@@ -13,7 +13,7 @@ Mission: Complete one expedition from planning to archive without ever leaving t
 These improvements affect the entire application.
 
 Navigation
-- [ ]  Group sidebar into logical sections
+- [x]  Group sidebar into logical sections (CURRENT SESSION/STREAM OPERATIONS/RECORDS/PROJECTS/SYSTEM headings with dividers, matching your sketch. Caught a real bug while building it: the active-page highlight logic assumed button list position matched page index directly - reordering buttons into sections broke that assumption, since Incident Report (page 4) now visually comes before Archive Log (page 3). Fixed by tracking each button'''s actual page index explicitly instead of relying on position, and verified with a standalone test that selecting page 3 vs 4 highlights the correct button.)
                         BLACK FEATHER
                         FOUNDRY
                         FIELD OFFICE
@@ -70,18 +70,18 @@ UI Consistency
 - [ ]  Theme system (Phase 1 foundation)
 
 Shared Expedition Data
-- [ ]  Expedition
-- [ ]  Objective
-- [ ]  Difficulty
-- [ ]  Location
-- [ ]  Weather
-- [ ]  Coffee
-- [ ]  Coffee Level
-- [ ]  Engineering
-- [ ]  Incident Number
-- [ ]  Current Archive ID
+- [x]  Expedition (now reads from Broadcast Desk's Location/Content field)
+- [x]  Objective (now reads from Broadcast Desk's Tonight's Goal field)
+- [x]  Difficulty (new Normal/Veteran/Hardmode checkboxes added to Broadcast Desk)
+- [x]  Location (same field as Expedition above)
+- [x]  Weather (moved from Field Office to Broadcast Desk)
+- [x]  Coffee (moved from Field Office to Broadcast Desk)
+- [x]  Coffee Level (moved from Field Office to Broadcast Desk, randomize button came with it)
+- [x]  Engineering (moved from Field Office to Broadcast Desk)
+- [x]  Incident Number (moved from Field Office to Broadcast Desk)
+- [ ]  Current Archive ID (not yet - needs its own design pass)
 
-Broadcast Desk becomes the source. Everything else reads from it.
+Broadcast Desk becomes the source. Everything else reads from it. (Field Office now shows all 8 of these as a read-only summary panel, refreshed live whenever you switch to that tab. Field Office's own Clear button only clears its own fields now (Assignment/Observation/Context/Recommendations/status checkboxes) - it no longer wipes the shared Broadcast Desk data. Save to OBS/Save to Archive on Broadcast Desk now include all these fields too.)
 
 🎙 Epic 2 — Operations
 Broadcast Desk
@@ -118,10 +118,10 @@ Stream Events
 📁 Epic 3 — Archive
 
 Archive Browser
-- [ ]  Display archive serial number
-- [ ]  Open archive by serial
-- [ ]  Search archives
-- [ ]  Filter by Boss/Dungeon/Trial/Expedition/Earth Date/Tamriel Date/Favorite
+- [x]  Display archive serial number
+- [x]  Open archive by serial (click any archive in the list to load its full report in the Selected Archive panel)
+- [x]  Search archives (matches against the full archive text, so boss names/dungeon/trial/location/serial/date all work - not just a dedicated field per category)
+- [ ]  Filter by Boss/Dungeon/Trial/Expedition/Earth Date/Tamriel Date/Favorite (single search box handles most of this; dedicated category filters and Favorites not built yet)
 
 Archive Viewer - Display:
 - [ ]  Mission Summary
@@ -295,10 +295,10 @@ A complete expedition can be managed entirely inside the Foundry: create it in B
 ## Achievement Run Tracker
 
 ## Archive Log Page
-- [ ] show me which logs I'm looking at by serial number
-- [ ] let me pull up logs by number
-- [ ] later let me search by like boss name or dungeon/trial/location/serial number/earth date
-- [ ] rn Archive Log is constantly showing the info from one of the logs. Can we have it default to blank please
+- [x] show me which logs I'm looking at by serial number (Archive Browser list shows serial + date + location + event count for every past archive)
+- [x] let me pull up logs by number (click any entry in the Archive Browser list)
+- [x] later let me search by like boss name or dungeon/trial/location/serial number/earth date
+- [x] rn Archive Log is constantly showing the info from one of the logs. Can we have it default to blank please (Marker Log/Boss Log now start blank with a placeholder until you click Refresh)
 
 ## Time Archive
 - [ ] OBS session start time

@@ -7,12 +7,9 @@ from datetime import datetime
 from pathlib import Path
 import re
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
-
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QApplication,
     QCheckBox,
     QComboBox,
@@ -23,20 +20,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QListWidgetItem,
     QMainWindow,
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSplitter,
     QSpinBox,
     QStackedWidget,
     QTabWidget,
     QTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -51,7 +44,6 @@ from services.incident_json_service import IncidentJsonService
 from services.json_service import JsonService
 from services.narrator_service import NarratorService
 from services.obs_websocket_service import ObsWebSocketService
-from services.reference_service import ReferenceLibrary
 from services.settings_service import SettingsService
 from services.stream_event_service import StreamEventService
 from services.tamriel_calendar import get_tamriel_date
@@ -172,10 +164,7 @@ class MainWindow(QMainWindow):
         self.google_sheets_connected = False
 
         self.theme = ThemeManager()
-        self.reference_data_directory = Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"
-        self.reference_library: ReferenceLibrary | None = None
-        self.reference_library_error = ""
-        self._reload_reference_library()
+
         self._build_ui()
         self._load_stream_session()
 
@@ -257,6 +246,17 @@ class MainWindow(QMainWindow):
                 font-size: {metrics.BRAND_SUBTITLE_SIZE}px;
                 color: {colors.TEXT_MUTED};
                 letter-spacing: 2px;
+            }}
+            QLabel#navSectionHeading {{
+                font-size: 10px;
+                font-weight: bold;
+                letter-spacing: 1px;
+                color: {colors.TEXT_MUTED};
+                padding: 2px 12px 4px 12px;
+            }}
+            QWidget#navSectionDivider {{
+                background: {colors.BORDER};
+                margin: 0px 12px 6px 12px;
             }}
             QGroupBox {{
                 background: {colors.CARD};
@@ -358,6 +358,7 @@ class MainWindow(QMainWindow):
         office.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sidebar_layout.addWidget(office)
         sidebar_layout.addSpacing(24)
+
         self.tabs = QTabWidget()
         self.tabs.addTab(self._wrap_scrollable(self._build_broadcast_page()), "Broadcast Desk")
         self.tabs.addTab(self._wrap_scrollable(self._build_expedition_page()), "Field Office")
@@ -366,33 +367,38 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self._wrap_scrollable(self._build_incident_page()), "Incident Report")
         self.tabs.addTab(self._wrap_scrollable(self._build_achievement_page()), "Achievement Run")
         self.tabs.addTab(self._wrap_scrollable(self._build_odds_and_ends_page()), "Collections")
-        self.tabs.addTab(self._wrap_scrollable(self._build_reference_browser()), "Comp Engine")
         self.tabs.addTab(self._wrap_scrollable(self._build_settings_page()), "Settings")
         self.tabs.tabBar().hide()
 
-        self.nav_buttons: list[QPushButton] = []
-        nav_pages = [
-            ("Broadcast Desk", 0),
-            ("Field Office", 1),
-            ("Stream Events", 2),
-            ("Archive Log", 3),
-            ("Incident Report", 4),
-            ("Achievement Run", 5),
-            ("Collections", 6),
-            ("Comp Engine", 7),
-            ("Settings", 8),
-            ]
+        self.nav_buttons: list[tuple[QPushButton, int]] = []
+        nav_sections = [
+            ("CURRENT SESSION", [("Broadcast Desk", 0), ("Field Office", 1)]),
+            ("STREAM OPERATIONS", [("Stream Events", 2)]),
+            ("RECORDS", [("Incident Report", 4), ("Archive Log", 3)]),
+            ("PROJECTS", [("Achievement Run", 5), ("Collections", 6)]),
+            ("SYSTEM", [("Settings", 7)]),
+        ]
 
-        for label, page in nav_pages:
-            button = QPushButton(label)
-            button.setProperty("nav", True)
-            button.setCheckable(True)
-            button.clicked.connect(
-                lambda checked=False, page=page: self._select_page(page)
-            )
-            sidebar_layout.addWidget(button)
-            self.nav_buttons.append(button)
+        for section_index, (section_label, pages) in enumerate(nav_sections):
+            if section_index > 0:
+                sidebar_layout.addSpacing(14)
+            heading = QLabel(section_label)
+            heading.setObjectName("navSectionHeading")
+            sidebar_layout.addWidget(heading)
+            divider = QWidget()
+            divider.setObjectName("navSectionDivider")
+            divider.setFixedHeight(1)
+            sidebar_layout.addWidget(divider)
 
+            for label, page in pages:
+                button = QPushButton(label)
+                button.setProperty("nav", True)
+                button.setCheckable(True)
+                button.clicked.connect(
+                    lambda checked=False, page=page: self._select_page(page)
+                )
+                sidebar_layout.addWidget(button)
+                self.nav_buttons.append((button, page))
 
         sidebar_layout.addStretch(1)
         reminder = QLabel("REMEMBER\n\n• Check the quest log\n• Read the achievements\n• Communicate\n• Have fun\n• Take breaks\n• Drink coffee")
@@ -425,209 +431,12 @@ class MainWindow(QMainWindow):
 
         self._select_page(0)
 
-    def _build_reference_browser(self) -> QWidget:
-        page = QWidget()
-        layout = QVBoxLayout(page)
-
-        status_box = QGroupBox("Reference Library Status")
-        self.reference_status_layout = QVBoxLayout(status_box)
-        self.reference_status_layout.setContentsMargins(10, 10, 10, 10)
-        layout.addWidget(status_box)
-
-        toolbar = QHBoxLayout()
-        self.reference_search = QLineEdit()
-        self.reference_search.setPlaceholderText("Search rows by name...")
-        self.reference_search.setClearButtonEnabled(True)
-        self.reference_search.textChanged.connect(self._filter_reference_rows)
-        toolbar.addWidget(self.reference_search, 1)
-        refresh_button = QPushButton("Refresh")
-        refresh_button.clicked.connect(self._refresh_reference_library)
-        toolbar.addWidget(refresh_button)
-        layout.addLayout(toolbar)
-
-        self.reference_dataset_list = QListWidget()
-        self.reference_dataset_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.reference_dataset_list.currentItemChanged.connect(self._select_reference_dataset)
-
-        self.reference_table = QTableWidget()
-        self.reference_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.reference_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.reference_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.reference_table.itemSelectionChanged.connect(self._show_reference_record)
-
-        self.reference_json = QTextEdit()
-        self.reference_json.setReadOnly(True)
-        self.reference_json.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-        self.reference_json.setPlaceholderText("Select a record to view its complete JSON.")
-
-        data_splitter = QSplitter(Qt.Orientation.Horizontal)
-        data_splitter.addWidget(self.reference_dataset_list)
-        data_splitter.addWidget(self.reference_table)
-        data_splitter.addWidget(self.reference_json)
-        data_splitter.setSizes([190, 480, 330])
-        data_splitter.setStretchFactor(1, 1)
-        data_splitter.setStretchFactor(2, 1)
-        layout.addWidget(data_splitter, 1)
-
-        self._populate_reference_datasets()
-
-        return page
-
-    def _reload_reference_library(self) -> None:
-        try:
-            self.reference_library = ReferenceLibrary(str(self.reference_data_directory))
-            self.reference_library_error = ""
-        except Exception as error:
-            self.reference_library = None
-            self.reference_library_error = str(error)
-
-    def _refresh_reference_library(self) -> None:
-        selected_key = self._selected_reference_key()
-        self._reload_reference_library()
-        self._populate_reference_datasets(selected_key)
-
-    def _dataset_label(self, dataset_key: str) -> str:
-        return dataset_key.replace("_", " ").title()
-
-    def _records_for_dataset(self, dataset_key: str) -> list[dict]:
-        if self.reference_library is None:
-            return []
-        return self.reference_library._records(self.reference_library.cache.get(dataset_key, []))
-
-    def _selected_reference_key(self) -> str | None:
-        item = self.reference_dataset_list.currentItem()
-        if item is None:
-            return None
-        return str(item.data(Qt.ItemDataRole.UserRole))
-
-    def _populate_reference_datasets(self, selected_key: str | None = None) -> None:
-        self.reference_dataset_list.clear()
-        self._clear_layout(self.reference_status_layout)
-
-        if self.reference_library is None:
-            self.reference_status_layout.addWidget(QLabel(f"Reference Library Error: {self.reference_library_error}"))
-            self.reference_table.clear()
-            self.reference_json.clear()
-            return
-
-        for file_name in ReferenceLibrary.FILE_NAMES:
-            dataset_key = file_name.removesuffix(".json")
-            label = self._dataset_label(dataset_key)
-            error = self.reference_library.load_errors.get(file_name)
-            records = self._records_for_dataset(dataset_key)
-
-            if error:
-                status_text = f"{label} ............ ✗ Error"
-                status_detail = f"{file_name}: {error}"
-            elif not records:
-                status_text = f"{label} ............ ⚠ Empty"
-                status_detail = ""
-            else:
-                status_text = f"{label} ............ ✓ {len(records)}"
-                status_detail = ""
-
-            status_label = QLabel(status_text)
-            status_label.setToolTip(status_detail)
-            self.reference_status_layout.addWidget(status_label)
-            if error:
-                self.reference_status_layout.addWidget(QLabel(f"  {file_name}: {error}"))
-
-            item = QListWidgetItem(f"{label} ({len(records)})" if not error else f"{label} (Error)")
-            item.setData(Qt.ItemDataRole.UserRole, dataset_key)
-            item.setToolTip(status_detail)
-            self.reference_dataset_list.addItem(item)
-
-        if self.reference_dataset_list.count():
-            matching_items = self.reference_dataset_list.findItems(
-                self._dataset_label(selected_key) if selected_key else "",
-                Qt.MatchFlag.MatchStartsWith,
-            )
-            self.reference_dataset_list.setCurrentItem(matching_items[0] if matching_items else self.reference_dataset_list.item(0))
-
-    @staticmethod
-    def _clear_layout(layout: QVBoxLayout) -> None:
-        while layout.count():
-            item = layout.takeAt(0)
-            if item.widget() is not None:
-                item.widget().deleteLater()
-
-    def _select_reference_dataset(self, current: QListWidgetItem | None, _previous: QListWidgetItem | None) -> None:
-        if current is None:
-            return
-        self._filter_reference_rows()
-
-    def _filter_reference_rows(self, _query: str = "") -> None:
-        dataset_key = self._selected_reference_key()
-        if dataset_key is None:
-            return
-
-        records = self._records_for_dataset(dataset_key)
-        query = self.reference_search.text().strip().casefold()
-        if query:
-            has_name = any(isinstance(record.get("name"), str) for record in records)
-            if has_name:
-                records = [record for record in records if query in str(record.get("name", "")).casefold()]
-            else:
-                records = [
-                    record for record in records
-                    if any(query in value.casefold() for value in record.values() if isinstance(value, str))
-                ]
-
-        columns: list[str] = []
-        for record in records:
-            for key in record:
-                if key not in columns:
-                    columns.append(key)
-
-        self.reference_table.clear()
-        self.reference_table.setColumnCount(len(columns))
-        self.reference_table.setHorizontalHeaderLabels(columns)
-        self.reference_table.setRowCount(len(records))
-        for row_index, record in enumerate(records):
-            for column_index, key in enumerate(columns):
-                value = record.get(key, "")
-                display_value = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
-                self.reference_table.setItem(row_index, column_index, QTableWidgetItem(display_value))
-        self.reference_table.resizeColumnsToContents()
-        self.reference_json.clear()
-
-        if not records:
-            if not columns:
-                self.reference_table.setColumnCount(1)
-                self.reference_table.setHorizontalHeaderLabels(["Status"])
-            self.reference_table.setRowCount(1)
-            self.reference_table.setItem(0, 0, QTableWidgetItem("No records found."))
-
-    def _show_reference_record(self) -> None:
-        selected_rows = self.reference_table.selectionModel().selectedRows()
-        if not selected_rows:
-            self.reference_json.clear()
-            return
-
-        dataset_key = self._selected_reference_key()
-        if dataset_key is None:
-            return
-        records = self._records_for_dataset(dataset_key)
-        query = self.reference_search.text().strip().casefold()
-        if query:
-            has_name = any(isinstance(record.get("name"), str) for record in records)
-            if has_name:
-                records = [record for record in records if query in str(record.get("name", "")).casefold()]
-            else:
-                records = [
-                    record for record in records
-                    if any(query in value.casefold() for value in record.values() if isinstance(value, str))
-                ]
-        row = selected_rows[0].row()
-        if row < len(records):
-            self.reference_json.setPlainText(json.dumps(records[row], ensure_ascii=False, indent=2, default=str))
-
     def _select_page(self, index: int) -> None:
-        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS", "COMPOSITION ENGINE", "SETTINGS")
+        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS",  "SETTINGS")
         self.tabs.setCurrentIndex(index)
         self.page_title.setText(titles[index])
-        for button_index, button in enumerate(self.nav_buttons):
-            button.setChecked(button_index == index)
+        for button, page_index in self.nav_buttons:
+            button.setChecked(page_index == index)
         if index == 1:  # Field Office - Expedition/Difficulty/etc. now live on Broadcast Desk
             self.refresh_top_bar_summary()
 
@@ -639,28 +448,7 @@ class MainWindow(QMainWindow):
         left = QVBoxLayout()
         right = QVBoxLayout()
 
-        top_bar_label = QLabel("TOP BAR (set on Broadcast Desk)")
-
-        left.addWidget(top_bar_label)
-        summary_box = QGroupBox("Tonight's Expedition")
-        summary_form = QFormLayout(summary_box)
-        self.top_bar_expedition_label = QLabel("—")
-        self.top_bar_difficulty_label = QLabel("—")
-        self.top_bar_objective_label = QLabel("—")
-        self.top_bar_weather_label = QLabel("—")
-        self.top_bar_coffee_label = QLabel("—")
-        self.top_bar_coffee_level_label = QLabel("—")
-        self.top_bar_engineering_label = QLabel("—")
-        self.top_bar_incidents_label = QLabel("—")
-        summary_form.addRow("Expedition:", self.top_bar_expedition_label)
-        summary_form.addRow("Difficulty:", self.top_bar_difficulty_label)
-        summary_form.addRow("Objective:", self.top_bar_objective_label)
-        summary_form.addRow("Weather:", self.top_bar_weather_label)
-        summary_form.addRow("Coffee:", self.top_bar_coffee_label)
-        summary_form.addRow("Coffee Level:", self.top_bar_coffee_level_label)
-        summary_form.addRow("Engineering:", self.top_bar_engineering_label)
-        summary_form.addRow("Incidents:", self.top_bar_incidents_label)
-        left.addWidget(summary_box)
+        
 
         self._build_status_checkboxes()
 
@@ -790,52 +578,131 @@ class MainWindow(QMainWindow):
 
     def _build_archive_log_page(self) -> QWidget:
         page = QWidget()
-        layout = QVBoxLayout(page)
+        outer_layout = QHBoxLayout(page)
 
+        # --- Left column: this session's live logs ---
+        left_column = QVBoxLayout()
+
+        intro = QLabel("What's actually being saved when you push buttons on Stream Events.")
+        left_column.addWidget(intro)
 
         marker_box = QGroupBox("Marker Log (Pull Starts, Wipes, Boss Clears, BRB, Field Notes, Incidents)")
         marker_layout = QVBoxLayout(marker_box)
         self.marker_log_view = QTextEdit()
         self.marker_log_view.setReadOnly(True)
+        self.marker_log_view.setPlaceholderText("Click Refresh to load this session's marker log.")
         marker_layout.addWidget(self.marker_log_view)
-        layout.addWidget(marker_box, 2)
+        left_column.addWidget(marker_box, 2)
 
         boss_box = QGroupBox("Boss Log (from Boss Clears)")
         boss_layout = QVBoxLayout(boss_box)
         self.boss_log_view = QTextEdit()
         self.boss_log_view.setReadOnly(True)
+        self.boss_log_view.setPlaceholderText("Click Refresh to load this session's boss log.")
         boss_layout.addWidget(self.boss_log_view)
-        layout.addWidget(boss_box, 1)
+        left_column.addWidget(boss_box, 1)
 
         notes_box = QGroupBox("Session Notes (included in the consolidated report)")
         notes_layout = QVBoxLayout(notes_box)
         self.session_notes_edit = QTextEdit()
         self.session_notes_edit.setPlaceholderText("How'd the run go? Anything worth remembering...")
         notes_layout.addWidget(self.session_notes_edit)
-        layout.addWidget(notes_box, 1)
-
-        intro = QLabel("What's actually being saved when you push buttons on Stream Events.")
-        layout.addWidget(intro)
-
+        left_column.addWidget(notes_box, 1)
 
         actions = QHBoxLayout()
-
-        layout.addStretch()
         refresh_btn = QPushButton("Refresh")
         archive_btn = QPushButton("Save to Archive")
         clear_btn = QPushButton("Clear")
-       
         refresh_btn.clicked.connect(self.refresh_archive_log)
         clear_btn.clicked.connect(self.clear_archive)
         archive_btn.clicked.connect(self.archive_current_run)
         actions.addWidget(clear_btn)
+        actions.addWidget(refresh_btn)
         actions.addWidget(archive_btn)
-        layout.addWidget(refresh_btn)
-        layout.addLayout(actions)
-     
+        left_column.addLayout(actions)
 
-        self.refresh_archive_log()
+        outer_layout.addLayout(left_column, 2)
+
+        # --- Right column: browse past archived sessions ---
+        right_column = QVBoxLayout()
+        browser_box = QGroupBox("Archive Browser")
+        browser_layout = QVBoxLayout(browser_box)
+
+        search_row = QHBoxLayout()
+        self.archive_search_edit = QLineEdit()
+        self.archive_search_edit.setPlaceholderText("Search by serial, boss, location, date...")
+        self.archive_search_edit.textChanged.connect(self.filter_archive_browser)
+        search_row.addWidget(self.archive_search_edit)
+        browser_layout.addLayout(search_row)
+
+        self.archive_browser_list = QListWidget()
+        self.archive_browser_list.currentItemChanged.connect(self.on_archive_selected)
+        browser_layout.addWidget(self.archive_browser_list, 1)
+
+        browser_refresh_btn = QPushButton("Refresh List")
+        browser_refresh_btn.clicked.connect(self.refresh_archive_browser)
+        browser_layout.addWidget(browser_refresh_btn)
+
+        right_column.addWidget(browser_box, 1)
+
+        detail_box = QGroupBox("Selected Archive")
+        detail_layout = QVBoxLayout(detail_box)
+        self.archive_detail_view = QTextEdit()
+        self.archive_detail_view.setReadOnly(True)
+        self.archive_detail_view.setPlaceholderText("Select an archive on the left to view it here.")
+        detail_layout.addWidget(self.archive_detail_view)
+        right_column.addWidget(detail_box, 1)
+
+        outer_layout.addLayout(right_column, 2)
+
+        self.refresh_archive_browser()
         return page
+
+    def _parse_archive_summary(self, path: Path) -> dict:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+
+        def extract(pattern: str) -> str:
+            match = re.search(pattern, text, re.MULTILINE)
+            return match.group(1).strip() if match else "Unknown"
+
+        return {
+            "id": path.stem,
+            "location": extract(r"^Location\s+(.+)$"),
+            "real_date": extract(r"Real Date:\s*(.+)"),
+            "events": extract(r"Marker Events:\s*(\d+)"),
+            "text": text,
+            "search_blob": text.lower(),
+        }
+
+    def refresh_archive_browser(self) -> None:
+        self.archive_browser_list.clear()
+        if not self.session_archive_folder.exists():
+            return
+        files = sorted(self.session_archive_folder.glob("ST-*.md"), reverse=True)
+        for path in files:
+            summary = self._parse_archive_summary(path)
+            label = f"{summary['id']}  —  {summary['real_date']}  —  {summary['location']}  ({summary['events']} events)"
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, summary)
+            self.archive_browser_list.addItem(item)
+        self.filter_archive_browser()
+
+    def filter_archive_browser(self) -> None:
+        query = self.archive_search_edit.text().strip().lower()
+        for i in range(self.archive_browser_list.count()):
+            item = self.archive_browser_list.item(i)
+            summary = item.data(Qt.ItemDataRole.UserRole)
+            matches = not query or query in summary["search_blob"] or query in summary["id"].lower()
+            item.setHidden(not matches)
+
+    def on_archive_selected(self, current, previous) -> None:
+        if current is None:
+            return
+        summary = current.data(Qt.ItemDataRole.UserRole)
+        self.archive_detail_view.setPlainText(summary["text"])
 
 
     def archive_current_run(self):
@@ -2182,15 +2049,13 @@ class MainWindow(QMainWindow):
             checkbox.setChecked(label in checked_labels)
 
     def refresh_top_bar_summary(self) -> None:
-        """Field Office no longer owns Expedition/Difficulty/Objective/Weather/
-        Coffee/Coffee Level/Engineering/Incidents - it just displays them,
-        read-only, from Broadcast Desk (the actual source now)."""
+        """Field Office no longer owns Expedition/Difficulty/Objective/Engineering/
+        Incidents - it just displays them, read-only, from Broadcast Desk (the
+        actual source now). Weather/Coffee/Coffee Level live on Broadcast Desk
+        only and aren't shown here at all."""
         self.top_bar_expedition_label.setText(self._broadcast_location_text() or "—")
         self.top_bar_difficulty_label.setText(self._current_difficulty_text() or "—")
         self.top_bar_objective_label.setText(self.broadcast_goal_edit.text().strip() or "—")
-        self.top_bar_weather_label.setText(self.broadcast_weather.currentText() or "—")
-        self.top_bar_coffee_label.setText(self.broadcast_coffee.currentText() or "—")
-        self.top_bar_coffee_level_label.setText(self.broadcast_coffee_level.text() or "—")
         self.top_bar_engineering_label.setText(self.broadcast_engineering.currentText() or "—")
         self.top_bar_incidents_label.setText(self.broadcast_incidents.text() or "—")
 
