@@ -1,12 +1,14 @@
-# src/__init__.py
-from .models import SourceGameObject, DynamicTrigger, CombatEffect
-from .engine import TheConsoleEngine
+"""Console engine package exports for FoundryDock."""
+
+from .engine import TheConsoleEngine, WeaponSwapSimulationEngine
+from .models import CombatEffect, DynamicTrigger, SourceGameObject
 from .operations import TheConsoleOpsEngine
 
 __all__ = [
-    "SourceGameObject",
-    "DynamicTrigger",
     "CombatEffect",
+    "DynamicTrigger",
+    "SourceGameObject",
     "TheConsoleEngine",
+    "WeaponSwapSimulationEngine",
     "TheConsoleOpsEngine",
 ]

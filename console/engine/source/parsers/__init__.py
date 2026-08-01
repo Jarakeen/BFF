@@ -47,16 +47,24 @@ _SET_BONUS_PATTERN: Final[re.Pattern[str]] = re.compile(
 
 def parse_effects(description: str) -> list[str]:
     """Return unique Major/Minor effect names in first-seen order."""
+
     if not description:
         return []
 
     effects: list[str] = []
     seen: set[str] = set()
+
     for match in _EFFECT_PATTERN.finditer(description):
-        effect_name = match.group(1)
+
+        tier = match.group(1).title()
+        effect = match.group(2).title()
+
+        effect_name = f"{tier} {effect}"
+
         if effect_name not in seen:
             seen.add(effect_name)
             effects.append(effect_name)
+
     return effects
 
 

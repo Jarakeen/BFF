@@ -1,5 +1,6 @@
 from typing import List, Dict, Set
-from models import CombatEffect, SourceGameObject
+
+from .models import CombatEffect, SourceGameObject
 
 class TheConsoleEngine:
     def __init__(self, pvp_rules: bool = False):
@@ -27,7 +28,7 @@ class TheConsoleEngine:
 
 
 # Add this to console/engine/sorce/engine.py
-from models import PredictiveHealerProfile, WeaponBarType
+from .models import PredictiveHealerProfile, WeaponBarType
 
 class WeaponSwapSimulationEngine:
     @staticmethod

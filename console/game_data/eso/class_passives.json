@@ -1,1 +1,2497 @@
-[]
+[
+  {
+    "id": "passive_18866",
+    "name": "Shadow Barrier",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "18866",
+      "displayId": "18866",
+      "baseAbilityId": "18866"
+    },
+    "effects": [
+      "Resolve"
+    ]
+  },
+  {
+    "id": "passive_29424",
+    "name": "Combustion",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29424",
+      "displayId": "29424",
+      "baseAbilityId": "29424"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29430",
+    "name": "Traumatic Burns",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29430",
+      "displayId": "29430",
+      "baseAbilityId": "29430"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29439",
+    "name": "Fan the Flames",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29439",
+      "displayId": "29439",
+      "baseAbilityId": "29439"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29451",
+    "name": "A Soul Ablaze",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29451",
+      "displayId": "29451",
+      "baseAbilityId": "29451"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29455",
+    "name": "Burnished Scales",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29455",
+      "displayId": "29455",
+      "baseAbilityId": "29455"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29457",
+    "name": "World in Ruin",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29457",
+      "displayId": "29457",
+      "baseAbilityId": "29457"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29460",
+    "name": "Elder Dragon",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29460",
+      "displayId": "29460",
+      "baseAbilityId": "29460"
+    },
+    "effects": [
+      "Brutality"
+    ]
+  },
+  {
+    "id": "passive_29462",
+    "name": "The Storm Voice",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29462",
+      "displayId": "29462",
+      "baseAbilityId": "29462"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29463",
+    "name": "Landslide",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29463",
+      "displayId": "29463",
+      "baseAbilityId": "29463"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29468",
+    "name": "Heart of Stone",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29468",
+      "displayId": "29468",
+      "baseAbilityId": "29468"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29473",
+    "name": "Blessing at the Peak",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29473",
+      "displayId": "29473",
+      "baseAbilityId": "29473"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_29475",
+    "name": "Mountain Giant",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "29475",
+      "displayId": "29475",
+      "baseAbilityId": "29475"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31378",
+    "name": "Persistence",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31378",
+      "displayId": "31378",
+      "baseAbilityId": "31378"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31383",
+    "name": "Blood Magic",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31383",
+      "displayId": "31383",
+      "baseAbilityId": "31383"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31386",
+    "name": "Unholy Knowledge",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31386",
+      "displayId": "31386",
+      "baseAbilityId": "31386"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31389",
+    "name": "Exploitation",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31389",
+      "displayId": "31389",
+      "baseAbilityId": "31389"
+    },
+    "effects": [
+      "Prophecy"
+    ]
+  },
+  {
+    "id": "passive_31396",
+    "name": "Power Stone",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31396",
+      "displayId": "31396",
+      "baseAbilityId": "31396"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31398",
+    "name": "Rebate",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31398",
+      "displayId": "31398",
+      "baseAbilityId": "31398"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31412",
+    "name": "Expert Summoner",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31412",
+      "displayId": "31412",
+      "baseAbilityId": "31412"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31417",
+    "name": "Daedric Protection",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31417",
+      "displayId": "31417",
+      "baseAbilityId": "31417"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31419",
+    "name": "Capacitor",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31419",
+      "displayId": "31419",
+      "baseAbilityId": "31419"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31421",
+    "name": "Energized",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31421",
+      "displayId": "31421",
+      "baseAbilityId": "31421"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31422",
+    "name": "Amplitude",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31422",
+      "displayId": "31422",
+      "baseAbilityId": "31422"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31425",
+    "name": "Expert Mage",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31425",
+      "displayId": "31425",
+      "baseAbilityId": "31425"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31565",
+    "name": "Balanced Warrior",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31565",
+      "displayId": "31565",
+      "baseAbilityId": "31565"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31698",
+    "name": "Piercing Spear",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31698",
+      "displayId": "31698",
+      "baseAbilityId": "31698"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31708",
+    "name": "Spear Wall",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31708",
+      "displayId": "31708",
+      "baseAbilityId": "31708"
+    },
+    "effects": [
+      "Berserk",
+      "Protection"
+    ]
+  },
+  {
+    "id": "passive_31718",
+    "name": "Burning Light",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31718",
+      "displayId": "31718",
+      "baseAbilityId": "31718"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31721",
+    "name": "Restoring Spirit",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31721",
+      "displayId": "31721",
+      "baseAbilityId": "31721"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31739",
+    "name": "Enduring Rays",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31739",
+      "displayId": "31739",
+      "baseAbilityId": "31739"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31743",
+    "name": "Illuminate",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31743",
+      "displayId": "31743",
+      "baseAbilityId": "31743"
+    },
+    "effects": [
+      "Sorcery"
+    ]
+  },
+  {
+    "id": "passive_31744",
+    "name": "Prism",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31744",
+      "displayId": "31744",
+      "baseAbilityId": "31744"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31747",
+    "name": "Master Ritualist",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31747",
+      "displayId": "31747",
+      "baseAbilityId": "31747"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31751",
+    "name": "Mending",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31751",
+      "displayId": "31751",
+      "baseAbilityId": "31751"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_31757",
+    "name": "Sacred Ground",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31757",
+      "displayId": "31757",
+      "baseAbilityId": "31757"
+    },
+    "effects": [
+      "Mending"
+    ]
+  },
+  {
+    "id": "passive_31760",
+    "name": "Light Weaver",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "31760",
+      "displayId": "31760",
+      "baseAbilityId": "31760"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36532",
+    "name": "Dark Vigor",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36532",
+      "displayId": "36532",
+      "baseAbilityId": "36532"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36549",
+    "name": "Refreshing Shadows",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36549",
+      "displayId": "36549",
+      "baseAbilityId": "36549"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36552",
+    "name": "Dark Veil",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36552",
+      "displayId": "36552",
+      "baseAbilityId": "36552"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36560",
+    "name": "Catalyst",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36560",
+      "displayId": "36560",
+      "baseAbilityId": "36560"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36587",
+    "name": "Transfer",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36587",
+      "displayId": "36587",
+      "baseAbilityId": "36587"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36595",
+    "name": "Magicka Flood",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36595",
+      "displayId": "36595",
+      "baseAbilityId": "36595"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36603",
+    "name": "Soul Siphoner",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36603",
+      "displayId": "36603",
+      "baseAbilityId": "36603"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36616",
+    "name": "Master Assassin",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36616",
+      "displayId": "36616",
+      "baseAbilityId": "36616"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36630",
+    "name": "Executioner",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36630",
+      "displayId": "36630",
+      "baseAbilityId": "36630"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36636",
+    "name": "Pressure Points",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36636",
+      "displayId": "36636",
+      "baseAbilityId": "36636"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_36641",
+    "name": "Hemorrhage",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "36641",
+      "displayId": "36641",
+      "baseAbilityId": "36641"
+    },
+    "effects": [
+      "Savagery"
+    ]
+  },
+  {
+    "id": "passive_44046",
+    "name": "Piercing Spear",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44046",
+      "displayId": "44046",
+      "baseAbilityId": "31698"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44721",
+    "name": "Spear Wall",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44721",
+      "displayId": "44721",
+      "baseAbilityId": "31708"
+    },
+    "effects": [
+      "Berserk",
+      "Protection"
+    ]
+  },
+  {
+    "id": "passive_44730",
+    "name": "Burning Light",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44730",
+      "displayId": "44730",
+      "baseAbilityId": "31718"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44732",
+    "name": "Balanced Warrior",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44732",
+      "displayId": "44732",
+      "baseAbilityId": "31565"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44922",
+    "name": "Burnished Scales",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44922",
+      "displayId": "44922",
+      "baseAbilityId": "29455"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44933",
+    "name": "World in Ruin",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44933",
+      "displayId": "44933",
+      "baseAbilityId": "29457"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44951",
+    "name": "Elder Dragon",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44951",
+      "displayId": "44951",
+      "baseAbilityId": "29460"
+    },
+    "effects": [
+      "Brutality"
+    ]
+  },
+  {
+    "id": "passive_44953",
+    "name": "The Storm Voice",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44953",
+      "displayId": "44953",
+      "baseAbilityId": "29462"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44984",
+    "name": "Landslide",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44984",
+      "displayId": "44984",
+      "baseAbilityId": "29463"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_44996",
+    "name": "Heart of Stone",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "44996",
+      "displayId": "44996",
+      "baseAbilityId": "29468"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45001",
+    "name": "Blessing at the Peak",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45001",
+      "displayId": "45001",
+      "baseAbilityId": "29473"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45009",
+    "name": "Mountain Giant",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45009",
+      "displayId": "45009",
+      "baseAbilityId": "29475"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45011",
+    "name": "Combustion",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45011",
+      "displayId": "45011",
+      "baseAbilityId": "29424"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45012",
+    "name": "Traumatic Burns",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45012",
+      "displayId": "45012",
+      "baseAbilityId": "29430"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45023",
+    "name": "Fan the Flames",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45023",
+      "displayId": "45023",
+      "baseAbilityId": "29439"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45029",
+    "name": "A Soul Ablaze",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45029",
+      "displayId": "45029",
+      "baseAbilityId": "29451"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45038",
+    "name": "Master Assassin",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45038",
+      "displayId": "45038",
+      "baseAbilityId": "36616"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45048",
+    "name": "Executioner",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45048",
+      "displayId": "45048",
+      "baseAbilityId": "36630"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45053",
+    "name": "Pressure Points",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45053",
+      "displayId": "45053",
+      "baseAbilityId": "36636"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45060",
+    "name": "Hemorrhage",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45060",
+      "displayId": "45060",
+      "baseAbilityId": "36641"
+    },
+    "effects": [
+      "Savagery"
+    ]
+  },
+  {
+    "id": "passive_45071",
+    "name": "Shadow Barrier",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45071",
+      "displayId": "45071",
+      "baseAbilityId": "18866"
+    },
+    "effects": [
+      "Resolve"
+    ]
+  },
+  {
+    "id": "passive_45084",
+    "name": "Dark Vigor",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45084",
+      "displayId": "45084",
+      "baseAbilityId": "36532"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45103",
+    "name": "Refreshing Shadows",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45103",
+      "displayId": "45103",
+      "baseAbilityId": "36549"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45115",
+    "name": "Dark Veil",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45115",
+      "displayId": "45115",
+      "baseAbilityId": "36552"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45135",
+    "name": "Catalyst",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45135",
+      "displayId": "45135",
+      "baseAbilityId": "36560"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45145",
+    "name": "Transfer",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45145",
+      "displayId": "45145",
+      "baseAbilityId": "36587"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45150",
+    "name": "Magicka Flood",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45150",
+      "displayId": "45150",
+      "baseAbilityId": "36595"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45155",
+    "name": "Soul Siphoner",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45155",
+      "displayId": "45155",
+      "baseAbilityId": "36603"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45165",
+    "name": "Persistence",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45165",
+      "displayId": "45165",
+      "baseAbilityId": "31378"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45172",
+    "name": "Blood Magic",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45172",
+      "displayId": "45172",
+      "baseAbilityId": "31383"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45176",
+    "name": "Unholy Knowledge",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45176",
+      "displayId": "45176",
+      "baseAbilityId": "31386"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45181",
+    "name": "Exploitation",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45181",
+      "displayId": "45181",
+      "baseAbilityId": "31389"
+    },
+    "effects": [
+      "Prophecy"
+    ]
+  },
+  {
+    "id": "passive_45188",
+    "name": "Capacitor",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45188",
+      "displayId": "45188",
+      "baseAbilityId": "31419"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45190",
+    "name": "Energized",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45190",
+      "displayId": "45190",
+      "baseAbilityId": "31421"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45192",
+    "name": "Amplitude",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45192",
+      "displayId": "45192",
+      "baseAbilityId": "31422"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45195",
+    "name": "Expert Mage",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45195",
+      "displayId": "45195",
+      "baseAbilityId": "31425"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45196",
+    "name": "Power Stone",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45196",
+      "displayId": "45196",
+      "baseAbilityId": "31396"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45198",
+    "name": "Rebate",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45198",
+      "displayId": "45198",
+      "baseAbilityId": "31398"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45199",
+    "name": "Expert Summoner",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45199",
+      "displayId": "45199",
+      "baseAbilityId": "31412"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45200",
+    "name": "Daedric Protection",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45200",
+      "displayId": "45200",
+      "baseAbilityId": "31417"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45202",
+    "name": "Master Ritualist",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45202",
+      "displayId": "45202",
+      "baseAbilityId": "31747"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45206",
+    "name": "Mending",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45206",
+      "displayId": "45206",
+      "baseAbilityId": "31751"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45207",
+    "name": "Sacred Ground",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45207",
+      "displayId": "45207",
+      "baseAbilityId": "31757"
+    },
+    "effects": [
+      "Mending"
+    ]
+  },
+  {
+    "id": "passive_45208",
+    "name": "Light Weaver",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45208",
+      "displayId": "45208",
+      "baseAbilityId": "31760"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45212",
+    "name": "Restoring Spirit",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45212",
+      "displayId": "45212",
+      "baseAbilityId": "31721"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45214",
+    "name": "Enduring Rays",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45214",
+      "displayId": "45214",
+      "baseAbilityId": "31739"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_45215",
+    "name": "Illuminate",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45215",
+      "displayId": "45215",
+      "baseAbilityId": "31743"
+    },
+    "effects": [
+      "Sorcery"
+    ]
+  },
+  {
+    "id": "passive_45216",
+    "name": "Prism",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "45216",
+      "displayId": "45216",
+      "baseAbilityId": "31744"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_85876",
+    "name": "Emerald Moss",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85876",
+      "displayId": "85876",
+      "baseAbilityId": "85876"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_85877",
+    "name": "Emerald Moss",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85877",
+      "displayId": "85877",
+      "baseAbilityId": "85876"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_85878",
+    "name": "Nature's Gift",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85878",
+      "displayId": "85878",
+      "baseAbilityId": "85878"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_85879",
+    "name": "Nature's Gift",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85879",
+      "displayId": "85879",
+      "baseAbilityId": "85878"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_85880",
+    "name": "Maturation",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85880",
+      "displayId": "85880",
+      "baseAbilityId": "85880"
+    },
+    "effects": [
+      "Toughness"
+    ]
+  },
+  {
+    "id": "passive_85881",
+    "name": "Maturation",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85881",
+      "displayId": "85881",
+      "baseAbilityId": "85880"
+    },
+    "effects": [
+      "Toughness"
+    ]
+  },
+  {
+    "id": "passive_85882",
+    "name": "Accelerated Growth",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85882",
+      "displayId": "85882",
+      "baseAbilityId": "85882"
+    },
+    "effects": [
+      "Mending"
+    ]
+  },
+  {
+    "id": "passive_85883",
+    "name": "Accelerated Growth",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "85883",
+      "displayId": "85883",
+      "baseAbilityId": "85882"
+    },
+    "effects": [
+      "Mending"
+    ]
+  },
+  {
+    "id": "passive_86062",
+    "name": "Savage Beast",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86062",
+      "displayId": "86062",
+      "baseAbilityId": "86062"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86063",
+    "name": "Savage Beast",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86063",
+      "displayId": "86063",
+      "baseAbilityId": "86062"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86064",
+    "name": "Bond with Nature",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86064",
+      "displayId": "86064",
+      "baseAbilityId": "86064"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86065",
+    "name": "Bond with Nature",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86065",
+      "displayId": "86065",
+      "baseAbilityId": "86064"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86066",
+    "name": "Flourish",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86066",
+      "displayId": "86066",
+      "baseAbilityId": "86066"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86067",
+    "name": "Flourish",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86067",
+      "displayId": "86067",
+      "baseAbilityId": "86066"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86068",
+    "name": "Advanced Species",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86068",
+      "displayId": "86068",
+      "baseAbilityId": "86068"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86069",
+    "name": "Advanced Species",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86069",
+      "displayId": "86069",
+      "baseAbilityId": "86068"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86189",
+    "name": "Frozen Armor",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86189",
+      "displayId": "86189",
+      "baseAbilityId": "86189"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86190",
+    "name": "Frozen Armor",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86190",
+      "displayId": "86190",
+      "baseAbilityId": "86189"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86191",
+    "name": "Glacial Presence",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86191",
+      "displayId": "86191",
+      "baseAbilityId": "86191"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86192",
+    "name": "Glacial Presence",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86192",
+      "displayId": "86192",
+      "baseAbilityId": "86191"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86193",
+    "name": "Icy Aura",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86193",
+      "displayId": "86193",
+      "baseAbilityId": "86193"
+    },
+    "effects": [
+      "Maim"
+    ]
+  },
+  {
+    "id": "passive_86194",
+    "name": "Icy Aura",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86194",
+      "displayId": "86194",
+      "baseAbilityId": "86193"
+    },
+    "effects": [
+      "Maim"
+    ]
+  },
+  {
+    "id": "passive_86195",
+    "name": "Piercing Cold",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86195",
+      "displayId": "86195",
+      "baseAbilityId": "86195"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_86196",
+    "name": "Piercing Cold",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "86196",
+      "displayId": "86196",
+      "baseAbilityId": "86195"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116186",
+    "name": "Reusable Parts",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116186",
+      "displayId": "116186",
+      "baseAbilityId": "116186"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116188",
+    "name": "Reusable Parts",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116188",
+      "displayId": "116188",
+      "baseAbilityId": "116186"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116192",
+    "name": "Dismember",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116192",
+      "displayId": "116192",
+      "baseAbilityId": "116192"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116194",
+    "name": "Dismember",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116194",
+      "displayId": "116194",
+      "baseAbilityId": "116192"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116197",
+    "name": "Death Knell",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116197",
+      "displayId": "116197",
+      "baseAbilityId": "116197"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116198",
+    "name": "Death Knell",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116198",
+      "displayId": "116198",
+      "baseAbilityId": "116197"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116199",
+    "name": "Rapid Rot",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116199",
+      "displayId": "116199",
+      "baseAbilityId": "116199"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116201",
+    "name": "Rapid Rot",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116201",
+      "displayId": "116201",
+      "baseAbilityId": "116199"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116230",
+    "name": "Death Gleaning",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116230",
+      "displayId": "116230",
+      "baseAbilityId": "116230"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116235",
+    "name": "Death Gleaning",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116235",
+      "displayId": "116235",
+      "baseAbilityId": "116230"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116239",
+    "name": "Disdain Harm",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116239",
+      "displayId": "116239",
+      "baseAbilityId": "116239"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116240",
+    "name": "Disdain Harm",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116240",
+      "displayId": "116240",
+      "baseAbilityId": "116239"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116269",
+    "name": "Health Avarice",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116269",
+      "displayId": "116269",
+      "baseAbilityId": "116269"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116270",
+    "name": "Health Avarice",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116270",
+      "displayId": "116270",
+      "baseAbilityId": "116269"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116271",
+    "name": "Last Gasp",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116271",
+      "displayId": "116271",
+      "baseAbilityId": "116271"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116272",
+    "name": "Last Gasp",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116272",
+      "displayId": "116272",
+      "baseAbilityId": "116271"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116273",
+    "name": "Near-Death Experience",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116273",
+      "displayId": "116273",
+      "baseAbilityId": "116273"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116275",
+    "name": "Near-Death Experience",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116275",
+      "displayId": "116275",
+      "baseAbilityId": "116273"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116282",
+    "name": "Undead Confederate",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116282",
+      "displayId": "116282",
+      "baseAbilityId": "116282"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116283",
+    "name": "Undead Confederate",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116283",
+      "displayId": "116283",
+      "baseAbilityId": "116282"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116284",
+    "name": "Corpse Consumption",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116284",
+      "displayId": "116284",
+      "baseAbilityId": "116284"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116285",
+    "name": "Corpse Consumption",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116285",
+      "displayId": "116285",
+      "baseAbilityId": "116284"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116286",
+    "name": "Curative Curse",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116286",
+      "displayId": "116286",
+      "baseAbilityId": "116286"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_116287",
+    "name": "Curative Curse",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "116287",
+      "displayId": "116287",
+      "baseAbilityId": "116286"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184844",
+    "name": "Fated Fortune",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184844",
+      "displayId": "184844",
+      "baseAbilityId": "184844"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184847",
+    "name": "Fated Fortune",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184847",
+      "displayId": "184847",
+      "baseAbilityId": "184844"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184857",
+    "name": "Harnessed Quintessence",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184857",
+      "displayId": "184857",
+      "baseAbilityId": "184857"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184858",
+    "name": "Harnessed Quintessence",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184858",
+      "displayId": "184858",
+      "baseAbilityId": "184857"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184870",
+    "name": "Psychic Lesion",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184870",
+      "displayId": "184870",
+      "baseAbilityId": "184870"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184873",
+    "name": "Psychic Lesion",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184873",
+      "displayId": "184873",
+      "baseAbilityId": "184870"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184885",
+    "name": "Splintered Secrets",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184885",
+      "displayId": "184885",
+      "baseAbilityId": "184885"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184887",
+    "name": "Splintered Secrets",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184887",
+      "displayId": "184887",
+      "baseAbilityId": "184885"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184918",
+    "name": "Aegis of the Unseen",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184918",
+      "displayId": "184918",
+      "baseAbilityId": "184918"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184923",
+    "name": "Aegis of the Unseen",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184923",
+      "displayId": "184923",
+      "baseAbilityId": "184918"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_184930",
+    "name": "Circumvented Fate",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184930",
+      "displayId": "184930",
+      "baseAbilityId": "184930"
+    },
+    "effects": [
+      "Evasion"
+    ]
+  },
+  {
+    "id": "passive_184932",
+    "name": "Circumvented Fate",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "184932",
+      "displayId": "184932",
+      "baseAbilityId": "184930"
+    },
+    "effects": [
+      "Evasion"
+    ]
+  },
+  {
+    "id": "passive_185033",
+    "name": "Wellspring of the Abyss",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185033",
+      "displayId": "185033",
+      "baseAbilityId": "185033"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185036",
+    "name": "Wellspring of the Abyss",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185036",
+      "displayId": "185036",
+      "baseAbilityId": "185033"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185050",
+    "name": "Implacable Outcome",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185050",
+      "displayId": "185050",
+      "baseAbilityId": "185050"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185058",
+    "name": "Implacable Outcome",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185058",
+      "displayId": "185058",
+      "baseAbilityId": "185050"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185185",
+    "name": "Healing Tides",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185185",
+      "displayId": "185185",
+      "baseAbilityId": "185185"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185186",
+    "name": "Healing Tides",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185186",
+      "displayId": "185186",
+      "baseAbilityId": "185185"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185187",
+    "name": "Intricate Runeforms",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185187",
+      "displayId": "185187",
+      "baseAbilityId": "185187"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185195",
+    "name": "Intricate Runeforms",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185195",
+      "displayId": "185195",
+      "baseAbilityId": "185187"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185238",
+    "name": "Erudition",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185238",
+      "displayId": "185238",
+      "baseAbilityId": "185238"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185239",
+    "name": "Erudition",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185239",
+      "displayId": "185239",
+      "baseAbilityId": "185238"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185240",
+    "name": "Hideous Clarity",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185240",
+      "displayId": "185240",
+      "baseAbilityId": "185240"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_185243",
+    "name": "Hideous Clarity",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "185243",
+      "displayId": "185243",
+      "baseAbilityId": "185240"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_238232",
+    "name": "Inexorable Descent",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "238232",
+      "displayId": "238232",
+      "baseAbilityId": "238232"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_240268",
+    "name": "Booming Voice",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "240268",
+      "displayId": "240268",
+      "baseAbilityId": "240268"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_259224",
+    "name": "Wildfire Embers",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "259224",
+      "displayId": "259224",
+      "baseAbilityId": "259224"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263220",
+    "name": "Resolute Defense",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263220",
+      "displayId": "263220",
+      "baseAbilityId": "263220"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263247",
+    "name": "Lead from the Front",
+    "class_affinity": "Dragonknight",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263247",
+      "displayId": "263247",
+      "baseAbilityId": "263247"
+    },
+    "effects": [
+      "Berserk"
+    ]
+  },
+  {
+    "id": "passive_263316",
+    "name": "Abyssal Emergence",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263316",
+      "displayId": "263316",
+      "baseAbilityId": "263316"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263398",
+    "name": "Fate Realigned",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263398",
+      "displayId": "263398",
+      "baseAbilityId": "263398"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263410",
+    "name": "Unbound Potential",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263410",
+      "displayId": "263410",
+      "baseAbilityId": "263410"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263412",
+    "name": "Erudite's Rigor",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263412",
+      "displayId": "263412",
+      "baseAbilityId": "263412"
+    },
+    "effects": [
+      "Cowardice",
+      "Vitality"
+    ]
+  },
+  {
+    "id": "passive_263416",
+    "name": "Ink-Scribe's Verve",
+    "class_affinity": "Arcanist",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263416",
+      "displayId": "263416",
+      "baseAbilityId": "263416"
+    },
+    "effects": [
+      "Force"
+    ]
+  },
+  {
+    "id": "passive_263448",
+    "name": "Nothing Wasted",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263448",
+      "displayId": "263448",
+      "baseAbilityId": "263448"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263465",
+    "name": "Malevolent Promise",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263465",
+      "displayId": "263465",
+      "baseAbilityId": "263465"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263509",
+    "name": "Cycle Unending",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263509",
+      "displayId": "263509",
+      "baseAbilityId": "263509"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263519",
+    "name": "Tundra's Maw",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263519",
+      "displayId": "263519",
+      "baseAbilityId": "263519"
+    },
+    "effects": [
+      "Brittle"
+    ]
+  },
+  {
+    "id": "passive_263520",
+    "name": "Wild Adaptation",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263520",
+      "displayId": "263520",
+      "baseAbilityId": "263520"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263521",
+    "name": "Glacial Obstinance",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263521",
+      "displayId": "263521",
+      "baseAbilityId": "263521"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263522",
+    "name": "Green-Keeper's Hide",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263522",
+      "displayId": "263522",
+      "baseAbilityId": "263522"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263523",
+    "name": "Bountiful Harvest",
+    "class_affinity": "Warden",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263523",
+      "displayId": "263523",
+      "baseAbilityId": "263523"
+    },
+    "effects": [
+      "Heroism"
+    ]
+  },
+  {
+    "id": "passive_263549",
+    "name": "Pound of Flesh",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263549",
+      "displayId": "263549",
+      "baseAbilityId": "263549"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263554",
+    "name": "Veil's Forfeit",
+    "class_affinity": "Necromancer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263554",
+      "displayId": "263554",
+      "baseAbilityId": "263554"
+    },
+    "effects": [
+      "Vulnerability"
+    ]
+  },
+  {
+    "id": "passive_263585",
+    "name": "Bastion of Light",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263585",
+      "displayId": "263585",
+      "baseAbilityId": "263585"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263586",
+    "name": "Devout Guardian",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263586",
+      "displayId": "263586",
+      "baseAbilityId": "263586"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263587",
+    "name": "Bright Harbinger",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263587",
+      "displayId": "263587",
+      "baseAbilityId": "263587"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263588",
+    "name": "Judgment's Brand",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263588",
+      "displayId": "263588",
+      "baseAbilityId": "263588"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263589",
+    "name": "Steadfast Candescence",
+    "class_affinity": "Templar",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263589",
+      "displayId": "263589",
+      "baseAbilityId": "263589"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263603",
+    "name": "Nocturnal Inspiration",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263603",
+      "displayId": "263603",
+      "baseAbilityId": "263603"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263604",
+    "name": "An Eye for Exploitation",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263604",
+      "displayId": "263604",
+      "baseAbilityId": "263604"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263605",
+    "name": "Above and Beyond",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263605",
+      "displayId": "263605",
+      "baseAbilityId": "263605"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263606",
+    "name": "Cutthroat's Focus",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263606",
+      "displayId": "263606",
+      "baseAbilityId": "263606"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263607",
+    "name": "Share the Spoils",
+    "class_affinity": "Nightblade",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263607",
+      "displayId": "263607",
+      "baseAbilityId": "263607"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263870",
+    "name": "Conservation of Energy",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263870",
+      "displayId": "263870",
+      "baseAbilityId": "263870"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263871",
+    "name": "Font of Power",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263871",
+      "displayId": "263871",
+      "baseAbilityId": "263871"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263872",
+    "name": "Static Reverberation",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263872",
+      "displayId": "263872",
+      "baseAbilityId": "263872"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263873",
+    "name": "Calculated Defense",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263873",
+      "displayId": "263873",
+      "baseAbilityId": "263873"
+    },
+    "effects": []
+  },
+  {
+    "id": "passive_263874",
+    "name": "Sphere of Influence",
+    "class_affinity": "Sorcerer",
+    "source_layer": "class_passives",
+    "source_ids": {
+      "id": "263874",
+      "displayId": "263874",
+      "baseAbilityId": "263874"
+    },
+    "effects": []
+  }
+]

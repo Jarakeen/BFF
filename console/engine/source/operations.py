@@ -5,7 +5,7 @@ from typing import List, Dict, Set
 from dataclasses import dataclass, field
 
 # Point cleanly to models without importing itself
-from models import SourceGameObject, DynamicTrigger, CombatEffect
+from .models import SourceGameObject, DynamicTrigger, CombatEffect
 
 class TheConsoleOpsEngine:
     def __init__(self, data_directory_path: str):
