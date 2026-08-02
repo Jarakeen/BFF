@@ -40,20 +40,8 @@ Navigation
                         SYSTEM
                         ────────────────
                         • Settings
-- [ ]  Highlight active page
-- [ ]  Standardize page titles and subtitles
-        titles = (
-                ("BROADCAST DESK", "Prepare broadcasts and live notifications."),
-                ("FIELD OFFICE", "Plan expeditions and record observations."),
-                ("STREAM EVENTS", "Track pulls, wipes, and boss clears."),
-                ("ARCHIVE LOG", "Historical records and expedition documentation."),
-                ("INCIDENT REPORT", "Operational reports and engineering assessments."),
-                ("ACHIEVEMENT RUN", "Track progression toward difficult goals."),
-                ("COLLECTIONS", "Browse achievements and reference material."),
-                ("SETTINGS", "Configure the Field Office."),
-                )Group sidebar into logical sections
-- [ ]  Highlight active page
-- [ ]  Standardize page titles and subtitles
+- [x]  Highlight active page (part of the sidebar grouping work - buttons now track their own page index directly)
+- [x]  Standardize page titles and subtitles (the subtitle label existed already but was hardcoded to one static string that never changed between pages - now it updates per page using your exact text, uppercased to match the rest of the app's styling. Also added the missing QLabel#pageSubtitle stylesheet rule since it had none at all before.)
 - [ ]  Standardize page headers
 - [ ]  Standardize action footer
 - [ ]  Add page/report serial number to every workspace

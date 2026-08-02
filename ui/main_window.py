@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from console.engine.data_miner import DataBuilderService
+from console.engine.source.data_miner import DataBuilderService
 from models.expedition_model import ExpeditionModel, StatusFlags
 from models.incident_model import IncidentModel, ResponsiblePartyFlags, IncidentStatusFlags
 from services.achievement_progress_service import AchievementProgressService
@@ -54,7 +54,7 @@ from services.stream_event_service import StreamEventService
 from services.tamriel_calendar import get_tamriel_date
 from services.validation_service import ValidationService
 from ui.reference_browser import ReferenceBrowserWindow
-
+from ui.theme import ThemeManager
 
 WEATHER_SOURCE_MAP = {
     "Clear": "TOP_clear",
@@ -1240,33 +1240,36 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Broadcast Desk cleared")
 
     def save_broadcast_to_obs(self) -> None:
-        title_item = self.stream_title_list.currentItem()
-        notification_item = self.live_notification_list.currentItem()
-        if not title_item or not notification_item:
-            self.status_label.setText("Click a title and a notification in the lists first, then Save to OBS")
-            return
         try:
-            payload = {
-                "Title": title_item.text(),
-                "Notification": notification_item.text(),
+            # This is the actual fix: the shared expedition fields (Expedition,
+            # Difficulty, Objective, Weather, Coffee, Coffee Level, Engineering,
+            # Incidents) need to go into CurrentExpedition.json via json_service -
+            # that's the only file the Lua script actually reads. Previously this
+            # button wrote everything into CurrentBroadcast.json instead, which
+            # nothing on the OBS side ever polls, so nothing could ever change
+            # on screen no matter what you set here.
+            model = self._collect_model()
+            self.json_service.save(model)
+
+            title_item = self.stream_title_list.currentItem()
+            notification_item = self.live_notification_list.currentItem()
+            broadcast_payload = {
+                "Title": title_item.text() if title_item else "",
+                "Notification": notification_item.text() if notification_item else "",
                 "Team": self.broadcast_team_edit.text().strip(),
-                "Expedition": self._broadcast_location_text(),
-                "Difficulty": self._current_difficulty_text(),
-                "Objective": self.broadcast_goal_edit.text().strip(),
-                "Weather": self.broadcast_weather.currentText(),
-                "Coffee": self.broadcast_coffee.currentText(),
-                "CoffeeLevel": self.broadcast_coffee_level.text(),
-                "Engineering": self.broadcast_engineering.currentText(),
-                "Incidents": self.broadcast_incidents.text(),
             }
             self.current_broadcast_path.parent.mkdir(parents=True, exist_ok=True)
             self.current_broadcast_path.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=4), encoding="utf-8"
+                json.dumps(broadcast_payload, ensure_ascii=False, indent=4), encoding="utf-8"
             )
-            self.status_label.setText(
-                "Saved to OBS (CurrentBroadcast.json) - matching OBS text sources not wired up yet"
-            )
-        except OSError as exc:
+
+            if title_item and notification_item:
+                self.status_label.setText("Saved to OBS - expedition data, title, and notification")
+            else:
+                self.status_label.setText(
+                    "Saved to OBS - expedition data updated (pick a title/notification too if you want those included)"
+                )
+        except Exception as exc:  # pragma: no cover - UI path guard
             self.status_label.setText(f"Save to OBS failed: {exc}")
 
     def archive_broadcast(self) -> None:
@@ -1891,7 +1894,7 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title)
 
-        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
+        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"))
         self.reference_data_page = QWidget()
         self.reference_data_layout = QVBoxLayout(self.reference_data_page)
 
@@ -2134,7 +2137,7 @@ class MainWindow(QMainWindow):
 
     def _reload_reference_library(self) -> None:
         try:
-            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
+            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"))
             self._build_reference_data_explorer()
             self.reference_inspector.setPlainText("ReferenceLibrary reloaded.")
         except Exception as exc:
@@ -2473,7 +2476,7 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Rebuilding database files...")
         QApplication.processEvents()
         try:
-            database_path = Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"
+            database_path = Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"
             builder = DataBuilderService(database_path)
             results = builder.build_all()
             validator = ValidationService(database_path)
