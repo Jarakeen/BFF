@@ -7,11 +7,11 @@ from typing import List, Dict
 
 # 1. Pull the real objects from your neighbor files
 from models import SourceGameObject, DynamicTrigger, CombatEffect
-from console.engine.operations import TheConsoleOpsEngine
+from engine.operations import TheConsoleOpsEngine
 
 # Inside console/engine/src/main.py
 from pathlib import Path
-from console.engine.operations import TheConsoleOpsEngine
+from engine.operations import TheConsoleOpsEngine
 
 # 1. Grab the folder where main.py lives: console/engine/src/
 CURRENT_FILE_DIR = Path(__file__).resolve().parent
@@ -20,7 +20,7 @@ CURRENT_FILE_DIR = Path(__file__).resolve().parent
 CONSOLE_ROOT_DIR = CURRENT_FILE_DIR.parent.parent
 
 # 3. Dive straight forward into the parallel directory structure: console/game_data/eso/
-DATABASE_PATH = CONSOLE_ROOT_DIR / "game_data" / "eso"
+DATABASE_PATH = CONSOLE_ROOT_DIR / "data" / "processed"
 
 # 4. Bind the resolved absolute string path straight into your platform engine
 ops_service = TheConsoleOpsEngine(data_directory_path=str(DATABASE_PATH))
@@ -62,7 +62,7 @@ def perform_pre_fight_audit(payload: RosterSelectionRequest):
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Engine runtime exception: {str(err)}")
 
-from console.engine.operations import TheConsoleOpsEngine
+from engine.operations import TheConsoleOpsEngine
 
 def init_app_operations():
     # Points cleanly to your data directory structure
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
-    from console.engine.engine import WeaponSwapSimulationEngine
+    from engine.engine import WeaponSwapSimulationEngine
     from models import PredictiveHealerProfile, WeaponSetup
 
     # Scenario: Finch runs a standard meta setup (Resto Front Bar / Ice Back Bar)
@@ -116,11 +116,11 @@ if __name__ == "__main__":
 
 # Add this testing snippet block to any execution file to run the database update
 if __name__ == "__main__":
-    from console.engine.data_miner import UESPSkillMiner
+    from engine.data_miner import UESPSkillMiner
     import os
 
     # Set path directory straight to your parallel data folders
-    DATA_PATH = "C:/Users/nourg/OneDrive/Desktop/Black Feather Foundry/40_Stream Studio/OBS/Scripts/FoundryDock/console/game_data/eso/"
+    DATA_PATH = "C:/Users/nourg/OneDrive/Desktop/Black Feather Foundry/40_Stream Studio/OBS/Scripts/FoundryDock/data/processed"
     
     print("Initializing UESP Data Mining Pipeline...")
     miner = UESPSkillMiner(output_directory=DATA_PATH)

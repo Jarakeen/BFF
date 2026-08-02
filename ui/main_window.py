@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from console.engine.data_miner import DataBuilderService
+from engine.data_miner import DataBuilderService
 from models.expedition_model import ExpeditionModel, StatusFlags
 from models.incident_model import IncidentModel, ResponsiblePartyFlags, IncidentStatusFlags
 from services.achievement_progress_service import AchievementProgressService
@@ -54,7 +54,7 @@ from services.stream_event_service import StreamEventService
 from services.tamriel_calendar import get_tamriel_date
 from services.validation_service import ValidationService
 from ui.reference_browser import ReferenceBrowserWindow
-from ui.theme import ThemeManager
+from ui.theme.theme_manager import ThemeManager
 
 WEATHER_SOURCE_MAP = {
     "Clear": "TOP_clear",
@@ -440,7 +440,7 @@ class MainWindow(QMainWindow):
             ("STREAM OPERATIONS", [("Stream Events", 2)]),
             ("RECORDS", [("Incident Report", 4), ("Archive Log", 3)]),
             ("PROJECTS", [("Achievement Run", 5), ("Collections", 6)]),
-            ("SYSTEM", [("Settings", 8), ("Comp Engine", 7)]),
+            ("SYSTEM", [("Comp Engine", 7), ("Settings", 8)]),
         ]
 
         for section_index, (section_label, pages) in enumerate(nav_sections):
@@ -496,7 +496,7 @@ class MainWindow(QMainWindow):
         self._select_page(0)
 
     def _select_page(self, index: int) -> None:
-        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS",  "SETTINGS")
+        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS", "COMP ENGINE" "SETTINGS")
         self.tabs.setCurrentIndex(index)
         self.page_title.setText(titles[index])
         for button, page_index in self.nav_buttons:
@@ -997,7 +997,7 @@ class MainWindow(QMainWindow):
         load_btn = QPushButton("Load Draft")
         archive_btn = QPushButton("Save to Archive")
         clear_btn.clicked.connect(self.clear_achievement_run)
-        obs_btn.clicked.connect(self.save_achievement_to_obs)
+        obs_btn.clicked.connect(self.save_broadcast_to_obs)
         draft_btn.clicked.connect(self.save_achievement_draft)
         load_btn.clicked.connect(self.load_achievement_draft)
         archive_btn.clicked.connect(self.archive_achievement_run)
@@ -1894,7 +1894,7 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title)
 
-        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
+        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "data" / "processed"))
         self.reference_data_page = QWidget()
         self.reference_data_layout = QVBoxLayout(self.reference_data_page)
 
@@ -2137,7 +2137,7 @@ class MainWindow(QMainWindow):
 
     def _reload_reference_library(self) -> None:
         try:
-            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
+            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "data" / "processed"))
             self._build_reference_data_explorer()
             self.reference_inspector.setPlainText("ReferenceLibrary reloaded.")
         except Exception as exc:
@@ -2476,7 +2476,7 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Rebuilding database files...")
         QApplication.processEvents()
         try:
-            database_path = Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"
+            database_path = Path(__file__).resolve().parents[1] / "data" / "processed"
             builder = DataBuilderService(database_path)
             results = builder.build_all()
             validator = ValidationService(database_path)

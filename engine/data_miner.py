@@ -14,7 +14,7 @@ try:
         parse_range, parse_skillCoef, parse_stat, parse_target,
     )
 except ImportError:  # pragma: no cover - supports direct script execution
-    from console.parsers import (
+    from parsers import (
         parse_abilityCooldown, parse_description, parse_duration, parse_effects,
         parse_range, parse_skillCoef, parse_stat, parse_target,
     )

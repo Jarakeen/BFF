@@ -1,11 +1,11 @@
 
 obs=obslua
-local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\CurrentExpedition.json]]
-local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\CurrentIncident.json]]
-local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\FieldNoteCounter.txt]]
-local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\Weather\]]
-local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\MarkerLog.md]]
-local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\StreamEvents.json]]
+local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentExpedition.json]]
+local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentIncident.json]]
+local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\FieldNoteCounter.txt]]
+local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\Weather\]]
+local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\MarkerLog.md]]
+local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\StreamEvents.json]]
 
 ----------------------------------------------------------
 -- Chapter Marker Tracking
@@ -278,7 +278,7 @@ end
 -- Checkbox Image
 ----------------------------------------------------------
 
-local CHECK_FOLDER = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\]]
+local CHECK_FOLDER = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data]]
 
 function set_checkbox(source_name, checked)
 

@@ -82,12 +82,12 @@ class BuffBuilder:
                 if len(columns) > 1:
                     current_buff["description"] = columns[1]
 
-                if len(columns) > 2:
+                if len(columns) > 3:
                     source_type = columns[2].lower()
 
-                    if source_type in current_buff["sources"]:
+                    if source_type in current_buff["relationships"]["granted_by"]:
 
-                        current_buff["sources"][source_type] = [
+                        current_buff["relationships"]["granted_by"][source_type] = [
                             s.strip()
                             for s in columns[3].split(",")
                         ]
@@ -113,11 +113,11 @@ class BuffBuilder:
 
                 source = columns[0].lower()
 
-                if source in current_buff["sources"]:
+                if source in current_buff["relationships"]["granted_by"]:
 
                     if len(columns) > 1:
 
-                        current_buff["sources"][source].extend(
+                        current_buff["relationships"]["granted_by"][source].extend(
                             [
                                 s.strip()
                                 for s in columns[1].split(",")
@@ -126,16 +126,19 @@ class BuffBuilder:
 
                 continue    
 
-            #
-            # Remove duplicates and sort the sources
-            #
-            for buff in buffs:
+        #
+        # Normalize
+        #
 
-                for key in buff["sources"]:
+        for buff in buffs:
 
-                    buff["sources"][key] = sorted(
-                        set(buff["sources"][key])
-                    )
+            granted = buff["relationships"]["granted_by"]
+
+            for key in granted:
+
+                granted[key] = sorted(
+                    set(granted[key])
+                )
 
         return buffs
 
@@ -160,27 +163,59 @@ class BuffBuilder:
         raw = self.load_raw()
 
         buffs = self.parse(raw)
-
+        print(json.dumps(buffs[0], indent=4))
         self.write(buffs)
 
         print(f"Built {len(buffs)} buffs.")
 
     def create_buff(self, tier: str, effect: str) -> dict:
+        print(f"Creating: {tier} {effect}")
+        record_id = (
+            f"buff_{tier.lower()}_{effect.lower()}"
+            .replace(" ", "_")
+        )
+
         return {
+
+            #
+            # Universal Fields
+            #
+
+            "id": record_id,
+
+            "type": "buff",
+
             "name": f"{tier} {effect}",
-            "tier": tier,
-            "effect": effect,
+
             "description": "",
+
             "icon": "",
-            "sources": {
-                "abilities": [],
-                "sets": [],
-                "potions": [],
-                "scribing": [],
-                "champion": [],
-                "verses": []
+
+            #
+            # Buff-specific
+            #
+
+            "tier": tier,
+
+            "effect_name": effect,
+
+            #
+            # Relationships
+            #
+
+            "relationships": {
+
+                "granted_by": {
+                    "abilities": [],
+                    "sets": [],
+                    "potions": [],
+                    "scribing": [],
+                    "champion": [],
+                    "verses": []
+                }
+
             }
-        }    
+        }
 
 
 print("Loaded:", __file__)
