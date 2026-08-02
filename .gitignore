@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local caches
+.pytest_cache/
+.mypy_cache/
+
+# Build artifacts
+dist/
+build/
+
+console/game_data/processed/
+console/game_data/raw_data/
+/data

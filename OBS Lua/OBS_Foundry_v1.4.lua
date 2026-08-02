@@ -1,11 +1,11 @@
 
 obs=obslua
-local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\CurrentExpedition.json]]
-local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\CurrentIncident.json]]
-local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\FieldNoteCounter.txt]]
-local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\Weather\]]
-local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\MarkerLog.md]]
-local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\Black Feather Foundry\40_Stream Studio\OBS\Scripts\Foundry\StreamEvents.json]]
+local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\CurrentExpedition.json]]
+local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\CurrentIncident.json]]
+local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\FieldNoteCounter.txt]]
+local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\Weather\]]
+local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\MarkerLog.md]]
+local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\Foundry\StreamEvents.json]]
 
 ----------------------------------------------------------
 -- Chapter Marker Tracking

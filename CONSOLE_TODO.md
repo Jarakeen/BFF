@@ -84,6 +84,11 @@ except Exception as e:
 
 
 
+# TODO
+- [ ] class skills come in 3's bc they have a base and then you can either level to one branch of another. We need to flatten the skills for the purpose of identifying which skill and morph of that skill has the skill ability with the buff that we are cataloging.
+
+
+
 - [ ] [I want to access this github https://github.com/Baertram/LibSets and grab the set info](https://en.m.uesp.net/wiki/User:Daveh/ESO_Log_Collector#Item_Types)
 - [ ] Google suggested we pull this info from UESP to get the skills info
 
