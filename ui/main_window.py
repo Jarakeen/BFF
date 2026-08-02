@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from console.engine.source.data_miner import DataBuilderService
+from console.engine.data_miner import DataBuilderService
 from models.expedition_model import ExpeditionModel, StatusFlags
 from models.incident_model import IncidentModel, ResponsiblePartyFlags, IncidentStatusFlags
 from services.achievement_progress_service import AchievementProgressService
@@ -1894,7 +1894,7 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(title)
 
-        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"))
+        self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
         self.reference_data_page = QWidget()
         self.reference_data_layout = QVBoxLayout(self.reference_data_page)
 
@@ -2137,7 +2137,7 @@ class MainWindow(QMainWindow):
 
     def _reload_reference_library(self) -> None:
         try:
-            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"))
+            self.reference_library = ReferenceLibrary(str(Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"))
             self._build_reference_data_explorer()
             self.reference_inspector.setPlainText("ReferenceLibrary reloaded.")
         except Exception as exc:
@@ -2476,7 +2476,7 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Rebuilding database files...")
         QApplication.processEvents()
         try:
-            database_path = Path(__file__).resolve().parents[1] / "console" / "game_data" / "eso"
+            database_path = Path(__file__).resolve().parents[1] / "console" / "game_data" / "processed"
             builder = DataBuilderService(database_path)
             results = builder.build_all()
             validator = ValidationService(database_path)
