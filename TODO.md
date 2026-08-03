@@ -90,7 +90,7 @@ Broadcast Desk
 - [ ]  Preview before OBS
 
 Field Office - Simplify
-- [ ]  Remove duplicated fields (objective, expedition, difficulty, location)
+- [X]  Remove duplicated fields (objective, expedition, difficulty, location)
 - [ ]  Read Expedition from Broadcast Desk
 - [ ]  Read Objective from Broadcast Desk
 - [ ]  Read Difficulty from checkboxes
@@ -308,3 +308,5 @@ A complete expedition can be managed entirely inside the Foundry: create it in B
 - [ ] until ZoS advances the year in Tamrial, remove the year from the date field.
 - [ ] I want to start numbering the reports for better tracking in a specific way. On 'client side' by Tamriel Month and Day (XX-MMDD-###) example IR-SH23-02. But on back end please keep earth time & dates.
         use these abbreviations for the months: MS  Morning Star, SD  Sun's Dawn, FS  First Seed, RH  Rain's Hand, SS  Second Seed, MY  Mid Year, SH  Sun's Height, LS  Last Seed, HF  Hearthfire, FF  Frostfall, SU  Sun's Dusk, ES  Evening Star
+
+- [ ] on Settings page make the file input boxes into file choosing buttons

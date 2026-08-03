@@ -6,6 +6,8 @@ import random
 from datetime import datetime
 from pathlib import Path
 import re
+import qtawesome as qta
+
 
 from PySide6.QtCore import Qt, QTimer, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QFont, QIcon
@@ -55,6 +57,7 @@ from services.tamriel_calendar import get_tamriel_date
 from services.validation_service import ValidationService
 from ui.reference_browser import ReferenceBrowserWindow
 from ui.theme.theme_manager import ThemeManager
+from services.ai_service import AIService
 
 WEATHER_SOURCE_MAP = {
     "Clear": "TOP_clear",
@@ -178,6 +181,8 @@ class MainWindow(QMainWindow):
         self.settings_path = Path(__file__).resolve().parents[1] / "settings.json"
         self.settings_service = SettingsService(self.settings_path)
         settings = self.settings_service.load()
+      
+
 
         self.current_path = self._resolve_setting_path(settings["CurrentExpeditionPath"])
         self.current_incident_path = self._resolve_setting_path(settings["CurrentIncidentPath"])
@@ -1062,7 +1067,7 @@ class MainWindow(QMainWindow):
 
         coffee_level_row = QHBoxLayout()
         coffee_level_row.addWidget(self.broadcast_coffee_level)
-        coffee_level_randomize_btn = QPushButton("🎲")
+        coffee_level_randomize_btn = QPushButton("fa6s.shuffle")
         coffee_level_randomize_btn.setToolTip("Randomize coffee level")
         coffee_level_randomize_btn.setFixedWidth(36)
         coffee_level_randomize_btn.clicked.connect(self.randomize_coffee_level)
@@ -1079,32 +1084,85 @@ class MainWindow(QMainWindow):
         form.addRow("INCIDENT COUNTER", self.broadcast_incidents)
         form.addRow("TONE", self.broadcast_mood_combo)
         form.addRow("TEAM NAME", self.broadcast_team_edit)
-        layout.addWidget(briefing)
+        #
+        # Right Side - Broadcast Generator
+        #
+
+        generator = QGroupBox("Broadcast Generator")
+        generator_layout = QVBoxLayout(generator)
+
+        #
+        # Generation Style
+        #
+
+        style_group = QGroupBox("Generation Style")
+        style_layout = QVBoxLayout(style_group)
+        style_layout.addWidget(self.broadcast_mood_combo)
+        generator_layout.addWidget(style_group)
+
+        #
+        # Generate Button
+        #
 
         generate_btn = QPushButton("Generate Broadcast Copy")
         generate_btn.clicked.connect(self.generate_broadcast_copy)
-        layout.addWidget(generate_btn)
+        generator_layout.addWidget(generate_btn)
+
+        #
+        # Output Lists
+        #
 
         output_row = QHBoxLayout()
-        title_box = QGroupBox("Stream Title (click one to copy)")
+
+        #
+        # Stream Titles
+        #
+
+        title_box = QGroupBox("Stream Titles (click to copy)")
         title_layout = QVBoxLayout(title_box)
+
         self.stream_title_list = QListWidget()
         self.stream_title_list.itemClicked.connect(
-            lambda item: self.copy_broadcast_text(item.text(), "Stream title copied")
+            lambda item: self.copy_broadcast_text(
+                item.text(),
+                "Stream title copied"
+            )
         )
-        title_layout.addWidget(self.stream_title_list)
-        output_row.addWidget(title_box, 1)
 
-        notification_box = QGroupBox("Live Notification (click one to copy)")
+        title_layout.addWidget(self.stream_title_list)
+        output_row.addWidget(title_box)
+
+        #
+        # Notifications
+        #
+
+        notification_box = QGroupBox("Live Notifications (click to copy)")
         notification_layout = QVBoxLayout(notification_box)
+
         self.live_notification_list = QListWidget()
         self.live_notification_list.setWordWrap(True)
         self.live_notification_list.itemClicked.connect(
-            lambda item: self.copy_broadcast_text(item.text(), "Live notification copied")
+            lambda item: self.copy_broadcast_text(
+                item.text(),
+                "Live notification copied"
+            )
         )
+
         notification_layout.addWidget(self.live_notification_list)
-        output_row.addWidget(notification_box, 1)
-        layout.addLayout(output_row)
+        output_row.addWidget(notification_box)
+
+        generator_layout.addLayout(output_row)
+
+        #
+        # Left + Right Columns
+        #
+
+        top_row = QHBoxLayout()
+
+        top_row.addWidget(briefing, 1)
+        top_row.addWidget(generator, 1)
+
+        layout.addLayout(top_row)
 
         actions = QHBoxLayout()
         clear_btn = QPushButton("Clear")
@@ -1757,6 +1815,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(page)
 
         form = QFormLayout()
+        self.bff_root_edit = QLineEdit()
         self.current_path_edit = QLineEdit()
         self.current_incident_edit = QLineEdit()
         self.field_note_counter_edit = QLineEdit()
@@ -1771,6 +1830,7 @@ class MainWindow(QMainWindow):
         self.obs_websocket_password_edit.setEchoMode(QLineEdit.EchoMode.Password)
 
         settings = self.settings_service.load()
+        self.bff_root_edit.setText(settings["BffRoot"])
         self.current_path_edit.setText(settings["CurrentExpeditionPath"])
         self.current_incident_edit.setText(settings["CurrentIncidentPath"])
         self.field_note_counter_edit.setText(settings["FieldNoteCounterPath"])
@@ -1779,10 +1839,12 @@ class MainWindow(QMainWindow):
         self.weather_folder_edit.setText(settings["WeatherFolder"])
         self.brb_scene_edit.setText(settings["BrbSceneName"])
         self.end_of_stream_scene_edit.setText(settings["EndOfStreamSceneName"])
+        self.ai_service = AIService(Path(settings["BffRoot"]))
         self.obs_websocket_host_edit.setText(settings["ObsWebSocketHost"])
         self.obs_websocket_port_edit.setText(str(settings["ObsWebSocketPort"]))
         self.obs_websocket_password_edit.setText(settings["ObsWebSocketPassword"])
 
+        form.addRow("BFF Workspace", self.bff_root_edit)    
         form.addRow("CurrentExpedition.json", self.current_path_edit)
         form.addRow("CurrentIncident.json", self.current_incident_edit)
         form.addRow("FieldNoteCounter.txt", self.field_note_counter_edit)
@@ -2348,16 +2410,16 @@ class MainWindow(QMainWindow):
         for label, checkbox in self.broadcast_difficulty_checkboxes.items():
             checkbox.setChecked(label in checked_labels)
 
-    def refresh_top_bar_summary(self) -> None:
-        """Field Office no longer owns Expedition/Difficulty/Objective/Engineering/
-        Incidents - it just displays them, read-only, from Broadcast Desk (the
-        actual source now). Weather/Coffee/Coffee Level live on Broadcast Desk
-        only and aren't shown here at all."""
-        self.top_bar_expedition_label.setText(self._broadcast_location_text() or "—")
-        self.top_bar_difficulty_label.setText(self._current_difficulty_text() or "—")
-        self.top_bar_objective_label.setText(self.broadcast_goal_edit.text().strip() or "—")
-        self.top_bar_engineering_label.setText(self.broadcast_engineering.currentText() or "—")
-        self.top_bar_incidents_label.setText(self.broadcast_incidents.text() or "—")
+#    def refresh_top_bar_summary(self) -> None:
+#        """Field Office no longer owns Expedition/Difficulty/Objective/Engineering/
+#        Incidents - it just displays them, read-only, from Broadcast Desk (the
+#        actual source now). Weather/Coffee/Coffee Level live on Broadcast Desk
+#        only and aren't shown here at all."""
+#        self.top_bar_expedition_label.setText(self._broadcast_location_text() or "—")
+#        self.top_bar_difficulty_label.setText(self._current_difficulty_text() or "—")
+#        self.top_bar_objective_label.setText(self.broadcast_goal_edit.text().strip() or "—")
+#        self.top_bar_engineering_label.setText(self.broadcast_engineering.currentText() or "—")
+#        self.top_bar_incidents_label.setText(self.broadcast_incidents.text() or "—")
 
     def clear_expedition(self) -> None:
         self.assignment.setPlainText("")
@@ -2496,6 +2558,7 @@ class MainWindow(QMainWindow):
     def save_settings(self) -> None:
         existing = self.settings_service.load()
         settings = {
+            "BffRoot": self.bff_root_edit.text(),
             "CurrentExpeditionPath": self.current_path_edit.text(),
             "CurrentIncidentPath": self.current_incident_edit.text(),
             "FieldNoteCounterPath": self.field_note_counter_edit.text(),

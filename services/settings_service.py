@@ -34,6 +34,7 @@ class SettingsService:
             "CurrentAchievementRunPath": str(Path("../Foundry/CurrentAchievementRun.json")),
             "CurrentBroadcastPath": str(Path("../Foundry/CurrentBroadcast.json")),
             "SessionArchiveFolder": str(Path("../Archive/Sessions")),
+            "BffRoot": str(Path("C:\\Users\\nourg\\OneDrive\\Desktop\\BFF"))
         }
 
     def _resolve_path(self, value: str) -> str:
@@ -73,7 +74,10 @@ class SettingsService:
             "CurrentAchievementRunPath": self._resolve_path(data.get("CurrentAchievementRunPath", "../Foundry/CurrentAchievementRun.json")),
             "CurrentBroadcastPath": self._resolve_path(data.get("CurrentBroadcastPath", "../Foundry/CurrentBroadcast.json")),
             "SessionArchiveFolder": self._resolve_path(data.get("SessionArchiveFolder", "../Archive/Sessions")),
+            "BffRoot": self._resolve_path(data.get("BffRoot", "C:\\Users\\nourg\\OneDrive\\Desktop\\BFF"))
         }
+    
+    
 
     def save(self, settings: dict) -> None:
         self.settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=4), encoding="utf-8")

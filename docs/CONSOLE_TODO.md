@@ -269,7 +269,7 @@ This is what makes The Console unique.
 
 ## Database Structure
 
-/game_data/eso/
+/data/
 
 stats.json
 damage_types.json
