@@ -45,15 +45,15 @@ class DataBuilderService:
 
     def _resolve_raw_dir(self) -> Path:
         candidates = [
-            self.data_dir / "raw",
-            self.data_dir.parent / "raw data",
-            self.data_dir / ".." / "raw data",
-            self.data_dir.parent.parent / "raw data",
+            self.data_dir / "raw_data",
+            self.data_dir.parent / "raw_data",
+            self.data_dir / ".." / "raw_data",
+            self.data_dir.parent.parent / "raw_data",
         ]
         for candidate in candidates:
             if candidate.exists():
                 return candidate.resolve()
-        return (self.data_dir / "raw").resolve()
+        return (self.data_dir / "raw_data").resolve()
 
     def _source_path(self, file_name: str) -> Path:
         candidate = self.raw_dir / file_name

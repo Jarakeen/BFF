@@ -27,7 +27,7 @@ class TheConsoleEngine:
         return global_capabilities
 
 
-# Add this to console/engine/sorce/engine.py
+# Add this to engine/engine.py
 from .models import PredictiveHealerProfile, WeaponBarType
 
 class WeaponSwapSimulationEngine:

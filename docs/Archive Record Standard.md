@@ -158,6 +158,7 @@ Encounter
 Progression
 
 - Achievement
+- Collectable
 
 Additional record types may be added without changing the Archive Standard.
 

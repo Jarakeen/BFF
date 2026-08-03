@@ -430,7 +430,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self._wrap_scrollable(self._build_incident_page()), "Incident Report")
         self.tabs.addTab(self._wrap_scrollable(self._build_achievement_page()), "Achievement Run")
         self.tabs.addTab(self._wrap_scrollable(self._build_odds_and_ends_page()), "Collections")
-        self.tabs.addTab(self._wrap_scrollable(self._build_reference_browser_page()),"Comp Engine",)
+        self.tabs.addTab(self._wrap_scrollable(self._build_reference_browser_page()),"Comp Engine")
         self.tabs.addTab(self._wrap_scrollable(self._build_settings_page()), "Settings")
         self.tabs.tabBar().hide()
 
@@ -496,7 +496,7 @@ class MainWindow(QMainWindow):
         self._select_page(0)
 
     def _select_page(self, index: int) -> None:
-        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS", "COMP ENGINE" "SETTINGS")
+        titles = ("BROADCAST DESK", "FIELD OFFICE", "STREAM EVENTS", "ARCHIVE LOG", "INCIDENT REPORT", "ACHIEVEMENT RUN TRACKER", "COLLECTIONS", "COMP ENGINE", "SETTINGS")
         self.tabs.setCurrentIndex(index)
         self.page_title.setText(titles[index])
         for button, page_index in self.nav_buttons:

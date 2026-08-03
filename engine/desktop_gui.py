@@ -7,12 +7,12 @@ from pathlib import Path
 # Initialize the path tracking layer right here:
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Place this directly inside your standard App class in console/engine/sorce/desktop_gui.py
+# Place this directly inside your standard App class in engine/desktop_gui.py
 def load_saved_roster_data(self, roster_file_name: str = "roster.json"):
     """Reads saved Xbox player layout files and loads profiles into the configurator."""
     # 1. CURRENT_DIR references your updated 'sorce' path framework
-    # 2. Walk backwards up to console/, then dive into game_data/eso/
-    roster_path = CURRENT_DIR.parent.parent / "game_data" / "eso" / roster_file_name
+    # 2. Walk backwards up to console/, then dive into data/processed/
+    roster_path = CURRENT_DIR.parent.parent / "data" / "processed" / roster_file_name
     
     if not roster_path.exists():
         self.directives_box.insert("1.0", f"[SYSTEM ALERT]: {roster_file_name} not found in database path.")

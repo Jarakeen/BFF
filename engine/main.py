@@ -6,10 +6,10 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 # 1. Pull the real objects from your neighbor files
-from models import SourceGameObject, DynamicTrigger, CombatEffect
+from engine.models import SourceGameObject, DynamicTrigger, CombatEffect
 from engine.operations import TheConsoleOpsEngine
 
-# Inside console/engine/src/main.py
+# Inside engine/main.py
 from pathlib import Path
 from engine.operations import TheConsoleOpsEngine
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     from engine.engine import WeaponSwapSimulationEngine
-    from models import PredictiveHealerProfile, WeaponSetup
+    from engine.models import PredictiveHealerProfile, WeaponSetup
 
     # Scenario: Finch runs a standard meta setup (Resto Front Bar / Ice Back Bar)
     finch_profile = PredictiveHealerProfile(

@@ -25,7 +25,7 @@ class SourceGameObject:
     triggers: List[DynamicTrigger] = field(default_factory=list)
 
 
-# Add this to console/engine/sorce/models.py
+# Add this to engine/models.py
 from dataclasses import dataclass, field
 from enum import Enum
 
