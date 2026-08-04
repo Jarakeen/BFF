@@ -1,7 +1,6 @@
 import time
 import threading
 import json
-import customtkinter as ctk
 from pathlib import Path 
 
 # Initialize the path tracking layer right here:

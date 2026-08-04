@@ -3,7 +3,7 @@
                         line 505   in _select_pageself.refresh_top_bar_summary()       ^^^^^^^^^^^^^^^^^^^^^^^
                         line 2356, in refresh_top_bar_summary self.top_bar_expedition_label.       setText        (self   _broadcast_location_text() or "—") 
                         AttributeError: 'MainWindow' object has no attribute 'top_bar_expedition_label'
-- [ ] desktop_gui.py    Import "customtkinter" could not be resolved
+- [X] desktop_gui.py    Import "customtkinter" could not be resolved
 - [ ] main.py           Import "fastapi" could not be resolved
                         Import "pydantic" could not be resolved
                         Import "fastapi" could not be resolved

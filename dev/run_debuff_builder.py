@@ -1,8 +1,9 @@
 from pathlib import Path
 
 from builders.debuff_builder import DebuffBuilder
+from services.paths import RAW_DATA
 
-DATA_PATH = Path("data/raw")
+DATA_PATH = RAW_DATA / "debuff.txt"
 
 builder = DebuffBuilder(DATA_PATH)
 

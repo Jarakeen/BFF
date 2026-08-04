@@ -4,7 +4,7 @@ import re
 
 
 class BuffBuilder:
-    """Builds buffs.json from the raw buff data."""
+    """Builds buff.json from the raw buff data."""
 
     PATTERN = re.compile(
         r"(Major|Minor)\s+([A-Za-z]+)"
@@ -23,7 +23,7 @@ class BuffBuilder:
 
     def parse(self, text: str) -> list[dict]:
 
-        buffs = []
+        buff = []
 
         current_effect = None
         current_buff = None
@@ -40,7 +40,7 @@ class BuffBuilder:
             #
 
             if line in (
-                "Buffs",
+                "Buff",
                 "Buff Name \tType \tDescription \tSources \tIcon",
             ):
                 continue
@@ -95,7 +95,7 @@ class BuffBuilder:
                 if len(columns) > 4:
                     current_buff["icon"] = columns[4]
 
-                buffs.append(current_buff)
+                buff.append(current_buff)
 
                 continue
             #
@@ -130,7 +130,7 @@ class BuffBuilder:
         # Normalize
         #
 
-        for buff in buffs:
+        for buff in buff:
 
             granted = buff["relationships"]["granted_by"]
 
@@ -140,18 +140,18 @@ class BuffBuilder:
                     set(granted[key])
                 )
 
-        return buffs
+        return buff
 
 
 
-    def write(self, buffs: list[dict]) -> None:
-        """Write buffs.json."""
+    def write(self, buff: list[dict]) -> None:
+        """Write buff.json."""
 
-        output = self.data_directory / "buffs.json"
+        output = self.data_directory / "buff.json"
 
         with open(output, "w", encoding="utf-8") as f:
             json.dump(
-                buffs,
+                buff,
                 f,
                 indent=4,
                 ensure_ascii=False,
@@ -162,11 +162,11 @@ class BuffBuilder:
 
         raw = self.load_raw()
 
-        buffs = self.parse(raw)
-        print(json.dumps(buffs[0], indent=4))
-        self.write(buffs)
+        buff = self.parse(raw)
+        print(json.dumps(buff[0], indent=4))
+        self.write(buff)
 
-        print(f"Built {len(buffs)} buffs.")
+        print(f"Built {len(buff)} buff.")
 
     def create_buff(self, tier: str, effect: str) -> dict:
         print(f"Creating: {tier} {effect}")
