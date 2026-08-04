@@ -7,8 +7,19 @@ __pycache__/
 .venv/
 venv/
 
-# VS Code
+# Secrets
+.env
+.env.*
+
+# IDE
 .vscode/
+
+# Build output
+dist/
+build/
+
+# Local databases
+*.db
 
 # OS
 .DS_Store
@@ -25,8 +36,7 @@ Thumbs.db
 dist/
 build/
 
-console/game_data/processed/
-console/game_data/raw_data/
+
 data/
 settings.json
 CONSOLE.md
