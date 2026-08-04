@@ -6,10 +6,10 @@ import random
 from datetime import datetime
 from pathlib import Path
 import re
-import qtawesome as qta
 
 
-from PySide6.QtCore import Qt, QTimer, QAbstractTableModel, QModelIndex
+
+from PySide6.QtCore import Qt, QTimer, QAbstractTableModel, QModelIndex, QSize
 from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -58,6 +58,8 @@ from services.validation_service import ValidationService
 from ui.reference_browser import ReferenceBrowserWindow
 from ui.theme.theme_manager import ThemeManager
 from services.ai_service import AIService
+from services.icon_service import IconService
+
 
 WEATHER_SOURCE_MAP = {
     "Clear": "TOP_clear",
@@ -182,7 +184,7 @@ class MainWindow(QMainWindow):
         self.settings_service = SettingsService(self.settings_path)
         settings = self.settings_service.load()
       
-
+        self.icons = IconService()
 
         self.current_path = self._resolve_setting_path(settings["CurrentExpeditionPath"])
         self.current_incident_path = self._resolve_setting_path(settings["CurrentIncidentPath"])
@@ -384,6 +386,7 @@ class MainWindow(QMainWindow):
             QCheckBox::indicator:checked {{
                 background: {colors.ACCENT};
                 border: 1px solid {colors.ACCENT_DARK};
+                image: url(assets/icons/check_white.svg);
             }}
         """)
 
@@ -511,35 +514,72 @@ class MainWindow(QMainWindow):
 
     def _build_expedition_page(self) -> QWidget:
         page = QWidget()
-        layout = QVBoxLayout(page)
 
-        grid = QHBoxLayout()
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+    # Overall page layout (top content + bottom buttons)
+        root_layout = QVBoxLayout(page)
 
-        
+    # Split page left/right
+        content_layout = QHBoxLayout()
+        root_layout.addLayout(content_layout, 1)
 
+        left_panel = QVBoxLayout()
+        right_panel = QVBoxLayout()
+
+        content_layout.addLayout(left_panel, 1)
+        content_layout.addLayout(right_panel, 1)
+
+        #
+        # Create status checkboxes FIRST
+        #
         self._build_status_checkboxes()
 
+        #
+        # LEFT SIDE
+        #
+
         clipboard_label = QLabel("CLIPBOARD")
-        
-        right.addWidget(clipboard_label)
-        right.addWidget(self._make_section("Assignment", self.assignment))
-        right.addWidget(self._make_clipboard_status_panel())
+        left_panel.addWidget(clipboard_label)
+        left_panel.addWidget(self._make_section("Assignment", self.assignment))
+        left_panel.addWidget(self._make_clipboard_status_panel())
+
 
         field_note_label = QLabel("FIELD NOTE")
-        
-        right.addWidget(field_note_label)
-        right.addWidget(self._make_section("Observation", self.observation))
-        right.addWidget(self._make_section("Context", self.context))
-        right.addWidget(self._make_section("Recommendations for Future Adventurers", self.next_steps))
-        right.addWidget(self._make_fieldnote_status_panel())
+        left_panel.addWidget(field_note_label)
+        left_panel.addWidget(self._make_section("Observation", self.observation))
+        left_panel.addWidget(self._make_section("Context", self.context))
+        left_panel.addWidget(
+        self._make_section(
+        "Recommendations for Future Adventurers",
+        self.next_steps,
+        )
+        )
+        left_panel.addWidget(self._make_fieldnote_status_panel())
 
-        grid.addLayout(left)
-        grid.addLayout(right)
-        layout.addLayout(grid)
+        left_panel.addStretch()
+
+        #
+        # RIGHT SIDE
+        #
+
+        notes_label = QLabel("FIELD NOTES")
+        right_panel.addWidget(notes_label)
+
+        self.field_notes_edit = QTextEdit()
+        self.field_notes_edit.setPlaceholderText(
+        "Record observations, reminders, or discoveries..."
+        )
+        right_panel.addWidget(self.field_notes_edit, 1)
+
+        save_note_btn = QPushButton("Save to Archive")
+        save_note_btn.clicked.connect(self.new_field_note)
+        right_panel.addWidget(save_note_btn)
+
+        #
+        # Bottom Action Buttons
+        #
 
         actions = QHBoxLayout()
+
         self.clear_btn = QPushButton("Clear")
         self.save_btn = QPushButton("Save to OBS")
         self.new_note_btn = QPushButton("Save to Archive")
@@ -557,7 +597,9 @@ class MainWindow(QMainWindow):
         actions.addWidget(self.new_note_btn)
         actions.addWidget(self.load_btn)
         actions.addWidget(self.incident_btn)
-        layout.addLayout(actions)
+
+        root_layout.addLayout(actions)
+
         return page
 
     def _build_stream_events_page(self) -> QWidget:
@@ -1065,11 +1107,19 @@ class MainWindow(QMainWindow):
         self.broadcast_engineering.setCurrentText("")
         self.broadcast_incidents = self._build_field("Incidents")
 
+
         coffee_level_row = QHBoxLayout()
         coffee_level_row.addWidget(self.broadcast_coffee_level)
-        coffee_level_randomize_btn = QPushButton("fa6s.shuffle")
+
+        coffee_level_randomize_btn = QPushButton()
+        coffee_level_randomize_btn.setIcon(self.icons.get("dice"))
+
+        # Set the ICON size here
+        coffee_level_randomize_btn.setIconSize(QSize(26, 26))
+
+        # Make sure the button is large enough
+        coffee_level_randomize_btn.setFixedSize(34, 34)
         coffee_level_randomize_btn.setToolTip("Randomize coffee level")
-        coffee_level_randomize_btn.setFixedWidth(36)
         coffee_level_randomize_btn.clicked.connect(self.randomize_coffee_level)
         coffee_level_row.addWidget(coffee_level_randomize_btn)
 
@@ -1082,7 +1132,7 @@ class MainWindow(QMainWindow):
         form.addRow("COFFEE LEVEL", coffee_level_row)
         form.addRow("ENGINEERING", self.broadcast_engineering)
         form.addRow("INCIDENT COUNTER", self.broadcast_incidents)
-        form.addRow("TONE", self.broadcast_mood_combo)
+       
         form.addRow("TEAM NAME", self.broadcast_team_edit)
         #
         # Right Side - Broadcast Generator
@@ -1094,9 +1144,10 @@ class MainWindow(QMainWindow):
         #
         # Generation Style
         #
-
+    
         style_group = QGroupBox("Generation Style")
         style_layout = QVBoxLayout(style_group)
+        # form.addRow("TONE", self.broadcast_mood_combo)
         style_layout.addWidget(self.broadcast_mood_combo)
         generator_layout.addWidget(style_group)
 
@@ -2453,6 +2504,18 @@ class MainWindow(QMainWindow):
         except Exception as exc:  # pragma: no cover - UI path guard
             self.status_label.setText(f"Save failed: {exc}")
 
+    def archive_field_note(self):
+        """Return the active field note text."""
+
+        if hasattr(self, "field_notes_edit"):
+            self.field_notes_edit.clear()
+
+        if hasattr(self, "observation"):
+            self.observation.clear()
+
+        return "No observation recorded"
+
+
     def new_field_note(self) -> None:
         self.status_label.setText("Updating field note counter...")
         try:
@@ -2477,7 +2540,7 @@ class MainWindow(QMainWindow):
                     f"- Objective: {self.broadcast_goal_edit.text().strip() or 'Unknown'}",
                     f"- Weather: {self.broadcast_weather.currentText() or 'Unknown'}",
                     f"- Coffee: {self.broadcast_coffee.currentText() or 'Unknown'}",
-                    f"- Note: {self.observation.toPlainText().strip() or 'No observation recorded'}",
+                    f"- Note: {self._current_field_note_text()}",
                     f"- Created: {datetime.now().isoformat(timespec='seconds')}",
                     "",
                 ]

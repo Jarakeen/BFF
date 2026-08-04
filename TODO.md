@@ -310,3 +310,4 @@ A complete expedition can be managed entirely inside the Foundry: create it in B
         use these abbreviations for the months: MS  Morning Star, SD  Sun's Dawn, FS  First Seed, RH  Rain's Hand, SS  Second Seed, MY  Mid Year, SH  Sun's Height, LS  Last Seed, HF  Hearthfire, FF  Frostfall, SU  Sun's Dusk, ES  Evening Star
 
 - [ ] on Settings page make the file input boxes into file choosing buttons
+- [ ] broadcast desk bottom section, a horizontal area of "green lights" for before streaming checklist. Titles/Notifications, OBS, Elgato, Audio, 
