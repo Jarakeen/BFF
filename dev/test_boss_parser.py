@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from parsers.boss_parser import BossParser
+from builders.boss_builder import BossBuilder
 
-parser = BossParser()
 
-boss = parser.parse(
-    Path("data/raw/bahsie.txt")
+builder = BossBuilder(
+    raw_folder=Path("data/raw/bosses"),
+    output_file=Path("data/processed/bosses.json"),
 )
 
-print(boss)
+builder.build()
