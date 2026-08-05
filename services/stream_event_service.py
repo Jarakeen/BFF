@@ -1,3 +1,4 @@
+# services/stream_event_service.py
 from __future__ import annotations
 
 import json

@@ -1,3 +1,4 @@
+# engine/engine.py
 from typing import List, Dict, Set
 
 from .models import CombatEffect, SourceGameObject

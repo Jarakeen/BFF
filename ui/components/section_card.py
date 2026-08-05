@@ -1,3 +1,4 @@
+# ui/components/section_card.py
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,

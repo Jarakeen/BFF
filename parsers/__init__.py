@@ -1,3 +1,4 @@
+# parsers/__init__.py
 """Parsers for structured values found in ESO tooltip descriptions."""
 
 from __future__ import annotations

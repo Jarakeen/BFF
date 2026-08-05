@@ -1,3 +1,4 @@
+# ui/theme/fonts.py
 from PySide6.QtGui import QFont
 
 

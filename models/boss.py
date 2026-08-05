@@ -1,3 +1,4 @@
+# models/boss.py
 from dataclasses import dataclass, field
 
 

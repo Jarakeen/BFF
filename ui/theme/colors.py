@@ -1,5 +1,5 @@
 # ==========================================
-# colors.py
+# ui/theme/colors.py
 # Black Feather Foundry Design System
 # ==========================================
 

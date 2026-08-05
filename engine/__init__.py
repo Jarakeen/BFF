@@ -1,3 +1,5 @@
+#  engine/__init__.py
+
 """Console engine package exports for FoundryDock."""
 
 from .engine import TheConsoleEngine, WeaponSwapSimulationEngine

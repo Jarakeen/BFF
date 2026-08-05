@@ -1,3 +1,4 @@
+# services/statistics_engine.py
 """Raid timeline statistics and JSON export."""
 
 from __future__ import annotations

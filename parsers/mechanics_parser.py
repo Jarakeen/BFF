@@ -1,3 +1,4 @@
+# parsers/mechanics_parser.py
 import re
 
 from models.boss import Mechanic
@@ -114,8 +115,15 @@ class MechanicsParser(SectionParser):
         mechanic.interruptible = "interrupt" in text
         mechanic.blockable = "block" in text
         mechanic.dodgeable = "dodge" in text
-        mechanic.cleanseable = "cleanse" in text
-
+        mechanic.cleanseable = any(
+                        keyword in text
+                        for keyword in (
+                            "cleanse",
+                            "cleansed",
+                            "purge",
+                            "purged",
+                        )
+        )
         self.find_damage_type(mechanic)
 
         self.generate_tags(mechanic)
@@ -143,6 +151,10 @@ class MechanicsParser(SectionParser):
             "shock": "Shock",
             "poison": "Poison",
             "oblivion": "Oblivion",
+            "magick": "Magic",
+            "flame": "Fire",
+            "bleed": "Bleed",
+            "disease": "Disease",
         }
 
         for keyword, damage in damage_types.items():

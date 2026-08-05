@@ -1,4 +1,4 @@
-
+-- OBS Lua/OBS_Foundry_v1.4.lua
 obs=obslua
 local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentExpedition.json]]
 local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentIncident.json]]

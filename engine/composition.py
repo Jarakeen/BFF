@@ -1,3 +1,5 @@
+# engine/composition.py
+
 def evaluate_effect_coverage(encounter, roster):
 	"""Return the roster players who provide each required encounter effect."""
 	coverage = {effect: [] for effect in encounter.mechanics}

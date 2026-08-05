@@ -1,3 +1,4 @@
+# services/icon_service.py
 from pathlib import Path
 
 from PySide6.QtGui import QIcon

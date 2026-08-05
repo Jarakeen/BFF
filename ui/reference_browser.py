@@ -1,3 +1,4 @@
+# ui/reference_browser.py
 """Reference data browser window."""
 
 from __future__ import annotations

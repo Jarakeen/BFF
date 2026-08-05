@@ -1,3 +1,4 @@
+# parsers/dialogue_parser.py
 import re
 
 from models.boss import DialogueGroup

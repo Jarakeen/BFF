@@ -1,3 +1,4 @@
+# services/recommendation_engine.py
 """Simple effect-coverage recommendations from indexed reference data."""
 
 from __future__ import annotations

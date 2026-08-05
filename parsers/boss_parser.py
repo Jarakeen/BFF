@@ -1,3 +1,4 @@
+# parsers/boss_parser.py
 from pathlib import Path
 
 from models.boss import Boss
