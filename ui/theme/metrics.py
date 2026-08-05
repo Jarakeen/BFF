@@ -1,5 +1,5 @@
 # ==========================================
-# metrics.py
+# ui/theme/metrics.py
 # Black Feather Foundry Design System
 # ==========================================
 

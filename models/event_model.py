@@ -1,5 +1,5 @@
 """
-event_model.py
+# models/event_model.py
 
 Defines a single event that occurred during an Expedition.
 """

@@ -1,3 +1,4 @@
+# ui/desktop_gui.py
 import time
 import threading
 import json

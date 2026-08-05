@@ -1,3 +1,4 @@
+# parsers/metadata_parser.py
 import re
 from pathlib import Path
 

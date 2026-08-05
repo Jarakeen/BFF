@@ -1,5 +1,6 @@
+# services/__init__.py
 """
-services/rules.py
+services/__init__.py
 
 Simple rules engine for FoundryDock.
 

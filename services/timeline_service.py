@@ -1,3 +1,4 @@
+# services/timeline/service.py
 """Chronological event timeline management."""
 
 from __future__ import annotations
