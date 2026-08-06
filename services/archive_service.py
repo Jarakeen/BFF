@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 from services.archive_record import ArchiveRecord
 
-
 # Counter filenames kept human-readable and backwards compatible with the
 # existing FieldNoteCounter.txt (which the OBS Lua script also reads
 # directly, so its name/format must not change).
@@ -79,58 +78,66 @@ class ArchiveService:
         path = self.write_markdown(prefix, number, lines)
         return report_id, path
 
-    def list_records(self) -> list[ArchiveRecord]:
+    def load_record(self, archive_no: str) -> str:
+        """
+        Load an archived markdown file.
+        """
 
-        records = []
+        filename = archive_no.replace("-", "_") + ".md"
 
-        if not self.archive_folder.exists():
-            return records
+        path = self.archive_folder / filename
 
-        for path in sorted(
-            self.archive_folder.glob("*.md")
-        ):
+        if not path.exists():
+            return ""
 
-            archive_no = path.stem.replace("_", "-")
-
-            records.append(
-
-                ArchiveRecord(
-                    archive_no=archive_no,
-                    name=archive_no,
-                    path=path,
-                )
-
-            )
-
-        return records
+        return path.read_text(
+            encoding="utf-8"
+        )
 
 # --------------------------------------------------
 # Archive Browser
 # --------------------------------------------------
 
-    def list_records(self) -> list[ArchiveRecord]:
-        """
-        Return all archived records.
-        """
+def list_records(self) -> list[ArchiveRecord]:
+    """
+    Return all archived records.
+    """
 
-        records = []
+    records: list[ArchiveRecord] = []
 
-        if not self.archive_folder.exists():
-            return records
+    if not self.archive_folder.exists():
+        return records
 
-        for path in sorted(
-            self.archive_folder.glob("*.md"),
-            reverse=True,
-        ):
+    for path in sorted(
+        self.archive_folder.glob("*.md"),
+        reverse=True,
+    ):
 
-            archive_no = path.stem.replace("_", "-")
+        archive_no = path.stem.replace("_", "-")
 
-            records.append(
-                ArchiveRecord(
-                    archive_no=archive_no,
-                    name=archive_no,
-                    path=path,
-                )
+        records.append(
+            ArchiveRecord(
+                archive_no=archive_no,
+                name=archive_no,
+                path=path,
             )
+        )
 
-        return records    
+    return records
+
+
+def load_record(self, archive_no: str) -> str:
+    """
+    Load an archived markdown file.
+    """
+
+    filename = archive_no.replace("-", "_") + ".md"
+
+    path = self.archive_folder / filename
+
+    if not path.exists():
+        return ""
+
+    return path.read_text(
+        encoding="utf-8"
+    )

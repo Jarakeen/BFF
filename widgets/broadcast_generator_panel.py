@@ -6,17 +6,18 @@
 #
 # Purpose:
 # Displays generated broadcast titles and
-# live notifications.
+# notifications.
 #
 # ==================================================
+
+from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QApplication,
-    QGroupBox,
     QLabel,
-    QHBoxLayout,
     QListWidget,
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
 )
@@ -24,10 +25,7 @@ from PySide6.QtWidgets import (
 
 class BroadcastGeneratorPanel(QWidget):
     """
-    Displays generated broadcast copy.
-
-    Clicking a title or notification copies it
-    to the clipboard.
+    Preview generated broadcast content.
     """
 
     statusMessage = Signal(str)
@@ -35,61 +33,74 @@ class BroadcastGeneratorPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        layout = QVBoxLayout(self)
-
-        #
-        # Output
-        #
-
-        output_row = QHBoxLayout()
-
-        #
-        # Stream Titles
-        #
-
-        title_layout = QVBoxLayout()
-
-        self.title_label = QLabel("Stream Titles")
         self.title_list = QListWidget()
+
+        self.notification_list = QListWidget()
 
         self.title_list.setToolTip(
             "Click to copy."
         )
 
-        self.title_list.itemClicked.connect(
-            self._copy_title
+        self.notification_list.setToolTip(
+            "Click to copy."
         )
-
-        title_layout.addWidget(self.title_label)
-        title_layout.addWidget(self.title_list)
-
-        output_row.addLayout(title_layout)
-
-        #
-        # Live Notifications
-        #
-
-        notification_layout = QVBoxLayout()
-
-        self.notification_label = QLabel("Live Notifications")
-        self.notification_list = QListWidget()
 
         self.notification_list.setWordWrap(True)
 
-        self.notification_list.setToolTip(
-            "Click to copy."
+        self.title_list.itemClicked.connect(
+            self._copy_title
         )
 
         self.notification_list.itemClicked.connect(
             self._copy_notification
         )
 
-        notification_layout.addWidget(self.notification_label)
-        notification_layout.addWidget(self.notification_list)
+        #
+        # Layout
+        #
 
-        output_row.addLayout(notification_layout)
+        title_layout = QVBoxLayout()
 
-        layout.addLayout(output_row)
+        title_layout.addWidget(
+            QLabel("Stream Titles")
+        )
+
+        title_layout.addWidget(
+            self.title_list
+        )
+
+        notification_layout = QVBoxLayout()
+
+        notification_layout.addWidget(
+            QLabel("Notifications")
+        )
+
+        notification_layout.addWidget(
+            self.notification_list
+        )
+
+        content = QHBoxLayout()
+
+        content.addLayout(
+            title_layout
+        )
+
+        content.addLayout(
+            notification_layout
+        )
+
+        layout = QVBoxLayout(self)
+
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        layout.addLayout(
+            content
+        )
 
     # --------------------------------------------------
     # Public API
@@ -108,7 +119,9 @@ class BroadcastGeneratorPanel(QWidget):
 
         self.title_list.clear()
 
-        self.title_list.addItems(titles)
+        self.title_list.addItems(
+            titles
+        )
 
     def set_notifications(
         self,
@@ -123,35 +136,31 @@ class BroadcastGeneratorPanel(QWidget):
 
     def set_result(self, result):
 
-        self.set_titles(result.titles)
+        self.set_titles(
+            result.titles
+        )
 
         self.set_notifications(
             result.notifications
         )
 
     # --------------------------------------------------
-    # Selection
+    # Selected Items
     # --------------------------------------------------
 
-    def selected_title(self):
+    @property
+    def selected_title(self) -> str:
 
         item = self.title_list.currentItem()
 
-        if item:
+        return item.text() if item else ""
 
-            return item.text()
-
-        return ""
-
-    def selected_notification(self):
+    @property
+    def selected_notification(self) -> str:
 
         item = self.notification_list.currentItem()
 
-        if item:
-
-            return item.text()
-
-        return ""
+        return item.text() if item else ""
 
     # --------------------------------------------------
     # Clipboard
@@ -164,7 +173,7 @@ class BroadcastGeneratorPanel(QWidget):
         )
 
         self.statusMessage.emit(
-            "Stream title copied."
+            "Title copied to clipboard."
         )
 
     def _copy_notification(self, item):
@@ -174,5 +183,5 @@ class BroadcastGeneratorPanel(QWidget):
         )
 
         self.statusMessage.emit(
-            "Live notification copied."
+            "Notification copied to clipboard."
         )
