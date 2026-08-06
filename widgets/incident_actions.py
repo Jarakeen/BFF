@@ -2,10 +2,10 @@
 # Black Feather Foundry
 #
 # File:
-# widgets/broadcast_actions.py
+# widgets/incident_actions.py
 #
 # Purpose:
-# Standard action bar for the Broadcast Desk.
+# Action buttons for the Incident Desk.
 #
 # ==================================================
 
@@ -20,24 +20,31 @@ from PySide6.QtWidgets import (
 )
 
 
-class BroadcastActions(QWidget):
+class IncidentActions(QWidget):
     """
-    Action buttons for the Broadcast Desk.
+    Action buttons for Incident Reports.
     """
 
     generateRequested = Signal()
-    saveRequested = Signal()
+
+    sendRequested = Signal()
+
     archiveRequested = Signal()
+
     clearRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        #
+        # Buttons
+        #
+
         self.generate_button = QPushButton(
-            "Generate"
+            "Prepare Report"
         )
 
-        self.save_button = QPushButton(
+        self.send_button = QPushButton(
             "Send to OBS"
         )
 
@@ -49,6 +56,10 @@ class BroadcastActions(QWidget):
             "Clear"
         )
 
+        #
+        # Layout
+        #
+
         layout = QHBoxLayout(self)
 
         layout.setContentsMargins(0, 0, 0, 0)
@@ -56,11 +67,11 @@ class BroadcastActions(QWidget):
 
         layout.addWidget(self.generate_button)
 
-        layout.addStretch()
-
-        layout.addWidget(self.save_button)
+        layout.addWidget(self.send_button)
 
         layout.addWidget(self.archive_button)
+
+        layout.addStretch()
 
         layout.addWidget(self.clear_button)
 
@@ -72,8 +83,8 @@ class BroadcastActions(QWidget):
             self.generateRequested.emit
         )
 
-        self.save_button.clicked.connect(
-            self.saveRequested.emit
+        self.send_button.clicked.connect(
+            self.sendRequested.emit
         )
 
         self.archive_button.clicked.connect(

@@ -2,47 +2,89 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
-from ui.main_window import MainWindow
-from ui.theme import ThemeManager
-
 
 def _set_windows_app_id() -> None:
-    """On Windows, taskbar icon grouping is keyed off the process's AppUserModelID
-    rather than the window icon alone. Without this, Windows shows the generic
-    python.exe icon on the taskbar even though the window icon looks right."""
+    """
+    Set the Windows AppUserModelID so the taskbar icon
+    uses the Foundry branding instead of python.exe.
+    """
+
     if sys.platform != "win32":
         return
+
     try:
         import ctypes
 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
             "BlackFeatherFoundry.FieldOffice"
         )
+
     except Exception:
         pass
 
 
 def main() -> int:
+
     _set_windows_app_id()
 
+    #
+    # Create the Qt application FIRST
+    #
+
     app = QApplication(sys.argv)
-    app.setApplicationName("Black Feather Foundry Field Office")
-    app.setOrganizationName("Black Feather Foundry")
+
+    app.setApplicationName(
+        "Black Feather Foundry Field Office"
+    )
+
+    app.setOrganizationName(
+        "Black Feather Foundry"
+    )
+
+    #
+    # Import Qt-dependent modules AFTER QApplication exists.
+    # This helps us catch modules that accidentally create
+    # widgets during import.
+    #
+
+    from ui.theme import ThemeManager
+    from ui.main_window import MainWindow
+
+    #
+    # Theme
+    #
 
     theme = ThemeManager()
-    if theme.logo:
-        app.setWindowIcon(QIcon(theme.logo))
 
-    style_file = Path("assets/themes/bff/foundry.qss")
-    app.setStyleSheet(
-        style_file.read_text(encoding="utf-8")
-    )    
+    if theme.logo:
+        app.setWindowIcon(
+            QIcon(theme.logo)
+        )
+
+    style_file = Path(
+        "assets/themes/bff/foundry.qss"
+    )
+
+    if style_file.exists():
+
+        app.setStyleSheet(
+            style_file.read_text(
+                encoding="utf-8"
+            )
+        )
+
+    #
+    # Main Window
+    #
 
     window = MainWindow()
+
     window.show()
+
     return app.exec()
 
 

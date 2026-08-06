@@ -5,14 +5,10 @@ from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QComboBox
 
+from services.settings_service import SettingsService
+
 
 class WeatherSelector(QComboBox):
-    """
-    Standard Black Feather Foundry weather selector.
-
-    Displays weather icons and exposes the
-    corresponding OBS source.
-    """
 
     OBS_SOURCE_MAP = {
         "Clear": "TOP_clear",
@@ -26,39 +22,41 @@ class WeatherSelector(QComboBox):
         "Windy": "TOP_wind",
     }
 
-    def __init__(
-        self,
-        weather_icon_folder: Path,
-        parent=None,
-    ):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.weather_icon_folder = Path(weather_icon_folder)
+        settings = SettingsService(
+            Path("settings.json")
+        ).load()
+
+        settings = SettingsService(
+            Path("settings.json")
+        ).load()
+
+        root = Path(settings["BffRoot"])
+
+        self.weather_icon_folder = (
+            root /
+            "assets" /
+            "weather"
+        )
 
         for weather in self.OBS_SOURCE_MAP:
 
-            icon_path = (
-                self.weather_icon_folder /
-                f"{weather}.png"
-            )
+            icon = self.weather_icon_folder / f"{weather}.png"
 
             self.addItem(
-                QIcon(str(icon_path)),
+                QIcon(str(icon)),
                 weather,
             )
 
     @property
-    def obs_source(self) -> str:
-        return self.OBS_SOURCE_MAP[self.currentText()]
+    def obs_source(self):
 
-    def set_source(self, source: str) -> None:
-
-        for label, obs_source in self.OBS_SOURCE_MAP.items():
-
-            if obs_source == source:
-                self.setCurrentText(label)
-                return
+        return self.OBS_SOURCE_MAP[
+            self.currentText()
+        ]
 
     def reset(self):
 
-        self.setCurrentText("Clear")
+        self.setCurrentIndex(0)
