@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+from services.archive_record import ArchiveRecord
+
 
 # Counter filenames kept human-readable and backwards compatible with the
 # existing FieldNoteCounter.txt (which the OBS Lua script also reads
@@ -76,3 +78,59 @@ class ArchiveService:
         lines = lines_builder(report_id, number)
         path = self.write_markdown(prefix, number, lines)
         return report_id, path
+
+    def list_records(self) -> list[ArchiveRecord]:
+
+        records = []
+
+        if not self.archive_folder.exists():
+            return records
+
+        for path in sorted(
+            self.archive_folder.glob("*.md")
+        ):
+
+            archive_no = path.stem.replace("_", "-")
+
+            records.append(
+
+                ArchiveRecord(
+                    archive_no=archive_no,
+                    name=archive_no,
+                    path=path,
+                )
+
+            )
+
+        return records
+
+# --------------------------------------------------
+# Archive Browser
+# --------------------------------------------------
+
+    def list_records(self) -> list[ArchiveRecord]:
+        """
+        Return all archived records.
+        """
+
+        records = []
+
+        if not self.archive_folder.exists():
+            return records
+
+        for path in sorted(
+            self.archive_folder.glob("*.md"),
+            reverse=True,
+        ):
+
+            archive_no = path.stem.replace("_", "-")
+
+            records.append(
+                ArchiveRecord(
+                    archive_no=archive_no,
+                    name=archive_no,
+                    path=path,
+                )
+            )
+
+        return records    

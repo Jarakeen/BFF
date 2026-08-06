@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-
+from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
@@ -35,6 +35,11 @@ def main() -> int:
     theme = ThemeManager()
     if theme.logo:
         app.setWindowIcon(QIcon(theme.logo))
+
+    style_file = Path("assets/themes/bff/foundry.qss")
+    app.setStyleSheet(
+        style_file.read_text(encoding="utf-8")
+    )    
 
     window = MainWindow()
     window.show()
