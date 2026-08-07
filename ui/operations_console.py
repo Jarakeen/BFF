@@ -99,11 +99,11 @@ class OperationsConsole(QWidget):
                 Qt.AlignmentFlag.AlignCenter
             )
 
-            layout.addStretch()
+            # layout.addStretch()
 
             layout.addWidget(title)
 
-            layout.addStretch()
+            # layout.addStretch()
 
             self.stack.addWidget(widget)
 

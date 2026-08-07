@@ -17,12 +17,13 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
 )
 
 from widgets.page_header import PageHeader
 from widgets.status_panel import StatusPanel
 from ui.components.section_card import SectionCard
-
+from ui.foundry_page import FoundryPage
 from widgets.session_panel import SessionPanel
 from widgets.raid_controls import RaidControls
 from widgets.timeline_panel import TimelinePanel
@@ -36,12 +37,15 @@ from services.narrator_service import NarratorService
 from services.obs_websocket_service import ObsWebSocketService
 from services.archive_service import ArchiveService
 
-class LiveOperationsPage(QWidget):
+
+class LiveOperationsPage(FoundryPage):
     """
     Live Operations.
 
     Run the current expedition and record its progress.
     """
+
+ 
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -52,9 +56,21 @@ class LiveOperationsPage(QWidget):
 
     def build_services(self):
 
+        # --------------------------------------------------
+        # Settings
+        # --------------------------------------------------
+
         self.settings = SettingsService(
             Path("settings.json")
         ).load()
+
+        root = Path(
+            self.settings["BffRoot"]
+        )
+
+        # --------------------------------------------------
+        # Domain Services
+        # --------------------------------------------------
 
         self.expedition = ExpeditionService()
 
@@ -62,17 +78,30 @@ class LiveOperationsPage(QWidget):
             self.expedition
         )
 
-        self.narrator = NarratorService(
-            Path(
-                self.settings["NarratorContent"]
-            )
+        root = Path(
+            self.settings["BffRoot"]
         )
+
+        self.narrator = NarratorService(
+            root / "nat_his_nar.md"
+        )
+
+        print("Narrator file:", self.narrator.content_path)
+        print("Exists:", self.narrator.content_path.exists())
+
+        # --------------------------------------------------
+        # External Services
+        # --------------------------------------------------
 
         self.obs = ObsWebSocketService(
             host=self.settings["ObsWebSocketHost"],
             port=self.settings["ObsWebSocketPort"],
             password=self.settings["ObsWebSocketPassword"],
         )
+
+        # --------------------------------------------------
+        # Archive
+        # --------------------------------------------------
 
         self.archive = ArchiveService(
             counters_folder=Path(
@@ -85,16 +114,21 @@ class LiveOperationsPage(QWidget):
 
     def build_ui(self):
 
-        layout = QVBoxLayout(self)
-
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(12)
+        #
+        # Header
+        #
 
         self.header = PageHeader(
             title="Live Operations",
             subtitle="Run the current expedition and record its progress.",
             department="Operations",
         )
+
+        self.set_header(self.header)
+
+        #
+        # Widgets
+        #
 
         self.session = SessionPanel()
 
@@ -110,52 +144,100 @@ class LiveOperationsPage(QWidget):
 
         self.status = StatusPanel()
 
-        layout.addWidget(self.header)
+        #
+        # Workspace
+        #
+
+        workspace_widget = QWidget()
+
+        workspace = QHBoxLayout(workspace_widget)
+
+        workspace.setContentsMargins(0, 0, 0, 0)
+        workspace.setSpacing(12)
+
+        #
+        # Left Column
+        #
+
+        left = QVBoxLayout()
 
         session = SectionCard("Expedition Session")
         session.addWidget(self.session)
-        layout.addWidget(session)
 
         raid = SectionCard("Raid Controls")
         raid.addWidget(self.raid_controls)
-        layout.addWidget(raid)
-
-        timeline = SectionCard("Timeline")
-        timeline.addWidget(self.timeline)
-        layout.addWidget(timeline)
-
-        narrator = SectionCard("Narrator")
-        narrator.addWidget(self.narrator_panel)
-        layout.addWidget(narrator)
 
         stream = SectionCard("Stream Controls")
         stream.addWidget(self.stream)
-        layout.addWidget(stream)
 
-        layout.addStretch()
+        left.addWidget(session)
+        left.addWidget(raid)
+        left.addWidget(stream)
 
-        layout.addWidget(self.status)
+        left.addStretch()
+        # #
+        # # Right Column
+        # #
+
+        right = QVBoxLayout()
+
+        narrator = SectionCard("Narrator")
+        narrator.addWidget(self.narrator_panel)
+
+        timeline = SectionCard("Timeline")
+        timeline.addWidget(self.timeline)
+
+        right.addWidget(narrator)
+        right.addWidget(timeline)
+        right.addStretch()
+        #
+        # Assemble
+        #
+
+        workspace.addLayout(left, 2)
+        workspace.addLayout(right, 3)
+
+        self.add_workspace(workspace_widget)
+
+        #
+        # Footer
+        #
+
+        self.set_status(self.status)
+
     def connect_signals(self):
 
-        self.raid_controls.pullRequested.connect(
+        #
+        # Raid Controls
+        #
+
+        self.raid_controls.pullStarted.connect(
             self.pull_started
         )
 
-        self.raid_controls.ultPullRequested.connect(
+        self.raid_controls.ultPullStarted.connect(
             self.ult_pull
         )
 
-        self.raid_controls.wipeRequested.connect(
+        self.raid_controls.wipeRecorded.connect(
             self.record_wipe
         )
 
-        self.raid_controls.bossClearRequested.connect(
+        self.raid_controls.bossCleared.connect(
             self.boss_clear
         )
+
+        #
+        # Narrator
+        #
 
         self.narrator_panel.narratorRequested.connect(
             self.post_narrator
         )
+
+        #
+        # Stream
+        #
 
         self.stream.brbRequested.connect(
             self.brb
@@ -168,6 +250,7 @@ class LiveOperationsPage(QWidget):
         self.stream.resetSessionRequested.connect(
             self.reset_session
         )
+
     def pull_started(self):
         pass
 

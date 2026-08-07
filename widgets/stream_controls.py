@@ -64,7 +64,7 @@ class StreamControls(QWidget):
             self.end_stream_button
         )
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(
             self.reset_button

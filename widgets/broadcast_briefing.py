@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import random
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -24,7 +25,7 @@ from PySide6.QtWidgets import (
 from widgets.coffee_selector import CoffeeSelector
 from widgets.difficulty_selector import DifficultySelector
 from widgets.weather_selector import WeatherSelector
-
+from widgets.coffee_level_widget import CoffeeLevelWidget
 
 OTTER_VARIABLES = [
     "Nominal",
@@ -96,6 +97,7 @@ class BroadcastBriefing(QWidget):
 
         self.difficulty = DifficultySelector()
 
+        self.coffee = CoffeeLevelWidget()
         #
         # Broadcast
         #
@@ -104,7 +106,11 @@ class BroadcastBriefing(QWidget):
 
         self.coffee = CoffeeSelector()
 
-        self.coffee_level = QLineEdit()
+        self.coffee_level = CoffeeLevelWidget()
+
+        self.coffee_level.set_generator(
+            lambda: f"{random.randint(0, 100)}%"
+)
 
         self.engineering = QComboBox()
         self.engineering.setEditable(True)
@@ -154,12 +160,16 @@ class BroadcastBriefing(QWidget):
             difficulty=self.difficulty.selected,
             weather=self.weather.currentText(),
             coffee=self.coffee.currentText(),
-            coffee_level=self.coffee_level.text().strip(),
+            coffee_level=self.coffee_level.level,
             engineering=self.engineering.currentText(),
             incidents=self.incidents.text().strip(),
             team=self.team.text().strip(),
             mood=self.mood.currentText(),
         )
+
+    @property
+    def level(self) -> str:
+        return self.edit.text().strip()
 
     # --------------------------------------------------
     # Helpers

@@ -48,7 +48,7 @@ class CollectionActions(QWidget):
 
         layout.addWidget(self.export_button)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         self.refresh_button.clicked.connect(
             self.refreshRequested.emit

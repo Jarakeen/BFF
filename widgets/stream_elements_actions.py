@@ -64,7 +64,7 @@ class StreamElementsActions(QWidget):
             self.refresh_button
         )
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(
             self.settings_button

@@ -72,7 +72,7 @@ class PageHeader(QWidget):
         # --------------------------------------------------
 
         right_layout = QVBoxLayout()
-        right_layout.addStretch()
+        # right_layout.addStretch()
         right_layout.addWidget(self.department_label)
 
         # --------------------------------------------------
@@ -83,7 +83,7 @@ class PageHeader(QWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
 
         header_layout.addLayout(left_layout)
-        header_layout.addStretch()
+        # header_layout.addStretch()
         header_layout.addLayout(right_layout)
 
         # --------------------------------------------------

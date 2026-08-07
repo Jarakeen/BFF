@@ -94,50 +94,34 @@ class ArchiveService:
             encoding="utf-8"
         )
 
-# --------------------------------------------------
-# Archive Browser
-# --------------------------------------------------
 
-def list_records(self) -> list[ArchiveRecord]:
-    """
-    Return all archived records.
-    """
 
-    records: list[ArchiveRecord] = []
+    # --------------------------------------------------
+    # Archive Browser
+    # --------------------------------------------------
 
-    if not self.archive_folder.exists():
+    def list_records(self) -> list[ArchiveRecord]:
+
+        records: list[ArchiveRecord] = []
+
+        if not self.archive_folder.exists():
+            return records
+
+        for path in sorted(
+            self.archive_folder.glob("*.md"),
+            reverse=True,
+        ):
+
+            archive_no = path.stem.replace("_", "-")
+
+            records.append(
+                ArchiveRecord(
+                    archive_no=archive_no,
+                    name=archive_no,
+                    path=path,
+                )
+            )
+
         return records
 
-    for path in sorted(
-        self.archive_folder.glob("*.md"),
-        reverse=True,
-    ):
-
-        archive_no = path.stem.replace("_", "-")
-
-        records.append(
-            ArchiveRecord(
-                archive_no=archive_no,
-                name=archive_no,
-                path=path,
-            )
-        )
-
-    return records
-
-
-def load_record(self, archive_no: str) -> str:
-    """
-    Load an archived markdown file.
-    """
-
-    filename = archive_no.replace("-", "_") + ".md"
-
-    path = self.archive_folder / filename
-
-    if not path.exists():
-        return ""
-
-    return path.read_text(
-        encoding="utf-8"
-    )
+   

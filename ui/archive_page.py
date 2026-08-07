@@ -102,7 +102,7 @@ class ArchivePage(QWidget):
         # Assemble page
         layout.addWidget(self.header)
         layout.addLayout(content)
-        layout.addStretch()
+        # layout.addStretch()
         layout.addWidget(self.actions)
         layout.addWidget(self.status)
 

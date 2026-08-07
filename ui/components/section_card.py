@@ -25,12 +25,12 @@ class SectionCard(QFrame):
         self.title.setFont(Fonts.section())
 
         self.body = QVBoxLayout()
-        self.body.setContentsMargins(20, 16, 20, 20)
-        self.body.setSpacing(16)
+        self.body.setContentsMargins(20, 0, 20, 0)
+        self.body.setSpacing(8)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 10, 18, 18)
-        layout.setSpacing(12)
+        layout.setContentsMargins(18, 0, 18, 0)
+        layout.setSpacing(6)
 
         layout.addWidget(self.title)
         layout.addLayout(self.body)

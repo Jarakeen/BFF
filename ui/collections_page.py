@@ -64,19 +64,33 @@ class CollectionsPage(QWidget):
             Path("settings.json")
         ).load()
 
-        self.progress = AchievementProgressService(
-            Path(
-                self.settings["AchievementProgress"]
+        try:
+            self.progress = AchievementProgressService(
+                Path(
+                    self.settings["AchievementProgress"]
+                )
             )
-        )
 
-        self.provider = AchievementProvider(
-            data_path=Path(
-                self.settings["AchievementData"]
-            ),
-            progress=self.progress,
-        )
+            self.provider = AchievementProvider(
+                data_path=Path(
+                    self.settings["AchievementData"]
+                ),
+                progress=self.progress,
+            )
 
+        except KeyError:
+
+            #
+            # Temporary development mode
+            #
+
+            from services.mock_achievement_provider import (
+                MockAchievementProvider,
+            )
+
+            self.provider = MockAchievementProvider()
+
+            
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -122,7 +136,7 @@ class CollectionsPage(QWidget):
             browser
         )
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(
             self.actions

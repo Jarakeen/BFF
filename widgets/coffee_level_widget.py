@@ -22,29 +22,29 @@ from PySide6.QtWidgets import (
 )
 
 
-COFFEE_LEVELS = [
+# COFFEE_LEVELS = [
 
-    "Trace",
+#    "Trace",
 
-    "Detectable",
+#    "Detectable",
 
-    "Nominal",
+#    "Nominal",
 
-    "Operational",
+#    "Operational",
 
-    "Elevated",
+#    "Elevated",
 
-    "High",
+#    "High",
 
-    "Critical",
+#    "Critical",
 
-    "Maximum",
+#    "Maximum",
 
-    "Experimental",
+#    "Experimental",
 
-    "Catastrophic",
+#    "Catastrophic",
 
-]
+#]
 
 
 class CoffeeLevelWidget(QWidget):
@@ -57,21 +57,28 @@ class CoffeeLevelWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        #
+        # --------------------------------------------------
+        # State
+        # --------------------------------------------------
+
+        self._items = []
+        self._generator = None
+
+        # --------------------------------------------------
         # Widgets
-        #
+        # --------------------------------------------------
 
         self.edit = QLineEdit()
 
         self.random_button = QPushButton()
-
+        self.random_button.setFixedWidth(34)
         self.random_button.setToolTip(
-            "Randomize coffee level"
+            "Randomize value"
         )
 
-        #
-        # Dice icon
-        #
+        # --------------------------------------------------
+        # Dice Icon
+        # --------------------------------------------------
 
         icon_path = (
             Path("assets")
@@ -89,25 +96,33 @@ class CoffeeLevelWidget(QWidget):
 
             self.random_button.setText("🎲")
 
-        self.random_button.setFixedWidth(34)
-
-        #
+        # --------------------------------------------------
         # Layout
-        #
+        # --------------------------------------------------
 
         layout = QHBoxLayout(self)
 
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
         layout.setSpacing(4)
 
-        layout.addWidget(self.edit)
+        layout.addWidget(
+            self.edit,
+            1,
+        )
 
-        layout.addWidget(self.random_button)
+        layout.addWidget(
+            self.random_button,
+        )
 
-        #
+        # --------------------------------------------------
         # Signals
-        #
+        # --------------------------------------------------
 
         self.edit.textChanged.connect(
             self.levelChanged.emit
@@ -117,6 +132,7 @@ class CoffeeLevelWidget(QWidget):
             self.randomize
         )
 
+
     # --------------------------------------------------
     # Properties
     # --------------------------------------------------
@@ -125,20 +141,65 @@ class CoffeeLevelWidget(QWidget):
     def level(self) -> str:
         return self.edit.text().strip()
 
+
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
 
-    def set_level(self, level: str):
+    def set_level(self, value):
 
-        self.edit.setText(level)
+        self.edit.setText(
+            str(value)
+        )
+
+
+    def set_items(
+        self,
+        items,
+    ):
+
+        self._items = list(items)
+
+
+    def set_generator(
+        self,
+        generator,
+    ):
+
+        self._generator = generator
+
 
     def clear(self):
 
         self.edit.clear()
 
+
     def randomize(self):
 
-        self.set_level(
-            random.choice(COFFEE_LEVELS)
-        )
+        #
+        # Callback takes priority
+        #
+
+        if self._generator is not None:
+
+            value = self._generator()
+
+        #
+        # Otherwise choose from supplied items
+        #
+
+        elif self._items:
+
+            value = random.choice(
+                self._items
+            )
+
+        #
+        # Nothing configured
+        #
+
+        else:
+
+            return
+
+        self.set_level(value)

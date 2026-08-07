@@ -103,7 +103,7 @@ class IncidentPage(QWidget):
 
         layout.addWidget(editor)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(self.actions)
 

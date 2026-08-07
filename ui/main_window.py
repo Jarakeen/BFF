@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QStackedWidget,
+    QSizePolicy,
     )
 
 from widgets.sidebar import Sidebar
