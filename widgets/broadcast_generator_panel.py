@@ -144,6 +144,14 @@ class BroadcastGeneratorPanel(QWidget):
             result.notifications
         )
 
+        print("Setting titles:", result.titles)
+        print("Setting notifications:", result.notifications)
+
+        self.set_titles(result.titles)
+        self.set_notifications(result.notifications)
+
+        print("Title widget count:", self.title_list.count())
+        print("Notification widget count:", self.notification_list.count())
     # --------------------------------------------------
     # Selected Items
     # --------------------------------------------------

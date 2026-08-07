@@ -32,7 +32,7 @@ class StatusPanel(QWidget):
 
         layout.addWidget(self.icon)
         layout.addWidget(self.message)
-        layout.addStretch()
+        # layout.addStretch()
 
     # --------------------------------------------------
     # Status

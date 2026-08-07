@@ -53,11 +53,24 @@ class NarratorPanel(QWidget):
 
         columns = 4
 
-        for index, category in enumerate(
-            self.narrator_service.categories()
-        ):
+        categories = self.narrator_service.categories()
 
-            button = QPushButton(category)
+        print("Building buttons for:", categories)
+
+        narrator_buttons = [
+            ("General Observations", "General"),
+            ("Healers", "Healers"),
+            ("Tanks", "Tanks"),
+            ("DPS", "DPS"),
+            ("🤣 Funny Moments", "FunnyMoments"),
+            ("📖 Progression", "Progression"),
+        ]
+
+        columns = 2
+
+        for index, (text, category) in enumerate(narrator_buttons):
+
+            button = QPushButton(text)
 
             button.clicked.connect(
                 lambda checked=False, c=category:

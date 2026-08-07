@@ -71,7 +71,7 @@ class IncidentActions(QWidget):
 
         layout.addWidget(self.archive_button)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(self.clear_button)
 

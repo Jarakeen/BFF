@@ -40,7 +40,7 @@ class DifficultySelector(QWidget):
         layout.addWidget(self.normal)
         layout.addWidget(self.veteran)
         layout.addWidget(self.hardmode)
-        layout.addStretch()
+        # layout.addStretch()
 
     # --------------------------------------------------
     # Properties

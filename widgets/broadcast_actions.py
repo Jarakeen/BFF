@@ -56,7 +56,7 @@ class BroadcastActions(QWidget):
 
         layout.addWidget(self.generate_button)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(self.save_button)
 

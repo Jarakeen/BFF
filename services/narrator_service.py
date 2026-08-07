@@ -1,32 +1,114 @@
 # services/narrator_service.py
 from __future__ import annotations
 
-import json
 import random
+import re
 from pathlib import Path
 
 
 class NarratorService:
-    """Reads the Natural History Narrator content bank and picks random lines.
+    """
+    Reads the Natural History Narrator markdown file.
 
-    The content file is plain JSON (category -> list of lines) so the person
-    can add/edit lines themselves without touching any code.
+    Categories are markdown headings:
+
+        ## 🦦 General Observations
+
+    followed by bullet points.
+
+    Public API:
+
+        categories()
+        pick(category)
     """
 
-    def __init__(self, content_path: Path) -> None:
-        self.content_path = content_path
+    def __init__(self, content_path: Path):
+        self.content_path = Path(content_path)
 
-    def _load(self) -> dict:
+    # --------------------------------------------------
+    # Parsing
+    # --------------------------------------------------
+
+    def _load(self) -> dict[str, list[str]]:
+
         if not self.content_path.exists():
             return {}
-        try:
-            return json.loads(self.content_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return {}
+
+        text = self.content_path.read_text(
+            encoding="utf-8"
+        )
+
+        categories: dict[str, list[str]] = {}
+
+        current = None
+
+        for line in text.splitlines():
+
+            line = line.strip()
+
+            #
+            # Heading
+            #
+
+            if line.startswith("##"):
+
+                heading = re.sub(
+                    r"^##\s*",
+                    "",
+                    line,
+                )
+
+                #
+                # Remove emoji but keep words
+                #
+
+                heading = re.sub(
+                    r"^[^\w]+",
+                    "",
+                    heading,
+                ).strip()
+
+                current = heading
+
+                categories[current] = []
+
+                continue
+
+            #
+            # Bullet
+            #
+
+            if current and line.startswith("-"):
+
+                categories[current].append(
+                    line[1:].strip()
+                )
+
+        return categories
+
+    # --------------------------------------------------
+    # Public API
+    # --------------------------------------------------
+
+    def categories(self) -> list[str]:
+
+        
+        categories = self._load()
+
+        print("Loaded narrator categories:", categories)
+
+
+        return list(self._load().keys())
+
+
 
     def pick(self, category: str) -> str:
-        content = self._load()
-        lines = content.get(category) or []
-        if not lines:
+
+        categories = self._load()
+
+        choices = categories.get(category, [])
+
+        if not choices:
             return ""
-        return random.choice(lines)
+
+        return random.choice(choices)

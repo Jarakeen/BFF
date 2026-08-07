@@ -15,9 +15,12 @@ from dataclasses import dataclass
 
 from PySide6.QtWidgets import (
     QWidget,
-    QFormLayout,
+    QLabel,
     QLineEdit,
     QTextEdit,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFormLayout,
 )
 
 
@@ -57,30 +60,77 @@ class FieldNotesEditor(QWidget):
 
         self.observation = QTextEdit()
 
+
+        self.observation.setPlaceholderText(
+            "Record the expedition's observations..."
+        )
+
+
         #
-        # Layout
+        # Metadata (Top)
         #
 
-        layout = QFormLayout(self)
+        left = QFormLayout()
 
-        layout.addRow(
+        left.addRow(
             "Expedition",
             self.expedition,
         )
 
-        layout.addRow(
-            "Location",
-            self.location,
-        )
-
-        layout.addRow(
+        left.addRow(
             "Title",
             self.title,
         )
 
-        layout.addRow(
-            "Observation",
+        right = QFormLayout()
+
+        right.addRow(
+            "Location",
+            self.location,
+        )
+
+        metadata = QHBoxLayout()
+
+        metadata.addLayout(
+            left,
+            1,
+        )
+
+        metadata.addLayout(
+            right,
+            1,
+        )
+
+        #
+        # Main Layout
+        #
+
+        layout = QVBoxLayout(self)
+
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        layout.setSpacing(10)
+
+        layout.addLayout(
+            metadata
+        )
+
+        observation_label = QLabel(
+            "Observation"
+        )
+
+        layout.addWidget(
+            observation_label
+        )
+
+        layout.addWidget(
             self.observation,
+            1,
         )
 
     # --------------------------------------------------
@@ -89,9 +139,6 @@ class FieldNotesEditor(QWidget):
 
     @property
     def model(self) -> FieldNoteModel:
-        """
-        Return the current field note.
-        """
 
         return FieldNoteModel(
             expedition=self.expedition.text().strip(),
@@ -105,13 +152,13 @@ class FieldNotesEditor(QWidget):
     # --------------------------------------------------
 
     def clear(self):
-        """
-        Reset the editor.
-        """
 
         self.expedition.clear()
+
         self.location.clear()
+
         self.title.clear()
+
         self.observation.clear()
 
         self.expedition.setFocus()

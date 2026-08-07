@@ -183,7 +183,7 @@ class AchievementPage(QWidget):
             result
         )
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(
             self.actions

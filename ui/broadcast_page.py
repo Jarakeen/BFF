@@ -18,8 +18,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QWidget,
-    QVBoxLayout,
 )
 
 from widgets.page_header import PageHeader
@@ -29,14 +29,15 @@ from ui.components.section_card import SectionCard
 from widgets.broadcast_briefing import BroadcastBriefing
 from widgets.broadcast_generator_panel import BroadcastGeneratorPanel
 from widgets.broadcast_actions import BroadcastActions
+from ui.foundry_page import FoundryPage
 
 from services.settings_service import SettingsService
 from services.broadcast_generator import BroadcastGenerator
 from services.obs_websocket_service import ObsWebSocketService
 from services.archive_service import ArchiveService
+from PySide6.QtCore import QTimer
 
-
-class BroadcastPage(QWidget):
+class BroadcastPage(FoundryPage):
     """
     Broadcast Desk.
 
@@ -62,13 +63,9 @@ class BroadcastPage(QWidget):
 
         self.generator = BroadcastGenerator()
 
-        self.archive = ArchiveService(
-            counters_folder=Path(
-                self.settings["CountersFolder"]
-            ),
-            archive_folder=Path(
-                self.settings["ArchiveFolder"]
-            ),
+        self.archive_service = ArchiveService(
+            counters_folder=Path(self.settings["CountersFolder"]),
+            archive_folder=Path(self.settings["ArchiveFolder"]),
         )
 
         self.obs = ObsWebSocketService(
@@ -83,46 +80,103 @@ class BroadcastPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
-            title="Broadcast Desk",
-            subtitle="Prepare today's field dispatch.",
-            department="Communications",
-        )
+            #
+            # Header
+            #
 
-        self.briefing = BroadcastBriefing()
+            self.header = PageHeader(
+                title="Broadcast Desk",
+                subtitle="Prepare today's field dispatch.",
+                department="Communications",
+            )
 
-        self.generator_panel = BroadcastGeneratorPanel()
+            #
+            # Widgets
+            #
 
-        self.actions = BroadcastActions()
+            self.briefing = BroadcastBriefing()
 
-        self.status = StatusPanel()
+            self.generator_panel = BroadcastGeneratorPanel()
 
-        layout = QVBoxLayout(self)
 
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(12)
+            self.actions = BroadcastActions()
 
-        layout.addWidget(self.header)
+            self.status = StatusPanel()
 
-        briefing = SectionCard("Today's Briefing")
-        briefing.addWidget(self.briefing)
-        layout.addWidget(briefing)
+            #
+            # Page
+            #
 
-        preview = SectionCard("Generated Content")
-        preview.addWidget(self.generator_panel)
-        layout.addWidget(preview)
+            self.set_header(self.header)
 
-        actions = SectionCard("Actions")
-        actions.addWidget(self.actions)
-        layout.addWidget(actions)
+            #
+            # Workspace
+            #
 
-        layout.addStretch()
+            workspace_widget = QWidget()
 
-        layout.addWidget(self.status)
+            workspace = QHBoxLayout(workspace_widget)
 
-        self.status.info(
-            "Broadcast Desk ready."
-        )
+            workspace.setContentsMargins(0, 0, 0, 0)
+            workspace.setSpacing(12)
+
+            #
+            # Left Card
+            #
+
+            briefing = SectionCard("Today's Briefing")
+
+            briefing.addWidget(self.briefing)
+            briefing.addStretch()
+
+            #
+            # Right Card
+            #
+
+            preview = SectionCard("Generated Broadcast")
+
+            preview.addWidget(self.generator_panel)
+
+            #
+            # Assemble Workspace
+            #
+
+            workspace.addWidget(
+                briefing,
+                2,
+            )
+
+            workspace.addWidget(
+                preview,
+                3,
+            )
+
+            self.add_workspace(workspace_widget)
+
+            #
+            # Bottom
+            #
+
+            self.set_actions(self.actions)
+
+            self.set_status(self.status)
+
+            self.status.info(
+                "Broadcast Desk ready."
+            )
+        #
+        # Bottom actions
+        #
+
+            self.set_actions(self.actions)
+
+            self.set_status(self.status)
+
+            self.status.info(
+                "Broadcast Desk ready."
+            )
+
+        
 
     # --------------------------------------------------
     # Signals
@@ -152,15 +206,24 @@ class BroadcastPage(QWidget):
 
     def generate(self):
 
+        print("=== GENERATE ===")
+
         model = self.briefing.model
+        print("Model:", model)
 
-        result = self.generator.generate(
-            model
-        )
+        print("Generator:", self.generator)
 
-        self.generator_panel.set_result(
-            result
-        )
+        result = self.generator.generate(model)
+
+        print("Result:", result)
+
+        print("Titles:", getattr(result, "titles", None))
+        print("Notifications:", getattr(result, "notifications", None))
+
+        self.generator_panel.set_result(result)
+
+        print("Title count:", self.generator_panel.title_list.count())
+        print("Notification count:", self.generator_panel.notification_list.count())
 
         self.status.success(
             "Broadcast generated."
@@ -214,7 +277,7 @@ class BroadcastPage(QWidget):
                 self.generator_panel.selected_notification
             )
 
-            report_id, path = self.archive.file_form(
+            report_id, path = self.archive_service.file_form(
                 "FN",
                 lambda report_id, number: [
 
@@ -258,3 +321,44 @@ class BroadcastPage(QWidget):
         self.status.info(
             "Broadcast cleared."
         )
+
+    # --------------------------------------------------
+    # Debugg
+    # --------------------------------------------------
+    
+    def inspect_layout(self):
+
+        page = self.stack.currentWidget()
+
+        print("\n==========")
+        print(type(page))
+
+        self.dump_widget(page)
+
+    def dump_widget(self, widget, indent=0):
+
+        print(
+            " " * indent,
+            type(widget).__name__,
+            widget.geometry(),
+        )
+
+        layout = widget.layout()
+
+        if layout:
+
+            print(
+                " " * indent,
+                type(layout).__name__,
+            )
+
+            for i in range(layout.count()):
+
+                item = layout.itemAt(i)
+
+                if item.widget():
+
+                    self.dump_widget(
+                        item.widget(),
+                        indent + 4,
+                    )    

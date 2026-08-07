@@ -105,6 +105,20 @@ class BroadcastGenerator:
 
         return self._unique(trimmed)[:8]
 
+
+    def generate(
+        self,
+        request: BroadcastRequest,
+    ) -> BroadcastResult:
+        """
+        Generate both stream titles and notifications.
+        """
+
+        return BroadcastResult(
+            titles=self.generate_titles(request),
+            notifications=self.generate_notifications(request),
+        )
+
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------

@@ -66,7 +66,7 @@ class ArchiveActions(QWidget):
         layout.addWidget(self.reveal_button)
         layout.addWidget(self.export_button)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(self.refresh_button)
 

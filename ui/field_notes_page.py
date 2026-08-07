@@ -19,20 +19,21 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout
 )
 
 from widgets.page_header import PageHeader
 from widgets.status_panel import StatusPanel
 from ui.components.section_card import SectionCard
-
+from ui.foundry_page import FoundryPage
 from widgets.field_notes_editor import FieldNotesEditor
 from widgets.field_notes_actions import FieldNotesActions
 
 from services.archive_service import ArchiveService
 from services.settings_service import SettingsService
+from widgets.field_notebook import FieldNotebook
 
-
-class FieldNotesPage(QWidget):
+class FieldNotesPage(FoundryPage):
     """
     Field Notes.
 
@@ -81,10 +82,9 @@ class FieldNotesPage(QWidget):
 
     def build_ui(self):
 
-        layout = QVBoxLayout(self)
-
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(12)
+        #
+        # Header
+        #
 
         self.header = PageHeader(
             title="Field Notes",
@@ -92,25 +92,62 @@ class FieldNotesPage(QWidget):
             department="Archives",
         )
 
+        self.set_header(self.header)
+
+        #
+        # Widgets
+        #
+
         self.editor = FieldNotesEditor()
+
+        self.notebook = FieldNotebook()
 
         self.actions = FieldNotesActions()
 
         self.status = StatusPanel()
 
-        layout.addWidget(self.header)
+        #
+        # Workspace
+        #
+
+        workspace_widget = QWidget()
+
+        workspace = QHBoxLayout(workspace_widget)
+
+        workspace.setContentsMargins(0, 0, 0, 0)
+        workspace.setSpacing(12)
 
         editor = SectionCard("Observation")
         editor.addWidget(self.editor)
-        layout.addWidget(editor)
 
-        actions = SectionCard("Actions")
-        actions.addWidget(self.actions)
-        layout.addWidget(actions)
+        notes = SectionCard("Field Notebook")
+        notes.addWidget(self.notebook)
 
-        layout.addStretch()
+        workspace.addWidget(
+            editor,
+            3,
+        )
 
-        layout.addWidget(self.status)
+        workspace.addWidget(
+            notes,
+            2,
+        )
+
+        self.add_workspace(
+            workspace_widget
+        )
+
+        #
+        # Footer
+        #
+
+        self.set_actions(
+            self.actions
+        )
+
+        self.set_status(
+            self.status
+        )
 
         self.status.info(
             "Ready to record today's observations."

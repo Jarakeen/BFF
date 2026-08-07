@@ -115,7 +115,7 @@ class RaidControls(QWidget):
             self.wipe_button
         )
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(
             self.clear_button

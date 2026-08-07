@@ -65,17 +65,17 @@ def main() -> int:
             QIcon(theme.logo)
         )
 
-    style_file = Path(
-        "assets/themes/bff/foundry.qss"
-    )
+   # style_file = Path(
+   #     "assets/themes/bff/foundry.qss"
+   # )
 
-    if style_file.exists():
+   # if style_file.exists():
 
-        app.setStyleSheet(
-            style_file.read_text(
-                encoding="utf-8"
-            )
-        )
+   #     app.setStyleSheet(
+   #         style_file.read_text(
+   #             encoding="utf-8"
+   #         )
+   #     )
 
     #
     # Main Window

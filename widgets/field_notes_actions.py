@@ -53,7 +53,7 @@ class FieldNotesActions(QWidget):
 
         layout.addWidget(self.clear_button)
 
-        layout.addStretch()
+        # layout.addStretch()
 
         layout.addWidget(self.archive_button)
 
