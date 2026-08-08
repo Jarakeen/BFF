@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -24,7 +26,10 @@ from PySide6.QtWidgets import (
 
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+
 from ui.components.foundry_card import FoundryCard
+
+
 from widgets.broadcast_briefing import BroadcastBriefing
 from widgets.broadcast_generator_panel import BroadcastGeneratorPanel
 from widgets.broadcast_actions import BroadcastActions
@@ -224,15 +229,37 @@ class BroadcastPage(FoundryPage):
             if not title or not notification:
 
                 self.status.warning(
-                    "Select a title and notification first."
+                    "Generate a broadcast first."
                 )
 
                 return
 
-            self.obs.update_overlay(
-                model=model,
-                title=title,
-                notification=notification,
+            #
+            # OBS's Lua script polls this file the same way
+            # it polls StreamEvents.json for Live Operations.
+            #
+
+            broadcast_path = Path(
+                self.settings["CurrentBroadcastPath"]
+            )
+
+            broadcast_path.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            broadcast_path.write_text(
+                json.dumps(
+                    {
+                        "Title": title,
+                        "Notification": notification,
+                        "Focus": model.focus,
+                        "Location": model.location,
+                    },
+                    ensure_ascii=False,
+                    indent=4,
+                ),
+                encoding="utf-8",
             )
 
             self.status.success(
@@ -341,4 +368,4 @@ class BroadcastPage(FoundryPage):
                     self.dump_widget(
                         item.widget(),
                         indent + 4,
-                    )
+                    )    
