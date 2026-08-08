@@ -3,77 +3,32 @@
 # Black Feather Foundry Design System
 # ==========================================
 
+# colors.py
+
 class Colors:
-    # -------------------------------------------------
-    # Backgrounds
-    # -------------------------------------------------
-    PAPER = "#121212"          # Main window
-    PAPER_DARK = "#0C0C0C"     # Window frame / footer
-    SIDEBAR = "#151515"        # Slightly lifted from background
 
-    # -------------------------------------------------
-    # Panels / Cards
-    # -------------------------------------------------
-    CARD = "#1B1A18"           # Main panels
-    CARD_HOVER = "#181918"
-    CARD_ALT = "#201D19"
+    BACKGROUND = "#121416"
 
-    # -------------------------------------------------
-    # Borders
-    # -------------------------------------------------
-    BORDER = "#302B24"         # Thin panel borders
-    BORDER_LIGHT = "#4A4136"   # Hover / dividers
+    SURFACE = "#1B2024"
 
-    # -------------------------------------------------
-    # Brand Accent (Brass)
-    # -------------------------------------------------
-    ACCENT = "#775524"         # Primary bronze
-    ACCENT_LIGHT = "#C99A4A"   # Headings / highlights
-    ACCENT_HOVER = "#4f3c1d"   # Button hover
-    ACCENT_DARK = "#8B612D"    # Pressed state
+    SURFACE_LIGHT = "#232A2F"
 
-    # -------------------------------------------------
-    # Status Colors
-    # -------------------------------------------------
-    SUCCESS = "#4b942d"        # Muted moss green
-    WARNING = "#BE8B45"
-    DANGER = "#A04C3B"
-    INFO = "#4b942d"
+    BORDER = "#323A41"
 
-    # -------------------------------------------------
-    # Text
-    # -------------------------------------------------
-    TEXT = "#d7e0e2"
-    TEXT_LIGHT = "#D8CBB3"
-    TEXT_MUTED = "#9C8C77"
-    TEXT_DISABLED = "#6D655A"
+    BORDER_HOVER = "#56616A"
 
-    # -------------------------------------------------
-    # Tables
-    # -------------------------------------------------
-    TABLE_ALT = "#24211D"
-    TABLE_SELECTED = "#3D2F1D"
+    GOLD = "#C89B5A"
 
-    # -------------------------------------------------
-    # Interactive States
-    # -------------------------------------------------
-    INPUT_BG = "#181715"
-    INPUT_BORDER = "#3A332B"
-    INPUT_FOCUS = "#C99A4A"
+    GOLD_LIGHT = "#D7B57A"
 
-    BUTTON = ACCENT
-    BUTTON_HOVER = ACCENT_HOVER
-    BUTTON_PRESSED = ACCENT_DARK
+    TEXT = "#ECE8DF"
 
-    # -------------------------------------------------
-    # Navigation
-    # -------------------------------------------------
-    NAV_BG = "#151515"
-    NAV_HOVER = "#211C17"
-    NAV_ACTIVE = "#2A2117"
-    NAV_ACTIVE_BORDER = "#C99A4A"
+    TEXT_MUTED = "#9AA3A9"
 
-    # -------------------------------------------------
-    # Misc
-    # -------------------------------------------------
-    SHADOW = "rgba(0,0,0,40)"
+    SUCCESS = "#6FA76D"
+
+    WARNING = "#D5B46A"
+
+    ERROR = "#C96A6A"
+
+    INFO = "#5C8EC7"

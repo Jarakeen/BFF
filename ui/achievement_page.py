@@ -21,11 +21,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
 
-from ui.components.section_card import SectionCard
-
+from ui.components.foundry_card import FoundryCard
 from widgets.run_details import RunDetails
 from widgets.achievement_list import AchievementList
 from widgets.run_notes import RunNotes
@@ -82,7 +81,7 @@ class AchievementPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Achievement Desk",
             subtitle="Prepare and archive Achievement Runs.",
             department="Operations",
@@ -98,7 +97,7 @@ class AchievementPage(QWidget):
 
         self.actions = AchievementActions()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         layout = QVBoxLayout(self)
 
@@ -109,7 +108,7 @@ class AchievementPage(QWidget):
             12,
         )
 
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         #
         # Header
@@ -123,7 +122,7 @@ class AchievementPage(QWidget):
         # Run Details
         #
 
-        details = SectionCard(
+        details = FoundryCard(
             "Run Details"
         )
 
@@ -139,7 +138,7 @@ class AchievementPage(QWidget):
         # Achievement List
         #
 
-        achievements = SectionCard(
+        achievements = FoundryCard(
             "Achievements"
         )
 
@@ -155,7 +154,7 @@ class AchievementPage(QWidget):
         # Notes
         #
 
-        notes = SectionCard(
+        notes = FoundryCard(
             "Run Notes"
         )
 
@@ -171,7 +170,7 @@ class AchievementPage(QWidget):
         # Result
         #
 
-        result = SectionCard(
+        result = FoundryCard(
             "Run Result"
         )
 

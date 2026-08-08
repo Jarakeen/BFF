@@ -91,8 +91,7 @@ class FoundryPage(QWidget):
     # Header
     # --------------------------------------------------
 
-    def set_header(self, widget):
-
+    def set_header(self, widget:  QWidget):
         self.header = widget
 
         self.root.insertWidget(
@@ -104,7 +103,7 @@ class FoundryPage(QWidget):
     # Workspace
     # --------------------------------------------------
 
-    def add_workspace(self, widget):
+    def add_workspace(self, widget: QWidget):
 
         self.workspace_layout.addWidget(
             widget

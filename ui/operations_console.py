@@ -26,10 +26,10 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 
 class OperationsConsole(QWidget):
@@ -50,7 +50,7 @@ class OperationsConsole(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Operations Console",
             subtitle="Mission control for expeditions, raids, and research.",
             department="Command",
@@ -111,7 +111,7 @@ class OperationsConsole(QWidget):
         # Status
         #
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         #
         # Layout
@@ -126,7 +126,7 @@ class OperationsConsole(QWidget):
             12,
         )
 
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         layout.addWidget(
             self.header
@@ -138,7 +138,7 @@ class OperationsConsole(QWidget):
         # Left navigation
         #
 
-        navigation = SectionCard(
+        navigation = FoundryCard(
             "Navigation"
         )
 
@@ -150,7 +150,7 @@ class OperationsConsole(QWidget):
         # Right content
         #
 
-        content = SectionCard(
+        content = FoundryCard(
             "Console"
         )
 

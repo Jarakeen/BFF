@@ -47,6 +47,18 @@ class JsonService:
         )
 
     def save(self, model: ExpeditionModel) -> None:
+
+        print("Saving JSON to:", self.file_path)
+
         payload = model.to_dict()
-        serialized = json.dumps(payload, ensure_ascii=False, indent=4)
-        self.file_path.write_text(serialized, encoding="utf-8")
+
+        serialized = json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=4,
+        )
+
+        self.file_path.write_text(
+            serialized,
+            encoding="utf-8",
+        )

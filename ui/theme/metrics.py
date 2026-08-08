@@ -9,34 +9,36 @@ class Metrics:
     # Spacing (8px Grid)
     # ==================================================
 
-    XXS = 4
-    XS = 8
-    SM = 12
-    MD = 16
-    LG = 24
-    XL = 32
-    XXL = 48
-    XXXL = 64
+    XXS = 2
+    XS = 4
+    SM = 8
+    MD = 12
+    LG = 20
+    XL = 28
+    XXL = 32
+    XXXL = 36
+
 
     # ==================================================
     # Window
     # ==================================================
 
-    SIDEBAR_WIDTH = 260
+    SIDEBAR_WIDTH = 320
     CONTENT_MAX_WIDTH = 1400
+    CONTENT_MAX_HEIGHT = 1000
 
     WINDOW_MARGIN = 24
-    PAGE_MARGIN = 32
+    PAGE_MARGIN = 12
 
     # ==================================================
     # Cards
     # ==================================================
 
-    CARD_RADIUS = 10
-    CARD_PADDING = 20
-    CARD_SPACING = 20
+    CARD_RADIUS = 16
+    CARD_PADDING = 10
+    CARD_SPACING = 10
 
-    GROUP_PADDING = 16
+    GROUP_PADDING = 10
 
     # ==================================================
     # Forms
@@ -45,8 +47,8 @@ class Metrics:
     LABEL_SPACING = 6
     FIELD_SPACING = 12
 
-    INPUT_HEIGHT = 38
-    BUTTON_HEIGHT = 40
+    INPUT_HEIGHT = 26
+    BUTTON_HEIGHT = 32
 
     CHECKBOX_HEIGHT = 22
 
@@ -71,8 +73,8 @@ class Metrics:
 
     ICON_SMALL = 16
     ICON = 20
-    ICON_MEDIUM = 24
-    ICON_LARGE = 32
+    ICON_MEDIUM = 20
+    ICON_LARGE = 28
 
     # ==================================================
     # Status
@@ -108,3 +110,9 @@ class Metrics:
     BRAND_TITLE_SIZE = 18
     BRAND_SUBTITLE_SIZE = 10
     BRAND_MARK_SIZE = 28
+
+    SECTION_SPACING = 8
+
+    FORM_SPACING = 4
+
+   

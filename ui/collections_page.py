@@ -21,10 +21,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 from widgets.collection_browser import CollectionBrowser
 from widgets.collection_actions import CollectionActions
@@ -97,7 +97,7 @@ class CollectionsPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Collections",
             subtitle="Browse ESO achievements, collectibles, and discoveries.",
             department="Research",
@@ -107,7 +107,7 @@ class CollectionsPage(QWidget):
 
         self.actions = CollectionActions()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         layout = QVBoxLayout(self)
 
@@ -118,13 +118,13 @@ class CollectionsPage(QWidget):
             12,
         )
 
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         layout.addWidget(
             self.header
         )
 
-        browser = SectionCard(
+        browser = FoundryCard(
             "Achievement Journal"
         )
 

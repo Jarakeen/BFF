@@ -3,9 +3,9 @@ obs=obslua
 local JSON_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentExpedition.json]]
 local JSON_INCIDENT_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentIncident.json]]
 local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\FieldNoteCounter.txt]]
-local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\Weather\]]
-local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\MarkerLog.md]]
-local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\StreamEvents.json]]
+local WEATHER_FOLDER=[[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\Weather\]]
+local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\MarkerLog.md]]
+local STREAM_EVENTS_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\StreamEvents.json]]
 
 ----------------------------------------------------------
 -- Chapter Marker Tracking
