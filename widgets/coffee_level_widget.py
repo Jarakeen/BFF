@@ -71,7 +71,6 @@ class CoffeeLevelWidget(QWidget):
         self.edit = QLineEdit()
 
         self.random_button = QPushButton()
-        self.random_button.setFixedWidth(34)
         self.random_button.setToolTip(
             "Randomize value"
         )

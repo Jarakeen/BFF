@@ -87,7 +87,7 @@ class EsoDatabase:
 
             self._connection.close()
 
-            self._connection = None
+            self._connection = None          
 
     def table_exists(
         self,
@@ -104,4 +104,4 @@ class EsoDatabase:
             (table,),
         ).fetchone()
 
-        return row is not None        
+        return row is not None

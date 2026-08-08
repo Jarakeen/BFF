@@ -29,7 +29,7 @@ from ui.components.foundry_card import FoundryCard
 from widgets.collection_browser import CollectionBrowser
 from widgets.collection_actions import CollectionActions
 
-from services.settings_service import SettingsService
+from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.achievement_progress_service import (
     AchievementProgressService,
 )
@@ -58,52 +58,35 @@ class CollectionsPage(QWidget):
     # Services
     # --------------------------------------------------
 
+
     def build_services(self):
 
-        self.settings = SettingsService(
-            Path("settings.json")
-        ).load()
+        data_dir = Path(__file__).resolve().parents[1] / "data"
 
-        try:
-            self.progress = AchievementProgressService(
-                Path(
-                    self.settings["AchievementProgress"]
-                )
-            )
+        self.eso_data_service = EsoAchievementDatabaseService(
+            data_dir / "eso.db"
+        )
 
-            self.provider = AchievementProvider(
-                data_path=Path(
-                    self.settings["AchievementData"]
-                ),
-                progress=self.progress,
-            )
-
-        except KeyError:
-
-            #
-            # Temporary development mode
-            #
-
-            from services.mock_achievement_provider import (
-                MockAchievementProvider,
-            )
-
-            self.provider = MockAchievementProvider()
-
+        self.achievement_progress_service = AchievementProgressService(
+            data_dir / "achievement_progress.json"
+        )
+    
             
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
     def build_ui(self):
-
         self.header = FoundryHeader(
             title="Collections",
             subtitle="Browse ESO achievements, collectibles, and discoveries.",
             department="Research",
         )
 
-        self.browser = CollectionBrowser()
+        self.browser = CollectionBrowser(
+        provider=self.eso_data_service,
+        progress=self.achievement_progress_service,
+    )
 
         self.actions = CollectionActions()
 
@@ -174,12 +157,10 @@ class CollectionsPage(QWidget):
 
     def refresh(self):
 
-        self.browser.set_provider(
-            self.provider
-        )
+        self.browser.reload()
 
         self.status.info(
-            f"{self.provider.completed_count()} achievements completed."
+            f"{self.achievement_progress_service.completed_count()} achievements completed."
         )
 
     def achievement_changed(
@@ -188,7 +169,7 @@ class CollectionsPage(QWidget):
         complete: bool,
     ):
 
-        self.provider.set_complete(
+        self.eso_data_service.set_complete(
             achievement_id,
             complete,
         )

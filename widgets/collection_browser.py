@@ -37,10 +37,16 @@ class CollectionBrowser(QWidget):
 
     achievementChanged = Signal(str, bool)
 
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        provider=None,
+        progress=None,
+        parent=None,
+    ):
         super().__init__(parent)
 
-        self.provider = None
+        self.provider = provider
+        self.progress_service = progress
 
         #
         # Search
@@ -68,8 +74,13 @@ class CollectionBrowser(QWidget):
             [
                 "Achievement",
                 "Points",
+                "Description",
             ]
         )
+
+        self.tree.setColumnWidth(0, 300)
+        self.tree.setColumnWidth(1, 70)
+        self.tree.setColumnWidth(2, 500)
 
         #
         # Progress
@@ -84,19 +95,16 @@ class CollectionBrowser(QWidget):
         left = QVBoxLayout()
 
         left.addWidget(self.search)
-
         left.addWidget(self.categories)
 
         right = QVBoxLayout()
 
         right.addWidget(self.tree)
-
         right.addWidget(self.progress)
 
         content = QHBoxLayout()
 
         content.addLayout(left, 1)
-
         content.addLayout(right, 3)
 
         layout = QVBoxLayout(self)
@@ -136,23 +144,13 @@ class CollectionBrowser(QWidget):
 
     def reload(self):
 
-        if self.provider is None:
-            return
-
         self.categories.clear()
 
-        for category in self.provider.categories():
-
-            self.categories.addItem(
-                category
-            )
-
-        if self.categories.count():
-
-            self.categories.setCurrentRow(0)
+        for category in self.provider.top_categories():
+            self.categories.addItem(category)
 
         self.progress.setText(
-            f"{self.provider.completed_count()} completed"
+            f"{self.progress_service.completed_count()} completed"
         )
 
     def category_changed(
@@ -177,7 +175,7 @@ class CollectionBrowser(QWidget):
                 parent
             )
 
-            for achievement in self.provider.achievements(
+            for achievement in self.provider.achievements_in(
                 category,
                 subcategory,
             ):
@@ -191,10 +189,18 @@ class CollectionBrowser(QWidget):
                                 ""
                             )
                         ),
+                        achievement.get(
+                            "desc",
+                            ""
+                        ),
                     ]
                 )
 
-                if achievement["completed"]:
+                achievement_id = achievement["id"]
+
+                if self.progress_service.is_complete(
+                    achievement_id
+                ):
 
                     child.setCheckState(
                         0,
@@ -211,7 +217,7 @@ class CollectionBrowser(QWidget):
                 child.setData(
                     0,
                     Qt.ItemDataRole.UserRole,
-                    achievement["id"],
+                    achievement_id,
                 )
 
                 parent.addChild(
@@ -223,7 +229,6 @@ class CollectionBrowser(QWidget):
         self.tree.itemChanged.connect(
             self.item_changed
         )
-
     # --------------------------------------------------
     # Search
     # --------------------------------------------------

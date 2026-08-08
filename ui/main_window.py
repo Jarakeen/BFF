@@ -10,7 +10,7 @@
 # ==================================================
 
 from __future__ import annotations
-
+from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -21,7 +21,9 @@ from PySide6.QtWidgets import (
     )
 
 from ui.components.foundry_sidebar import FoundrySidebar
-
+from services.eso_achievement_database_service import (
+    EsoAchievementDatabaseService,
+)
 from ui.broadcast_page import BroadcastPage
 from ui.field_notes_page import FieldNotesPage
 from ui.stream_elements_page import LiveOperationsPage
@@ -39,7 +41,10 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
+        data_dir = Path(__file__).resolve().parents[1] / "data"
+        self.eso_data_service = EsoAchievementDatabaseService(
+            data_dir / "eso.db"
+        )
         self.setWindowTitle(
             "Black Feather Foundry Field Office"
         )
