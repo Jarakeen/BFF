@@ -15,10 +15,10 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar   
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 class DebugPage(QWidget):
 
@@ -32,7 +32,7 @@ class DebugPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Developer Console",
             subtitle="Diagnostics and maintenance.",
             department="Engineering",
@@ -68,7 +68,7 @@ class DebugPage(QWidget):
             "Reload Settings"
         )
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         layout = QVBoxLayout(self)
 
@@ -80,11 +80,11 @@ class DebugPage(QWidget):
 
         top = QHBoxLayout()
 
-        info = SectionCard("Application")
+        info = FoundryCard("Application")
 
         info.addWidget(self.system_info)
 
-        tree = SectionCard("Widgets")
+        tree = FoundryCard("Widgets")
 
         tree.addWidget(self.widget_tree)
 
@@ -98,7 +98,7 @@ class DebugPage(QWidget):
         # Logs
         #
 
-        logs = SectionCard("Recent Log")
+        logs = FoundryCard("Recent Log")
 
         logs.addWidget(self.log_output)
 

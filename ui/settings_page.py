@@ -16,20 +16,21 @@
 from __future__ import annotations
 
 from pathlib import Path
-
+from ui.theme.roles import ButtonRole
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
     QFileDialog,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.theme.roles import ButtonRole
+from ui.components.foundry_button import FoundryButton
+from ui.components.foundry_status_bar import FoundryStatusBar
 from widgets.settings_editor import SettingsEditor
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 from services.settings_service import SettingsService
 from services.obs_websocket_service import ObsWebSocketService
@@ -65,7 +66,7 @@ class SettingsPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Settings",
             subtitle="Configure the Foundry workspace and services.",
             department="Administration",
@@ -73,18 +74,21 @@ class SettingsPage(QWidget):
 
         self.editor = SettingsEditor()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
-        self.save_button = QPushButton(
-            "Save Settings"
+        self.save_button = FoundryButton(
+            "Save Settings",
+            role=ButtonRole.SUCCESS,
         )
 
-        self.reload_button = QPushButton(
-            "Reload"
+        self.reload_button = FoundryButton(
+            "Reload",
+            role=ButtonRole.SUCCESS,
         )
 
-        self.test_button = QPushButton(
-            "Test OBS"
+        self.test_button = FoundryButton(
+            "Test OBS",
+            role=ButtonRole.SUCCESS,
         )
 
         #
@@ -100,13 +104,13 @@ class SettingsPage(QWidget):
             12,
         )
 
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         layout.addWidget(
             self.header
         )
 
-        editor = SectionCard(
+        editor = FoundryCard(
             "Foundry Settings"
         )
 

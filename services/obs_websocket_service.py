@@ -43,6 +43,9 @@ class ObsWebSocketService(QObject):
             self._socket.abort()
         self._scene_name = scene_name.strip()
         self._timeout.start(6000)
+        print(
+        f"Connecting to ws://{self.host}:{self.port}"
+)
         self._socket.open(QUrl(f"ws://{self.host}:{self.port}"))
 
     def _on_message(self, text: str) -> None:

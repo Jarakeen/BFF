@@ -23,10 +23,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 from widgets.archive_browser import ArchiveBrowser
 from widgets.archive_preview import ArchivePreview
@@ -73,10 +73,10 @@ class ArchivePage(QWidget):
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(12)
+        layout.setSpacing(18)
 
         # Widgets
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Archive",
             subtitle="Browse previous expeditions and Foundry records.",
             department="Archives",
@@ -85,13 +85,13 @@ class ArchivePage(QWidget):
         self.browser = ArchiveBrowser()
         self.preview = ArchivePreview()
         self.actions = ArchiveActions()
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         # Cards
-        browser = SectionCard("Archive Browser")
+        browser = FoundryCard("Archive Browser")
         browser.addWidget(self.browser)
 
-        preview = SectionCard("Preview")
+        preview = FoundryCard("Preview")
         preview.addWidget(self.preview)
 
         # Middle row

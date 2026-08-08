@@ -22,10 +22,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
-from ui.components.section_card import SectionCard
-
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.foundry_card import FoundryCard
 from widgets.broadcast_briefing import BroadcastBriefing
 from widgets.broadcast_generator_panel import BroadcastGeneratorPanel
 from widgets.broadcast_actions import BroadcastActions
@@ -80,103 +79,89 @@ class BroadcastPage(FoundryPage):
 
     def build_ui(self):
 
-            #
-            # Header
-            #
-
-            self.header = PageHeader(
-                title="Broadcast Desk",
-                subtitle="Prepare today's field dispatch.",
-                department="Communications",
-            )
-
-            #
-            # Widgets
-            #
-
-            self.briefing = BroadcastBriefing()
-
-            self.generator_panel = BroadcastGeneratorPanel()
-
-
-            self.actions = BroadcastActions()
-
-            self.status = StatusPanel()
-
-            #
-            # Page
-            #
-
-            self.set_header(self.header)
-
-            #
-            # Workspace
-            #
-
-            workspace_widget = QWidget()
-
-            workspace = QHBoxLayout(workspace_widget)
-
-            workspace.setContentsMargins(0, 0, 0, 0)
-            workspace.setSpacing(12)
-
-            #
-            # Left Card
-            #
-
-            briefing = SectionCard("Today's Briefing")
-
-            briefing.addWidget(self.briefing)
-            briefing.addStretch()
-
-            #
-            # Right Card
-            #
-
-            preview = SectionCard("Generated Broadcast")
-
-            preview.addWidget(self.generator_panel)
-
-            #
-            # Assemble Workspace
-            #
-
-            workspace.addWidget(
-                briefing,
-                2,
-            )
-
-            workspace.addWidget(
-                preview,
-                3,
-            )
-
-            self.add_workspace(workspace_widget)
-
-            #
-            # Bottom
-            #
-
-            self.set_actions(self.actions)
-
-            self.set_status(self.status)
-
-            self.status.info(
-                "Broadcast Desk ready."
-            )
         #
-        # Bottom actions
+        # Header
         #
 
-            self.set_actions(self.actions)
+        self.header = FoundryHeader(
+            title="Broadcast Desk",
+            subtitle="Prepare today's field dispatch.",
+            department="Communications",
+        )
 
-            self.set_status(self.status)
+        #
+        # Widgets
+        #
 
-            self.status.info(
-                "Broadcast Desk ready."
-            )
+        self.briefing = BroadcastBriefing()
 
-        
+        self.generator_panel = BroadcastGeneratorPanel()
+
+        self.actions = BroadcastActions()
+
+        self.status = FoundryStatusBar()
+
+        #
+        # Page
+        #
+
+        self.set_header(self.header)
+
+        #
+        # Workspace
+        #
+
+        workspace_widget = QWidget()
+
+        workspace = QHBoxLayout(workspace_widget)
+
+        workspace.setContentsMargins(0, 0, 0, 0)
+        workspace.setSpacing(12)
+
+        #
+        # Left Card
+        #
+
+        briefing = FoundryCard("Today's Briefing")
+
+        briefing.addWidget(self.briefing)
+        briefing.addStretch()
+
+        #
+        # Right Card
+        #
+
+        preview = FoundryCard("Generated Broadcast")
+
+        preview.addWidget(self.generator_panel)
+
+        #
+        # Assemble Workspace
+        #
+
+        workspace.addWidget(
+            briefing,
+            2,
+        )
+
+        workspace.addWidget(
+            preview,
+            3,
+        )
+
+        self.add_workspace(workspace_widget)
+
+        #
+        # Bottom
+        #
+
+        self.set_actions(self.actions)
+
+        self.set_status(self.status)
+
+        self.status.info(
+            "Broadcast Desk ready."
+        )
 
     # --------------------------------------------------
     # Signals
@@ -206,28 +191,23 @@ class BroadcastPage(FoundryPage):
 
     def generate(self):
 
-        print("=== GENERATE ===")
+        try:
 
-        model = self.briefing.model
-        print("Model:", model)
+            model = self.briefing.model
 
-        print("Generator:", self.generator)
+            result = self.generator.generate(model)
 
-        result = self.generator.generate(model)
+            self.generator_panel.set_result(result)
 
-        print("Result:", result)
+            self.status.success(
+                "Broadcast generated."
+            )
 
-        print("Titles:", getattr(result, "titles", None))
-        print("Notifications:", getattr(result, "notifications", None))
+        except Exception as exc:
 
-        self.generator_panel.set_result(result)
-
-        print("Title count:", self.generator_panel.title_list.count())
-        print("Notification count:", self.generator_panel.notification_list.count())
-
-        self.status.success(
-            "Broadcast generated."
-        )
+            self.status.error(
+                f"Generation failed: {exc}"
+            )
 
     def save_to_obs(self):
 
@@ -244,7 +224,7 @@ class BroadcastPage(FoundryPage):
             if not title or not notification:
 
                 self.status.warning(
-                    "Generate a broadcast first."
+                    "Select a title and notification first."
                 )
 
                 return
@@ -361,4 +341,4 @@ class BroadcastPage(FoundryPage):
                     self.dump_widget(
                         item.widget(),
                         indent + 4,
-                    )    
+                    )

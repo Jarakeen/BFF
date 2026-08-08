@@ -1,5 +1,8 @@
 # ui/theme/roles.py
 
+from enum import Enum, auto
+
+
 class Roles:
 
     PRIMARY = "primary"
@@ -8,7 +11,7 @@ class Roles:
 
     DANGER = "danger"
 
-    CARD = "sectionCard"
+    CARD = "FoundryCard"
 
     STAT = "statCard"
 
@@ -17,3 +20,11 @@ class Roles:
     PAGE_TITLE = "pageTitle"
 
     STATUS = "status"
+
+class ButtonRole(Enum):
+    PRIMARY = auto()
+    SECONDARY = auto()
+    SUCCESS = auto()
+    WARNING = auto()
+    DANGER = auto()
+    GHOST = auto()    

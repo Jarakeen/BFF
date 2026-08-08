@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     )
 
-from widgets.sidebar import Sidebar
+from ui.components.foundry_sidebar import FoundrySidebar
 
 from ui.broadcast_page import BroadcastPage
 from ui.field_notes_page import FieldNotesPage
@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
         # Sidebar
         #
 
-        self.sidebar = Sidebar()
+        self.sidebar = FoundrySidebar()
 
         layout.addWidget(self.sidebar)
         

@@ -22,9 +22,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
-from ui.components.section_card import SectionCard
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.foundry_card import FoundryCard
 from ui.foundry_page import FoundryPage
 from widgets.field_notes_editor import FieldNotesEditor
 from widgets.field_notes_actions import FieldNotesActions
@@ -86,7 +86,7 @@ class FieldNotesPage(FoundryPage):
         # Header
         #
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Field Notes",
             subtitle="Record today's observations for the Archive.",
             department="Archives",
@@ -104,7 +104,7 @@ class FieldNotesPage(FoundryPage):
 
         self.actions = FieldNotesActions()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         #
         # Workspace
@@ -117,10 +117,10 @@ class FieldNotesPage(FoundryPage):
         workspace.setContentsMargins(0, 0, 0, 0)
         workspace.setSpacing(12)
 
-        editor = SectionCard("Observation")
+        editor = FoundryCard("Observation")
         editor.addWidget(self.editor)
 
-        notes = SectionCard("Field Notebook")
+        notes = FoundryCard("Field Notebook")
         notes.addWidget(self.notebook)
 
         workspace.addWidget(

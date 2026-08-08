@@ -1,9 +1,32 @@
+# ==================================================
+# Black Feather Foundry
+#
+# File:
 # ui/theme/theme_manager.py
+#
+# Purpose:
+# Central theme manager.
+#
+# Responsible for:
+#   - Colors
+#   - Fonts
+#   - Metrics
+#   - Roles
+#   - Theme assets
+#   - QSS loading
+#
+# ==================================================
+
 from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtGui import QFont
+from PySide6.QtGui import (
+    QFont,
+    QIcon,
+)
+
+from PySide6.QtWidgets import QApplication
 
 from .colors import Colors
 from .fonts import Fonts
@@ -13,147 +36,211 @@ from .roles import Roles
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+# ==================================================
+# Theme
+# ==================================================
+
 class Theme:
-    """
-    Defines a complete visual theme.
-
-    A Theme bundles together:
-      - Colors
-      - Fonts
-      - Metrics
-      - Roles (QSS selector-name constants)
-      - Images / Logos
-
-    Widgets should ask ThemeManager for these values instead of hardcoding
-    them throughout the application.
-    """
 
     def __init__(
         self,
         name: str,
-        logo: str | None,
-        background_image: str | None,
+        folder: Path,
     ) -> None:
 
         self.name = name
 
-        # Images
-        self.logo = logo
-        self.background_image = background_image
+        self.folder = folder
 
-        # Colors
+        #
+        # Assets
+        #
+
+        self.logo = folder / "logo.ico"
+
+        self.stylesheet = folder / "foundry.qss"
+
+        self.preview = folder / "preview.png"
+
+        self.background = folder / "background.png"
+
+        #
+        # Design System
+        #
+
         self.colors = Colors
 
-        # Fonts
         self.fonts = Fonts
 
-        # Metrics
         self.metrics = Metrics
 
-        # Roles
         self.roles = Roles
 
 
+# ==================================================
+# Default Theme
+# ==================================================
+
 def _default_theme() -> Theme:
-    logo_path = PROJECT_ROOT / "Otter_Engineer.ico"
 
     return Theme(
+
         name="Black Feather Foundry",
-        logo=str(logo_path) if logo_path.exists() else None,
-        # No background art shipped with the project yet - stays None until
-        # one is added, rather than pointing at a file that doesn't exist.
-        background_image=None,
+
+        folder=(
+            PROJECT_ROOT
+            / "assets"
+            / "themes"
+            / "bff"
+        ),
+
     )
 
 
+# ==================================================
+# Theme Manager
+# ==================================================
+
 class ThemeManager:
-    """
-    Single source of truth for the application's appearance.
 
-    Example:
+    def __init__(
+        self,
+        theme: Theme | None = None,
+    ):
 
-        theme = ThemeManager()
-
-        theme.colors.ACCENT
-        theme.colors.CARD
-
-        theme.fonts.title()
-        theme.fonts.button()
-
-        theme.metrics.BUTTON_HEIGHT
-        theme.metrics.PAGE_MARGIN
-
-        theme.roles.CARD
-        theme.roles.NAV
-    """
-
-    def __init__(self, theme: Theme | None = None) -> None:
         self._theme = theme or _default_theme()
 
-    def set_theme(self, theme: Theme) -> None:
-        self._theme = theme
+    # -------------------------------------------------
+    # Apply
+    # -------------------------------------------------
+
+    def apply(
+        self,
+        app: QApplication,
+    ):
+
+        #
+        # Window Icon
+        #
+
+        if self.logo.exists():
+
+            app.setWindowIcon(
+                QIcon(str(self.logo))
+            )
+
+        #
+        # Stylesheet
+        #
+
+        if self.stylesheet.exists():
+
+            print("Loading:", self.stylesheet)
+            print("Exists:", self.stylesheet.exists())
+
+            app.setStyleSheet(
+
+                self.stylesheet.read_text(
+                    encoding="utf-8"
+                )
+
+            )
+
+            print(
+                f"Loaded theme '{self.name}'"
+            )
+
+        else:
+
+            print(
+                f"Missing stylesheet:\n{self.stylesheet}"
+            )
 
     # -------------------------------------------------
     # Theme
     # -------------------------------------------------
 
+    def set_theme(
+        self,
+        theme: Theme,
+    ):
+
+        self._theme = theme
+
+    # -------------------------------------------------
+    # Properties
+    # -------------------------------------------------
+
     @property
-    def name(self) -> str:
+    def name(self):
+
         return self._theme.name
 
-    # -------------------------------------------------
-    # Images
-    # -------------------------------------------------
-
     @property
-    def logo(self) -> str | None:
+    def logo(self):
+
         return self._theme.logo
 
     @property
-    def background_image(self) -> str | None:
-        return self._theme.background_image
+    def stylesheet(self):
 
-    # -------------------------------------------------
-    # Design System
-    # -------------------------------------------------
+        return self._theme.stylesheet
+
+    @property
+    def preview(self):
+
+        return self._theme.preview
+
+    @property
+    def background(self):
+
+        return self._theme.background
 
     @property
     def colors(self):
+
         return self._theme.colors
 
     @property
     def fonts(self):
+
         return self._theme.fonts
 
     @property
     def metrics(self):
+
         return self._theme.metrics
 
     @property
     def roles(self):
+
         return self._theme.roles
 
-    # -------------------------------------------------
-    # Convenience Aliases
-    # (keeps older code working)
-    # -------------------------------------------------
+    #
+    # Compatibility aliases
+    #
 
     @property
-    def sidebar_color(self) -> str:
+    def sidebar_color(self):
+
         return self.colors.SIDEBAR
 
     @property
-    def paper_color(self) -> str:
+    def paper_color(self):
+
         return self.colors.PAPER
 
     @property
-    def accent_color(self) -> str:
+    def accent_color(self):
+
         return self.colors.ACCENT
 
     @property
-    def title_font(self) -> QFont:
+    def title_font(self):
+
         return self.fonts.title()
 
     @property
-    def body_font(self) -> QFont:
+    def body_font(self):
+
         return self.fonts.body()

@@ -20,9 +20,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
-from ui.components.section_card import SectionCard
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.foundry_card import FoundryCard
 from ui.foundry_page import FoundryPage
 from widgets.session_panel import SessionPanel
 from widgets.raid_controls import RaidControls
@@ -83,7 +83,7 @@ class LiveOperationsPage(FoundryPage):
         )
 
         self.narrator = NarratorService(
-            root / "nat_his_nar.md"
+            root / "Natural_history_narrator.md"
         )
 
         print("Narrator file:", self.narrator.content_path)
@@ -114,15 +114,18 @@ class LiveOperationsPage(FoundryPage):
 
     def build_ui(self):
 
+        print("OBS Service:", self.obs)
         #
         # Header
         #
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Live Operations",
             subtitle="Run the current expedition and record its progress.",
             department="Operations",
-        )
+            )
+
+        
 
         self.set_header(self.header)
 
@@ -142,7 +145,7 @@ class LiveOperationsPage(FoundryPage):
 
         self.stream = StreamControls()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         #
         # Workspace
@@ -161,13 +164,13 @@ class LiveOperationsPage(FoundryPage):
 
         left = QVBoxLayout()
 
-        session = SectionCard("Expedition Session")
+        session = FoundryCard("Expedition Session")
         session.addWidget(self.session)
 
-        raid = SectionCard("Raid Controls")
+        raid = FoundryCard("Raid Controls")
         raid.addWidget(self.raid_controls)
 
-        stream = SectionCard("Stream Controls")
+        stream = FoundryCard("Stream Controls")
         stream.addWidget(self.stream)
 
         left.addWidget(session)
@@ -181,10 +184,10 @@ class LiveOperationsPage(FoundryPage):
 
         right = QVBoxLayout()
 
-        narrator = SectionCard("Narrator")
+        narrator = FoundryCard("Narrator")
         narrator.addWidget(self.narrator_panel)
 
-        timeline = SectionCard("Timeline")
+        timeline = FoundryCard("Timeline")
         timeline.addWidget(self.timeline)
 
         right.addWidget(narrator)

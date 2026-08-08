@@ -60,22 +60,7 @@ def main() -> int:
 
     theme = ThemeManager()
 
-    if theme.logo:
-        app.setWindowIcon(
-            QIcon(theme.logo)
-        )
-
-   # style_file = Path(
-   #     "assets/themes/bff/foundry.qss"
-   # )
-
-   # if style_file.exists():
-
-   #     app.setStyleSheet(
-   #         style_file.read_text(
-   #             encoding="utf-8"
-   #         )
-   #     )
+    theme.apply(app)
 
     #
     # Main Window

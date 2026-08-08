@@ -21,10 +21,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from widgets.page_header import PageHeader
-from widgets.status_panel import StatusPanel
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
 
-from ui.components.section_card import SectionCard
+from ui.components.foundry_card import FoundryCard
 
 from widgets.incident_editor import IncidentEditor
 from widgets.incident_actions import IncidentActions
@@ -79,7 +79,7 @@ class IncidentPage(QWidget):
 
     def build_ui(self):
 
-        self.header = PageHeader(
+        self.header = FoundryHeader(
             title="Incident Desk",
             subtitle="Prepare and file today's incident report.",
             department="Administration",
@@ -89,16 +89,16 @@ class IncidentPage(QWidget):
 
         self.actions = IncidentActions()
 
-        self.status = StatusPanel()
+        self.status = FoundryStatusBar()
 
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         layout.addWidget(self.header)
 
-        editor = SectionCard("Incident Report")
+        editor = FoundryCard("Incident Report")
         editor.addWidget(self.editor)
 
         layout.addWidget(editor)

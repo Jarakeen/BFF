@@ -1,22 +1,570 @@
-/* =====================================================
+/* ============================================================
    Black Feather Foundry
-   # assets/themes/bff/Foundry.qss
-   ===================================================== */
+   Expedition Night Theme
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   Global
+------------------------------------------------------------ */
 
 QWidget {
-    background-color: #171717;
-    color: #E8E3D6;
+    background: #121416;
+    color: #ECE8DF;
+    font-family: "Segoe UI";
     font-size: 10pt;
 }
-QFrame#card {
-    background-color: #202020;
-    border: 1px solid #343434;
-    border-radius: 8px;
-    padding: 10px;
+
+
+/* ------------------------------------------------------------
+   Main Window
+------------------------------------------------------------ */
+
+QMainWindow {
+    background: #121416;
 }
 
-QLabel#cardTitle {
-    color: #C79A4A;
+
+/* ------------------------------------------------------------
+   Section Cards
+------------------------------------------------------------ */
+
+QFrame[sectionCard="true"] {
+
+    background: #1B2024;
+
+    border: 1px solid #2F363D;
+
+    border-radius: 8px;
+
+    padding: 8px;
+}
+
+QFrame[sectionCard="true"]:hover {
+
+    border: 1px solid #4A555E;
+}
+
+
+/* ------------------------------------------------------------
+   Section Titles
+------------------------------------------------------------ */
+
+QLabel[sectionTitle="true"] {
+
+    color: #C89B5A;
+
+    font-size: 15pt;
+
+    font-weight: 600;
+
+    padding-bottom: 6px;
+}
+
+
+/* ------------------------------------------------------------
+   Page Header
+------------------------------------------------------------ */
+
+QFrame[pageHeader="true"] {
+
+    background: transparent;
+
+    border: none;
+
+    border-bottom: 1px solid #343C43;
+}
+
+
+QLabel[pageTitle="true"] {
+
+    color: #ECE8DF;
+
+    font-size: 22pt;
+
+    font-weight: 600;
+}
+
+
+QLabel[pageSubtitle="true"] {
+
+    color: #97A2AA;
+
+    font-size: 10pt;
+}
+
+
+QLabel[departmentLabel="true"] {
+
+    color: #B88C4A;
+
     font-weight: bold;
-    font-size: 14px;
+
+    letter-spacing: 2px;
+}
+
+
+/* ------------------------------------------------------------
+   Buttons
+------------------------------------------------------------ */
+
+QPushButton {
+
+    background: #2B3238;
+
+    border: 1px solid #404A51;
+
+    border-radius: 6px;
+
+    padding: 8px 14px;
+
+    color: #ECE8DF;
+
+    min-height: 30px;
+}
+
+QPushButton:hover {
+
+    background: #353E45;
+
+    border-color: #59666F;
+}
+
+QPushButton:pressed {
+
+    background: #242A2F;
+
+    border-color: #B88C4A;
+}
+
+QPushButton:disabled {
+
+    background: #1B2024;
+
+    color: #5A6369;
+
+    border-color: #2E353A;
+}
+
+
+/* ------------------------------------------------------------
+   Line Edits
+------------------------------------------------------------ */
+
+QLineEdit,
+QTextEdit,
+QPlainTextEdit {
+
+    background: #22282D;
+
+    border: 1px solid #39434A;
+
+    border-radius: 5px;
+
+    padding: 6px;
+
+    color: #ECE8DF;
+
+    selection-background-color: #B88C4A;
+}
+
+QLineEdit:focus,
+QTextEdit:focus,
+QPlainTextEdit:focus {
+
+    border: 1px solid #B88C4A;
+}
+
+
+/* ------------------------------------------------------------
+   Combo Boxes
+------------------------------------------------------------ */
+
+QComboBox {
+
+    background: #22282D;
+
+    border: 1px solid #39434A;
+
+    border-radius: 5px;
+
+    padding: 5px;
+}
+
+QComboBox::drop-down {
+
+    border: none;
+}
+
+
+/* ------------------------------------------------------------
+   Spin Boxes
+------------------------------------------------------------ */
+
+QSpinBox {
+
+    background: #22282D;
+
+    border: 1px solid #39434A;
+
+    border-radius: 5px;
+
+    padding: 5px;
+}
+
+
+/* ------------------------------------------------------------
+   Check Boxes
+------------------------------------------------------------ */
+
+QCheckBox {
+
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+
+    width: 16px;
+
+    height: 16px;
+}
+
+
+/* ------------------------------------------------------------
+   Lists
+------------------------------------------------------------ */
+
+QListWidget {
+
+    background: #20262B;
+
+    border: 1px solid #313A40;
+
+    border-radius: 6px;
+
+    padding: 4px;
+
+    alternate-background-color: #252D33;
+}
+
+QListWidget::item {
+
+    padding: 6px;
+}
+
+QListWidget::item:selected {
+
+    background: #B88C4A;
+
+    color: #121416;
+}
+
+
+/* ------------------------------------------------------------
+   Scrollbars
+------------------------------------------------------------ */
+
+QScrollBar:vertical {
+
+    background: transparent;
+
+    width: 10px;
+
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+
+    background: #404A51;
+
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+
+    background: #5B6973;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+
+    height: 0;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+
+    background: transparent;
+}
+
+
+/* ------------------------------------------------------------
+   Status Panel
+------------------------------------------------------------ */
+
+QFrame[statusPanel="true"] {
+
+    background: #171C20;
+
+    border-top: 1px solid #31383E;
+
+    padding: 6px;
+}
+
+
+/* ------------------------------------------------------------
+   Tooltips
+------------------------------------------------------------ */
+
+QToolTip {
+
+    background: #2B3238;
+
+    border: 1px solid #59666F;
+
+    color: #ECE8DF;
+
+    padding: 6px;
+}
+
+/* ------------------------------------------------------------
+   CARDS
+------------------------------------------------------------ */
+
+QFrame[foundryCard="true"] {
+
+    background: #1B2024;
+
+    border: 1px solid #323A41;
+
+    border-radius: 10px;
+}
+
+
+QWidget[cardHeader="true"] {
+
+    background: #181D21;
+
+    border-bottom: 1px solid #323A41;
+}
+
+
+QLabel[cardTitle="true"] {
+
+    color: #C89B5A;
+
+    font-weight: 600;
+
+    letter-spacing: 1px;
+}
+
+
+QLabel[cardIcon="true"] {
+
+    color: #C89B5A;
+
+    font-size: 16pt;
+}
+
+/* -------------------------------------------------
+   Foundry Header
+------------------------------------------------- */
+
+QWidget[foundryHeader="true"] {
+
+    background: transparent;
+
+    border: none;
+
+    border-bottom: 1px solid #323A41;
+
+    padding-bottom: 8px;
+}
+
+
+/* Title */
+
+QLabel[pageTitle="true"] {
+
+    color: #ECE8DF;
+
+    font-size: 24pt;
+
+    font-weight: 600;
+}
+
+
+/* Subtitle */
+
+QLabel[pageSubtitle="true"] {
+
+    color: #98A3AA;
+
+    font-size: 10pt;
+
+    padding-left: 32px;
+}
+
+
+/* Department */
+
+QLabel[departmentLabel="true"] {
+
+    color: #C89B5A;
+
+    font-size: 10pt;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+
+/* Icon */
+
+QLabel[headerIcon="true"] {
+
+    color: #C89B5A;
+
+    font-size: 20pt;
+}
+
+QPushButton {
+
+    background: #2B3238;
+
+    border: 1px solid #404A51;
+
+    border-radius: 6px;
+
+    padding: 8px 14px;
+
+    color: #ECE8DF;
+}
+
+QPushButton[primary="true"] {
+
+    background: #B88C4A;
+
+    border: 1px solid #C89B5A;
+
+    color: #121416;
+}
+
+QPushButton[success="true"] {
+
+    background: #486C4D;
+
+    border: 1px solid #5B8A61;
+}
+
+QPushButton[warning="true"] {
+
+    background: #8C6B38;
+
+    border: 1px solid #B88C4A;
+}
+
+QPushButton[danger="true"] {
+
+    background: #7A3E3E;
+
+    border: 1px solid #B65A5A;
+}
+
+QPushButton[ghost="true"] {
+
+    background: transparent;
+
+    border: 1px solid transparent;
+}
+
+/* ==========================================================
+   Foundry Progress Bar
+   ========================================================== */
+
+QProgressBar {
+
+    background: #1B2024;
+
+    border: 1px solid #323A41;
+
+    border-radius: 6px;
+
+    text-align: center;
+
+    color: #ECE8DF;
+
+    padding: 1px;
+}
+
+QProgressBar::chunk {
+
+    background: #B88C4A;
+
+    border-radius: 5px;
+}
+
+/* ==========================================================
+   Foundry Status Bar
+   ========================================================== */
+
+QWidget[foundryStatusBar="true"] {
+
+    background: #171C20;
+
+    border-top: 1px solid #323A41;
+}
+
+QLabel[statusIcon="true"] {
+
+    color: #B88C4A;
+}
+
+QLabel[statusMessage="true"] {
+
+    color: #ECE8DF;
+}
+
+
+/* Success */
+
+QLabel[statusIcon="true"][statusRole="success"] {
+
+    color: #6FA76D;
+}
+
+
+/* Warning */
+
+QLabel[statusIcon="true"][statusRole="warning"] {
+
+    color: #D5B46A;
+}
+
+
+/* Error */
+
+QLabel[statusIcon="true"][statusRole="error"] {
+
+    color: #C96A6A;
+}
+
+QLineEdit,
+QComboBox,
+QSpinBox,
+QDateEdit,
+QTimeEdit,
+QPlainTextEdit {
+
+    min-height: 26px;
+
+    padding: 2px 6px;
+}
+
+QLineEdit,
+QComboBox,
+QSpinBox {
+
+    min-height: 24px;
 }
