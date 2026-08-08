@@ -59,8 +59,24 @@ def main() -> int:
     #
 
     theme = ThemeManager()
+    otter = " Otter_Engineer.ico "
 
-    theme.apply(app)
+    if theme.logo:
+        app.setWindowIcon(
+            QIcon(otter)
+        )
+
+    style_file = Path(
+        "assets/themes/bff/foundry.qss"
+    )
+
+    if style_file.exists():
+
+        app.setStyleSheet(
+            style_file.read_text(
+                encoding="utf-8"
+            )
+        )
 
     #
     # Main Window

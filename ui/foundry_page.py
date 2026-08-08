@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QScrollArea,
     QSizePolicy,
+    QFrame,
 )
 
 
@@ -75,10 +76,28 @@ class FoundryPage(QWidget):
 
         self.workspace_layout.setSpacing(12)
 
+        self.workspace_widget.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum,
+        )
+
+        self.workspace_scroll = QScrollArea()
+
+        self.workspace_scroll.setWidgetResizable(True)
+
+        self.workspace_scroll.setFrameShape(
+            QFrame.Shape.NoFrame
+        )
+
+        self.workspace_scroll.setWidget(
+            self.workspace_widget
+        )
+
         self.root.addWidget(
-        self.workspace_widget,
-        1,
-        ) 
+            self.workspace_scroll,
+            1,
+        )
+
         #
         # References
         #
@@ -91,7 +110,8 @@ class FoundryPage(QWidget):
     # Header
     # --------------------------------------------------
 
-    def set_header(self, widget:  QWidget):
+    def set_header(self, widget):
+
         self.header = widget
 
         self.root.insertWidget(
@@ -103,7 +123,7 @@ class FoundryPage(QWidget):
     # Workspace
     # --------------------------------------------------
 
-    def add_workspace(self, widget: QWidget):
+    def add_workspace(self, widget):
 
         self.workspace_layout.addWidget(
             widget
