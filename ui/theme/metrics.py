@@ -48,7 +48,7 @@ class Metrics:
     FIELD_SPACING = 12
 
     INPUT_HEIGHT = 26
-    BUTTON_HEIGHT = 32
+    BUTTON_HEIGHT = 28
 
     CHECKBOX_HEIGHT = 22
 

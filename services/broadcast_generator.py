@@ -14,16 +14,22 @@ from dataclasses import dataclass
 
 @dataclass
 class BroadcastRequest:
+
     focus: str
     location: str
     goal: str
     mood: str
     team: str = ""
 
+    custom_title: str = ""
+    custom_notification: str = ""
+
+
 @dataclass
 class BroadcastResult:
+
     titles: list[str]
-    notifications: list[str]    
+    notifications: list[str]
 
 
 class BroadcastGenerator:
@@ -40,58 +46,130 @@ class BroadcastGenerator:
         request: BroadcastRequest,
     ) -> list[str]:
 
+        #
+        # Use custom title when supplied.
+        #
+
+        if request.custom_title.strip():
+
+            return [
+                request.custom_title.strip()
+            ]
+
         titles = [
+
             f"Field Notes: {request.location} — {request.goal}",
+
             f"{request.location} Survey, Continued",
+
             f"Documenting {request.location} Tonight",
+
             f"Foundry Field Report — {request.location}",
+
             f"An Expedition to {request.location}",
+
             f"{request.location}: Observations in Progress",
+
             f"Cataloging {request.location} — {request.goal}",
+
             f"Field Office Live: {request.location}",
+
             f"Weather Permitting: {request.location}",
+
             f"Tonight's Log: {request.location} ({request.mood})",
+
             f"Routine Survey — {request.location}",
+
             f"{request.goal}, Documented Live from {request.location}",
+
         ]
 
         if request.team:
+
             titles = [
+
                 f"{title} — {request.team}"
+
                 for title in titles
+
             ]
 
         return self._unique(titles)[:10]
+
+    # --------------------------------------------------
 
     def generate_notifications(
         self,
         request: BroadcastRequest,
     ) -> list[str]:
 
+        #
+        # Use custom notification when supplied.
+        #
+
+        if request.custom_notification.strip():
+
+            text = request.custom_notification.strip()
+
+            if len(text) > 140:
+
+                text = (
+                    text[:137].rstrip()
+                    + "..."
+                )
+
+            return [text]
+
         mood = request.mood.lower()
 
         goal = (
-            request.goal[:1].lower() +
-            request.goal[1:]
+            request.goal[:1].lower()
+            + request.goal[1:]
         ) if request.goal else ""
 
         notifications = [
 
-            f"The Foundry has resumed operations at {request.location}. Tonight's objective: {request.goal}. Findings to follow.",
+            (
+                f"The Foundry has resumed operations at "
+                f"{request.location}. Tonight's objective: "
+                f"{request.goal}. Findings to follow."
+            ),
 
-            f"Field notes are being taken at {request.location}. Conditions: {mood}.",
+            (
+                f"Field notes are being taken at "
+                f"{request.location}. Conditions: {mood}."
+            ),
 
-            f"An expedition has been dispatched to {request.location}. Purpose: {request.goal}.",
+            (
+                f"An expedition has been dispatched to "
+                f"{request.location}. Purpose: {request.goal}."
+            ),
 
-            f"Observed: the crew has returned to {request.location}. Documentation ongoing.",
+            (
+                f"Observed: the crew has returned to "
+                f"{request.location}. Documentation ongoing."
+            ),
 
-            f"Tonight's survey covers {request.location}. Objective: {request.goal}. Weather: {mood}.",
+            (
+                f"Tonight's survey covers {request.location}. "
+                f"Objective: {request.goal}. Weather: {mood}."
+            ),
 
-            f"The archive grows. Tonight: {request.location}, {goal}.",
+            (
+                f"The archive grows. Tonight: "
+                f"{request.location}, {goal}."
+            ),
 
-            f"Field Office open. Currently investigating {request.location}. No further remarks at this time.",
+            (
+                f"Field Office open. Currently investigating "
+                f"{request.location}. No further remarks at this time."
+            ),
 
-            f"Routine documentation of {request.location} is underway. All quiet so far.",
+            (
+                f"Routine documentation of {request.location} "
+                f"is underway. All quiet so far."
+            ),
+
         ]
 
         trimmed = []
@@ -99,24 +177,37 @@ class BroadcastGenerator:
         for text in notifications:
 
             if len(text) > 140:
-                text = text[:137].rstrip() + "..."
+
+                text = (
+                    text[:137].rstrip()
+                    + "..."
+                )
 
             trimmed.append(text)
 
         return self._unique(trimmed)[:8]
 
+    # --------------------------------------------------
 
     def generate(
         self,
         request: BroadcastRequest,
     ) -> BroadcastResult:
+
         """
         Generate both stream titles and notifications.
         """
 
         return BroadcastResult(
-            titles=self.generate_titles(request),
-            notifications=self.generate_notifications(request),
+
+            titles=self.generate_titles(
+                request
+            ),
+
+            notifications=self.generate_notifications(
+                request
+            ),
+
         )
 
     # --------------------------------------------------
@@ -129,6 +220,7 @@ class BroadcastGenerator:
     ) -> list[str]:
 
         seen = set()
+
         unique = []
 
         for value in values:
@@ -137,6 +229,7 @@ class BroadcastGenerator:
                 continue
 
             seen.add(value)
+
             unique.append(value)
 
         return unique

@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QComboBox,
     QLineEdit,
+    QGroupBox,
+    QPushButton,
 )
 
 from widgets.coffee_selector import CoffeeSelector
@@ -67,6 +69,9 @@ class BroadcastModel:
     incidents: str
     team: str
     mood: str
+
+    custom_title: str = ""
+    custom_notification: str = ""
 
 
 class BroadcastBriefing(QWidget):
@@ -128,9 +133,23 @@ class BroadcastBriefing(QWidget):
             "Hardmode",
         ])
 
+        self.broadcast_custom_title_edit = QLineEdit()
+
+        self.broadcast_custom_title_edit.setPlaceholderText(
+            "Enter your own stream title..."
+        )
+
+        self.broadcast_custom_notification_edit = QLineEdit()
+
+        self.broadcast_custom_notification_edit.setPlaceholderText(
+            "Enter your own live notification..."
+        )
+
+    
         #
         # Layout
         #
+        
 
         form = QFormLayout(self)
 
@@ -145,7 +164,15 @@ class BroadcastBriefing(QWidget):
         form.addRow("Incidents", self.incidents)
         form.addRow("Team", self.team)
         form.addRow("Tone", self.mood)
+        form.addRow(
+            "Your Own Stream Title",
+            self.broadcast_custom_title_edit
+        )
 
+        form.addRow(
+            "Your Own Live Notification",
+            self.broadcast_custom_notification_edit
+        )
     # --------------------------------------------------
     # Model
     # --------------------------------------------------

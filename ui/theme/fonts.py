@@ -139,7 +139,7 @@ class Fonts:
         """
         Button captions.
         """
-        f = QFont("Bebas Neue", 14)
+        f = QFont("Bebas Neue", 18)
         f.setBold(True)
         return f
 
