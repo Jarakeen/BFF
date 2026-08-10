@@ -1,273 +1,215 @@
+# ==================================================
+# Black Feather Foundry
+#
+# File:
+# engine/parsers/base_parser.py
+#
+# Purpose:
+# Shared infrastructure for Foundry data parsers.
+#
+# This class does NOT interpret ESO mechanics.
+# It provides common tools for:
+# - loading raw data
+# - normalizing values
+# - grouping records
+# - writing derived data
+#
+# ==================================================
+
+from __future__ import annotations
+
 import json
-import urllib.request
-import re
 from pathlib import Path
-from typing import List, Dict, Any
-
-
-
-# =============================================================================
-# Generic API
-# =============================================================================
-
-
-
-
-
-
-
-# =============================================================================
-# UESP Fetchers
-# =============================================================================
-
-
-
-
-
-
-#------------
-# skill   
-#-----------
-
-def _fetch_skill_tree(self) -> list[dict]:
-    """Fetch the ESO skill tree definitions."""
-
-    return self._fetch_json(
-        table="skillTree",
-    )
-
-def _fetch_skill_tree(self) -> list[dict]:
-    """Fetch the ESO skill tree definitions."""
-
-    return self._fetch_json(
-        table="skillTree",
-    )
-
-
-
-
-
-# =============================================================================
-# Record Builders
-# =============================================================================
-
-
-
-
-#--------------
-#  Skills
-#--------------
-        
-def _build_skill(self, entry: dict) -> dict:
-
-    return {
-        "id": entry["id"],
-        "name": entry["name"],
-        "description": entry["description"],
-        "icon": entry["icon"],
-        "cast_time": entry.get("castTime"),
-        "cost": entry.get("cost"),
-        "range": entry.get("range"),
-    }
-
-
-
-#--------------
-#  food
-#--------------
-
-def _build_food(self, entry: dict) -> dict:
-
-    description = entry.get("description", "")
-
-    return {
-        "id": f"food_{self._slug(entry['name'])}",
-        "name": entry["name"],
-        "source_layer": "foods",
-
-        "stats_provided": {
-            "max_health":
-                self._extract_numeric_stat(description, "Max Health"),
-
-            "max_magicka":
-                self._extract_numeric_stat(description, "Max Magicka"),
-
-            "max_stamina":
-                self._extract_numeric_stat(description, "Max Stamina"),
-
-            "magicka_recovery":
-                self._extract_numeric_stat(description, "Magicka Recovery"),
-
-            "stamina_recovery":
-                self._extract_numeric_stat(description, "Stamina Recovery"),
-        },
-    }
-
-#---------------
-#  potion
-#---------------
-
-
-def _build_potion(self, entry: dict) -> dict:
-
-    description = entry.get("description", "")
-
-    return {
-        "id": f"potion_{self._slug(entry['name'])}",
-        "name": entry["name"],
-
-        "source_layer": "potions",
-
-        "base_cooldown_seconds": 45,
-
-        "base_effect_duration_seconds": 36,
-
-        "instant_restoration": {
-            "health":
-                self._extract_numeric_stat(description, "Health"),
-
-            "magicka":
-                self._extract_numeric_stat(description, "Magicka"),
-
-            "stamina":
-                self._extract_numeric_stat(description, "Stamina"),
-        },
-    }
-
-
-
-# =============================================================================
-# Public Mining Operations
-# =============================================================================
-
-
-# --------------
-# Consumables
-# --------------
-
-def mine_consumables(self) -> str:
-    """Mine food, drink, and potion reference data."""
-
-    try:
-
-        compiled_foods = []
-        compiled_potions = []
-
-        # --------------------------------------------------
-        # Foods (Type 4)
-        # --------------------------------------------------
-
-        for entry in self._fetch_items(4):
-            compiled_foods.append(self._build_food(entry))
-
-        # --------------------------------------------------
-        # Drinks (Type 12)
-        # --------------------------------------------------
-
-        for entry in self._fetch_items(12):
-            compiled_foods.append(self._build_food(entry))
-
-        # --------------------------------------------------
-        # Potions (Type 7)
-        # --------------------------------------------------
-
-        for entry in self._fetch_items(7):
-            compiled_potions.append(self._build_potion(entry))
-
-        self._write_to_database("foods.json", compiled_foods)
-        self._write_to_database("potions.json", compiled_potions)
-
-        return (
-            f"Successfully mined "
-            f"{len(compiled_foods)} foods/drinks and "
-            f"{len(compiled_potions)} potions."
+from collections import defaultdict
+from typing import Any
+
+
+class BaseParser:
+    """
+    Base class for Foundry data parsers.
+
+    Subclasses are responsible for understanding
+    specific ESO data types.
+
+    BaseParser only handles infrastructure.
+    """
+
+    def __init__(
+        self,
+        raw_folder: str | Path,
+        output_folder: str | Path,
+    ):
+        self.raw_folder = Path(raw_folder)
+        self.output_folder = Path(output_folder)
+
+        self.output_folder.mkdir(
+            parents=True,
+            exist_ok=True,
         )
 
-    except Exception as e:
-        return f"Consumable mining failed: {e}"
+    # --------------------------------------------------
+    # File I/O
+    # --------------------------------------------------
 
+    def load_json(
+        self,
+        filename: str,
+    ) -> Any:
 
-# --------------
-# Skills
-# --------------
+        path = self.raw_folder / filename
 
-def mine_skills(self) -> str:
-    """Build the skills reference database."""
-
-    try:
-
-        compiled = []
-
-        for entry in self._fetch_mined_skills():
-            compiled.append(
-                self._build_skill(entry)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Raw data file not found: {path}"
             )
 
-        self._write_to_database(
-            "skills.json",
-            compiled,
-        )
+        with path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
 
-        return (
-            f"Successfully mined "
-            f"{len(compiled)} skills."
-        )
+            return json.load(file)
 
-    except Exception as e:
-        return f"Skill mining failed: {e}"
+    def write_json(
+        self,
+        filename: str,
+        data: Any,
+    ) -> Path:
 
+        path = self.output_folder / filename
 
+        with path.open(
+            "w",
+            encoding="utf-8",
+        ) as file:
 
-#--------------
-# gear sets
-#--------------
+            json.dump(
+                data,
+                file,
+                indent=2,
+                ensure_ascii=False,
+            )
 
-def mine_gear_sets(self):
+        return path
 
-    raw = self._fetch_sets()
+    # --------------------------------------------------
+    # Value helpers
+    # --------------------------------------------------
 
-    sets = []
+    @staticmethod
+    def clean_string(
+        value: Any,
+    ) -> str | None:
 
-    for entry in raw:
-        sets.append(
-            self._build_set(entry)
-        )
+        if value is None:
+            return None
 
-    self._write_to_database(
-        "gear_sets.json",
-        sets,
-    )
+        value = str(value).strip()
 
+        if not value:
+            return None
 
+        return value
 
-#-------------
-# do the thing
-#-------------
+    @staticmethod
+    def to_int(
+        value: Any,
+        default: int | None = None,
+    ) -> int | None:
 
-def _slug(self, text: str) -> str:
-    return (
-        text.lower()
-            .replace(" ", "_")
-            .replace("'", "")
-    )
+        if value is None:
+            return default
 
+        try:
+            return int(value)
 
+        except (
+            TypeError,
+            ValueError,
+        ):
+            return default
 
-def _fetch_json(self, table: str, **params) -> list[dict]:
+    @staticmethod
+    def to_float(
+        value: Any,
+        default: float | None = None,
+    ) -> float | None:
 
-    query = "&".join(
-        f"{key}={value}"
-        for key, value in params.items()
-    )
+        if value is None:
+            return default
 
-    url = (
-        "https://esolog.uesp.net/exportJson.php"
-        f"?table={table}"
-    )
+        try:
+            return float(value)
 
-    if query:
-        url += f"&{query}"
+        except (
+            TypeError,
+            ValueError,
+        ):
+            return default
 
-    data = self._fetch_raw_web_stream(url)
+    @staticmethod
+    def to_bool(
+        value: Any,
+    ) -> bool:
 
-    return data.get(table, [])
+        if isinstance(value, bool):
+            return value
+
+        if value is None:
+            return False
+
+        return str(value).lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+
+    # --------------------------------------------------
+    # Grouping
+    # --------------------------------------------------
+
+    @staticmethod
+    def group_by(
+        records: list[dict],
+        key: str,
+    ) -> dict[str, list[dict]]:
+
+        groups: dict[str, list[dict]] = defaultdict(list)
+
+        for record in records:
+
+            value = record.get(key)
+
+            if value is None:
+                continue
+
+            groups[str(value)].append(
+                record
+            )
+
+        return dict(groups)
+
+    # --------------------------------------------------
+    # Deduplication
+    # --------------------------------------------------
+
+    @staticmethod
+    def unique_by(
+        records: list[dict],
+        key: str,
+    ) -> list[dict]:
+
+        seen = set()
+        result = []
+
+        for record in records:
+
+            value = record.get(key)
+
+            if value in seen:
+                continue
+
+            seen.add(value)
+            result.append(record)
+
+        return result
