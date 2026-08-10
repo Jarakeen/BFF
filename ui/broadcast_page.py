@@ -34,7 +34,8 @@ from widgets.broadcast_briefing import BroadcastBriefing
 from widgets.broadcast_generator_panel import BroadcastGeneratorPanel
 from widgets.broadcast_actions import BroadcastActions
 from ui.foundry_page import FoundryPage
-
+from services.eso_database import EsoDatabase
+from services.roster_service import RosterService
 from services.settings_service import SettingsService
 from services.broadcast_generator import BroadcastGenerator
 from services.obs_websocket_service import ObsWebSocketService
@@ -78,6 +79,16 @@ class BroadcastPage(FoundryPage):
             password=self.settings["ObsWebSocketPassword"],
         )
 
+        self.db = EsoDatabase(
+            Path("data/eso.db")
+        )
+
+        self.roster_service = RosterService(
+            self.db
+        )
+        self.briefing = BroadcastBriefing(
+            roster_service=self.roster_service
+        )
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -98,7 +109,9 @@ class BroadcastPage(FoundryPage):
         # Widgets
         #
 
-        self.briefing = BroadcastBriefing()
+        self.briefing = BroadcastBriefing(
+             roster_service=self.roster_service
+        )
 
         self.generator_panel = BroadcastGeneratorPanel()
 
