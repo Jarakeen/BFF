@@ -145,6 +145,7 @@ class FoundrySidebar(QWidget):
             ("Incidents", "incident"),
             ("Achievements", "achievement"),
             ("Collections", "collections"),
+            ("Roster", "roster"),
             ("Console", "console"),
             ("Settings", "settings"),
 

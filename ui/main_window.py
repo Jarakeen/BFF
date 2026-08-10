@@ -34,6 +34,7 @@ from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
 from ui.achievement_page import AchievementPage
 from ui.collections_page import CollectionsPage
+from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
 from services.expedition_service import ExpeditionService
@@ -141,6 +142,8 @@ class MainWindow(QMainWindow):
             "achievement": AchievementPage(),
 
             "collections": CollectionsPage(),
+
+            "roster": RosterPage(),
 
            "console": OperationsConsole(
                 expedition=self.expedition_service
