@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
 
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
-
+from services.expedition_service import ExpeditionService
+from services.raid_service import RaidService
+from services.statistics_engine import StatisticsEngine
 from ui.components.foundry_card import FoundryCard
 
 
@@ -37,8 +39,20 @@ class OperationsConsole(QWidget):
     Central command interface.
     """
 
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        expedition: ExpeditionService,
+        parent=None,
+    ):
         super().__init__(parent)
+
+        self.expedition = expedition
+
+        self.raid = RaidService(
+            expedition=self.expedition
+        )
+
+        self.statistics = StatisticsEngine()
 
         self.build_ui()
 

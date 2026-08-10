@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QGroupBox,
     QPushButton,
+    QTextEdit,
 )
 
 from widgets.coffee_selector import CoffeeSelector
@@ -55,15 +56,15 @@ OTTER_VARIABLES = [
 
 @dataclass
 class BroadcastModel:
-
+    expedition: str
     focus: str
     location: str
     goal: str
-    difficulty: list[str]
+    difficulty: str
 
     weather: str
     coffee: str
-    coffee_level: str
+    coffeeLevel: str
 
     engineering: str
     incidents: str
@@ -72,6 +73,11 @@ class BroadcastModel:
 
     custom_title: str = ""
     custom_notification: str = ""
+
+    clipBoard: str = ""
+    content: str = ""
+    context: str = ""
+    nextSteps : str = ""
 
 
 class BroadcastBriefing(QWidget):
@@ -111,12 +117,12 @@ class BroadcastBriefing(QWidget):
 
         self.coffee = CoffeeSelector()
 
-        self.coffee_level = CoffeeLevelWidget()
+        self.coffeeLevel = CoffeeLevelWidget()
 
-        self.coffee_level.set_generator(
+        self.coffeeLevel.set_generator(
             lambda: f"{random.randint(0, 100)}%"
 )
-
+        self.clipBoard = QLineEdit()
         self.engineering = QComboBox()
         self.engineering.setEditable(True)
         self.engineering.addItems(OTTER_VARIABLES)
@@ -159,7 +165,7 @@ class BroadcastBriefing(QWidget):
         form.addRow("Difficulty", self.difficulty)
         form.addRow("Weather", self.weather)
         form.addRow("Coffee", self.coffee)
-        form.addRow("Coffee Level", self.coffee_level)
+        form.addRow("Coffee Level", self.coffeeLevel)
         form.addRow("Engineering", self.engineering)
         form.addRow("Incidents", self.incidents)
         form.addRow("Team", self.team)
@@ -181,22 +187,22 @@ class BroadcastBriefing(QWidget):
     def model(self) -> BroadcastModel:
 
         return BroadcastModel(
+            expedition=self.location.text().strip(),
             focus=self.focus.currentText(),
             location=self.location.text().strip(),
             goal=self.goal.text().strip(),
             difficulty=self.difficulty.selected,
             weather=self.weather.currentText(),
             coffee=self.coffee.currentText(),
-            coffee_level=self.coffee_level.level,
+            coffeeLevel=self.coffeeLevel.level,
             engineering=self.engineering.currentText(),
             incidents=self.incidents.text().strip(),
             team=self.team.text().strip(),
             mood=self.mood.currentText(),
+            custom_title=self.broadcast_custom_title_edit.text().strip(),
+            custom_notification=self.broadcast_custom_notification_edit.text().strip(),
         )
-
-    @property
-    def level(self) -> str:
-        return self.edit.text().strip()
+   
 
     # --------------------------------------------------
     # Helpers
@@ -209,7 +215,7 @@ class BroadcastBriefing(QWidget):
         self.location.clear()
 
         self.goal.clear()
-
+        self.clipBoard.clear()
         self.difficulty.clear()
 
         if hasattr(self.weather, "reset"):
@@ -222,7 +228,7 @@ class BroadcastBriefing(QWidget):
         else:
             self.coffee.setCurrentIndex(0)
 
-        self.coffee_level.clear()
+        self.coffeeLevel.clear()
 
         self.engineering.setCurrentIndex(0)
 

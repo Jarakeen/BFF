@@ -7,15 +7,6 @@
 # Purpose:
 # Base class for all Foundry pages.
 #
-# Provides a consistent page structure:
-#
-#   Header
-#   -----------------------------
-#   Scrollable Workspace
-#   -----------------------------
-#   Action Bar
-#   Status Bar
-#
 # ==================================================
 
 from __future__ import annotations
@@ -30,35 +21,21 @@ from PySide6.QtWidgets import (
 
 
 class FoundryPage(QWidget):
-    """
-    Standard Foundry page layout.
-
-    Header
-    Scrollable Workspace
-    Bottom Actions
-    Status
-    """
+    """Standard Foundry page layout."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        #
-        # Root Layout
-        #
-
         self.root = QVBoxLayout(self)
 
         self.root.setContentsMargins(
-            12,
-            12,
-            12,
-            12,
+            12, 12, 12, 12
         )
 
         self.root.setSpacing(12)
 
         #
-        # Workspace
+        # Scrollable workspace
         #
 
         self.workspace_widget = QWidget()
@@ -68,22 +45,21 @@ class FoundryPage(QWidget):
         )
 
         self.workspace_layout.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
+            0, 0, 0, 0
         )
 
         self.workspace_layout.setSpacing(12)
 
         self.workspace_widget.setSizePolicy(
-            QSizePolicy.Policy.Preferred,
-            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
 
         self.workspace_scroll = QScrollArea()
 
-        self.workspace_scroll.setWidgetResizable(True)
+        self.workspace_scroll.setWidgetResizable(
+            True
+        )
 
         self.workspace_scroll.setFrameShape(
             QFrame.Shape.NoFrame
@@ -97,10 +73,6 @@ class FoundryPage(QWidget):
             self.workspace_scroll,
             1,
         )
-
-        #
-        # References
-        #
 
         self.header = None
         self.actions = None
@@ -126,7 +98,8 @@ class FoundryPage(QWidget):
     def add_workspace(self, widget):
 
         self.workspace_layout.addWidget(
-            widget
+            widget,
+            1,
         )
 
     def add_workspace_layout(self, layout):

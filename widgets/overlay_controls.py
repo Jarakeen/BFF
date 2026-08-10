@@ -41,7 +41,7 @@ class OverlayControls(QWidget):
 
         self.coffee = CoffeeSelector()
 
-        self.coffee_level = CoffeeLevelWidget()
+        self.coffeeLevel = CoffeeLevelWidget()
 
         self.push_button = QPushButton(
             "Push Overlay"
@@ -65,7 +65,7 @@ class OverlayControls(QWidget):
 
         layout.addRow(
             "Coffee Level",
-            self.coffee_level,
+            self.coffeeLevel,
         )
 
         layout.addRow(
@@ -94,7 +94,7 @@ class OverlayControls(QWidget):
         return {
             "weather": self.weather.obs_source,
             "coffee": self.coffee.source_name,
-            "coffee_level": self.coffee_level.value,
+            "coffeeLevel": self.coffeeLevel.value,
         }
 
     # --------------------------------------------------
@@ -110,4 +110,4 @@ class OverlayControls(QWidget):
 
         self.coffee.reset()
 
-        self.coffee_level.reset()
+        self.coffeeLevel.reset()

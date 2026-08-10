@@ -19,12 +19,13 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
 )
 
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
-
 from ui.components.foundry_card import FoundryCard
+
 from widgets.run_details import RunDetails
 from widgets.achievement_list import AchievementList
 from widgets.run_notes import RunNotes
@@ -42,6 +43,7 @@ class AchievementPage(QWidget):
     """
 
     def __init__(self, parent=None):
+
         super().__init__(parent)
 
         self.build_services()
@@ -81,11 +83,19 @@ class AchievementPage(QWidget):
 
     def build_ui(self):
 
+        # --------------------------------------------------
+        # Header
+        # --------------------------------------------------
+
         self.header = FoundryHeader(
             title="Achievement Desk",
             subtitle="Prepare and archive Achievement Runs.",
             department="Operations",
         )
+
+        # --------------------------------------------------
+        # Widgets
+        # --------------------------------------------------
 
         self.details = RunDetails()
 
@@ -99,97 +109,154 @@ class AchievementPage(QWidget):
 
         self.status = FoundryStatusBar()
 
+        # --------------------------------------------------
+        # Main Layout
+        # --------------------------------------------------
+
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(
+            16,
             12,
-            12,
-            12,
+            16,
             12,
         )
 
-        layout.setSpacing(8)
+        layout.setSpacing(12)
 
-        #
+        # --------------------------------------------------
         # Header
-        #
+        # --------------------------------------------------
 
         layout.addWidget(
-            self.header
+            self.header,
+            0,
         )
 
-        #
+        # --------------------------------------------------
         # Run Details
-        #
+        # --------------------------------------------------
 
-        details = FoundryCard(
+        details_card = FoundryCard(
             "Run Details"
         )
 
-        details.addWidget(
+        details_card.addWidget(
             self.details
         )
 
-        layout.addWidget(
-            details
+        details_card.setMinimumHeight(
+            170
         )
 
-        #
-        # Achievement List
-        #
+        layout.addWidget(
+            details_card,
+            0,
+        )
 
-        achievements = FoundryCard(
+        # --------------------------------------------------
+        # Achievements
+        # --------------------------------------------------
+
+        achievements_card = FoundryCard(
             "Achievements"
         )
 
-        achievements.addWidget(
+        achievements_card.addWidget(
             self.achievements
         )
 
-        layout.addWidget(
-            achievements
+        achievements_card.setMinimumHeight(
+            220
         )
 
-        #
-        # Notes
-        #
+        layout.addWidget(
+            achievements_card,
+            1,
+        )
 
-        notes = FoundryCard(
+        # --------------------------------------------------
+        # Bottom Row
+        # --------------------------------------------------
+
+        bottom_widget = QWidget()
+
+        bottom_layout = QHBoxLayout(
+            bottom_widget
+        )
+
+        bottom_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        bottom_layout.setSpacing(12)
+
+        # --------------------------------------------------
+        # Run Notes
+        # --------------------------------------------------
+
+        notes_card = FoundryCard(
             "Run Notes"
         )
 
-        notes.addWidget(
+        notes_card.addWidget(
             self.notes
         )
 
-        layout.addWidget(
-            notes
+        notes_card.setMinimumHeight(
+            190
         )
 
-        #
-        # Result
-        #
+        # --------------------------------------------------
+        # Run Result
+        # --------------------------------------------------
 
-        result = FoundryCard(
+        result_card = FoundryCard(
             "Run Result"
         )
 
-        result.addWidget(
+        result_card.addWidget(
             self.result
         )
 
-        layout.addWidget(
-            result
+        result_card.setMinimumHeight(
+            190
         )
 
-        # layout.addStretch()
+        bottom_layout.addWidget(
+            notes_card,
+            3,
+        )
 
-        layout.addWidget(
-            self.actions
+        bottom_layout.addWidget(
+            result_card,
+            2,
         )
 
         layout.addWidget(
-            self.status
+            bottom_widget,
+            1,
+        )
+
+        # --------------------------------------------------
+        # Actions
+        # --------------------------------------------------
+
+        layout.addWidget(
+            self.actions,
+            0,
+        )
+
+        # --------------------------------------------------
+        # Status
+        # --------------------------------------------------
+
+        layout.addWidget(
+            self.status,
+            0,
         )
 
         self.status.info(

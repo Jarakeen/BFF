@@ -248,13 +248,34 @@ class BroadcastPage(FoundryPage):
                 exist_ok=True,
             )
 
+            payload = {
+                "Title": title,
+                "Notification": notification,
+                "Team": model.team,
+            }
+
+            print(
+                "BROADCAST PAYLOAD:",
+                payload
+            )
+
             broadcast_path.write_text(
                 json.dumps(
                     {
                         "Title": title,
                         "Notification": notification,
+                        "Team": model.team,
+                        "Expedition":model.expedition,
+                        "Weather": model.weather,
+                        "Coffee": model.coffee ,
+                        "CoffeeLevel": model.coffeeLevel,
+                        "Difficulty": model.difficulty,
+                        "Engineering": model.engineering,
+                        "Incidents": model.incidents,
                         "Focus": model.focus,
                         "Location": model.location,
+                        "Objective": model.goal,
+                        "Mood": model.mood, 
                     },
                     ensure_ascii=False,
                     indent=4,
@@ -262,10 +283,11 @@ class BroadcastPage(FoundryPage):
                 encoding="utf-8",
             )
 
+
             self.status.success(
                 "Broadcast sent to OBS."
             )
-
+                    
         except Exception as exc:
 
             self.status.error(

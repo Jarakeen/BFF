@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 
-# COFFEE_LEVELS = [
+# COFFEELEVELS = [
 
 #    "Trace",
 
