@@ -276,7 +276,7 @@ A complete expedition can be managed entirely inside the Foundry: create it in B
 - [?] play an audio track alongside the Natural History Narrator notes - like a documentary narrator reading them aloud. I have Audio files in folders that match the notes headings with names that are similar. But I can rename as needed.
 - [ ] I'm having an idea, I want to talk thru this on this page right here. lol My BFF and I are going to work on dungeon Perf videos for youtube and we need to track mechs for each boss to explain them well in the videos. I think I need a page, or a a way to tweak Stream Events so I can better track Boss percentages and mechs.
 - [ ] I'm also playing with the idea of making this app having UI themes so I can change the look
-
+- [ ] add a way to add team names in the setting so its faster to add them in Broadcast Page
 
 ## Broadcast Desk
 - [ ] I want a way to start off the Archive Log stream timer and this feels like the right place to do it. Maybe add a small button to Start the Stream in Archive Log. 
