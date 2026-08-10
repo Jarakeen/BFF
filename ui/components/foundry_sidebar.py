@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QFrame,
+    QScrollArea,
+    QSizePolicy,
 )
 
 from ui.components.foundry_button import (
@@ -47,6 +49,13 @@ class FoundrySidebar(QWidget):
             True,
         )
 
+        # --------------------------------------------------
+        # Sidebar shell
+        #
+        # The logo and footer stay fixed. Everything between
+        # them is allowed to scroll when the window gets short.
+        # --------------------------------------------------
+
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(
@@ -56,14 +65,14 @@ class FoundrySidebar(QWidget):
             20,
         )
 
-        layout.setSpacing(16)
+        layout.setSpacing(12)
 
         #
         # Logo
         #
 
         logo = QLabel(
-            "BLACK FEATHER\nFOUNDRY"
+            "BLACK FEATHER FOUNDRY"
         )
 
         logo.setFont(
@@ -75,9 +84,51 @@ class FoundrySidebar(QWidget):
             True,
         )
 
-        layout.addWidget(logo)
+        # Never let the logo be vertically compressed.
+        logo.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
+        )
 
+        logo.setMinimumHeight(
+            logo.sizeHint().height()
+        )
+
+        layout.addWidget(logo)
         layout.addWidget(self.divider())
+
+        #
+        # Scrollable sidebar content
+        #
+
+        scroll = QScrollArea()
+
+        scroll.setFrameShape(
+            QFrame.Shape.NoFrame
+        )
+
+        scroll.setWidgetResizable(True)
+
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
+        scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+        content = QWidget()
+
+        content_layout = QVBoxLayout(content)
+
+        content_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        content_layout.setSpacing(12)
 
         #
         # Navigation
@@ -115,11 +166,11 @@ class FoundrySidebar(QWidget):
 
             self.buttons[page] = button
 
-            layout.addWidget(button)
+            content_layout.addWidget(button)
 
-        layout.addStretch()
+        content_layout.addStretch()
 
-        layout.addWidget(self.divider())
+        content_layout.addWidget(self.divider())
 
         #
         # Expedition
@@ -134,7 +185,7 @@ class FoundrySidebar(QWidget):
             True,
         )
 
-        layout.addWidget(
+        content_layout.addWidget(
             self.status_title
         )
 
@@ -154,12 +205,12 @@ class FoundrySidebar(QWidget):
             "Coffee: --"
         )
 
-        layout.addWidget(self.current_boss)
-        layout.addWidget(self.pull_count)
-        layout.addWidget(self.best_pull)
-        layout.addWidget(self.coffee)
+        content_layout.addWidget(self.current_boss)
+        content_layout.addWidget(self.pull_count)
+        content_layout.addWidget(self.best_pull)
+        content_layout.addWidget(self.coffee)
 
-        layout.addWidget(self.divider())
+        content_layout.addWidget(self.divider())
 
         #
         # Systems
@@ -174,29 +225,46 @@ class FoundrySidebar(QWidget):
             True,
         )
 
-        layout.addWidget(systems)
+        content_layout.addWidget(systems)
 
         self.obs = QLabel("● OBS")
         self.archive = QLabel("● Archive")
         self.discord = QLabel("● Discord")
 
-        layout.addWidget(self.obs)
-        layout.addWidget(self.archive)
-        layout.addWidget(self.discord)
+        content_layout.addWidget(self.obs)
+        content_layout.addWidget(self.archive)
+        content_layout.addWidget(self.discord)
 
-        layout.addStretch()
+        scroll.setWidget(content)
+
+        layout.addWidget(
+            scroll,
+            1,
+        )
 
         #
         # Footer
         #
+        # Kept outside the scroll area so the version number
+        # can never disappear when the window is resized.
+        #
 
         footer = QLabel(
-            "Black Feather Foundry\nv1.0"
+            "Black Feather Foundry\\nv1.0"
         )
 
         footer.setProperty(
             "sidebarFooter",
             True,
+        )
+
+        footer.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
+        )
+
+        footer.setMinimumHeight(
+            footer.sizeHint().height()
         )
 
         layout.addWidget(

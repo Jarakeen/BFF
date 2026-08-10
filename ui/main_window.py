@@ -17,13 +17,16 @@ from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QStackedWidget,
+    QScrollArea,
     QSizePolicy,
-    )
-
+    QApplication,
+)
+from ui.foundry_theme import apply_foundry_theme
 from ui.components.foundry_sidebar import FoundrySidebar
 from services.eso_achievement_database_service import (
     EsoAchievementDatabaseService,
 )
+
 from ui.broadcast_page import BroadcastPage
 from ui.field_notes_page import FieldNotesPage
 from ui.stream_elements_page import LiveOperationsPage
@@ -33,7 +36,7 @@ from ui.achievement_page import AchievementPage
 from ui.collections_page import CollectionsPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
-
+from services.expedition_service import ExpeditionService
 class MainWindow(QMainWindow):
     """
     Black Feather Foundry main window.
@@ -41,10 +44,23 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
         data_dir = Path(__file__).resolve().parents[1] / "data"
+
         self.eso_data_service = EsoAchievementDatabaseService(
             data_dir / "eso.db"
         )
+
+        app = QApplication.instance()
+
+        if app is not None:
+            apply_foundry_theme(app)
+        #
+        # Shared active Expedition
+        #
+
+        self.expedition_service = ExpeditionService()
+
         self.setWindowTitle(
             "Black Feather Foundry Field Office"
         )
@@ -126,21 +142,27 @@ class MainWindow(QMainWindow):
 
             "collections": CollectionsPage(),
 
-            "console": OperationsConsole(),
+           "console": OperationsConsole(
+                expedition=self.expedition_service
+            ),
 
             "settings": SettingsPage(),
 
         }      
 
-        for page in self.pages.values():
+        self.page_containers = {}
 
-            self.stack.addWidget(
+        for name, page in self.pages.items():
+
+            container = self.wrap_page(
                 page
             )
 
-        self.stack.setCurrentWidget(
-            self.pages["broadcast"]
-        )
+            self.page_containers[name] = container
+
+            self.stack.addWidget(
+                container
+            )
 
     # --------------------------------------------------
     # Signals
@@ -161,13 +183,36 @@ class MainWindow(QMainWindow):
         page_name: str,
     ):
 
-        page = self.pages.get(
-            page_name
-        )
-
-        if page is None:
+        if page_name not in self.page_containers:
             return
 
         self.stack.setCurrentWidget(
-            page
+            self.page_containers[page_name]
         )
+
+    def wrap_page(self, page):
+
+        scroll = QScrollArea()
+
+        scroll.setWidgetResizable(True)
+
+        scroll.setFrameShape(
+            QScrollArea.NoFrame
+        )
+
+        scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
+        scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+        page.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Preferred,
+        )
+
+        scroll.setWidget(page)
+
+        return scroll    

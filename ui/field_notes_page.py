@@ -7,40 +7,40 @@
 # Purpose:
 # Field Notes page.
 #
-# Records expedition observations and preserves
-# notable discoveries as permanent archive entries.
-#
 # ==================================================
 
 from __future__ import annotations
 
-from pathlib import Path
+import json
 
+from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QHBoxLayout
+    QSizePolicy,
+    QScrollArea,
+    QFrame,
 )
 
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_card import FoundryCard
 from ui.foundry_page import FoundryPage
+
 from widgets.field_notes_editor import FieldNotesEditor
 from widgets.field_notes_actions import FieldNotesActions
 
 from services.archive_service import ArchiveService
 from services.settings_service import SettingsService
-from widgets.field_notebook import FieldNotebook
+
 
 class FieldNotesPage(FoundryPage):
     """
-    Field Notes.
-
-    Record expedition observations for the Archive.
+    Field Notes page.
     """
 
     def __init__(self, parent=None):
+
         super().__init__(parent)
 
         #
@@ -88,58 +88,53 @@ class FieldNotesPage(FoundryPage):
 
         self.header = FoundryHeader(
             title="Field Notes",
-            subtitle="Record today's observations for the Archive.",
+            subtitle=(
+                "Record today's observations "
+                "for the Archive."
+            ),
             department="Archives",
         )
 
-        self.set_header(self.header)
+        self.set_header(
+            self.header
+        )
 
         #
-        # Widgets
+        # Main Editor
         #
 
         self.editor = FieldNotesEditor()
 
-        self.notebook = FieldNotebook()
+        editor_card = FoundryCard(
+            "Field Notes"
+        )
+
+        editor_card.addWidget(
+            self.editor
+        )
+
+        #
+        # Actions
+        #
 
         self.actions = FieldNotesActions()
+
+        #
+        # Status
+        #
 
         self.status = FoundryStatusBar()
 
         #
-        # Workspace
+        # IMPORTANT:
+        # FoundryPage already owns the workspace,
+        # scroll area, action bar, and status bar.
+        # Do not create another workspace here.
         #
-
-        workspace_widget = QWidget()
-
-        workspace = QHBoxLayout(workspace_widget)
-
-        workspace.setContentsMargins(0, 0, 0, 0)
-        workspace.setSpacing(12)
-
-        editor = FoundryCard("Observation")
-        editor.addWidget(self.editor)
-
-        notes = FoundryCard("Field Notebook")
-        notes.addWidget(self.notebook)
-
-        workspace.addWidget(
-            editor,
-            3,
-        )
-
-        workspace.addWidget(
-            notes,
-            2,
-        )
 
         self.add_workspace(
-            workspace_widget
+            editor_card
         )
-
-        #
-        # Footer
-        #
 
         self.set_actions(
             self.actions
@@ -177,23 +172,123 @@ class FieldNotesPage(FoundryPage):
 
     def save(self):
         """
-        Save the current field note.
+        Save the current Field Note to CurrentBroadcast.json.
         """
 
-        model = self.editor.model
+        try:
 
-        #
-        # Save draft here later.
-        #
+            import json
 
-        self.status.success(
-            "Field note saved."
-        )
+            model = self.editor.model
+
+            broadcast_path = Path(
+                self.settings["CurrentBroadcastPath"]
+            )
+
+            print(
+                f"[FIELD NOTES] Broadcast path: {broadcast_path}"
+            )
+
+            print(
+                f"[FIELD NOTES] Absolute path: "
+                f"{broadcast_path.resolve()}"
+            )
+
+            #
+            # Make sure the folder exists
+            #
+
+            broadcast_path.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            print(
+                "[FIELD NOTES] Parent folder ready."
+            )
+
+            #
+            # Load existing JSON if it exists
+            #
+
+            if broadcast_path.exists():
+
+                print(
+                    "[FIELD NOTES] Existing CurrentBroadcast.json found."
+                )
+
+                data = json.loads(
+                    broadcast_path.read_text(
+                        encoding="utf-8"
+                    )
+                )
+
+            else:
+
+                print(
+                    "[FIELD NOTES] CurrentBroadcast.json does not exist. "
+                    "Creating it."
+                )
+
+                data = {}
+
+            #
+            # Field Note data
+            #
+
+            data["Status"] = {
+                "Observe": model.observe,
+                "Document": model.document,
+                "Learn": model.learn,
+                "ShareTheLesson": model.share_the_lesson,
+            }
+
+            data["Assignment"] = model.assignment
+
+            data["Observation"] = model.observation
+
+            data["Context"] = model.context
+
+            data["NextSteps"] = model.next_steps
+
+            data["RandomNotes"] = model.random_notes
+
+            print(
+                "[FIELD NOTES] Data prepared."
+            )
+
+            #
+            # Write JSON
+            #
+
+            broadcast_path.write_text(
+                json.dumps(
+                    data,
+                    ensure_ascii=False,
+                    indent=4,
+                ),
+                encoding="utf-8",
+            )
+
+            print(
+                "[FIELD NOTES] CurrentBroadcast.json written."
+            )
+
+            self.status.success(
+                "Field Note saved to OBS."
+            )
+
+        except Exception as exc:
+
+            print(
+                f"[FIELD NOTES] SAVE ERROR: {exc}"
+            )
+
+            self.status.error(
+                f"Field Note save failed: {exc}"
+            )
 
     def clear(self):
-        """
-        Reset the editor.
-        """
 
         self.editor.clear()
 
@@ -202,35 +297,90 @@ class FieldNotesPage(FoundryPage):
         )
 
     def archive(self):
-        """
-        Archive the current field note.
-        """
 
         try:
 
             model = self.editor.model
 
-            report_id, path = self.archive_service.file_form(
-                "FN",
-                lambda report_id, number: [
+            report_id, path = (
+                self.archive_service.file_form(
+                    "FN",
+                    lambda report_id, number: [
 
-                    f"# Field Note {report_id}",
+                        f"# Field Note {report_id}",
 
-                    "",
+                        "",
 
-                    f"Expedition: {model.expedition}",
+                        f"Expedition: "
+                        f"{model.expedition}",
 
-                    f"Location: {model.location}",
+                        f"Location: "
+                        f"{model.location}",
 
-                    "",
+                        "",
 
-                    f"## {model.title}",
+                        f"## {model.title}",
 
-                    "",
+                        "",
 
-                    model.observation,
+                        "Status:",
 
-                ],
+                        (
+                            "Observe"
+                            if model.observe
+                            else ""
+                        ),
+
+                        (
+                            "Document"
+                            if model.document
+                            else ""
+                        ),
+
+                        (
+                            "Learn"
+                            if model.learn
+                            else ""
+                        ),
+
+                        (
+                            "Share the Lesson"
+                            if model.share_the_lesson
+                            else ""
+                        ),
+
+                        "",
+
+                        "Clipboard Assignment:",
+
+                        model.assignment,
+
+                        "",
+
+                        "Observation:",
+
+                        model.observation,
+
+                        "",
+
+                        "Context:",
+
+                        model.context,
+
+                        "",
+
+                        "Notes for Future Explorers:",
+
+                        model.next_steps,
+
+                        "",
+
+                        "Random Notes:",
+
+                        model.random_notes,
+
+                    ],
+                )
             )
 
             self.status.success(

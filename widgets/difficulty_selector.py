@@ -12,7 +12,7 @@
 
 from PySide6.QtWidgets import (
     QWidget,
-    QCheckBox,
+    QRadioButton,
     QHBoxLayout,
 )
 
@@ -21,7 +21,7 @@ class DifficultySelector(QWidget):
     """
     Standard Foundry difficulty selector.
 
-    Allows selecting any combination of:
+    Allows selecting one of:
     - Normal
     - Veteran
     - Hardmode
@@ -30,16 +30,31 @@ class DifficultySelector(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.normal = QCheckBox("Normal")
-        self.veteran = QCheckBox("Veteran")
-        self.hardmode = QCheckBox("Hardmode")
+        self.normal = QRadioButton("Normal")
+        self.veteran = QRadioButton("Veteran")
+        self.hardmode = QRadioButton("Hardmode")
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(self.normal)
-        layout.addWidget(self.veteran)
-        layout.addWidget(self.hardmode)
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        layout.addWidget(
+            self.normal
+        )
+
+        layout.addWidget(
+            self.veteran
+        )
+
+        layout.addWidget(
+            self.hardmode
+        )
+
         # layout.addStretch()
 
     # --------------------------------------------------
@@ -47,31 +62,29 @@ class DifficultySelector(QWidget):
     # --------------------------------------------------
 
     @property
-    def selected(self) -> list[str]:
+    def selected(self) -> str:
         """
-        Returns the selected difficulties.
+        Returns the selected difficulty.
         """
-
-        values = []
 
         if self.normal.isChecked():
-            values.append("Normal")
+            return "Normal"
 
         if self.veteran.isChecked():
-            values.append("Veteran")
+            return "Veteran"
 
         if self.hardmode.isChecked():
-            values.append("Hardmode")
+            return "Hardmode"
 
-        return values
+        return ""
 
     @property
     def text(self) -> str:
         """
-        Returns a comma-separated string.
+        Returns the selected difficulty.
         """
 
-        return ", ".join(self.selected)
+        return self.selected
 
     # --------------------------------------------------
     # Public API
@@ -83,22 +96,24 @@ class DifficultySelector(QWidget):
         self.veteran.setChecked(False)
         self.hardmode.setChecked(False)
 
-    def set_selected(self, values: list[str]):
+    def set_selected(
+        self,
+        value: str,
+    ):
 
         self.clear()
 
-        self.normal.setChecked(
-            "Normal" in values
-        )
+        if value == "Normal":
+            self.normal.setChecked(True)
 
-        self.veteran.setChecked(
-            "Veteran" in values
-        )
+        elif value == "Veteran":
+            self.veteran.setChecked(True)
 
-        self.hardmode.setChecked(
-            "Hardmode" in values
-        )
+        elif value == "Hardmode":
+            self.hardmode.setChecked(True)
 
     def has_selection(self) -> bool:
 
-        return bool(self.selected)
+        return bool(
+            self.selected
+        )
