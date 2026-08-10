@@ -47,3 +47,11 @@ Launch Foundry (debug).bat
 Images
 *.png
 *.svg
+
+Importers
+/importers
+/parsers
+/dev
+/docs
+/tests
+/archives
