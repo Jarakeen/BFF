@@ -100,8 +100,21 @@ class FoundryCard(QFrame):
         )
 
         self.title_label.setFont(
-            Fonts.section()
+            Fonts.section_title()
         )
+
+        #
+        # Badge / count (optional)
+        #
+
+        self.badge_label = QLabel("")
+
+        self.badge_label.setProperty(
+            "cardBadge",
+            True,
+        )
+
+        self.badge_label.setVisible(False)
 
         header_layout.addWidget(
             self.icon_label
@@ -111,7 +124,29 @@ class FoundryCard(QFrame):
             self.title_label
         )
 
+        header_layout.addWidget(
+            self.badge_label
+        )
+
         header_layout.addStretch()
+
+        #
+        # Header action (optional)
+        #
+        # A caller-supplied widget (button, dropdown, ...)
+        # docked to the right of the header, e.g. "+ Add
+        # Note". Empty/absent by default.
+        #
+
+        self.header_action_layout = QHBoxLayout()
+
+        self.header_action_layout.setContentsMargins(
+            0, 0, 0, 0,
+        )
+
+        header_layout.addLayout(
+            self.header_action_layout
+        )
 
         #
         # Body
@@ -169,6 +204,40 @@ class FoundryCard(QFrame):
     ):
 
         self.icon_label.setText(icon)
+
+    def set_badge(
+        self,
+        text: str,
+    ):
+        """
+        Small count/badge shown beside the title, e.g.
+        "3 pending". Pass an empty string to hide it.
+        """
+
+        self.badge_label.setText(text)
+
+        self.badge_label.setVisible(
+            bool(text)
+        )
+
+    def set_header_action(
+        self,
+        widget: QWidget,
+    ):
+        """
+        Dock a widget (button, dropdown, ...) to the
+        right of the header, e.g. a "+ Add Note" button.
+        Replaces any previously set header action.
+        """
+
+        while self.header_action_layout.count():
+
+            item = self.header_action_layout.takeAt(0)
+
+            if item.widget():
+                item.widget().setParent(None)
+
+        self.header_action_layout.addWidget(widget)
 
     def addWidget(
         self,

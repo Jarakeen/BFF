@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QHBoxLayout,
+    QToolButton,
 )
 
 from ui.theme.fonts import Fonts
@@ -25,6 +26,8 @@ from ui.theme.fonts import Fonts
 class FoundryStatusBar(QWidget):
     """
     Standard Foundry status bar.
+
+    [ ● message ]                [ center ]              [ actions ● ]
     """
 
     def __init__(self, parent=None):
@@ -64,6 +67,43 @@ class FoundryStatusBar(QWidget):
         )
 
         #
+        # Center (optional)
+        #
+        # e.g. "THE CONSOLE v0.1.0". Empty by default.
+        #
+
+        self.center_label = QLabel("")
+
+        self.center_label.setFont(
+            Fonts.status()
+        )
+
+        self.center_label.setAlignment(
+            Qt.AlignCenter
+        )
+
+        self.center_label.setProperty(
+            "statusCenter",
+            True,
+        )
+
+        #
+        # Trailing actions (optional)
+        #
+        # Icon buttons docked to the far right (refresh,
+        # settings, ...), in addition to the built-in
+        # connection dot.
+        #
+
+        self.actions_layout = QHBoxLayout()
+
+        self.actions_layout.setContentsMargins(
+            0, 0, 0, 0,
+        )
+
+        self.actions_layout.setSpacing(6)
+
+        #
         # Layout
         #
 
@@ -85,6 +125,15 @@ class FoundryStatusBar(QWidget):
             1,
         )
 
+        layout.addWidget(
+            self.center_label,
+            1,
+        )
+
+        layout.addLayout(
+            self.actions_layout
+        )
+
         #
         # Initial state
         #
@@ -94,6 +143,49 @@ class FoundryStatusBar(QWidget):
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
+
+    def set_center_text(
+        self,
+        text: str,
+    ):
+
+        self.center_label.setText(text)
+
+    def add_action(
+        self,
+        icon_text: str,
+        on_click=None,
+        tooltip: str = "",
+    ) -> QToolButton:
+        """
+        Add a small icon button to the far right of the
+        status bar (e.g. a refresh or settings glyph).
+        Returns the button so the caller can keep a
+        reference if needed.
+        """
+
+        button = QToolButton()
+
+        button.setText(icon_text)
+
+        button.setProperty(
+            "statusAction",
+            True,
+        )
+
+        button.setCursor(
+            Qt.CursorShape.PointingHandCursor
+        )
+
+        if tooltip:
+            button.setToolTip(tooltip)
+
+        if on_click is not None:
+            button.clicked.connect(on_click)
+
+        self.actions_layout.addWidget(button)
+
+        return button
 
     def info(
         self,

@@ -42,6 +42,7 @@ class FoundryButton(QPushButton):
         *,
         icon: QIcon | None = None,
         role: ButtonRole = ButtonRole.SECONDARY,
+        compact: bool = False,
         parent=None,
     ):
         super().__init__(text, parent)
@@ -50,12 +51,40 @@ class FoundryButton(QPushButton):
             Fonts.button()
         )
 
-        self.setMinimumHeight(38)
+        self.setProperty(
+            "compact",
+            compact,
+        )
+
+        self.setMinimumHeight(
+            26 if compact else 38
+        )
 
         if icon is not None:
             self.setIcon(icon)
 
         self.setRole(role)
+
+    def set_compact(
+        self,
+        compact: bool,
+    ):
+        """
+        Switch between the standard button size and the
+        compact size used for tab pills / filter chips.
+        """
+
+        self.setProperty(
+            "compact",
+            compact,
+        )
+
+        self.setMinimumHeight(
+            26 if compact else 38
+        )
+
+        self.style().unpolish(self)
+        self.style().polish(self)
 
     # --------------------------------------------------
     # Theme
