@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
     Black Feather Foundry main window.
     """
 
-    def __init__(self):
+    def __init__(self, expedition=None):
         super().__init__()
 
         data_dir = Path(__file__).resolve().parents[1] / "data"
@@ -60,8 +60,11 @@ class MainWindow(QMainWindow):
         # Shared active Expedition
         #
 
-        self.expedition_service = ExpeditionService()
-
+        self.expedition_service = (
+            expedition
+            if expedition is not None
+            else ExpeditionService()
+        )
         self.setWindowTitle(
             "Black Feather Foundry Field Office"
         )
@@ -74,7 +77,7 @@ class MainWindow(QMainWindow):
         self.build_ui()
 
         self.connect_signals()
-
+        
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -143,9 +146,9 @@ class MainWindow(QMainWindow):
 
             "collections": CollectionsPage(),
 
-            "roster": RosterPage(),
+           "roster_page": RosterPage(),
 
-           "console": OperationsConsole(
+           "operations_console": OperationsConsole(
                 expedition=self.expedition_service
             ),
 
@@ -187,12 +190,15 @@ class MainWindow(QMainWindow):
     ):
 
         if page_name not in self.page_containers:
+            print(
+                f"[FoundryDock] Unknown navigation page: {page_name}"
+            )
             return
 
         self.stack.setCurrentWidget(
             self.page_containers[page_name]
         )
-
+        
     def wrap_page(self, page):
 
         scroll = QScrollArea()

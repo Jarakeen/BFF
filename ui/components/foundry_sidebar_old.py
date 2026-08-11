@@ -57,12 +57,11 @@ NAV_SECTIONS = [
             ("Archive", "archive"),
             ("Incident Reports", "incident"),
             ("Achievement Desk", "achievement"),
-            
         ],
     },
 
 
-    ("Achievements", "collections", "header"),
+    ("Achievements", "collections"),
 
     {
         "label": "Collections",
@@ -85,12 +84,12 @@ NAV_SECTIONS = [
     {
         "label": "Raid Operations",
         "children": [
-            ("Dashboard", "operations_console"),
+            ("Dashboard", "roster_page"),
             ("Raid", "console:1"),
             ("Builds", "console:2"),
             ("Capabilities", "console:3"),
             ("Boss Guide", "console:4"),
-            ("Assignments", "roster_page"),
+            ("Assignments", "console:5"),
             ("Optimization", "console:6"),
             ("Progression", "console:7"),
             ("References", "console:8"),
@@ -215,16 +214,8 @@ class FoundrySidebar(QWidget):
 
             if isinstance(section, tuple):
 
-                text, page = section[0], section[1]
-
-                style = section[2] if len(section) > 2 else None
-
                 content_layout.addWidget(
-                    self.build_leaf_button(
-                        text,
-                        page,
-                        header_style=(style == "header"),
-                    )
+                    self.build_leaf_button(*section)
                 )
 
             else:
@@ -342,19 +333,14 @@ class FoundrySidebar(QWidget):
     # Navigation builders
     # --------------------------------------------------
 
-    def build_leaf_button(self, text, page, header_style=False):
+    def build_leaf_button(self, text, page):
         """
         A single top-level button that navigates directly
         to a page -- no children, nothing to expand.
-
-        header_style renders it bold/uppercase like the
-        expandable category headers, for a standalone entry
-        that should carry the same visual weight even though
-        it has no children of its own.
         """
 
         button = self.make_nav_button(
-            text.upper() if header_style else text,
+            text,
             indent=False,
         )
 
