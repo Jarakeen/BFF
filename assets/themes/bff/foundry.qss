@@ -1,292 +1,597 @@
-FOUNDRY_THEME = """
-/* ==========================================================
-   BLACK FEATHER FOUNDRY
-   Chocolate / Bronze Theme
-   ========================================================== */
+/* ==================================================
+   Black Feather Foundry
+   assets/themes/bff/foundry.qss
 
-QMainWindow,
+   Generated to match ui/theme/colors.py, fonts.py,
+   and metrics.py. Values here must stay in sync with
+   those modules -- they are the source of truth.
+
+   Every rule below targets either a dynamic property
+   actually set by ui/components/*.py, or a plain Qt
+   widget class as a sane baseline for anything that
+   doesn't have a dedicated component yet.
+   ================================================== */
+
+/* --------------------------------------------------
+   Base
+   -------------------------------------------------- */
+
 QWidget {
-    background-color: #120f0c;
-    color: #e8dfd0;
+    background-color: #121416;
+    color: #ECE8DF;
     font-family: "Segoe UI";
-    font-size: 14px;
+    font-size: 10pt;
 }
 
-/* ----------------------------------------------------------
-   Main surfaces
-   ---------------------------------------------------------- */
+QMainWindow {
+    background-color: #121416;
+}
 
-QScrollArea,
-QScrollArea > QWidget > QWidget {
-    background-color: #120f0c;
+QToolTip {
+    background-color: #1B2024;
+    color: #ECE8DF;
+    border: 1px solid #323A41;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+QScrollArea {
+    background: transparent;
     border: none;
 }
 
-QGroupBox {
-    background-color: #1a1511;
-    border: 1px solid #493a2a;
-    border-radius: 7px;
-    margin-top: 18px;
-    padding: 14px;
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 0;
 }
 
-QGroupBox::title {
-    subcontrol-origin: margin;
-    left: 14px;
-    padding: 0 8px;
-    color: #c99643;
-    background-color: #120f0c;
-    font-family: "Georgia";
-    font-size: 15px;
-    font-weight: bold;
+QScrollBar::handle:vertical {
+    background: #323A41;
+    border-radius: 5px;
+    min-height: 24px;
 }
 
-/* ----------------------------------------------------------
-   Sidebar
-   ---------------------------------------------------------- */
-
-QWidget#sidebar {
-    background-color: #0d0a08;
-    border-right: 1px solid #493a2a;
+QScrollBar::handle:vertical:hover {
+    background: #56616A;
 }
 
-QLabel#brandMark {
-    color: #c99643;
-    font-size: 32px;
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
 }
 
-QLabel#brandTitle {
-    color: #eee5d6;
-    font-family: "Georgia";
-    font-size: 25px;
-    font-weight: bold;
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 0;
 }
 
-QLabel#brandSubtitle {
-    color: #c99643;
-    font-family: "Georgia";
-    font-size: 13px;
-    letter-spacing: 2px;
+QScrollBar::handle:horizontal {
+    background: #323A41;
+    border-radius: 5px;
+    min-width: 24px;
 }
 
-QLabel#reminder {
-    color: #a99d8d;
-    font-size: 12px;
-    line-height: 1.5;
+QScrollBar::handle:horizontal:hover {
+    background: #56616A;
 }
 
-QLabel#sidebarFooter {
-    color: #756958;
-    font-size: 10px;
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
 }
 
-/* ----------------------------------------------------------
-   Page headings
-   ---------------------------------------------------------- */
+/* --------------------------------------------------
+   Sidebar (ui/components/foundry_sidebar.py)
+   -------------------------------------------------- */
 
-QLabel#pageTitle {
-    color: #f0e6d5;
-    font-family: "Georgia";
-    font-size: 30px;
-    font-weight: bold;
+QWidget[foundrySidebar="true"] {
+    background-color: #1B2024;
+    border-right: 1px solid #323A41;
 }
 
-QLabel#pageSubtitle {
-    color: #b28a51;
-    font-size: 12px;
+QLabel[sidebarLogo="true"] {
+    color: #C89B5A;
     letter-spacing: 1px;
 }
 
-QLabel#statusLabel {
-    color: #8f806e;
+QLabel[sidebarHeading="true"] {
+    color: #9AA3A9;
+    font-family: "Bebas Neue";
+    font-size: 11pt;
+    letter-spacing: 1px;
     padding-top: 4px;
 }
 
-/* ----------------------------------------------------------
-   Navigation
-   ---------------------------------------------------------- */
+QLabel[sidebarFooter="true"] {
+    color: #56616A;
+    font-size: 8pt;
+}
+
+QFrame[sidebarDivider="true"] {
+    background-color: #323A41;
+    max-height: 1px;
+    border: none;
+}
+
+/* Nav buttons: sidebar leaf/child/category-header
+   buttons, and the top-level page tabs elsewhere in
+   the app -- one shared look. */
 
 QPushButton[nav="true"] {
     background-color: transparent;
-    border: 1px solid #33281d;
-    border-radius: 5px;
-    color: #cfc4b4;
-    padding: 10px 12px;
+    color: #ECE8DF;
+    border: none;
+    border-radius: 6px;
     text-align: left;
+    padding: 6px 10px;
 }
 
 QPushButton[nav="true"]:hover {
-    background-color: #211910;
-    border-color: #76572d;
-    color: #f0e6d5;
+    background-color: #232A2F;
 }
 
 QPushButton[nav="true"]:checked {
-    background-color: #6e4a20;
-    border-color: #a87932;
-    color: #fff3df;
+    background-color: #2B4B48;
+    color: #5FB0A8;
 }
 
-/* ----------------------------------------------------------
-   Inputs
-   ---------------------------------------------------------- */
+QPushButton[nav="true"]:checked:hover {
+    background-color: #2B4B48;
+}
+
+/* --------------------------------------------------
+   Cards (ui/components/foundry_card.py)
+   -------------------------------------------------- */
+
+QFrame[foundryCard="true"] {
+    background-color: #1B2024;
+    border: 1px solid #323A41;
+    border-radius: 16px;
+}
+
+QWidget[cardHeader="true"] {
+    background-color: transparent;
+    border-bottom: 1px solid #323A41;
+}
+
+QLabel[cardIcon="true"] {
+    color: #C89B5A;
+    font-size: 12pt;
+}
+
+QLabel[cardTitle="true"] {
+    color: #C89B5A;
+    letter-spacing: 1px;
+}
+
+QLabel[cardBadge="true"] {
+    background-color: #232A2F;
+    color: #9AA3A9;
+    border-radius: 9px;
+    padding: 1px 8px;
+    font-size: 8pt;
+}
+
+/* --------------------------------------------------
+   Sections (ui/components/section_card.py)
+   -------------------------------------------------- */
+
+QFrame[sectionCard="true"] {
+    background-color: transparent;
+    border: none;
+}
+
+QLabel[sectionTitle="true"] {
+    color: #C89B5A;
+    letter-spacing: 1px;
+}
+
+/* --------------------------------------------------
+   Page header (ui/components/foundry_header.py)
+   -------------------------------------------------- */
+
+QLabel[headerIcon="true"] {
+    color: #C89B5A;
+    font-size: 16pt;
+}
+
+QLabel[pageTitle="true"] {
+    color: #C89B5A;
+    letter-spacing: 1px;
+}
+
+QLabel[pageSubtitle="true"] {
+    color: #9AA3A9;
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+    font-size: 11pt;
+}
+
+QLabel[departmentLabel="true"] {
+    color: #56616A;
+    font-family: "Bebas Neue";
+    font-size: 10pt;
+    letter-spacing: 2px;
+}
+
+/* --------------------------------------------------
+   Status bar (ui/components/foundry_status_bar.py)
+   -------------------------------------------------- */
+
+QWidget[foundryStatusBar="true"] {
+    background-color: #1B2024;
+    border-top: 1px solid #323A41;
+}
+
+QLabel[statusMessage="true"],
+QLabel[statusCenter="true"] {
+    color: #9AA3A9;
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+}
+
+QLabel[statusIcon="true"][statusRole="info"] {
+    color: #5C8EC7;
+}
+
+QLabel[statusIcon="true"][statusRole="success"] {
+    color: #6FA76D;
+}
+
+QLabel[statusIcon="true"][statusRole="warning"] {
+    color: #D5B46A;
+}
+
+QLabel[statusIcon="true"][statusRole="error"] {
+    color: #C96A6A;
+}
+
+QToolButton[statusAction="true"] {
+    background: transparent;
+    border: none;
+    color: #9AA3A9;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+QToolButton[statusAction="true"]:hover {
+    background-color: #232A2F;
+    color: #ECE8DF;
+}
+
+/* --------------------------------------------------
+   Buttons (ui/components/foundry_button.py)
+   -------------------------------------------------- */
+
+QPushButton {
+    border-radius: 6px;
+    padding: 6px 16px;
+    border: 1px solid transparent;
+}
+
+QPushButton[secondary="true"] {
+    background-color: #232A2F;
+    color: #ECE8DF;
+    border: 1px solid #323A41;
+}
+
+QPushButton[secondary="true"]:hover {
+    background-color: #2B333A;
+    border-color: #56616A;
+}
+
+QPushButton[primary="true"] {
+    background-color: #C89B5A;
+    color: #121416;
+}
+
+QPushButton[primary="true"]:hover {
+    background-color: #D7B57A;
+}
+
+QPushButton[success="true"] {
+    background-color: #6FA76D;
+    color: #121416;
+}
+
+QPushButton[success="true"]:hover {
+    background-color: #7FB77D;
+}
+
+QPushButton[warning="true"] {
+    background-color: #D5B46A;
+    color: #121416;
+}
+
+QPushButton[warning="true"]:hover {
+    background-color: #E0C280;
+}
+
+QPushButton[danger="true"] {
+    background-color: #C96A6A;
+    color: #121416;
+}
+
+QPushButton[danger="true"]:hover {
+    background-color: #D67F7F;
+}
+
+QPushButton[ghost="true"] {
+    background-color: transparent;
+    color: #9AA3A9;
+    border: 1px solid transparent;
+}
+
+QPushButton[ghost="true"]:hover {
+    color: #ECE8DF;
+    background-color: #232A2F;
+}
+
+QPushButton:disabled {
+    background-color: #1B2024;
+    color: #56616A;
+    border-color: #232A2F;
+}
+
+/* Compact sizing (tab pills, filter chips) */
+
+QPushButton[compact="true"] {
+    padding: 3px 12px;
+    border-radius: 13px;
+    font-size: 9pt;
+}
+
+QPushButton[compact="true"]:checked {
+    background-color: #2B4B48;
+    color: #5FB0A8;
+    border-color: #3E8E86;
+}
+
+/* --------------------------------------------------
+   Progress bar (ui/components/foundry_progress_bar.py)
+   -------------------------------------------------- */
+
+QProgressBar[foundryProgress="true"] {
+    background-color: #232A2F;
+    border: 1px solid #323A41;
+    border-radius: 6px;
+    text-align: center;
+    color: #ECE8DF;
+    height: 12px;
+}
+
+QProgressBar[foundryProgress="true"]::chunk {
+    background-color: #C89B5A;
+    border-radius: 5px;
+}
+
+/* --------------------------------------------------
+   Status badges (ui/components/foundry_status_badge.py)
+   Shape only -- color is resolved per-instance from
+   Colors.SEVERITY / Colors.ROLE / Colors.STATUS, since
+   those are open-ended keyed palettes rather than a
+   fixed set of boolean flags.
+   -------------------------------------------------- */
+
+QLabel[foundryStatusBadge="true"] {
+    border-radius: 11px;
+    padding: 2px 10px;
+    font-family: "Bebas Neue";
+    font-size: 9pt;
+    letter-spacing: 1px;
+}
+
+/* --------------------------------------------------
+   Tables (ui/components/foundry_table.py)
+   -------------------------------------------------- */
+
+QTableWidget[foundryTable="true"] {
+    background-color: #1B2024;
+    alternate-background-color: #1F252A;
+    gridline-color: #232A2F;
+    border: none;
+    selection-background-color: #2B4B48;
+    selection-color: #5FB0A8;
+}
+
+QTableWidget[foundryTable="true"] QHeaderView::section {
+    background-color: #211910;
+    color: #C89B5A;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 1px solid #323A41;
+    font-family: "Bebas Neue";
+    letter-spacing: 1px;
+}
+
+QTableWidget[foundryTable="true"]::item {
+    padding: 4px 10px;
+    border-bottom: 1px solid #232A2F;
+}
+
+QTableWidget[foundryTable="true"]::item:selected {
+    background-color: #2B4B48;
+    color: #5FB0A8;
+}
+
+/* --------------------------------------------------
+   Metric (ui/components/foundry_metric.py)
+   -------------------------------------------------- */
+
+QLabel[metricValue="true"] {
+    color: #ECE8DF;
+    font-family: "Cascadia Code";
+    font-weight: bold;
+}
+
+QLabel[metricLabel="true"] {
+    color: #9AA3A9;
+    font-family: "Bebas Neue";
+    letter-spacing: 1px;
+    font-size: 9pt;
+}
+
+/* --------------------------------------------------
+   Hero panel (ui/components/foundry_hero_panel.py)
+   -------------------------------------------------- */
+
+QWidget[foundryHeroPanel="true"] {
+    background: transparent;
+}
+
+QLabel[heroPortrait="true"] {
+    background-color: #232A2F;
+    border: 1px solid #323A41;
+    border-radius: 10px;
+}
+
+QLabel[heroName="true"] {
+    color: #C89B5A;
+    letter-spacing: 1px;
+}
+
+QLabel[heroSubtitle="true"] {
+    color: #9AA3A9;
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+}
+
+QLabel[heroFactLabel="true"] {
+    color: #56616A;
+    font-family: "Bebas Neue";
+    font-size: 8pt;
+    letter-spacing: 1px;
+}
+
+QLabel[heroFactValue="true"] {
+    color: #ECE8DF;
+    font-size: 9pt;
+}
+
+/* --------------------------------------------------
+   Note cards (ui/components/foundry_note_card.py)
+
+   A deliberately distinct "parchment" register, not a
+   second design system -- it reuses the same spacing/
+   radius tokens and only swaps the surface/text colors
+   for the paper palette in colors.py.
+   -------------------------------------------------- */
+
+QFrame[foundryNoteCard="true"] {
+    background-color: #2A2115;
+    border: 1px solid #5A4A2E;
+    border-radius: 16px;
+}
+
+QLabel[noteCardTitle="true"] {
+    color: #E8DCC0;
+    font-family: "Bebas Neue";
+    letter-spacing: 1px;
+}
+
+QLabel[noteCardBody="true"],
+QTextEdit[noteCardBody="true"] {
+    color: #E8DCC0;
+    background: transparent;
+    font-family: "Cormorant Garamond";
+    border: none;
+}
+
+/* --------------------------------------------------
+   Empty state (ui/components/foundry_empty_state.py)
+   -------------------------------------------------- */
+
+QWidget[foundryEmptyState="true"] {
+    background: transparent;
+}
+
+QLabel[emptyStateIcon="true"] {
+    color: #323A41;
+    font-size: 28pt;
+}
+
+QLabel[emptyStateMessage="true"] {
+    color: #56616A;
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+}
+
+/* --------------------------------------------------
+   Form controls
+   -------------------------------------------------- */
 
 QLineEdit,
 QComboBox,
-QSpinBox,
 QTextEdit,
-QListWidget,
-QTreeWidget {
-    background-color: #17120e;
-    border: 1px solid #4b3a29;
-    border-radius: 5px;
-    color: #e9dfd0;
-    padding: 7px;
-    selection-background-color: #765225;
-    selection-color: #fff5e6;
+QPlainTextEdit {
+    background-color: #1B2024;
+    color: #ECE8DF;
+    border: 1px solid #323A41;
+    border-radius: 6px;
+    padding: 4px 8px;
+    selection-background-color: #2B4B48;
 }
 
 QLineEdit:focus,
 QComboBox:focus,
-QSpinBox:focus,
-QTextEdit:focus,
-QListWidget:focus,
-QTreeWidget:focus {
-    border-color: #b17b31;
+QTextEdit:focus {
+    border-color: #C89B5A;
 }
-
-/* ----------------------------------------------------------
-   Combo boxes
-   ---------------------------------------------------------- */
 
 QComboBox::drop-down {
     border: none;
-    width: 28px;
+    width: 20px;
 }
 
 QComboBox QAbstractItemView {
-    background-color: #1b1510;
-    border: 1px solid #6d512e;
-    color: #eee5d6;
-    selection-background-color: #6e4a20;
+    background-color: #1B2024;
+    color: #ECE8DF;
+    border: 1px solid #323A41;
+    selection-background-color: #2B4B48;
+    selection-color: #5FB0A8;
 }
 
-/* ----------------------------------------------------------
-   Checkboxes
-   ---------------------------------------------------------- */
-
 QCheckBox {
-    color: #d9cfbf;
-    spacing: 7px;
+    spacing: 8px;
 }
 
 QCheckBox::indicator {
-    width: 15px;
-    height: 15px;
-}
-
-QCheckBox::indicator:unchecked {
-    background-color: #17120e;
-    border: 1px solid #67533a;
-    border-radius: 3px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #56616A;
+    border-radius: 4px;
+    background-color: #1B2024;
 }
 
 QCheckBox::indicator:checked {
-    background-color: #b07b32;
-    border: 1px solid #d3a65d;
-    border-radius: 3px;
+    background-color: #6FA76D;
+    border-color: #6FA76D;
 }
 
-/* ----------------------------------------------------------
-   Buttons
-   ---------------------------------------------------------- */
+/* --------------------------------------------------
+   Generic lists (used by widgets without a dedicated
+   component yet, e.g. widgets/collection_browser.py)
+   -------------------------------------------------- */
 
-QPushButton {
-    background-color: #6b481d;
-    border: 1px solid #9a6c2d;
-    border-radius: 5px;
-    color: #fff1dc;
-    padding: 9px 16px;
+QListWidget {
+    background-color: #1B2024;
+    border: 1px solid #323A41;
+    border-radius: 8px;
+    outline: none;
 }
 
-QPushButton:hover {
-    background-color: #805827;
-    border-color: #c09249;
+QListWidget::item {
+    padding: 6px 8px;
+    border-radius: 4px;
 }
 
-QPushButton:pressed {
-    background-color: #503414;
-}
-
-QPushButton:disabled {
-    background-color: #29221b;
-    border-color: #3d3328;
-    color: #71675b;
-}
-
-/* ----------------------------------------------------------
-   Lists / trees
-   ---------------------------------------------------------- */
-
-QListWidget,
-QTreeWidget {
-    alternate-background-color: #1d1712;
-}
-
-QTreeWidget::item:selected,
 QListWidget::item:selected {
-    background-color: #65451f;
-    color: #fff1dc;
+    background-color: #2B4B48;
+    color: #5FB0A8;
 }
 
-QHeaderView::section {
-    background-color: #211910;
-    border: 1px solid #493a2a;
-    color: #c99643;
-    padding: 7px;
+QListWidget::item:hover:!selected {
+    background-color: #232A2F;
 }
-
-/* ----------------------------------------------------------
-   Scrollbars
-   ---------------------------------------------------------- */
-
-QScrollBar:vertical {
-    background: #0e0b09;
-    width: 11px;
-    margin: 2px;
-}
-
-QScrollBar::handle:vertical {
-    background: #58442c;
-    border-radius: 5px;
-    min-height: 30px;
-}
-
-QScrollBar::handle:vertical:hover {
-    background: #856332;
-}
-
-QScrollBar::add-line,
-QScrollBar::sub-line {
-    height: 0;
-}
-
-QScrollBar:horizontal {
-    background: #0e0b09;
-    height: 11px;
-}
-
-QScrollBar::handle:horizontal {
-    background: #58442c;
-    border-radius: 5px;
-}
-
-/* ----------------------------------------------------------
-   Bronze separators
-   ---------------------------------------------------------- */
-
-QFrame[frameShape="4"],
-QFrame[frameShape="5"] {
-    color: #493a2a;
-}
-"""

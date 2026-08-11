@@ -46,7 +46,6 @@ class FoundryHeader(QWidget):
             "foundryHeader",
             True,
         )
-
         #
         # Left
         #
@@ -112,6 +111,35 @@ class FoundryHeader(QWidget):
         )
 
         #
+        # Context (optional)
+        #
+        # Extra widgets docked to the right of the header --
+        # trial/boss selectors, a directive banner, and so
+        # on. Empty by default; existing callers that only
+        # pass `department` are unaffected.
+        #
+
+        self.context_layout = QHBoxLayout()
+
+        self.context_layout.setContentsMargins(
+            0, 0, 0, 0,
+        )
+
+        self.context_layout.setSpacing(12)
+
+        right = QVBoxLayout()
+
+        right.setSpacing(8)
+
+        right.addWidget(
+            self.department
+        )
+
+        right.addLayout(
+            self.context_layout
+        )
+
+        #
         # Root
         #
 
@@ -131,6 +159,22 @@ class FoundryHeader(QWidget):
             1,
         )
 
-        layout.addWidget(
-            self.department
+        layout.addLayout(
+            right
         )
+
+    # --------------------------------------------------
+    # Public API
+    # --------------------------------------------------
+
+    def add_context_widget(
+        self,
+        widget: QWidget,
+    ):
+        """
+        Dock a widget (a filter dropdown, a directive
+        banner, ...) to the right of the header, below
+        the department label.
+        """
+
+        self.context_layout.addWidget(widget)
