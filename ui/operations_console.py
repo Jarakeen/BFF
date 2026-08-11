@@ -15,15 +15,10 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QHBoxLayout,
     QVBoxLayout,
-    QStackedWidget,
 )
 
 from ui.components.foundry_header import FoundryHeader
@@ -66,70 +61,65 @@ class OperationsConsole(QWidget):
 
         self.header = FoundryHeader(
             title="Operations Console",
-            subtitle="Mission control for expeditions, raids, and research.",
+            subtitle=(
+                "Mission control for expeditions, raids, "
+                "and research."
+            ),
             department="Command",
         )
 
-        #
-        # Navigation
-        #
+        # --------------------------------------------------
+        # Main content
+        # --------------------------------------------------
 
-        self.navigation = QListWidget()
+        self.content_widget = QWidget()
 
-        pages = [
-            "Dashboard",
-            "Raid",
-            "Builds",
-            "Capabilities",
-            "Boss Guide",
-            "Assignments",
-            "Optimization",
-            "Progression",
-            "Reference",
-            "Settings",
-        ]
+        content_layout = QVBoxLayout(
+            self.content_widget
+        )
 
-        for page in pages:
+        content_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
-            self.navigation.addItem(
-                QListWidgetItem(page)
-            )
+        title = QLabel(
+            "Operations Console"
+        )
 
-        #
-        # Content
-        #
+        title.setAlignment(
+            Qt.AlignmentFlag.AlignCenter
+        )
 
-        self.stack = QStackedWidget()
+        content_layout.addWidget(
+            title
+        )
 
-        for page in pages:
+        content_layout.addStretch()
 
-            widget = QWidget()
+        # --------------------------------------------------
+        # Console card
+        # --------------------------------------------------
 
-            layout = QVBoxLayout(widget)
+        content = FoundryCard(
+            "Console"
+        )
 
-            title = QLabel(page)
+        content.addWidget(
+            self.content_widget
+        )
 
-            title.setAlignment(
-                Qt.AlignmentFlag.AlignCenter
-            )
-
-            # layout.addStretch()
-
-            layout.addWidget(title)
-
-            # layout.addStretch()
-
-            self.stack.addWidget(widget)
-
-        #
+        # --------------------------------------------------
         # Status
-        #
+        # --------------------------------------------------
 
         self.status = FoundryStatusBar()
 
-        #
-        # Layout
-        #
+        # --------------------------------------------------
+        # Main layout
+        # --------------------------------------------------
 
         layout = QVBoxLayout(self)
 
@@ -146,51 +136,14 @@ class OperationsConsole(QWidget):
             self.header
         )
 
-        body = QHBoxLayout()
-
-        #
-        # Left navigation
-        #
-
-        navigation = FoundryCard(
-            "Navigation"
-        )
-
-        navigation.addWidget(
-            self.navigation
-        )
-
-        #
-        # Right content
-        #
-
-        content = FoundryCard(
-            "Console"
-        )
-
-        content.addWidget(
-            self.stack
-        )
-
-        body.addWidget(
-            navigation,
-            1,
-        )
-
-        body.addWidget(
+        layout.addWidget(
             content,
-            4,
-        )
-
-        layout.addLayout(
-            body
+            1,
         )
 
         layout.addWidget(
             self.status
         )
-
-        self.navigation.setCurrentRow(0)
 
         self.status.info(
             "Operations Console ready."
@@ -201,7 +154,11 @@ class OperationsConsole(QWidget):
     # --------------------------------------------------
 
     def connect_signals(self):
+        """
+        Operations Console currently has no local
+        navigation signals.
 
-        self.navigation.currentRowChanged.connect(
-            self.stack.setCurrentIndex
-        )
+        Navigation is handled by the main FoundryDock
+        sidebar.
+        """
+        pass

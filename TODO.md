@@ -91,8 +91,8 @@ Broadcast Desk
 
 Field Office - Simplify
 - [X]  Remove duplicated fields (objective, expedition, difficulty, location)
-- [ ]  Read Expedition from Broadcast Desk
-- [ ]  Read Objective from Broadcast Desk
+- [X]  Read Expedition from Broadcast Desk
+- [X]  Read Objective from Broadcast Desk
 - [ ]  Read Difficulty from checkboxes
 - [ ]  Save observations
 - [ ]  Load observations
