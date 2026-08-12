@@ -15,7 +15,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, QSize
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -56,6 +57,11 @@ class LiveOperationsPage(FoundryPage):
         super().__init__(parent)
 
         self.build_services()
+
+        self.archive_id = None
+        self.run_started = False
+        self.dirty = False
+
         self.build_ui()
         self.connect_signals()
 
@@ -168,6 +174,7 @@ class LiveOperationsPage(FoundryPage):
 
         self.status = FoundryStatusBar()
 
+
         #
         # Workspace
         #
@@ -229,6 +236,45 @@ class LiveOperationsPage(FoundryPage):
 
         self.set_status(self.status)
 
+        self.start_run_button = self.status.add_action(
+            "",
+            self.start_run,
+            "Start a new run",
+        )
+
+        self.save_button = self.status.add_action(
+            "",
+            self.save_run,
+            "Save current run",
+        )
+
+        self.archive_button = self.status.add_action(
+            "",
+            self.archive_run,
+            "Archive current timeline",
+        )
+
+        self._set_status_icon(
+            self.start_run_button,
+            "live-operations",
+        )
+
+        self._set_status_icon(
+            self.save_button,
+            "download",
+        )
+
+        self._set_status_icon(
+            self.archive_button,
+            "archive",
+        )
+
+        self.status.set_center_text(
+            "EXPEDITION SESSION"
+        )
+
+        
+ 
         #
         # Restore Session
         #
@@ -256,6 +302,32 @@ class LiveOperationsPage(FoundryPage):
             saved_session["BossWipes"]
         )
 
+        # --------------------------------------------------
+        # Restore saved timeline
+        # --------------------------------------------------
+
+        saved_events = saved_session.get(
+            "Events",
+            []
+        )
+
+        events = []
+
+        for data in saved_events:
+            try:
+                events.append(
+                    Event.from_dict(data)
+                )
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+            ):
+                continue
+
+        self.expedition.expedition.Events = events
+        self.timeline.set_events(events)
+        
         #
         # Elapsed Time
         #
@@ -337,6 +409,14 @@ class LiveOperationsPage(FoundryPage):
             self._on_obs_failed
         )
 
+        self.timeline.eventChanged.connect(
+            self._event_changed
+        )
+
+        self.timeline.eventDeleted.connect(
+            self._event_deleted
+        )
+
     # --------------------------------------------------
     # Raid Controls
     # --------------------------------------------------
@@ -366,6 +446,7 @@ class LiveOperationsPage(FoundryPage):
         self.status.info(
             f"Pull {pull_number} started on {boss}."
         )
+        self.dirty = True
 
     def ult_pull(self):
 
@@ -381,6 +462,192 @@ class LiveOperationsPage(FoundryPage):
 
         self.status.info(
             f"Ult pull started on {boss}."
+        )
+        self.dirty = True
+
+    def start_run(self):
+        """
+        Begin a fresh expedition run.
+
+        This does NOT affect OBS stream state.
+        """
+
+        self.expedition.new()
+
+        self.timeline.clear()
+        self.raid_controls.clear()
+
+        self.archive_id = None
+        self.run_started = True
+        self.dirty = False
+
+        self.status.success(
+            "Run started."
+        )
+        self.status.set_center_text(
+            "RUNNING"
+        )
+
+
+    def archive_run(self):
+        """
+        Create a new archive or update the existing archive
+        for this run.
+
+        Archiving never clears the active expedition.
+        """
+
+        events = self.expedition.expedition.Events
+
+        if not events:
+            self.status.warning(
+                "Nothing to archive yet."
+            )
+            return
+
+        lines = self._build_archive_lines()
+
+        try:
+
+            # ----------------------------------------------
+            # Existing archive
+            # ----------------------------------------------
+
+            if self.archive_id:
+
+                path = self._write_existing_archive(
+                    self.archive_id,
+                    lines,
+                )
+
+                self.dirty = False
+
+                self.status.success(
+                    f"{self.archive_id} updated."
+                )
+                self.status.set_center_text(
+                    f"ARCHIVE {self.archive_id}"
+                )
+
+                return
+
+            # ----------------------------------------------
+            # First archive
+            # ----------------------------------------------
+
+            archive_id, path = self.archive.file_form(
+                "EX",
+                lambda report_id, number: lines,
+            )
+
+            self.archive_id = archive_id
+            self.dirty = False
+
+            self.status.success(
+                f"{archive_id} archived."
+            )
+
+        except Exception as exc:
+
+            self.status.error(
+                f"Archive failed: {exc}"
+            )    
+
+    def _build_archive_lines(self) -> list[str]:
+        """
+        Build the current expedition timeline as Markdown.
+        """
+
+        boss = self._current_boss()
+
+        events = sorted(
+            self.expedition.expedition.Events,
+            key=lambda event: event.timestamp,
+        )
+
+        lines = [
+            "# Expedition Archive",
+            "",
+            f"**Boss:** {boss}",
+            "",
+            "## Timeline",
+            "",
+        ]
+
+        for event in events:
+
+            timestamp = event.timestamp.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+            detail = event.event
+
+            if event.payload.get("percent") is not None:
+                detail += (
+                    f" • {event.payload['percent']}%"
+                )
+
+            if event.payload.get("pull") is not None:
+                detail += (
+                    f" • Pull {event.payload['pull']}"
+                )
+
+            lines.append(
+                f"- `{timestamp}` — {detail}"
+            )
+
+            if event.notes:
+                lines.append(
+                    f"  - Note: {event.notes}"
+                )
+
+        return lines
+
+
+
+    def save_run(self):
+        """
+        Persist the current expedition state.
+        """
+
+        events = [
+            event.to_dict()
+            for event in self.expedition.expedition.Events
+        ]
+
+        boss = self._current_boss()
+
+        pulls = len(
+            self._boss_events(
+                boss,
+                "Pull Started",
+            )
+        )
+
+        wipes = len(
+            self._boss_events(
+                boss,
+                "Wipe",
+            )
+        )
+
+        self.stream_events.save_session(
+            {
+                "TotalPulls": pulls,
+                "CurrentBoss": boss,
+                "BossPulls": pulls,
+                "BossWipes": wipes,
+                "Events": events,
+            }
+        )
+
+        self.dirty = False
+
+        self.status.success(
+            "Run saved."
+        )
+        self.status.set_center_text(
+            "SAVED"
         )
 
     def record_wipe(self, percent: int, rough_night: bool):
@@ -421,6 +688,7 @@ class LiveOperationsPage(FoundryPage):
         self.status.warning(
             f"Wipe recorded at {percent}%."
         )
+        self.dirty = True
 
     def boss_clear(self):
 
@@ -459,7 +727,8 @@ class LiveOperationsPage(FoundryPage):
         self.status.success(
             f"{boss} cleared!"
         )
-
+        self.dirty = True
+        
     # --------------------------------------------------
     # Narrator
     # --------------------------------------------------
@@ -480,12 +749,43 @@ class LiveOperationsPage(FoundryPage):
             narrator_text=text,
             log_label=f"Narrator: {category}",
         )
-
+        
         self._log_timeline(f"Narrator ({category})")
 
         self.status.success(
             f"Posted a {category} note."
         )
+        self.dirty = True
+
+        # --------------------------------------------------
+        # Edit
+        # --------------------------------------------------
+
+
+    def _event_changed(self, event):
+
+        self.status.success(
+            f"Updated {event.event} at "
+            f"{event.timestamp.strftime('%H:%M:%S')}"
+        )
+
+        self._refresh_session()
+
+
+
+    def _event_deleted(self, event):
+
+        if event in self.expedition.expedition.Events:
+            self.expedition.expedition.Events.remove(
+                event
+            )
+
+        self.status.warning(
+            f"Removed {event.event}"
+        )
+
+        self._refresh_session()
+        self.dirty = True
 
     # --------------------------------------------------
     # Stream
@@ -502,6 +802,7 @@ class LiveOperationsPage(FoundryPage):
         )
 
         self._log_timeline("BRB")
+        self.dirty = True
 
     def end_stream(self):
 
@@ -536,7 +837,7 @@ class LiveOperationsPage(FoundryPage):
         self.status.info(
             "Ending stream..."
         )
-
+        self.dirty = True
     def reset_session(self):
 
         self.expedition.reset()
@@ -552,7 +853,12 @@ class LiveOperationsPage(FoundryPage):
             "CurrentBoss": "",
             "BossPulls": 0,
             "BossWipes": 0,
+            "Events": [],
         })
+
+        self.archive_id = None
+        self.run_started = False
+        self.dirty = False
 
         self.status.info(
             "Session reset."
@@ -577,6 +883,48 @@ class LiveOperationsPage(FoundryPage):
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
+
+    def _set_status_icon(self, button, icon_name: str):
+        """Use one of the real Foundry SVG icons for a status action."""
+        icon_path = Path("assets") / "icons" / f"{icon_name}.svg"
+
+        if not icon_path.exists():
+            return
+
+        button.setText("")
+        button.setIcon(
+            QIcon(str(icon_path))
+        )
+        button.setIconSize(
+            QSize(18, 18)
+        )
+
+    def _write_existing_archive(
+        self,
+        archive_id: str,
+        lines: list[str],
+    ) -> Path:
+        """Update an existing archive without allocating a new ID."""
+        filename = archive_id.replace("-", "_") + ".md"
+        path = self.archive.archive_folder / filename
+
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Archive does not exist: {archive_id}"
+            )
+
+        path.write_text(
+            "\n".join(lines),
+            encoding="utf-8",
+        )
+
+        return path
+
+    def _mark_dirty(self):
+        self.dirty = True
+        self.status.warning(
+            "Unsaved changes."
+        )
 
     def _current_boss(self) -> str:
 

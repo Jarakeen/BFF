@@ -9,6 +9,9 @@
                         Import "fastapi" could not be resolved
 
 # FoundryDock Roadmap
+- [ ] live operations - be able to edit a boss wipe pull timestamp in case I mess up the percentage
+- [ ] how am I saving this to the over all archive for the run? there is no way these are all getting tied together
+- [ ] a way to export the archived notes to something pretty
 
 
 Phase 1 – Operational MVP

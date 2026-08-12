@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
@@ -158,32 +158,49 @@ class FoundryStatusBar(QWidget):
         tooltip: str = "",
     ) -> QToolButton:
         """
-        Add a small icon button to the far right of the
-        status bar (e.g. a refresh or settings glyph).
-        Returns the button so the caller can keep a
-        reference if needed.
+        Add a session action to the right side of the status bar.
         """
 
         button = QToolButton()
-
-        button.setText(icon_text)
 
         button.setProperty(
             "statusAction",
             True,
         )
+      
 
         button.setCursor(
             Qt.CursorShape.PointingHandCursor
         )
 
+        button.setMinimumSize(
+            48,
+            44,
+        )
+        button.setIconSize(
+            QSize(
+                40,
+                40,
+            )
+        )
+
+        button.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonIconOnly
+        )
+
         if tooltip:
-            button.setToolTip(tooltip)
+            button.setToolTip(
+                tooltip
+            )
 
         if on_click is not None:
-            button.clicked.connect(on_click)
+            button.clicked.connect(
+                on_click
+            )
 
-        self.actions_layout.addWidget(button)
+        self.actions_layout.addWidget(
+            button
+        )
 
         return button
 

@@ -55,3 +55,6 @@ Importers
 /docs
 /tests
 /archives
+/crawlers
+/validators
+/database
