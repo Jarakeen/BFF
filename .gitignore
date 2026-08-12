@@ -19,7 +19,7 @@ dist/
 build/
 
 # Local databases
-*.db
+.db
 
 # OS
 .DS_Store
