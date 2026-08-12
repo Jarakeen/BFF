@@ -22,11 +22,10 @@ isn't literally in the page.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from html import unescape
 from html.parser import HTMLParser
 from typing import Any
-import re
 import urllib 
 from datetime import datetime, timezone
 
@@ -642,6 +641,8 @@ def _match_dialogue_trigger_to_ability(
         # Individual dialogue lines provide secondary evidence, but do not
         # pool unrelated lines from different triggers together.
         for entry in dialogue:
+            if entry.trigger.strip() != trigger.strip():
+                continue
             line_words = set(_normalize_text(entry.line).split())
             score += len(line_words & description_words)
 
@@ -935,24 +936,25 @@ class UespParser:
         )
 
     
+    @staticmethod
     def _dedupe_titles(titles: list[str]) -> list[str]:
         """
         Remove duplicate wiki titles while preserving their original order.
+        Matching is case-insensitive so one wiki page cannot be imported twice.
         """
-
         seen: set[str] = set()
         result: list[str] = []
 
         for title in titles:
             normalized = title.strip()
-
             if not normalized:
                 continue
 
-            if normalized in seen:
+            key = normalized.casefold()
+            if key in seen:
                 continue
 
-            seen.add(normalized)
+            seen.add(key)
             result.append(normalized)
 
         return result
@@ -960,48 +962,30 @@ class UespParser:
 
     def find_boss_links(self, page: UespPage) -> list[str]:
         """
-        Discover likely boss pages linked from a trial, dungeon, or arena page.
-        """
+        Discover boss pages from an explicit Bosses/Encounters section.
 
+        This intentionally does NOT fall back to every link on the page.
+        UESP overview pages contain links to locations, NPCs, achievements,
+        abilities, items, lore, and other pages. Treating those as bosses was
+        the source of the Blackrose Prison garbage import.
+
+        If there is no explicit boss section, return [] rather than guessing.
+        """
         parsed = parse_page_html(page.html)
 
-        # --------------------------------------------------
-        # Collect candidate titles
-        # --------------------------------------------------
-
-        candidates: list[str] = []
-
-        # First: explicit Bosses / Encounters section
         blocks = _section(
             parsed.sections,
             BOSS_SECTION_HEADINGS,
-        ) or []
+        )
 
-        for _, title in _extract_linked_titles(blocks):
-            candidates.append(title)
+        if not blocks:
+            return []
 
-        # --------------------------------------------------
-        # Fallback: inspect all links on the page
-        # --------------------------------------------------
-
-        if not candidates:
-            for block in parsed.all_blocks:
-                for href, text in block.get("links", []):
-                    title = _title_from_href(href)
-
-                    if not title:
-                        continue
-
-                    if not _looks_like_content_title(title):
-                        continue
-
-                    candidates.append(title)
-
-        # --------------------------------------------------
-        # Filter obvious non-boss pages
-        # --------------------------------------------------
-
-        boss_candidates: list[str] = []
+        candidates = [
+            title
+            for _, title in _extract_linked_titles(blocks)
+            if title.strip()
+        ]
 
         excluded_words = (
             "achievement",
@@ -1019,36 +1003,34 @@ class UespParser:
             "zone",
             "guide",
             "strategy",
+            "journal",
         )
 
+        generic_pages = {
+            "arenas",
+            "dungeons",
+            "trials",
+            "murkmire",
+            "dead water village",
+            "imperial",
+            "blackguards",
+        }
+
+        filtered: list[str] = []
+
         for title in candidates:
-            lowered = title.lower()
+            lowered = title.casefold()
+
+            if lowered in generic_pages:
+                continue
 
             if any(word in lowered for word in excluded_words):
                 continue
 
-            boss_candidates.append(title)
+            filtered.append(title)
 
-        # --------------------------------------------------
-        # Deduplicate while preserving order
-        # --------------------------------------------------
+        return self._dedupe_titles(filtered)
 
-        deduped: list[str] = []
-        seen: set[str] = set()
-
-        for title in boss_candidates:
-            title = title.strip()
-
-            if not title:
-                continue
-
-            if title in seen:
-                continue
-
-            seen.add(title)
-            deduped.append(title)
-
-        return deduped
 
     def detect_content_type(
         self,

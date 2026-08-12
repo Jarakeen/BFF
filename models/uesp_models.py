@@ -104,7 +104,6 @@ class UespBoss:
     summary: str = ""
     source: UespSource | None = None
 
-
 # --------------------------------------------------
 # Content-level structures (trial / dungeon / arena)
 # --------------------------------------------------
