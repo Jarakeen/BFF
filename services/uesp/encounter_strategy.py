@@ -88,7 +88,102 @@ OAXILTSO_MECHANICS = (
 )
 
 
+# Core curated mechanics for Flame-Herald Bahsei. The generic classifier may
+# discover additional candidates, but only mechanics we can describe with
+# confidence are promoted here. Portal details and some add/phase behavior are
+# intentionally left to inferred mechanics until they are verified.
+BAHSEI_MECHANICS = (
+    MechanicStrategySpec(
+        name="Bahsei's Salvo",
+        ability_name="Skull Salvo",
+        mechanic_type="interrupt",
+        damage_type="flame",
+        interruptible=True,
+        interrupt_note="Verified interrupt mechanic; UESP ability is named Skull Salvo.",
+        strategy="Interrupt the Salvo before the channel completes.",
+        recommended_role="Tank / assigned interrupter",
+        priority="high",
+        rationale="Raid-helper sources identify Bahsei's Salvo as an interrupt alert.",
+    ),
+    MechanicStrategySpec(
+        name="Death Touch",
+        ability_name="Death Touch/Kiss of Death",
+        mechanic_type="spread",
+        damage_type="frost",
+        target_count=2,
+        requires_movement=True,
+        requires_positioning=True,
+        failure_is_fatal=True,
+        interruptible=False,
+        interrupt_note="Not an interrupt mechanic.",
+        strategy="Cursed players move away from the group and allow the curse to resolve without catching other players.",
+        recommended_role="All",
+        priority="critical",
+        rationale=(
+            "External Rockgrove guides describe two cursed players, an 8-second timer, "
+            "and directional AoEs that can spread the curse to other players."
+        ),
+    ),
+    MechanicStrategySpec(
+        name="Cursed Ground",
+        ability_name="Cursed Ground/Unholy Spike",
+        mechanic_type="hazard",
+        damage_type="flame",
+        requires_movement=True,
+        requires_positioning=True,
+        persistent_hazard=True,
+        interruptible=False,
+        interrupt_note="No interrupt assigned here.",
+        strategy="Keep the ground hazards controlled and avoid placing them where they compromise the group's safe space.",
+        recommended_role="All",
+        priority="high",
+        rationale="Rockgrove encounter sources identify Cursed Ground as a recurring ground/chain hazard.",
+    ),
+    MechanicStrategySpec(
+        name="Sickle Strike",
+        ability_name="Sickle Strike",
+        mechanic_type="area_attack",
+        damage_type="flame",
+        requires_movement=True,
+        requires_positioning=True,
+        interruptible=False,
+        interrupt_note="No interrupt assigned here.",
+        strategy="Recognize the three outgoing AoEs and move through safe space without breaking the group formation unnecessarily.",
+        recommended_role="All",
+        priority="medium",
+        rationale="Rockgrove helper sources identify Sickle Strike as three outgoing AoEs from Bahsei.",
+    ),
+    MechanicStrategySpec(
+        name="Behemoth Spawn",
+        ability_name="Summon Behemoth",
+        mechanic_type="add_spawn",
+        damage_type="flame",
+        requires_positioning=True,
+        interruptible=False,
+        interrupt_note="Not treated as an interrupt mechanic.",
+        strategy="Prioritize the Behemoth over boss damage and control its position so its attacks and death explosion do not disrupt the group.",
+        recommended_role="DD / Tank",
+        priority="high",
+        rationale="Encounter guides identify Behemoths as a priority add introduced from the later portion of the fight.",
+    ),
+    MechanicStrategySpec(
+        name="Specter Spawn",
+        ability_name="Summon Specters",
+        mechanic_type="add_spawn",
+        requires_movement=True,
+        interruptible=False,
+        interrupt_note="Not treated as an interrupt mechanic.",
+        strategy="Kill the Specters promptly while maintaining the group's positioning.",
+        recommended_role="DD",
+        priority="medium",
+        rationale="Encounter sources describe Specter/Fire Spirit pressure during the lower-health portion of Bahsei.",
+    ),
+)
+
+
 def curated_mechanics_for(boss: UespBoss) -> tuple[MechanicStrategySpec, ...]:
     if boss.id == "oaxiltso" and boss.content_id == "rockgrove":
         return OAXILTSO_MECHANICS
+    if boss.id == "flame_herald_bahsei" and boss.content_id == "rockgrove":
+        return BAHSEI_MECHANICS
     return ()
