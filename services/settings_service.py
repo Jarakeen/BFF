@@ -4,6 +4,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+try:
+    import keyring
+except ImportError:
+    keyring = None
+
+# ESO Logs Client Secret is kept out of settings.json (which
+# often gets zipped into support bundles / synced folders)
+# and stored in the OS credential vault instead, via keyring.
+# If keyring isn't available on a given machine, save() falls
+# back to storing it in settings.json rather than losing it
+# silently -- see _save_secret()/_load_secret() below.
+_KEYRING_SERVICE = "BlackFeatherFoundry"
+_KEYRING_ESO_LOGS_SECRET = "EsoLogsClientSecret"
+
 
 class SettingsService:
     def __init__(self, settings_path: Path) -> None:
@@ -11,6 +25,9 @@ class SettingsService:
 
     def _default_settings(self) -> dict:
         return {
+            "EsoLogsClientId": "",
+            "EsoLogsClientSecret": "",
+            "BuildsExportFolder": "",
             "CurrentExpeditionPath": str(Path("../data/CurrentExpedition.json")),
             "CurrentIncidentPath": str(Path("../data/CurrentIncident.json")),
             "FieldNoteCounterPath": str(Path("../FieldNoteCounter.txt")),
@@ -56,6 +73,22 @@ class SettingsService:
 )
 
         return {
+                "EsoLogsClientId": str(
+                    data.get(
+                        "EsoLogsClientId",
+                        ""
+                    )
+                ),
+
+                "EsoLogsClientSecret": self._load_secret(data),
+
+                "BuildsExportFolder": str(
+                    data.get(
+                        "BuildsExportFolder",
+                        ""
+                    )
+                ),
+
                 "CurrentExpeditionPath": self._resolve_path(
                     data.get(
                         "CurrentExpeditionPath",
@@ -236,4 +269,69 @@ class SettingsService:
         
 
     def save(self, settings: dict) -> None:
+
+        settings = dict(settings)
+
+        secret = settings.pop("EsoLogsClientSecret", "")
+
+        stored_in_keyring = self._save_secret(secret)
+
+        # Only if keyring truly isn't available do we fall
+        # back to writing the secret into settings.json --
+        # better a plaintext secret on disk than a silently
+        # discarded one.
+        if not stored_in_keyring:
+            settings["EsoLogsClientSecret"] = secret
+
         self.settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=4), encoding="utf-8")
+
+    # --------------------------------------------------
+    # ESO Logs Client Secret (keyring-backed)
+    # --------------------------------------------------
+
+    def _save_secret(self, secret: str) -> bool:
+        """Returns True if the secret was handed off to keyring."""
+
+        if keyring is None:
+            return False
+
+        try:
+
+            if secret:
+                keyring.set_password(
+                    _KEYRING_SERVICE,
+                    _KEYRING_ESO_LOGS_SECRET,
+                    secret,
+                )
+            else:
+                keyring.delete_password(
+                    _KEYRING_SERVICE,
+                    _KEYRING_ESO_LOGS_SECRET,
+                )
+
+            return True
+
+        except Exception:
+            return False
+
+    def _load_secret(self, raw_settings: dict) -> str:
+
+        if keyring is not None:
+
+            try:
+
+                stored = keyring.get_password(
+                    _KEYRING_SERVICE,
+                    _KEYRING_ESO_LOGS_SECRET,
+                )
+
+                if stored:
+                    return stored
+
+            except Exception:
+                pass
+
+        # keyring unavailable/empty -- fall back to whatever
+        # was last written to settings.json directly (only
+        # happens on a machine with no OS credential vault).
+        return str(raw_settings.get("EsoLogsClientSecret", ""))

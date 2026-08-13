@@ -188,6 +188,10 @@ class SettingsPage(QWidget):
             self.browse_progress
         )
 
+        self.editor.builds_export_browse.clicked.connect(
+            self.browse_builds_export
+        )
+
     # --------------------------------------------------
     # Loading
     # --------------------------------------------------
@@ -311,4 +315,17 @@ class SettingsPage(QWidget):
 
             self.editor.achievement_progress.setText(
                 filename
+            )
+
+    def browse_builds_export(self):
+
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Default Builds Export Folder",
+        )
+
+        if folder:
+
+            self.editor.builds_export_folder.setText(
+                folder
             )

@@ -37,6 +37,8 @@ from ui.collections_page import CollectionsPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
+from ui.builds_page import BuildsPage
+from ui.capabilities_page import CapabilitiesPage
 from services.expedition_service import ExpeditionService
 class MainWindow(QMainWindow):
     """
@@ -151,6 +153,10 @@ class MainWindow(QMainWindow):
            "operations_console": OperationsConsole(
                 expedition=self.expedition_service
             ),
+
+            "console:2": BuildsPage(),
+
+            "console:3": CapabilitiesPage(),
 
             "settings": SettingsPage(),
 

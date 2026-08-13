@@ -1,0 +1,601 @@
+# ==================================================
+# Black Feather Foundry
+#
+# File:
+# ui/capabilities_page.py
+#
+# Purpose:
+# Capabilities Desk.
+#
+# Pulls a report/fight from ESO Logs for up to 12 raid team
+# members and models buff/debuff/skill uptime the way
+# BTVTools does -- relative to both the full pull length and
+# to how long the boss was actually damageable. Watches can
+# be suggested from a player's equipped gear sets.
+#
+# Wired to the sidebar's existing "Capabilities" nav entry
+# (Raid Operations > Capabilities, page key "console:3").
+#
+# ==================================================
+
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QStackedWidget,
+    QMessageBox,
+    QWidget,
+    QFileDialog,
+)
+
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.foundry_button import ButtonRole, FoundryButton
+from ui.components.foundry_tabs import FoundryTabs
+
+from ui.foundry_page import FoundryPage
+
+from widgets.capability_editor import CapabilityEditor
+
+from models.capability_model import CapabilityRoster, CapabilityProfile
+
+from services.capability_service import CapabilityService
+from services.esologs_client import EsoLogsClient, EsoLogsApiError
+from services.eso_database import EsoDatabase
+from services.reference_data_service import ReferenceDataService
+from services.settings_service import SettingsService
+
+CAPABILITIES_PATH = "data/capabilities.json"
+
+
+class CapabilitiesPage(FoundryPage):
+    """
+    Capabilities Desk -- one tab per raid team member's ESO
+    Logs-driven buff/debuff/skill uptime dashboard.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.build_services()
+
+        self.build_ui()
+        self.connect_signals()
+
+        self.refresh()
+
+    # --------------------------------------------------
+    # Services
+    # --------------------------------------------------
+
+    def build_services(self):
+
+        data_dir = Path(__file__).resolve().parents[1] / "data"
+
+        self.database = EsoDatabase(data_dir / "eso.db")
+
+        self.reference = ReferenceDataService(self.database)
+
+        self.settings_service = SettingsService(Path("settings.json"))
+
+        self.capabilities_path = data_dir / "capabilities.json"
+
+    def _build_capability_service(self) -> CapabilityService:
+        """
+        Rebuilt on demand (not cached) so a Client ID/Secret
+        change on the Settings page takes effect on the next
+        Fetch without restarting the Foundry.
+        """
+
+        settings = self.settings_service.load()
+
+        client = EsoLogsClient(
+            client_id=settings.get("EsoLogsClientId", ""),
+            client_secret=settings.get("EsoLogsClientSecret", ""),
+        )
+
+        return CapabilityService(client, self.reference)
+
+    # --------------------------------------------------
+    # UI
+    # --------------------------------------------------
+
+    def build_ui(self):
+
+        self.header = FoundryHeader(
+            title="Capabilities",
+            subtitle=(
+                "Buff, debuff, and skill uptime for the raid team, "
+                "pulled from ESO Logs."
+            ),
+            department="Planning",
+        )
+
+        self.set_header(self.header)
+
+        #
+        # Tab strip
+        #
+
+        self.tab_row = QHBoxLayout()
+
+        self.tab_row.setSpacing(8)
+
+        self.tabs_container = QHBoxLayout()
+
+        self.tabs_widget = None
+
+        self.add_member_button = FoundryButton(
+            "+ Add Member",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+
+        self.remove_member_button = FoundryButton(
+            "Remove Member",
+            role=ButtonRole.DANGER,
+            compact=True,
+        )
+
+        self.tab_row.addLayout(self.tabs_container, 1)
+        self.tab_row.addWidget(self.add_member_button)
+        self.tab_row.addWidget(self.remove_member_button)
+
+        self.add_workspace_layout(self.tab_row)
+
+        #
+        # Per-member editors
+        #
+
+        self.stack = QStackedWidget()
+
+        self.editors: list[CapabilityEditor] = []
+
+        self.add_workspace(self.stack)
+
+        #
+        # Actions
+        #
+
+        from PySide6.QtWidgets import QWidget
+
+        self.actions = QWidget()
+
+        actions_layout = QHBoxLayout(self.actions)
+
+        actions_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.save_button = FoundryButton(
+            "Save Watch Lists",
+            role=ButtonRole.SUCCESS,
+        )
+
+        self.export_csv_button = FoundryButton(
+            "Export CSV...",
+            role=ButtonRole.SECONDARY,
+        )
+
+        actions_layout.addWidget(self.save_button)
+        actions_layout.addWidget(self.export_csv_button)
+        actions_layout.addStretch()
+
+        self.set_actions(self.actions)
+
+        #
+        # Status
+        #
+
+        self.status = FoundryStatusBar()
+
+        self.set_status(self.status)
+
+    # --------------------------------------------------
+    # Signals
+    # --------------------------------------------------
+
+    def connect_signals(self):
+
+        self.add_member_button.clicked.connect(self.add_member)
+
+        self.remove_member_button.clicked.connect(self.remove_current_member)
+
+        self.save_button.clicked.connect(self.save_capabilities)
+
+        self.export_csv_button.clicked.connect(self.export_csv)
+
+    # --------------------------------------------------
+    # Loading
+    # --------------------------------------------------
+
+    def refresh(self):
+
+        try:
+
+            roster = self._load_roster_from_disk()
+
+        except Exception as exc:
+
+            self.status.error(f"Failed to load capabilities: {exc}")
+
+            roster = CapabilityRoster()
+
+        self._apply_roster(roster)
+
+        self.status.info(f"{len(roster.Members)} member tab(s) loaded.")
+
+    def _load_roster_from_disk(self) -> CapabilityRoster:
+
+        import json
+
+        if not self.capabilities_path.exists():
+            return CapabilityRoster()
+
+        data = json.loads(self.capabilities_path.read_text(encoding="utf-8"))
+
+        return CapabilityRoster.from_dict(data)
+
+    def _apply_roster(self, roster: CapabilityRoster):
+
+        while self.stack.count():
+
+            widget = self.stack.widget(0)
+
+            self.stack.removeWidget(widget)
+
+            widget.deleteLater()
+
+        self.editors = []
+
+        skill_choices = self.reference.list_skill_names()
+
+        for member in roster.Members:
+
+            editor = self._new_editor(skill_choices)
+
+            editor.load(member)
+
+            self.editors.append(editor)
+
+            self.stack.addWidget(editor)
+
+        self._rebuild_tabs()
+
+    def _new_editor(self, skill_choices: list[str]) -> CapabilityEditor:
+
+        editor = CapabilityEditor()
+
+        editor.set_watch_name_choices(skill_choices)
+
+        editor.nameChanged.connect(self._rebuild_tabs)
+
+        editor.fetchRequested.connect(lambda e=editor: self.fetch(e))
+
+        editor.suggestRequested.connect(lambda e=editor: self.suggest_watches(e))
+
+        return editor
+
+    # --------------------------------------------------
+    # Tabs
+    # --------------------------------------------------
+
+    def _rebuild_tabs(self, *_args):
+
+        current = self.stack.currentIndex()
+
+        if current < 0:
+            current = 0
+
+        while self.tabs_container.count():
+
+            item = self.tabs_container.takeAt(0)
+
+            if item.widget():
+                item.widget().deleteLater()
+
+        labels = [
+            editor.model.display_label(f"Member {i + 1}")
+            for i, editor in enumerate(self.editors)
+        ]
+
+        if not labels:
+            return
+
+        self.tabs_widget = FoundryTabs(
+            labels,
+            selected=labels[current] if current < len(labels) else labels[0],
+        )
+
+        self.tabs_widget.tabChanged.connect(self._select_tab_by_label)
+
+        self.tabs_container.addWidget(self.tabs_widget)
+
+        self.remove_member_button.setEnabled(len(self.editors) > 1)
+
+        self.add_member_button.setEnabled(
+            len(self.editors) < CapabilityRoster.MAX_MEMBERS
+        )
+
+    def _select_tab_by_label(self, label: str):
+
+        for i, editor in enumerate(self.editors):
+
+            if editor.model.display_label(f"Member {i + 1}") == label:
+
+                self.stack.setCurrentIndex(i)
+
+                return
+
+    # --------------------------------------------------
+    # Member management
+    # --------------------------------------------------
+
+    def add_member(self):
+
+        if len(self.editors) >= CapabilityRoster.MAX_MEMBERS:
+
+            self.status.warning(
+                f"Capabilities is limited to {CapabilityRoster.MAX_MEMBERS} members."
+            )
+
+            return
+
+        editor = self._new_editor(self.reference.list_skill_names())
+
+        self.editors.append(editor)
+
+        self.stack.addWidget(editor)
+
+        self.stack.setCurrentWidget(editor)
+
+        self._rebuild_tabs()
+
+        self.status.info("New member tab added.")
+
+    def remove_current_member(self):
+
+        if len(self.editors) <= 1:
+
+            self.status.warning("At least one member is required.")
+
+            return
+
+        index = self.stack.currentIndex()
+
+        if index < 0:
+            return
+
+        editor = self.editors[index]
+
+        label = editor.model.display_label(f"Member {index + 1}")
+
+        confirm = QMessageBox.question(
+            self,
+            "Remove Member",
+            f"Remove the Capabilities tab for {label}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        self.editors.pop(index)
+
+        self.stack.removeWidget(editor)
+
+        editor.deleteLater()
+
+        self._rebuild_tabs()
+
+        self.status.success(f"Removed {label}.")
+
+    # --------------------------------------------------
+    # Suggestions
+    # --------------------------------------------------
+
+    def suggest_watches(self, editor: CapabilityEditor):
+
+        set_names = [
+            s.strip()
+            for s in editor.equipped_sets.text().split(",")
+            if s.strip()
+        ]
+
+        if not set_names:
+
+            self.status.warning(
+                "Enter equipped sets (comma-separated) before suggesting watches."
+            )
+
+            return
+
+        service = self._build_capability_service()
+
+        suggestions = service.suggest_watches(set_names)
+
+        if not suggestions:
+
+            self.status.info("No buffs/debuffs found in those sets' bonus text.")
+
+            return
+
+        for watch in suggestions:
+            editor.add_watch(watch)
+
+        self.status.success(f"Added {len(suggestions)} suggested watch(es).")
+
+    # --------------------------------------------------
+    # Fetch
+    # --------------------------------------------------
+
+    def fetch(self, editor: CapabilityEditor):
+
+        report_code = editor.report_code.text().strip()
+
+        fight_text = editor.fight_id.text().strip()
+
+        if not report_code or not fight_text:
+
+            self.status.warning("Enter a report code and fight number first.")
+
+            return
+
+        try:
+            fight_id = int(fight_text)
+        except ValueError:
+
+            self.status.error("Fight number must be an integer.")
+
+            return
+
+        active_text = editor.boss_active_seconds.text().strip()
+
+        boss_active_seconds = None
+
+        if active_text:
+
+            try:
+                boss_active_seconds = float(active_text)
+            except ValueError:
+
+                self.status.error("Boss active time must be a number of seconds.")
+
+                return
+
+        watches = editor.active_watches
+
+        if not watches:
+
+            self.status.warning("Check at least one watch before fetching.")
+
+            return
+
+        service = self._build_capability_service()
+
+        self.status.info(f"Fetching {report_code} #{fight_text} from ESO Logs...")
+
+        try:
+
+            summary, results = service.fetch_uptime(
+                report_code,
+                fight_id,
+                watches,
+                boss_active_seconds=boss_active_seconds,
+            )
+
+        except EsoLogsApiError as exc:
+
+            self.status.error(str(exc))
+
+            return
+
+        except Exception as exc:
+
+            self.status.error(f"Fetch failed: {exc}")
+
+            return
+
+        editor.record_results(summary, results)
+
+        self.status.success(
+            f"Fetched {len(results)} watched effect(s) for {summary.get('name', 'the fight')}."
+        )
+
+    # --------------------------------------------------
+    # Save
+    # --------------------------------------------------
+
+    def _current_roster(self) -> CapabilityRoster:
+
+        return CapabilityRoster(
+            Members=[editor.model for editor in self.editors]
+        )
+
+    def save_capabilities(self):
+
+        import json
+
+        try:
+
+            self.capabilities_path.parent.mkdir(parents=True, exist_ok=True)
+
+            self.capabilities_path.write_text(
+                json.dumps(self._current_roster().to_dict(), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            self.status.success("Capabilities saved.")
+
+        except Exception as exc:
+
+            self.status.error(f"Save failed: {exc}")
+
+    # --------------------------------------------------
+    # Export
+    # --------------------------------------------------
+
+    def export_csv(self):
+
+        import csv
+
+        from PySide6.QtWidgets import QFileDialog
+
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Capabilities as CSV",
+            "raid_capabilities.csv",
+            "CSV Files (*.csv)",
+        )
+
+        if not filename:
+            return
+
+        try:
+
+            with open(filename, "w", newline="", encoding="utf-8") as handle:
+
+                writer = csv.writer(handle)
+
+                writer.writerow(
+                    [
+                        "Member",
+                        "Report",
+                        "Fight",
+                        "Fight Name",
+                        "Watching",
+                        "Type",
+                        "Uptime % (Full Fight)",
+                        "Uptime % (Boss Active)",
+                    ]
+                )
+
+                for editor in self.editors:
+
+                    model = editor.model
+
+                    if not model.LastResults:
+                        continue
+
+                    for result in model.LastResults:
+
+                        writer.writerow(
+                            [
+                                model.Name,
+                                model.ReportCode,
+                                model.FightId,
+                                model.LastFightName,
+                                result.Name,
+                                result.Kind,
+                                f"{result.UptimePercentFull:.1f}",
+                                f"{result.UptimePercentActive:.1f}",
+                            ]
+                        )
+
+            self.status.success(f"Exported CSV to {filename}")
+
+        except Exception as exc:
+
+            self.status.error(f"CSV export failed: {exc}")

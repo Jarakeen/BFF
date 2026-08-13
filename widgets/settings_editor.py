@@ -103,6 +103,28 @@ class SettingsEditor(QWidget):
         )
 
         #
+        # ESO Logs (Capabilities page)
+        #
+
+        self.eso_logs_client_id = QLineEdit()
+
+        self.eso_logs_client_secret = QLineEdit()
+
+        self.eso_logs_client_secret.setEchoMode(
+            QLineEdit.EchoMode.Password
+        )
+
+        #
+        # Builds export
+        #
+
+        self.builds_export_folder = QLineEdit()
+
+        self.builds_export_browse = QPushButton(
+            "Browse..."
+        )
+
+        #
         # Tabs
         #
 
@@ -284,6 +306,70 @@ class SettingsEditor(QWidget):
         )
 
         #
+        # ESO Logs
+        #
+
+        eso_logs = QWidget()
+
+        form = QFormLayout(eso_logs)
+
+        form.addRow(
+            "Client ID",
+            self.eso_logs_client_id,
+        )
+
+        form.addRow(
+            "Client Secret",
+            self.eso_logs_client_secret,
+        )
+
+        note = QPushButton(
+            "Get credentials at esologs.com/api/clients"
+        )
+
+        note.setFlat(True)
+
+        note.setEnabled(False)
+
+        form.addRow(
+            "",
+            note,
+        )
+
+        tabs.addTab(
+            eso_logs,
+            "ESO Logs",
+        )
+
+        #
+        # Builds
+        #
+
+        builds = QWidget()
+
+        form = QFormLayout(builds)
+
+        export_folder = QHBoxLayout()
+
+        export_folder.addWidget(
+            self.builds_export_folder
+        )
+
+        export_folder.addWidget(
+            self.builds_export_browse
+        )
+
+        form.addRow(
+            "Default Export Folder",
+            export_folder,
+        )
+
+        tabs.addTab(
+            builds,
+            "Builds",
+        )
+
+        #
         # Layout
         #
 
@@ -375,6 +461,27 @@ class SettingsEditor(QWidget):
             )
         )
 
+        self.eso_logs_client_id.setText(
+            settings.get(
+                "EsoLogsClientId",
+                ""
+            )
+        )
+
+        self.eso_logs_client_secret.setText(
+            settings.get(
+                "EsoLogsClientSecret",
+                ""
+            )
+        )
+
+        self.builds_export_folder.setText(
+            settings.get(
+                "BuildsExportFolder",
+                ""
+            )
+        )
+
     @property
     def settings(self) -> dict:
         """
@@ -382,6 +489,12 @@ class SettingsEditor(QWidget):
         """
 
         return {
+            "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
+
+            "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
+
+            "BuildsExportFolder": self.builds_export_folder.text().strip(),
+
             "BffRoot": self.workspace.text(),
 
             "ObsWebSocketHost": self.obs_host.text(),
