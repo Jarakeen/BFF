@@ -24,6 +24,7 @@ EXPECTED_CURATED = {
     "Behemoth Spawn",
     "Specter Spawn",
 }
+EXPECTED_HEALTH = ("21,812,840", "65,201,356", "123,882,576")
 
 
 def main() -> None:
@@ -72,7 +73,12 @@ def main() -> None:
         assert len(strategy_rows) == len(EXPECTED_CURATED)
         assert ability_count == 12
         assert dialogue_count == 41
-        assert health == ("21,812,840", "65,201,356", "123,882,576")
+
+        print("Bahsei DB snapshot health:", health)
+        print("Expected Bahsei health:", EXPECTED_HEALTH)
+        assert health == EXPECTED_HEALTH, (
+            f"Bahsei health mismatch: actual={health!r}, expected={EXPECTED_HEALTH!r}"
+        )
 
         # Re-import to prove replacement/upsert behavior does not duplicate data.
         store.save_boss(boss)
