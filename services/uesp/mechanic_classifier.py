@@ -1,15 +1,33 @@
 from __future__ import annotations
 
-"""Conservative rule-based classification of UESP encounter mechanics.
+"""Conservative interpretation of UESP encounter ability descriptions.
 
-This layer deliberately classifies only facts that are reasonably supported by
-UESP ability descriptions. Raid execution strategies remain separate and are
-never inferred here.
+The classifier extracts source-supported behavioral facts. It does not invent
+raid execution strategy. Strategy remains a separate curated layer.
 """
 
 from dataclasses import dataclass
 import re
 from typing import Optional
+
+
+MECHANIC_TYPES = {
+    "attack",
+    "area_attack",
+    "targeted_attack",
+    "hazard",
+    "movement",
+    "positioning",
+    "cleanse",
+    "interrupt",
+    "summon",
+    "add_spawn",
+    "phase_transition",
+    "resource",
+    "stack",
+    "spread",
+    "environment",
+}
 
 
 @dataclass(frozen=True)
@@ -35,43 +53,71 @@ _DAMAGE_PATTERNS = {
     "shock": r"\bshock\b|lightning|electric",
 }
 
+_COUNT_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+}
+
 
 def classify_mechanic(name: str, description: str) -> MechanicClassification:
     text = f"{name} {description}".lower()
 
-    damage_type = None
-    for candidate, pattern in _DAMAGE_PATTERNS.items():
-        if re.search(pattern, text):
-            damage_type = candidate
-            break
+    damage_type = _first_damage_type(text)
 
     target_count = None
-    count_match = re.search(r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+targets?\b", text)
+    count_match = re.search(
+        r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+targets?\b", text
+    )
     if count_match:
-        target_count = {
-            "one": 1, "two": 2, "three": 3, "four": 4,
-            "five": 5, "six": 6,
-        }.get(count_match.group(1), int(count_match.group(1)) if count_match.group(1).isdigit() else None)
+        token = count_match.group(1)
+        target_count = _COUNT_WORDS.get(token, int(token) if token.isdigit() else None)
 
-    requires_cleanse = bool(re.search(r"\bcleanse|cleanses|cleanse the effect|purge\b", text)) or None
-    persistent_hazard = bool(re.search(r"\blingering\b|\bpersistent\b|\bdrop .*pools?\b|\bpool\b|\bhazard\b", text)) or None
-    requires_movement = bool(re.search(r"\bdodge|dodged|charge|walk(?:ing)? into|move|movement|path\b", text)) or None
-    requires_positioning = bool(re.search(r"\bfarthest\b|\bposition|standing|range|near|away from|corners?\b", text)) or None
+    requires_cleanse = _has(
+        text, r"\bcleanse\b|\bcleanses\b|\bcleanse the effect\b|\bpurge\b"
+    )
+    persistent_hazard = _has(
+        text,
+        r"\blingering\b|\bpersistent\b|\bdrop .*pools?\b|\bpool\b|\bhazard\b|\bcracked earth\b",
+    )
+    requires_movement = _has(
+        text, r"\bdodge\b|\bdodged\b|\bcharge\b|\bwalk(?:ing)? into\b|\bmove\b|\bmovement\b|\bpath\b"
+    )
+    requires_positioning = _has(
+        text,
+        r"\bfarthest\b|\bposition\b|\bstanding\b|\brange\b|\bnear\b|\baway from\b|\bcorners?\b|\btarget area\b",
+    )
 
     interruptible = None
     interrupt_note = ""
     if re.search(r"\binterruptible\b|\bcan be interrupted\b", text):
         interruptible = True
         interrupt_note = "UESP description indicates the ability can be interrupted."
-    elif re.search(r"\binterrupt\b|\binterrupts?\b", text):
-        interruptible = True
-        interrupt_note = "UESP description references interruption."
 
-    mechanic_type = None
+    summon = _has(text, r"\bsummon\b|\bsummons\b|\bspawn(?:s|ed)?\b|\bcalled forth\b")
+    area_attack = _has(
+        text,
+        r"\barea\b|\baoe\b|\bexploding\b|\btrails?\b|\bmeteors?\b|\bsalvo\b|\bblast\b|\bcircle\b",
+    )
+
+    mechanic_type: Optional[str] = None
     if requires_cleanse:
         mechanic_type = "cleanse"
+    elif summon:
+        mechanic_type = "summon"
     elif persistent_hazard:
         mechanic_type = "hazard"
+    elif interruptible:
+        mechanic_type = "interrupt"
+    elif requires_positioning and target_count is not None:
+        mechanic_type = "targeted_attack"
+    elif requires_positioning:
+        mechanic_type = "positioning"
+    elif area_attack:
+        mechanic_type = "area_attack"
     elif requires_movement:
         mechanic_type = "movement"
 
@@ -87,3 +133,15 @@ def classify_mechanic(name: str, description: str) -> MechanicClassification:
         interruptible=interruptible,
         interrupt_note=interrupt_note,
     )
+
+
+def _first_damage_type(text: str) -> Optional[str]:
+    """Return a damage type only when the description contains explicit cues."""
+    for candidate, pattern in _DAMAGE_PATTERNS.items():
+        if re.search(pattern, text):
+            return candidate
+    return None
+
+
+def _has(text: str, pattern: str) -> Optional[bool]:
+    return True if re.search(pattern, text) else None
