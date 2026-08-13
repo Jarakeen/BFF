@@ -77,18 +77,24 @@ def _empty_bar() -> list[str]:
 
 def _empty_armor() -> dict[str, dict[str, str]]:
     return {
-        slot: {"Set": "", "Trait": ""}
+        slot: {
+            "Set": "",
+            "Trait": "",
+            "Enchant": "",
+            "Weight": "",
+        }
         for slot in ARMOR_SLOTS
     }
 
 
 @dataclass
 class GearSlot:
-    """A single weapon or jewelry slot (set + trait + enchant)."""
+    """A single weapon, armor, or jewelry slot."""
 
     Set: str = ""
     Trait: str = ""
     Enchant: str = ""
+    Weight: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -96,10 +102,12 @@ class GearSlot:
     @classmethod
     def from_dict(cls, data: dict | None) -> "GearSlot":
         data = data or {}
+
         return cls(
             Set=data.get("Set", ""),
             Trait=data.get("Trait", ""),
             Enchant=data.get("Enchant", ""),
+            Weight=data.get("Weight", ""),
         )
 
 
@@ -222,6 +230,8 @@ class PlayerBuild:
                 armor[slot] = {
                     "Set": value.get("Set", ""),
                     "Trait": value.get("Trait", ""),
+                    "Enchant": value.get("Enchant", ""),
+                    "Weight": value.get("Weight", ""),
                 }
 
         return cls(

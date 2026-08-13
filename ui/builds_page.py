@@ -35,7 +35,7 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_tabs import FoundryTabs
-
+from widgets.build_dashboard import BuildDashboard
 from ui.foundry_page import FoundryPage
 
 from widgets.build_editor import BuildEditor
@@ -237,7 +237,8 @@ class BuildsPage(FoundryPage):
 
             self.editors.append(editor)
 
-            self.stack.addWidget(editor)
+            dashboard = BuildDashboard(editor)
+            self.stack.addWidget(dashboard)
 
         self._rebuild_tabs()
 
@@ -326,8 +327,8 @@ class BuildsPage(FoundryPage):
 
         self.editors.append(editor)
 
-        self.stack.addWidget(editor)
-
+        dashboard = BuildDashboard(editor)
+        self.stack.addWidget(dashboard)
         self.stack.setCurrentWidget(editor)
 
         self._rebuild_tabs()
