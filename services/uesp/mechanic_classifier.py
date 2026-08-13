@@ -91,6 +91,9 @@ def classify_mechanic(name: str, description: str) -> MechanicClassification:
         r"\bfarthest\b|\bposition\b|\bstanding\b|\brange\b|\bnear\b|\baway from\b|\bcorners?\b|\btarget area\b",
     )
 
+    # UESP is treated as authoritative only when it explicitly says an ability
+    # can be interrupted. We deliberately do not infer interruption from words
+    # like "attack", "cast", "charge", or from generic encounter importance.
     interruptible = None
     interrupt_note = ""
     if re.search(r"\binterruptible\b|\bcan be interrupted\b", text):
@@ -106,12 +109,12 @@ def classify_mechanic(name: str, description: str) -> MechanicClassification:
     mechanic_type: Optional[str] = None
     if requires_cleanse:
         mechanic_type = "cleanse"
+    elif interruptible:
+        mechanic_type = "interrupt"
     elif summon:
         mechanic_type = "summon"
     elif persistent_hazard:
         mechanic_type = "hazard"
-    elif interruptible:
-        mechanic_type = "interrupt"
     elif requires_positioning and target_count is not None:
         mechanic_type = "targeted_attack"
     elif requires_positioning:
