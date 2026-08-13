@@ -9,15 +9,11 @@ from typing import Any
 from models.uesp_models import UespBoss, UespContent
 from services.encounter_schema import ensure_encounter_schema
 from services.uesp.encounter_strategy import curated_mechanics_for
+from services.uesp.mechanic_classifier import classify_mechanic
 
 
 class UespEncounterStore:
-    """Writes parsed UESP encounter facts into the existing ESO database.
-
-    This store deliberately does not replace the existing JSON UESP store.
-    JSON remains useful as the raw/cache representation; this class creates
-    the relational representation used by FoundryDock's analysis layer.
-    """
+    """Writes parsed UESP encounter facts into the existing ESO database."""
 
     def __init__(self, connection: sqlite3.Connection) -> None:
         self.connection = connection
@@ -34,24 +30,17 @@ class UespEncounterStore:
                 retrieved_at, source_license
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
-                name=excluded.name,
-                slug=excluded.slug,
-                content_type=excluded.content_type,
-                summary=excluded.summary,
-                location=excluded.location,
-                source_url=excluded.source_url,
+                name=excluded.name, slug=excluded.slug,
+                content_type=excluded.content_type, summary=excluded.summary,
+                location=excluded.location, source_url=excluded.source_url,
                 source_page_title=excluded.source_page_title,
                 source_revision_id=excluded.source_revision_id,
                 retrieved_at=excluded.retrieved_at,
                 source_license=excluded.source_license
             """,
             (
-                content.id,
-                content.name,
-                content.id,
-                content.content_type,
-                content.summary,
-                content.location,
+                content.id, content.name, content.id, content.content_type,
+                content.summary, content.location,
                 source.url if source else None,
                 source.page_title if source else None,
                 str(source.revision_id) if source and source.revision_id is not None else None,
@@ -59,15 +48,9 @@ class UespEncounterStore:
                 source.license if source else None,
             ),
         )
-        self.connection.commit()
-
         if content.achievements:
-            self._save_content_section(
-                content.id,
-                "achievements",
-                [asdict(a) for a in content.achievements],
-            )
-            self.connection.commit()
+            self._save_content_section(content.id, "achievements", [asdict(a) for a in content.achievements])
+        self.connection.commit()
 
     def save_boss(self, boss: UespBoss) -> None:
         if not boss.content_id:
@@ -75,6 +58,8 @@ class UespEncounterStore:
 
         self._ensure_content_stub(boss)
         source = boss.source
+        source_url = source.url if source else None
+        revision = str(source.revision_id) if source and source.revision_id is not None else None
 
         self.connection.execute(
             """
@@ -84,31 +69,19 @@ class UespEncounterStore:
                 retrieved_at, source_license
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
-                content_id=excluded.content_id,
-                name=excluded.name,
-                slug=excluded.slug,
-                summary=excluded.summary,
-                location=excluded.location,
-                species=excluded.species,
-                reaction=excluded.reaction,
-                source_url=excluded.source_url,
+                content_id=excluded.content_id, name=excluded.name,
+                slug=excluded.slug, summary=excluded.summary,
+                location=excluded.location, species=excluded.species,
+                reaction=excluded.reaction, source_url=excluded.source_url,
                 source_page_title=excluded.source_page_title,
                 source_revision_id=excluded.source_revision_id,
                 retrieved_at=excluded.retrieved_at,
                 source_license=excluded.source_license
             """,
             (
-                boss.id,
-                boss.content_id,
-                boss.name,
-                boss.id,
-                boss.summary,
-                boss.location,
-                boss.species,
-                boss.reaction,
-                source.url if source else None,
-                source.page_title if source else None,
-                str(source.revision_id) if source and source.revision_id is not None else None,
+                boss.id, boss.content_id, boss.name, boss.id, boss.summary,
+                boss.location, boss.species, boss.reaction,
+                source_url, source.page_title if source else None, revision,
                 source.retrieved_at if source else None,
                 source.license if source else None,
             ),
@@ -119,8 +92,7 @@ class UespEncounterStore:
             INSERT INTO encounter_health(encounter_id, normal, veteran, hardmode)
             VALUES (?, ?, ?, ?)
             ON CONFLICT(encounter_id) DO UPDATE SET
-                normal=excluded.normal,
-                veteran=excluded.veteran,
+                normal=excluded.normal, veteran=excluded.veteran,
                 hardmode=excluded.hardmode
             """,
             (boss.id, boss.health.normal, boss.health.veteran, boss.health.hardmode),
@@ -138,8 +110,7 @@ class UespEncounterStore:
             """
             INSERT INTO content(id, name, slug, content_type)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                name=excluded.name
+            ON CONFLICT(id) DO UPDATE SET name=excluded.name
             """,
             (
                 boss.content_id,
@@ -152,6 +123,7 @@ class UespEncounterStore:
     def _replace_abilities(self, boss: UespBoss) -> None:
         self.connection.execute("DELETE FROM encounter_ability WHERE encounter_id = ?", (boss.id,))
         for ability in boss.abilities:
+            classification = classify_mechanic(ability.name, ability.description)
             self.connection.execute(
                 """
                 INSERT INTO encounter_ability(
@@ -160,14 +132,10 @@ class UespEncounterStore:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    boss.id,
-                    ability.name,
-                    ability.description,
-                    "Skills and Abilities",
+                    boss.id, ability.name, ability.description, "Skills and Abilities",
                     boss.source.url if boss.source else None,
                     str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None,
-                    None,
-                    "",
+                    _db_bool(classification.interruptible), classification.interrupt_note,
                 ),
             )
 
@@ -193,27 +161,15 @@ class UespEncounterStore:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    boss.id,
-                    spec.name,
-                    description,
-                    spec.mechanic_type,
-                    spec.damage_type,
-                    spec.target_count,
-                    _db_bool(spec.requires_movement),
-                    _db_bool(spec.requires_positioning),
-                    _db_bool(spec.requires_cleanse),
-                    _db_bool(spec.persistent_hazard),
-                    _db_bool(spec.failure_is_fatal),
-                    _db_bool(spec.interruptible),
-                    spec.interrupt_note,
-                    "curated",
-                    "Skills and Abilities",
-                    source_url,
-                    revision,
+                    boss.id, spec.name, description, spec.mechanic_type, spec.damage_type,
+                    spec.target_count, _db_bool(spec.requires_movement),
+                    _db_bool(spec.requires_positioning), _db_bool(spec.requires_cleanse),
+                    _db_bool(spec.persistent_hazard), _db_bool(spec.failure_is_fatal),
+                    _db_bool(spec.interruptible), spec.interrupt_note, "curated",
+                    "Skills and Abilities", source_url, revision,
                 ),
             )
             mechanic_id = cursor.lastrowid
-
             if spec.strategy:
                 self.connection.execute(
                     """
@@ -223,39 +179,37 @@ class UespEncounterStore:
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        boss.id,
-                        mechanic_id,
-                        spec.strategy,
-                        spec.recommended_role,
-                        spec.priority,
-                        spec.rationale,
-                        "manual",
-                        source_url,
-                        revision,
+                        boss.id, mechanic_id, spec.strategy, spec.recommended_role,
+                        spec.priority, spec.rationale, "manual", source_url, revision,
                     ),
                 )
 
-        # Preserve any parser-produced mechanics that are not part of the
-        # curated strategy set. These remain explicitly unclassified.
         curated_names = {spec.name for spec in curated}
         for mechanic in boss.mechanics:
             if mechanic.name in curated_names:
                 continue
+            classification = classify_mechanic(mechanic.name, mechanic.description)
             self.connection.execute(
                 """
                 INSERT INTO encounter_mechanic(
-                    encounter_id, name, description, interpretation_status,
+                    encounter_id, name, description, mechanic_type, damage_type,
+                    target_count, requires_movement, requires_positioning,
+                    requires_cleanse, persistent_hazard, failure_is_fatal,
+                    interruptible, interrupt_note, interpretation_status,
                     source_section, source_url, source_revision_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    boss.id,
-                    mechanic.name,
-                    mechanic.description,
-                    "unclassified",
-                    "Skills and Abilities",
-                    source_url,
-                    revision,
+                    boss.id, mechanic.name, mechanic.description,
+                    classification.mechanic_type, classification.damage_type,
+                    classification.target_count, _db_bool(classification.requires_movement),
+                    _db_bool(classification.requires_positioning),
+                    _db_bool(classification.requires_cleanse),
+                    _db_bool(classification.persistent_hazard),
+                    _db_bool(classification.failure_is_fatal),
+                    _db_bool(classification.interruptible),
+                    classification.interrupt_note, classification.interpretation_status,
+                    "Skills and Abilities", source_url, revision,
                 ),
             )
 
@@ -270,28 +224,21 @@ class UespEncounterStore:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    boss.id,
-                    phase.label,
-                    phase.threshold,
-                    phase.description,
-                    "Phases",
-                    boss.source.url if boss.source else None,
+                    boss.id, phase.label, phase.threshold, phase.description,
+                    "Phases", boss.source.url if boss.source else None,
                     str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None,
                 ),
             )
 
     def _replace_dialogue(self, boss: UespBoss) -> None:
         self.connection.execute("DELETE FROM encounter_dialogue WHERE encounter_id = ?", (boss.id,))
-
         ability_ids = {
             row["name"]: row["id"]
             for row in self.connection.execute(
                 "SELECT id, name FROM encounter_ability WHERE encounter_id = ?", (boss.id,)
             )
         }
-
         for line in boss.dialogue:
-            matched_id = ability_ids.get(line.ability or "")
             self.connection.execute(
                 """
                 INSERT INTO encounter_dialogue(
@@ -300,12 +247,8 @@ class UespEncounterStore:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    boss.id,
-                    line.trigger or "Unspecified",
-                    line.speaker,
-                    line.line,
-                    matched_id,
-                    "Dialogue",
+                    boss.id, line.trigger or "Unspecified", line.speaker, line.line,
+                    ability_ids.get(line.ability or ""), "Dialogue",
                     boss.source.url if boss.source else None,
                     str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None,
                 ),
@@ -313,7 +256,6 @@ class UespEncounterStore:
 
     def _save_boss_sections(self, boss: UespBoss) -> None:
         import json
-
         source_url = boss.source.url if boss.source else None
         revision = str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None
         sections: dict[str, Any] = {
