@@ -8,6 +8,7 @@ from typing import Any
 
 from models.uesp_models import UespBoss, UespContent
 from services.encounter_schema import ensure_encounter_schema
+from services.uesp.encounter_strategy import curated_mechanics_for
 
 
 class UespEncounterStore:
@@ -60,9 +61,13 @@ class UespEncounterStore:
         )
         self.connection.commit()
 
-        for achievement in content.achievements:
-            self._save_content_section(content.id, "achievements", [asdict(a) for a in content.achievements])
-            break
+        if content.achievements:
+            self._save_content_section(
+                content.id,
+                "achievements",
+                [asdict(a) for a in content.achievements],
+            )
+            self.connection.commit()
 
     def save_boss(self, boss: UespBoss) -> None:
         if not boss.content_id:
@@ -167,8 +172,75 @@ class UespEncounterStore:
             )
 
     def _replace_mechanics(self, boss: UespBoss) -> None:
+        self.connection.execute("DELETE FROM encounter_strategy WHERE encounter_id = ?", (boss.id,))
         self.connection.execute("DELETE FROM encounter_mechanic WHERE encounter_id = ?", (boss.id,))
+
+        curated = curated_mechanics_for(boss)
+        ability_descriptions = {ability.name: ability.description for ability in boss.abilities}
+        source_url = boss.source.url if boss.source else None
+        revision = str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None
+
+        for spec in curated:
+            description = ability_descriptions.get(spec.ability_name, "")
+            cursor = self.connection.execute(
+                """
+                INSERT INTO encounter_mechanic(
+                    encounter_id, name, description, mechanic_type, damage_type,
+                    target_count, requires_movement, requires_positioning,
+                    requires_cleanse, persistent_hazard, failure_is_fatal,
+                    interruptible, interrupt_note, interpretation_status,
+                    source_section, source_url, source_revision_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    boss.id,
+                    spec.name,
+                    description,
+                    spec.mechanic_type,
+                    spec.damage_type,
+                    spec.target_count,
+                    _db_bool(spec.requires_movement),
+                    _db_bool(spec.requires_positioning),
+                    _db_bool(spec.requires_cleanse),
+                    _db_bool(spec.persistent_hazard),
+                    _db_bool(spec.failure_is_fatal),
+                    _db_bool(spec.interruptible),
+                    spec.interrupt_note,
+                    "curated",
+                    "Skills and Abilities",
+                    source_url,
+                    revision,
+                ),
+            )
+            mechanic_id = cursor.lastrowid
+
+            if spec.strategy:
+                self.connection.execute(
+                    """
+                    INSERT INTO encounter_strategy(
+                        encounter_id, mechanic_id, strategy, recommended_role,
+                        priority, rationale, source_type, source_url, source_revision_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        boss.id,
+                        mechanic_id,
+                        spec.strategy,
+                        spec.recommended_role,
+                        spec.priority,
+                        spec.rationale,
+                        "manual",
+                        source_url,
+                        revision,
+                    ),
+                )
+
+        # Preserve any parser-produced mechanics that are not part of the
+        # curated strategy set. These remain explicitly unclassified.
+        curated_names = {spec.name for spec in curated}
         for mechanic in boss.mechanics:
+            if mechanic.name in curated_names:
+                continue
             self.connection.execute(
                 """
                 INSERT INTO encounter_mechanic(
@@ -178,12 +250,12 @@ class UespEncounterStore:
                 """,
                 (
                     boss.id,
-                    self._mechanic_name(mechanic),
+                    mechanic.name,
                     mechanic.description,
                     "unclassified",
                     "Skills and Abilities",
-                    boss.source.url if boss.source else None,
-                    str(boss.source.revision_id) if boss.source and boss.source.revision_id is not None else None,
+                    source_url,
+                    revision,
                 ),
             )
 
@@ -265,14 +337,6 @@ class UespEncounterStore:
                 (boss.id, name, json.dumps(payload, ensure_ascii=False), source_url, revision),
             )
 
-    @staticmethod
-    def _mechanic_name(mechanic: Any) -> str:
-        # Current UespMechanic does not carry a separate name. Until the model
-        # does, use a stable generated label rather than pretending the
-        # description itself is a canonical ability name.
-        text = mechanic.description.strip()
-        return text[:120] if text else "Unspecified mechanic"
-
     def _save_content_section(self, content_id: str, section_name: str, payload: Any) -> None:
         import json
         self.connection.execute(
@@ -283,3 +347,9 @@ class UespEncounterStore:
             """,
             (content_id, section_name, json.dumps(payload, ensure_ascii=False)),
         )
+
+
+def _db_bool(value: bool | None) -> int | None:
+    if value is None:
+        return None
+    return 1 if value else 0
