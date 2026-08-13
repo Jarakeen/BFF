@@ -5,9 +5,8 @@ from __future__ import annotations
 The classifier extracts source-supported behavioral facts. It does not invent
 raid execution strategy. Strategy remains a separate curated layer.
 """
-
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -29,8 +28,7 @@ MECHANIC_TYPES = {
     "environment",
 }
 
-
-@dataclass(frozen=True)
+@dataclass
 class MechanicClassification:
     mechanic_type: Optional[str] = None
     damage_type: Optional[str] = None
@@ -45,14 +43,6 @@ class MechanicClassification:
     interpretation_status: str = "inferred"
 
 
-_DAMAGE_PATTERNS = {
-    "poison": r"\bpoison\b|poisonous|noxious",
-    "flame": r"\bflame\b|fire|fiery|burn",
-    "physical": r"\bphysical\b|chomp|smash|stomp|crush",
-    "frost": r"\bfrost\b|ice|icy|freeze",
-    "shock": r"\bshock\b|lightning|electric",
-}
-
 _COUNT_WORDS = {
     "one": 1,
     "two": 2,
@@ -63,88 +53,284 @@ _COUNT_WORDS = {
 }
 
 
-def classify_mechanic(name: str, description: str) -> MechanicClassification:
-    text = f"{name} {description}".lower()
-
-    damage_type = _first_damage_type(text)
-
-    target_count = None
-    count_match = re.search(
-        r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+targets?\b", text
-    )
-    if count_match:
-        token = count_match.group(1)
-        target_count = _COUNT_WORDS.get(token, int(token) if token.isdigit() else None)
-
-    requires_cleanse = _has(
-        text, r"\bcleanse\b|\bcleanses\b|\bcleanse the effect\b|\bpurge\b"
-    )
-    persistent_hazard = _has(
-        text,
-        r"\blingering\b|\bpersistent\b|\bdrop .*pools?\b|\bpool\b|\bhazard\b|\bcracked earth\b",
-    )
-    requires_movement = _has(
-        text, r"\bdodge\b|\bdodged\b|\bcharge\b|\bwalk(?:ing)? into\b|\bmove\b|\bmovement\b|\bpath\b"
-    )
-    requires_positioning = _has(
-        text,
-        r"\bfarthest\b|\bposition\b|\bstanding\b|\brange\b|\bnear\b|\baway from\b|\bcorners?\b|\btarget area\b",
-    )
-
-    # UESP is treated as authoritative only when it explicitly says an ability
-    # can be interrupted. We deliberately do not infer interruption from words
-    # like "attack", "cast", "charge", or from generic encounter importance.
-    interruptible = None
-    interrupt_note = ""
-    if re.search(r"\binterruptible\b|\bcan be interrupted\b", text):
-        interruptible = True
-        interrupt_note = "UESP description indicates the ability can be interrupted."
-
-    summon = _has(text, r"\bsummon\b|\bsummons\b|\bspawn(?:s|ed)?\b|\bcalled forth\b")
-    area_attack = _has(
-        text,
-        r"\barea\b|\baoe\b|\bexploding\b|\btrails?\b|\bmeteors?\b|\bsalvo\b|\bblast\b|\bcircle\b",
-    )
-
-    mechanic_type: Optional[str] = None
-    if requires_cleanse:
-        mechanic_type = "cleanse"
-    elif interruptible:
-        mechanic_type = "interrupt"
-    elif summon:
-        mechanic_type = "summon"
-    elif persistent_hazard:
-        mechanic_type = "hazard"
-    elif requires_positioning and target_count is not None:
-        mechanic_type = "targeted_attack"
-    elif requires_positioning:
-        mechanic_type = "positioning"
-    elif area_attack:
-        mechanic_type = "area_attack"
-    elif requires_movement:
-        mechanic_type = "movement"
-
-    return MechanicClassification(
-        mechanic_type=mechanic_type,
-        damage_type=damage_type,
-        target_count=target_count,
-        requires_movement=requires_movement,
-        requires_positioning=requires_positioning,
-        requires_cleanse=requires_cleanse,
-        persistent_hazard=persistent_hazard,
-        failure_is_fatal=None,
-        interruptible=interruptible,
-        interrupt_note=interrupt_note,
-    )
+def _has(text: str, pattern: str) -> bool:
+    return re.search(pattern, text, re.IGNORECASE) is not None
 
 
 def _first_damage_type(text: str) -> Optional[str]:
-    """Return a damage type only when the description contains explicit cues."""
-    for candidate, pattern in _DAMAGE_PATTERNS.items():
-        if re.search(pattern, text):
-            return candidate
+    """
+    Identify damage types when the description actually attributes
+    that damage to the ability or its affected targets.
+    """
+
+    patterns = [
+        (
+            "flame",
+            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
+            r"[^.]{0,100}\bflame damage\b",
+        ),
+        (
+            "frost",
+            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
+            r"[^.]{0,100}\bfrost damage\b",
+        ),
+        (
+            "poison",
+            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
+            r"[^.]{0,100}\bpoison damage\b",
+        ),
+        (
+            "poison",
+            r"\bpoisoned targets?\b[^.]{0,100}\bpoison damage\b",
+        ),
+        (
+            "poison",
+            r"\bpoisoned players?\b[^.]{0,100}\bpoison damage\b",
+        ),
+        (
+            "physical",
+            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
+            r"[^.]{0,100}\bphysical damage\b",
+        ),
+        (
+            "magic",
+            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
+            r"[^.]{0,100}\bmagical damage\b",
+        ),
+    ]
+
+    for damage_type, pattern in patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return damage_type
+
     return None
 
 
-def _has(text: str, pattern: str) -> Optional[bool]:
-    return True if re.search(pattern, text) else None
+def classify_mechanic(name: str, description: str) -> MechanicClassification:
+    text = f"{name} {description}".lower()
+
+    # ---------------------------------------------------------
+    # Target count
+    # ---------------------------------------------------------
+
+    target_count = None
+
+    count_match = re.search(
+        r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\b"
+        r"(?:\s+\w+){0,3}\s+"
+        r"(?:targets?|players?|party members?)\b",
+        text,
+    )
+
+    if count_match:
+        token = count_match.group(1)
+        target_count = _COUNT_WORDS.get(
+            token,
+            int(token) if token.isdigit() else None,
+        )
+
+    # ---------------------------------------------------------
+    # Explicit mechanics
+    # ---------------------------------------------------------
+
+    requires_cleanse = _has(
+        text,
+        r"\bcleanse\b|\bcleanses\b|\bcleanse the effect\b|\bpurge\b",
+    )
+
+    persistent_hazard = _has(
+        text,
+        r"\blingering\b"
+        r"|\bpersistent\b"
+        r"|\bdrop .*pools?\b"
+        r"|\bcracked earth\b"
+        r"|\barea .* remains\b"
+        r"|\bremains .* area\b",
+    )
+
+    requires_movement = _has(
+        text,
+        r"\bdodge\b"
+        r"|\bdodged\b"
+        r"|\bwalk(?:ing)? into\b"
+        r"|\bmove out\b"
+        r"|\bmove away\b"
+        r"|\bavoid\b"
+        r"|\bpath\b"
+        r"|\brun through\b"
+        r"|\bmove through\b"
+        r"|\bmoving walls?\b"
+        r"|\bmoving walls? of\b",
+    )
+
+    requires_positioning = _has(
+        text,
+        r"\bfarthest\b"
+        r"|\baway from\b"
+        r"|\bcorners?\b"
+        r"|\boutside\b"
+        r"|\bspread\b"
+        r"|\bstanding\b",
+    )
+
+
+    spread = _has(
+    text,
+        r"\bspread\b"
+        r"|\bswirls? away\b"
+        r"|\bnearby players?\b"
+        r"|\btransfers? the curse\b",
+    )
+    # ---------------------------------------------------------
+    # Interrupt
+    #
+    # Only trust explicit UESP wording.
+    # ---------------------------------------------------------
+
+    interruptible = None
+    interrupt_note = ""
+
+    if re.search(
+        r"\bcan be interrupted\b|\bcan be interruptible\b|\binterruptible\b",
+        text,
+        re.IGNORECASE,
+    ):
+        interruptible = True
+        interrupt_note = (
+            "UESP description indicates the ability can be interrupted."
+        )
+
+    # ---------------------------------------------------------
+    # Area attacks
+    # ---------------------------------------------------------
+
+    area_attack = _has(
+        text,
+        r"\barea\b"
+        r"|\baoe\b"
+        r"|\bexplod(?:e|es|ing|ed)\b"
+        r"|\btrails?\b"
+        r"|\bmeteors?\b"
+        r"|\bsalvo\b"
+        r"|\bblast\b"
+        r"|\bcircle\b"
+        r"|\btornadoes?\b"
+        r"|\bflaming walls?\b",
+    )
+
+    # ---------------------------------------------------------
+    # Charges
+    # ---------------------------------------------------------
+
+    charge = _has(
+        text,
+        r"\bcharges?\b|\bcharge forward\b",
+    )
+
+    # ---------------------------------------------------------
+    # Summons
+    #
+    # A summon is only useful as a mechanic when the description
+    # actually tells us something meaningful happens because of it.
+    #
+    # "Occasionally, Death Hoppers are summoned..."
+    # is technically a summon, but contains no actionable mechanic.
+    # ---------------------------------------------------------
+
+    summon = _has(
+        text,
+        r"\bsummon\b|\bsummons\b|\bspawn(?:s|ed)?\b|\bcalled forth\b",
+    )
+
+    meaningful_summon = summon and (
+        _has(
+            text,
+            r"\bhealth thresholds?\b"
+            r"|\bat \d+% health\b"
+            r"|\bfrom the .* portal\b"
+            r"|\bfall from the sky\b"
+            r"|\bappears?\b"
+            r"|\benters? the fight\b"
+            r"|\benrage\b"
+            r"|\bempower\b"
+            r"|\bmust be\b"
+            r"|\bshould be\b"
+            r"|\bif .* reaches\b"
+            r"|\bif .* absorbed\b"
+            r"|\bif .* allowed\b",
+        )
+    )
+
+    # ---------------------------------------------------------
+    # Mechanic type
+    #
+    # Order matters.
+    # ---------------------------------------------------------
+
+    mechanic_type: Optional[str] = None
+
+    if target_count is not None and persistent_hazard:
+        mechanic_type = "targeted_hazard"
+
+    elif requires_cleanse:
+        mechanic_type = "cleanse"
+
+    elif interruptible:
+        mechanic_type = "interrupt"
+
+    elif charge:
+        mechanic_type = "charge"
+
+    elif meaningful_summon:
+        mechanic_type = "summon"
+
+    elif persistent_hazard:
+        mechanic_type = "hazard"
+
+    elif target_count is not None and requires_positioning:
+        mechanic_type = "targeted_attack"
+
+    elif requires_positioning:
+        mechanic_type = "positioning"
+
+    elif area_attack:
+        mechanic_type = "area_attack"
+
+    elif requires_movement:
+        mechanic_type = "movement"
+
+    elif spread:
+        mechanic_type = "spread"    
+
+    # ---------------------------------------------------------
+    # Do not classify generic basic attacks as mechanics.
+    # ---------------------------------------------------------
+
+    if mechanic_type is None:
+        return MechanicClassification(
+            mechanic_type=None,
+            damage_type=None,
+            target_count=target_count,
+            requires_movement=requires_movement or None,
+            requires_positioning=requires_positioning or None,
+            requires_cleanse=requires_cleanse or None,
+            persistent_hazard=persistent_hazard or None,
+            failure_is_fatal=None,
+            interruptible=interruptible,
+            interrupt_note=interrupt_note,
+            interpretation_status="inferred",
+        )
+
+    return MechanicClassification(
+        mechanic_type=mechanic_type,
+        damage_type=_first_damage_type(text),
+        target_count=target_count,
+        requires_movement=requires_movement or None,
+        requires_positioning=requires_positioning or None,
+        requires_cleanse=requires_cleanse or None,
+        persistent_hazard=persistent_hazard or None,
+        failure_is_fatal=None,
+        interruptible=interruptible,
+        interrupt_note=interrupt_note,
+        interpretation_status="inferred",
+    )

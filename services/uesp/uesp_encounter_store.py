@@ -49,8 +49,12 @@ class UespEncounterStore:
             ),
         )
         if content.achievements:
-            self._save_content_section(content.id, "achievements", [asdict(a) for a in content.achievements])
-        self.connection.commit()
+            self._save_content_section(
+                content.id,
+                "achievements",
+                [asdict(a) for a in content.achievements],
+            )
+            self._link_content_achievements(content)
 
     def save_boss(self, boss: UespBoss) -> None:
         if not boss.content_id:
@@ -329,8 +333,57 @@ class UespEncounterStore:
             (content_id, section_name, json.dumps(payload, ensure_ascii=False)),
         )
 
+    def _link_content_achievements(self, content: UespContent) -> None:
+        """Link UESP achievements to existing ESO achievement records by name."""
+
+        source_url = content.source.url if content.source else None
+
+        source_revision_id = (
+            str(content.source.revision_id)
+            if content.source and content.source.revision_id is not None
+            else None
+        )
+
+        for achievement in content.achievements:
+            row = self.connection.execute(
+                """
+                SELECT id
+                FROM achievement
+                WHERE name = ?
+                LIMIT 1
+                """,
+                (achievement.name,),
+            ).fetchone()
+
+            if row is None:
+                continue
+
+            self.connection.execute(
+                """
+                INSERT INTO content_achievement (
+                    content_id,
+                    achievement_id,
+                    source_url,
+                    source_revision_id
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(content_id, achievement_id)
+                DO UPDATE SET
+                    source_url = excluded.source_url,
+                    source_revision_id = excluded.source_revision_id
+                """,
+                (
+                    content.id,
+                    row["id"],
+                    source_url,
+                    source_revision_id,
+                ),
+            )    
+
 
 def _db_bool(value: bool | None) -> int | None:
     if value is None:
         return None
     return 1 if value else 0
+
+
