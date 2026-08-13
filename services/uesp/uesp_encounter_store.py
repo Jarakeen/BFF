@@ -188,30 +188,69 @@ class UespEncounterStore:
         for mechanic in boss.mechanics:
             if mechanic.name in curated_names:
                 continue
-            classification = classify_mechanic(mechanic.name, mechanic.description)
-            self.connection.execute(
-                """
-                INSERT INTO encounter_mechanic(
-                    encounter_id, name, description, mechanic_type, damage_type,
-                    target_count, requires_movement, requires_positioning,
-                    requires_cleanse, persistent_hazard, failure_is_fatal,
-                    interruptible, interrupt_note, interpretation_status,
-                    source_section, source_url, source_revision_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    boss.id, mechanic.name, mechanic.description,
-                    classification.mechanic_type, classification.damage_type,
-                    classification.target_count, _db_bool(classification.requires_movement),
-                    _db_bool(classification.requires_positioning),
-                    _db_bool(classification.requires_cleanse),
-                    _db_bool(classification.persistent_hazard),
-                    _db_bool(classification.failure_is_fatal),
-                    _db_bool(classification.interruptible),
-                    classification.interrupt_note, classification.interpretation_status,
-                    "Skills and Abilities", source_url, revision,
-                ),
+            self._insert_inferred_mechanic(
+                boss,
+                mechanic.name,
+                mechanic.description,
+                "Mechanics",
+                source_url,
+                revision,
             )
+
+        # Some UESP boss pages document encounter mechanics entirely inside
+        # "Skills and Abilities" and have no dedicated Mechanics section. In
+        # that case, promote only abilities that produce a meaningful
+        # behavioral classification. Basic attacks remain abilities, not
+        # mechanics, so the DB doesn't fill with noise.
+        existing_names = curated_names | {mechanic.name for mechanic in boss.mechanics}
+        for ability in boss.abilities:
+            if ability.name in existing_names:
+                continue
+            classification = classify_mechanic(ability.name, ability.description)
+            if classification.mechanic_type is None:
+                continue
+            self._insert_inferred_mechanic(
+                boss,
+                ability.name,
+                ability.description,
+                "Skills and Abilities",
+                source_url,
+                revision,
+            )
+
+    def _insert_inferred_mechanic(
+        self,
+        boss: UespBoss,
+        name: str,
+        description: str,
+        source_section: str,
+        source_url: str | None,
+        revision: str | None,
+    ) -> None:
+        classification = classify_mechanic(name, description)
+        self.connection.execute(
+            """
+            INSERT INTO encounter_mechanic(
+                encounter_id, name, description, mechanic_type, damage_type,
+                target_count, requires_movement, requires_positioning,
+                requires_cleanse, persistent_hazard, failure_is_fatal,
+                interruptible, interrupt_note, interpretation_status,
+                source_section, source_url, source_revision_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                boss.id, name, description,
+                classification.mechanic_type, classification.damage_type,
+                classification.target_count, _db_bool(classification.requires_movement),
+                _db_bool(classification.requires_positioning),
+                _db_bool(classification.requires_cleanse),
+                _db_bool(classification.persistent_hazard),
+                _db_bool(classification.failure_is_fatal),
+                _db_bool(classification.interruptible),
+                classification.interrupt_note, classification.interpretation_status,
+                source_section, source_url, revision,
+            ),
+        )
 
     def _replace_phases(self, boss: UespBoss) -> None:
         self.connection.execute("DELETE FROM encounter_phase WHERE encounter_id = ?", (boss.id,))
