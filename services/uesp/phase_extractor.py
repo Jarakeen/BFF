@@ -17,7 +17,7 @@ _PHASE_THRESHOLD = re.compile(
     r"(?i)\b(?:phase\s+(?:\d+|[ivx]+))\b[^.]{0,120}?\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?"
 )
 _FINAL_PHASE_THRESHOLD = re.compile(
-    r"(?i)\bfinal\s+phase\b[^.]{0,120}?\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?"
+    r"(?i)\bfinal\s+phase\b[^.]{0,160}?\b(\d{1,3})\s*%\s*(?:health)?"
 )
 _HEALTH_THRESHOLD = re.compile(
     r"(?i)\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?\b"
