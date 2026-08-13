@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 import sys
 
@@ -27,7 +28,13 @@ def main() -> None:
     assert first.content_name == "Rockgrove"
     assert first.source is not None
     assert first.source.page_title == page.title
-    assert first == second, "Xalvakka parsing is not deterministic"
+
+    # retrieved_at is intentionally generated at parse time, so it must not
+    # participate in the deterministic-content comparison.
+    first_for_compare = replace(first, source=replace(first.source, retrieved_at=""))
+    second_for_compare = replace(second, source=replace(second.source, retrieved_at=""))
+    assert first_for_compare == second_for_compare, "Xalvakka parsing is not deterministic"
+
     assert all(ability.name.strip() for ability in first.abilities)
     assert all(mechanic.name.strip() for mechanic in first.mechanics)
 
