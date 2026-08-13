@@ -61,9 +61,10 @@ def main() -> None:
         dialogue_count = connection.execute(
             "SELECT COUNT(*) FROM encounter_dialogue WHERE encounter_id = ?", (boss.id,)
         ).fetchone()[0]
-        health = connection.execute(
+        health_row = connection.execute(
             "SELECT normal, veteran, hardmode FROM encounter_health WHERE encounter_id = ?", (boss.id,)
         ).fetchone()
+        health = tuple(health_row) if health_row is not None else None
 
         names = {row[0] for row in mechanic_rows}
         statuses = {row[0]: row[1] for row in mechanic_rows}
