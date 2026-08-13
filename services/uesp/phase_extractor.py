@@ -14,13 +14,13 @@ class PhaseFact:
 _PHASE_REF = re.compile(r"(?i)\bphase\s+(\d+|[ivx]+)\b")
 _EXPLICIT_PHASE_HEADING = re.compile(r"(?i)^phase(?:\s+(\d+|[ivx]+))?(?:\s*[-:.]\s*.*)?$")
 _PHASE_THRESHOLD = re.compile(
-    r"(?i)\b(?:phase\s+(?:\d+|[ivx]+))\b[^.]{0,120}?\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?"
+    r"(?i)\b(?:phase\s+(?:\d+|[ivx]+))\b[^.]{0,120}?\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?"
 )
 _FINAL_PHASE_THRESHOLD = re.compile(
-    r"(?i)\bfinal\s+phase\b[^.]{0,120}?\b(?:starts?|begins?|occurs?|at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?"
+    r"(?i)\bfinal\s+phase\b[^.]{0,120}?\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?"
 )
 _HEALTH_THRESHOLD = re.compile(
-    r"(?i)\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?\b"
+    r"(?i)\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?\b"
 )
 
 
@@ -30,7 +30,8 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
     A bare health percentage never creates a phase. Explicit phase references
     are merged, and explicit final-phase thresholds may be attached to the
     next explicitly named phase. This matches UESP prose such as 'the final
-    phase starts at 40%' followed by a separate paragraph describing Phase 3.
+    phase starts when she hits 40%' followed by a separate paragraph describing
+    Phase 3.
     """
     results: list[PhaseFact] = []
     index_by_label: dict[str, int] = {}
