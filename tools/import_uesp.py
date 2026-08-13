@@ -1,203 +1,213 @@
-#!/usr/bin/env python3
-# tools/import_uesp.py
-"""
-CLI importer for the local UESP encounter knowledge base.
-
-Usage:
-    python tools/import_uesp.py --content "Rockgrove"
-    python tools/import_uesp.py --boss "Bahsei"
-    python tools/import_uesp.py --all-trials
-    python tools/import_uesp.py --all-dungeons
-    python tools/import_uesp.py --all-arenas
-    python tools/import_uesp.py --all
-
-See data/uesp/README.md for the data layout, UESP's license/
-attribution terms, and rate-limit/caching behavior.
-"""
-
 from __future__ import annotations
 
 import argparse
+import sqlite3
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.uesp.uesp_client import UespClient
-from services.uesp.uesp_importer import ImportResult, UespImporter
-from services.uesp.uesp_store import UespStore
+from services.uesp.uesp_parser import UespParser, slugify
+from services.uesp.uesp_encounter_store import UespEncounterStore
 
 
-DEFAULT_DATA_ROOT = REPO_ROOT / "data" / "uesp"
+def import_content(
+    title: str,
+    database_path: Path,
+    cache_dir: Path,
+    force: bool = False,
+) -> None:
+    client = UespClient(cache_dir=cache_dir)
+    parser = UespParser()
+
+    connection = sqlite3.connect(database_path)
+    store = UespEncounterStore(connection)
+
+    try:
+        print(f"Fetching content: {title}")
+
+        page = client.get_page(
+            title,
+            use_cache=not force,
+        )
+
+        content_type = parser.detect_content_type(page, "trial")
+        content = parser.parse_content(page, content_type)
+
+        boss_titles = parser.find_boss_links(page)
+
+        content.boss_ids = [
+            slugify(title)
+            for title in boss_titles
+        ]
+        print(
+            f"Content: {content.name} "
+            f"({content.content_type})"
+        )
+
+        print(f"Boss links found: {len(content.boss_ids)}")
+
+        store.save_content(content)
+
+        content.boss_ids = [
+            slugify(title)
+            for title in boss_titles
+        ]
+
+        if not boss_titles:
+            print("No linked bosses found.")
+            return
+
+        for index, boss_title in enumerate(boss_titles, start=1):
+            print(f"[{index}/{len(boss_titles)}] Fetching boss: {boss_title}")
+
+            boss_page = client.get_page(
+                boss_title,
+                use_cache=not force,
+            )
+
+            boss = parser.parse_boss(
+                boss_page,
+                content_id=content.id,
+                content_name=content.name,
+            )
+
+            store.save_boss(boss)
+
+            print(
+                f"    saved: {boss.name} "
+                f"(abilities={len(boss.abilities)}, "
+                f"mechanics={len(boss.mechanics)}, "
+                f"phases={len(boss.phases)})"
+            )
+
+        print()
+        print("IMPORT PASSED")
+        print(f"  content: {content.name}")
+        print(f"  bosses:  {len(boss_titles)}")
+
+    finally:
+        connection.close()
 
 
-def build_arg_parser() -> argparse.ArgumentParser:
+def import_boss(
+    title: str,
+    database_path: Path,
+    cache_dir: Path,
+    content_id: str = "",
+    content_name: str = "",
+    force: bool = False,
+) -> None:
+    client = UespClient(cache_dir=cache_dir)
+    parser = UespParser()
 
+    connection = sqlite3.connect(database_path)
+    store = UespEncounterStore(connection)
+
+    try:
+        print(f"Fetching boss: {title}")
+
+        page = client.get_page(
+            title,
+            use_cache=not force,
+        )
+
+        boss = parser.parse_boss(
+            page,
+            content_id=content_id,
+            content_name=content_name,
+        )
+
+        store.save_boss(boss)
+
+        print()
+        print("BOSS IMPORT PASSED")
+        print(f"  boss:      {boss.name}")
+        print(f"  abilities: {len(boss.abilities)}")
+        print(f"  mechanics: {len(boss.mechanics)}")
+        print(f"  phases:    {len(boss.phases)}")
+
+    finally:
+        connection.close()
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(
-        description=(
-            "Import ESO trial/dungeon/arena/boss data from UESP's "
-            "official API into a local structured knowledge base."
-        ),
+        description="Import ESO encounter data from UESP."
     )
 
-    group = parser.add_mutually_exclusive_group(required=True)
-
-    group.add_argument(
+    parser.add_argument(
         "--content",
-        metavar="TITLE",
-        help='Import one trial/dungeon/arena overview page by title (e.g. "Rockgrove").',
+        help='Import one trial/dungeon/arena, e.g. "Rockgrove".',
     )
-    group.add_argument(
+
+    parser.add_argument(
         "--boss",
-        metavar="TITLE",
-        help='Import one boss page by title (e.g. "Bahsei").',
-    )
-    group.add_argument(
-        "--all-trials",
-        action="store_true",
-        help="Import every page in Category:Online-Trials.",
-    )
-    group.add_argument(
-        "--all-dungeons",
-        action="store_true",
-        help="Import every page in Category:Online-Dungeons.",
-    )
-    group.add_argument(
-        "--all-arenas",
-        action="store_true",
-        help="Import every page in Category:Online-Arenas.",
-    )
-    group.add_argument(
-        "--all",
-        action="store_true",
-        help="Import trials, dungeons, and arenas.",
+        help='Import one boss, e.g. "Online:Xalvakka".',
     )
 
     parser.add_argument(
-        "--content-type",
-        choices=["trial", "dungeon", "arena"],
-        default="trial",
-        help=(
-            "Content type for --content, used only as a fallback if it "
-            "can't be detected from the page's own wiki categories "
-            "(default: trial).")
-        )
-
-    group.add_argument(
-        "--list-categories",
-        action="store_true",
-        help="List UESP categories matching --category-prefix.",
-        )
+        "--content-id",
+        default="",
+        help="Content ID to associate with --boss.",
+    )
 
     parser.add_argument(
-        "--category-prefix",
-        default="Online",
-        help="Category prefix used with --list-categories.",
-    )
-    group.add_argument(
-        "--category-members",
-        metavar="CATEGORY",
-        help="List pages belonging to a UESP category.",
+        "--content-name",
+        default="",
+        help="Content name to associate with --boss.",
     )
 
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Re-import even if the stored revision id is already current.",
-        )
-    parser.add_argument(
-        "--rate-limit",
-        type=float,
-        default=2.0,
-        help="Minimum seconds between UESP API requests (default: 2.0).",
+        help="Ignore the local API cache and fetch fresh data.",
     )
+
     parser.add_argument(
-        "--data-root",
+        "--db",
         type=Path,
-        default=DEFAULT_DATA_ROOT,
-        help=f"Output directory (default: {DEFAULT_DATA_ROOT}).",
+        default=REPO_ROOT / "data" / "eso.db",
+        help="SQLite database path.",
     )
 
-    return parser
+    parser.add_argument(
+        "--cache",
+        type=Path,
+        default=REPO_ROOT / "data" / "uesp" / ".cache",
+        help="UESP API cache directory.",
+    )
 
+    args = parser.parse_args()
 
-def main(argv: list[str] | None = None) -> int:
+    if bool(args.content) == bool(args.boss):
+        parser.error("Specify exactly one of --content or --boss.")
 
-    args = build_arg_parser().parse_args(argv)
-
-    data_root: Path = args.data_root
-    cache_root = data_root / ".cache"
-    log_path = data_root / "import_log.jsonl"
-
-    client = UespClient(cache_dir=cache_root, min_request_interval=args.rate_limit)
-    store = UespStore(root=data_root)
-    importer = UespImporter(client=client, store=store, log_path=log_path, force=args.force)
-
-    results: list[ImportResult] = []
+    if not args.db.exists():
+        parser.error(f"Database does not exist: {args.db}")
 
     if args.content:
-        results.append(importer.import_content(args.content, content_type=args.content_type))
-    if args.list_categories:
-        categories = client.get_categories(
-        prefix=args.category_prefix
+        import_content(
+            title=args.content,
+            database_path=args.db,
+            cache_dir=args.cache,
+            force=args.force,
         )
-
-        print()
-        print(
-            f"UESP categories beginning with "
-            f"'{args.category_prefix}':"
+    else:
+        import_boss(
+            title=args.boss,
+            database_path=args.db,
+            cache_dir=args.cache,
+            content_id=args.content_id,
+            content_name=args.content_name,
+            force=args.force,
         )
-
-        for category in categories:
-            print(f"  {category}")
-    if args.category_members:
-        members = client.get_category_members(
-            args.category_members
-        )
-
-        print()
-        print(
-            f"UESP pages in "
-            f"'{args.category_members}':"
-        )
-
-        for member in members:
-            print(f"  {member}")
-
-        print()
-        print(f"Total: {len(members)}")
-
-        return 0        
-    elif args.boss:
-        results.append(importer.import_boss(args.boss))
-    elif args.all_trials:
-        results.extend(importer.import_all_trials())
-    elif args.all_dungeons:
-        results.extend(importer.import_all_dungeons())
-    elif args.all_arenas:
-        results.extend(importer.import_all_arenas())
-    elif args.all:
-        results.extend(importer.import_all())
-
-    _print_summary(results)
-
-    return 1 if any(result.status == "error" for result in results) else 0
 
     return 0
-
-def _print_summary(results: list[ImportResult]) -> None:
-
-    imported = sum(1 for r in results if r.status == "imported")
-    skipped = sum(1 for r in results if r.status == "skipped_up_to_date")
-    errors = [r for r in results if r.status == "error"]
-
-    print()
-    print(f"Imported: {imported}  Skipped (up to date): {skipped}  Errors: {len(errors)}")
-
-    for result in errors:
-        print(f"  ERROR  {result.title}: {result.detail}")
 
 
 if __name__ == "__main__":
