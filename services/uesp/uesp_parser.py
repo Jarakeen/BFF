@@ -241,32 +241,68 @@ def _extract_mechanics(blocks: list[dict]) -> list[UespMechanic]:
 
 
 _PHASE_HEALTH_PATTERN = re.compile(r"(?i)\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?")
+_PHASE_HEADING_PATTERN = re.compile(r"(?i)^(?:phase\s+)?(?:\d+|[ivx]+)(?:\s*[-:.]\s*.*)?$")
+_PHASE_WORD_PATTERN = re.compile(r"(?i)\bphase\s+(\d+|[ivx]+)\b")
 
 
 def _extract_phases(blocks: list[dict]) -> list[UespPhase]:
+    """Extract phase facts from headings and nearby descriptive text.
+
+    UESP encounter pages are inconsistent: some use a dedicated phase section,
+    while others describe phases inside abilities, strategy, or prose. We only
+    create a phase when the page itself gives a recognizable phase marker or an
+    explicit health threshold. We do not invent phase boundaries.
+    """
     phases: list[UespPhase] = []
-    seen: set[tuple[str, str]] = set()
-    pending_phase_name: str | None = None
+    seen: set[tuple[str, str, str]] = set()
+    current_phase: UespPhase | None = None
+
+    def add_phase(label: str, threshold: str = "", description: str = "") -> None:
+        normalized_label = label.strip()
+        normalized_description = description.strip()
+        key = (normalized_label.casefold(), threshold, normalized_description.casefold())
+        if not normalized_label or key in seen:
+            return
+        seen.add(key)
+        phase = UespPhase(label=normalized_label, threshold=threshold, description=normalized_description)
+        phases.append(phase)
+        return phase
+
     for block in blocks:
         block_type = block.get("type", "")
         text = block.get("text", "").strip()
         if not text:
             continue
-        if block_type == "dt":
-            pending_phase_name = text if "phase" in text.lower() else None
-            continue
-        if block_type != "dd" or not pending_phase_name:
-            continue
-        match = _PHASE_HEALTH_PATTERN.search(text)
-        if not match:
-            continue
-        threshold = f"{match.group(1)}%"
-        key = (pending_phase_name, threshold)
-        if key in seen:
-            continue
-        seen.add(key)
-        phases.append(UespPhase(label=pending_phase_name, threshold=threshold, description=text))
-        pending_phase_name = None
+
+        if block_type == "heading":
+            heading = text.rstrip(":").strip()
+            if _PHASE_WORD_PATTERN.search(heading) or heading.casefold() in {"phase", "final phase", "burn phase"}:
+                current_phase = add_phase(heading) or current_phase
+                continue
+            # Some pages use bare numbered headings. Only accept them when the
+            # heading explicitly looks like a phase label, not arbitrary lists.
+            if re.match(r"(?i)^phase\b", heading):
+                current_phase = add_phase(heading) or current_phase
+                continue
+
+        health_match = _PHASE_HEALTH_PATTERN.search(text)
+        phase_match = _PHASE_WORD_PATTERN.search(text)
+        if health_match:
+            threshold = f"{health_match.group(1)}%"
+            label = current_phase.label if current_phase else f"Phase at {threshold}"
+            description = text
+            key = (label.casefold(), threshold, description.casefold())
+            if key not in seen:
+                seen.add(key)
+                phases.append(UespPhase(label=label, threshold=threshold, description=description))
+        elif phase_match and block_type in {"p", "li", "dd"}:
+            token = phase_match.group(1).upper()
+            label = f"Phase {token}"
+            key = (label.casefold(), "", text.casefold())
+            if key not in seen:
+                seen.add(key)
+                phases.append(UespPhase(label=label, description=text))
+
     return phases
 
 
@@ -406,7 +442,7 @@ class UespParser:
         mechanics = _extract_mechanics(mechanics_blocks)
         strategy_blocks = _section(parsed.sections, STRATEGY_HEADINGS) or []
         strategy_paragraphs = [b["text"] for b in strategy_blocks if b["type"] == "p" and b["text"].strip()]
-        phases = _extract_phases(abilities_blocks)
+        phases = _extract_phases(parsed.all_blocks)
         dialogue_blocks = _section(parsed.sections, DIALOGUE_HEADINGS) or []
         dialogue = _extract_dialogue(dialogue_blocks)
         dialogue_by_trigger = _group_dialogue_by_trigger(dialogue)
