@@ -21,22 +21,33 @@ _PHASE_THRESHOLD = re.compile(
 def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
     """Extract only source-explicit phase facts.
 
-    A bare health percentage is never enough to create a phase. This avoids
-    turning ordinary statements such as 'at 70% health' into fake phases.
+    A bare health percentage is never enough to create a phase. Repeated
+    references to the same phase are merged, allowing a later explicit
+    threshold statement to enrich an earlier phase reference.
     """
     results: list[PhaseFact] = []
-    seen: set[tuple[str, str]] = set()
-    current_label: str | None = None
+    index_by_label: dict[str, int] = {}
 
     def add(label: str, threshold: str = "", description: str = "") -> None:
         clean = label.strip()
         if not clean:
             return
-        key = (clean.casefold(), threshold)
-        if key in seen:
+        key = clean.casefold()
+        description = description.strip()
+        existing_index = index_by_label.get(key)
+        if existing_index is None:
+            index_by_label[key] = len(results)
+            results.append(PhaseFact(clean, threshold, description))
             return
-        seen.add(key)
-        results.append(PhaseFact(clean, threshold, description.strip()))
+
+        existing = results[existing_index]
+        merged_threshold = existing.threshold or threshold
+        merged_description = existing.description
+        if threshold and not existing.threshold:
+            merged_description = description or existing.description
+        elif description and description != existing.description and threshold:
+            merged_description = f"{existing.description} {description}".strip()
+        results[existing_index] = PhaseFact(existing.label, merged_threshold, merged_description)
 
     for block in blocks:
         kind = block.get("type", "")
@@ -51,11 +62,8 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
                 token = match.group(1)
                 if token:
                     current_label = f"Phase {token.upper()}"
-                elif heading.casefold() in {"phase", "final phase"}:
-                    current_label = heading
                 else:
                     current_label = heading
-
                 threshold_match = _PHASE_THRESHOLD.search(text)
                 threshold = f"{threshold_match.group(1)}%" if threshold_match else ""
                 add(current_label, threshold, text)
