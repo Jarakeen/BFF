@@ -18,7 +18,8 @@ PAGE_TITLE = "Online:Xalvakka"
 EXPECTED_HEALTH = ("25,084,768", "53,558,256", "214,233,024")
 EXPECTED_ABILITIES = 10
 EXPECTED_DIALOGUE = 21
-EXPECTED_PHASES = 6
+EXPECTED_PHASES = 2
+EXPECTED_PHASES_DATA = (("Phase 2", "70%"), ("Phase 3", "40%"))
 
 
 def main() -> None:
@@ -59,10 +60,12 @@ def main() -> None:
         ).fetchone()
 
         health = tuple(health_row) if health_row is not None else None
+        phase_data = tuple((row["label"], row["threshold"]) for row in phase_rows)
 
         assert ability_count == EXPECTED_ABILITIES, f"Expected {EXPECTED_ABILITIES} abilities, got {ability_count}"
         assert dialogue_count == EXPECTED_DIALOGUE, f"Expected {EXPECTED_DIALOGUE} dialogue lines, got {dialogue_count}"
         assert len(phase_rows) == EXPECTED_PHASES, f"Expected {EXPECTED_PHASES} phases, got {len(phase_rows)}"
+        assert phase_data == EXPECTED_PHASES_DATA, f"Xalvakka phases mismatch: actual={phase_data!r}, expected={EXPECTED_PHASES_DATA!r}"
         assert health == EXPECTED_HEALTH, f"Xalvakka health mismatch: actual={health!r}, expected={EXPECTED_HEALTH!r}"
         assert mechanic_count > 0, "Expected inferred Xalvakka mechanics in the database"
 
