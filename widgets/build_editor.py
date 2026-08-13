@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
 )
-
+from widgets.gear_slot_tile import GearSlotTile
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from services.eso_icon_resolver import EsoIconResolver
@@ -43,48 +43,88 @@ from models.roster_model import ESO_CLASSES
 
 
 class GearSlotRow(QWidget):
-    """One armor/weapon/jewelry slot: a set combo + a trait combo."""
+    """Reusable editor for one armor, weapon, or jewelry slot."""
 
     def __init__(
         self,
         set_choices: list[str],
         trait_choices: list[str],
+        *,
+        armor: bool = False,
         parent=None,
     ):
         super().__init__(parent)
 
+        self.armor = armor
+
+        # Set
         self.set_combo = QComboBox()
         self.set_combo.setEditable(True)
         self.set_combo.addItem("")
         self.set_combo.addItems(set_choices)
 
+        # Trait
         self.trait_combo = QComboBox()
+        self.trait_combo.addItem("")
         self.trait_combo.addItems(trait_choices)
 
-        layout = QHBoxLayout(self)
+        # Enchantment
+        self.enchant_combo = QComboBox()
+        self.enchant_combo.setEditable(True)
+        self.enchant_combo.addItem("")
 
+        # Weight, armor only
+        self.weight_combo = QComboBox()
+
+        if self.armor:
+            self.weight_combo.addItems(
+                [
+                    "",
+                    "Light",
+                    "Medium",
+                    "Heavy",
+                ]
+            )
+
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
 
         layout.addWidget(self.set_combo, 2)
         layout.addWidget(self.trait_combo, 1)
+        layout.addWidget(self.enchant_combo, 1)
+
+        if self.armor:
+            layout.addWidget(self.weight_combo, 1)
 
     @property
     def value(self) -> GearSlot:
-
         return GearSlot(
             Set=self.set_combo.currentText().strip(),
-            Trait=self.trait_combo.currentText(),
+            Trait=self.trait_combo.currentText().strip(),
+            Enchant=self.enchant_combo.currentText().strip(),
+            Weight=(
+                self.weight_combo.currentText().strip()
+                if self.armor
+                else ""
+            ),
         )
 
     def load(self, slot: GearSlot):
-
-        self.set_combo.setCurrentText(slot.Set)
+        self.set_combo.setCurrentText(slot.Set or "")
         self.trait_combo.setCurrentText(slot.Trait or "")
+        self.enchant_combo.setCurrentText(slot.Enchant or "")
+
+        if self.armor:
+            self.weight_combo.setCurrentText(slot.Weight or "")
 
     def clear(self):
-
         self.set_combo.setCurrentText("")
-        self.trait_combo.setCurrentIndex(0)
+        self.trait_combo.setCurrentText("")
+        self.enchant_combo.setCurrentText("")
+
+        if self.armor:
+            self.weight_combo.setCurrentText("")
 
 
 class SkillBarRow(QWidget):
@@ -126,15 +166,22 @@ class SkillBarRow(QWidget):
                 lambda text, combo=field: self._update_icon(combo, text)
             )
 
-    def _update_icon(self, field: QComboBox, skill_name: str) -> None:
-        """Update the skill icon when the selected skill changes."""
-
-        field.setIcon(QIcon())
+    def _update_icon(
+        self,
+        field: QComboBox,
+        skill_name: str,
+    ) -> None:
+        """Update the selected skill icon."""
 
         skill_name = skill_name.strip()
 
+        # QComboBox does not support setIcon().
+        # Skill icons are handled by the compact skill tile UI,
+        # so there is nothing to clear or set on the combo itself.
         if not skill_name:
             return
+
+    
 
         # For now, skill_choices contain names rather than full skill
         # records. The resolver needs the ESO texture path, so this
@@ -441,45 +488,210 @@ class BuildEditor(QWidget):
         return card
 
     def _build_gear_card(self) -> FoundryCard:
-
         card = FoundryCard("Gear")
 
         grid = QGridLayout()
-
-        grid.setHorizontalSpacing(16)
-
+        grid.setContentsMargins(8, 8, 8, 8)
+        grid.setHorizontalSpacing(6)
         grid.setVerticalSpacing(6)
 
         self.armor_rows: dict[str, GearSlotRow] = {}
+        self.gear_tiles: dict[str, GearSlotTile] = {}
 
-        for i, slot in enumerate(ARMOR_SLOTS):
+        def add_armor_tile(
+            slot: str,
+            label: str,
+            row: int,
+            column: int,
+        ) -> None:
+            editor = GearSlotRow(
+                self.set_choices,
+                ARMOR_TRAITS,
+                armor=True,
+            )
 
-            row = GearSlotRow(self.set_choices, ARMOR_TRAITS)
+            self.armor_rows[slot] = editor
 
-            self.armor_rows[slot] = row
+            tile = GearSlotTile(
+                slot=slot,
+                label=label,
+                editor=editor,
+            )
 
-            grid.addWidget(QLabel(slot), i, 0)
-            grid.addWidget(row, i, 1)
+            self.gear_tiles[slot] = tile
 
-        offset = len(ARMOR_SLOTS)
+            grid.addWidget(
+                tile,
+                row,
+                column,
+                Qt.AlignmentFlag.AlignCenter,
+            )
 
-        self.front_bar_weapon = GearSlotRow(self.set_choices, WEAPON_TRAITS)
-        self.back_bar_weapon = GearSlotRow(self.set_choices, WEAPON_TRAITS)
-        self.necklace = GearSlotRow(self.set_choices, JEWELRY_TRAITS)
-        self.ring1 = GearSlotRow(self.set_choices, JEWELRY_TRAITS)
-        self.ring2 = GearSlotRow(self.set_choices, JEWELRY_TRAITS)
+        # --------------------------------------------------
+        # Armor silhouette
+        # --------------------------------------------------
 
-        for i, (label, row) in enumerate(
-            [
-                ("Front Bar Weapon", self.front_bar_weapon),
-                ("Back Bar Weapon", self.back_bar_weapon),
-                ("Necklace", self.necklace),
-                ("Ring 1", self.ring1),
-                ("Ring 2", self.ring2),
-            ]
-        ):
-            grid.addWidget(QLabel(label), offset + i, 0)
-            grid.addWidget(row, offset + i, 1)
+        add_armor_tile(
+            "Head",
+            "Head",
+            0,
+            1,
+        )
+
+        add_armor_tile(
+            "Shoulders",
+            "Shoulders",
+            1,
+            0,
+        )
+
+        add_armor_tile(
+            "Chest",
+            "Chest",
+            1,
+            1,
+        )
+
+        add_armor_tile(
+            "Legs",
+            "Legs",
+            1,
+            2,
+        )
+
+        add_armor_tile(
+            "Hands",
+            "Hands",
+            2,
+            0,
+        )
+
+        add_armor_tile(
+            "Waist",
+            "Waist",
+            2,
+            1,
+        )
+
+        add_armor_tile(
+            "Feet",
+            "Feet",
+            2,
+            2,
+        )
+
+        # --------------------------------------------------
+        # Jewelry
+        # --------------------------------------------------
+
+        self.necklace = GearSlotRow(
+            self.set_choices,
+            JEWELRY_TRAITS,
+        )
+
+        self.ring1 = GearSlotRow(
+            self.set_choices,
+            JEWELRY_TRAITS,
+        )
+
+        self.ring2 = GearSlotRow(
+            self.set_choices,
+            JEWELRY_TRAITS,
+        )
+
+        jewelry = [
+            (
+                "Neck",
+                "Neck",
+                self.necklace,
+                3,
+                0,
+            ),
+            (
+                "Ring1",
+                "Ring 1",
+                self.ring1,
+                3,
+                1,
+            ),
+            (
+                "Ring2",
+                "Ring 2",
+                self.ring2,
+                3,
+                2,
+            ),
+        ]
+
+        for slot, label, editor, row, column in jewelry:
+            tile = GearSlotTile(
+                slot=slot,
+                label=label,
+                editor=editor,
+            )
+
+            self.gear_tiles[slot] = tile
+
+            grid.addWidget(
+                tile,
+                row,
+                column,
+                Qt.AlignmentFlag.AlignCenter,
+            )
+
+        # --------------------------------------------------
+        # Weapons
+        # --------------------------------------------------
+
+        self.front_bar_weapon = GearSlotRow(
+            self.set_choices,
+            WEAPON_TRAITS,
+        )
+
+        self.back_bar_weapon = GearSlotRow(
+            self.set_choices,
+            WEAPON_TRAITS,
+        )
+
+        front_tile = GearSlotTile(
+            slot="main_hand",
+            label="Front Bar",
+            editor=self.front_bar_weapon,
+        )
+
+        back_tile = GearSlotTile(
+            slot="off_hand",
+            label="Back Bar",
+            editor=self.back_bar_weapon,
+        )
+
+        self.gear_tiles["main_hand"] = front_tile
+        self.gear_tiles["off_hand"] = back_tile
+
+        grid.addWidget(
+            front_tile,
+            4,
+            0,
+            1,
+            2,
+            Qt.AlignmentFlag.AlignCenter,
+        )
+
+        grid.addWidget(
+            back_tile,
+            4,
+            2,
+            1,
+            1,
+            Qt.AlignmentFlag.AlignCenter,
+        )
+
+        # --------------------------------------------------
+        # Keep the grid compact
+        # --------------------------------------------------
+
+        for column in range(3):
+            grid.setColumnStretch(column, 0)
 
         card.addLayout(grid)
 
@@ -640,10 +852,7 @@ class BuildEditor(QWidget):
     def model(self) -> PlayerBuild:
 
         armor = {
-            slot: {
-                "Set": row.value.Set,
-                "Trait": row.value.Trait,
-            }
+             slot: row.value.to_dict()
             for slot, row in self.armor_rows.items()
         }
 
@@ -681,6 +890,10 @@ class BuildEditor(QWidget):
         else:
             self.clear_image()
 
+        # --------------------------------------------------
+        # Armor
+        # --------------------------------------------------
+
         for slot, row in self.armor_rows.items():
 
             entry = model.Armor.get(slot, {})
@@ -689,8 +902,20 @@ class BuildEditor(QWidget):
                 GearSlot(
                     Set=entry.get("Set", ""),
                     Trait=entry.get("Trait", ""),
+                    Enchant=entry.get("Enchant", ""),
+                    Weight=entry.get("Weight", ""),
                 )
             )
+
+            # Refresh the compact tile after loading its editor.
+            tile = self.gear_tiles.get(slot)
+
+            if tile is not None:
+                tile.refresh()
+
+        # --------------------------------------------------
+        # Weapons / jewelry
+        # --------------------------------------------------
 
         self.front_bar_weapon.load(model.FrontBarWeapon)
         self.back_bar_weapon.load(model.BackBarWeapon)
@@ -698,16 +923,45 @@ class BuildEditor(QWidget):
         self.ring1.load(model.Ring1)
         self.ring2.load(model.Ring2)
 
+        # Refresh those tiles too.
+        for slot in (
+            "main_hand",
+            "off_hand",
+            "Neck",
+            "Ring1",
+            "Ring2",
+        ):
+            tile = self.gear_tiles.get(slot)
+
+            if tile is not None:
+                tile.refresh()
+
+        # --------------------------------------------------
+        # Champion Points
+        # --------------------------------------------------
+
         self._clear_cp_rows()
 
         for entry in model.ChampionPoints:
             self.add_cp_row(entry)
 
+        # --------------------------------------------------
+        # Skills
+        # --------------------------------------------------
+
         self.front_bar.load(model.FrontBarSkills)
         self.back_bar.load(model.BackBarSkills)
 
+        # --------------------------------------------------
+        # Consumables
+        # --------------------------------------------------
+
         self.food.setCurrentText(model.Food)
         self.potion.setCurrentText(model.Potion)
+
+        # --------------------------------------------------
+        # Boss loadouts
+        # --------------------------------------------------
 
         self._clear_boss_loadouts()
 
