@@ -14,7 +14,10 @@ class PhaseFact:
 _PHASE_REF = re.compile(r"(?i)\bphase\s+(\d+|[ivx]+)\b")
 _EXPLICIT_PHASE_HEADING = re.compile(r"(?i)^phase(?:\s+(\d+|[ivx]+))?(?:\s*[-:.]\s*.*)?$")
 _PHASE_THRESHOLD = re.compile(
-    r"(?i)\b(?:phase\s+(?:\d+|[ivx]+)|final\s+phase)\b[^.]{0,120}?\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?"
+    r"(?i)\b(?:phase\s+(?:\d+|[ivx]+))\b[^.]{0,120}?\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?"
+)
+_FINAL_PHASE_THRESHOLD = re.compile(
+    r"(?i)\bfinal\s+phase\b[^.]{0,120}?\b(?:starts?|begins?|occurs?|at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?"
 )
 _HEALTH_THRESHOLD = re.compile(
     r"(?i)\b(?:at|reaches?|below|under)\s+(\d{1,3})\s*%\s*(?:health)?\b"
@@ -22,17 +25,18 @@ _HEALTH_THRESHOLD = re.compile(
 
 
 def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
-    """Extract only source-explicit phase facts.
+    """Extract source-explicit phase facts.
 
-    A bare health percentage is never enough to create a phase. Repeated
-    references to the same phase are merged. A threshold in the same block,
-    or in the immediately following block, may enrich the current explicit
-    phase reference. After that one-block window, percentages are ignored.
+    A bare health percentage never creates a phase. Explicit phase references
+    are merged, and explicit final-phase thresholds may be attached to the
+    next explicitly named phase. This matches UESP prose such as 'the final
+    phase starts at 40%' followed by a separate paragraph describing Phase 3.
     """
     results: list[PhaseFact] = []
     index_by_label: dict[str, int] = {}
     current_label: str | None = None
     threshold_window = False
+    pending_final_threshold: str | None = None
 
     def add(label: str, threshold: str = "", description: str = "") -> None:
         clean = label.strip()
@@ -61,7 +65,10 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
         if not text:
             continue
 
-        # A phase reference opens a one-block threshold window.
+        final_match = _FINAL_PHASE_THRESHOLD.search(text)
+        if final_match:
+            pending_final_threshold = f"{final_match.group(1)}%"
+
         if kind == "heading":
             heading = text.rstrip(":").strip()
             match = _EXPLICIT_PHASE_HEADING.match(heading)
@@ -70,6 +77,9 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
                 current_label = f"Phase {token.upper()}" if token else heading
                 threshold_match = _PHASE_THRESHOLD.search(text)
                 threshold = f"{threshold_match.group(1)}%" if threshold_match else ""
+                if not threshold and pending_final_threshold:
+                    threshold = pending_final_threshold
+                    pending_final_threshold = None
                 add(current_label, threshold, text)
                 threshold_window = not bool(threshold)
                 continue
@@ -80,6 +90,9 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
             current_label = f"Phase {token}"
             threshold_match = _PHASE_THRESHOLD.search(text)
             threshold = f"{threshold_match.group(1)}%" if threshold_match else ""
+            if not threshold and pending_final_threshold:
+                threshold = pending_final_threshold
+                pending_final_threshold = None
             add(current_label, threshold, text)
             threshold_window = not bool(threshold)
             continue
@@ -89,7 +102,6 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
             if threshold_match:
                 add(current_label, f"{threshold_match.group(1)}%", text)
 
-        # Never let a percentage many blocks later attach to an old phase.
         threshold_window = False
 
     return results
