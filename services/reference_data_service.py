@@ -32,12 +32,14 @@ class ReferenceDataService:
     def __init__(self, database: EsoDatabase):
 
         self.database = database
-
+        
         self._race_names: list[str] | None = None
         self._gear_set_names: list[str] | None = None
         self._skill_names: list[str] | None = None
         self._cp_names: list[str] | None = None
-
+        self._skill_rows: list[dict] | None = None
+        self._food_names: list[str] | None = None
+        self._potion_names: list[str] | None = None
     # --------------------------------------------------
     # Combo box sources
     # --------------------------------------------------
@@ -98,28 +100,127 @@ class ReferenceDataService:
 
         return self._skill_names
 
-    def list_champion_point_names(self) -> list[str]:
+    def list_skills(self) -> list[dict]:
+        """
+        Return structured skill records for the Build Editor.
 
-        if self._cp_names is None:
+        These records retain the metadata needed for:
+        - class filtering
+        - combat filtering
+        - passive filtering
+        - ultimate filtering
+        - ESO skill icons
+        """
+
+        if self._skill_rows is None:
 
             try:
 
                 rows = self.database.execute(
                     """
-                    SELECT DISTINCT name
+                    SELECT
+                        s.id,
+                        s.base_ability_id,
+                        s.name,
+                        s.index_name,
+                        s.description,
+                        s.texture,
+                        s.class_type,
+                        s.skill_line,
+                        s.target,
+                        s.skill_type,
+                        s.is_passive,
+                        s.is_player,
+                        s.is_crafted,
+                        s.crafted_id,
+
+                        a.base_mechanic,
+                        a.cost,
+                        a.buff_type
+
+                    FROM skill s
+
+                    LEFT JOIN ability a
+                        ON a.base_ability_id = s.base_ability_id
+
+                    WHERE s.name IS NOT NULL
+                    AND s.name != ''
+
+                    ORDER BY s.name
+                    """
+).fetchall()
+
+                self._skill_rows = [
+                    dict(row)
+                    for row in rows
+                ]
+
+            except Exception as exc:
+
+                print(
+                    "SKILLS QUERY ERROR:",
+                    repr(exc),
+                )
+
+                self._skill_rows = []
+
+        return self._skill_rows
+
+    def list_champion_points(self) -> list[dict]:
+        """Return Champion Point reference records with discipline metadata."""
+
+        if getattr(self, "_cp_rows", None) is None:
+
+            try:
+                rows = self.database.execute(
+                    """
+                    SELECT
+                        id,
+                        name,
+                        discipline_id,
+                        description,
+                        min_description,
+                        max_description,
+                        max_points,
+                        jump_points,
+                        jump_point_delta,
+                        num_jump_points,
+                        is_root,
+                        is_cluster_root,
+                        parent_skill_id,
+                        skill_index,
+                        discipline_index
                     FROM champion_point
-                    WHERE name IS NOT NULL AND name != ''
-                    ORDER BY name
+                    WHERE name IS NOT NULL
+                    AND name != ''
+                    ORDER BY discipline_id, name
                     """
                 ).fetchall()
 
-                self._cp_names = [row["name"] for row in rows]
+                self._cp_rows = [dict(row) for row in rows]
 
             except Exception:
-                self._cp_names = []
+                self._cp_rows = []
 
-        return self._cp_names
+        return self._cp_rows
 
+    def champion_point_discipline(self, discipline_id: int) -> str:
+        """Return the ESO Champion Point discipline name."""
+
+        return {
+            1: "Warfare",
+            2: "Fitness",
+            3: "Craft",
+        }.get(discipline_id, "Unknown")
+
+    def champion_point_discipline_color(self, discipline_id: int) -> str:
+        """Return the display color associated with an ESO CP discipline."""
+
+        return {
+            1: "blue",
+            2: "red",
+            3: "green",
+        }.get(discipline_id, "")
     # --------------------------------------------------
     # Suggestions
     # --------------------------------------------------
@@ -179,3 +280,80 @@ class ReferenceDataService:
             return []
 
         return sorted(found)
+
+    def list_food_names(self) -> list[str]:
+        if self._food_names is None:
+            try:
+                rows = self.database.execute(
+                    """
+                    SELECT DISTINCT name
+                    FROM food
+                    WHERE name IS NOT NULL
+                    AND name != ''
+                    ORDER BY name
+                    """
+                ).fetchall()
+
+                self._food_names = [
+                    row["name"]
+                    for row in rows
+                ]
+
+            except Exception as exc:
+                print("FOOD QUERY ERROR:", repr(exc))
+                self._food_names = []
+
+        return self._food_names
+
+
+    def list_potion_names(self) -> list[str]:
+        if self._potion_names is None:
+            try:
+                rows = self.database.execute(
+                    """
+                    SELECT name
+                    FROM entity
+                    WHERE entity_type = 'potion'
+                    ORDER BY name
+                    """
+                ).fetchall()
+
+                self._potion_names = [
+                    row["name"]
+                    for row in rows
+                ]
+
+            except Exception as exc:
+                print("POTION QUERY ERROR:", repr(exc))
+                self._potion_names = []
+
+        return self._potion_names
+
+    def list_food_names(self) -> list[str]:
+
+        if self._food_names is None:
+            try:
+                rows = self.database.execute(
+                    """
+                    SELECT name
+                    FROM entity
+                    WHERE entity_type = 'food'
+                    AND name IS NOT NULL
+                    AND name != ''
+                    ORDER BY name
+                    """
+                ).fetchall()
+
+                self._food_names = [
+                    row["name"]
+                    for row in rows
+                ]
+
+            except Exception as exc:
+                print(
+                    "FOOD QUERY ERROR:",
+                    repr(exc),
+                )
+                self._food_names = []
+
+        return self._food_names
