@@ -1,0 +1,18 @@
+{
+    "id": "nighthollow_keep",
+    "name": "Nighthollow Keep",
+    "content_type": "dungeon",
+    "summary": "Nighthollow Keep is a keep found deep in the eastern end of Blackreach: Arkthzand Cavern. It is the home of the long-forgotten Nighthollow Clan. A dark and dangerous relic rests underneath the keep, waiting to be harnessed. Vampiric mines are active in some of the hallways inside, and Nighthollow Shades haunt the keep's halls. Ghosts can be found in the waters near the keep, as well as flying throughout the air both to and from the keep. Several wispmothers, along with their wisps, can be seen floating near waterfalls surrounding the keep. The water out front contains foul fishing holes. The antiquity lead for the Pale Order's Golden Band fragment for the Ring of the Pale Order can be found on a round table as an \"Ancient Text\", in the west branch of the split hallway.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nighthollow_Keep",
+        "page_title": "Online:Nighthollow Keep",
+        "revision_id": 3548127,
+        "retrieved_at": "2026-08-12T21:30:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "id": "chimera_sanity_s_edge",
+    "name": "Chimera (Sanity's Edge)",
+    "content_id": "sanity_s_edge",
+    "content_name": "Sanity's Edge",
+    "location": "Sanity's Edge — Chimera's Den",
+    "species": "Chimera",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "6,359,63046,572,396",
+        "veteran": "",
+        "hardmode": "93,144,792 (Hard Mode)"
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "War Within: Enter the Daedra-possessed mind of a wizard in Sanity's Edge."
+    ],
+    "achievements": [],
+    "summary": "The Chimera is a powerful member of its kind who serves Archwizard Twelvane within Sanity's Edge. According to her decree, it was created by Archwizard Twelvane to cull the \"weaklings infecting Nirn\", hence why it is inscribed with glowing mage symbols.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Chimera_(Sanity%27s_Edge)",
+        "page_title": "Online:Chimera (Sanity's Edge)",
+        "revision_id": 3608290,
+        "retrieved_at": "2026-08-12T05:34:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

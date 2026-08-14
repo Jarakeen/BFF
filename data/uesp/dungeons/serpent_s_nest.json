@@ -1,0 +1,28 @@
+{
+    "id": "serpent_s_nest",
+    "name": "Serpent's Nest",
+    "content_type": "dungeon",
+    "summary": "Serpent's Nest is a cave in Upper Craglorn containing Scaled Court cultists, giant snakes and trolls. Snakes are found in numbers within. Deep inside lie the Spawning Pools where the Scaled Court has been experimenting with a dangerous new type of creature. Hruzizolk the Progenitor Mantikora can be found here during Slithering Brood.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Serpent%27s_Nest",
+        "page_title": "Online:Serpent's Nest",
+        "revision_id": 3209224,
+        "retrieved_at": "2026-08-12T21:33:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "id": "spriggan",
+    "name": "Spriggan",
+    "content_id": "elden_hollow_ii",
+    "content_name": "Elden Hollow II",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Spriggan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "character_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Players can take on the appearance of a spriggan using the following polymorphs: Azure Blight Spriggan, Bloodroot Spriggan, Sylvan Spriggan, and Winterborn Spriggan."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancient Remains: Investigate Wood Orc activity in the ruins beneath Elden Root.",
+        "Blood of the Reach: Search for the Arkthzand Keystone.",
+        "Bosmer Insight: Go on a spirit journey and learn the ways of the forest.",
+        "Champion of the Guardians: Help repair the wyrd sister's link to the guardians.",
+        "Into the Woods: Search a dark forest for signs of the Fighters Guild.",
+        "Land Dispute: Find out why the forest spirits are attacking a logging camp.",
+        "The Last Spriggan: Try to prevent a spriggan from becoming a lurcher.",
+        "Pact Advocate: Restore the Green Pact in Karthdar.",
+        "Pledge: Elden Hollow I: Explore Elden Hollow I and return Undaunted.",
+        "The Price of Longevity: Solve the mystery of the strange sapling.",
+        "Sunflower Stamina: Gather giant sunflowers from a dangerous valley.",
+        "A Tale Forever Told: Ensure the spinners' tale of the Silvenar and the Green Lady is not changed.",
+        "Turning of the Trees: Help the Wyrd Sisters set up a ward to protect Deleyn's Mill.",
+        "The Will of the Woods: Help the Sentinel of Viridian Woods.",
+        "The Wyrd Tree's Roots: Cleanse the roots of the Wyrd Tree and evacuate Deleyn's Mill."
+    ],
+    "summary": "Near Brackenleaf, Deleyn's Mill, Driladan Pass, Dread Vullain, Ephesus, Falinesti Autumn Site, Greenheart, Greenshade, Hadran's Caravan, Jackdaw Cove, Karthdar, The Moonless Walk, Mournoth, Reaper's March, Root Sunder Ruins, Rootwater Grove, Senalana, Silvenar Vale, Thulvald's Logging Camp, Treehenge, Vinedeath Cave, Viridian Woods\nFrostbreak Ridge\nRed Eagle Tower, Shadowgreen, Western Skyrim\nNorthwestern Reach\nNiben Forest\nFauns' Thicket\nFyrelight Cave, West Weald\nCalindvale Gardens Spriggans are tree spirits that vaguely resemble mortal women. They are hostile, and difficult to kill due to their ability to heal themselves and summon allies to their aid. Spriggans can be found in a variety of wooded places. In Reaper's March, they're primarily found next to tall trees near places bordering the edge of the map, such as Fort Grimwatch, Greenhill, and Willowgrove. Starting with Ascending Tide, some newer spriggan variants walk on two legs. These spriggans are rigged using the Sylvan Spriggan polymorph, often wield weapons, and are classified as NPCs instead of creatures.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Spriggan",
+        "page_title": "Online:Spriggan",
+        "revision_id": 3607221,
+        "retrieved_at": "2026-08-12T21:21:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "id": "exarchanic_yaseyla",
+    "name": "Exarchanic Yaseyla",
+    "content_id": "sanity_s_edge",
+    "content_name": "Sanity's Edge",
+    "location": "Sanity's Edge: Yaseyla's Execution Room",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fire Bomb",
+            "description": "(?)"
+        },
+        {
+            "name": "Frost Bomb",
+            "description": "You must be healed when targeted by Frost Bomb"
+        },
+        {
+            "name": "Ignite",
+            "description": "(?)"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "War Within: Enter the Daedra-possessed mind of a wizard in Sanity's Edge."
+    ],
+    "achievements": [],
+    "summary": "Exarchanic Yaseyla is the first boss of Sanity's Edge and leader of the Contramagis Militia. Her ultimate desire is the death of all mages. In her manifesto, it's revealed that her daughter, Javalla, was afflicted with a wasting disease. Wizard Twelvane offered her a potion to ease the child's suffering, but Javalla died despite the treatment. She hates all mages, but has a particular distaste for Twelvane.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Exarchanic_Yaseyla",
+        "page_title": "Online:Exarchanic Yaseyla",
+        "revision_id": 3452301,
+        "retrieved_at": "2026-08-12T05:34:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

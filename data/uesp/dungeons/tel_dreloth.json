@@ -1,0 +1,18 @@
+{
+    "id": "tel_dreloth",
+    "name": "Tel Dreloth",
+    "content_type": "dungeon",
+    "summary": "Tel Dreloth is a Telvanni mushroom tower situated along the southern edge of the Padomaic Crest. A chest can spawn to the left of the tower's front door. There's a garden on the north side of the tower. Softly-Glowing examines the bioluminescent mushrooms growing there. A copy of The Spotted Towers sits on a stool near her. Centipedes, rats, shroom beetles and torchbugs are found within. Hazards include lava pools and vile fungi.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tel_Dreloth",
+        "page_title": "Online:Tel Dreloth",
+        "revision_id": 3567145,
+        "retrieved_at": "2026-08-12T21:35:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

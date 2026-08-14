@@ -1,0 +1,39 @@
+{
+    "id": "archwizard_twelvane",
+    "name": "Archwizard Twelvane",
+    "content_id": "sanity_s_edge",
+    "content_name": "Sanity's Edge",
+    "location": "Sanity's Edge — Chimera's Den",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is the author of Archwizard Twelvane's Decree.",
+        "Unlike the real Twelvane, she has a mohawk instead of wearing her hair down, wears a blue mages guild costume, and is much taller."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "War Within: Enter the Daedra-possessed mind of a wizard in Sanity's Edge."
+    ],
+    "achievements": [],
+    "summary": "Archwizard Twelvane is a dream recreation of the Khajiit mage Twelvane encountered in the Chimera's Den who serves as the second main boss of Sanity's Edge. Despite the similarities in appearance, she is not Wizard Twelvane, but a hostile figment of Warlock Vanton's imagination. She leads a group of mages called the \"Dynamagis\" who believe in magical supremacy, and has ordered the creation of a chimera to wipe out the non-magical mortal \"weaklings infecting Nirn\".",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archwizard_Twelvane",
+        "page_title": "Online:Archwizard Twelvane",
+        "revision_id": 3465582,
+        "retrieved_at": "2026-08-12T05:34:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

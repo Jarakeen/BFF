@@ -1,0 +1,18 @@
+{
+    "id": "wing_of_the_crow",
+    "name": "Wing of the Crow",
+    "content_type": "dungeon",
+    "summary": "The Wing of the Crow is the site of the Scholarium's final trial.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wing_of_the_Crow",
+        "page_title": "Online:Wing of the Crow",
+        "revision_id": 3405374,
+        "retrieved_at": "2026-08-12T21:38:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

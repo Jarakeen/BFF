@@ -1,0 +1,26 @@
+{
+    "id": "santaki",
+    "name": "Santaki",
+    "content_type": "dungeon",
+    "summary": "Santaki is a Dwemer ruin in the western Alik'r Desert, south of Sentinel containing bandits and Dwemer constructs. Lizards and scorpions are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Santaki",
+        "page_title": "Online:Santaki",
+        "revision_id": 3598247,
+        "retrieved_at": "2026-08-12T21:32:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,85 @@
+{
+    "id": "saint_olms_the_just",
+    "name": "Saint Olms the Just",
+    "content_id": "asylum_sanctorium",
+    "content_name": "Asylum Sanctorium",
+    "location": "Asylum Sanctorium",
+    "species": "Clockwork Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that does high physical damage. If taunted the boss will be forced to use this on the tank only."
+        },
+        {
+            "name": "Gusts of Steam",
+            "description": "At 90%, 75%, 50% and 25% health he will jump from between the left and right side of the arena, dealing very high damage when he lands. At the same time, all players will get small red circles around them that deal moderate physical damage every time he lands. Stay near the entrance or opposite the entrance to avoid the main damage from the jumps and avoid stacking to minimize damage from the smaller AOEs. Blocking and shielding will also help mitigate the smaller AOE damage."
+        },
+        {
+            "name": "Exhaustive Charges",
+            "description": "Saint Olms will place a lightning AOE on the furthest away player in front of him. Standing in the red circle will drain your resources and deal damage to you. It is common for most groups to have a non-tank person (usually a healer) be the \"kiter\" to deal with this mechanic; that person will stand some distance in front of the boss near the edge of the arena, where they are out of range of Scalding Roar. This will bait the boss to place the AOE on the kiter instead of the main tank, allowing the main tank to keep the boss still."
+        },
+        {
+            "name": "Scalding Roar",
+            "description": "A breath attack that hit all targets in front of the boss for very high flame damage as indicated by a red cone. This attack must be avoided at all costs by the tank as being hit by this will cause your armor to shatter (basically reducing armor to 0) and you will receive a healing debuff."
+        },
+        {
+            "name": "Storm the Heavens",
+            "description": "Lightning will fall on each player's position as indicated by red circles. Each time you are hit by one of these you will take more damage from the next. Saint Olms will jump in air just before this attack, and all players have to move continuously to avoid being hit. Avoid stacking with other players when this mechanic happens as AOEs will stack making them harder to avoid."
+        },
+        {
+            "name": "Trial By Fire",
+            "description": "When low on health (around 20%), Saint Olms will create 3 large fire AOEs. Being inside one of these will put a damage over time effect on you which must be purged on veteran mode. Two AOEs will always be on the left and right side of the arena, and the last will either be near the entrance or opposite the entrance."
+        },
+        {
+            "name": "Shocking Slam",
+            "description": "If standing behind him, Saint Olms will slam his axe tail into the ground violently, causing five traveling shock fields to move outward from the impact point, indicated by circular AoEs, dealing high shock damage each. The tail itself doesn't inflict damage."
+        },
+        {
+            "name": "Invulnerability",
+            "description": "Saint Olms is invulnerable for as long as there is an Ordinated Protector present, they must be killed immediately to progress the fight."
+        },
+        {
+            "name": "Summon Spiders",
+            "description": "Throughout the fight, Firepot Spiders will spawn and explode near players leaving behind flaming red circles, dealing continuous high flame damage."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He can be seen flying in the distance within the Atrium prior to approaching his cell.",
+        "The Canton of St. Olms the Just in Vivec City is named in his honor, and features a statue of him.",
+        "He is only called \"Saint Olms, The Clockwork Titan\" in concept art and named ClockWorkTitan_A_Basic in the files. He is the only Clockwork Titan in the game."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Saints' Mercy: Neutralize a threat within the Asylum Sanctorium."
+    ],
+    "achievements": [
+        {
+            "id": "clockwork_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "summary": "Saint Olms the Just is the final boss, or the only boss if you so choose, of the Asylum Sanctorium trial. In life he was a saint of the Tribunal Temple and has now had his soul transported into the body of a Clockwork Titan, where he has been gradually losing his sanity.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Saint_Olms_the_Just",
+        "page_title": "Online:Saint Olms the Just",
+        "revision_id": 3517324,
+        "retrieved_at": "2026-08-12T05:31:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

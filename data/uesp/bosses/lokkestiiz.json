@@ -1,0 +1,91 @@
+{
+    "id": "lokkestiiz",
+    "name": "Lokkestiiz",
+    "content_id": "sunspire",
+    "content_name": "Sunspire",
+    "location": "Sunspire",
+    "species": "Dragon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shatter",
+            "description": "The Frozen Tomb shatters if a player does not stand in it, causing massive damage to the entire group."
+        },
+        {
+            "name": "Frostbolt",
+            "description": "Lokkestiiz fires ice at people."
+        },
+        {
+            "name": "Frigid Cold",
+            "description": "Lokkestiiz has an aura of cold energy around him. When you are close to him, it causes damage."
+        },
+        {
+            "name": "Frost Breath",
+            "description": "Lokkestiiz breathes a blast of frost, indicated by a massive conical AoE."
+        },
+        {
+            "name": "Storm Fury",
+            "description": "Lokkestiiz fires off a beam of lightning during flight."
+        },
+        {
+            "name": "Wing Thrash",
+            "description": "Lokkestiiz hits you with his wing if you're too close."
+        },
+        {
+            "name": "Aerial Onslaught",
+            "description": "At 80%/50%/20% health, Lokkestiiz flies into the air and ceases to be targetable. A large amount of atronachs are summoned into the arena at the same time. From here, Lokkestiiz will perform a strafing run over the arena, breathing electricity that will linger for a time, dealing damage if touched, and will end by performing a massive ice and shock beam that sweeps across the arena, and must be blocked to avoid the immense damage it deals."
+        },
+        {
+            "name": "Summon Frost Atronach",
+            "description": "Summons a Frost Atronach with 3,408,25819,405,160 health."
+        },
+        {
+            "name": "Glacial Fist",
+            "description": "Very powerful blow from Lokkestiiz's Frost Atronachs which can easily one shot most players. Indicated by a conical aoe."
+        },
+        {
+            "name": "Summon Storm Atronach",
+            "description": "Summons a Storm Atronach with 321,8912,874,839 health."
+        },
+        {
+            "name": "Meteor",
+            "description": "The Storm Atronach enters the arena, causing damage if a player is under it when it spawns. Can be blocked."
+        },
+        {
+            "name": "Unstable Explosion",
+            "description": "The Storm Atronach enters execute phase similar to Stormfist. The atronach must be burned down."
+        },
+        {
+            "name": "Storm Bound",
+            "description": "Lightning-based attack from the Storm Atronach."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His name translates to \"Sky Tempest Ice\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Return of Alkosh: Defeat the Alkosh pretender and liberate the faithful of Sunspire."
+    ],
+    "achievements": [],
+    "summary": "Lokkestiiz is a frost dragon residing in the Sunspire, masquerading as an aspect of Jone. Lokkestiiz is known for his freezing breath.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lokkestiiz",
+        "page_title": "Online:Lokkestiiz",
+        "revision_id": 3606420,
+        "retrieved_at": "2026-08-12T05:34:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

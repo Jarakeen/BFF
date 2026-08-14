@@ -1,0 +1,203 @@
+{
+    "id": "tree_minder_na_kesh",
+    "name": "Tree-Minder Na-Kesh",
+    "content_id": "ruins_of_mazzatun",
+    "content_name": "Ruins of Mazzatun",
+    "location": "Ruins of Mazzatun, Mad Hist's Summit",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "3,527,796",
+        "hardmode": "4,409,745"
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Whirling Blades",
+            "description": "The boss spins around, dealing moderate physical damage to all players around her. This attack is very fast with no telegraph, so be prepared."
+        },
+        {
+            "name": "Bark Breaker",
+            "description": "A charged heavy melee attack that deals high physical damage and knocks back the target. This should be blocked or dodged if possible."
+        },
+        {
+            "name": "Root Slam",
+            "description": "Na-Kesh calls roots from the earth to slam into the target in front of her, with a conical AoE that deals mild physical damage."
+        },
+        {
+            "name": "Lashing Vines",
+            "description": "The boss charges up and summons vines to hit her target, dealing moderate physical damage as indicated by a red cone in front of her. She will turn to track her target as she is casting this, so the tank should stand still to avoid hitting other group members."
+        },
+        {
+            "name": "Summon Siphoning Totem",
+            "description": "The boss summons a Siphoning Totem near a target that initially drains resources and health from them only. The totem must be killed as quickly as possible, as the siphoning speed will increase over time, together with multiple players getting siphoned at once. She tends to summon the totem at the start of the fight and every time Hist Hallucinations occurs."
+        },
+        {
+            "name": "Hist Hallucinations",
+            "description": "The Tree-Minder targets one player and throws Amber at them, causing them to hallucinate. This makes the statues on the edge of the arena glow and the affected player's vision to go blue. The affected player will see Avatars of the Hist statues all around the edge of the arena. While targeted, all your skills and light attacks are replaced with a ranged sap ball attack. You must find the correct Avatar and use your light attack to destroy it. Your allies can activate a synergy to reveal the real avatar on normal, but on veteran hard mode, you need to communicate to find it. A good strategy without using voice communications is for the tank to run over to the real one, which will be glowing for those with normal vision. The achievement Blind Luck can be earned by not using the Reveal synergy to find the Empowered Tree-Minder Totem."
+        },
+        {
+            "name": "Amber Rain",
+            "description": "During Hist Hallucinations, amber will fall from the Hist above, dealing moderate magical damage as indicated by red circles. Sticky Situation Savvy can be earned by having no group members hit by Amber Rain during this fight on veteran difficulty."
+        },
+        {
+            "name": "Summon Adds",
+            "description": "A wave of archer Xit-Xaht will spawn every time Hist Hallucinations is cast and should be killed as soon as possible. On hard mode, Stoneshapers and Root-Masons are summoned as well, and are high priority targets for the group."
+        },
+        {
+            "name": "Hist Throw",
+            "description": "Na-Kesh throws a glob of Amber onto the ground that creates a Hist Pool, which adds can run into. This empowers the enemies, causing them to deal more damage and become immune to crowd control. One player should run into the Hist Pool to grab it so the adds can't step into it. This is especially crucial during hard mode when Stoneshapers appear, as an empowered Stoneshaper can easily wipe the group with its uninterruptible boulder throw attack. The player that steps in the plasm will take moderate magic damage over time, which can be healed through fairly easily."
+        },
+        {
+            "name": "Amber Projection",
+            "description": "Na-Kesh will summon an amber shade of Mighty Chudan at 75% health and Xal-Nur at 50%. The boss is stunned and immune to damage while the shades are alive. Note that there is no time limit for killing the shades: your group can use these phases to charge ultimate or recover resources if needed."
+        },
+        {
+            "name": "Thorn Scourge",
+            "description": "At 25% health, Na-Kesh enters execute phase, wherein she causes vines to erupt in all directions in an alternating pattern, dealing moderate physical damage as indicated by large red cones. It is advised for the group to save ultimate to burn the boss down swiftly during this phase, as dealing with totems and adds together with the constant AoEs can be overwhelming."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Heem-Jas",
+            "line": "I am here! You draw its attention while I … oh. Well, good job. I guess.",
+            "trigger": "Na-Kesh will first appear after Chudan is killed",
+            "ability": "Amber Projection"
+        },
+        {
+            "speaker": "Tree-Minder Na-Kesh",
+            "line": "Muck-dwellers! What have you done?",
+            "trigger": "Na-Kesh will first appear after Chudan is killed",
+            "ability": "Amber Projection"
+        },
+        {
+            "speaker": "Heem-Jas",
+            "line": "It is Na-Kesh! We have killed your pet. Release the rest of the Su-Zahleel tribe, or suffer the same fate! That was good, right?",
+            "trigger": "Na-Kesh will first appear after Chudan is killed",
+            "ability": "Amber Projection"
+        },
+        {
+            "speaker": "Tree-Minder Na-Kesh",
+            "line": "No. No, I think not. Xal-Nur prepares your elders for sacrifice even as we speak. Their blood will water the roots. As will yours.",
+            "trigger": "Na-Kesh will first appear after Chudan is killed",
+            "ability": "Amber Projection"
+        },
+        {
+            "speaker": "",
+            "line": "<Na-Kesh leaves>",
+            "trigger": "Na-Kesh will first appear after Chudan is killed",
+            "ability": "Amber Projection"
+        },
+        {
+            "speaker": "Tree-Minder Na-Kesh",
+            "line": "Idolent! Worthless! The Xit-Xaht do not suffer weakness. Drench the elders. Kill the invaders!",
+            "trigger": "The Tree-Minder will be seen again in the chamber where the Su-Zahleel elders are being kept.",
+            "ability": "Hist Hallucinations"
+        },
+        {
+            "speaker": "",
+            "line": "<She then leaves the chamber.>",
+            "trigger": "The Tree-Minder will be seen again in the chamber where the Su-Zahleel elders are being kept.",
+            "ability": "Hist Hallucinations"
+        },
+        {
+            "speaker": "Tree-Minder Na-Kesh",
+            "line": "Tsono-Xuhil! Mother root, father stone—grant me your strength!",
+            "trigger": "When approached, she can be heard praying to her Hist.",
+            "ability": "Hist Throw"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Na-Kesh will first appear after Chudan is killed": [
+            {
+                "speaker": "Heem-Jas",
+                "line": "I am here! You draw its attention while I … oh. Well, good job. I guess.",
+                "trigger": "Na-Kesh will first appear after Chudan is killed",
+                "ability": "Amber Projection"
+            },
+            {
+                "speaker": "Tree-Minder Na-Kesh",
+                "line": "Muck-dwellers! What have you done?",
+                "trigger": "Na-Kesh will first appear after Chudan is killed",
+                "ability": "Amber Projection"
+            },
+            {
+                "speaker": "Heem-Jas",
+                "line": "It is Na-Kesh! We have killed your pet. Release the rest of the Su-Zahleel tribe, or suffer the same fate! That was good, right?",
+                "trigger": "Na-Kesh will first appear after Chudan is killed",
+                "ability": "Amber Projection"
+            },
+            {
+                "speaker": "Tree-Minder Na-Kesh",
+                "line": "No. No, I think not. Xal-Nur prepares your elders for sacrifice even as we speak. Their blood will water the roots. As will yours.",
+                "trigger": "Na-Kesh will first appear after Chudan is killed",
+                "ability": "Amber Projection"
+            },
+            {
+                "speaker": "",
+                "line": "<Na-Kesh leaves>",
+                "trigger": "Na-Kesh will first appear after Chudan is killed",
+                "ability": "Amber Projection"
+            }
+        ],
+        "The Tree-Minder will be seen again in the chamber where the Su-Zahleel elders are being kept.": [
+            {
+                "speaker": "Tree-Minder Na-Kesh",
+                "line": "Idolent! Worthless! The Xit-Xaht do not suffer weakness. Drench the elders. Kill the invaders!",
+                "trigger": "The Tree-Minder will be seen again in the chamber where the Su-Zahleel elders are being kept.",
+                "ability": "Hist Hallucinations"
+            },
+            {
+                "speaker": "",
+                "line": "<She then leaves the chamber.>",
+                "trigger": "The Tree-Minder will be seen again in the chamber where the Su-Zahleel elders are being kept.",
+                "ability": "Hist Hallucinations"
+            }
+        ],
+        "When approached, she can be heard praying to her Hist.": [
+            {
+                "speaker": "Tree-Minder Na-Kesh",
+                "line": "Tsono-Xuhil! Mother root, father stone—grant me your strength!",
+                "trigger": "When approached, she can be heard praying to her Hist.",
+                "ability": "Hist Throw"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "She has a chance to drop Mazzatun Style pages on Veteran\u0000HEALTH_VETERAN\u0000 difficulty, with a guaranteed drop from Hard Mode and a 50% chance for a page to drop from non-Hard Mode."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: Ruins of Mazzatun: Prove you are truly Undaunted by conquering the Ruins of Mazzatun.",
+        "Ruins of Mazzatun Pledge: Prove you are truly Undaunted by conquering the Ruins of Mazzatun. (disabled since Patch 2.6.4)",
+        "Sap and Stone: Eliminate the Xit-Xaht threat in the Ruins of Mazzatun."
+    ],
+    "summary": "Tree-Minder Na-Kesh is the leader of the Argonian Xit-Xaht tribe. She is responsible for tending the mad Hist at the Ruins of Mazzatun, and is performing cruel alchemical experiments with amber plasm. She serves as the final boss of the dungeon. She has written a journal, and wears the Amber Plasm skin. She has a chance to drop Mazzatun Style pages on Veteran\u0000HEALTH_VETERAN\u0000 difficulty, with a guaranteed drop from Hard Mode and a 50% chance for a page to drop from non-Hard Mode. She has a chance to drop the Antiquity lead for Bog-Blue Jasper Fetish.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tree-Minder_Na-Kesh",
+        "page_title": "Online:Tree-Minder Na-Kesh",
+        "revision_id": 3551465,
+        "retrieved_at": "2026-08-12T21:32:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

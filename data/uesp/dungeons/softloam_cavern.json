@@ -1,0 +1,28 @@
+{
+    "id": "softloam_cavern",
+    "name": "Softloam Cavern",
+    "content_type": "dungeon",
+    "summary": "Softloam Cavern is a cave northeast of Kragenmoor in Stonefalls containing Daggerfall Covenant soldiers.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Walking up the slope directly to the left of the cavern entrance, you will find a semi-hidden Ashlander merchant named Zahshur who mentions a statue you can buy from him."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Softloam_Cavern",
+        "page_title": "Online:Softloam Cavern",
+        "revision_id": 3598105,
+        "retrieved_at": "2026-08-12T21:34:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

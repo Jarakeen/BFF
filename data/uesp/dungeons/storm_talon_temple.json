@@ -1,0 +1,20 @@
+{
+    "id": "storm_talon_temple",
+    "name": "Storm Talon Temple",
+    "content_type": "dungeon",
+    "summary": "Storm Talon Temple is a hidden Dragonguard temple accessed through a trapdoor in Aphren's Hold. Much of the way through has collapsed over the years and so the temple can only be navigated by using the grappling crossbow. The archives contain the following volumes: The Formalities of Dragonguard Correspondence, List of Deceased Dragons, Curse of the Black Beast, Fire Dragons, a Burning Menace, and Searching for the Horn of Ja'darri, Part 2.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Storm Talon Temple was first mentioned in the TES V: Skyrim book The Rise and Fall of the Blades."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Storm_Talon_Temple",
+        "page_title": "Online:Storm Talon Temple",
+        "revision_id": 3137895,
+        "retrieved_at": "2026-08-12T21:35:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

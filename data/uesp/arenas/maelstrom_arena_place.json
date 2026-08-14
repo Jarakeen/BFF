@@ -1,0 +1,29 @@
+{
+    "id": "maelstrom_arena_place",
+    "name": "Maelstrom Arena (place)",
+    "content_type": "arena",
+    "summary": "Maelstrom Arena is an otherworldly solo arena accessed from Wrothgar. Created by the Demiprince Fa-Nuit-Hen, it serves as a solo trial where one must defeat waves of enemies and bosses in nine different arenas. The entrance is found inside a small abandoned Orcish fort, complete with a set of stables and sealed well on the outside, and a number of hallways carved inside the mountain past the gate. The lower hallways are made up of jail cells, with a hole in the wall leading to a small cave containing the Daedric portal to the Maelstrom Arena. When you first enter the realm, you will find yourself at a small Redguard-style manor in an Alik'r-like desert, surrounded by a circular wall of large rocks. Accepting the quest from Fa-Nuit-Hen will allow you to enter a portal and begin the trial. Fa-Nuit-Hen and his Daedric subordinates will be spectating the games from the sidelines, and his assistant Tutor Riparius functions as a merchant between arenas. Each wave will have new sigils of defense, haste, healing, and power spawn, which can be used as temporary buffs. Once an arena is completed, one will be rewarded with a chest containing rewards and the option of traveling to the next arena. New arenas progressively become more difficult, and completing the final arena grants a Maelstrom Weapon; completing the arena on veteran difficulty grants a Perfected Maelstrom Weapon.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Maelstrom Arena was originally supposed to have 10 arenas (hence why the tenth bust in the starting area uses a Baron in place of an arena boss), as the cut Skein Grotto would have been visited somewhere in the middle. As the name suggests, it would've been themed after the Spiral Skein and complimented the Spiral Shadows arena in a similar manner to how Seht's Balcony contrasts with Seht's Flywheel.",
+        "Prior to an unknown patch, the spectators seen and heard commenting on the fights in the arena stages could all be found on the arena grounds upon first arriving. However, this is no longer the case."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maelstrom_Arena_(place)",
+        "page_title": "Online:Maelstrom Arena (place)",
+        "revision_id": 3549525,
+        "retrieved_at": "2026-08-12T21:46:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

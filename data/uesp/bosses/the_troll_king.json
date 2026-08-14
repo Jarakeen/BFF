@@ -1,0 +1,63 @@
+{
+    "id": "the_troll_king",
+    "name": "The Troll King",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible, Frozen Arena",
+    "species": "Troll",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Ground Slam",
+            "description": "The boss pounds the ground releasing shockwaves in front of itself that deal moderate physical damage to all players hit."
+        },
+        {
+            "name": "Leaping Crush",
+            "description": "The boss jumps on a target dealing moderate physical damage."
+        },
+        {
+            "name": "Frozen Aura",
+            "description": "The boss releases a wave of frost from itself dealing continuous moderate frost damage and snaring as indicated by a large red circle."
+        },
+        {
+            "name": "Regeneration",
+            "description": "The Troll King passively regenerates ~0.3% of its max health every two seconds. (~6,600 in Veteran)"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Troll King appears to have an odd hitbox when attacking from range, often requiring to aim and attack within the empty space just behind his back for the attack highlight to actually register."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Blessed Crucible Pledge: Explore the Blessed Crucible and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "This article is about the monster. For the monster set, see The Troll King (set). The Troll King is a giant armored troll trained by the Beast Master of the Blessed Crucible. She will announce it with the words, \"From the volcanic island of Vvardenfell. A creature of fury that knows no mercy. The vicious ... the cruel ... the Troll King!\" They have a chance to drop Beastmaster's Crop, a unique item.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Troll_King",
+        "page_title": "Online:The Troll King",
+        "revision_id": 3244827,
+        "retrieved_at": "2026-08-12T21:15:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

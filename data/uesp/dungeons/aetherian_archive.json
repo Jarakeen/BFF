@@ -1,0 +1,44 @@
+{
+    "id": "aetherian_archive",
+    "name": "Aetherian Archive",
+    "content_type": "dungeon",
+    "summary": "The Aetherian Archive is a tower in southeastern Craglorn near the city of Elinhir. Within the tower, groups of twelve battle through a series of challenges and ultimately face the Mage. The Aetherian Archive Trial quest begins when you enter the dungeon. You have to complete the dungeon within a certain amount of time with limited respawns. The Mage's Tower is a quest to defeat the Celestial Mage, who is the final enemy in this dungeon. The bosses are the Lightning Storm Atronach, the Foundation Stone Atronach, Varlariel, and the Mage herself. The Firstmages, the residents of the tower, can be encountered on both friendly and hostile terms as you progress through the trial. The very beginning of the trial contains three Elemental Traps and Bottomless Pits are present throughout the whole trial. You will receive a Periapt of Elinhir from Mindil the Untested with your other rewards after defeating The Mage with hard mode engaged.",
+    "location": "",
+    "boss_ids": [
+        "lightning_storm_atronach",
+        "foundation_stone_atronach",
+        "stone_atronach",
+        "varlariel",
+        "wispmother",
+        "the_mage_celestial",
+        "celestial"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Although NPCs refer to the Aetherian Archive as a \"tower\", the dungeon also includes outside areas. This is due to the powerful magic unleashed by the Mage, which has warped the upper levels of the tower interior.",
+        "Aetherian Archive originally scaled to Veteran Rank 12 and had no Normal mode. It later scaled to the Champion Points of the group leader, to a maximum of 160."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Aetherian_Archive",
+        "page_title": "Online:Aetherian Archive",
+        "revision_id": 3579055,
+        "retrieved_at": "2026-08-12T05:31:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

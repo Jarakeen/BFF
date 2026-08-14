@@ -1,0 +1,26 @@
+{
+    "id": "shrine_of_the_black_maw",
+    "name": "Shrine of the Black Maw",
+    "content_type": "dungeon",
+    "summary": "The Shrine of the Black Maw is an Ayleid ruin in northwestern Shadowfen, west-northwest of Stormhold containing vampires. The ruin was once known as Varakun, and was a base for illegal slavers. Recently, however, a group of vampires led by a former slave named Peers-Through-Glass have entered the ruin, killing all the slavers. A Free Argonian's Manifesto can be found near here. Other notable items here include a Skyshard and an Ayleid Well. Rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shrine_of_the_Black_Maw",
+        "page_title": "Online:Shrine of the Black Maw",
+        "revision_id": 3598131,
+        "retrieved_at": "2026-08-12T21:33:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

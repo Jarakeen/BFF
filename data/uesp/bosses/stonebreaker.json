@@ -1,0 +1,55 @@
+{
+    "id": "stonebreaker",
+    "name": "Stonebreaker",
+    "content_id": "sanctum_ophidia",
+    "content_name": "Sanctum Ophidia",
+    "location": "Sanctum Ophidia",
+    "species": "Troll",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Punch",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Rock Throw",
+            "description": "Stonebreaker quickly throws a rock in front of itself, indicated by a quickly cast AoE, dealing high physical damage and stunning you."
+        },
+        {
+            "name": "Repeat Slam",
+            "description": "Stonebreaker slams the ground repeatedly, dealing high physical damage on each one to nearby opponents."
+        },
+        {
+            "name": "Leap",
+            "description": "Stonebreaker jumps over to an opponent far away, dealing very high physical damage and knocking them down. This attack has no indicator."
+        },
+        {
+            "name": "Raging Fist",
+            "description": "Stonebreaker begins pumping its chest rapidly while screaming, before slamming his fist into the ground, causing a huge earthquake all around itself, indicated by a very large growing AoE, causing massive physical damage. This attack must be blocked."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "achievements": [],
+    "summary": "Stonebreaker is a giant armored troll infused with nirncrux, found within Sanctum Ophidia. It's initially held in place by a Serpent Fang and a Serpent War-Priest. He serves as the second boss of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stonebreaker",
+        "page_title": "Online:Stonebreaker",
+        "revision_id": 3450219,
+        "retrieved_at": "2026-08-12T05:33:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

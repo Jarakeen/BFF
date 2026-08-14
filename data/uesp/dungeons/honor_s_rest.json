@@ -1,0 +1,21 @@
+{
+    "id": "honor_s_rest",
+    "name": "Honor's Rest",
+    "content_type": "dungeon",
+    "summary": "Honor's Rest is an Orc crypt located southeast of Watcher's Hold. A scholarly expedition is currently excavating the ruins, attempting to decipher which of two legendary figures is entombed within. Honor's Rest Catacombs is a cave found just to the north of the main ruins, and is filled with Winterborn. A note describing religious views of the Reachmen can be found near the entrance to the catacombs. Other items found here include Letter to Lozruth, Letter to Baloth Bloodtusk, and Savage Sons War Chant. River fishing holes are found in the river. Butterflies, Fleshflies, rats and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Torc of Baloth Bloodtusk, a relic for the House of Orsimer Glories, can be found in the catacombs section, inside an open sarcophagus in the westernmost room.",
+        "In the catacombs, glowing alembics can be seen. Standing nearby applies a healing effect, which can be applied on you or enemies as well."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Honor%27s_Rest",
+        "page_title": "Online:Honor's Rest",
+        "revision_id": 3548801,
+        "retrieved_at": "2026-08-12T21:25:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

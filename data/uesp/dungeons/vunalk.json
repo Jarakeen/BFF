@@ -1,0 +1,26 @@
+{
+    "id": "vunalk",
+    "name": "Vunalk",
+    "content_type": "dungeon",
+    "summary": "Vunalk is an Ayleid ruin in the far eastern end of Blackwood. It can be found at the end of an ancient bridge spanning a river valley, far southeast of Gideon. The delve contains both indoor sections within the Ayleid ruins, as well as several outdoor sections in-between. Hostile plants are found inside. The Sister of Pools, a nereid, lives here, enjoying the company of the frogs, which are said to have the most beautiful singing voices in the region. There is a skyshard in a small cavern in the northeast corner of the delve. The boss can be found in the open area in the northwest corner of the delve. Traveling counterclockwise from the entrance, you will encounter four pools: the Humble Pool, the Remorseful Pool, the Penitent Pool, and the Frog Pool.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vunalk",
+        "page_title": "Online:Vunalk",
+        "revision_id": 3576371,
+        "retrieved_at": "2026-08-12T21:37:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

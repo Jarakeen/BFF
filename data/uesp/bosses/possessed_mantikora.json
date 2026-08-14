@@ -1,0 +1,56 @@
+{
+    "id": "possessed_mantikora",
+    "name": "Possessed Mantikora",
+    "content_id": "sanctum_ophidia",
+    "content_name": "Sanctum Ophidia",
+    "location": "Sanctum Ophidia",
+    "species": "Mantikora",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Charged Punch",
+            "description": "Causes hemorrhaging."
+        },
+        {
+            "name": "Quake",
+            "description": "Targets two players, and \"popcorns\" them. This ability causes an AoE to crawl out from under you. It strikes three times, and throws you into the air increasingly higher with each \"pop\". If you don't roll out of it, you're going to be killed by it on Veteran."
+        },
+        {
+            "name": "Punch",
+            "description": "Deals major physical damage. Has a chance to cause bleeding."
+        },
+        {
+            "name": "Enraged Punch",
+            "description": "Only occurs on Veteran. One-shots everyone but the tank."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "This creature's main ability, \"Quake\", is one that pops most of the players in the air, colloquially known as \"popcorn\".",
+        "In the Veteran version of the trial, the Serpent's Image will at some point in the fight fly out of the Mantikora and dive into the ground, creating a portal to an island where those who enter must defeat the miniboss."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Oldest Ghost: Launch a direct assault on the Celestial Serpent."
+    ],
+    "achievements": [],
+    "summary": "The Possessed Mantikora is a mantikora found within Sanctum Ophidia. It glows green, having been possessed by the Serpent. It serves as the trial's first boss, and can be summoned by using the Nirncrux Altars at the red pool in the first chamber.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Possessed_Mantikora",
+        "page_title": "Online:Possessed Mantikora",
+        "revision_id": 3424002,
+        "retrieved_at": "2026-08-12T05:33:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

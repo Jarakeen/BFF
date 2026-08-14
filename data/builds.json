@@ -1,0 +1,155 @@
+{
+  "Members": [
+    {
+      "Name": "Jarakeen",
+      "Gamertag": "Magrat",
+      "ImagePath": "C:/Users/nourg/Downloads/Avatar.png",
+      "Race": "Breton",
+      "EsoClass": "Warden",
+      "Armor": {
+        "Head": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": ""
+        },
+        "Shoulders": {
+          "Set": "Spaulder of Ruin",
+          "Trait": "Divines",
+          "Enchant": "magica",
+          "Weight": "Light"
+        },
+        "Chest": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": ""
+        },
+        "Legs": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": ""
+        },
+        "Hands": {
+          "Set": "Spell Power Cure",
+          "Trait": "Divines",
+          "Enchant": "magica",
+          "Weight": "Light"
+        },
+        "Waist": {
+          "Set": "Spell Power Cure",
+          "Trait": "Divines",
+          "Enchant": "magica",
+          "Weight": "Light"
+        },
+        "Feet": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": ""
+        }
+      },
+      "FrontBarWeapon": {
+        "Set": "Master Architect",
+        "Trait": "Powered",
+        "Enchant": "crusher",
+        "Weight": ""
+      },
+      "BackBarWeapon": {
+        "Set": "Master Architect",
+        "Trait": "Infused",
+        "Enchant": "weapon power",
+        "Weight": ""
+      },
+      "Necklace": {
+        "Set": "Master Architect",
+        "Trait": "Infused",
+        "Enchant": "spell power",
+        "Weight": ""
+      },
+      "Ring1": {
+        "Set": "Master Architect",
+        "Trait": "Infused",
+        "Enchant": "spell power",
+        "Weight": ""
+      },
+      "Ring2": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": ""
+      },
+      "ChampionPoints": [
+        {
+          "Name": "Swift Renewal",
+          "Points": "50"
+        },
+        {
+          "Name": "Hope Infusion",
+          "Points": "50"
+        },
+        {
+          "Name": "Enlivening Overflow",
+          "Points": "50"
+        },
+        {
+          "Name": "From the Brink",
+          "Points": "50"
+        },
+        {
+          "Name": "Celerity",
+          "Points": "50"
+        },
+        {
+          "Name": "Fortification",
+          "Points": "30"
+        },
+        {
+          "Name": "Rejuvenation",
+          "Points": "50"
+        },
+        {
+          "Name": "Expert Evasion",
+          "Points": "50"
+        },
+        {
+          "Name": "Rationer",
+          "Points": "30"
+        },
+        {
+          "Name": "Breakfall",
+          "Points": "50"
+        },
+        {
+          "Name": "Liquid Efficiency",
+          "Points": "50"
+        },
+        {
+          "Name": "Professional Upkeep",
+          "Points": "50"
+        }
+      ],
+      "FrontBarSkills": [
+        "Caltrops",
+        "Wall of Elements",
+        "Low Slash",
+        "Defensive Posture",
+        "Impulse",
+        "Secluded Grove"
+      ],
+      "BackBarSkills": [
+        "Pounce",
+        "Betty Netch",
+        "Bone Shield",
+        "Frost Cloak",
+        "Circle of Protection",
+        "War Horn"
+      ],
+      "Food": "clockwork citrus",
+      "Potion": "spell power",
+      "Notes": "",
+      "BossLoadouts": []
+    }
+  ]
+}

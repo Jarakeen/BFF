@@ -1,0 +1,18 @@
+{
+    "id": "shadow_dance_temple",
+    "name": "Shadow Dance Temple",
+    "content_type": "dungeon",
+    "summary": "The Shadow Dance Temple is an ancient Khajiiti temple hidden in Northern Elsweyr accessible from Shadow Dance Ruins. The sanctuary found in the deepest part of the temple is called the Vault of the Heavenly Scourge.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shadow_Dance_Temple",
+        "page_title": "Online:Shadow Dance Temple",
+        "revision_id": 3177448,
+        "retrieved_at": "2026-08-12T21:33:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

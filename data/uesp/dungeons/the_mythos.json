@@ -1,0 +1,18 @@
+{
+    "id": "the_mythos",
+    "name": "The Mythos",
+    "content_type": "dungeon",
+    "summary": "This article is about the realm during the events of Necrom. For the area visited during Prisoner of Fate, see The Mythos (Prisoner of Fate). The Mythos is the heart of Apocrypha. It is said to be located beneath the Ichor Sea where Hermaeus Mora conceived the concept of knowledge. It is also directly connected to the Infinite Panopticon. The Mythos Vaults are a subsection of this location where things that are important to Hermaeus Mora are kept. tomeshells are found within. Hazards include blight sacks, bottomless pits, incunabular storms, and Seeker frenzies. During the events of Necrom you will visit this location twice: the first visit occurs during the recollection of a memory that Vaermina's presence influences; the second occurs in the present though some areas will be affected by the disease spread by Blightcrown.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Mythos",
+        "page_title": "Online:The Mythos",
+        "revision_id": 3567110,
+        "retrieved_at": "2026-08-12T21:29:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

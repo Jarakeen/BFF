@@ -1,0 +1,18 @@
+{
+    "id": "doomvault_capraxus",
+    "name": "Doomvault Capraxus",
+    "content_type": "dungeon",
+    "summary": "Doomvault Capraxus is a Daedric ruin in Blackwood, located in the center of Ojel-Bak. It is one of the Four Ambitions vaults that were built by the Longhouse Emperors. The vault is inaccessible until starting the related quest. After the quest is finished, all but the Deep Vaults are accessible. Hostile plants can be found in the open air sections, as well as passive critters such as Daedrats, Deadlands Scorpions, Frogs, and Swamp Jellies.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Doomvault_Capraxus",
+        "page_title": "Online:Doomvault Capraxus",
+        "revision_id": 3231735,
+        "retrieved_at": "2026-08-12T21:20:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

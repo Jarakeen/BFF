@@ -1,0 +1,26 @@
+{
+    "id": "breakwater_cave",
+    "name": "Breakwater Cave",
+    "content_type": "dungeon",
+    "summary": "Breakwater Cave is a sea cave found on the southern shore of High Isle, located just southeast of Spriggan's Crown containing aquatic wildlife. Passive Cave Jellies and Hermit Crabs can be found inside. A large group of ambient imps can be seen in the main open section of the cave, both flying through the air and perched on rocks. While fighting on the ground level of that section, some of them will swoop down to lay ambushes.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Breakwater_Cave",
+        "page_title": "Online:Breakwater Cave",
+        "revision_id": 3548646,
+        "retrieved_at": "2026-08-12T21:15:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

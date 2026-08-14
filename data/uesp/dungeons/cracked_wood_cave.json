@@ -1,0 +1,29 @@
+{
+    "id": "cracked_wood_cave",
+    "name": "Cracked Wood Cave",
+    "content_type": "dungeon",
+    "summary": "Cracked Wood Cave is a cave in southeastern Cyrodiil, just northwest of Cropsford containing Bloody Hand goblins.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The cave can also be entered by jumping into a large nearby hole in the ground, (map) causing you to land in a small puddle in the northwest part of the delve. However, prior to Patch 2.6.9, this could result in a bug where you got stuck at the bottom of the hole instead.",
+        "Cracked Wood Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cracked_Wood_Cave",
+        "page_title": "Online:Cracked Wood Cave",
+        "revision_id": 3598794,
+        "retrieved_at": "2026-08-12T21:17:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

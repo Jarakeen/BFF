@@ -1,0 +1,78 @@
+{
+    "id": "galchobhar",
+    "name": "Galchobhar",
+    "content_id": "bloodroot_forge",
+    "content_name": "Bloodroot Forge",
+    "location": "Island at the end of the Sanguinary Veins, Bloodroot Forge",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,383,439",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chop",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Inflamed Earth",
+            "description": "When hit by Chop, flame AOEs will spawn under the tank dealing moderate flame damage over time as indicated by red circles."
+        },
+        {
+            "name": "Cleave",
+            "description": "The boss swings its weapon in an arc dealing moderate flame damage and staggering the target."
+        },
+        {
+            "name": "Wake of Fire",
+            "description": "When casting Cleave, three flaming AOEs are also released along the ground traveling outwards from the boss in the direction it is facing. Do not stand in front of the boss unless you are the tank."
+        },
+        {
+            "name": "Mantle Breaker",
+            "description": "A charged heavy attack that deals high physical damage, and should be blocked. Following that, a small volcano is summoned at the impact location. The volcano shoots lava balls at all players dealing high flame damage over time. To prevent this, the tank needs to stand on top of the volcano and block. Do note that it is preferable the tank do this as the damage taken while standing on the volcano is very high."
+        },
+        {
+            "name": "Scorched Earth",
+            "description": "Galchobar charges up his weapon and throws it, dealing a high amount of damage to anyone on the island as indicated by a large expanding red circle. This attack is lethal on veteran mode. To avoid it, jump onto the rocks surrounding the island. Note that only one person should be on each rock, as multiple people standing on a rock will cause it to disappear faster causing all players on it to fall into the lava."
+        },
+        {
+            "name": "Flames of Galchobhar",
+            "description": "After Scorched Earth is cast there will be a ring of lingering flames on the island edge. Wait for"
+        },
+        {
+            "name": "Molten Nirncrux",
+            "description": "Falling into the lava surrounding the island will deal very high flame damage over time. Do not step onto the rocks unless avoiding a Lava Ball from a Fire Shalk or Scorched Earth from Galchobhar."
+        },
+        {
+            "name": "Summon Fire Shalk",
+            "description": "Throughout the fight, the boss summons Fire Shalks to attack the party. These should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Galchobhar previously had two dormant stone atronachs on his island that he would start raising when he reached around 55% of his health. When they died, he'd continuously revive them, and they would become invulnerable by turning their stone black, eyes red, and briefly halting their attacks when he threw his weapon."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood for Blood: Neutralize an ancient forge and put an end to the evil plans of the Dreadhorn clan.",
+        "Pledge: Bloodroot Forge: Prove you are truly Undaunted by clearing Bloodroot Forge."
+    ],
+    "summary": "Galchobhar is a minotaur of the Dreadhorn Clan found in Bloodroot Forge, serving as the second boss of the dungeon. He is on island surrounded by molten nirncrux, guarding the entrance to the forge. When first encountered, a group of rebelling captives attempt to take him down before he smashes his cleaver, throwing them all into the lava.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Galchobhar",
+        "page_title": "Online:Galchobhar",
+        "revision_id": 3354620,
+        "retrieved_at": "2026-08-12T21:15:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

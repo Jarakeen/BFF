@@ -1,0 +1,29 @@
+{
+    "id": "shark_s_teeth_grotto",
+    "name": "Shark's Teeth Grotto",
+    "content_type": "dungeon",
+    "summary": "Shark's Teeth Grotto is a seaside cave system found on the southern coast of Hew's Bane, containing Wake Walkers and desert wildlife. The Wake Walkers wrested control from the grotto's previous inhabitants, the Shark's Teeth. Scorpions are found in numbers within. Hazards include flare traps, oil traps, and slaughterfish. The boss battle involves attacking First Mate Rodros and his pet snakes Laylah and Leelo in order to summon a Haj Mota named Krona Keeba. The book Legend of Shalug the Shark can be found at the top of the second set of stairs.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "thieves_guild_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Most of them will appear highlighted when crouching, however some will not, like the bear traps and the poison jar traps.",
+        "Numerous traps can be found throughout the delve, ranging from situational traps such tripwire and flare traps, to more lethal traps like explosive and poison gas traps that can quickly drain your health."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shark%27s_Teeth_Grotto",
+        "page_title": "Online:Shark's Teeth Grotto",
+        "revision_id": 3567106,
+        "retrieved_at": "2026-08-12T21:33:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

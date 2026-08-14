@@ -1,0 +1,28 @@
+{
+    "id": "nisin_cave",
+    "name": "Nisin Cave",
+    "content_type": "dungeon",
+    "summary": "Nisin Cave is a cave in southwestern Cyrodiil, north of Castle Black Boot, featuring a sunken Daedric ruin. The cave contains Shadowed Path necromancers, Dremora, skeletons, and wisps. A chest can be found around the exterior of the cave, to the east, behind the mountain. Mushrooms grow within the cave. The first room contains an altar where a Shadowed Path Defiler performs a ritual on a skeletal corpse. A heavy sack can be found at the end of the entrance tunnel, beside a crate. Across from the entrance tunnel, near a cooking station sits Tamrielic Artifacts, Part Two. A chest can be found in the tunnel leading to the next chamber, in front of where Volgo the Harrower stands. A shrine to Boethiah can be found in the westernmost chamber. Here, you can fight Barasatii, a Dremora fire mage who is associated with the related quest. The delve's skyshard lies atop a large boulder in the southern portion of the chamber. A chest is located behind the western pillar in this room, near the tunnel where Volgo lies.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Nisin Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nisin_Cave",
+        "page_title": "Online:Nisin Cave",
+        "revision_id": 3607166,
+        "retrieved_at": "2026-08-12T21:30:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

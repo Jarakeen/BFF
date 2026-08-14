@@ -1,0 +1,18 @@
+{
+    "id": "incarnatorium",
+    "name": "Incarnatorium",
+    "content_type": "dungeon",
+    "summary": "The Incarnatorium is a fabricant production plant in the Machine District. Found in the derelict parts of the Brass Fortress, the Incarnatorium houses the Blackfeather Court's hiding place of the Skeleton Key.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Incarnatorium",
+        "page_title": "Online:Incarnatorium",
+        "revision_id": 3548029,
+        "retrieved_at": "2026-08-12T21:26:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

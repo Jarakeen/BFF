@@ -1,0 +1,63 @@
+{
+    "id": "loremaster_trigon",
+    "name": "Loremaster Trigon",
+    "content_id": "the_underweave",
+    "content_name": "The Underweave",
+    "location": "Underweave Nullifactory",
+    "species": "Seeker",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Shot",
+            "description": "Basic ranged attack dealing moderate magic damage."
+        },
+        {
+            "name": "Powerful Barrage",
+            "description": "Loremaster Trigon targets one person and fires three projectiles that deal minor magic damage with a fourth projectile dealing moderate magic damage and slowing for 1 second in a cone area. This can be interrupted to stagger Loremaster Trigon."
+        },
+        {
+            "name": "Incunabular Storm",
+            "description": "Loremaster Trigon performs a lengthy spell and throws two green orbs at a book pike in the arena which creates an Incunabular Storm, a book tornado, which slowly follows a player, dealing continuous direct low physical damage and knocking back."
+        },
+        {
+            "name": "Summon Clones",
+            "description": "Loremaster Trigon teleports in the arena and creates two Loremaster Trrygon which are clones of itself that attack you. There can only be two maximum clones at a time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Before the Gold Road chapter, Loremaster Trigon wrongly summoned Seeker Sokhaj instead of Loremaster Trrygon. It had the same stats as Loremaster Trrygon however."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Loremaster Trigon is a Seeker who can be found in the southeastern-most room, in the Underweave Nullifactory. It serves as one of the champions of the Underweave public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Loremaster_Trigon",
+        "page_title": "Online:Loremaster Trigon",
+        "revision_id": 3489518,
+        "retrieved_at": "2026-08-12T21:36:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

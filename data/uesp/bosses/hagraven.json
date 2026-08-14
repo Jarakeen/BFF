@@ -1,0 +1,75 @@
+{
+    "id": "hagraven",
+    "name": "Hagraven",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "South of Damar Farmstead, Near Telesubi Ruins, Three Tribes Camp\nColdperch Cavern, Near Friendship Gate, Honor's Rest, Old Orsinium",
+    "species": "Hagraven",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flare",
+            "description": "The hagraven shoots a fireball as a basic ranged attack, dealing low flame damage."
+        },
+        {
+            "name": "Fire Bomb",
+            "description": "The hagraven summons a pool of fire under her target, indicated by a circular AoE, dealing moderate flame damage."
+        },
+        {
+            "name": "Raven Storm",
+            "description": "The hagraven sends a storm of flaming crows out towards her target, dealing moderate flame damage and staggering them. This can be interrupted to set the hagraven off-balance. Blocking negates the stagger but doesn't reduce the damage."
+        },
+        {
+            "name": "Shadow Strike/Surround",
+            "description": "When close to them, the hagraven teleports away from, and most often behind, their target to create distance."
+        },
+        {
+            "name": "Burning",
+            "description": "Getting hit by any hagraven attacks has a chance of applying the \"Burning\" effect, which deals minor flame damage over time."
+        },
+        {
+            "name": "Briarheart Resurrection",
+            "description": "The hagraven grabs hold of a nearby dead Reachman and resurrects them as a briarheart. Unlike the creatures summoned by necromancers elsewhere, the resurrected Reachman will not die if the hagraven who reanimated them is killed. This ability has a cooldown of 2 minutes and the hagraven cannot resurrect the same Reachman more than once.(In Wrothgar only)"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Several hagraven corpses can be found at the Tower of Lies in Coldharbour, with lamias around them. It is unclear what their ties to the location are as no live hagravens are there."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Birdsong's Curse: A hagraven has been turning people into birds.",
+        "Blood of the Reach: Search for the Arkthzand Keystone.",
+        "Breakfast of the Bizarre: Collect strange eggs in Coldperch Cavern for a client.",
+        "Breaking the Coven: Eradicate the Hagraven coven at Northwind Mine.",
+        "Heart of Evil: Drive the hagraven and her Dark Witnesses out of Mournoth.",
+        "The Hidden Harvest: Destroy the source of the briarheart warriors.",
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "For Kyne's Honor: Defeat the Muzzled Owl witches who have forsaken Kyne.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven.",
+        "Scouting the Mine: Discover why the Reachmen have taken over Northwind Mine.",
+        "A Son's Promise: Help a son find his missing father."
+    ],
+    "summary": "Hagravens are creatures resembling a cross between a woman and a bird. They are often associated with various Reachmen clans and can usually be found at the various places that they operate in.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hagraven",
+        "page_title": "Online:Hagraven",
+        "revision_id": 3599589,
+        "retrieved_at": "2026-08-12T21:14:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "coldrock_diggings",
+    "name": "Coldrock Diggings",
+    "content_type": "dungeon",
+    "summary": "Coldrock Diggings is a mine in the northern Alik'r Desert, southeast of Tava's Blessing containing vampires. The mine produced grit-rock and holystone for shipwrights at Tava's Blessing before being abandoned. Young Bats swarm from Bat Hollows in the northeastern tunnels. Dead Merchants and Captive Withered Hands, victims of the vampires, can be found inside. Scorpions are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Coldrock_Diggings",
+        "page_title": "Online:Coldrock Diggings",
+        "revision_id": 3496236,
+        "retrieved_at": "2026-08-12T21:17:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

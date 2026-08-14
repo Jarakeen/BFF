@@ -1,0 +1,35 @@
+{
+    "id": "scalecaller_peak",
+    "name": "Scalecaller Peak",
+    "content_type": "dungeon",
+    "summary": "Scalecaller Peak is a group dungeon located in Stormhaven. It's part of the Dragon Bones dungeon pack DLC, along with Fang Lair. It is located north of Wind Keep Wayshrine, in Stormhaven. Elk and foxes can be found on the slopes of the mountain.",
+    "location": "",
+    "boss_ids": [
+        "orzun_the_foul_smelling",
+        "rinaerus_the_rancid",
+        "ogre",
+        "matriarch_aldis",
+        "giant",
+        "plague_concocter_mortieu",
+        "zaan_the_scalecaller",
+        "dragon_priest"
+    ],
+    "achievements": [
+        {
+            "id": "dragon_bones_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Scalecaller_Peak",
+        "page_title": "Online:Scalecaller Peak",
+        "revision_id": 3183397,
+        "retrieved_at": "2026-08-12T21:32:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

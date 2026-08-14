@@ -1,0 +1,248 @@
+{
+    "id": "sister_maefyn",
+    "name": "Sister Maefyn",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Ramparts",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "336,797",
+        "veteran": "",
+        "hardmode": "1,218,039"
+    },
+    "abilities": [
+        {
+            "name": "Ice Tornado",
+            "description": "She summons a large ice tornado, indicated by a large circular AoE, that will swirl around the arena in your general direction, dealing continuous high frost damage while inside and snaring you."
+        },
+        {
+            "name": "Flame Swirl",
+            "description": "She summons a fire swirl that tracks your movement as it builds up, before erupting, dealing very high flame damage. After the eruption, a pool of flame will continue to follow your movement for a few more seconds, dealing continuous high flame damage that must be healed through."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "Throughout the fight, Envervating Thralls will constantly appear in the arena to join the fight."
+        },
+        {
+            "name": "Thunderous Pursuit",
+            "description": "She calls forth fourteen lightning strikes to hit you, all chaining quickly one after the other as indicated by small circular AoEs, dealing high shock damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Lyris Titanborn \"Stay down, witch-scum! Come on, we're getting close to the ritual, I know it.\"",
+            "trigger": "After you enter the Icereach Bailey, Lyris will have defeated one of their champions, only for Maefyn to intervene and create the Stormborn Revenant",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Maefyn",
+            "line": "So simple, is it? Arise, and fight on, champion!",
+            "trigger": "After you enter the Icereach Bailey, Lyris will have defeated one of their champions, only for Maefyn to intervene and create the Stormborn Revenant",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Why do you hesitate? My servant yearns to make your acquaintance.",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Having second thoughts? Hmm. Cowardice is so off-putting.",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Longing for the Bear-Woman's help? Alas, alas ….",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Do take your time. This anticipation … it's exhilarating!",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "The storm's strength is ours!",
+            "trigger": "During this fight with the Stormborn Reverant, she will assist with her magic along with summoning Frostborn Archers",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "The storm's rage is endless!",
+            "trigger": "During this fight with the Stormborn Reverant, she will assist with her magic along with summoning Frostborn Archers",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "Over so soon? How embarrassing.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Killed by a corpse …. Ironic.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "They were so vigorous! What a waste.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Honestly, sisters, was that so hard?",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Maefyn",
+            "line": "So confident … so proud. You have no idea what kinds of forces you're meddling with.",
+            "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "Lyris Titanborn \"Think you can lock me out? I'll knock that pretty head clean off your shoulders!\"",
+            "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Maefyn",
+            "line": "Promises, promises. When our ally spreads his wings over the world, you'll lose so much more than your heads.",
+            "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+            "ability": "Ice Tornado"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After you enter the Icereach Bailey, Lyris will have defeated one of their champions, only for Maefyn to intervene and create the Stormborn Revenant": [
+            {
+                "speaker": "",
+                "line": "Lyris Titanborn \"Stay down, witch-scum! Come on, we're getting close to the ritual, I know it.\"",
+                "trigger": "After you enter the Icereach Bailey, Lyris will have defeated one of their champions, only for Maefyn to intervene and create the Stormborn Revenant",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Maefyn",
+                "line": "So simple, is it? Arise, and fight on, champion!",
+                "trigger": "After you enter the Icereach Bailey, Lyris will have defeated one of their champions, only for Maefyn to intervene and create the Stormborn Revenant",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Idling before engaging in combat": [
+            {
+                "speaker": "",
+                "line": "Why do you hesitate? My servant yearns to make your acquaintance.",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "Having second thoughts? Hmm. Cowardice is so off-putting.",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "Longing for the Bear-Woman's help? Alas, alas ….",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "Do take your time. This anticipation … it's exhilarating!",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "During this fight with the Stormborn Reverant, she will assist with her magic along with summoning Frostborn Archers": [
+            {
+                "speaker": "",
+                "line": "The storm's strength is ours!",
+                "trigger": "During this fight with the Stormborn Reverant, she will assist with her magic along with summoning Frostborn Archers",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "The storm's rage is endless!",
+                "trigger": "During this fight with the Stormborn Reverant, she will assist with her magic along with summoning Frostborn Archers",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Over so soon? How embarrassing.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Killed by a corpse …. Ironic.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "They were so vigorous! What a waste.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Honestly, sisters, was that so hard?",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Once her champion is dead once more, Maefyn will threaten you": [
+            {
+                "speaker": "Sister Maefyn",
+                "line": "So confident … so proud. You have no idea what kinds of forces you're meddling with.",
+                "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "Lyris Titanborn \"Think you can lock me out? I'll knock that pretty head clean off your shoulders!\"",
+                "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Maefyn",
+                "line": "Promises, promises. When our ally spreads his wings over the world, you'll lose so much more than your heads.",
+                "trigger": "Once her champion is dead once more, Maefyn will threaten you",
+                "ability": "Ice Tornado"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Sister Maefyn is a member of the Icereach Coven who specializes in storm magic, though she also has some skill with necromancy. She can be found on the ramparts of their island fortress. She is involved in the final boss fight of the dungeon, assisting Mother Ciannait, alongside her sisters Bani, Gohlla and Hiti.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sister_Maefyn",
+        "page_title": "Online:Sister Maefyn",
+        "revision_id": 3339525,
+        "retrieved_at": "2026-08-12T21:26:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,56 @@
+{
+    "id": "chokethorn",
+    "name": "Chokethorn",
+    "content_id": "elden_hollow_i",
+    "content_name": "Elden Hollow I",
+    "location": "Elden Hollow I",
+    "species": "Strangler",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,007,499",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Piercing Strike",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Pulling Grasp",
+            "description": "The boss pulls in players that are far away, stunning them briefly."
+        },
+        {
+            "name": "Fungal Burst",
+            "description": "The boss releases a burst of poison around itself as indicated by a large red circle. This attack deals high poison damage and should be blocked or avoided."
+        },
+        {
+            "name": "Summon Strangler Saplings",
+            "description": "The boss summons saplings that will heal it over time. They should be interrupted or killed quickly to prevent this."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancient Remains: Investigate Wood Orc activity in the ruins beneath Elden Root.",
+        "Pledge: Elden Hollow I: Explore Elden Hollow I and return Undaunted."
+    ],
+    "summary": "This article is about the strangler found in Elden Hollow I. For the set, see Chokethorn (set). Chokethorn is a gigantic strangler found in Elden Hollow I, of which it is a boss. Its unique loot is Chokethorn's Healing Root. It must be defeated in order to unseal Canonreeve Oraneth's room.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Chokethorn",
+        "page_title": "Online:Chokethorn",
+        "revision_id": 3322086,
+        "retrieved_at": "2026-08-12T21:20:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

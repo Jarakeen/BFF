@@ -1,0 +1,57 @@
+{
+    "id": "lightning_storm_atronach",
+    "name": "Lightning Storm Atronach",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Aetherian Archive",
+    "species": "Storm Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bash",
+            "description": "A basic melee attack that deals moderate-high physical damage."
+        },
+        {
+            "name": "Strike",
+            "description": "A basic melee attack that deals moderate-high physical damage."
+        },
+        {
+            "name": "Impending Storm",
+            "description": "The Lightning Storm Atronach overcharges before releasing five shock storms going out in all directions from itself, indicated by red circles, dealing moderate-high shock damage each."
+        },
+        {
+            "name": "Storm Bound",
+            "description": "The Lightning Storm Atronach slams the ground, conjuring and sending a homing electric orb at its target. On contact, it deals moderate shock damage, morphs into a shocking field around them, indicated by a red circle, and tracks their movement. The field deals continuous low shock damage and applies a constant snare on the target. Blocking or dodge rolling won't escape the field, so the damage must be endured or the initial orb must be avoided with dodge roll; blocking the orb doesn't prevent the effects from being applied."
+        },
+        {
+            "name": "Lightning Storm",
+            "description": "The Lightning Storm Atronach will barrage the group with lightning strikes as the arena darkens. You must run over to an \"Eye of the Storm\" golden circle of safety that appears just before this attack begins to avoid taking damage. It has five spawn locations: one is on the left side of the arena, one is on the right, one is by the entrance cliff, one is by the bridge behind the boss, and one is by the teleportation pads to the right of the bridge. If you go too long without standing in the safety circle, you will die as the shock damage dramatically increases after each lightning strike."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent."
+    ],
+    "achievements": [],
+    "summary": "The Lightning Storm Atronach is a storm atronach that serves as the first boss in the Aetherian Archive.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lightning_Storm_Atronach",
+        "page_title": "Online:Lightning Storm Atronach",
+        "revision_id": 3450232,
+        "retrieved_at": "2026-08-12T05:31:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

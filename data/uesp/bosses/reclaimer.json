@@ -1,0 +1,59 @@
+{
+    "id": "reclaimer",
+    "name": "Reclaimer",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Halls of Fabrication",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shock Bolt",
+            "description": "A basic ranged attack dealing moderate shock damage."
+        },
+        {
+            "name": "Energy Shield",
+            "description": "Throughout the entirety of the fight, the Reclaimer is surrounded by a field of energy that prevents getting too close, dealing continuous very high shock damage when standing inside."
+        },
+        {
+            "name": "Summon Factotums",
+            "description": "During the fight, additional Ruined Factotums will spawn, and walk slowly to the Reclaimer. If they reach them, they will then run towards a player, where they will explode. It is therefore advised to kill the adds before they reach the Reclaimer. If the Reclaimer has been slain, the adds will explode immedeately after spawning."
+        },
+        {
+            "name": "Empowering Beam",
+            "description": "If near any of the other two constructs, they form a link which strengthens both of them, increasing their damage output and resistance. They should therefore be kept separate."
+        },
+        {
+            "name": "Overcharge",
+            "description": "At certain health thresholds (70%, 40%, and 20%), each of them will overcharge and be immune to all damage. Once all three enemies are overcharged, bringing them together will reverse that, allowing them to be damaged again, as well as offering a burn window while they are briefly stunned."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Reclaimer's model predate the Series 7 Factotum model, which is why they use the Refabricated Style and have more Dwemer-inspired humanoid features."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Reclaimer is a Factotum encountered together with the Reactor and the Reducer in the Halls of Fabrication, where they serve as the fourth boss encounter of the trial. The Reclaimer does not move during the fight, but stays at the center of the arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reclaimer",
+        "page_title": "Online:Reclaimer",
+        "revision_id": 3029559,
+        "retrieved_at": "2026-08-12T05:32:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

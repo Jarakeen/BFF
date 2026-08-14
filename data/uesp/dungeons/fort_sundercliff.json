@@ -1,0 +1,20 @@
+{
+    "id": "fort_sundercliff",
+    "name": "Fort Sundercliff",
+    "content_type": "dungeon",
+    "summary": "Fort Sundercliff is an abandoned Legion fort in Cyrodiil, located in the eastern Nibenay Basin, surrounded by the town of Sundercliff. You will visit the ravaged ruins of the fort during the related quest, accessed from a portal opened by Lyranth in Destruction's Solace. Mehrunes Dagon successfully crosses into Nirn here, with the energy given to him by Sombren, and then begins the process to merge Nirn with the Deadlands.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Fort Sundercliff first appeared in the Mehrunes' Razor DLC for Oblivion as Sundercliff Watch."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fort_Sundercliff",
+        "page_title": "Online:Fort Sundercliff",
+        "revision_id": 3550290,
+        "retrieved_at": "2026-08-12T21:22:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

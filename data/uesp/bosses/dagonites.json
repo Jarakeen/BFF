@@ -1,0 +1,42 @@
+{
+    "id": "dagonites",
+    "name": "Dagonites",
+    "content_id": "city_of_ash_i",
+    "content_name": "City of Ash I",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Dagonites were intended to be featured as the antagonists of Apocrypha's Gate, a temple to Hermaeus Mora in Stonefalls, but its quest was cut from the game prior to release. Remnants of this, such as the exterior and a related book mentioning the Dagonites, remained intact."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Razor's Edge: Drive back the Daedra from a burning Bosmeri city.",
+        "Pledge: City of Ash I: Prove you are truly Undaunted by clearing the City of Ash I.",
+        "City of Ash Pledge: Explore the City of Ash and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Dagonites are mortals (generally part of a cult) who revere the Daedric Prince Mehrunes Dagon. A Dagonite sect can be found invading Whisper Grove.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dagonites",
+        "page_title": "Online:Dagonites",
+        "revision_id": 3196787,
+        "retrieved_at": "2026-08-12T21:17:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

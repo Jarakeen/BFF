@@ -1,0 +1,1035 @@
+{
+    "id": "drakeeh_the_unchained",
+    "name": "Drakeeh the Unchained",
+    "content_id": "blackrose_prison",
+    "content_name": "Blackrose Prison",
+    "location": "Blackrose Prison, Drakeeh's Cage",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "12,045,934",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Uppercut",
+            "description": "Drakeeh winds up his greatsword before delivering a powerful blow, dealing massive physical damage and knocking you away. This attack can be blocked."
+        },
+        {
+            "name": "Cleave",
+            "description": "Drakeeh will channel a frontal cleave with his sword, indicated by a thin but wide conical AoE. This does a massive amount of physical damage, so make sure the tank has Drakeeh taunted so they can absorb the damage. The cleave AoE adjusts to your positioning if you attempt to strafe the ability."
+        },
+        {
+            "name": "Charged Leap",
+            "description": "Drakeeh will target a faraway player, leap into the air and drive his sword into the ground. Roll-dodge or block this ability; it deals a lot of physical damage damage. After he lands, stones will fly into the air around him and deal moderate physical damage to anyone nearby."
+        },
+        {
+            "name": "Void",
+            "description": "Drakeeh raises his sword towards the ceiling and channels a dark spell that must be interrupted. If he is allowed to cast it, the spell will explode on the ground and send three small AoEs outward, dealing very high magical damage each."
+        },
+        {
+            "name": "Spirit Ignition",
+            "description": "Drakeeh will select three wraiths for him to use in his next ability. Players must absorb the wraiths with golden circles around them and cleanse themselves at one of the ritual stones in the arena. Spirit Ignition also applies an enemy AoE around all players, as well as does some moderate initial magical damage. If player AoEs are touching when Spirit Ignition wears off after 6 seconds, then all overlapping players cause each other to take a large burst of magical damage. If a player is not touching another player's AoE, then no damage occurs."
+        },
+        {
+            "name": "Spirit Scream",
+            "description": "A few moments after marking the wraiths, Drakeeh will attempt to absorb them and cause a massive explosion. If the players have cleansed all of the wraiths, this ability does little damage, but if any of the wraiths are up, this ability will deal increased damage for each wraith he has absorbed."
+        },
+        {
+            "name": "Negate",
+            "description": "After Spirit Scream, Drakeeh will set a negate down around him. This ability can be very easily avoided, and deals plenty of damage while you're standing inside of it, so try not to stand in it."
+        },
+        {
+            "name": "Summon Shadow Proxies",
+            "description": "Drakeeh can summon shades of himself that have all the same abilities as him, but weaker health and damage output."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Let us show them what the Blackguards are made of!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Behold! The might of the Blackguards!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You may have survived so far, but the worst is yet to come!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Keep watching, you kuudas! You might just learn something.",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Don't lose your stride, challengers! The fight isn't finished yet.",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Your challenge isn't over yet!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Do you wish for more? Very well!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Will this next bout be your undoing? Let's find out!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At last, a fight worth watching!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You may have survived so far, but there is more to come!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "So the challengers have some bite after all!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At last, challengers who fight back!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Perhaps the challengers have some fight left after all!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "That's it, challengers! Put up a fight!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Finally, something worth watching!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Oh! We may need to start recruiting after this fight!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "A sturdy blow from the challengers!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At last, the fight gets interesting!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Come on, Blackguards! Fight back!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "What are you doing, Blackguards? Get it together!",
+            "trigger": "He yells out from the stands during the first four rounds.",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Finally, it is time for the real fight to begin!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And now it's time to face one of the Blackguards' finest!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Finally! It is time for the final fight!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Time to face your final opponent!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And now for the true challenge! Our champion!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "It's time to finish this fight!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At long last, our champion emerges!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Very good! But how will you fair against our champion?",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Impressive! But now it is time to face our champion!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You may have held your own, but now comes our champion!",
+            "trigger": "When you get to round 5 on any stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Against all hope, the challengers succeed!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Victory for the challengers!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And so ends this bloody contest!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The challengers have triumphed!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Against all odds, we have new victors!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The challengers have won!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The gauntlet has a new victor!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And the match goes to the challengers!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Quite the show! Give a cheer for our victors!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "A stunning victory for our challengers!",
+            "trigger": "When you win a stage",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You're supposed to dodge, challenger!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Oh! Having trouble there? Hmm?",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "That's how the Blackguards fight!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Keep on your toes, challengers!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You'll have to be quicker than that!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Come on, challengers! Give us a fight worth watching!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Feel the savagery of the Blackguards!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Come now, challengers, put up a fight!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Strike quick and true, Blackguards!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Let's see how long these challengers last!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Oh! Looks like our challengers haven't gotten enough!",
+            "trigger": "Match restart after a wipe",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Our challengers return for another fight!",
+            "trigger": "Match restart after a wipe",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And so the challengers come crawling back!",
+            "trigger": "Match restart after a wipe",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "And the challengers return for another bout!",
+            "trigger": "Match restart after a wipe",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Look at that, Blackguards! The challengers have returned!",
+            "trigger": "Match restart after a wipe",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Let's see if the challengers can outlast our first arena!",
+            "trigger": "Stage 1 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Can the challengers defeat Battlemage Ennodius? Let's find out!",
+            "trigger": "Stage 1 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "It's time for Tames-the-Beast to show off his collection!",
+            "trigger": "Stage 2 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "\"Let's see how the challengers fare against our beasts!\"'",
+            "trigger": "Stage 2 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "How will challengers fair against our lovely Lady Minara?",
+            "trigger": "Stage 3 start",
+            "ability": "Cleave"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Our challengers triumphed over flame and beast! But how will they fare against the undead?",
+            "trigger": "Stage 3 start",
+            "ability": "Cleave"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Burning flames! Raging beasts! Malicious undead! Can our challengers handle them all?",
+            "trigger": "Stage 4 start",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The challengers have triumphed against our champions. But can they face them all at once?",
+            "trigger": "Stage 4 start",
+            "ability": "Spirit Scream"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At last, our challengers face the final arena! But will they stand against my might?",
+            "trigger": "Stage 5 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "It's finally time for our challengers to go against me, Drakeeh the Unchained!",
+            "trigger": "Stage 5 start",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "*\"Finally, new challengers for our gauntlet!\"",
+            "trigger": "Entering the ring",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "At last, challengers worthy of the Blackguards!",
+            "trigger": "Entering the ring",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "We are the unshackled! We are the unchained!",
+            "trigger": "Entering the ring",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Blackrose Prison is no place for mercy! Strike quick and true!",
+            "trigger": "Entering the ring",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "You'll find no mercy from the Blackguards!",
+            "trigger": "Entering the ring",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Be lost in the void of death!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Hear the screams of the undead!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The spirits cry out! Do you hear them?",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The void will take you! As it takes us all!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Sithis, give me power!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The agony of these spirits only gives me strength!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "The void shall become my power!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        },
+        {
+            "speaker": "Drakeeh the Unchained",
+            "line": "Chaos, death, destruction! All are mine to control!",
+            "trigger": "Absorbing wraiths",
+            "ability": "Spirit Ignition"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He yells out from the stands during the first four rounds.": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Let us show them what the Blackguards are made of!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Behold! The might of the Blackguards!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You may have survived so far, but the worst is yet to come!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Keep watching, you kuudas! You might just learn something.",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Don't lose your stride, challengers! The fight isn't finished yet.",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Your challenge isn't over yet!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Do you wish for more? Very well!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Will this next bout be your undoing? Let's find out!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At last, a fight worth watching!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You may have survived so far, but there is more to come!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "So the challengers have some bite after all!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At last, challengers who fight back!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Perhaps the challengers have some fight left after all!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "That's it, challengers! Put up a fight!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Finally, something worth watching!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Oh! We may need to start recruiting after this fight!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "A sturdy blow from the challengers!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At last, the fight gets interesting!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Come on, Blackguards! Fight back!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "What are you doing, Blackguards? Get it together!",
+                "trigger": "He yells out from the stands during the first four rounds.",
+                "ability": "Spirit Scream"
+            }
+        ],
+        "When you get to round 5 on any stage": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Finally, it is time for the real fight to begin!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And now it's time to face one of the Blackguards' finest!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Finally! It is time for the final fight!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Time to face your final opponent!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And now for the true challenge! Our champion!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "It's time to finish this fight!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At long last, our champion emerges!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Very good! But how will you fair against our champion?",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Impressive! But now it is time to face our champion!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You may have held your own, but now comes our champion!",
+                "trigger": "When you get to round 5 on any stage",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "When you win a stage": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Against all hope, the challengers succeed!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Victory for the challengers!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And so ends this bloody contest!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The challengers have triumphed!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Against all odds, we have new victors!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The challengers have won!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The gauntlet has a new victor!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And the match goes to the challengers!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Quite the show! Give a cheer for our victors!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "A stunning victory for our challengers!",
+                "trigger": "When you win a stage",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You're supposed to dodge, challenger!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Oh! Having trouble there? Hmm?",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "That's how the Blackguards fight!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Keep on your toes, challengers!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You'll have to be quicker than that!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Come on, challengers! Give us a fight worth watching!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Feel the savagery of the Blackguards!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Come now, challengers, put up a fight!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Strike quick and true, Blackguards!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Let's see how long these challengers last!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Match restart after a wipe": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Oh! Looks like our challengers haven't gotten enough!",
+                "trigger": "Match restart after a wipe",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Our challengers return for another fight!",
+                "trigger": "Match restart after a wipe",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And so the challengers come crawling back!",
+                "trigger": "Match restart after a wipe",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "And the challengers return for another bout!",
+                "trigger": "Match restart after a wipe",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Look at that, Blackguards! The challengers have returned!",
+                "trigger": "Match restart after a wipe",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Stage 1 start": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Let's see if the challengers can outlast our first arena!",
+                "trigger": "Stage 1 start",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Can the challengers defeat Battlemage Ennodius? Let's find out!",
+                "trigger": "Stage 1 start",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Stage 2 start": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "It's time for Tames-the-Beast to show off his collection!",
+                "trigger": "Stage 2 start",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "\"Let's see how the challengers fare against our beasts!\"'",
+                "trigger": "Stage 2 start",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Stage 3 start": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "How will challengers fair against our lovely Lady Minara?",
+                "trigger": "Stage 3 start",
+                "ability": "Cleave"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Our challengers triumphed over flame and beast! But how will they fare against the undead?",
+                "trigger": "Stage 3 start",
+                "ability": "Cleave"
+            }
+        ],
+        "Stage 4 start": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Burning flames! Raging beasts! Malicious undead! Can our challengers handle them all?",
+                "trigger": "Stage 4 start",
+                "ability": "Spirit Scream"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The challengers have triumphed against our champions. But can they face them all at once?",
+                "trigger": "Stage 4 start",
+                "ability": "Spirit Scream"
+            }
+        ],
+        "Stage 5 start": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At last, our challengers face the final arena! But will they stand against my might?",
+                "trigger": "Stage 5 start",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "It's finally time for our challengers to go against me, Drakeeh the Unchained!",
+                "trigger": "Stage 5 start",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Entering the ring": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "*\"Finally, new challengers for our gauntlet!\"",
+                "trigger": "Entering the ring",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "At last, challengers worthy of the Blackguards!",
+                "trigger": "Entering the ring",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "We are the unshackled! We are the unchained!",
+                "trigger": "Entering the ring",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Blackrose Prison is no place for mercy! Strike quick and true!",
+                "trigger": "Entering the ring",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "You'll find no mercy from the Blackguards!",
+                "trigger": "Entering the ring",
+                "ability": "Spirit Ignition"
+            }
+        ],
+        "Absorbing wraiths": [
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Be lost in the void of death!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Hear the screams of the undead!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The spirits cry out! Do you hear them?",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The void will take you! As it takes us all!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Sithis, give me power!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The agony of these spirits only gives me strength!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "The void shall become my power!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            },
+            {
+                "speaker": "Drakeeh the Unchained",
+                "line": "Chaos, death, destruction! All are mine to control!",
+                "trigger": "Absorbing wraiths",
+                "ability": "Spirit Ignition"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Drakeeh keeps a journal, of which you can find three pages: 1, 2, 3"
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Black Gauntlet: Enter a deadly gauntlet held by the Blackguards of Blackrose Prison."
+    ],
+    "summary": "Drakeeh the Unchained is the Naga leader of the Blackguards and a descendant of one of the prisoners held at the brutal Blackrose Prison. After it was abandoned by the Imperials, Drakeeh has turned the prison into his base of operations and his gauntlet, where he pits people against his best soldiers (and then himself if they can manage to get that far) for entertainment, as well as to settle disputes with anyone who challenges his rule. He has kidnapped a former member of the Blackguards, Pimaxi-Taeed, who you must rescue during the related quest. He serves as the final boss of the arena, during Round 5: Drakeeh's Cage. He wields a two-handed greatsword and employs several magical abilities in his arsenal. He is also a devout follower of Sithis, which some posits is what grants him control over ghosts and wraiths.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Drakeeh_the_Unchained",
+        "page_title": "Online:Drakeeh the Unchained",
+        "revision_id": 3606598,
+        "retrieved_at": "2026-08-12T22:11:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

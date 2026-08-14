@@ -1,0 +1,152 @@
+{
+    "id": "mad_architect",
+    "name": "Mad Architect",
+    "content_id": "vaults_of_madness",
+    "content_name": "Vaults of Madness",
+    "location": "Vaults of Madness",
+    "species": "Lich",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,703,728",
+        "hardmode": "5,409,287"
+    },
+    "abilities": [
+        {
+            "name": "Grinning Bolt",
+            "description": "A basic ranged attack that does high Magical damage. If taunted the Mad Architect will be forced to use this on the tank only."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "The Mad Architect summons Reanimated Atronachs, Reanimated Mages, Reanimated Monstrosities and Zombies to attack the party. These should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Claim the Dead",
+            "description": "After summoning the minions, the Mad Architect creates a large explosion around him for moderate magical damage. This cannot be avoided and should be healed through."
+        },
+        {
+            "name": "Deathly Grasp",
+            "description": "The Mad Architect places magical runes on the ground that do moderate magical damage over time as well as snaring those who stand in them. These do not have red circle indicators, so players should look for blackened areas on the ground and avoid them instead."
+        },
+        {
+            "name": "Undead Legion",
+            "description": "The Mad Architect lets out a flash of light and summons spirits from the ground around him. This does very high magical damage over time and should be avoided at all costs. This area will affect the circle he is standing on only, so players can use that as a guide."
+        },
+        {
+            "name": "Obliterate",
+            "description": "The Mad Architect summons a bubble around himself and the windows around the room break. Any player standing outside his bubble when the explosion goes off will take extremely high magical damage, so players should watch for this and position themselves accordingly."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Mad Architect",
+            "line": "You doomed yourself by coming here—you know that, don't you?",
+            "trigger": "When first entering the Vaults of Madness, you can hear him taunting Gasteau with torture",
+            "ability": "Undead Legion"
+        },
+        {
+            "speaker": "The Mad Architect",
+            "line": "You've freed them. I've sacrificed much to bring those prisoners here, to keep them … occupied. I won't allow you to compromise that. Your head will make a fitting gift for Molag Bal.",
+            "trigger": "When you enter the Mad Architect's chamber, he will materialize as a spirit before turning into his lich form",
+            "ability": "Undead Legion"
+        },
+        {
+            "speaker": "The Mad Architect",
+            "line": "You should never have come here.",
+            "trigger": "Casting Summon Undead during the battle",
+            "ability": "Summon Undead"
+        },
+        {
+            "speaker": "The Mad Architect",
+            "line": "My minions will tear you asunder!",
+            "trigger": "Casting Summon Undead during the battle",
+            "ability": "Summon Undead"
+        },
+        {
+            "speaker": "The Mad Architect",
+            "line": "Those who serve me never stay dead.",
+            "trigger": "Casting Summon Undead during the battle",
+            "ability": "Summon Undead"
+        },
+        {
+            "speaker": "The Mad Architect",
+            "line": "Rise! Rise and slay these fools!",
+            "trigger": "Casting Summon Undead during the battle",
+            "ability": "Summon Undead"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When first entering the Vaults of Madness, you can hear him taunting Gasteau with torture": [
+            {
+                "speaker": "The Mad Architect",
+                "line": "You doomed yourself by coming here—you know that, don't you?",
+                "trigger": "When first entering the Vaults of Madness, you can hear him taunting Gasteau with torture",
+                "ability": "Undead Legion"
+            }
+        ],
+        "When you enter the Mad Architect's chamber, he will materialize as a spirit before turning into his lich form": [
+            {
+                "speaker": "The Mad Architect",
+                "line": "You've freed them. I've sacrificed much to bring those prisoners here, to keep them … occupied. I won't allow you to compromise that. Your head will make a fitting gift for Molag Bal.",
+                "trigger": "When you enter the Mad Architect's chamber, he will materialize as a spirit before turning into his lich form",
+                "ability": "Undead Legion"
+            }
+        ],
+        "Casting Summon Undead during the battle": [
+            {
+                "speaker": "The Mad Architect",
+                "line": "You should never have come here.",
+                "trigger": "Casting Summon Undead during the battle",
+                "ability": "Summon Undead"
+            },
+            {
+                "speaker": "The Mad Architect",
+                "line": "My minions will tear you asunder!",
+                "trigger": "Casting Summon Undead during the battle",
+                "ability": "Summon Undead"
+            },
+            {
+                "speaker": "The Mad Architect",
+                "line": "Those who serve me never stay dead.",
+                "trigger": "Casting Summon Undead during the battle",
+                "ability": "Summon Undead"
+            },
+            {
+                "speaker": "The Mad Architect",
+                "line": "Rise! Rise and slay these fools!",
+                "trigger": "Casting Summon Undead during the battle",
+                "ability": "Summon Undead"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness."
+    ],
+    "summary": "The Mad Architect is the final boss in the Vaults of Madness. He has a chance of dropping Architect's Shield, The Mad Maul, or a helmet from the Grothdarr set in veteran mode. In life his name was Dutheil and he was known as one of the best architects of the age, as well as for his eccentric nature. A plan hatched by one of his rivals, Gasteau Chamrond, saw to it that his designs were stolen and plagiarized and that he was discredited by the Wayrest nobility. This led to his mental collapse and his reaching out to the Daedra, who offered him revenge in return for becoming their personal architect. He accepted and was transformed into the Mad Architect. While he initially started with the three that had ruined him, over time he captured many more souls and upon the player group entering the Vaults, he aims to do the same to them. When he is approached in person, he will appear from the central skull door as a spectral skeleton, before transforming into a lich when he reaches the center of the room, in a massive burst of purple magic.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mad_Architect",
+        "page_title": "Online:Mad Architect",
+        "revision_id": 3390172,
+        "retrieved_at": "2026-08-12T21:37:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

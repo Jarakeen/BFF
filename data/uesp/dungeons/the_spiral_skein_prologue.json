@@ -1,0 +1,18 @@
+{
+    "id": "the_spiral_skein_prologue",
+    "name": "The Spiral Skein (prologue)",
+    "content_type": "dungeon",
+    "summary": "The Spiral Skein is a part of Mephala's realm of Oblivion. The servants of Mephala have captured Oracle Marieve here, trying to find out the location of the island of Artaeum from her. The Spiral Skein is entered through a portal in Bewan which only appears during its associated quest. This location is not to be confused with the location of the same name entered in the Summerset chapter.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Spiral_Skein_(prologue)",
+        "page_title": "Online:The Spiral Skein (prologue)",
+        "revision_id": 3550259,
+        "retrieved_at": "2026-08-12T21:34:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

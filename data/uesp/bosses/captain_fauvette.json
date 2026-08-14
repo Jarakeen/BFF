@@ -1,0 +1,137 @@
+{
+    "id": "captain_fauvette",
+    "name": "Captain Fauvette",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Arrow",
+            "description": "Basic ranged attack dealing minor frost damage."
+        },
+        {
+            "name": "Burdening Eye",
+            "description": "Captain Fauvette summons a Burdening Eye that moves toward a player."
+        },
+        {
+            "name": "Burden",
+            "description": "If the Burdening Eye touches the player, it explodes, dealing minor magic damage and snaring in an area."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "Captain Fauvette periodically summons a Ghost Strongarm and a Ghost Swashbuckler to fight for her."
+        },
+        {
+            "name": "Summon Totem",
+            "description": "Captain Fauvette periodically summons her Totem, deals fast ticks of direct minor poison damage around it. It also continuously casts areas that travel in a straight line in four directions which root targets hit for 4 seconds."
+        },
+        {
+            "name": "Run Away!",
+            "description": "When too close to her, Captain Fauvette backs up to put some distance between her target and herself."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Vanisande Maul",
+            "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+            "ability": "Summon Totem"
+        },
+        {
+            "speaker": "",
+            "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+            "ability": "Summon Totem"
+        },
+        {
+            "speaker": "Commodore Malfairre",
+            "line": "I said take the idols! Place them how I showed you. Do as I command and we may yet escape this with our lives.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+            "ability": "Summon Totem"
+        },
+        {
+            "speaker": "Captain Fauvette",
+            "line": "Y—yes, sir!",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+            "ability": "Summon Totem"
+        },
+        {
+            "speaker": "Captain Tuvacca",
+            "line": "I hope you know what you're doing.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+            "ability": "Summon Totem"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log": [
+            {
+                "speaker": "Vanisande Maul",
+                "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+                "ability": "Summon Totem"
+            },
+            {
+                "speaker": "",
+                "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+                "ability": "Summon Totem"
+            },
+            {
+                "speaker": "Commodore Malfairre",
+                "line": "I said take the idols! Place them how I showed you. Do as I command and we may yet escape this with our lives.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+                "ability": "Summon Totem"
+            },
+            {
+                "speaker": "Captain Fauvette",
+                "line": "Y—yes, sir!",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+                "ability": "Summon Totem"
+            },
+            {
+                "speaker": "Captain Tuvacca",
+                "line": "I hope you know what you're doing.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Fauvette appears in one: After reading Debonaire's Captain Log",
+                "ability": "Summon Totem"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "\"Summon Allies\" ability is actually called \"Summon Dremora\" and \"Summon Bloodknight Specter\" in the game files."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Buried at the Bay: Retrieve the treasure of Captain Maul for her great great great great grand … something."
+    ],
+    "summary": "Captain Fauvette is the spirit of a Breton ship captain in Ghost Haven Bay.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Fauvette",
+        "page_title": "Online:Captain Fauvette",
+        "revision_id": 3493117,
+        "retrieved_at": "2026-08-12T21:23:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

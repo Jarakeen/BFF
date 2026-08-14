@@ -1,0 +1,107 @@
+{
+    "id": "king_narilmor",
+    "name": "King Narilmor",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Tabernacle of Light Unyielding, Depths of Malatar",
+    "species": "",
+    "reaction": "Hostile\nFriendly (initially, while talking)",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Purifying Light",
+            "description": "The boss summons an expanding beam of pure sunlight to doom a player, dealing moderate magical damage to them and copying all their damage taken for 6 seconds and releasing 20% of it as additional magical damage to them."
+        },
+        {
+            "name": "Smiting Dawn",
+            "description": "The boss arms himself with Meridia's sacred sword and dispenses her retribution, dealing very high physical damage to players in front of itself and stuns them for 2 seconds and deals additional moderate physical damage over time for 6 seconds. Blocking this attack will reduce the damage and prevent the stun."
+        },
+        {
+            "name": "Minor Wound",
+            "description": "A basic ranged attack that does moderate magical damage."
+        },
+        {
+            "name": "Radiant Destruction",
+            "description": "The boss channels a ray of holy fire, dealing moderate magical damage over 1.8 seconds. Deals up to 480% more damage to players below 50% health. This attack can be interrupted."
+        },
+        {
+            "name": "Flare",
+            "description": "A basic ranged attack that does moderate flame damage."
+        },
+        {
+            "name": "Fire Runes",
+            "description": "The boss shoots two fireballs in the air which form two fire runes when they land. The runes do moderate flame damage over time to all players within the runes and should be avoided. Players should be prepared to move as soon as the attack casts as one rune will always be cast on top of a random player."
+        },
+        {
+            "name": "Sunburst",
+            "description": "The enemy calls down a flaming meteor from the sky down onto a player dealing high AoE flame damage and stunning any players hit by the meteor. This skill then sends out fire AoEs across the floor called Afterimages."
+        },
+        {
+            "name": "Afterimage",
+            "description": "These AoEs are released after Sunburst lands, the smaller AoEs deal moderate flame damage."
+        },
+        {
+            "name": "Ice Arrow",
+            "description": "A basic ranged attack that does moderate frost damage."
+        },
+        {
+            "name": "Winter's Reach",
+            "description": "The enemy releases an icy whirlwind in the direction it is facing. This whirlwind does high frost damage and roots all players that it hits. Root effect passes through block, and can be escaped by roll dodging. This attack can be interrupted or simply avoided."
+        },
+        {
+            "name": "Summon Ice Pillar",
+            "description": "The enemy summons an Ice Pillar. The pillar has an AoE around it that deals moderate frost damage over time to all players within it and should be avoided. Players should be prepared to move as soon as the attack casts as the pillar will always be cast on top of a random player."
+        },
+        {
+            "name": "Shock",
+            "description": "A basic ranged attack that does moderate shock damage."
+        },
+        {
+            "name": "Arc Lightning",
+            "description": "The boss channels and releases lightning across the floor as indicated by red circles. This attack does high shock damage to all enemies hit. This attack cannot be interrupted so must be avoided or blocked."
+        },
+        {
+            "name": "Agonizing Bolts",
+            "description": "The boss will call down lightning AoEs from the sky that deal moderate shock damage, the shock damage rapidly increases if you are hit in succession by the lightning."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He uses Meridian Style staves and armor, and wears the Ayleid Royal Crown collectible hat.",
+        "His journal is quoted in the description for the Symphony of Dawn Charger mount."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact.",
+        "Pledge: Depths of Malatar: Prove you are truly Undaunted by clearing Depths of Malatar."
+    ],
+    "summary": "King Narilmor is the ancient Ayleid king of Garlas Malatar who serves as the fourth boss of the Depths of Malatar. Purified with the blessings of immortality and loss of free will by Meridia herself, he stops at nothing to reacquire the right half of the Wrathstone from you, sabotaging your expedition and luring you into various traps along the way. When he is fought in the Tabernacle of Light Unyielding, he will split himself into four various clones: flame (red), frost (blue), lightning (purple), and light (white/yellow), all having attacks based on their element. The spirit of Quintus Verres also escapes during the battle, complicating matters as you have the option of helping Tharayya capture him again. After Narilmor's defeat, his pact with Meridia transforms him into the Symphony of Blades, a vessel of her power fought in the final part of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:King_Narilmor",
+        "page_title": "Online:King Narilmor",
+        "revision_id": 3547714,
+        "retrieved_at": "2026-08-12T21:19:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

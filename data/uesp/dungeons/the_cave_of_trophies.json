@@ -1,0 +1,26 @@
+{
+    "id": "the_cave_of_trophies",
+    "name": "The Cave of Trophies",
+    "content_type": "dungeon",
+    "summary": "The Cave of Trophies is a cave containing Daedra in central Coldharbour, just southeast of the Cliffs of Failure. Centipedes, fleshflies and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Cave_of_Trophies",
+        "page_title": "Online:The Cave of Trophies",
+        "revision_id": 3533553,
+        "retrieved_at": "2026-08-12T21:16:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

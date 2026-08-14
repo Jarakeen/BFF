@@ -1,0 +1,18 @@
+{
+    "id": "clockwork_city_vault",
+    "name": "Clockwork City Vault",
+    "content_type": "dungeon",
+    "summary": "This article is about a location visited in the Morrowind chapter. For a similar location visited in the Clockwork City DLC, see Clockwork City Vaults. Clockwork City Vault is Sotha Sil's secret vault containing the Clockwork City. It is located in the Dwemer ruin of Bamz-Amschend, deep beneath the Mournhold Temple in Deshaan.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Clockwork_City_Vault",
+        "page_title": "Online:Clockwork City Vault",
+        "revision_id": 3550253,
+        "retrieved_at": "2026-08-12T21:17:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

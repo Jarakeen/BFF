@@ -1,0 +1,73 @@
+{
+    "id": "mouz_the_unclean",
+    "name": "Mouz the Unclean",
+    "content_id": "spire_of_the_crimson_coin",
+    "content_name": "Spire of the Crimson Coin",
+    "location": "Spire of the Crimson Coin",
+    "species": "Harpy",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Kick",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Talon",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Bolt",
+            "description": "A basic ranged attack that deals moderate shock damage."
+        },
+        {
+            "name": "Lightning Gale",
+            "description": "Mouz the Unclean conjures a shocking storm around itself then sends it forward at its target, dealing moderate shock damage. This doesn't have any red area indicators. This can be interrupted to set Mouz the Unclean off-balance."
+        },
+        {
+            "name": "Fling Feathers",
+            "description": "Mouz the Unclean deals moderate oblivion damage, knocks down and stuns targets hit in a cone in front of it. Then \"Aftershock\" is always cast."
+        },
+        {
+            "name": "Aftershock",
+            "description": "Three areas dealing minor oblivion damage are sent from it in three directions."
+        },
+        {
+            "name": "Call Flock",
+            "description": "Mouz the Unclean peridically summons three harpies to fight for it."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Mouz the Unclean is a harpy boss found in the Spire of the Crimson Coin public dungeon. It is accompanied by five harpies at the start of the combat.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mouz_the_Unclean",
+        "page_title": "Online:Mouz the Unclean",
+        "revision_id": 3219578,
+        "retrieved_at": "2026-08-12T21:34:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

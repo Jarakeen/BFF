@@ -1,0 +1,60 @@
+{
+    "id": "swarm_mother",
+    "name": "Swarm Mother",
+    "content_id": "spindleclutch_i",
+    "content_name": "Spindleclutch I",
+    "location": "Spindleclutch I",
+    "species": "Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Inject Poison",
+            "description": "A heavy melee attack that does moderate poison damage followed by minor poison damage over time. This can be blocked to stagger the Swarm Mother."
+        },
+        {
+            "name": "Poisoned Fang",
+            "description": "The Swarm Mother jumps on targets that are far away from it, dealing moderate poison damage. Stay near the Swarm Mother to prevent this."
+        },
+        {
+            "name": "Summon Spiders",
+            "description": "Occasionally, the Swarm Mother will summon a group of spiders to attack the party. These should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Impeding Webs",
+            "description": "The Swarm Mother spits a web on top of a player snaring all players within as indicated by a red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Whispers: Aid the Fighters Guild members in clearing the Spindleclutch I caves.",
+        "Pledge: Spindleclutch I: Explore Spindleclutch I and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Swarm Mother (set). Swarm Mother is a big spider found inside Spindleclutch I. It is also the namesake of the Swarm Mother set, style, and the basis of a trophy and bust.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Swarm_Mother",
+        "page_title": "Online:Swarm Mother",
+        "revision_id": 3285744,
+        "retrieved_at": "2026-08-12T21:34:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

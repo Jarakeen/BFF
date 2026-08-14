@@ -1,0 +1,36 @@
+{
+    "id": "werebear",
+    "name": "Werebear",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Infernal City, Skyrim(DB), ESO Werebears (or were-bears)[2]:Part 3, Chapter 7 are large werebeasts which possess bear-like features.[3][4] They are claimed to be the most common lycanthropes of Skyrim,[3] though they are rarely actually seen.[5][3][6] It is said werebears can also be found in the northern parts of High Rock, Cyrodiil, and Morrowind.[3] In the Fourth Era, hunting packs of werebears could be more commonly encountered on the island of Solstheim.[4] Werebears are sometimes considered to be more dangerous than werewolves,[7][1] they have even came into conflict with or wiped out werewolf packs.[8] Werebears are known to have a taste for honey,[4] and will even attack travelers to steal it.[9] Werebears are a common subject of tales and folklore in Nordic culture,[5][10][11] despite the lack of documented encounters.[5][3] One Legend holds that smearing canis root on the trees surrounding one's home wards off werebears.[3][7][5] The Skaal consider true bears noble and great creatures of the All-Maker, but lycanthropes like werebears are considered defilements of the All-Maker's workings.[12] Despite this, the Beast Stone of the All-Maker has been known to grant individuals with the ability to summon a werebear.[13] \"Lucky Werebear Paws\" are a type of strange magical curiosity. They are still \"living\" severed werebear paws that can be used a pocket warmers as long as their paws are kept trimmed.[14]",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Lore:Werebear",
+        "page_title": "Lore:Werebear",
+        "revision_id": 3579742,
+        "retrieved_at": "2026-08-12T21:28:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

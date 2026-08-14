@@ -1,0 +1,28 @@
+{
+    "id": "capstone_cave",
+    "name": "Capstone Cave",
+    "content_type": "dungeon",
+    "summary": "Capstone Cave is a cave in northern Cyrodiil, west-southwest of Fort Dragonclaw containing Black Dagger bandits. Hegris' Orders are found near Claudette the Sharper.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Capstone Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Capstone_Cave",
+        "page_title": "Online:Capstone Cave",
+        "revision_id": 3598793,
+        "retrieved_at": "2026-08-12T21:16:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

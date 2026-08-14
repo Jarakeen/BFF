@@ -1,0 +1,192 @@
+{
+    "id": "wyress_ursus",
+    "name": "Wyress Ursus",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices, Bloodscent Pass",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,031,441",
+        "veteran": "1,549,884",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Deep Slash",
+            "description": "The enemy slashes at your shins snaring you and dealing moderate physical damage."
+        },
+        {
+            "name": "Power Bash",
+            "description": "A charged melee attack that deals very high physical damage. This must be blocked by the tank or dodged if you are not."
+        },
+        {
+            "name": "Shield Charge",
+            "description": "The boss charges at a random target stunning them and dealing moderate physical damage. This occurs whether or not she is taunted, and she will target anyone in view of her. One strategy is to keep the boss out of line of sight of the group behind the rock on the island to she does not charge anyone."
+        },
+        {
+            "name": "Bear Aura",
+            "description": "The boss has a green circle around her that boosts the damage dealt by her allies. Keep the bosses separate to prevent this. When she dies she will spawn a bear that emanates the same aura, the bear cannot be damaged or interacted with and will move on its own."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Wyress Ursus",
+            "line": "Hopefully you put up more of a fight than those Wood Elves.",
+            "trigger": "Idling before battle",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "This is turning out to be quite the eventful hunt!",
+            "trigger": "Idling before battle",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "I'll hunt every last one of you down!",
+            "trigger": "Idling before battle",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "Perhaps next time Lord Hircine will give us foes worth bragging about.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "It's always disappointing when the prey barely fights back.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "It seems you were nothing against a bear's might!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "Stay strong, sisters! My spirit is with you.",
+            "trigger": "After she is killed",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "The spirit of the bear lives on.",
+            "trigger": "After she is killed",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "Even in death, I can still fight.",
+            "trigger": "After she is killed",
+            "ability": "Shield Charge"
+        },
+        {
+            "speaker": "Wyress Ursus",
+            "line": "We failed, sisters …. But we shall hunt again.",
+            "trigger": "When she is the last to be defeated",
+            "ability": "Bear Aura"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before battle": [
+            {
+                "speaker": "Wyress Ursus",
+                "line": "Hopefully you put up more of a fight than those Wood Elves.",
+                "trigger": "Idling before battle",
+                "ability": "Shield Charge"
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "This is turning out to be quite the eventful hunt!",
+                "trigger": "Idling before battle",
+                "ability": "Shield Charge"
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "I'll hunt every last one of you down!",
+                "trigger": "Idling before battle",
+                "ability": "Shield Charge"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Wyress Ursus",
+                "line": "Perhaps next time Lord Hircine will give us foes worth bragging about.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "It's always disappointing when the prey barely fights back.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "It seems you were nothing against a bear's might!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "After she is killed": [
+            {
+                "speaker": "Wyress Ursus",
+                "line": "Stay strong, sisters! My spirit is with you.",
+                "trigger": "After she is killed",
+                "ability": "Shield Charge"
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "The spirit of the bear lives on.",
+                "trigger": "After she is killed",
+                "ability": "Shield Charge"
+            },
+            {
+                "speaker": "Wyress Ursus",
+                "line": "Even in death, I can still fight.",
+                "trigger": "After she is killed",
+                "ability": "Shield Charge"
+            }
+        ],
+        "When she is the last to be defeated": [
+            {
+                "speaker": "Wyress Ursus",
+                "line": "We failed, sisters …. But we shall hunt again.",
+                "trigger": "When she is the last to be defeated",
+                "ability": "Bear Aura"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She wears the helmet used in the Old Orsinium Sentry costume.",
+        "It was revealed that she along with her sisters each represent a different aspect of Hircine in ESO Live's preview of Wolfhunter (Timestamp 32:30)."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt."
+    ],
+    "summary": "Wyress Ursus is a Breton wyress who hunts alongside her sisters, Rangifer and Strigidae, in the Bloodscent Pass. She and her sisters serve as the first bosses encountered in the March of Sacrifices. She wields a mace and shield and is surrounded by a green aura. She represents Hrokkibeg, the Mighty Bear.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wyress_Ursus",
+        "page_title": "Online:Wyress Ursus",
+        "revision_id": 3347523,
+        "retrieved_at": "2026-08-12T21:28:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

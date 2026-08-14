@@ -1,0 +1,18 @@
+{
+    "id": "fauns_thicket",
+    "name": "Fauns' Thicket",
+    "content_type": "dungeon",
+    "summary": "Fauns' Thicket is a clearing found in western Galen.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fauns%27_Thicket",
+        "page_title": "Online:Fauns' Thicket",
+        "revision_id": 3197004,
+        "retrieved_at": "2026-08-12T21:22:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

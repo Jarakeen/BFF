@@ -1,0 +1,246 @@
+{
+    "id": "corruption_of_root",
+    "name": "Corruption of Root",
+    "content_id": "earthen_root_enclave",
+    "content_name": "Earthen Root Enclave",
+    "location": "Earthen Root Enclave, Deeproot",
+    "species": "Aggression of Root",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,157,473",
+        "veteran": "4,303,732",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Corruption of Root",
+            "line": "Lose your voice to the Rootspeak!",
+            "trigger": "When combat begins",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Insects. Inside. Crawling. Die. Die!",
+            "trigger": "Using Root Infection",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "To us. Fauns. To us!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Defend us. Help. Help!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Tricksters add voices. Sing with us!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Hooves defend our grove. Defend!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Voices and hooves. Fight. Fight!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Horns and hooves. Help. Help!",
+            "trigger": "Summoning fauns",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Our roots grow deep.",
+            "trigger": "Summoning Distributary doppelgangers",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "We retreat into the dirt.",
+            "trigger": "Summoning Distributary doppelgangers",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Go to ground. To ground!",
+            "trigger": "Summoning Distributary doppelgangers",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "We grow. We sprout!",
+            "trigger": "Summoning Distributary doppelgangers",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Crash seeds. Crash! Time to hatch.",
+            "trigger": "Summoning Graft-Root animals",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "\"We are hurt. Make it stop. Stop!",
+            "trigger": "Close to being finished off",
+            "ability": null
+        },
+        {
+            "speaker": "Corruption of Root",
+            "line": "Voices of root. Voices of many!",
+            "trigger": "?",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When combat begins": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "Lose your voice to the Rootspeak!",
+                "trigger": "When combat begins",
+                "ability": null
+            }
+        ],
+        "Using Root Infection": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "Insects. Inside. Crawling. Die. Die!",
+                "trigger": "Using Root Infection",
+                "ability": null
+            }
+        ],
+        "Summoning fauns": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "To us. Fauns. To us!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Defend us. Help. Help!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Tricksters add voices. Sing with us!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Hooves defend our grove. Defend!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Voices and hooves. Fight. Fight!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Horns and hooves. Help. Help!",
+                "trigger": "Summoning fauns",
+                "ability": null
+            }
+        ],
+        "Summoning Distributary doppelgangers": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "Our roots grow deep.",
+                "trigger": "Summoning Distributary doppelgangers",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "We retreat into the dirt.",
+                "trigger": "Summoning Distributary doppelgangers",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "Go to ground. To ground!",
+                "trigger": "Summoning Distributary doppelgangers",
+                "ability": null
+            },
+            {
+                "speaker": "Corruption of Root",
+                "line": "We grow. We sprout!",
+                "trigger": "Summoning Distributary doppelgangers",
+                "ability": null
+            }
+        ],
+        "Summoning Graft-Root animals": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "Crash seeds. Crash! Time to hatch.",
+                "trigger": "Summoning Graft-Root animals",
+                "ability": null
+            }
+        ],
+        "Close to being finished off": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "\"We are hurt. Make it stop. Stop!",
+                "trigger": "Close to being finished off",
+                "ability": null
+            }
+        ],
+        "?": [
+            {
+                "speaker": "Corruption of Root",
+                "line": "Voices of root. Voices of many!",
+                "trigger": "?",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "lost_depths_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Their internal mesh name is DruidicWispMother_C.",
+        "The spirit is mentioned in their original capacity as the Spirit of Root in the book Message of Welcome"
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Stonelore Defense: Repel the Firesong Circle's attack on Earthen Root Enclave.",
+        "Pledge: Earthen Root Enclave: Enter Earthen Root Enclave and return Undaunted."
+    ],
+    "summary": "The Corruption of Root (originally the Spirit of Root) is a nature spirit who takes a form resembling a Druidic Wispmother. She is found at the Dais of Rootspeak within the Deeproot in Earthen Root Enclave. This spirit was corrupted by the invading Firesong Druids who are lead by Archdruid Devyric. The Corruption of Root serves as the second boss of this dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Corruption_of_Root",
+        "page_title": "Online:Corruption of Root",
+        "revision_id": 3392469,
+        "retrieved_at": "2026-08-12T21:20:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

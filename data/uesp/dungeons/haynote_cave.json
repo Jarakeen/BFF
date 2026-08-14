@@ -1,0 +1,28 @@
+{
+    "id": "haynote_cave",
+    "name": "Haynote Cave",
+    "content_type": "dungeon",
+    "summary": "Haynote Cave is a cave in western Cyrodiil, between Castles Brindle and Roebeck containing Shadowed Path necromancers. There is a cooking fire in the camp outside of the cave. Ore, jewelry seams, runestones and mushrooms can be harvested inside the cave. Theurgist Thelas is standing on a wooden platform within the first large chamber. A chest can be found in the hallway leading to the next chamber, at the eastern bend where the road turns north. The chest lies beyond the scaffolding, and you can pick the lock from behind the scaffolding. A Letter to Diabolist Volcatia can be found upon Diabolist Volcatia's altar, in the farthest chamber. A heavy sack can be found on the ground in front of it. A chest spawns behind the cages that lie beyond the Diabolist's altar. A copy of Antecedents of Dwemer Law may also be found in a broken crate in the first open area.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Haynote Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Haynote_Cave",
+        "page_title": "Online:Haynote Cave",
+        "revision_id": 3598796,
+        "retrieved_at": "2026-08-12T21:25:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

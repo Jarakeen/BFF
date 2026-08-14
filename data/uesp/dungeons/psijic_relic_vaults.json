@@ -1,0 +1,21 @@
+{
+    "id": "psijic_relic_vaults",
+    "name": "Psijic Relic Vaults",
+    "content_type": "dungeon",
+    "summary": "The Psijic Relic Vaults is a secured vault for storing many of the artifacts in the possession of the Psijic Order. It is accessed from the southeastern beach of Artaeum, which has entrances from the College of Psijics Ruins. During the related quest, it will be invaded by K'Tora along with his Daedric and Yaghra forces, as he seeks the Ul'vor Staff.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "This location was originally datamined as \"Artaeum Old Vaults\", and the door connecting it to the College of Psijics Ruins refers to it as Old Vaults.",
+        "The beach outside the vaults are part of the Artaeum worldspace, and the waters surrounding them are filled with slaughterfish. If one does manage to swim to it, the door to the vaults will always remain locked if not on the related quest."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Psijic_Relic_Vaults",
+        "page_title": "Online:Psijic Relic Vaults",
+        "revision_id": 3392711,
+        "retrieved_at": "2026-08-12T21:31:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

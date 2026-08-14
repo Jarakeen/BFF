@@ -1,0 +1,62 @@
+{
+    "id": "foulhide",
+    "name": "Foulhide",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Selene's Web",
+    "species": "Bear",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Summon Selene's Roses",
+            "description": "Throughout the fight, stranglers will spawn in large numbers to attack the group. They tend only to attack players near them and can be safely ignored if far away."
+        },
+        {
+            "name": "Vicious Maul",
+            "description": "The boss rears up and slams down dealing moderate physical damage in front of itself as indicated by a red cone. This will also instantly kill any Selene's Roses hit."
+        },
+        {
+            "name": "Trampling Charge",
+            "description": "The boss charges forward dealing moderate physical damage and knocking down all players hit as indicated by a red rectangle. At the end of the charge Foulhide is stunned for a short moment. This will also kill any Selene's Roses hit by dealing 110% of their Max Health in oblivion damage."
+        },
+        {
+            "name": "Horrifying Roar",
+            "description": "The boss roars fearing all players. Break free to counter this."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is seemingly the Primal Spirit later summoned by Selene, who later appears in Lair of Maarselok as Selene's Claws."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web."
+    ],
+    "summary": "Foulhide is an enormous bear found inside Selene's Web.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Foulhide",
+        "page_title": "Online:Foulhide",
+        "revision_id": 3469903,
+        "retrieved_at": "2026-08-12T21:33:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

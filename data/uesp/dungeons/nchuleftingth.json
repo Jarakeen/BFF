@@ -1,0 +1,34 @@
+{
+    "id": "nchuleftingth",
+    "name": "Nchuleftingth",
+    "content_type": "dungeon",
+    "summary": "Nchuleftingth is a Dwemer ruin and public dungeon found in the Molag Amur region of Vvardenfell, northeast of Suran. Apart from various Dwemer constructs, the dungeon has lately been occupied by treasure hunter Lenarmen and his hired Bronzefist mercenaries, searching for a powerful artifact. Butterflies, Centipedes, Dragonflies and Skavengers are found in numbers within. The seven fragments for the Dwarven Theodolite pet and achievement are randomly dropped from enemies in this zone.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Nchuleftingth also appears in TES III: Morrowind.",
+        "The loading screen for Nchuleft mentions these locations as being confused for one another, due to their similar names.",
+        "The metal chair found above the prism in the sanctuary is identical to the seat used by the Harmonic Auditor.",
+        "Steam vent traps that deal continuous moderate flame damage when standing on.",
+        "Piston traps that inflict moderate shock damage and knock you away.",
+        "Shock beam traps that inflict continuous low shock damage and snare you if you pass through, while overcharging and buffing dwarven automatons that go through.",
+        "Several traps can be found throughout the dungeon:"
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nchuleftingth",
+        "page_title": "Online:Nchuleftingth",
+        "revision_id": 3579015,
+        "retrieved_at": "2026-08-12T21:30:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

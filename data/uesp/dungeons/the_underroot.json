@@ -1,0 +1,26 @@
+{
+    "id": "the_underroot",
+    "name": "The Underroot",
+    "content_type": "dungeon",
+    "summary": "The Underroot is a cave in western Greenshade, southeast of the Seaside Sanctuary containing lamia. The group is led by Domina Ssaranth. According to a Blood-Spattered Love Note found in the cave, The Underroot was not only used as a trysting spot, but the Lamia were thought to be friendly. Two passive senches are found near the boss' room. Snakes and torchbugs are found in number within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Underroot",
+        "page_title": "Online:The Underroot",
+        "revision_id": 3598314,
+        "retrieved_at": "2026-08-12T21:36:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,756 @@
+{
+    "id": "zelvraak_the_unbreathing",
+    "name": "Zelvraak the Unbreathing",
+    "content_id": "graven_deep",
+    "content_name": "Graven Deep",
+    "location": "Graven Deep — Tempest Observatory",
+    "species": "Lich",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,197,602",
+        "veteran": "7,441,393",
+        "hardmode": "12,278,298"
+    },
+    "abilities": [
+        {
+            "name": "(?)",
+            "description": "The center of the room is always cursed and deals continuous high (?) damage.[verification needed]"
+        },
+        {
+            "name": "Slash",
+            "description": "Basic melee attack dealing very high physical damage and applies \"Necrotic Revenant\"."
+        },
+        {
+            "name": "Necrotic Spear",
+            "description": "Basic ranged attack dealing very high frost damage and applies \"Necrotic Revenant\"."
+        },
+        {
+            "name": "Necrotic Revenant",
+            "description": "Deals high magic damage over (?) seconds."
+        },
+        {
+            "name": "Necrotic Wave",
+            "description": "Zelvraak's charged heavy attack dealing massive magic damage in a cone. The tank must absolutely turn Zelvraak away from the group and block this attack."
+        },
+        {
+            "name": "Flesh Abominations",
+            "description": "At the start of the fight and after the \"Banished\" phase ends, a Flesh Abomination is summoned."
+        },
+        {
+            "name": "Terrified",
+            "description": "Zelvraak channels a massive fear spell dealing moderate frost damage over time which covers the whole room. You must turn away from him when it unleashes it, otherwise you are feared."
+        },
+        {
+            "name": "Drowning Waters",
+            "description": "At probably 90% health and after the \"Banished\" phase ends, Zelvraak casts a spell which appears like whirlpools on the ceiling of the room and each one creates a Sea Orb. In Normal difficulty there is only one, in veteran there are two and in veteran hard mode there are four. The sea orbs appear at the ceiling and slowly fall. If one of them reaches the ground, all players are killed by lethal frost damage. They cannot be destroyed but any hit will send them right to the ceiling. You must constantly check them in order to survive."
+        },
+        {
+            "name": "The Afterlife/Banished",
+            "description": "When Zelvraak reaches 50% Health, he becomes invincible, untargetable and stops all mechanics. All players will have their screen darkened, their character appearing ghostly and they cannot see each other. Fractured Souls slowly fly towards Zelvraak at the center of the room and you must destroy them. You are dealt continuous moderate frost damage but yellow-glowing ghosts are seen wandering the room, if you touch them, you are healed over 4 seconds and get a stack of \"Soul Infusion\"/\"Speed Increase\" for 10 seconds, each stack giving +25% movement speed. After enough time has passed, the fight with Zelvraak resumes."
+        },
+        {
+            "name": "Inferno",
+            "description": "Deals moderate-high flame damage. Must be interrupted"
+        },
+        {
+            "name": "Split",
+            "description": "Zelvraak splits into four Illusory Specters. You must interrupt all of them and block the subsequent attack if any remain uninterrupted, otherwise each one deals immense magic damage in a cone. Upon being interrupted they disappear then (?)."
+        },
+        {
+            "name": "Crippling Grasp",
+            "description": "Deals moderate-high magic damage"
+        },
+        {
+            "name": "Winter",
+            "description": "Deals moderate frost damage"
+        },
+        {
+            "name": "Sundered Soul/Soul Fragmentation",
+            "description": "Deal minor frost damage over time."
+        },
+        {
+            "name": "Siphon Soul",
+            "description": "Deals moderate magic damage over time."
+        },
+        {
+            "name": "Phantasmal Barrage",
+            "description": "Deals high frost damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Old secrets, left behind. Play with them, if you wish.",
+            "trigger": "At the first secret",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Perhaps this one's beyond you.",
+            "trigger": "If you choose the incorrect cube and get repelled",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "No match for simple cubes.",
+            "trigger": "If you choose the incorrect cube and get repelled",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Ahahahaha!",
+            "trigger": "If you choose the incorrect cube and get repelled",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Poor mortal of weak mind.",
+            "trigger": "If you choose the incorrect cube and get repelled",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Not the most complex of mysteries, it would seem.",
+            "trigger": "Once you have solved the puzzle, Mzugru, Security Drone will be activated",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Defend yourself, construct!",
+            "trigger": "When a Power Transmitter is activated",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "How will you deal with this?",
+            "trigger": "When a Power Transmitter is activated",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Can you break its protections?",
+            "trigger": "When a Power Transmitter is activated",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "An imperfect design.",
+            "trigger": "Breaking a Power Transmitter",
+            "ability": "Necrotic Wave"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "I can't repair that part.",
+            "trigger": "Breaking a Power Transmitter",
+            "ability": "Necrotic Wave"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Impressive. But other secrets await. How long until one cuts you down?",
+            "trigger": "Once Mzugru is defeated",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "You seem drawn to these secrets. Like a fish, enticed by bait.",
+            "trigger": "At the second secret",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "The delicious scent of burnt mortal.",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Please, keep amusing me.",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Do not feel bold too quickly!",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Hurry, mortal. Hahaha!",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "An unforgiving punishment!",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Are you tired? These machines shall give you no rest!",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "very entertaining.",
+            "trigger": "Whenever you touch the lasers",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "The dwarves here had so many toys to play with. Here comes one now!",
+            "trigger": "The Side Boss is summoned",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Yes! What savagery in your rich souls.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Ah, the little fish avoids the hook. For now.",
+            "trigger": "Defeating the Side Boss",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Just like a fish, to swim into my jaws.",
+            "trigger": "Closer to the final boss room",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "You're swimming into danger once again, little fish.",
+            "trigger": "At the third secret",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Does that hurt? I no longer remember pain.",
+            "trigger": "If you choose the wrong switch and zap someone",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "How foolish to think this so easy.",
+            "trigger": "If you choose the wrong switch and zap someone",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "I should send one of my brainless ghouls to solve this for you.",
+            "trigger": "If you choose the wrong switch and zap someone",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "I suggest a more cautious step.",
+            "trigger": "If you choose the wrong switch and zap someone",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "An ancient device. What threat could it pose?",
+            "trigger": "The Side Boss is summoned",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Unwise. The constructs react poorly when you remove their energy supply.",
+            "trigger": "The Side Boss is summoned",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "For untold centuries, I've watched lesser creatures die from those devices. What clever little fish!",
+            "trigger": "Defeating the Side Boss",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Ah, little fish! You have arrived at last.",
+            "trigger": "Upon reaching the Energy Chamber, you will find Zelvraak with a Flesh Abomination and some Drowned Frost Mages",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "How kind of you to swim right into my open jaws.",
+            "trigger": "Upon reaching the Energy Chamber, you will find Zelvraak with a Flesh Abomination and some Drowned Frost Mages",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Take your last breaths!",
+            "trigger": "Engaging him",
+            "ability": "Terrified"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Down beneath the brine!",
+            "trigger": "Engaging him",
+            "ability": "Terrified"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "You will cook before my meal.",
+            "trigger": "Engaging him",
+            "ability": "Terrified"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "No sun can reach you in the deep.",
+            "trigger": "Engaging him",
+            "ability": "Terrified"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "My sight will pierce your fragile soul!",
+            "trigger": "When he is casting his terrify spell",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Do not avert your eyes, gaze upon true fear!",
+            "trigger": "When he is casting his terrify spell",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Your shadows belong to me.",
+            "trigger": "When he throws you in the other realm",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Even in darkness, I find you.",
+            "trigger": "When he throws you in the other realm",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Delicious morsel!",
+            "trigger": "When he absorbs a soul",
+            "ability": "The Afterlife/Banished"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Such weak magics against my power.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Your storms fizzle beneath the waves.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Nature dies by my hand.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "Your life shall feed the dead.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "A small sip of life.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "The dead can only have one master.",
+            "trigger": "Unsorted",
+            "ability": "Drowning Waters"
+        },
+        {
+            "speaker": "Zelvraak the Unbreathing",
+            "line": "I'll be back.",
+            "trigger": "Killing him",
+            "ability": "Terrified"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "At the first secret": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Old secrets, left behind. Play with them, if you wish.",
+                "trigger": "At the first secret",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "If you choose the incorrect cube and get repelled": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Perhaps this one's beyond you.",
+                "trigger": "If you choose the incorrect cube and get repelled",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "No match for simple cubes.",
+                "trigger": "If you choose the incorrect cube and get repelled",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Ahahahaha!",
+                "trigger": "If you choose the incorrect cube and get repelled",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Poor mortal of weak mind.",
+                "trigger": "If you choose the incorrect cube and get repelled",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Once you have solved the puzzle, Mzugru, Security Drone will be activated": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Not the most complex of mysteries, it would seem.",
+                "trigger": "Once you have solved the puzzle, Mzugru, Security Drone will be activated",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "When a Power Transmitter is activated": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Defend yourself, construct!",
+                "trigger": "When a Power Transmitter is activated",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "How will you deal with this?",
+                "trigger": "When a Power Transmitter is activated",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Can you break its protections?",
+                "trigger": "When a Power Transmitter is activated",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Breaking a Power Transmitter": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "An imperfect design.",
+                "trigger": "Breaking a Power Transmitter",
+                "ability": "Necrotic Wave"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "I can't repair that part.",
+                "trigger": "Breaking a Power Transmitter",
+                "ability": "Necrotic Wave"
+            }
+        ],
+        "Once Mzugru is defeated": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Impressive. But other secrets await. How long until one cuts you down?",
+                "trigger": "Once Mzugru is defeated",
+                "ability": "Drowning Waters"
+            }
+        ],
+        "At the second secret": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "You seem drawn to these secrets. Like a fish, enticed by bait.",
+                "trigger": "At the second secret",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Whenever you touch the lasers": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "The delicious scent of burnt mortal.",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Please, keep amusing me.",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Do not feel bold too quickly!",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Hurry, mortal. Hahaha!",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "An unforgiving punishment!",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Are you tired? These machines shall give you no rest!",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "very entertaining.",
+                "trigger": "Whenever you touch the lasers",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "The Side Boss is summoned": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "The dwarves here had so many toys to play with. Here comes one now!",
+                "trigger": "The Side Boss is summoned",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "An ancient device. What threat could it pose?",
+                "trigger": "The Side Boss is summoned",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Unwise. The constructs react poorly when you remove their energy supply.",
+                "trigger": "The Side Boss is summoned",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Yes! What savagery in your rich souls.",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "Defeating the Side Boss": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Ah, the little fish avoids the hook. For now.",
+                "trigger": "Defeating the Side Boss",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "For untold centuries, I've watched lesser creatures die from those devices. What clever little fish!",
+                "trigger": "Defeating the Side Boss",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Closer to the final boss room": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Just like a fish, to swim into my jaws.",
+                "trigger": "Closer to the final boss room",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "At the third secret": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "You're swimming into danger once again, little fish.",
+                "trigger": "At the third secret",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "If you choose the wrong switch and zap someone": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Does that hurt? I no longer remember pain.",
+                "trigger": "If you choose the wrong switch and zap someone",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "How foolish to think this so easy.",
+                "trigger": "If you choose the wrong switch and zap someone",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "I should send one of my brainless ghouls to solve this for you.",
+                "trigger": "If you choose the wrong switch and zap someone",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "I suggest a more cautious step.",
+                "trigger": "If you choose the wrong switch and zap someone",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Upon reaching the Energy Chamber, you will find Zelvraak with a Flesh Abomination and some Drowned Frost Mages": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Ah, little fish! You have arrived at last.",
+                "trigger": "Upon reaching the Energy Chamber, you will find Zelvraak with a Flesh Abomination and some Drowned Frost Mages",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "How kind of you to swim right into my open jaws.",
+                "trigger": "Upon reaching the Energy Chamber, you will find Zelvraak with a Flesh Abomination and some Drowned Frost Mages",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Engaging him": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Take your last breaths!",
+                "trigger": "Engaging him",
+                "ability": "Terrified"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Down beneath the brine!",
+                "trigger": "Engaging him",
+                "ability": "Terrified"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "You will cook before my meal.",
+                "trigger": "Engaging him",
+                "ability": "Terrified"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "No sun can reach you in the deep.",
+                "trigger": "Engaging him",
+                "ability": "Terrified"
+            }
+        ],
+        "When he is casting his terrify spell": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "My sight will pierce your fragile soul!",
+                "trigger": "When he is casting his terrify spell",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Do not avert your eyes, gaze upon true fear!",
+                "trigger": "When he is casting his terrify spell",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "When he throws you in the other realm": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Your shadows belong to me.",
+                "trigger": "When he throws you in the other realm",
+                "ability": "The Afterlife/Banished"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Even in darkness, I find you.",
+                "trigger": "When he throws you in the other realm",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "When he absorbs a soul": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Delicious morsel!",
+                "trigger": "When he absorbs a soul",
+                "ability": "The Afterlife/Banished"
+            }
+        ],
+        "Unsorted": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Such weak magics against my power.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Your storms fizzle beneath the waves.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Nature dies by my hand.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "Your life shall feed the dead.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "A small sip of life.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            },
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "The dead can only have one master.",
+                "trigger": "Unsorted",
+                "ability": "Drowning Waters"
+            }
+        ],
+        "Killing him": [
+            {
+                "speaker": "Zelvraak the Unbreathing",
+                "line": "I'll be back.",
+                "trigger": "Killing him",
+                "ability": "Terrified"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Haunted Depths: Explore an uncharted region of the Abecean Sea and make it back alive.",
+        "Pledge: Graven Deep: Explore Graven Deep and return Undaunted."
+    ],
+    "summary": "Zelvraak the Unbreathing is a lich and former member of the Druids of Galen. He serves as the final boss of Graven Deep and can be found in the central core of the Tempest Observatory section. In life, his name was Saer. He was a practitioner of necromancy, but ascended to lichdom within the ruin's depths, entombing his fellow druids that accompanied him within. He is responsible for the disappearances of sailors around Graven Deep, utilizing the Dwarven weather machine to draw ships to their doom for his dark purposes.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zelvraak_the_Unbreathing",
+        "page_title": "Online:Zelvraak the Unbreathing",
+        "revision_id": 3508004,
+        "retrieved_at": "2026-08-12T21:25:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "muck_valley_cavern",
+    "name": "Muck Valley Cavern",
+    "content_type": "dungeon",
+    "summary": "Muck Valley Cavern is a cave east of Sejanus Outpost in eastern Cyrodiil, containing goblins, kwama, and giant spiders. Academy's Rejection Letter can be found near the Webmistress.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Muck Valley Cavern also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Muck_Valley_Cavern",
+        "page_title": "Online:Muck Valley Cavern",
+        "revision_id": 3598799,
+        "retrieved_at": "2026-08-12T21:29:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "id": "warden_of_the_shrine",
+    "name": "Warden of the Shrine",
+    "content_id": "city_of_ash_i",
+    "content_name": "City of Ash I",
+    "location": "City of Ash I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,908,876",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Light Swing",
+            "description": "A basic melee attack that does moderate physical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Measured Uppercut",
+            "description": "A heavy melee attack that does high physical damage as well as knockback. Players should block this attack to prevent the knockback and reduce damage taken. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Blazing Fire",
+            "description": "The boss spins around releasing pools of fire on the ground dealing high flame damage over time as indicated by red circles. There are two versions of this attack, one where all the circles are next to him, and one where the circles are a bit further out. For the one that is further out, the player may choose to stand in the middle of the AOEs, which is safe."
+        },
+        {
+            "name": "Teleport Strike",
+            "description": "The boss teleports onto players far away from him, dealing moderate damage and stunning them."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Warden of the Shrine",
+            "line": "I will harvest your soul for the Deadlands!",
+            "trigger": "When entering combat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When entering combat": [
+            {
+                "speaker": "Warden of the Shrine",
+                "line": "I will harvest your soul for the Deadlands!",
+                "trigger": "When entering combat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: City of Ash I: Prove you are truly Undaunted by clearing the City of Ash I.",
+        "City of Ash Pledge: Explore the City of Ash and return Undaunted. (disabled since Patch 2.6.4)",
+        "Razor's Edge: Drive back the Daedra from a burning Bosmeri city."
+    ],
+    "summary": "The Warden of the Shrine is a Dremora encountered in City of Ash I, where he serves as a boss. He is clad in Daedric style medium armor, apart from his hat which is in Xivkyn style. His maces are both in Daedric style. He has a chance to drop either Staff of the Grove or Aegis of Ash.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Warden_of_the_Shrine",
+        "page_title": "Online:Warden of the Shrine",
+        "revision_id": 3188439,
+        "retrieved_at": "2026-08-12T21:17:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

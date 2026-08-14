@@ -1,0 +1,164 @@
+{
+    "id": "ihudir",
+    "name": "Ihudir",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "Red Petal Bastion Vaults",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "673,594",
+        "veteran": "",
+        "hardmode": "2,815,023"
+    },
+    "abilities": [
+        {
+            "name": "Sword Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Cleave",
+            "description": "Ihudir cleaves you with his sword, dealing high physical damage."
+        },
+        {
+            "name": "Charge",
+            "description": "Ihudir charges forward abruptly, tackling anyone in his way, dealing high physical damage and knocking down. This attack has no AoE indicator."
+        },
+        {
+            "name": "Joint Slam",
+            "description": "Ihudir and Eliam both combine forces as they jump at you back to back, causing a shockwave on impact, indicated by a large circular AoE, dealing high physical damage and staggering each."
+        },
+        {
+            "name": "Resurrection",
+            "description": "When Eliam Merick reaches 35%, if Ihudir was slain before, he is resurrected back to full health by Eliam, along with Liramindrel."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Prior Thierric Sarazen",
+            "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Liramindrel",
+            "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Ihudir",
+            "line": "Two shares of the spoils for me, me.",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "I got this! There won't be much left after I stomp them into paste.",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "Jump in anytime!",
+            "trigger": "At (?)% health, Eliam will call for Ihudir will join in",
+            "ability": "Joint Slam"
+        },
+        {
+            "speaker": "Ihudir",
+            "line": "Need a hand, or two?",
+            "trigger": "At (?)% health, Eliam will call for Ihudir will join in",
+            "ability": "Joint Slam"
+        },
+        {
+            "speaker": "",
+            "line": "Seeing double, double?",
+            "trigger": "During Combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "more",
+            "trigger": "During Combat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Before combat when you enter the room": [
+            {
+                "speaker": "Prior Thierric Sarazen",
+                "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Liramindrel",
+                "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Ihudir",
+                "line": "Two shares of the spoils for me, me.",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Eliam Merick",
+                "line": "I got this! There won't be much left after I stomp them into paste.",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            }
+        ],
+        "At (?)% health, Eliam will call for Ihudir will join in": [
+            {
+                "speaker": "Eliam Merick",
+                "line": "Jump in anytime!",
+                "trigger": "At (?)% health, Eliam will call for Ihudir will join in",
+                "ability": "Joint Slam"
+            },
+            {
+                "speaker": "Ihudir",
+                "line": "Need a hand, or two?",
+                "trigger": "At (?)% health, Eliam will call for Ihudir will join in",
+                "ability": "Joint Slam"
+            }
+        ],
+        "During Combat": [
+            {
+                "speaker": "",
+                "line": "Seeing double, double?",
+                "trigger": "During Combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "more",
+                "trigger": "During Combat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "A Rose of Many Thorns: A knightly order has been hoarding dangerous relics, and Lyranth wishes to claim one.",
+        "Pledge: Red Petal Bastion: Enter Red Petal Bastion and return Undaunted."
+    ],
+    "summary": "Ihudir is a Redguard found in Red Petal Bastion. He is equipped with the Duplici Gladio and accompanied by Liramindrel and Eliam Merick, who together make up the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ihudir",
+        "page_title": "Online:Ihudir",
+        "revision_id": 3332844,
+        "retrieved_at": "2026-08-12T21:31:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "anchre_egg_mine",
+    "name": "Anchre Egg Mine",
+    "content_type": "dungeon",
+    "summary": "Anchre Egg Mine is a cave that can be found on the Telvanni Peninsula. It can be found south of Necrom, down the hill from the Necrom Outskirts Wayshrine. Centipedes, rats, scribs and shroom beetles are found in numbers within. Hazards include poison pools.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Anchre_Egg_Mine",
+        "page_title": "Online:Anchre Egg Mine",
+        "revision_id": 3567084,
+        "retrieved_at": "2026-08-12T21:12:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

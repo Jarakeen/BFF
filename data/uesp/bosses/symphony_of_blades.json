@@ -1,0 +1,549 @@
+{
+    "id": "symphony_of_blades",
+    "name": "Symphony of Blades",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Colored Rooms, Depths of Malatar",
+    "species": "Blessed Sentinel",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "6,158,395",
+        "hardmode": "7,082,154"
+    },
+    "abilities": [
+        {
+            "name": "Singing Blade",
+            "description": "A basic melee attack that deals high physical damage."
+        },
+        {
+            "name": "Dissonant Blow",
+            "description": "A charged heavy attack that deals very high physical damage. Block this as the tank or dodge this if you are not."
+        },
+        {
+            "name": "Blade Dance",
+            "description": "The boss spins around, dealing very high physical damage around him as indicated by a red circle. The tank should stand still and absorb it if possible, while the rest of the group avoids it."
+        },
+        {
+            "name": "Curse Expiry",
+            "description": "The boss stabs the ground and an AoE appears around a random target. The target will take moderate magic damage and get stunned in a few moments. This is unavoidable and should be healed through."
+        },
+        {
+            "name": "Decrepify",
+            "description": "The boss stabs the ground. After a few seconds, all players take 50% of their maximum health as Oblivion damage over 5 seconds. At the same time, all healing taken is nullified. Ensure the party is fully healed before this attack lands."
+        },
+        {
+            "name": "Cowardice Purification",
+            "description": "This ability will instantly kill any player that tries to exit the arena when they touch the barriers of light blocking the two exits."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "King Narilmor",
+            "line": "For three thousand years I have protected the Wrathstone! I will not fail her now!",
+            "trigger": "King Narilmor transforms into the Symphony of Blades when you enter the room.",
+            "ability": "Cowardice Purification"
+        },
+        {
+            "speaker": "",
+            "line": "Kneel before me, and I will make you pure.",
+            "trigger": "Idling before battle",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Her will is eternal and her reach endless. Submit.",
+            "trigger": "Idling before battle",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "You may live to serve, or die a pointless death.",
+            "trigger": "Idling before battle",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Your lives are hers, as they have always been.",
+            "trigger": "Idling before battle",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Her power is limitless, as are her legions!",
+            "trigger": "Summoning the Auroran Phalanx",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Aurorans! To me!",
+            "trigger": "Summoning the Auroran Phalanx",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Warriors of Light! Join me!",
+            "trigger": "Summoning the Auroran Phalanx",
+            "ability": "Decrepify"
+        },
+        {
+            "speaker": "",
+            "line": "Deliver me her strength!",
+            "trigger": "Summoning Aurorans to empower the boss",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Meridia, lend me your power!",
+            "trigger": "Summoning Aurorans to empower the boss",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "By her will, we stand united!",
+            "trigger": "Summoning Aurorans to empower the boss",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Bask in the full spectrum of pain.",
+            "trigger": "The boss is empowered by Aurorans",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "Now you will know despair!",
+            "trigger": "The boss is empowered by Aurorans",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "I shine in perfect glory!",
+            "trigger": "The boss is empowered by Aurorans",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "Your ashes will be pure, at least.",
+            "trigger": "Using a fire ability while empowered by the red Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Flame is the vengeful weapon of light.",
+            "trigger": "Using a fire ability while empowered by the red Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "You will burn in her radiance!",
+            "trigger": "Using a fire ability while empowered by the red Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "There is order in ice. Rigid and pure.",
+            "trigger": "Using an ice ability when empowered by the blue Auroran",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "Water knows how to obey, and blood is its cousin.",
+            "trigger": "Using an ice ability when empowered by the blue Auroran",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "The cold will leech your insolence until you are frozen in eternal supplication.",
+            "trigger": "Using an ice ability when empowered by the blue Auroran",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "The sun warms the righteous, and scorches the worm.",
+            "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "You will know the sun's fury.",
+            "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Her light will strip you of all your failings.",
+            "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Her light will flash from the sky and smite you.",
+            "trigger": "Using a lightning ability while empowered by the purple Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Her power courses through me!",
+            "trigger": "Using a lightning ability while empowered by the purple Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "Lightning is the whip she will use to break you!",
+            "trigger": "Using a lightning ability while empowered by the purple Auroran",
+            "ability": "Blade Dance"
+        },
+        {
+            "speaker": "",
+            "line": "You have yet to taste her power! Gaze into the infinite!",
+            "trigger": "Entering Execute Phase in the Colored Rooms",
+            "ability": "Curse Expiry"
+        },
+        {
+            "speaker": "",
+            "line": "Her will, is now your will. Rejoice.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "All must kneel before the Lady of Infinite Energies.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Supplicants, you will serve for all time.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "The light has seared you clean.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "We will find you. Her reach is boundless!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "There is no escape now. This will be your home or your grave.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You will be cleansed, do not resist.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You were blinded by greed, but her light will make you see clearly.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This is the domain of the Lady of Infinite Energies and I am its guardian.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "However you may try, you cannot resist her.",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "King Narilmor transforms into the Symphony of Blades when you enter the room.": [
+            {
+                "speaker": "King Narilmor",
+                "line": "For three thousand years I have protected the Wrathstone! I will not fail her now!",
+                "trigger": "King Narilmor transforms into the Symphony of Blades when you enter the room.",
+                "ability": "Cowardice Purification"
+            }
+        ],
+        "Idling before battle": [
+            {
+                "speaker": "",
+                "line": "Kneel before me, and I will make you pure.",
+                "trigger": "Idling before battle",
+                "ability": "Decrepify"
+            },
+            {
+                "speaker": "",
+                "line": "Her will is eternal and her reach endless. Submit.",
+                "trigger": "Idling before battle",
+                "ability": "Decrepify"
+            },
+            {
+                "speaker": "",
+                "line": "You may live to serve, or die a pointless death.",
+                "trigger": "Idling before battle",
+                "ability": "Decrepify"
+            },
+            {
+                "speaker": "",
+                "line": "Your lives are hers, as they have always been.",
+                "trigger": "Idling before battle",
+                "ability": "Decrepify"
+            }
+        ],
+        "Summoning the Auroran Phalanx": [
+            {
+                "speaker": "",
+                "line": "Her power is limitless, as are her legions!",
+                "trigger": "Summoning the Auroran Phalanx",
+                "ability": "Decrepify"
+            },
+            {
+                "speaker": "",
+                "line": "Aurorans! To me!",
+                "trigger": "Summoning the Auroran Phalanx",
+                "ability": "Decrepify"
+            },
+            {
+                "speaker": "",
+                "line": "Warriors of Light! Join me!",
+                "trigger": "Summoning the Auroran Phalanx",
+                "ability": "Decrepify"
+            }
+        ],
+        "Summoning Aurorans to empower the boss": [
+            {
+                "speaker": "",
+                "line": "Deliver me her strength!",
+                "trigger": "Summoning Aurorans to empower the boss",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "Meridia, lend me your power!",
+                "trigger": "Summoning Aurorans to empower the boss",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "By her will, we stand united!",
+                "trigger": "Summoning Aurorans to empower the boss",
+                "ability": "Blade Dance"
+            }
+        ],
+        "The boss is empowered by Aurorans": [
+            {
+                "speaker": "",
+                "line": "Bask in the full spectrum of pain.",
+                "trigger": "The boss is empowered by Aurorans",
+                "ability": "Curse Expiry"
+            },
+            {
+                "speaker": "",
+                "line": "Now you will know despair!",
+                "trigger": "The boss is empowered by Aurorans",
+                "ability": "Curse Expiry"
+            },
+            {
+                "speaker": "",
+                "line": "I shine in perfect glory!",
+                "trigger": "The boss is empowered by Aurorans",
+                "ability": "Curse Expiry"
+            }
+        ],
+        "Using a fire ability while empowered by the red Auroran": [
+            {
+                "speaker": "",
+                "line": "Your ashes will be pure, at least.",
+                "trigger": "Using a fire ability while empowered by the red Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "Flame is the vengeful weapon of light.",
+                "trigger": "Using a fire ability while empowered by the red Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "You will burn in her radiance!",
+                "trigger": "Using a fire ability while empowered by the red Auroran",
+                "ability": "Blade Dance"
+            }
+        ],
+        "Using an ice ability when empowered by the blue Auroran": [
+            {
+                "speaker": "",
+                "line": "There is order in ice. Rigid and pure.",
+                "trigger": "Using an ice ability when empowered by the blue Auroran",
+                "ability": "Curse Expiry"
+            },
+            {
+                "speaker": "",
+                "line": "Water knows how to obey, and blood is its cousin.",
+                "trigger": "Using an ice ability when empowered by the blue Auroran",
+                "ability": "Curse Expiry"
+            },
+            {
+                "speaker": "",
+                "line": "The cold will leech your insolence until you are frozen in eternal supplication.",
+                "trigger": "Using an ice ability when empowered by the blue Auroran",
+                "ability": "Curse Expiry"
+            }
+        ],
+        "Using Radiant Oppression while empowered by the gold Auroran": [
+            {
+                "speaker": "",
+                "line": "The sun warms the righteous, and scorches the worm.",
+                "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "You will know the sun's fury.",
+                "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "Her light will strip you of all your failings.",
+                "trigger": "Using Radiant Oppression while empowered by the gold Auroran",
+                "ability": "Blade Dance"
+            }
+        ],
+        "Using a lightning ability while empowered by the purple Auroran": [
+            {
+                "speaker": "",
+                "line": "Her light will flash from the sky and smite you.",
+                "trigger": "Using a lightning ability while empowered by the purple Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "Her power courses through me!",
+                "trigger": "Using a lightning ability while empowered by the purple Auroran",
+                "ability": "Blade Dance"
+            },
+            {
+                "speaker": "",
+                "line": "Lightning is the whip she will use to break you!",
+                "trigger": "Using a lightning ability while empowered by the purple Auroran",
+                "ability": "Blade Dance"
+            }
+        ],
+        "Entering Execute Phase in the Colored Rooms": [
+            {
+                "speaker": "",
+                "line": "You have yet to taste her power! Gaze into the infinite!",
+                "trigger": "Entering Execute Phase in the Colored Rooms",
+                "ability": "Curse Expiry"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Her will, is now your will. Rejoice.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "All must kneel before the Lady of Infinite Energies.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Supplicants, you will serve for all time.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "The light has seared you clean.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "We will find you. Her reach is boundless!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "There is no escape now. This will be your home or your grave.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You will be cleansed, do not resist.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You were blinded by greed, but her light will make you see clearly.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "This is the domain of the Lady of Infinite Energies and I am its guardian.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "However you may try, you cannot resist her.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "In Veteran\u0000HEALTH_VETERAN\u0000 mode, burning the Dictates of the Lady of Light will trigger hard mode, where it will now summon colored dark orbs.",
+            "The following changes appear on hard mode, on top of the boss having more health and dealing more damage."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Iratan the Lightbringer is another of this type of Daedra called a \"Blessed Sentinel\", though he has two arms instead of four, and is smaller.",
+        "They are mentioned in a Loremaster's Archive, in which Lyranth states that they are \"of little concern to the Kyn.\"",
+        "Though the official name of the type of Daedra is unknown, Loremaster Leamon Tuttle gave them the nickname \"Meridimincers\" in jest.",
+        "They are comparable in appearance to Mournful Aegises and Air Atronachs; its internal mesh name is \"TombGuardian_B_MornAeg\".",
+        "\"Symphony of Blades\" is the name of one of the Mournful Aegis' attacks."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact.",
+        "Pledge: Depths of Malatar: Prove you are truly Undaunted by clearing Depths of Malatar."
+    ],
+    "summary": "This article is about the boss in Depths of Malatar. For the boss in the Infinite Archive, see Symphony of Blades (Infinite Archive). For the item set, see Symphony of Blades (set). The Symphony of Blades is the final boss of the Depths of Malatar. It is King Narilmor transformed into an avatar of Meridia's power, in the image of an Auroran suit of armor with four arms wielding blades. In Veteran\u0000HEALTH_VETERAN\u0000 mode, burning the Dictates of the Lady of Light will trigger hard mode, where it will now summon colored dark orbs. During the fight, it can summon the four colors of Aurorans to aid itself, which will converge from each corner of the room to join it in the center and empower it. It will also summon the Auroran Phalanx, a formation of Aurorans that march with Meridia's Light at their side and will empower the Symphony of Blades if they cross paths. After reaching around 10% of its health, the Symphony of Blades will transport you to the Colored Rooms, healing itself back up to 25% of its newly increased maximum health. It can also summon the Auroran Phalanx in the realm, spread up into various groups marching in different paths with three Aurorans in each group.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Symphony_of_Blades",
+        "page_title": "Online:Symphony of Blades",
+        "revision_id": 3607966,
+        "retrieved_at": "2026-08-12T21:19:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

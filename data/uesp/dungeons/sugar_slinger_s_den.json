@@ -1,0 +1,22 @@
+{
+    "id": "sugar_slinger_s_den",
+    "name": "Sugar-Slinger's Den",
+    "content_type": "dungeon",
+    "summary": "Sugar-Slinger's Den is a smuggler's lair accessed from Northern Elsweyr. It is a former mine which was taken over by Sallum the Sugar-Slinger and his fellow Ruddy Fangs. Qa'jahd can bring you back and forth between the overland zone and the hideout during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The only exceptions are Sallum and the two Ruddy Fangs found alongside him in his quarters, who are Hostile rather than Justice Neutral.",
+        "You will be trespassing in the den. Despite being hostile bandits that can be killed with impunity elsewhere, the Ruddy Fangs are considered noncombatants and even though they are hostile here as well, killing them will earn you a bounty (and progress murderer achievements if slain).",
+        "While in the den, viewing the world map shows the player cursor as being within the Cyrodiil zone."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sugar-Slinger%27s_Den",
+        "page_title": "Online:Sugar-Slinger's Den",
+        "revision_id": 3336254,
+        "retrieved_at": "2026-08-12T21:35:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

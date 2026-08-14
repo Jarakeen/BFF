@@ -1,0 +1,45 @@
+{
+    "id": "ansuul_the_tormentor",
+    "name": "Ansuul the Tormentor",
+    "content_id": "sanity_s_edge",
+    "content_name": "Sanity's Edge",
+    "location": "Sanity's Edge: The Twisted Memory",
+    "species": "Gloam Knight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ritual Blast",
+            "description": "While she's summmoning one of the three mazes, Ansuul charges up a blast in a massive cone in front of her. The group must run to the opposite wall to avoid staning in the blast radius. The blast is a one-hit KO."
+        },
+        {
+            "name": "Neural Takeover",
+            "description": "If you don't stop Ansuul from convincing Vanton to give in during the maze segment, your group is destroyed."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "War Within: Enter the Daedra-possessed mind of a wizard in Sanity's Edge."
+    ],
+    "achievements": [],
+    "summary": "Ansuul the Tormentor is a Gloam Knight who appears throughout Sanity's Edge as the main antagonist. She is a creature of nightmare who is attempting to break free of her prison within an artifact known as the Dreamstone. To achieve this, she has taken control of Warlock Vanton's mind and is attempting to break through into Tamriel. You must enter Vanton's dreamworld to defeat Ansuul and save him. Ansuul appears throughout the trial as a projection, either to speak directly to your group or as part of one of Vanton's fragmented memories of his dealings with the creature. She can also be observed as a giant red specter in the sky above the surreal landscapes within Sanity's Edge, observing your group from above. You will face her within The Twisted Memory, the final section of the trial, where she serves as the final boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ansuul_the_Tormentor",
+        "page_title": "Online:Ansuul the Tormentor",
+        "revision_id": 3608295,
+        "retrieved_at": "2026-08-12T05:34:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

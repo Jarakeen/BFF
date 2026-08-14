@@ -1,0 +1,28 @@
+{
+    "id": "enduum",
+    "name": "Enduum",
+    "content_type": "dungeon",
+    "summary": "Enduum is an Ayleid ruin on the shore west of Camlorn in Glenumbra containing Aldmeri Dominion soldiers and skeletons. Rats and spiders and are found in ample numbers within with a squirrel. During the Elsweyr Chapter prologue quest, Daggerfall Covenant characters will be sent here by Abnur Tharn to collect dusk mushrooms for Dagaril-dro.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Dawn Era reference was noted to be an error by Lawrence Schick, and is instead intended to be First Era. This was fixed in Update 51."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Enduum",
+        "page_title": "Online:Enduum",
+        "revision_id": 3604491,
+        "retrieved_at": "2026-08-12T21:21:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

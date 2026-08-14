@@ -1,0 +1,49 @@
+{
+    "id": "gauztuul_the_terror",
+    "name": "Gauztuul the Terror",
+    "content_id": "writhing_fortress",
+    "content_name": "Writhing Fortress",
+    "location": "Writhing Fortress, East Wing",
+    "species": "Bone Colossus",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Freezing Breath",
+            "description": "Gauztuul the Terror opens its maw and releases a wide cloud of freezing air, dealing continuous direct high frost damage. This attack has no indicator and covers most of the upper area, but a large yellow bubble (Barrier) appears and protects all targets inside it from \"Freezing Breath\"."
+        },
+        {
+            "name": "Blistering Brimstone",
+            "description": "Gauztuul the Terror spits out a large fiery boulder at your location which explodes on impact, indicated by a circular AoE, dealing moderate flame damage and leaving a lingering area dealing continuous low flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Gauztuul the Terror bears some resemblance to Tzirzhalir, which can be encountered in Unhallowed Grave, and Mzrelnir in the Lucent Citadel."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Support the Fellowship: Assist the Stirk Fellowship during the Battle for the Writhing Wall. (disabled)"
+    ],
+    "summary": "Gauztuul the Terror is a powerful creature resembling a giant Bone Colossus found at the end of the East Wing of the Writhing Fortress.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gauztuul_the_Terror",
+        "page_title": "Online:Gauztuul the Terror",
+        "revision_id": 3457304,
+        "retrieved_at": "2026-08-12T21:38:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

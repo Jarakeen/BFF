@@ -1,0 +1,26 @@
+{
+    "id": "erokii_ruins",
+    "name": "Erokii Ruins",
+    "content_type": "dungeon",
+    "summary": "The Erokii Ruins are Ayleid ruins in northern Rivenspire, northeast of The Doomcrag containing Montclair soldiers. Rats and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Erokii_Ruins",
+        "page_title": "Online:Erokii Ruins",
+        "revision_id": 3598219,
+        "retrieved_at": "2026-08-12T21:21:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

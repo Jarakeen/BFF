@@ -1,0 +1,26 @@
+{
+    "id": "mal_sorra_s_tomb",
+    "name": "Mal Sorra's Tomb",
+    "content_type": "dungeon",
+    "summary": "Mal Sorra's Tomb is a Dunmer tomb in central Coldharbour, southwest of the Orchard containing undead. Mal Sorra and the ghost assisting it in combat can be found in the northeast chamber. A copy of Mal Sorra's Curse can be found in one of the first hallways. Centipedes are found within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mal_Sorra%27s_Tomb",
+        "page_title": "Online:Mal Sorra's Tomb",
+        "revision_id": 3598787,
+        "retrieved_at": "2026-08-12T21:28:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

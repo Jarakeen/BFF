@@ -1,0 +1,37 @@
+{
+    "id": "imperial_city_prison",
+    "name": "Imperial City Prison",
+    "content_type": "dungeon",
+    "summary": "The Imperial City Prison is a group dungeon found northeast of the Imperial City's Memorial District. It has been overrun by Daedra, who have turned it into a place of torment and slaughter. A large Daedra carried on black wings has declared itself the new \"Lord Warden\" of the prison, and he has decreed that the prisoners must be tortured for the glory of Molag Bal. Mortals who die in captivity have their flesh taken to be used in the creation of biological weapons crafted by the vile Flesh Sculptor. The dungeon sets found here are Leeching Plate, Scathing Mage, and Sheer Venom.",
+    "location": "",
+    "boss_ids": [
+        "ibomez_the_flesh_sculptor",
+        "xivilai",
+        "flesh_abomination_imperial_city_prison",
+        "flesh_colossus",
+        "lord_warden_dusk",
+        "grievous_twilight"
+    ],
+    "achievements": [
+        {
+            "id": "imperial_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Exiting the Imperial City Prison will return you to your last non-dungeon location.",
+        "The Imperial City Prison also appeared in Arena, Oblivion and Oblivion Mobile.",
+        "The dungeon originally had a minimum enemy level of 35. This was reduced to 10 in one of the updates."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Imperial_City_Prison",
+        "page_title": "Online:Imperial City Prison",
+        "revision_id": 3567889,
+        "retrieved_at": "2026-08-12T21:26:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

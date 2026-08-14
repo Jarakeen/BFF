@@ -1,0 +1,18 @@
+{
+    "id": "dourstone_vault",
+    "name": "Dourstone Vault",
+    "content_type": "dungeon",
+    "summary": "Dourstone Vault is a hidden chamber beneath Dourstone Isle. While assisting the Fighters Guild with an investigation, you will enter the vault beneath the ruins.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dourstone_Vault",
+        "page_title": "Online:Dourstone Vault",
+        "revision_id": 3586598,
+        "retrieved_at": "2026-08-12T21:20:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

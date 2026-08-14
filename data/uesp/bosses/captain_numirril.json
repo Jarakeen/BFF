@@ -1,0 +1,564 @@
+{
+    "id": "captain_numirril",
+    "name": "Captain Numirril",
+    "content_id": "shipwright_s_regret",
+    "content_name": "Shipwright's Regret",
+    "location": "Shipwright's Regret — Derelict Shipyard",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,721,609",
+        "veteran": "7,037,554",
+        "hardmode": "13,371,352"
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Waves and Swell",
+            "description": "Captain Numirril rises up on a water spout, then comes swinging down on you with his sword, dealing massive physical damage. This attack can be blocked."
+        },
+        {
+            "name": "Jet",
+            "description": "Captain Numirril suddenly dashes across the screen while riding a water spout, indicated by a circular AoE beneath him, dealing high physical damage and staggering you. This often leads into Spout."
+        },
+        {
+            "name": "Wave Swat",
+            "description": "Captain Numirril swats his hand in front of himself, summoning a wave of water in a wide area before him, indicated by a wide conical AoE, dealing high physical damage."
+        },
+        {
+            "name": "Spout",
+            "description": "Captain Numirril summons numerous large water spouts back to back close to each other, tracking close behind your movement, indicated by circular AoEs, dealing high physical damage each."
+        },
+        {
+            "name": "Splash",
+            "description": "Upon reaching 80%/40%, Captain Numirril dashes outside of the arena and rests on a tall water spout, overlooking the arena, becoming invulnerable to incoming damage. He then summons large roiling water waves across the arena, indicated by massive circular AoEs, dealing very high physical damage and knocking you back if hit."
+        },
+        {
+            "name": "Summon the Drowned",
+            "description": "While still outside of the arena, Captain Numirril summons a horde of drowned enemies, comprising of Drowned Hulks, the main threat, along with Drowned Corpses and Drowned Fiends. Captain Numirril will eventually return to the arena even if the adds aren't all killed. The drowned zombies will spew bile all over the arena."
+        },
+        {
+            "name": "Bile Burst",
+            "description": "Captain Numirril causes the lingering bile applied onto the arena from the drowned in the previous summoning to explode in succession, indicated by large growing circular AoEs, dealing high poison damage each."
+        },
+        {
+            "name": "Drown",
+            "description": "A column of water will lift the player with aggro up unless blocked or dodged and deals moderate frost damage. It cannot be broken free from."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Captain Za'ji",
+            "line": "Come back you scaly scallywags! You take what is rightfully Captain Za'ji's!",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Scavengers? Bah! Take the lodestones to Dreadsail Reef. I'll make sure these wretches can't follow.",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "",
+            "line": "<Both Caska and Za'ji rush at the Maormer.>",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Caska",
+            "line": "I'd like to see you try—ayyy!",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "",
+            "line": "<With a gesture, Numirril sweeps Caska and Za'ji over the side into the water. Za'ji manages to get out of the water with his grappling bow>",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Za'ji",
+            "line": "It will take more than that playful splash to keep Za'ji from his treasure!",
+            "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Put up a good fight and I might keep your heads as trophies instead of letting the gulls pick out your eyes.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "The lodestones were ours the moment we agreed to the bargain.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "You'll soon join the rest of the flotsam bobbing on the waves.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Five years hard labor for every Dreadsail you've killed. If the adders don't make a meal of you first.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "You picked the wrong salvage to fight for.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Orgnum's serpents take your soul!",
+            "trigger": "Starting combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "You'll soon wish you'd have drowned.",
+            "trigger": "Starting combat",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "The deep claims leviathans and holds them in its thrall. Where they are tamed, you shall be crushed!",
+            "trigger": "When he summons the first Drowned Hulk",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "You thrash and gasp like fish dumped onto the decks, soon to be snuffed out without ceremony or respect.",
+            "trigger": "Trigger? Line said during first Drowned Hulk fight while Cpt N was in the water. Doesn't replace the previous line, occurs after it.",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Did you believe the Maormer weak and the Dreadsail unworthy of your fear? We have the strength of the sea and the force of waves in our very blood!",
+            "trigger": "Trigger? Line said during first Drowned Hulk fight while Cpt N was in the water. Doesn't replace the previous line, occurs after it.",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "My blood is the tides! The more you spill the more shall rise up to swallow you!",
+            "trigger": "When he summons Drowned Corpses to deal with you",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "I am Dreadsail, born of the sea. I cannot be defeated!",
+            "trigger": "During combat, when he goes back into the water the second time and summons the second Drowned Hulk",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Sibling seas, answer me.",
+            "trigger": "When he is about to cast Drown",
+            "ability": "Splash"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Give in, you're in the serpent's mouth.",
+            "trigger": "When Drown is not blocked or dodged",
+            "ability": "Drown"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "That's it, cease your struggles.",
+            "trigger": "When Drown is not blocked or dodged",
+            "ability": "Drown"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Shh. Let the tide take you.",
+            "trigger": "When Drown is not blocked or dodged",
+            "ability": "Drown"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Rise now, seas of Tamriel, wash these pitiful curs away.",
+            "trigger": "When he casts Spout",
+            "ability": "Splash"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "The sea obeys my command, what force have you brought to match it?",
+            "trigger": "When he casts Spout",
+            "ability": "Splash"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Hah, spewed into the drink like the swill you are!",
+            "trigger": "When he casts Spout",
+            "ability": "Splash"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "The current's on my side.",
+            "trigger": "When he uses Jet",
+            "ability": "Jet"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "I am the crashing waves!",
+            "trigger": "When he uses Jet",
+            "ability": "Jet"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Like a shark chasing horkers.",
+            "trigger": "When he uses Jet",
+            "ability": "Jet"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Let the brine fill your lungs and die!",
+            "trigger": "When he casts Bile Burst",
+            "ability": "Bile Burst"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Soon you'll be nothing but mouldering filth for the harbor rats!",
+            "trigger": "When he casts Bile Burst",
+            "ability": "Bile Burst"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Join the rest of the sodden rotters in this harbor!",
+            "trigger": "When he casts Bile Burst",
+            "ability": "Bile Burst"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "So you land-crawlers do have teeth, but you are nothing but slaughterfish among sharks.",
+            "trigger": "Near the climax of the battle",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Za'ji",
+            "line": "Hah! You won't catch Za'ji like that!",
+            "trigger": "Near the climax of the battle",
+            "ability": "Summon the Drowned"
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "I left my ship for this? Feh.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Fetch the chains! One or two might have survived.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "The secret's safe now.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Someone strip this lot of whatever they're worth.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Numirril",
+            "line": "Curse you all to the deep…!",
+            "trigger": "Defeating him",
+            "ability": "Jet"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water": [
+            {
+                "speaker": "Captain Za'ji",
+                "line": "Come back you scaly scallywags! You take what is rightfully Captain Za'ji's!",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Scavengers? Bah! Take the lodestones to Dreadsail Reef. I'll make sure these wretches can't follow.",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "",
+                "line": "<Both Caska and Za'ji rush at the Maormer.>",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "Caska",
+                "line": "I'd like to see you try—ayyy!",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "",
+                "line": "<With a gesture, Numirril sweeps Caska and Za'ji over the side into the water. Za'ji manages to get out of the water with his grappling bow>",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "Captain Za'ji",
+                "line": "It will take more than that playful splash to keep Za'ji from his treasure!",
+                "trigger": "When you reach the square in front of the lighthouse, the Maormer ship will be sailing away. Captain Numirril will leave the ship and move towards you in a column of water",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "Idling before combat": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Put up a good fight and I might keep your heads as trophies instead of letting the gulls pick out your eyes.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "The lodestones were ours the moment we agreed to the bargain.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "You'll soon join the rest of the flotsam bobbing on the waves.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Five years hard labor for every Dreadsail you've killed. If the adders don't make a meal of you first.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "You picked the wrong salvage to fight for.",
+                "trigger": "Idling before combat",
+                "ability": null
+            }
+        ],
+        "Starting combat": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Orgnum's serpents take your soul!",
+                "trigger": "Starting combat",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "You'll soon wish you'd have drowned.",
+                "trigger": "Starting combat",
+                "ability": null
+            }
+        ],
+        "When he summons the first Drowned Hulk": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "The deep claims leviathans and holds them in its thrall. Where they are tamed, you shall be crushed!",
+                "trigger": "When he summons the first Drowned Hulk",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "Trigger? Line said during first Drowned Hulk fight while Cpt N was in the water. Doesn't replace the previous line, occurs after it.": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "You thrash and gasp like fish dumped onto the decks, soon to be snuffed out without ceremony or respect.",
+                "trigger": "Trigger? Line said during first Drowned Hulk fight while Cpt N was in the water. Doesn't replace the previous line, occurs after it.",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Did you believe the Maormer weak and the Dreadsail unworthy of your fear? We have the strength of the sea and the force of waves in our very blood!",
+                "trigger": "Trigger? Line said during first Drowned Hulk fight while Cpt N was in the water. Doesn't replace the previous line, occurs after it.",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "When he summons Drowned Corpses to deal with you": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "My blood is the tides! The more you spill the more shall rise up to swallow you!",
+                "trigger": "When he summons Drowned Corpses to deal with you",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "During combat, when he goes back into the water the second time and summons the second Drowned Hulk": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "I am Dreadsail, born of the sea. I cannot be defeated!",
+                "trigger": "During combat, when he goes back into the water the second time and summons the second Drowned Hulk",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "When he is about to cast Drown": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Sibling seas, answer me.",
+                "trigger": "When he is about to cast Drown",
+                "ability": "Splash"
+            }
+        ],
+        "When Drown is not blocked or dodged": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Give in, you're in the serpent's mouth.",
+                "trigger": "When Drown is not blocked or dodged",
+                "ability": "Drown"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "That's it, cease your struggles.",
+                "trigger": "When Drown is not blocked or dodged",
+                "ability": "Drown"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Shh. Let the tide take you.",
+                "trigger": "When Drown is not blocked or dodged",
+                "ability": "Drown"
+            }
+        ],
+        "When he casts Spout": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Rise now, seas of Tamriel, wash these pitiful curs away.",
+                "trigger": "When he casts Spout",
+                "ability": "Splash"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "The sea obeys my command, what force have you brought to match it?",
+                "trigger": "When he casts Spout",
+                "ability": "Splash"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Hah, spewed into the drink like the swill you are!",
+                "trigger": "When he casts Spout",
+                "ability": "Splash"
+            }
+        ],
+        "When he uses Jet": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "The current's on my side.",
+                "trigger": "When he uses Jet",
+                "ability": "Jet"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "I am the crashing waves!",
+                "trigger": "When he uses Jet",
+                "ability": "Jet"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Like a shark chasing horkers.",
+                "trigger": "When he uses Jet",
+                "ability": "Jet"
+            }
+        ],
+        "When he casts Bile Burst": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Let the brine fill your lungs and die!",
+                "trigger": "When he casts Bile Burst",
+                "ability": "Bile Burst"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Soon you'll be nothing but mouldering filth for the harbor rats!",
+                "trigger": "When he casts Bile Burst",
+                "ability": "Bile Burst"
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Join the rest of the sodden rotters in this harbor!",
+                "trigger": "When he casts Bile Burst",
+                "ability": "Bile Burst"
+            }
+        ],
+        "Near the climax of the battle": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "So you land-crawlers do have teeth, but you are nothing but slaughterfish among sharks.",
+                "trigger": "Near the climax of the battle",
+                "ability": "Summon the Drowned"
+            },
+            {
+                "speaker": "Captain Za'ji",
+                "line": "Hah! You won't catch Za'ji like that!",
+                "trigger": "Near the climax of the battle",
+                "ability": "Summon the Drowned"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "I left my ship for this? Feh.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Fetch the chains! One or two might have survived.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "The secret's safe now.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Numirril",
+                "line": "Someone strip this lot of whatever they're worth.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Defeating him": [
+            {
+                "speaker": "Captain Numirril",
+                "line": "Curse you all to the deep…!",
+                "trigger": "Defeating him",
+                "ability": "Jet"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Wright of Passage: Help Za'ji retrieve plans to upgrade his ship from a haunted shipyard.",
+        "Pledge: Shipwright's Regret: Enter Shipwright's Regret and return Undaunted."
+    ],
+    "summary": "Captain Numirril is a Maormer pirate and a captain of the Dreadsails. He is a powerful water magic user. You will encounter him in the Derelict Shipyard section of Shipwright's Regret, where he acts as the final boss of the dungeon. He has a rare chance to drop the antiquity lead for the Rune-scribed Braces mythic item fragment for Syrabane's Ward.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Numirril",
+        "page_title": "Online:Captain Numirril",
+        "revision_id": 3460242,
+        "retrieved_at": "2026-08-12T21:33:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

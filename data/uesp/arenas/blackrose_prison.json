@@ -1,0 +1,33 @@
+{
+    "id": "blackrose_prison",
+    "name": "Blackrose Prison",
+    "content_type": "arena",
+    "summary": "Blackrose Prison is a group-based arena in Murkmire, located southeast of Dead-Water Village. The prison was originally run by the Imperials during their attempted conquest of the region, but fell into disuse around a century ago, where it then became the founding place of the Blackguards, and remains their headquarters to this day. Here, they run battles to the death, against challengers, or even putting some prisoners they capture through the gauntlet for their own amusement.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "murkmire_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "arenas",
+            "name": "arena",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blackrose_Prison",
+        "page_title": "Online:Blackrose Prison",
+        "revision_id": 3586232,
+        "retrieved_at": "2026-08-12T22:54:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

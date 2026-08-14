@@ -1,0 +1,61 @@
+{
+    "id": "captain_vrol",
+    "name": "Captain Vrol",
+    "content_id": "kyne_s_aegis",
+    "content_name": "Kyne's Aegis",
+    "location": "Kyne's Aegis",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Thunderous Bash",
+            "description": "A heavy shield bash that deals very high physical damage and shock damage and stuns if it hits the target. This attack can be blocked."
+        },
+        {
+            "name": "Frigid Fog",
+            "description": "Captain Vrol points his hammer at a target, putting a tracking frost field around that that deals continuous high frost damage to them and nearby allies that stand in the tracking circle."
+        },
+        {
+            "name": "Shocking Harpoon",
+            "description": "Captain Vrol hurls a Sharpened Conduit into the arena floor, which then tethers and pulls multiple targets towards it, while inflicting them with continuous very high shock damage."
+        },
+        {
+            "name": "Summon",
+            "description": "Captain Vrol summons a Storm Twin, a copy of himself that uses the same abilities."
+        },
+        {
+            "name": "Vrolsworn",
+            "description": "During the fight, Vrolsworn Conjurers will appear one at a time on the boat near the arena and summon portals that spawn reinforcements, in the form of Half-Giant Apothecaries, Half-Giant Bulwarks, and Half-Giant Harpooners. The most vital summons are the Bulwarks as they can make Captain Vrol invulnerable when standing near him."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Fight for Kyne's Aegis: Retake Kyne's Aegis from a Vampire Lord's army."
+    ],
+    "achievements": [],
+    "summary": "Captain Vrol is a Sea Giant warrior and the second boss of Kyne's Aegis.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Vrol",
+        "page_title": "Online:Captain Vrol",
+        "revision_id": 3380458,
+        "retrieved_at": "2026-08-12T05:33:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

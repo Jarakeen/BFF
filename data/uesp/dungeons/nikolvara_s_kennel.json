@@ -1,0 +1,26 @@
+{
+    "id": "nikolvara_s_kennel",
+    "name": "Nikolvara's Kennel",
+    "content_type": "dungeon",
+    "summary": "Nikolvara's Kennel is a cave southwest of Orsinium, containing durzogs, spiders and trolls. A letter penned by one of Nikolvara's employees can be found by the dragon skulls within the entrance. Jaeloreh is located in the harpy nest above the entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nikolvara%27s_Kennel",
+        "page_title": "Online:Nikolvara's Kennel",
+        "revision_id": 3212386,
+        "retrieved_at": "2026-08-12T21:30:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

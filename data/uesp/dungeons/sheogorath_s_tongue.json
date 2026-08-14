@@ -1,0 +1,26 @@
+{
+    "id": "sheogorath_s_tongue",
+    "name": "Sheogorath's Tongue",
+    "content_type": "dungeon",
+    "summary": "Sheogorath's Tongue is a Daedric ruin in western Stonefalls, north of Kragenmoor, containing bandits. The shrine inside is dedicated to Sheogorath. The Lover can be found on the hill above the delve, to the east. Shivering Shrine is also near the delve. Kennixa's List can be found on the floor in the first hallway. The skyshard and the potions needed for Darkvale Brews can be found in the northern chamber. A chest can be found between two bookshelves in the western part of the same room. There is a chest up on a ledge in the western portion of the first large chamber. It can be accessed by traversing the tunnels and taking the path east when you reach the crossroads in the center of the delve. Assassin Beetles infest the western tunnels. Calls-to-Nature and Dezanu are performing a ritual in the western chamber. A pile of coins can be taken from their altar. Argar's corpse can be found on their pavilion during Ruthless Competition.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sheogorath%27s_Tongue",
+        "page_title": "Online:Sheogorath's Tongue",
+        "revision_id": 3598104,
+        "retrieved_at": "2026-08-12T21:33:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

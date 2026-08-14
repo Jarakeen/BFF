@@ -1,0 +1,20 @@
+{
+    "id": "cathedral_of_akatosh",
+    "name": "Cathedral of Akatosh",
+    "content_type": "dungeon",
+    "summary": "Cathedral of Akatosh is a temple to Akatosh located in Kvatch. It is under construction, and it can't be entered unless the related quest is active. It can be accessed via the Cathedral Catacombs, found in the graveyard next to the building.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Cathedral of Akatosh appears in Oblivion as the Chapel of Akatosh."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cathedral_of_Akatosh",
+        "page_title": "Online:Cathedral of Akatosh",
+        "revision_id": 3549741,
+        "retrieved_at": "2026-08-12T21:16:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

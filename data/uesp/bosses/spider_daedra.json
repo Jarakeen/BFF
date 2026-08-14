@@ -1,0 +1,52 @@
+{
+    "id": "spider_daedra",
+    "name": "Spider Daedra",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "Black Garrison, Broken Tusk, The Everfull Flagon, Halls of Ichor, Mephala's Nest\nFort Redmane",
+    "species": "Spider Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Prior to an unknown update, the Spider Daedras summoned by Spellblades were named Xivilai's Servant."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Azura's Relics: Help recover stolen relics from Daedric worshipers.",
+        "Climbing the Spire: Make your way to the top of the Tormented Spire.",
+        "Crawling Chaos: Rescue the missing miners from Kulati Mines.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Deadly Whispers: Aid the Fighters Guild members in clearing the Spindleclutch I caves.",
+        "Getting the Band Together: Liven up the Jester's Festival with a Daedric concert.",
+        "A Guild in Crisis: Discover who is attacking Fighters Guild halls by tracking Guildmaster Merric at-Aswala.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "A Marriage in Ruins: Find out what happened to a mage and her sister.",
+        "Pledge: Spindleclutch I: Explore Spindleclutch I and return Undaunted.",
+        "Sever All Ties: Help save Auridon from the Veiled Heritance and their Daedric allies.",
+        "Special Blend: Investigate the alluring mead at a Coldharbour tavern.",
+        "An Unhealthy Fate: Find and banish Vaermina from Apocrypha."
+    ],
+    "summary": "Spider Daedra are Daedric creatures that resemble a cross between a spider and a woman. They attack using a combination of ranged and melee abilities. They are usually found in the service of Mephala. Spider Daedra come in three variants: A black-shelled model, a red-shelled model, and a model with a non-humanoid face.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Spider_Daedra",
+        "page_title": "Online:Spider Daedra",
+        "revision_id": 3568378,
+        "retrieved_at": "2026-08-12T21:18:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

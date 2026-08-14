@@ -1,0 +1,370 @@
+{
+    "id": "matriarch_lladi_telvanni",
+    "name": "Matriarch Lladi Telvanni",
+    "content_id": "bal_sunnar",
+    "content_name": "Bal Sunnar",
+    "location": "Bal Sunnar — Excavation Chamber (past), Peryitic Ritual Chamber (future)",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,209,965",
+        "veteran": "6,766,879",
+        "hardmode": "10,150,318"
+    },
+    "abilities": [
+        {
+            "name": "Poisonous Bolt",
+            "description": "A basic ranged attack dealing moderate poison damage."
+        },
+        {
+            "name": "Toxic Eruption",
+            "description": "Matriarch Lladi Telvanni slams her staff into the water, causing poisoned water to bubble over and explode at your location, indicated by a growing circular AoE, dealing high poison damage."
+        },
+        {
+            "name": "Plague Bomb",
+            "description": "Matriarch Lladi Telvanni charges her staff before throwing an orb of concentrated poison at you which explodes on impact, dealing massive poison damage. This attack can be blocked."
+        },
+        {
+            "name": "Infectious Vomit",
+            "description": "Matriarch Lladi Telvanni rears back before starting to belch large amounts of toxic vomit in front of her, indicated by a wide conical AoE, dealing very high poison damage. She will adjust her positioning if you attempt to strafe."
+        },
+        {
+            "name": "Plague Dash",
+            "description": "Matriarch Lladi Telvanni dashes forward to one of the far ends of the arena, leaving lingering plague clouds in her wake, all indicated by circular AoEs, dealing high physical damage on impact and high poison damage if standing in the affected areas."
+        },
+        {
+            "name": "Summon Voriplasm",
+            "description": "Occasionally, Matriarch Lladi Telvanni throws a blob of slime down into the arena, which forms into a Peryite's Glory that comes in to assist her."
+        },
+        {
+            "name": "Toxic Storm",
+            "description": "At 75% / 40% health, Matriarch Lladi Telvanni dashes to the center of the arena, becomes invulnerable to damage, and summons and arena-wide storm of toxic gas, dealing continuous moderate poison damage. During the storm, Peryite's Blessed will appear to attack you. The only way to make the storm cease is to collect three Shards of Time that appear in various separate locations within the arena by using the \"​ Freeze Time\" synergy."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "They've come for the artifact! Do not let them near it!",
+            "trigger": "While you hear the residents refer to her when you first enter in Bal Sunnar, you and Saresea don't meet her in person until you arrive in the settlement's past. The Matriarch is first encountered at the excavation site, where she believes you have come to steal what is rightfully theirs. She will direct her Telvanni to attack you",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Who sent you? How did you learn of our discovery?",
+            "trigger": "While you hear the residents refer to her when you first enter in Bal Sunnar, you and Saresea don't meet her in person until you arrive in the settlement's past. The Matriarch is first encountered at the excavation site, where she believes you have come to steal what is rightfully theirs. She will direct her Telvanni to attack you",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "This power is ours! I will control my own fate!",
+            "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+            "ability": "Infectious Vomit"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Rise, my blessed pet! Defend our home!",
+            "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+            "ability": "Infectious Vomit"
+        },
+        {
+            "speaker": "",
+            "line": "<Roksa the Warped is summoned. At this point, Saresea arrives.>",
+            "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+            "ability": "Infectious Vomit"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "Here you are! I felt a surge of power and … what is that?",
+            "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+            "ability": "Infectious Vomit"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "Well, I was right. Here it is.",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "Matriarch! Allow us to neutralize the distortion!",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "I've waited years for you. Preparing. Seething. Gaining in power.",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Your scourge is over!",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "",
+            "line": "<Matriarch Lladi attacks you.>",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "I cannot allow this to continue. I must destroy it.",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "Keep the Matriarch away from me while I focus!",
+            "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Finally! The chase ends here.",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "\"This has happened before!\"[verification needed]",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "\"Feel the weight of time!\"[verification needed]",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "",
+            "line": "(?)",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Feel it crawl under your skin!",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "A gift from my lord!",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Peryite blesses you!",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Covered in glory!",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "Taste what Peryite offers you!",
+            "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+            "ability": "Toxic Storm"
+        },
+        {
+            "speaker": "Matriarch Lladi Telvanni",
+            "line": "My lord, you failed me!",
+            "trigger": "Once you have defeated Matriarch Lladi",
+            "ability": "Plague Bomb"
+        },
+        {
+            "speaker": "",
+            "line": "<Matriarch Lladi Telvanni dies>",
+            "trigger": "Once you have defeated Matriarch Lladi",
+            "ability": "Plague Bomb"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "While you hear the residents refer to her when you first enter in Bal Sunnar, you and Saresea don't meet her in person until you arrive in the settlement's past. The Matriarch is first encountered at the excavation site, where she believes you have come to steal what is rightfully theirs. She will direct her Telvanni to attack you": [
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "They've come for the artifact! Do not let them near it!",
+                "trigger": "While you hear the residents refer to her when you first enter in Bal Sunnar, you and Saresea don't meet her in person until you arrive in the settlement's past. The Matriarch is first encountered at the excavation site, where she believes you have come to steal what is rightfully theirs. She will direct her Telvanni to attack you",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Who sent you? How did you learn of our discovery?",
+                "trigger": "While you hear the residents refer to her when you first enter in Bal Sunnar, you and Saresea don't meet her in person until you arrive in the settlement's past. The Matriarch is first encountered at the excavation site, where she believes you have come to steal what is rightfully theirs. She will direct her Telvanni to attack you",
+                "ability": "Toxic Storm"
+            }
+        ],
+        "You eventually follow her into a side Excavation Chamber, where she will call for assistance": [
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "This power is ours! I will control my own fate!",
+                "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+                "ability": "Infectious Vomit"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Rise, my blessed pet! Defend our home!",
+                "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+                "ability": "Infectious Vomit"
+            },
+            {
+                "speaker": "",
+                "line": "<Roksa the Warped is summoned. At this point, Saresea arrives.>",
+                "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+                "ability": "Infectious Vomit"
+            },
+            {
+                "speaker": "Saresea",
+                "line": "Here you are! I felt a surge of power and … what is that?",
+                "trigger": "You eventually follow her into a side Excavation Chamber, where she will call for assistance",
+                "ability": "Infectious Vomit"
+            }
+        ],
+        "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success": [
+            {
+                "speaker": "Saresea",
+                "line": "Well, I was right. Here it is.",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Saresea",
+                "line": "Matriarch! Allow us to neutralize the distortion!",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "I've waited years for you. Preparing. Seething. Gaining in power.",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Your scourge is over!",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "",
+                "line": "<Matriarch Lladi attacks you.>",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Saresea",
+                "line": "I cannot allow this to continue. I must destroy it.",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Saresea",
+                "line": "Keep the Matriarch away from me while I focus!",
+                "trigger": "Saresea will soon come to the conclusion that Matriarch Lladi arrived in the future before you and forged a defensive pact with the Taskmaster. Deep within the Peryitic Ritual Chamber of the temple, you will find the temporal distortion and Matriarch Lladi will be drawing power from it. Saresea will attempt to reason with the matriarch without success",
+                "ability": "Toxic Storm"
+            }
+        ],
+        "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight": [
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Finally! The chase ends here.",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "\"This has happened before!\"[verification needed]",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "\"Feel the weight of time!\"[verification needed]",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "",
+                "line": "(?)",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Feel it crawl under your skin!",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "A gift from my lord!",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Peryite blesses you!",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Covered in glory!",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            },
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "Taste what Peryite offers you!",
+                "trigger": "Now is the time to fight Matriarch Lladi, she will use a combination of temporal magics and diseases to fight you. She will shout the following during the fight",
+                "ability": "Toxic Storm"
+            }
+        ],
+        "Once you have defeated Matriarch Lladi": [
+            {
+                "speaker": "Matriarch Lladi Telvanni",
+                "line": "My lord, you failed me!",
+                "trigger": "Once you have defeated Matriarch Lladi",
+                "ability": "Plague Bomb"
+            },
+            {
+                "speaker": "",
+                "line": "<Matriarch Lladi Telvanni dies>",
+                "trigger": "Once you have defeated Matriarch Lladi",
+                "ability": "Plague Bomb"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She ages throughout the dungeon; in the past she has brown hair, while in the future she has white hair and wrinkles."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Unstuck From Time: Investigate a temporal disturbance at the remote Telvanni settlement of Bal Sunnar.",
+        "Pledge: Bal Sunnar: Explore Bal Sunnar and return Undaunted."
+    ],
+    "summary": "Matriarch Lladi Telvanni is a Dark Elf member of House Telvanni and founder of the settlement of Bal Sunnar in Stonefalls a few thousand years ago. She formed a group called the Blessed Inheritors and came to the area to locate and obtain what she referred to as \"Their Inheritance\". You unwittingly become her enemy when you become drawn into the time anomaly, which leads her to go to more extreme lengths to defeat you. She also functions as the final boss of this dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Matriarch_Lladi_Telvanni",
+        "page_title": "Online:Matriarch Lladi Telvanni",
+        "revision_id": 3585465,
+        "retrieved_at": "2026-08-12T21:13:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

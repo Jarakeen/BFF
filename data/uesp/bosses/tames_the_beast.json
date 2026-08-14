@@ -1,0 +1,295 @@
+{
+    "id": "tames_the_beast",
+    "name": "Tames-the-Beast",
+    "content_id": "blackrose_prison",
+    "content_name": "Blackrose Prison",
+    "location": "Blackrose Prison; Hall of Beasts, Mess Hall of Misery",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,864,622",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Taking Aim",
+            "description": "Tames-the-Beast channels a powerful Snipe from his bow, hitting whomever has him taunted. This ability can be interrupted by bashing the boss to avoid the massive physical damage it inflicts."
+        },
+        {
+            "name": "Crushing Roots",
+            "description": "Tames-the Beast will channel an ability that roots you in place and inflicts high continuous physical damage to you. You must roll-dodge to break free."
+        },
+        {
+            "name": "Swarm",
+            "description": "Upon reaching 50% and 25% health, Tames-the-Beast will send a swarm of insects to bite a party member. The group must stack on the affected player and share the damage, similar to the Shade of Siroria's Roaring Flare ability from Cloudrest. If the damage is not split between the group, the swarm of insects will kill their target. This ability lasts for 10 seconds."
+        },
+        {
+            "name": "Pet Summons",
+            "description": "At certain health percentages, Tames-the-Beast will signal for a powerful monster to join him in battle. At 80% health, he will summon a River Troll, at 60%, he summons a Haj Mota, and at 40% health he summons a Wamasu. It is recommended that the group destroys these adds before putting more damage out onto Tames-the-Beast."
+        },
+        {
+            "name": "Enrage",
+            "description": "If the group neglects to kill the Troll, Haj Mota and Wamasu he spawns during the fight, Tames-the-Beast and his remaining pets will enrage, increasing the damage they deal."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Do the challengers expect to win like this?",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "A foul wind has blown for our challengers, it seems.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Ka-ha-ha! These spineless weaklings will never win.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Watch as these kuudas struggle. Pathetic.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Looks like these limp-fins can't take much more.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Finally, the challengers fight back.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Is that all these kuudas can muster?",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "A mire gnat bites harder than these challengers.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Was that a hit? I could barely tell.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Our prey finally puts up a fight.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "This is what you bring us, Drakeeh? I remain unimpressed.",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Finally, some action!",
+            "trigger": "While watching the fights",
+            "ability": "Pet Summons"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "My netches move faster than these so called challengers.",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "A sitting stone would offer more of a challenge.",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "This fight drags like a limp leg.",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "A nix-hound has more common sense than these challengers ….",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "Look at them, running around like headless bantam guars.",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "\"These are our challengers? Hmm.\" [verification needed — when exactly he says those last six?]",
+            "trigger": "While organizing his round",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Tames-the-Beast",
+            "line": "You have won, challengers. I yield.",
+            "trigger": "When he is defeated",
+            "ability": "Pet Summons"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "While watching the fights": [
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Do the challengers expect to win like this?",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "A foul wind has blown for our challengers, it seems.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Ka-ha-ha! These spineless weaklings will never win.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Watch as these kuudas struggle. Pathetic.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Looks like these limp-fins can't take much more.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Finally, the challengers fight back.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Is that all these kuudas can muster?",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "A mire gnat bites harder than these challengers.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Was that a hit? I could barely tell.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Our prey finally puts up a fight.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "This is what you bring us, Drakeeh? I remain unimpressed.",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Finally, some action!",
+                "trigger": "While watching the fights",
+                "ability": "Pet Summons"
+            }
+        ],
+        "While organizing his round": [
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "My netches move faster than these so called challengers.",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "A sitting stone would offer more of a challenge.",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "This fight drags like a limp leg.",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "A nix-hound has more common sense than these challengers ….",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "Look at them, running around like headless bantam guars.",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "\"These are our challengers? Hmm.\" [verification needed — when exactly he says those last six?]",
+                "trigger": "While organizing his round",
+                "ability": "Taking Aim"
+            }
+        ],
+        "When he is defeated": [
+            {
+                "speaker": "Tames-the-Beast",
+                "line": "You have won, challengers. I yield.",
+                "trigger": "When he is defeated",
+                "ability": "Pet Summons"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Black Gauntlet: Enter a deadly gauntlet held by the Blackguards of Blackrose Prison."
+    ],
+    "summary": "Tames-the-Beast is an Argonian master beast-handler and an elite member of the Blackguards. He has dominion over a wide variety of creatures, most notably netches, trolls, haj mota and wamasu. All of the creatures he controls are much stronger than those found in the wild. He serves as the boss of Round 2: Hall of Beasts and one of the bosses of Round 4: Mess Hall of Misery.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tames-the-Beast",
+        "page_title": "Online:Tames-the-Beast",
+        "revision_id": 3505620,
+        "retrieved_at": "2026-08-12T22:10:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

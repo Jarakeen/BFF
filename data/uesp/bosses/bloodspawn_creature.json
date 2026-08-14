@@ -1,0 +1,36 @@
+{
+    "id": "bloodspawn_creature",
+    "name": "Bloodspawn (creature)",
+    "content_id": "spindleclutch_ii",
+    "content_name": "Spindleclutch II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Redirect to:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bloodspawn_(creature)",
+        "page_title": "Online:Bloodspawn (creature)",
+        "revision_id": 2135786,
+        "retrieved_at": "2026-08-12T21:34:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

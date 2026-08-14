@@ -1,0 +1,36 @@
+{
+    "id": "dunmer",
+    "name": "Dunmer",
+    "content_id": "fungal_grotto_ii",
+    "content_name": "Fungal Grotto II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Redirect to:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dunmer",
+        "page_title": "Online:Dunmer",
+        "revision_id": 2478652,
+        "retrieved_at": "2026-08-12T21:23:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "the_frigid_grotto",
+    "name": "The Frigid Grotto",
+    "content_type": "dungeon",
+    "summary": "The Frigid Grotto is a cave in southwestern Eastmarch, northwest of Fort Amol containing wildlife. Rats and torchbugs are found within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Frigid_Grotto",
+        "page_title": "Online:The Frigid Grotto",
+        "revision_id": 3598155,
+        "retrieved_at": "2026-08-12T21:22:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,85 @@
+{
+    "id": "qacath_the_silent",
+    "name": "Qacath the Silent",
+    "content_id": "the_underweave",
+    "content_name": "The Underweave",
+    "location": "Underweave Nullifactory",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Brand",
+            "description": "Qacath joins her swords with fire then strikes precisely in her target, dealing moderate physical damage then fast ticks of low flame damage over 2 seconds and stunning for that time. This can be blocked to stagger Qacath instead and negate the flame damage."
+        },
+        {
+            "name": "Assault",
+            "description": "When standing further away from them, Qacath teleports and stabs the target, dealing moderate-high physical damage and snaring for a brief moment."
+        },
+        {
+            "name": "Aperture",
+            "description": "Qacath continuously throws daggers under the target that has a red icon over their head, each dealing moderate-high physical damage. Each dagger explodes if a target walks on it which deal moderate-high physical damage in a small area. The Daggers disappear after some time Qacath cannot be taunted in this state."
+        },
+        {
+            "name": "Blast Powder/Explosive Spray",
+            "description": "Qaxath performs a large fire blast around her, dealing high flame damage and knocking back targets in an area. She then performs \"Daggerstorm/Deadeye\". After \"Daggerstorm/Deadeye\" she performs again a large fire blast around her, dealing high flame damage and knocking back targets in an area."
+        },
+        {
+            "name": "Daggerstorm/Deadeye",
+            "description": "Qaxath then throws a large amount of flame projectiles in the arena, each dealing moderate flame damage (Deadeye). Some of the projectiles thrown remain as small flaming areas dealing very fast ticks of low flame damage(Daggerstorm)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "A little pitch for you, coward.",
+            "trigger": "When Qacath casts \"Blast Powder/Explosive Spray\"",
+            "ability": "Blast Powder/Explosive Spray"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When Qacath casts \"Blast Powder/Explosive Spray\"": [
+            {
+                "speaker": "",
+                "line": "A little pitch for you, coward.",
+                "trigger": "When Qacath casts \"Blast Powder/Explosive Spray\"",
+                "ability": "Blast Powder/Explosive Spray"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Qacath the Silent is a Dremora who can be found in the upstairs section of the Underweave Nullifactory. She serves as one of the champions of the Underwave public dungeon. She is accompanied by a Darkreave Armamancer and a Darkreave Sun Mage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Qacath_the_Silent",
+        "page_title": "Online:Qacath the Silent",
+        "revision_id": 3298015,
+        "retrieved_at": "2026-08-12T21:36:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,66 @@
+{
+    "id": "verminous_fabricant",
+    "name": "Verminous Fabricant",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Clockwork City; Cogitum Centralis, Everwound Wellspring, Incarnatorium, Machine District, Mechanical Fundament, The Radius, Reactor District, Vale of Tiers, Ventral Terminus\nNchuthnkarst\nThe Disquiet Study",
+    "species": "Fabricant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "31,364",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Headbutt",
+            "description": "The Verminous Fabricant swings its head at the target at close range, dealing moderate physical damage."
+        },
+        {
+            "name": "Dorsal Spin",
+            "description": "The Fabricant tucks its head between its legs, curling up into a ball and charging at the target. Block or dodge to avoid being knocked back. Deals moderate physical damage."
+        },
+        {
+            "name": "Tail Spike",
+            "description": "The Fabricant swings its tail at the target, dealing moderate physical damage. This ability can snare you, making you walk slower."
+        },
+        {
+            "name": "Shocking Field",
+            "description": "The Fabricant crouches with its belly touching the ground, generating sparks. It unleashes a wave of electricity after one second, dealing moderate shock damage."
+        },
+        {
+            "name": "Self-Destruct",
+            "description": "If left alive below 20% Health for long enough, the fabricant will self-destruct, as it begins to shake uncontrollably and finally exploding in a burst of flame, indicated by a growing circular AoE, dealing high flame damage. Once the self-destruct commences, the fabricant can no longer be killed until ability ends, at which point it is destroyed."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Obscuros shows a Verminous Fabricant during Of Knives and Long Shadows.",
+        "The Mad Tinkerer set provides the ability of summoning this fabricant.",
+        "Verminous Fabricants first appeared in Tribunal. They also appear as a card in Legends, with the introduction of the Return to Clockwork City storyline.",
+        "There are two Verminous Fabricant pets: the Microtized Verminous Fabricant and the Mnemoflare Fabricant"
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Memory of Mystery: Save Sotha Sil's laboratory from hostile invaders.",
+        "Inciting the Imperfect: Defeat the Imperfect and gather its lost sequence plaques.",
+        "Lost in the Gloam: Assist the Blackfeather Court to reclaim a mysterious key.",
+        "In Search of a Sponsor: Gain sponsorship in order to become a citizen of the Clockwork City.",
+        "The Strangeness of Seht: Investigate Sotha Sil's recent change of character."
+    ],
+    "achievements": [],
+    "summary": "Verminous Fabricants are fabricants designed by Sotha Sil. They appear as large reptilian animals with robotic limbs and numerous spikes on their bodies, and are capable of jumping and rolling long distances.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Verminous_Fabricant",
+        "page_title": "Online:Verminous Fabricant",
+        "revision_id": 3585442,
+        "retrieved_at": "2026-08-12T05:32:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

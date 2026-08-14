@@ -1,0 +1,26 @@
+{
+    "id": "the_chill_hollow",
+    "name": "The Chill Hollow",
+    "content_type": "dungeon",
+    "summary": "The Chill Hollow is a cave in northeastern Eastmarch, east of Windhelm containing wispmothers and atronachs. It is inhabited by the frost atronach Nomeg Chal. Dead Worm Cultists can be found in the deepest room of the cave, hinting at the source of the out-of-place atronachs roaming the lower tunnels. A chest can spawn in the southernmost end of the central chamber, close to the eastern tunnel.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Chill_Hollow",
+        "page_title": "Online:The Chill Hollow",
+        "revision_id": 3598152,
+        "retrieved_at": "2026-08-12T21:16:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

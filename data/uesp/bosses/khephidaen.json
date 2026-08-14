@@ -1,0 +1,87 @@
+{
+    "id": "khephidaen",
+    "name": "Khephidaen",
+    "content_id": "cradle_of_shadows",
+    "content_name": "Cradle of Shadows",
+    "location": "Spider Caves, Cradle of Shadows",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,214,120",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Umbral Bolts",
+            "description": "The boss shoots at the player doing moderate magical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Withering Strike",
+            "description": "The boss melees the player, doing moderate physical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Withering",
+            "description": "A moderate magical damage over time applied by Withering Strike and Umbral Bolts."
+        },
+        {
+            "name": "Extinguish(?)",
+            "description": "The boss will put out the braziers around the room, and summon Gloom Wraiths to attack the party. The wraiths will summon two Swarming Beetles each. As long as the brazier is extinguished the beetles will continue to spawn. Players should go near the braziers and press the synergy key to relight them, as well as kill the wraiths."
+        },
+        {
+            "name": "Shadowbolt",
+            "description": "A ranged attack used by the Gloom Wraiths that deals minor magical damage."
+        },
+        {
+            "name": "Voice of the Spinner",
+            "description": "The boss will channels a large magical explosion as indicated by a red circle. This splits into three smaller waves of magic that travel along the ground. The explosion must be avoided at all costs, as it will do massive damage even to tanks."
+        },
+        {
+            "name": "Tide of Darkness",
+            "description": "The boss swings its staff around, releasing red magical projectiles that strike all players in front of her. This attack does massive damage, and should be blocked by the tank as indicated by the block telegraph. The tank should also ensure the boss is facing away from the team so they do not get hit. Dodge rolling will also help avoid this attack."
+        },
+        {
+            "name": "Interruptible",
+            "description": "Khephidaen will teleport close to another brazier (usually on the opposite side of the room). She will channel a spell, and have red lines coming off of her, indicating an interruptible attack. If she is allowed to channel this ability, it will send players it hits flying back, knocking them over. Destruction Staff users can slot Crushing Shock or other ranged abilities that interrupt enemies on contact to help out. Alternatively, the tank can bash her."
+        },
+        {
+            "name": "Pull of Darkness",
+            "description": "Standing in the darkness will cause minor magical damage over time that increases over time. If the boss stands in the darkness she will take reduced damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is far taller than most Spiderkith, standing around 2 meters tall.",
+        "Like the rest of the Spiderkith in the dungeon, she does not use the old Crypt of Hearts Spiderkith skin or the new Spiderkith skin collectible. Instead, she has solid red eyes and glowing red veins showing through her skin."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Silk and Shadow: Help a former Shadowscale destroy a dangerous new group of assassins.",
+        "Pledge: Cradle of Shadows: Prove you are truly Undaunted by clearing the Cradle of Shadows."
+    ],
+    "summary": "Khephidaen is a Spiderkith who serves as the first boss of the Cradle of Shadows. Her Pull of Darkness can be felt throughout the Spider Caves, and she can be found in the end of the caves, after Sithera.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Khephidaen",
+        "page_title": "Online:Khephidaen",
+        "revision_id": 3354743,
+        "retrieved_at": "2026-08-12T21:18:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

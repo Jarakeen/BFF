@@ -1,0 +1,28 @@
+{
+    "id": "jode_s_light",
+    "name": "Jode's Light",
+    "content_type": "dungeon",
+    "summary": "Jode's Light is a ruined Khajiiti temple in eastern Reaper's March, west of Dune, containing Rotblood goblins and hostile wildlife. A Khajiit's Lost Journal Page is located on top of a crate at the entrance. Beetles and torchbugs are found in numbers within. The skyshard is located in the northwestern chamber, near the northern wall. Giant Bats inhabit this room. The tunnel to the south leads to the delve's boss. The Second Khajiiti Journal Page is located in the passage leading to the boss. A Third Khajiiti Journal Page is located near the boss room's northern one-way exit.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Ja'zennji Siir style is based on the outfits worn by the monks of Jode's Light temple (Ja'zennji Siir is Jode's Light in Ta'agra)."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Jode%27s_Light",
+        "page_title": "Online:Jode's Light",
+        "revision_id": 3598344,
+        "retrieved_at": "2026-08-12T21:26:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

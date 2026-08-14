@@ -1,0 +1,78 @@
+{
+    "id": "allene_pellingare",
+    "name": "Allene Pellingare",
+    "content_id": "wayrest_sewers_i",
+    "content_name": "Wayrest Sewers I",
+    "location": "Wayrest Sewers II, cavern chamber",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,131,995",
+        "hardmode": "5,901,794"
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack that does moderate physical damage."
+        },
+        {
+            "name": "Penetrating Daggers",
+            "description": "A heavy melee attack that does very high physical damage and knocks the target down. This attack must be blocked by the tank or dodged by other roles at all costs especially on hard mode."
+        },
+        {
+            "name": "Backstab",
+            "description": "The boss teleports onto a target dealing high physical damage. This attack is usually immediately followed by Razor Flourish. The high damage of these two attacks combined with their short cast times makes it likely that non tanks will die in two hits if they are not blocking or being healed. To prevent this, preemptively rolling immediately after getting hit by Backstab will help avoid the damage from Razor Flourish if it is cast by the boss."
+        },
+        {
+            "name": "Razor Flourish",
+            "description": "The boss spins around dealing high physical damage around itself. This attack has a fast cast time with no red telegraph indicator but has a short range, so avoid standing too near the boss if possible."
+        },
+        {
+            "name": "Mind-Bending Mist",
+            "description": "At 75%, 50% and 25%, the boss disappears in puff of smoke and summons Fiendish Hallucinations to attack the party, with the amount of them increasing with each summoning. These should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Ghost Burst",
+            "description": "After the final wave of bats are summoned, the boss will reappear in a ghostly shadowy form, dealing moderate magical damage in a short radius around her."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "several",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "When walking by a nearby guard tower before completing the dungeons, Master Pellingare comments that his daughter is \"distant and aloof\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Deception in the Dark: Prevent an underground invasion of Wayrest.",
+        "No Second Chances: Return the Pellingare siblings to the grave.",
+        "Pledge: Wayrest Sewers I: Explore Wayrest Sewers I and return Undaunted.",
+        "Pledge: Wayrest Sewers II: Explore Wayrest Sewers II and return Undaunted.",
+        "Wayrest Sewers Pledge: Explore Wayrest Sewers and return Undaunted. (disabled since Patch 2.6.4)",
+        "Veteran Wayrest Sewers Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Wayrest Sewers. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Allene Pellingare is a Breton noble and one of the two leaders of the bandits found in the Wayrest Sewers. She is Varaine Pellingare's sister and Master Pellingare's daughter. At around 30% health, she will transform into a shadowy version of herself. When killed, Allene Pellingare may drop the Druidic Music Box Comb lead for the Music Box, Blessings of Stone antiquity. Allene Pellingare is killed in Wayrest Sewers I, and as a result, her mourning father made a deal with Garron the lich to have her raised from the dead. She returns in the final battle of Wayrest Sewers II, fighting alongside her brother. She will use a variety of ranged attacks with her bow, while Varaine uses melee attacks using his sword.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Allene_Pellingare",
+        "page_title": "Online:Allene Pellingare",
+        "revision_id": 3510353,
+        "retrieved_at": "2026-08-12T21:38:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

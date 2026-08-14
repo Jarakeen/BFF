@@ -1,0 +1,26 @@
+{
+    "id": "the_disquiet_study",
+    "name": "The Disquiet Study",
+    "content_type": "dungeon",
+    "summary": "The Disquiet Study is a delve that can be found in Apocrypha. It is located north of the Syzygial Rostrum. Archivist Bartalus can be found north of the delve. Brassilisks, bookbinder spiders, centipede, cockroaches, dwarven scarabs, fiendroths, fleshflies, nixads, rats, seht's dovah-flies, skeevatons, skavenger, skitteris, a spectral spider, spiders, a swamp jelly, tomeshells, torchbugs, a violet jelly and wafts are found in numbers within. Hazards include ghostly grip, heretical literature, incunabular storms, raging flames, and rain lightning.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Disquiet_Study",
+        "page_title": "Online:The Disquiet Study",
+        "revision_id": 3567049,
+        "retrieved_at": "2026-08-12T21:20:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "vinedeath_cave",
+    "name": "Vinedeath Cave",
+    "content_type": "dungeon",
+    "summary": "Vinedeath Cave is a cave in northeastern Grahtwood, east of Elden Root containing spriggans and stranglers. The corpse of Storgh, an Orc and Orthelos's friend, can be found in the southeast chamber. A Scrap of Storgh's Journal is located next to his corpse, while the skyshard sits across from it. A chest can spawn near the tunnel leading out west from the room with Storgh's corpse in it, between a large root and the wall. The delve's boss is located in the southwest chamber. A chest can spawn atop a rocky ledge behind the boss, where the fog accumulates near a rack of large ribs.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The cave is mentioned in Garick's Message as a place not suitable as a hideout due to its haunted nature. Reading the note adds a marker to your map for this location."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vinedeath_Cave",
+        "page_title": "Online:Vinedeath Cave",
+        "revision_id": 3562088,
+        "retrieved_at": "2026-08-12T21:37:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

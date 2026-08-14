@@ -1,0 +1,26 @@
+{
+    "id": "the_scuttle_pit",
+    "name": "The Scuttle Pit",
+    "content_type": "dungeon",
+    "summary": "The Scuttle Pit is a cave in eastern Grahtwood, north of Haven and east of Elden Root containing spiders. Two dead Giant Spiders can be found in the delve: One at the bottom level of the second large room and one behind the Spider Queen.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Scuttle_Pit",
+        "page_title": "Online:The Scuttle Pit",
+        "revision_id": 3598298,
+        "retrieved_at": "2026-08-12T21:32:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

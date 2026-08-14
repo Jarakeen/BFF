@@ -1,0 +1,57 @@
+{
+    "id": "keeper_imiril",
+    "name": "Keeper Imiril",
+    "content_id": "the_banished_cells_ii",
+    "content_name": "The Banished Cells II",
+    "location": "The Banished Cells II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "52,831",
+        "veteran": "36,004",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic attack that does moderate physical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Corruption",
+            "description": "The boss summons orbs of magic that bounce around the room, dealing moderate magical damage over time as indicated by a red circle."
+        },
+        {
+            "name": "Summon Dark Daedra",
+            "description": "The boss disappears and summons five Banekin to attack the party. The next time the boss does this she will summon four Winged Twilights, and the next time she will summon three Clannfear. These should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Daedric Blast",
+            "description": "After summoning the creatures, the boss will reappear and cast an explosion around herself that does high magical damage around herself as indicated by a red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Banishing the Banished: Help imprison the spirit of an evil Altmer.",
+        "The Plan: Return to the Banished Cells and free its keepers from Daedric servitude.",
+        "Pledge: Banished Cells II: Explore The Banished Cells II and return Undaunted."
+    ],
+    "summary": "Keeper Imiril is a High Elf and a member of the group tasked with keeping High Kinlord Rilis' spirit inside The Banished Cells I. At some point after defeating Rilis, they form a pact with High Kinlord Rilis, and serve as a boss of The Banished Cells II. After defeating her in Banished Cells II, there is a small chance that she will drop Firetooth, a unique item in the Jailbreaker item set.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Keeper_Imiril",
+        "page_title": "Online:Keeper Imiril",
+        "revision_id": 3323495,
+        "retrieved_at": "2026-08-12T21:14:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

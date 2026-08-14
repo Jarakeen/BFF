@@ -1,0 +1,87 @@
+{
+    "id": "z_maja",
+    "name": "Z'Maja",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Cloudrest Aerie",
+    "species": "Sea Sload",
+    "reaction": "Hostile\nFriendly (initially, before defeating her Yaghra)",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Dark Canal",
+            "description": "Z'Maja creates a teleportation pool at her current location and a second pool from which to pop out of at a second location."
+        },
+        {
+            "name": "Mind Blast",
+            "description": "A telekinetic projectile that targets a single person. If a player is hit by Mind Blast 4 times within 15 seconds, they'll suffer a DoT called Leeching Shadow on the fourth strike. While this ability targets a single person, it also creates a cone-shaped AoE in front of her that damages anyone within range for slightly less than Mind Blast's base damage.[1]:148"
+        },
+        {
+            "name": "Leeching Shadow",
+            "description": "Lasting for 8 seconds, damage from this DoT decreases with each tick."
+        },
+        {
+            "name": "Dark Orb",
+            "description": "Spawns three small orbs that will stun any player who touches them. If the orbs are not destroyed in time they will converge and target a player, stunning them and releasing Sinister Beads. Note that when an orb is destroyed it inflicts players with damage-over-time effect. The number of players affected by this damage-over-time will increase if more mini bosses are fought alongside Z'Maja, with no players being afflicted if Z'maja is fought on her own."
+        },
+        {
+            "name": "Sinister Beads",
+            "description": "If the Dark Orbs collide with either each other or a player, they will explode into a number of dark beads. These will stun and place a damage over time on those hit."
+        },
+        {
+            "name": "Crushing Darkness",
+            "description": "An ability that targets the tank who is currently taunting her, and the player furthest from her, creating a void beneath their feet."
+        },
+        {
+            "name": "Dark Detonation",
+            "description": "If the shadow portal is not closed quickly enough by destroying the Tenebrous Vessels within, all players will begin to helplessly levitate under Z'Maja's control and she will instantly kill the entire group."
+        },
+        {
+            "name": "Execute Phase",
+            "description": "One she reaches 10% health, Z'Maja unleashes the full power of her amulet by cracking it open.[1]:148 This summons her shade to the real world. Approximately every 22 seconds she will afflict 6 members of the group with Baneful Mark, which reduces the healing taken and damage done by all those inflicted until they return to 100% health."
+        },
+        {
+            "name": "Nocturnal's Favor",
+            "description": "This attack damages whoever she's facing and has aggro on (whoever she's selected as a target to attack): she conjures a powerful blast of shadow energy in front of herself and thrusts it towards her target. There is a long animation for this attack. It is a very high damage projectile that cannot be dodged or reflected. Due to the high damage, it will kill any character that is not blocking, and frequently kill lower health players through block. Generally speaking, the tank holding taunt on Z'Maja should be the only person being affected by this ability; everybody else in the group should be behind Z'Maja so they're not in range."
+        },
+        {
+            "name": "Shadow Splash[1]:148",
+            "description": "Z'Maja waves her hands, channeling a spell. After a few seconds, she settles into a rhythm, and random players are sucked into a vortex and dropped from a random spot in the air, taking fall damage. If she's allowed to continue casting, she'll drag more players into the vortex, becoming more of a nuisance. This ability must be interrupted so Z'Maja doesn't interrupt the flow of battle and kill your damage dealers. On Veteran, the teleportation height is raised, which makes your group members take more fall damage when they're teleported into the air."
+        },
+        {
+            "name": "Grievous Retaliation",
+            "description": "In Veteran Cloudrest, if a player dies and someone tries to resurrect the dead ally before defeating their Shade, the person attempting the resurrection will take increasing damage from Grievous Retaliation."
+        },
+        {
+            "name": "Dark Contamination",
+            "description": "On Veteran, if you attempt to enter the Shadow World twice in the span of two minutes, you'll immediately die upon your second entry. Of this, the death recap combat tips say the following: \"Repeated exposure to Z'Maja's realm of shadow in a short period of time results in a catastrophic breakdown of the body.\""
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "When she speaks in Sload, it is a slightly altered version of the Esperanto language, similar to N'Gasta! Kvata! Kvakis!."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Z'Maja is a Sea Sload sorceress of the Abyssal Cabal who is encountered in the central chamber of Cloudrest. She has taken control of the Welkynar Gryphon Knights, transforming them into shadowy monsters that possess all of their formidable skills. She is also responsible for releasing a mysterious purple mist that has spread throughout the city. The Shadowcaster has wrested control of Cloudrest's Aerie, the Welkynars' grand meeting hall. There, you will face her. The amulet embedded in her chest supplies her with great power, and was given to her by Nocturnal.[1]:146",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Z%27Maja",
+        "page_title": "Online:Z'Maja",
+        "revision_id": 3553342,
+        "retrieved_at": "2026-08-12T05:32:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

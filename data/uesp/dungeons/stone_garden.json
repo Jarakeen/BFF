@@ -1,0 +1,33 @@
+{
+    "id": "stone_garden",
+    "name": "Stone Garden",
+    "content_type": "dungeon",
+    "summary": "Stone Garden is a group dungeon found in the Greymoor Cavern section of Blackreach: Greymoor Caverns. It is part of the Stonethorn dungeon pack DLC, along with Castle Thorn. The mad alchemist Arkasis operates from this location, now with increased security offered by his newly-acquired patronage from the Gray Host. Various passive critters can be found in numbers inside, such as Shroom Beetles, Spiders, Rats, and Winter Moths. Hazards include a lava pool.",
+    "location": "",
+    "boss_ids": [
+        "exarch_kraglen",
+        "werewolf_behemoth",
+        "stone_behemoth",
+        "arkasis_the_mad_alchemist"
+    ],
+    "achievements": [
+        {
+            "id": "stonethorn_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The entrance to Stone Garden has been present since Update 26."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stone_Garden",
+        "page_title": "Online:Stone Garden",
+        "revision_id": 3567073,
+        "retrieved_at": "2026-08-12T21:35:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

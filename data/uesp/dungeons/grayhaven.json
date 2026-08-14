@@ -1,0 +1,18 @@
+{
+    "id": "grayhaven",
+    "name": "Grayhaven",
+    "content_type": "dungeon",
+    "summary": "Grayhaven is a lost realm of Oblivion located deep in the Void. It was originally a part of the Reach, but was sundered from Tamriel by Mannimarco in a failed attempt to meld the land with Coldharbour. Instead, Grayhaven was cast adrift into the Void, beyond the reach of Mundus and Oblivion. Rada al-Saran now plans to use the isolated realm as a sanctuary for himself and his Gray Host. To this purpose, he has conjured the Darkstorm to feed all the souls of the Reach to the Dark Heart, thereby granting the Gray Host immortality within this realm. It is accessible only during the related quest via the orrery at the Library of Arkthzand, at the conclusion of the Dark Heart of Skyrim storyline. Red Torchbugs flit through the air. You can see gristlewings feasting on dead lizards along the side of the path, though some live lizards can be seen as well.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Grayhaven",
+        "page_title": "Online:Grayhaven",
+        "revision_id": 3550278,
+        "retrieved_at": "2026-08-12T21:25:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

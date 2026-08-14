@@ -1,0 +1,170 @@
+{
+    "id": "garvin_the_tracker",
+    "name": "Garvin the Tracker",
+    "content_id": "lep_seclusa",
+    "content_name": "Lep Seclusa",
+    "location": "Lep Seclusa — Inlet Grotto",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,954,854",
+        "hardmode": "8,932,282"
+    },
+    "abilities": [
+        {
+            "name": "Whirlwind",
+            "description": "Heavy attack, applies Healing Absorb"
+        },
+        {
+            "name": "Noxious Boulder",
+            "description": "Garvin channels a green spell that shoots a large boulder at the target, which stuns those who do not block and will create a toxic AoE when it hits the ground. Can be aimed at Monstrous Dunerippers to kill them"
+        },
+        {
+            "name": "Vanishing Powder",
+            "description": "Garvin teleports away to set traps. Sister Chana's tracking spell will reveal his location by outlining him."
+        },
+        {
+            "name": "Hunter's Trap",
+            "description": "Traps that are cast after he disappears, setting them up in corners of the room. Will cause bleeding damage."
+        },
+        {
+            "name": "Piercing Dervish",
+            "description": "Casts a damage over time effect in an hourglass shaped radius"
+        },
+        {
+            "name": "Wild Spores",
+            "description": "Garvin puts a highly damaging damage over time effect on everyone for 8 seconds, giving everyone a green aura. Should be outhealed to avoid damage."
+        },
+        {
+            "name": "Venom Eruption",
+            "description": "Garvin holds his dagger up and lets out bursts of venom in a large area around him. Using rocks as cover can block the damage."
+        },
+        {
+            "name": "Ricochet (Veteran only)",
+            "description": "Garvin puts Ricochet on two players; if they come into contact with each other, they will take massive damage"
+        },
+        {
+            "name": "Duneripper Spawn",
+            "description": "Around 70% and 40% health, will summon dunerippers."
+        },
+        {
+            "name": "Summon Storm Mage",
+            "description": "Around 80% health, will summon a storm mage that electrifies the waters."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Garvin the Tracker",
+            "line": "Caught you!",
+            "trigger": "When you approach the entrance to the Underground Monastery in the Secluded Cave, Garvin the Tracker will be seen at the top of the staircase, where he will hurl a boulder at Hushiah and Mubanat before vanishing",
+            "ability": "Noxious Boulder"
+        },
+        {
+            "speaker": "Hushiah and Mubanat",
+            "line": "<Grunt and get knocked off the ledge>",
+            "trigger": "When you approach the entrance to the Underground Monastery in the Secluded Cave, Garvin the Tracker will be seen at the top of the staircase, where he will hurl a boulder at Hushiah and Mubanat before vanishing",
+            "ability": "Noxious Boulder"
+        },
+        {
+            "speaker": "Garvin the Tracker",
+            "line": "Taste dirt!",
+            "trigger": "As you make your way through the monastery rooms, you will be attacked by Garvin when exiting Lewin Frey's chamber, where he will hurl the Noxious Boulders as a trap before vanishing once again",
+            "ability": "Noxious Boulder"
+        },
+        {
+            "speaker": "Khafdeed",
+            "line": "He's the dog who sniffed our island out. The tracker who led Orpheon's army here.",
+            "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+            "ability": "Venom Eruption"
+        },
+        {
+            "speaker": "Sister Chana Nirine",
+            "line": "There's something familiar about his magic. I can help.",
+            "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+            "ability": "Venom Eruption"
+        },
+        {
+            "speaker": "Khafdeed",
+            "line": "Help from up here. I can protect you from attacks or uneven terrain. Not both.",
+            "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+            "ability": "Venom Eruption"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you approach the entrance to the Underground Monastery in the Secluded Cave, Garvin the Tracker will be seen at the top of the staircase, where he will hurl a boulder at Hushiah and Mubanat before vanishing": [
+            {
+                "speaker": "Garvin the Tracker",
+                "line": "Caught you!",
+                "trigger": "When you approach the entrance to the Underground Monastery in the Secluded Cave, Garvin the Tracker will be seen at the top of the staircase, where he will hurl a boulder at Hushiah and Mubanat before vanishing",
+                "ability": "Noxious Boulder"
+            },
+            {
+                "speaker": "Hushiah and Mubanat",
+                "line": "<Grunt and get knocked off the ledge>",
+                "trigger": "When you approach the entrance to the Underground Monastery in the Secluded Cave, Garvin the Tracker will be seen at the top of the staircase, where he will hurl a boulder at Hushiah and Mubanat before vanishing",
+                "ability": "Noxious Boulder"
+            }
+        ],
+        "As you make your way through the monastery rooms, you will be attacked by Garvin when exiting Lewin Frey's chamber, where he will hurl the Noxious Boulders as a trap before vanishing once again": [
+            {
+                "speaker": "Garvin the Tracker",
+                "line": "Taste dirt!",
+                "trigger": "As you make your way through the monastery rooms, you will be attacked by Garvin when exiting Lewin Frey's chamber, where he will hurl the Noxious Boulders as a trap before vanishing once again",
+                "ability": "Noxious Boulder"
+            }
+        ],
+        "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you": [
+            {
+                "speaker": "Khafdeed",
+                "line": "He's the dog who sniffed our island out. The tracker who led Orpheon's army here.",
+                "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+                "ability": "Venom Eruption"
+            },
+            {
+                "speaker": "Sister Chana Nirine",
+                "line": "There's something familiar about his magic. I can help.",
+                "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+                "ability": "Venom Eruption"
+            },
+            {
+                "speaker": "Khafdeed",
+                "line": "Help from up here. I can protect you from attacks or uneven terrain. Not both.",
+                "trigger": "When you reach him in his main chamber of the Inlet Grotto, Sister Chana and Khafdeed will arrive beside you",
+                "ability": "Venom Eruption"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He wears the Tactician's Gold Lattice Skin and Daggerfall Covenant Style armor."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Upstart Emperor: Repel an invading army from Lep Seclusa and secure an Elder Scroll.",
+        "Pledge: Lep Seclusa: Explore Lep Seclusa and return Undaunted."
+    ],
+    "summary": "Garvin the Tracker is a Breton soldier who tracked down the island of Lep Seclusa and led Orpheon's army to it. He serves as the first boss of the dungeon. He uses many poison-based attacks.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Garvin_the_Tracker",
+        "page_title": "Online:Garvin the Tracker",
+        "revision_id": 3447432,
+        "retrieved_at": "2026-08-12T21:27:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

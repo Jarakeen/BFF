@@ -1,0 +1,28 @@
+{
+    "id": "aba_loria",
+    "name": "Aba-Loria",
+    "content_type": "dungeon",
+    "summary": "Aba-Loria is an Ayleid ruin in central Coldharbour, east of the Spurned Peak containing Worm Cultists and skeletons. They are led by Cirterisse. A copy of Necromancy: The Great Debate can be found on an altar within the ruins. Fleshflies and rats are found in numbers within. The Forsaken Village is nearby.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Salache Bonelords and Salache Cryomages used to be found here until Update 11."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Aba-Loria",
+        "page_title": "Online:Aba-Loria",
+        "revision_id": 3598779,
+        "retrieved_at": "2026-08-12T21:12:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

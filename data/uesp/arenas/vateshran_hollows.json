@@ -1,0 +1,35 @@
+{
+    "id": "vateshran_hollows",
+    "name": "Vateshran Hollows",
+    "content_type": "arena",
+    "summary": "Vateshran Hollows is a solo arena in the Reach, south of the Reachwind Ritual Site. The Hollows are maintained by Reachfolk of the Spiritblood Clan and is currently overseen by the three sisters—the Rites Matron, the Binder in the Dark, and the Lamenter of the Slain. Vateshran Hollows is where young clan members take on the challenging Vateshran Rites—a test of strength which will allow one to become a full member of the clan. The name of the rites comes from the term \"vateshran\": vateshrans are storytellers who sing their clan's songs. When a young warrior completes their Vateshran's Rites, they earn a song that tells of their triumph over the trials. Although the cavern itself is physically in the Reach, the veil between Nirn and Oblivion is thin here: realms of Oblivion leak into the cavern, allowing different otherworldly monsters to appear in the three wings where the rites themselves take place. Vateshran Hollows serves as a solo trial where challengers must conquer three areas themed after three Daedric Princes: Hircine (Hunter's Grotto), Mehrunes Dagon (The Brimstone Den), and Molag Bal (The Wounding). The three wings can be done in any order, and the order they are completed affects your playthrough, as explained here. After completing the three trials, the fourth and final wing (the Champion's Circle), will become available. Each wing has two bosses: after killing the first boss of a given area, you unlock a new traversal method that must be used to navigate the rest of the section. Should you need help in selecting which realm to start with, you can briefly confer with the spirit of Aydolan, the Spiritblood clan's first vateshran and the creator of the Vateshran's Rites. When you defeat an enemy that blocks the way forward (these enemies are generally in front of barriers, which are only lowered after these elite enemies are defeated), all of the weaker enemies in the section preceeding them will despawn. The enemies in Vateshran Hollows are not leashed, meaning that if you engage in combat with them, they will not return to their original post if you run far enough away. If you enter combat, expect those enemies to chase you to the ends of the map until either you are dead, they are killed, or the enemies are forced to despawn with the death of a guardian: for example, the trio of Dremora Kyngalds near the end of the Brimstone Den are fully capable of chasing you through the river of lava all the way to the secret boss if you aggro them. Completing the final arena grants you a Vateshran Weapon.",
+    "location": "",
+    "boss_ids": [
+        "vateshran_s_rites"
+    ],
+    "achievements": [
+        {
+            "id": "markarth_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "arenas",
+            "name": "arena",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vateshran_Hollows",
+        "page_title": "Online:Vateshran Hollows",
+        "revision_id": 3585236,
+        "retrieved_at": "2026-08-12T21:46:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

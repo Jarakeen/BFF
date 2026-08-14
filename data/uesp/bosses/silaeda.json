@@ -1,0 +1,36 @@
+{
+    "id": "silaeda",
+    "name": "Silaeda",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Cloudrest",
+    "species": "Gryphon",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "8,520,644",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Silaeda is a gryphon and the companion of Welkynar Siroria. She is capable of unleashing powerful fire magic in the form of Roaring Flare. She and her mortal partner have been captured by the sea sload sorceress, Z'Maja. If the Shades of Siroria and Silaeda are defeated, the real Silaeda and Siroria will die, as Z'Maja will \"release them from her service\" by killing them. However, if the Shade of Siroria is defeated during the fight against Z'Maja, Silaeda and her rider will live.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Silaeda",
+        "page_title": "Online:Silaeda",
+        "revision_id": 3527978,
+        "retrieved_at": "2026-08-12T05:32:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

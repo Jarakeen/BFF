@@ -1,0 +1,40 @@
+{
+    "id": "havocrel",
+    "name": "Havocrel",
+    "content_id": "the_cauldron",
+    "content_name": "The Cauldron",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Havocrel first made their appearance with Flames of Ambition with Baron Zaudrus, though his species' name was not revealed until the release of Loremaster's Archive - Mehrunes Dagon & Daedra in the Second Era.",
+        "They use Nord facial presets with red irises and wear the Deadlands Scorcher skin.",
+        "A Havocrel is seen caged in The Feral Gallery."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Havocrel are a race of blind, giant, and ill-tempered Daedric beings that serve as mercenaries in their quest to find their purpose. Thus they do not truly serve the Daedric Princes, and instead sell their skillsets in hopes of gaining something they desire. They are a solitary race that is rarely seen, and have no sense of kinship, ultimately resulting in them detesting others of their own kind. For more information, see the lore page.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Havocrel",
+        "page_title": "Online:Havocrel",
+        "revision_id": 3532360,
+        "retrieved_at": "2026-08-12T21:16:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,76 @@
+{
+    "id": "the_scavenging_maw",
+    "name": "The Scavenging Maw",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Fort Mistwatch, Depths of Malatar",
+    "species": "Hunger",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,189,182",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Rake",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Puncture Wound",
+            "description": "Getting hit by Rake deals minor physical damage over time."
+        },
+        {
+            "name": "Retch",
+            "description": "The boss spews poison dealing moderate poison damage over time as indicated by a red cone in front of it. Do not stand in front of the boss unless you are the tank. The tank should keep the boss as still as possible as the boss will turn when doing this attack."
+        },
+        {
+            "name": "Retched Bile",
+            "description": "Pools of poison will appear under whoever is hit by Retch dealing moderate poison damage over time."
+        },
+        {
+            "name": "Hunger Pangs",
+            "description": "The boss disappears and summons shades to strike all players. Roll dodge or block to avoid this. If all players avoid this, it will net players an achievement."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [
+            "At 80%, 50% and 25% on veteran or 50% and 25% on normal, the boss disappears and enters the Hunting Phase."
+        ],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "It is seen on the dungeon's loading screen."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact.",
+        "Pledge: Depths of Malatar: Prove you are truly Undaunted by clearing Depths of Malatar."
+    ],
+    "summary": "The Scavenging Maw is a large and powerful hunger that serves as the first boss of the Depths of Malatar. It is encountered in Fort Mistwatch's storeroom, feasting on the purified soldiers. During combat, it can summon regular hungers called Maulers, or its own shade to strike targets. Periodically it will vanish, and a notice will appear on screen saying that is lurking and waiting to strike.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Scavenging_Maw",
+        "page_title": "Online:The Scavenging Maw",
+        "revision_id": 3345617,
+        "retrieved_at": "2026-08-12T21:19:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

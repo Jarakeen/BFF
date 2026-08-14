@@ -1,0 +1,38 @@
+{
+    "id": "mafremare",
+    "name": "Mafremare",
+    "content_id": "coral_aerie",
+    "content_name": "Coral Aerie",
+    "location": "Coral Aerie - Cove Lagoon",
+    "species": "Gryphon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "572,555",
+        "veteran": "2,052,798",
+        "hardmode": "3,592,397"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "An Order Gone Awry: A secretive society named the Ascendant Order has set up operations on Coral Aerie."
+    ],
+    "summary": "Mafremare is one of the gryphons trained by Varallion and can be found with him in Coral Aerie. She is a white, alpine breed taken far from her natural habitat. She has wind-based attacks during combat.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mafremare",
+        "page_title": "Online:Mafremare",
+        "revision_id": 3387828,
+        "retrieved_at": "2026-08-12T21:17:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

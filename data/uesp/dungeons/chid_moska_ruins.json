@@ -1,0 +1,28 @@
+{
+    "id": "chid_moska_ruins",
+    "name": "Chid-Moska Ruins",
+    "content_type": "dungeon",
+    "summary": "The Chid-Moska Ruins are ancient Argonian ruins in southwestern Shadowfen, west of Murkwater containing Blackguards.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The delve was inhabited by Outlaws (Outlaw Berserker; Outlaw Bruiser; Outlaw Recruit; Outlaw Sharpshooter) prior to Update 19, having been replaced by Blackguards."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Chid-Moska_Ruins",
+        "page_title": "Online:Chid-Moska Ruins",
+        "revision_id": 3598132,
+        "retrieved_at": "2026-08-12T21:16:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,461 @@
+{
+    "id": "riftmaster_naqri",
+    "name": "Riftmaster Naqri",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Scrivener's Hall",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,413,503",
+        "hardmode": "9,202,956"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Keshargo",
+            "line": "The hall, bask in its magnificence— shh! That's Valinna!",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<He heads over to listen.>",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I need that staff. Lock the gates, Riftmaster. No one leaves until I find it.",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "No one has ever challenged me and lived, Magnastylus.",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "She has them calling her Magnastylus? No matter, the staff remains hidden. Our efforts may yet be successful.",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna and Naqri move on.>",
+            "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I must consult the web of truth. Alert me with any news of the staff or the old fool.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "No need to involve you, Magnastylus. I'll beat anyone who tries to get through here.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna goes through door and Riftmaster Naqri stalks to the middle of the room.>",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "Naqri guards the rifts due to his more … aggressive nature. There'll be no reasoning with him.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I'll defeat you under the Golden Eye's watch.",
+            "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Foolish heroes to follow an old fool. How fitting.",
+            "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Been too long since I faced enemies on this side of the gate.",
+            "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "You want to visit Oblivion? Come closer, I'll let you see it without the rifts.",
+            "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Let's test your mettle.",
+            "trigger": "When combat begins",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I'm faster than you.",
+            "trigger": "When combat begins",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I'll defeat you with the works of the scribes.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Knowledge, give me versatility.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Knowledge, give me reserves.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Knowledge, give me power.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Knowledge, give me strength.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I command the realms of knowledge!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "Stay still. Let me put a book through your skull.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I'll fill books with your blood.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I'll batter your bones with hardcovers.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "I've held the horrors at bay. You are nothing.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "more lines",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "You should've done your research before challenging me.",
+            "trigger": "When the group is wiped",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "You can't get past me.",
+            "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Riftmaster Naqri dies.>",
+            "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "Naqri always was too arrogant.",
+            "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<He runs to the door and goes through.>",
+            "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "Web of truth? What could Valinna mean? No matter, we must retrieve the Itinerant Staff.",
+            "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation": [
+            {
+                "speaker": "Keshargo",
+                "line": "The hall, bask in its magnificence— shh! That's Valinna!",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<He heads over to listen.>",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "I need that staff. Lock the gates, Riftmaster. No one leaves until I find it.",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "No one has ever challenged me and lived, Magnastylus.",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "She has them calling her Magnastylus? No matter, the staff remains hidden. Our efforts may yet be successful.",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna and Naqri move on.>",
+                "trigger": "Riftmaster Naqri is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            }
+        ],
+        "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster": [
+            {
+                "speaker": "Valinna",
+                "line": "I must consult the web of truth. Alert me with any news of the staff or the old fool.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "No need to involve you, Magnastylus. I'll beat anyone who tries to get through here.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna goes through door and Riftmaster Naqri stalks to the middle of the room.>",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "Naqri guards the rifts due to his more … aggressive nature. There'll be no reasoning with him.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            }
+        ],
+        "When you begin your fight with him, Riftmaster Naqri will say one of the following": [
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I'll defeat you under the Golden Eye's watch.",
+                "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Foolish heroes to follow an old fool. How fitting.",
+                "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Been too long since I faced enemies on this side of the gate.",
+                "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "You want to visit Oblivion? Come closer, I'll let you see it without the rifts.",
+                "trigger": "When you begin your fight with him, Riftmaster Naqri will say one of the following",
+                "ability": null
+            }
+        ],
+        "When combat begins": [
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Let's test your mettle.",
+                "trigger": "When combat begins",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I'm faster than you.",
+                "trigger": "When combat begins",
+                "ability": null
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I'll defeat you with the works of the scribes.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Knowledge, give me versatility.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Knowledge, give me reserves.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Knowledge, give me power.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Knowledge, give me strength.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I command the realms of knowledge!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "Stay still. Let me put a book through your skull.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I'll fill books with your blood.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I'll batter your bones with hardcovers.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "I've held the horrors at bay. You are nothing.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "more lines",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "When the group is wiped": [
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "You should've done your research before challenging me.",
+                "trigger": "When the group is wiped",
+                "ability": null
+            }
+        ],
+        "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door": [
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "You can't get past me.",
+                "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Riftmaster Naqri dies.>",
+                "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "Naqri always was too arrogant.",
+                "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<He runs to the door and goes through.>",
+                "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "Web of truth? What could Valinna mean? No matter, we must retrieve the Itinerant Staff.",
+                "trigger": "Once you have slain Riftmaster Naqri, Keshargo will make a comment before heading to the Deadlands Pathway door",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "scribes_of_fate_achievements",
+            "name": "Achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Sigils used by Riftmaster Naqri are identical in appearance to Symbols of Xarxes used by Archivist Ernarde. They differ in colors and effects, however."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A War of Scribes: A usurper has taken control of the Scribes of Mora.",
+        "Pledge: Scrivener's Hall: Explore Scrivener's Hall and return Undaunted."
+    ],
+    "summary": "Riftmaster Naqri is an Imperial member of the Scribes of Mora who has sided with Valinna in her takeover of the organization. He is the first boss of Scrivener's Hall.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Riftmaster_Naqri",
+        "page_title": "Online:Riftmaster Naqri",
+        "revision_id": 3407148,
+        "retrieved_at": "2026-08-12T21:32:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

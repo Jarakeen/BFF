@@ -1,0 +1,76 @@
+{
+    "id": "roost_mother",
+    "name": "Roost Mother",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "Blackheart Haven, The Roost",
+    "species": "Hagraven",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,326,139",
+        "veteran": "2,008,408",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fire Bolt",
+            "description": "A basic ranged attack that does minor flame damage."
+        },
+        {
+            "name": "Breathe Flame",
+            "description": "The Roost Mother releases fire in front of herself dealing high flame damage as indicated by a red cone."
+        },
+        {
+            "name": "Raven Storm",
+            "description": "The Roost Mother charges up and releases a line of flaming ravens in front of herself dealing very high flame damage and staggering any target hit. This attack has no red indicator so keep an eye out for it."
+        },
+        {
+            "name": "Fiery Sacrifice",
+            "description": "The Roost Mother breathes fire in the air and causes ravens to fall to the ground near players, dealing high flame damage on impact and moderate flame damage over time as indicated by red circles."
+        },
+        {
+            "name": "Daedric Step",
+            "description": "The Roost Mother teleports around to avoid your attacks."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Roost Mother",
+            "line": "Rise my pretties!",
+            "trigger": "As you approach her arena, she appears, spewing a gout of fire from her mouth in a flurry of crows.",
+            "ability": "Breathe Flame"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you approach her arena, she appears, spewing a gout of fire from her mouth in a flurry of crows.": [
+            {
+                "speaker": "Roost Mother",
+                "line": "Rise my pretties!",
+                "trigger": "As you approach her arena, she appears, spewing a gout of fire from her mouth in a flurry of crows.",
+                "ability": "Breathe Flame"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven."
+    ],
+    "summary": "The Roost Mother is a Hagraven encountered in Blackheart Haven, where she serves as a boss. When defeated, she has a small chance to drop Roost Mother's Branch, a unique weapon in the Undaunted Unweaver item set. You do not need to kill her in order to progress to Blackheart's Cove but she is required to be killed in order to complete the dungeon's pledge.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Roost_Mother",
+        "page_title": "Online:Roost Mother",
+        "revision_id": 3425703,
+        "retrieved_at": "2026-08-12T21:14:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

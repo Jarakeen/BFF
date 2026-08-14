@@ -1,0 +1,28 @@
+{
+    "id": "the_vile_manse",
+    "name": "The Vile Manse",
+    "content_type": "dungeon",
+    "summary": "The Vile Manse is a manor in northwestern Reaper's March. This large estate was recently built by Graccus and his renegade Colovian Raiders after they deserted from the Legion of the West Weald, and razed the nearby Bosmer village to build it over. Extensive tunnel systems have been excavated beneath the mansion, where Graccus pursues his mad quest for a mysterious relic. The entrance to it is in an abandoned Colovian-style mansion, where a key obtained for The Waking Dreamer quest is needed to open the cellar, where most of the enemies are found. At the end of the cellar, there is a large hole that goes to collapsed cavern containing an Ayleid ruin. Centipedes are found within. Hazards include bottomless pits.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Despite the Imperial occupants inside being part of the Colovian Raiders, all the generic Imperial enemies have the \"Highland\" prefix, which is attributed to the Legion of the West Weald."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Vile_Manse",
+        "page_title": "Online:The Vile Manse",
+        "revision_id": 3567116,
+        "retrieved_at": "2026-08-12T21:37:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,335 @@
+{
+    "id": "rogerain_the_sly",
+    "name": "Rogerain the Sly",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "Red Petal Bastion",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "3,182,733",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Dagger Strike",
+            "description": "A basic melee attack dealing moderate physical damage. Rogerain the Sly can change weapons on the fly during combat."
+        },
+        {
+            "name": "Greatsword Strike",
+            "description": "A basic melee attack dealing high physical damage. Rogerain the Sly can change weapons on the fly during combat."
+        },
+        {
+            "name": "Stink Bolt",
+            "description": "A basic ranged attack dealing moderate poison damage. Rogerain the Sly can change weapons on the fly during combat."
+        },
+        {
+            "name": "Crazed Leap",
+            "description": "Rogerain the Sly leaps into the air and slams his greatsword into the ground, creating four swirls of chaotic magic to fly outward from the impact site, dealing high magical damage. These don't have AoE indicators."
+        },
+        {
+            "name": "Unspeakable Void",
+            "description": "Rogerain the Sly creates a dark portal into the floor of the arena, indicated by a large circular AoE. Standing in the portal deals continuous moderate magical damage. The portal itself will constantly spew out purple magical orbs in all directions, indicated by smaller circular AoEs, dealing high magical damage. Every once in a while, a golden Sweetroll will also get tossed into the arena, which is required for the Belly Buster ability."
+        },
+        {
+            "name": "Belly Buster",
+            "description": "Rogerain the Sly grabs hold of you, rendering you immobile, then turns you into a goat, making you unable to perform attacks. To return to human form, you must eat ten sweetrolls. Each sweetroll eaten reduces your movement speed while in goat form. If there are any sweetrolls left while out of goat form, they can be used before they disappear to regain health."
+        },
+        {
+            "name": "Chaos Gate",
+            "description": "Rogerain activates a Gate of Chaos, which summons random enemies into the arena to assist in the fight. These can include Chaos Spiders, death hoppers and watchers."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lyranth",
+            "line": "I expected greater resistance. It seems the Silver Rose are short on more than servants.",
+            "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "<Rogerain the Sly exits the keep's doors.>",
+            "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "Rogerain the Sly",
+            "line": "Oh, ho ho! They're still here. Just not everyone takes to these toys as well as me. Hee hee hahahaha!",
+            "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "Lyranth",
+            "line": "Sanity seems in short supply as well.",
+            "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "I wasn't prepared for a contest today. I'll just have to improvise! That's when the magic happens.",
+            "trigger": "Idling before combat happens",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "What do we have in here today? A little of this, a little of that!",
+            "trigger": "Opening portals",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "I just like poking holes in reality, if I'm honest.",
+            "trigger": "Opening portals",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Well, what in Oblivion have we got here? Something for everyone!",
+            "trigger": "Opening portals",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Let's see who wants to join us. More the merrier, I say!",
+            "trigger": "Opening portals",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "I'd say it's coming down like cats and dogs, but it's not!",
+            "trigger": "Opening portals",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Those froggos know how to stick a landing, I'll give em that. Where'd you suppose they learned to fly?",
+            "trigger": "Summoning Death Hoppers",
+            "ability": "Chaos Gate"
+        },
+        {
+            "speaker": "",
+            "line": "Duck, duck—goat! Haha hee ha ho ho!",
+            "trigger": "Turning a player into a goat",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Baaa! Wait, goats don't baa. They ahhhhhhhhhhhhh!",
+            "trigger": "Turning a player into a goat",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Here, goat. Here, goat. Got some nice tasty garbage for you.",
+            "trigger": "Turning a player into a goat",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Hey, goat! Quit kidding around! Hee hee!",
+            "trigger": "Turning a player into a goat",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Let's play pin the tail on—you!",
+            "trigger": "Turning a player into a goat",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Too cold? I suppose they don't call it the Shivering Isles for nothing.",
+            "trigger": "Unsorted",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Stand still, would you? I'm trying to make toad stools out of you!",
+            "trigger": "Unsorted",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "You're not even going to try your indescribable horrors? Such ingratitude!",
+            "trigger": "Unsorted",
+            "ability": "Belly Buster"
+        },
+        {
+            "speaker": "",
+            "line": "Well, that was a fun diversion! But who's going to clean up?",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You see that, uncle? I said did you see that? Well, there's no need to shout.",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering the courtyard outside the keep, Lyranth will follow you": [
+            {
+                "speaker": "Lyranth",
+                "line": "I expected greater resistance. It seems the Silver Rose are short on more than servants.",
+                "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "<Rogerain the Sly exits the keep's doors.>",
+                "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "Rogerain the Sly",
+                "line": "Oh, ho ho! They're still here. Just not everyone takes to these toys as well as me. Hee hee hahahaha!",
+                "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "Lyranth",
+                "line": "Sanity seems in short supply as well.",
+                "trigger": "Entering the courtyard outside the keep, Lyranth will follow you",
+                "ability": "Belly Buster"
+            }
+        ],
+        "Idling before combat happens": [
+            {
+                "speaker": "",
+                "line": "I wasn't prepared for a contest today. I'll just have to improvise! That's when the magic happens.",
+                "trigger": "Idling before combat happens",
+                "ability": "Belly Buster"
+            }
+        ],
+        "Opening portals": [
+            {
+                "speaker": "",
+                "line": "What do we have in here today? A little of this, a little of that!",
+                "trigger": "Opening portals",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "I just like poking holes in reality, if I'm honest.",
+                "trigger": "Opening portals",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Well, what in Oblivion have we got here? Something for everyone!",
+                "trigger": "Opening portals",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Let's see who wants to join us. More the merrier, I say!",
+                "trigger": "Opening portals",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "I'd say it's coming down like cats and dogs, but it's not!",
+                "trigger": "Opening portals",
+                "ability": "Belly Buster"
+            }
+        ],
+        "Summoning Death Hoppers": [
+            {
+                "speaker": "",
+                "line": "Those froggos know how to stick a landing, I'll give em that. Where'd you suppose they learned to fly?",
+                "trigger": "Summoning Death Hoppers",
+                "ability": "Chaos Gate"
+            }
+        ],
+        "Turning a player into a goat": [
+            {
+                "speaker": "",
+                "line": "Duck, duck—goat! Haha hee ha ho ho!",
+                "trigger": "Turning a player into a goat",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Baaa! Wait, goats don't baa. They ahhhhhhhhhhhhh!",
+                "trigger": "Turning a player into a goat",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Here, goat. Here, goat. Got some nice tasty garbage for you.",
+                "trigger": "Turning a player into a goat",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Hey, goat! Quit kidding around! Hee hee!",
+                "trigger": "Turning a player into a goat",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Let's play pin the tail on—you!",
+                "trigger": "Turning a player into a goat",
+                "ability": "Belly Buster"
+            }
+        ],
+        "Unsorted": [
+            {
+                "speaker": "",
+                "line": "Too cold? I suppose they don't call it the Shivering Isles for nothing.",
+                "trigger": "Unsorted",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "Stand still, would you? I'm trying to make toad stools out of you!",
+                "trigger": "Unsorted",
+                "ability": "Belly Buster"
+            },
+            {
+                "speaker": "",
+                "line": "You're not even going to try your indescribable horrors? Such ingratitude!",
+                "trigger": "Unsorted",
+                "ability": "Belly Buster"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Well, that was a fun diversion! But who's going to clean up?",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You see that, uncle? I said did you see that? Well, there's no need to shout.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His staff is Ancient Daedric style like the artifacts Duplici Gladio and Groundsplitters, but it is no known artifact."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Rogerain the Sly is an insane Breton found in the Red Petal Bastion. He acts as the first boss of Red Petal Bastion.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rogerain_the_Sly",
+        "page_title": "Online:Rogerain the Sly",
+        "revision_id": 3584766,
+        "retrieved_at": "2026-08-12T21:31:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

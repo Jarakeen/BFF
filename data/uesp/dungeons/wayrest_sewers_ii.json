@@ -1,0 +1,38 @@
+{
+    "id": "wayrest_sewers_ii",
+    "name": "Wayrest Sewers II",
+    "content_type": "dungeon",
+    "summary": "Wayrest Sewers II is a group dungeon found under the city of Wayrest in Stormhaven. The storyline continues from the events of Wayrest Sewers I. In this version, enemies you once thought dead have returned. Yahyif and Gedric Serre want you to find Master Pellingare, who has gone missing in the city sewers. You can learn its location from Wandering Jakalor outside Elden Root, Lady Blade outside Wayrest, or Hranir Icy-Mane outside Mournhold.",
+    "location": "",
+    "boss_ids": [
+        "malubeth_the_scourger",
+        "harvester",
+        "garron_the_returned",
+        "lich",
+        "investigator_garron",
+        "allene_pellingare",
+        "varaine_pellingare"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Wayrest Sewers was designed for levels 20–23, and Veteran Wayrest Sewers was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Wayrest Sewers I was only available in Normal mode, and Wayrest Sewers II was only available in Veteran mode. These were named Wayrest Sewers and Veteran Wayrest Sewers respectively.",
+        "As can be seen from the map below, the layout is unusual, with one of the mini-bosses off in an easily missable room to the side (in the far NW corner of the dungeon). Most dungeons take a fairly sequential route and the player will generally encounter all the mini-bosses whether they like it or not: this one you must go out of your way to even see. This is also true of Wayrest Sewers I, where the Rat Whisperer is in the same side room. Missing this mini-boss may cause the player to miss out on various in-game Achievements, especially in Veteran mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wayrest_Sewers_II",
+        "page_title": "Online:Wayrest Sewers II",
+        "revision_id": 3511111,
+        "retrieved_at": "2026-08-12T21:38:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

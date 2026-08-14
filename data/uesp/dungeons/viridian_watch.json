@@ -1,0 +1,26 @@
+{
+    "id": "viridian_watch",
+    "name": "Viridian Watch",
+    "content_type": "dungeon",
+    "summary": "Viridian Watch is a fort in eastern Bangkorai, northeast of the Bangkorai Garrison containing Bjoulsae Boys bandits. A chest can be found around the corner from the trapdoor leading into the delve. A heavy sack is located in the hallway west of the entrance, at the corner between the eastern and southern passageways. Quickpaw of Martyr's Crossing can mark this delve on your map. Captured Bretons can be found here. A chest and heavy sack are located west of the boss, in the eastern chamber. Curnard's Journal can be found on a table east of the boss. The Bjoulsae Boys Charter can be found in the delve as well, along with another document. A copy of A Royal Embarrassment can also be found here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Viridian_Watch",
+        "page_title": "Online:Viridian Watch",
+        "revision_id": 3598264,
+        "retrieved_at": "2026-08-12T21:37:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

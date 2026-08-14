@@ -1,0 +1,37 @@
+{
+    "id": "vaults_of_madness",
+    "name": "Vaults of Madness",
+    "content_type": "dungeon",
+    "summary": "The Vaults of Madness is a group dungeon found in Coldharbour. Gasteau Chamrond needs you to help him and his friends escape from the Vaults by destroying the Mad Architect. You can learn about its location from Tubidan the Alarmist in the Hollow City. Hazards include bottomless pits and fire, the latter of which is encountered near the Ancient One and Iskra the Omen.",
+    "location": "",
+    "boss_ids": [
+        "ulguna_soul_reaver",
+        "harvester",
+        "grothdarr",
+        "flesh_atronach",
+        "iskra_the_omen",
+        "daedric_titan",
+        "mad_architect",
+        "lich"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Vaults of Madness was designed for levels 47–50."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vaults_of_Madness",
+        "page_title": "Online:Vaults of Madness",
+        "revision_id": 3567041,
+        "retrieved_at": "2026-08-12T21:37:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

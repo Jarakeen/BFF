@@ -1,0 +1,70 @@
+{
+    "id": "rinaerus_the_rancid",
+    "name": "Rinaerus the Rancid",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Scalecaller Peak",
+    "species": "Ogre",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,252,465",
+        "veteran": "1,882,002",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Frost Bolt",
+            "description": "A basic melee attack that deals minor frost damage."
+        },
+        {
+            "name": "Glacial Winds",
+            "description": "The boss deals moderate frost damage around itself over time as indicated by a large red circle. After Glacial Winds ends, freeze yourself in the yellow frost circles to counter the incoming Terrorizing Tremors. The group is advised to kill the two ogres at around the same time, as once Rinaerus dies the Glacial Winds will not appear to shield the group from Terrorizing Tremor AOEs."
+        },
+        {
+            "name": "Wave of Pestilence",
+            "description": "The boss throws a wave of green mist at a target dealing moderate disease damage as indicated by a red cone."
+        },
+        {
+            "name": "Vicious Hail",
+            "description": "The boss gathers a large ice ball, dealing moderate frost damage over time to all players not hiding behind the pillars."
+        },
+        {
+            "name": "Vicious Shard",
+            "description": "The boss throws the ball at all players out in the open, dealing very high frost damage (lethal on vet). Hide behind the larger ice pillars summoned by Orzun to prevent this."
+        },
+        {
+            "name": "Summon Skeevers",
+            "description": "The boss channels a spell that summons multiple skeevers to attack the group. Interrupt this as soon as possible and kill the skeevers to simplify the fight."
+        },
+        {
+            "name": "Wretched Pollution",
+            "description": "The boss has an aura that deals minor disease damage around itself (visible as green mist in image above). This damage will increase dramatically if the two bosses are brought together, so keep them separate."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Prior to battle, he can be seen feeding on dead imps."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Plans of Pestilence: Conquer Scalecaller Peak and stop a dangerous plague from spreading.",
+        "Pledge: Scalecaller Peak: Prove you are truly Undaunted by clearing Scalecaller Peak."
+    ],
+    "summary": "Rinaerus the Rancid is an ogre found at Scalecaller Peak. Along with Orzun the Foul-Smelling, he serves as the first boss of the dungeon. He and Orzun have a chance to collectively drop a sample of Infected Flesh.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rinaerus_the_Rancid",
+        "page_title": "Online:Rinaerus the Rancid",
+        "revision_id": 3348043,
+        "retrieved_at": "2026-08-12T21:32:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

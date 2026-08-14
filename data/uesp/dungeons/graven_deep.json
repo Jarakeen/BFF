@@ -1,0 +1,37 @@
+{
+    "id": "graven_deep",
+    "name": "Graven Deep",
+    "content_type": "dungeon",
+    "summary": "This article is about the group dungeon. For the cemetery, see Deep Graves. Graven Deep is a region located off the southwest coast of High Isle, accessed by ship from Amenos Station. It is connected to a Dwarven observatory located on the seabed, containing a machine capable of manipulating the weather. Dragonflies, frogs, hermit crabs, monkeys and torchbugs are found in numbers within. It is included in the Lost Depths DLC alongside Earthen Root Enclave.",
+    "location": "",
+    "boss_ids": [
+        "the_euphotic_gatekeeper",
+        "varzunon",
+        "zelvraak_the_unbreathing"
+    ],
+    "achievements": [
+        {
+            "id": "lost_depths_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Graven_Deep",
+        "page_title": "Online:Graven Deep",
+        "revision_id": 3585402,
+        "retrieved_at": "2026-08-12T21:24:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

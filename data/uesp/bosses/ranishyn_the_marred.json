@@ -1,0 +1,85 @@
+{
+    "id": "ranishyn_the_marred",
+    "name": "Ranishyn the Marred",
+    "content_id": "leftwheal_trading_post",
+    "content_name": "Leftwheal Trading Post",
+    "location": "Leftwheal Trading Post",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Heavy Strike",
+            "description": "Charged melee attack dealing moderate-high physical damage and staggering. This can be blocked to stagger Ranishyn instead."
+        },
+        {
+            "name": "Powerful Throw",
+            "description": "Ranishyn starts an Uppercut-like attack but instead transforms into her weapon which flies in an arc and lands with force, dealing moderate-high physical damage in an area and staggering. This ability can only be cast one at a time between enemies."
+        },
+        {
+            "name": "Shard Shield",
+            "description": "Ranishyn channels a glass shield around her which grants her a moderate damage shield and deals moderate magic damage."
+        },
+        {
+            "name": "Bouncing Light",
+            "description": "Ranishyn launches a glass orb to her twin that bounces back to her, each time dealing moderate magic damage in an area."
+        },
+        {
+            "name": "Return, My Twin",
+            "description": "If Ranishyn isn't killed within two seconds of Olashyn the Twisted, Olashyn is revived with 50% Health."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Ranishyn the Marred",
+            "line": "Return to me, my other half!",
+            "trigger": "When she revives her twin sister",
+            "ability": "Bouncing Light"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When she revives her twin sister": [
+            {
+                "speaker": "Ranishyn the Marred",
+                "line": "Return to me, my other half!",
+                "trigger": "When she revives her twin sister",
+                "ability": "Bouncing Light"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Ranishyn the Marred is a Dremora who serves as one of the champions of Leftwheal Trading Post alongside Olashyn the Twisted.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ranishyn_the_Marred",
+        "page_title": "Online:Ranishyn the Marred",
+        "revision_id": 3281826,
+        "retrieved_at": "2026-08-12T21:27:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

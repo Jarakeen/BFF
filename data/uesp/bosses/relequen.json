@@ -1,0 +1,38 @@
+{
+    "id": "relequen",
+    "name": "Relequen",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Cloudrest Aerie",
+    "species": "",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "6,816,516",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Arms of Relequen and Perfect Arms of Relequen sets are named after him. He also wrote the book The Welkynars of Eton Nir and the Welkynar motif book."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Relequen is the High Elf leader of the four Welkynar Knights. He fights alongside his gryphon companion, Belanaril, who is capable of unleashing powerful lightning magic. During the fall of Cloudrest, he is corrupted by Z'Maja and fights for her as a shadowy clone. If he is defeated alongside Z'Maja in the final battle he is released from her spell and retakes his mortal form.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Relequen",
+        "page_title": "Online:Relequen",
+        "revision_id": 3566001,
+        "retrieved_at": "2026-08-12T05:31:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

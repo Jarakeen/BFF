@@ -1,0 +1,108 @@
+{
+    "id": "captain_geminus",
+    "name": "Captain Geminus",
+    "content_id": "black_drake_villa",
+    "content_name": "Black Drake Villa",
+    "location": "Black Drake Villa",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "4,060,128",
+        "hardmode": "9,135,288"
+    },
+    "abilities": [
+        {
+            "name": "Arrow Shot",
+            "description": "A basic range attack dealing moderate physical damage."
+        },
+        {
+            "name": "Arrow Spray",
+            "description": "Captain Geminus takes aim and fires a wide spray of arrows at you, dealing very high physical damage, indicated by a large conical AoE in front of her. She will adjust her position for a time if you try to strafe around her to avoid the attack."
+        },
+        {
+            "name": "Bomb Arrow",
+            "description": "Captain Geminus shoots an arrow that explodes on impact, sending out three magical shockwaves outward from the explosion, dealing high magical damage. These don't have AoE indicators."
+        },
+        {
+            "name": "Mind Rending",
+            "description": "Captain Geminus assaults your very mind, as your screen becomes obscured and shadowy, causing continuous massive damage. You must head over to a small magical field that Captain Geminus throws at far away into the arena at the start of this ability to nullify the effect."
+        },
+        {
+            "name": "Earth Slam",
+            "description": "Captain Geminus slams the ground with force, sending out a massive shockwave, dealing high physical damage and knocking you down."
+        },
+        {
+            "name": "Elemental Onslaught",
+            "description": "At 70% and 30% health, Captain Geminus summons a large air atronach into the arena to assist her. As long as the atronach is alive, Captain Geminus is shielded by a magical bubble, making her invulnerable to damage. Additionally, while you fight the atronach, she will fire out waves of fireballs out from all around her position, dealing high flame damage each. These don't have any indicators."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "During the fight, Shades of Geminus will appear on the outer rim of the arena and shoot you with arrows. They have low health and should be killed quickly to simplify the fight. Starting after the first Elemental Onslaught phase, True-Sworn Flame Hounds will also start to get summoned."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Pyroturge Encratis",
+            "line": "The book isn't here. Burn this—burn it all! Our lord demands it!",
+            "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+            "ability": "Arrow Spray"
+        },
+        {
+            "speaker": "Captain Geminus",
+            "line": "You go. We must finish the job. I can delay these worms.",
+            "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+            "ability": "Arrow Spray"
+        },
+        {
+            "speaker": "Eveli Sharp-Arrow",
+            "line": "You take care of Captain Important there. I'm after the fire mage!\"",
+            "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+            "ability": "Arrow Spray"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult": [
+            {
+                "speaker": "Pyroturge Encratis",
+                "line": "The book isn't here. Burn this—burn it all! Our lord demands it!",
+                "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+                "ability": "Arrow Spray"
+            },
+            {
+                "speaker": "Captain Geminus",
+                "line": "You go. We must finish the job. I can delay these worms.",
+                "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+                "ability": "Arrow Spray"
+            },
+            {
+                "speaker": "Eveli Sharp-Arrow",
+                "line": "You take care of Captain Important there. I'm after the fire mage!\"",
+                "trigger": "When you and Eveli break in, she can be heard speaking with Pyroturge Encratis about the book sought by their cult",
+                "ability": "Arrow Spray"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Burning Secrets: Recover a book from an abandoned villa before it is burned to the ground.",
+        "Pledge: Black Drake Villa: Enter Black Drake Villa and return Undaunted."
+    ],
+    "summary": "Captain Geminus is an Imperial archer found in Black Drake Villa. She is a member of the True-Sworn. She acts as the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Geminus",
+        "page_title": "Online:Captain Geminus",
+        "revision_id": 3384700,
+        "retrieved_at": "2026-08-12T21:14:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

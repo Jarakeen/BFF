@@ -1,0 +1,21 @@
+{
+    "id": "annyce_favraud_s_dream",
+    "name": "Annyce Favraud's Dream",
+    "content_type": "dungeon",
+    "summary": "Annyce Favraud's Dream is an imaginary ship dreamed up by Annyce Favraud. The scene is based on The Saga of Captain Wereshark Vol. 3. The lower deck of Captain Wereshark's ship is inaccessible, but Prince Vaugr's vessel is open for exploration, which is guarded by his draugr crew.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Combat music doesn't play while in the dream.",
+        "Jumping in the water results in an instant attack by slaughterfish."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Annyce_Favraud%27s_Dream",
+        "page_title": "Online:Annyce Favraud's Dream",
+        "revision_id": 3550286,
+        "retrieved_at": "2026-08-12T21:12:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

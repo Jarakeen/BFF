@@ -1,0 +1,67 @@
+{
+    "id": "yokeda_kai",
+    "name": "Yokeda Kai",
+    "content_id": "hel_ra_citadel",
+    "content_name": "Hel Ra Citadel",
+    "location": "Hel Ra Citadel",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flare",
+            "description": "A basic ranged attack that does moderate flame damage."
+        },
+        {
+            "name": "Meteor",
+            "description": "The boss drops a meteor on top of a target player as indicated by a red circle, dealing high flame damage and stunning the target. Blocking can help the player survive this attack."
+        },
+        {
+            "name": "Scorched Ground",
+            "description": "The meteor leaves behind a pool of fire that does moderate flame damage over time as indicated by a small red circle."
+        },
+        {
+            "name": "Pulsar",
+            "description": "The boss releases flame around itself as indicated by a red circle. This attack does high flame damage and must be blocked or shielded through at all costs."
+        },
+        {
+            "name": "Inferno",
+            "description": "The boss channels flame above itself that deals moderate flame damage to all players over time, increasing over time. This attack will stagger nearby players briefly and must be interrupted quickly."
+        },
+        {
+            "name": "Summon Clones",
+            "description": "The boss moves to the center of the room and summons three copies of himself at four fixed locations in the room. These clones will be invulnerable while the original boss can still be damaged. These clones must be killed quickly to simplify the fight. When the clones cast Inferno, interrupting them will kill them immediately. If the interrupt is missed, they will disappear after some time by themselves."
+        },
+        {
+            "name": "Wrath of Yokeda",
+            "description": "If the group fighting Yokeda Rok'dun down below is defeated, flares of bright light not unlike those produced during The Warrior's Shehai Storm will rain down from the sky, causing the group fighting Yokeda Kai to wipe."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He uses the same model as the Anka-Ra Flame-Shapers."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Assaulting the Citadel: Launch an attack on the Celestial Warrior's stronghold."
+    ],
+    "achievements": [],
+    "summary": "Yokeda Kai is an Anka-Ra mage defending Hel Ra Citadel against intruders. He is one of two possible second bosses that the team will face in the trial, the other being Yokeda Rok'dun, as the team splits into two teams of six after the first boss. He must be defeated to progress further.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yokeda_Kai",
+        "page_title": "Online:Yokeda Kai",
+        "revision_id": 3092239,
+        "retrieved_at": "2026-08-12T05:32:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

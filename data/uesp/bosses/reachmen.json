@@ -1,0 +1,36 @@
+{
+    "id": "reachmen",
+    "name": "Reachmen",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Redirect to:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reachmen",
+        "page_title": "Online:Reachmen",
+        "revision_id": 2154629,
+        "retrieved_at": "2026-08-12T21:26:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,76 @@
+{
+    "id": "air_atronach",
+    "name": "Air Atronach",
+    "content_id": "hel_ra_citadel",
+    "content_name": "Hel Ra Citadel",
+    "location": "Lower Craglorn, Elinhir Sewerworks",
+    "species": "Air Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "47,046",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slice/Swipe",
+            "description": "Basic melee attack dealing low physical damage."
+        },
+        {
+            "name": "Flare",
+            "description": "Basic ranged attack dealing low physical damage."
+        },
+        {
+            "name": "Double Strike/Heavy Attack",
+            "description": "The air atronach crosses its swords together in front of itself before fanning them out, dealing moderate physical damage. This attack can be blocked to set the air atronach off-balance."
+        },
+        {
+            "name": "Blade Spin/Tornado",
+            "description": "The air atronach winds up its swords before spinning around once, as indicated by a red circular AoE, dealing moderate physical damage. This can be interrupted to set air atronach off-balance."
+        },
+        {
+            "name": "Flame Tornado",
+            "description": "The air atronach winds up its swords before spinning around continuously, as indicated by a red circular AoE under itself, dealing continuous moderate flame damage. This can be interrupted to set air atronach off-balance. (Tornado changes into Flame Tornado after absorbing a flame atronach.)"
+        },
+        {
+            "name": "Ice Vortex",
+            "description": "The air atronach winds up its swords before spinning around in a large area around itself once, dealing moderate frost damage and an intense snare that lasts for 8 seconds. This can be interrupted to set air atronach off-balance. (Tornado changes into Ice Vortex after absorbing a frost atronach.)"
+        },
+        {
+            "name": "Lightning Rod",
+            "description": "The air atronach lifts its swords to channel a lightning strike on its target, dealing continuous low shock damage. It then releases a thunderbolt on top of its target which deals moderate shock damage. This can be interrupted to set air atronach off-balance. (Tornado changes into Lightning Rod after absorbing a storm atronach.)"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Killing an atronach of a different element than the air atronach's current buff will not change it. The buff stays the same from the beginning until it runs out, which takes around one minute."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Avarice of the Eldertide: Stop the encroachment of Eldertide theurges.",
+        "Born of Grief: Ascend Annihilarch's Summit to locate the Waking Flame's hidden base.",
+        "Elemental Army: Destroy the Serpent's army of atronachs.",
+        "Haunted Grounds: Help drive out spirits infesting a nobleman's new property.",
+        "Ithelia's Fury: Investigate the threat caused by Ithelia's unstable power, and find a way to stop her.",
+        "Pledge: City of Ash II: Prove you are truly Undaunted by clearing the City of Ash II.",
+        "Relics of Yasammidan: Help recover historical relics from a Daedric ruin.",
+        "Return to Ash: Enter the Deadlands to rescue a failed invasion force.",
+        "The Second Era of Scribing: Investigate unstable magic with Votary Nahlia.",
+        "Veteran City of Ash Pledge: Prove you are truly Undaunted by clearing the Veteran City of Ash. (disabled since Patch 2.6.4)"
+    ],
+    "achievements": [],
+    "summary": "Air Atronachs are a type of elemental Daedra that supposedly possess the combined power of a flame, frost and storm atronach. As a result, Air Atronachs are capable of absorbing the element of a nearby slain atronach to temporary buff themselves. They are found mostly in the eastern half of Lower Craglorn, especially around the Spellscar, often in the presence of other atronachs. They can also be found guarding certain Daedric ruins on Vvardenfell.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Air_Atronach",
+        "page_title": "Online:Air Atronach",
+        "revision_id": 3572735,
+        "retrieved_at": "2026-08-12T05:32:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

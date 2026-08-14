@@ -1,0 +1,33 @@
+{
+    "id": "tombs_of_the_na_totambu",
+    "name": "Tombs of the Na-Totambu",
+    "content_type": "dungeon",
+    "summary": "The Tombs of the Na-Totambu are a Yokudan burial ground in southern Craglorn containing Anka-Ra warriors and desert wildlife. The ruthless warlord, Emperor Tarish-Zi, is entombed here. Sandroaches and Wasps are found in numbers within. Spike Traps cover the bridges within the delve.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve.",
+        "The Glorious Coil is an optional boss that can be found in the dungeon but does not require to be killed for completion. He is an Anka-Ra statue that will come to life when his three attendant servants The Craven Shield, The Fumbled Knife and The Servile Staff are defeated. They are in the center of the southwestern square, but it is possible to walk right past the lot of them.",
+        "Namsah can be summoned at the Tomb of the Fallen, a blue-glowing brazier with a statue behind it, in the open central area just south of the eastern end of the first spike-trapped bridge.",
+        "Prince Tarjal can be summoned at the Tomb of the Lost Heir, a blue-glowing brazier with a statue behind it, after crossing the first bridge between the waterfalls, continuing up the first set of stairs, at the far western end of the hall, directly west of the player's entrance to the tomb.",
+        "The gargoyles inside the dungeon can drop Spirit Stones which can be used to summon and fight optional bosses, Namsah the Fallen and Prince Tarjal the Lost. The drop chance is apparently random, and there is a chance that you may have passed the tomb before getting the Spirit Stone that can open it.",
+        "The map marker for the entrance of the delve is deceiving. To reach the entrance you have to cross a natural stone bridge that starts at a Greycloak camp south of the Sandy Path Wayshrine."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tombs_of_the_Na-Totambu",
+        "page_title": "Online:Tombs of the Na-Totambu",
+        "revision_id": 3282359,
+        "retrieved_at": "2026-08-12T21:36:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

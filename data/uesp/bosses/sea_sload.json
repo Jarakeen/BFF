@@ -1,0 +1,66 @@
+{
+    "id": "sea_sload",
+    "name": "Sea Sload",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Summerset",
+    "species": "Sea Sload",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Pearlescence",
+            "description": "Summons two pearlescent orbs; one near the Sea Sload, and one near a target. A Sload group boss may summon as many orbs as there are opposing players."
+        },
+        {
+            "name": "Mental Manipulation",
+            "description": "Moves pearlescent orbs (Alchemical Globules), which explode if they strike a player target. Pearls moved by Mental Manipulation move quicker or slower depending on how far away the pearl is from where it is going."
+        },
+        {
+            "name": "Hallucinosis",
+            "description": "The Sload creates a shield of psychic energy around itself. When the shield is attacked, it may release AoEs which snare and inflict Mind Magic damage to those who step in them. The AoEs also activate pearls, which summon Yaghra when they're hit by Hallucinosis."
+        },
+        {
+            "name": "Cognitive Dissonance",
+            "description": "Summons two hydro-portals, one in front of the Sload and one at least 15 meters away, allowing them to teleport."
+        },
+        {
+            "name": "Mind Blast",
+            "description": "A beam of energy channeled at their antennas that deals mind magic damage at one target and staggers them. Group boss Sea Sload can hit multiple targets with this ability. Being hit by this ability also makes you the prime target for nearby Yaghra."
+        },
+        {
+            "name": "Engorge the Horde",
+            "description": "The Sload congeals a ball of energy, releasing it to target nearby Yaghra and applying a buff. It appears as a moderately sized AoE."
+        },
+        {
+            "name": "Ingurgitate",
+            "description": "The Sload calls an orb to it and absorbs it, granting the Sload rapid health regeneration. Group boss Sea Sload can absorb multiple orbs simultaneously. Destroy as many orbs as you can find to prevent the Sload from healing."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "There is a dead Sea Sload in one of the nests at Gryphon Run. It's the first nest immediately to the right as soon as you cross the bridge into the nesting grounds. You can see its large body and spindly toes peeking up from the branches. A live Sea Sload is seen caged in The Feral Gallery and can be examined.",
+        "The Prima guide makes it a point to put \"male\" and \"female\" in quotes when referring to the named Sea Sload, implying that gender is merely a suggestion for linguistic convenience."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "achievements": [],
+    "summary": "Sea Sload are a variant of Sload who hail from the undersea kingdom of Ul'vor Kus. Known to be even more reclusive than their Thrassian cousins, Sea Sload often tend to form cabals among themselves to achieve common goals, which then break up or reform as those goals change. In addition to necromancy, the Sea Sload are also skilled in the arts of alchemy, shadow magic, and mind magic, as well as other arcane disciplines. Sea Sload utilize various deep sea creatures, such as the Yaghra, as servants and soldiers.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sea_Sload",
+        "page_title": "Online:Sea Sload",
+        "revision_id": 3561394,
+        "retrieved_at": "2026-08-12T05:32:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

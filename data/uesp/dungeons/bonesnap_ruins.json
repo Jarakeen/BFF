@@ -1,0 +1,28 @@
+{
+    "id": "bonesnap_ruins",
+    "name": "Bonesnap Ruins",
+    "content_type": "dungeon",
+    "summary": "Bonesnap Ruins is an Ayleid ruin about halfway between Koeglin Village and Wayrest in Stormhaven. It is occupied by the Bonesnap goblin tribe. The Lion Guard has been sent to the ruins to investigate rumors of Daedra summoning occurring within. A few alchemy, blacksmithing, enchanting and jewelry crafting resource nodes are scattered throughout the public dungeon. Fleshflies, rats and spiders are found in numbers within. Hazards include bottomless pits. Bosses have a chance to drop Malacath's Brutal Ritual Oil antiquity lead for Malacath's Band of Brutality.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Even though the loading screen states that the Ayleid name of the ruin has been long forgotten, it is actually mentioned in the book The Mysteries of Moravagarlis."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bonesnap_Ruins",
+        "page_title": "Online:Bonesnap Ruins",
+        "revision_id": 3567101,
+        "retrieved_at": "2026-08-12T21:15:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

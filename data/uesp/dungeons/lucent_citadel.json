@@ -1,0 +1,42 @@
+{
+    "id": "lucent_citadel",
+    "name": "Lucent Citadel",
+    "content_type": "dungeon",
+    "summary": "Lucent Citadel is a ruined stronghold in the wastelands of Fargrave, accessible from West Weald. Lucent Citadel is a trial, although unlike other trials, the main objective is to obtain an unstable relic called the Arcane Knot and bring it back to the entrance. Hazards include arcane sentries and glass orbs. The trial and its rewards are associated with the Daedric Prince Ithelia (see note below).",
+    "location": "",
+    "boss_ids": [
+        "count_ryelaz",
+        "zilyesset",
+        "cavot_agnan",
+        "orphic_shattered_shard",
+        "xoryn"
+    ],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Arcane Knot and the Lucent Citadel are associated with the Daedric Prince Ithelia. Hermaeus Mora wiped her existence from memory, which is why the Lucent Citadel and the Arcane Knot became a mystery. When she was freed, the defenders of the Lucent Citadel were reawakened.",
+        "The developers state in the 10-Year Anniversary Celebration Livestream (1:02:49-1:03:32) that the Lucent Guardian Horse, the Lucent Sentinel Style motif, and the Threads of Mirrormoor Face and Body Art are based on Ithelia."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lucent_Citadel",
+        "page_title": "Online:Lucent Citadel",
+        "revision_id": 3607528,
+        "retrieved_at": "2026-08-12T05:33:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

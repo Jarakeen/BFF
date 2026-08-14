@@ -1,0 +1,69 @@
+{
+    "id": "shade_of_siroria",
+    "name": "Shade of Siroria",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Northwest platform of Cloudrest Aerie, Cloudrest",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fiery Breath",
+            "description": "Mimics the Dragon Knight Engulfing Flames ability. This attack is a conal ability that severely debuffs any player hit to take increased damage from other flame damage."
+        },
+        {
+            "name": "Quick Strike",
+            "description": "Melee ability, deals physical damage."
+        },
+        {
+            "name": "Lava Whip",
+            "description": "Melee ability, deals flame damage."
+        },
+        {
+            "name": "Low Slash",
+            "description": "Melee ability, deals physical damage."
+        },
+        {
+            "name": "Dark Talons",
+            "description": "Siroria casts Dark Talons and roots any player within range of her and applies a dot. This ability can be purged away by player abilities that purge debuffs."
+        },
+        {
+            "name": "Dragonknight Standard",
+            "description": "Siroria casts Dragonknight Standard and a large aoe that looks like a player standard will appear and do severe damage to anyone standing in the radius. While standing in the aoe of her Standard, Siroria's other abilities are empowered significantly to the point they can even one-shot tanks."
+        },
+        {
+            "name": "Scalding Sunder",
+            "description": "Siroria's heavy attack, like the other riders, is a one-shot if not blocked by the tank, and must be dodge rolled by the non-tanks if targeted."
+        },
+        {
+            "name": "Fulminate/Burgeoning Blaze",
+            "description": "Starting at 60% health on veteran difficulty, Siroria will leap into the air and land at the spot where the farthest player away was standing when she cast the ability. Upon landing she does a high damage shockwave that sends four roving fire tornadoes out from the center point. The tornadoes spin out in random directions and cause high damage to any target hit before vanishing."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "The Shade of Siroria is a shadowy clone of the Welkynar Knight Siroria, created by Z'Maja. She serves as an optional boss, though defeating her will make the battle with Z'Maja easier. When engaged, she will summon her gryphon, the Shade of Silaeda",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shade_of_Siroria",
+        "page_title": "Online:Shade of Siroria",
+        "revision_id": 3205534,
+        "retrieved_at": "2026-08-12T05:32:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

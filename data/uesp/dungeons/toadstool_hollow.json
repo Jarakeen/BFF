@@ -1,0 +1,28 @@
+{
+    "id": "toadstool_hollow",
+    "name": "Toadstool Hollow",
+    "content_type": "dungeon",
+    "summary": "Toadstool Hollow is a cave in northern Cyrodiil, north of Bleaker's Outpost containing undead. Skeletons and giant bats can be found outside around the cave entrance. Inside, you'll find yourself on the top level of a frozen cavern. This part of the cave is infested with giant spiders. Head into the main chamber and proceed straight forward, and you'll have the opportunity to fight Dreadfang, the first of the delve's bosses. If you head east, you'll start your descent further into the cave. A tomb will start to poke out of the ice. A heavy sack is in this first hallway. You will make a left turn at the end of this hallway, then a right turn, and another left. The Toadstool Hollow Journal is located on the floor next to a crate at the bend in this hallway. This tunnel leads you into the northern chamber. There is a chest at the western end of the room, between the stairs and the wall. There is another chest in the first alcove to the south in the next hall to the west. This hallway brings you to the lower section of the main chamber. There is a skyshard in the southeast corner of this room. Captain Roreles lies in the center of this room, in front of a sarcophagus with a water sack in front of it. General Virane is located north of this chamber, alongside a heavy sack. Captain Serniel is located in a small room to the south of the main chamber. Lucienne Cerine can be west of the main chamber. A chest is in the top right corner of the room.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Toadstool Hollow also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Toadstool_Hollow",
+        "page_title": "Online:Toadstool Hollow",
+        "revision_id": 3598809,
+        "retrieved_at": "2026-08-12T21:36:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

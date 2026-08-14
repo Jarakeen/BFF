@@ -1,0 +1,26 @@
+{
+    "id": "doomvault_porcixid",
+    "name": "Doomvault Porcixid",
+    "content_type": "dungeon",
+    "summary": "Doomvault Porcixid is a Daedric ruin in Blackwood, located east of Gideon, containing Daedra. It is one of the Four Ambitions vaults that were built by the Longhouse Emperors. Skirmishes between the forces of Mehrunes Dagon and Mephala are currently underway, as Mephala seeks to steal a mysterious construct from Dagon. Various passive critters, mostly of Daedric origins, can be found inside, consisting of Daedrats, Deadlands Scorpions, Rats, and Scuttlers.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Doomvault_Porcixid",
+        "page_title": "Online:Doomvault Porcixid",
+        "revision_id": 3576430,
+        "retrieved_at": "2026-08-12T21:20:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

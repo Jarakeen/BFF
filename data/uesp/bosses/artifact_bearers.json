@@ -1,0 +1,36 @@
+{
+    "id": "artifact_bearers",
+    "name": "Artifact Bearers",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Artifact Bearers are members of Knights of the Silver Rose who have been chosen by Prior Thierric Sarazen to wield the Daedric artifacts Duplici Gladio, Groundsplitters, and the Opal Charm. They serve as the second boss in Red Petal Bastion each one having their own skills and abilities. After they are defeated, Prior Thierric will loot the artifacts from their bodies, declaring his subordinates unworthy of them.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Artifact_Bearers",
+        "page_title": "Online:Artifact Bearers",
+        "revision_id": 3587573,
+        "retrieved_at": "2026-08-12T21:31:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

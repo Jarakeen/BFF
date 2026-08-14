@@ -1,0 +1,20 @@
+{
+    "id": "riften_ratway",
+    "name": "Riften Ratway",
+    "content_type": "dungeon",
+    "summary": "The Riften Ratway is a sewer beneath Riften that has become a den for thieves and criminals. Recently, vampires associated with the Icereach Coven have occupied the sewers and are in the process of massacring the remaining residents, with only a few still alive. It contains an entrance to the Riften Outlaws Refuge. During the related quest, Goharth Ironbelly and Sister Balra will meet here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Ratway previously appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Riften_Ratway",
+        "page_title": "Online:Riften Ratway",
+        "revision_id": 3200263,
+        "retrieved_at": "2026-08-12T21:31:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

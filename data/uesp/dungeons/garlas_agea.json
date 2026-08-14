@@ -1,0 +1,29 @@
+{
+    "id": "garlas_agea",
+    "name": "Garlas Agea",
+    "content_type": "dungeon",
+    "summary": "Garlas Agea is an Ayleid ruin found northeast of Anvil containing war deserters and Gold Coast Trading Company mercenaries. Captain Jena Apinia and her gang of deserters holed up in the ruins following their recent massacre in Bravil. The delve boss, Ironfang, has a chance to drop the following chapters of the Assassins League style: Shoulders, Legs, Shields, Shoulders, and Staves. Rats and Torchbugs are found in numbers within. Hazards include swinging blades.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dark_brotherhood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Garlas Agea also appeared in Oblivion.",
+        "Northwest of the Gold Coast Wayshrine, north of the road that is north of Garlas Agea, there is an Ayleid ruin entrance. It is possible this is an alternate entrance leading to Garlas Agea, but it is blocked off by a gate and cannot be explored in-game to confirm this. Inside the Garlas Agea delve, there is a tunnel on the eastern side of the map, also gated off, with transport carts found behind it that may lead to the alternate entrance. If this is the case, then there would potentially be a full map level located above the one that is playable in-game (both in Oblivion and in ESO), since that underground passage is far removed from the exterior ruin northwest of the Gold Coast Wayshrine."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Garlas_Agea",
+        "page_title": "Online:Garlas Agea",
+        "revision_id": 3567063,
+        "retrieved_at": "2026-08-12T21:23:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

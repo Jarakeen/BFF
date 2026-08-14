@@ -1,0 +1,59 @@
+{
+    "id": "reactor",
+    "name": "Reactor",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Halls of Fabrication",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "A powerful melee attack dealing very high physical damage and knocking you away. This attack can be blocked."
+        },
+        {
+            "name": "Grasping Limbs",
+            "description": "The Reactor periodically sends out rolling bits of electricity by planting his sword into the ground. They deal high shock damage on the way to their destination, indicated by smaller traveling AoEs. Where they burst, reanimated construct limbs will appear, dealing continuous physical damage and stunning nearby players, indicated by circular AoEs."
+        },
+        {
+            "name": "Empowering Beam",
+            "description": "If near any of the other two constructs, they form a link which strengthens both of them, increasing their damage output and resistance. They should therefore be kept separate."
+        },
+        {
+            "name": "Overcharge",
+            "description": "At certain health thresholds (70%, 40%, and 20%), each of them will overcharge and be immune to all damage. Once all three enemies are overcharged, bringing them together will reverse that, allowing them to be damaged again, as well as offering a burn window while they are briefly stunned."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Reactor's models predate the Series 7 Factotum model, which is why it uses the Refabricated Style and has more Dwemer-inspired humanoid features."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Reactor is a Factotum encountered together with the Reclaimer and the Reducer in the Halls of Fabrication, where they serve as the fourth boss encounter of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reactor",
+        "page_title": "Online:Reactor",
+        "revision_id": 3029558,
+        "retrieved_at": "2026-08-12T05:32:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

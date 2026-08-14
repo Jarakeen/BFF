@@ -1,0 +1,49 @@
+{
+    "id": "dark_orb",
+    "name": "Dark Orb",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Halls of Garlas Malatar, Depths of Malatar",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,214,120",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Dark Orb also appeared in Garlas Malatar in Knights of the Nine, where it continually resurrected Aurorans until it was shattered into pieces, stuck frozen in time."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact.",
+        "Pledge: Depths of Malatar: Prove you are truly Undaunted by clearing Depths of Malatar."
+    ],
+    "summary": "The Dark Orb is a magical relic found in the Depths of Malatar. It serves as the third boss of the dungeon after King Narilmor traps you in the room with it while the dark orb summons invulnerable Aurorans and additional orbs. The Aurorans will only die after it is shattered, and opens up the doors to the Tabernacle of Light that it was guarding.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dark_Orb",
+        "page_title": "Online:Dark Orb",
+        "revision_id": 3584170,
+        "retrieved_at": "2026-08-12T21:19:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

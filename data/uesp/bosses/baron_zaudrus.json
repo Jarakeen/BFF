@@ -1,0 +1,208 @@
+{
+    "id": "baron_zaudrus",
+    "name": "Baron Zaudrus",
+    "content_id": "the_cauldron",
+    "content_name": "The Cauldron",
+    "location": "The Cauldron, Exalted Summit",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,131,955",
+        "hardmode": "10,263,990"
+    },
+    "abilities": [
+        {
+            "name": "Hack",
+            "description": "A basic melee attack dealing minor physical damage."
+        },
+        {
+            "name": "Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Crush",
+            "description": "An overhead smash with his hammer which most likely one-shots non-tanks."
+        },
+        {
+            "name": "Hammer Down",
+            "description": "Baron Zaudrus slams his hammer down on you swiftly, dealing high physical damage. This will cause three Molten Pillar to spawn nearby."
+        },
+        {
+            "name": "Galvanic Blow",
+            "description": "Baron Zaudrus cleaves you with his lightning-charged hammer, indicated by a conical AoE, dealing high shock damage. After the initial strike, a circular shock field is applied around you, dealing moderate continuous shock damage, if stacked with other shock fields."
+        },
+        {
+            "name": "Disintegration",
+            "description": "Throughout the fight, bouts of flame will erupt at random throughout the arena, indicated by small and quickly growing circular AoEs, dealing lethal flame damage."
+        },
+        {
+            "name": "Ash Vent Disintegration",
+            "description": "Baron Zaudrus plants his hammer into the ground and stomps on it, causing two lines of fire, increased to four on Hard Mode, to burst from the central structure in the arena, and then start circling around the arena. You must move around as they move to avoid being hit."
+        },
+        {
+            "name": "Cold-Flame Infusion",
+            "description": "Periodically, a player can pick up a Cold-Flame synergy, which allows them to destroy Molten Pillars in one hit, and empowers their attacks. When a player destroys a Molten Pillar this way, a friendly Cold-Flame Atronach will appear, and proceed to assist the group."
+        },
+        {
+            "name": "Summon Watcher",
+            "description": "Baron Zaudrus occasionally creates several portals from which watchlings come out from to assist him in the fight. Magma Daedroth will also appear if playing Veteran difficulty, or with Hard Mode enabled. These portals also appear more frequently if a Molten Pillar is destroyed by either a player not wielding the Cold-Flame Infusion synergy, or the Ash Vents."
+        },
+        {
+            "name": "Metamorphic Inversion",
+            "description": "Baron Zaudrus will cause a large eruption, which deals a moderate amount of (?) damage and applies a snare to players caught within it."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lyranth",
+            "line": "It's worse than I thought up ahead. They used the captives to excavate an old Mehrunes Dagon shrine.",
+            "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+            "ability": "Ash Vent Disintegration"
+        },
+        {
+            "speaker": "Baron Zaudrus",
+            "line": "Ah, Lyranth. Your reputation precedes you. I find you … useful.",
+            "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+            "ability": "Ash Vent Disintegration"
+        },
+        {
+            "speaker": "Drathas",
+            "line": "Who are you? Why did you take my people?",
+            "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+            "ability": "Ash Vent Disintegration"
+        },
+        {
+            "speaker": "Lyranth",
+            "line": "Baron Zaudrus. We meet at last.",
+            "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+            "ability": "Ash Vent Disintegration"
+        },
+        {
+            "speaker": "Baron Zaudrus",
+            "line": "Lyranth. You are mine!",
+            "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+            "ability": "Ash Vent Disintegration"
+        },
+        {
+            "speaker": "Baron Zaudrus",
+            "line": "You defile the sanctity of this site! I must find another.",
+            "trigger": "You walk your way to the place where Zaudrus's ritual is taking place. Zaudrus there will taunt Lyranth before fleeing.",
+            "ability": "Summon Watcher"
+        },
+        {
+            "speaker": "Baron Zaudrus",
+            "line": "I know what you seek, Lyranth. Come find me if you wish.",
+            "trigger": "You walk your way to the place where Zaudrus's ritual is taking place. Zaudrus there will taunt Lyranth before fleeing.",
+            "ability": "Summon Watcher"
+        },
+        {
+            "speaker": "Baron Zaudrus",
+            "line": "What you want is right here, Lyranth. Come take it.",
+            "trigger": "You'll enter the Exalted Summit, where Zauldron is waiting for Lyranth",
+            "ability": "Galvanic Blow"
+        },
+        {
+            "speaker": "Lyranth",
+            "line": "Hand the map to me, creature! Or die protecting it.",
+            "trigger": "You'll enter the Exalted Summit, where Zauldron is waiting for Lyranth",
+            "ability": "Galvanic Blow"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.": [
+            {
+                "speaker": "Lyranth",
+                "line": "It's worse than I thought up ahead. They used the captives to excavate an old Mehrunes Dagon shrine.",
+                "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+                "ability": "Ash Vent Disintegration"
+            },
+            {
+                "speaker": "Baron Zaudrus",
+                "line": "Ah, Lyranth. Your reputation precedes you. I find you … useful.",
+                "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+                "ability": "Ash Vent Disintegration"
+            },
+            {
+                "speaker": "Drathas",
+                "line": "Who are you? Why did you take my people?",
+                "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+                "ability": "Ash Vent Disintegration"
+            },
+            {
+                "speaker": "Lyranth",
+                "line": "Baron Zaudrus. We meet at last.",
+                "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+                "ability": "Ash Vent Disintegration"
+            },
+            {
+                "speaker": "Baron Zaudrus",
+                "line": "Lyranth. You are mine!",
+                "trigger": "Further into the cave, through the Boiling Path, you'll encounter Lyranth and a force barrier blocking your way, which she easily gets rid of. After this, Baron Zaudrus will suddenly appear, knocking Drathas who tries to confront him and kidnapping Lyranth.",
+                "ability": "Ash Vent Disintegration"
+            }
+        ],
+        "You walk your way to the place where Zaudrus's ritual is taking place. Zaudrus there will taunt Lyranth before fleeing.": [
+            {
+                "speaker": "Baron Zaudrus",
+                "line": "You defile the sanctity of this site! I must find another.",
+                "trigger": "You walk your way to the place where Zaudrus's ritual is taking place. Zaudrus there will taunt Lyranth before fleeing.",
+                "ability": "Summon Watcher"
+            },
+            {
+                "speaker": "Baron Zaudrus",
+                "line": "I know what you seek, Lyranth. Come find me if you wish.",
+                "trigger": "You walk your way to the place where Zaudrus's ritual is taking place. Zaudrus there will taunt Lyranth before fleeing.",
+                "ability": "Summon Watcher"
+            }
+        ],
+        "You'll enter the Exalted Summit, where Zauldron is waiting for Lyranth": [
+            {
+                "speaker": "Baron Zaudrus",
+                "line": "What you want is right here, Lyranth. Come take it.",
+                "trigger": "You'll enter the Exalted Summit, where Zauldron is waiting for Lyranth",
+                "ability": "Galvanic Blow"
+            },
+            {
+                "speaker": "Lyranth",
+                "line": "Hand the map to me, creature! Or die protecting it.",
+                "trigger": "You'll enter the Exalted Summit, where Zauldron is waiting for Lyranth",
+                "ability": "Galvanic Blow"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Lava Pool (Hard Mode only):"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In a hidden diary, it is mentioned that Baron Zaudrus is nothing like the types of Daedra the author summoned before. The species of Daedra he belongs to was revealed in Blackwood, with the book Havocrel: Strangers from Oblivion, with their existence being widely unknown to their rarity and reclusiveness. Painting: Baron Zaudrus Triumphs directly calls him a Havocrel."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Deep: Help Lyranth recover a map from a group of cultists.",
+        "Pledge: The Cauldron: Enter the Cauldron and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Baron Zaudrus (set). Baron Zaudrus is a Havocrel chieftain[1] summoned by the Order of the Waking Flame in the Cauldron and acts as the final boss for that dungeon. He seeks to consecrate the site with the blood of mortals.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Baron_Zaudrus",
+        "page_title": "Online:Baron Zaudrus",
+        "revision_id": 3608146,
+        "retrieved_at": "2026-08-12T21:16:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

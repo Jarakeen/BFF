@@ -1,0 +1,20 @@
+{
+    "id": "the_sunless_hollow_stonefalls",
+    "name": "The Sunless Hollow (Stonefalls)",
+    "content_type": "dungeon",
+    "summary": "The Sunless Hollow is a cave south of Ebonheart used by the Blackguards to hide Murkmire artifacts.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The journal of Margus Derius can be found within the Hollow, on a pile of crates near a tent."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Sunless_Hollow_(Stonefalls)",
+        "page_title": "Online:The Sunless Hollow (Stonefalls)",
+        "revision_id": 3598134,
+        "retrieved_at": "2026-08-12T21:35:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

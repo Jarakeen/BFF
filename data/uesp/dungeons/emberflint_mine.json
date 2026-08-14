@@ -1,0 +1,28 @@
+{
+    "id": "emberflint_mine",
+    "name": "Emberflint Mine",
+    "content_type": "dungeon",
+    "summary": "Emberflint Mine is a mine in central Stonefalls, southeast of Ebonheart containing Stonefire Cultists. The miners' souls have recently been trapped in small stones. You must free them during the related quest",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The actual mine entrance can be difficult to find, as it is underground. You can easily get the map marker without seeing the entrance at all. Go north from where the marker appears and into an open-air mine, then turn around to find the entrance to the underground tunnel that leads to the actual mine. The Emberflint mine entrance will be a wooden door in the same underground area where you find the soul crystals that the miners are trapped in."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Emberflint_Mine",
+        "page_title": "Online:Emberflint Mine",
+        "revision_id": 3181110,
+        "retrieved_at": "2026-08-12T21:21:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

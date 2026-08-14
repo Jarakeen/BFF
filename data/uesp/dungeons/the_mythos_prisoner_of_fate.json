@@ -1,0 +1,18 @@
+{
+    "id": "the_mythos_prisoner_of_fate",
+    "name": "The Mythos (Prisoner of Fate)",
+    "content_type": "dungeon",
+    "summary": "The Mythos is the deepest and oldest part of Hermaeus Mora's realm. You will visit this part of the realm via the opened portal from the Shrine of Inevitable Secrets where you will need to chase after Torvesard and stop him from using the last glyphic. There are two parts to this area, the first has floating platforms that are linked by bridges and are patrolled by the hostile Gaze of Mirrormoor. Along these paths, servants of Mora will be fighting off the attacking Clan Shardborn Dremora. After you defeated the glasslike Hollow Sentinel, you will be able to go through the door to the Mythos Vaults, where the Glyphic of Shattered Reflections is kept. In Vaults area there is floating islands which are linked by portals. When you arrive, Dexxiuk the Glass Mantikora will be summoned and other denizens of the mysterious Mirrormoor realm will join in attacking you. At the highest point there is an obelisk-like structure with a beam of blue light erupting from the top of it.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Mythos_(Prisoner_of_Fate)",
+        "page_title": "Online:The Mythos (Prisoner of Fate)",
+        "revision_id": 3550298,
+        "retrieved_at": "2026-08-12T21:29:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

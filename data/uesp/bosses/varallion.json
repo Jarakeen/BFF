@@ -1,0 +1,361 @@
+{
+    "id": "varallion",
+    "name": "Varallion",
+    "content_id": "coral_aerie",
+    "content_name": "Coral Aerie",
+    "location": "Coral Aerie, Cove Lagoon",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,209,965",
+        "veteran": "6,766,879",
+        "hardmode": "13,195,414"
+    },
+    "abilities": [
+        {
+            "name": "Obliterate",
+            "description": "Varallion will heavy attack whoever has taunt. This attack must be blocked; if dodge rolled, all players will be knocked off their feet and take damage from the resulting blast."
+        },
+        {
+            "name": "Coalescing Shadows",
+            "description": "Varallion will summon shadows under the players' feet that follow them around. On normal or veteran, only one player will be affected at a time; on Hard Mode, all players will be affected. The shadows do damage over time over several seconds, and after the timer has run out, will deposit a swirling pool of shadow on the ground. This pool of shadow will do damage to anyone who steps in it until it vanishes after a certain amount of time has passed. Standing on the pool of shadow will also give the player a debuff which will cause their damage taken from the pools to increase until they have avoided standing in them for 15 seconds."
+        },
+        {
+            "name": "Crashing Waves",
+            "description": "Varallion summons waves (one on normal/veteran, two on Hard Mode) in a random pattern across the floor. This will happen three times per activation of this ability. These waves are telegraphed and anyone in their AOE must step out of them, or they will be instantly killed when the wave spawns."
+        },
+        {
+            "name": "Sea Orb",
+            "description": "Varallion will summon a sea orb from the lagoon which will target a random player who is not holding taunt on him. The orb will begin to float in their direction more rapidly over time and, if not destroyed, will explode on the targeted player, damaging them and anyone else within a certain radius."
+        },
+        {
+            "name": "Mind Link",
+            "description": "On Hard Mode, Varallion will periodically link two random players together with a purple tether that lasts for around 30 seconds. This tether causes a small amount of damage over time to both players effected by it. If the link is broken in any way, both tethered players will die. This will happen if either tethered player dies or if any other player touches the tether, in which case it will explode, killing both linked players and whatever player touched the tether instantly."
+        },
+        {
+            "name": "Slaughterfish Attack",
+            "description": "If you stray from the island in the middle of the lagoon you will be attacked by Slaughterfish."
+        },
+        {
+            "name": "Gryphon Summon",
+            "description": "At around 95%, 80%, and 60%, Varallion will summon a random gryphon, either Mafremare, Ofallo, or Iliata. The gryphon will land at a random spot on the edge of the arena. Gryphons can overlap if the boss is burned too quickly."
+        },
+        {
+            "name": "Lingering Current",
+            "description": "Ofallo will periodically apply an electrical current to whoever currently holds its taunt. The current applies a heal absorption effect to its target and reduces healing done by the target by 90%. Once the target has been healed enough, the lingering current will break."
+        },
+        {
+            "name": "Whirlwind",
+            "description": "Once landed, Mafremare will summon two whirlwinds which circle around its body. Any player standing in the whirlwind will take a large amount of damage from it, therefore it is best to stand away from Mafremare or close enough to it that the whirlwind passes behind the player. These whirlwinds are dispelled upon Mafremare's death."
+        },
+        {
+            "name": "Lightning Storm",
+            "description": "Once landed, Iliata will summon a large circular moving ground AOE that will follow one player at a time around the arena. Any player who stands in this lightning storm will take a rapidly increasing amount of damage over time until their death. This storm will disappear upon Iliata's death, or if enough time has passed, after which Iliata will summon another."
+        },
+        {
+            "name": "Cyclonic Spark",
+            "description": "Iliata summons blasts of lightning on each player that must be kited; otherwise the lightning blasts will do rapidly increasing damage on the player. Cyclonic Spark is only active when Lightning Storm is currently present on the floor and stops upon Iliata's death."
+        },
+        {
+            "name": "Kargaeda",
+            "description": "On Hard Mode, at 30%, Varallion summons his final gryphon, Kargaeda. Varallion then becomes invulnerable until Kargaeda has been killed. Kargaeda summons a cyclone in the middle of the room, spawning lines of lightning that rotate around the arena similar to Molag Kena's fight in White Gold Tower. Unlike the other gryphons' mechanics, once Kargaeda is killed, this storm remains throughout execute."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sarydil",
+            "line": "Again. Who hired you to deliver this?",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Jakarn",
+            "line": "You know, I can't recall. Must have been those knocks to the head.",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Perhaps a few more will jog your memory?",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "The longer you stall, Jakarn, the more likely I take what I have and leave you chained up for the yaghra. Think on that.",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "<Sarydil and Varallion leave.>",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Jakarn",
+            "line": "Varallion! I believe you have something of mine.",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "You are prideful for an errand boy. Come and take it.",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "<Jakarn begins to run up to him but stumbles in pain.>",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Jakarn",
+            "line": "Oh, bet your arse I w—ow, ow, ow!",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Captain Kaleen",
+            "line": "Reopened your wounds, didn't you?",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "<Kaleen crouches next to Jakarn.>",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Captain Kaleen",
+            "line": "Would you take care of Varallion while I mummify this idiot? Thanks.",
+            "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "Mafremare! To me!",
+            "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+            "ability": "Kargaeda"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "Ofallo, descend! Kill!",
+            "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+            "ability": "Kargaeda"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "Iliata! Swoop and destroy!",
+            "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+            "ability": "Kargaeda"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "Kargaeda! Protect me!",
+            "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+            "ability": "Kargaeda"
+        },
+        {
+            "speaker": "",
+            "line": "Both the sea and sky are at my command!",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "\"Those who fight the tides of change",
+            "line": "drown!\"",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "An ocean's worth of pain awaits you!",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "We'll wash away all their foolish plans. And you with them!",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "The Ascendant are like the tides! Inexorable!",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        },
+        {
+            "speaker": "",
+            "line": "more lines",
+            "trigger": "Water attacks",
+            "ability": "Coalescing Shadows"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.": [
+            {
+                "speaker": "Sarydil",
+                "line": "Again. Who hired you to deliver this?",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Jakarn",
+                "line": "You know, I can't recall. Must have been those knocks to the head.",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "Perhaps a few more will jog your memory?",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "The longer you stall, Jakarn, the more likely I take what I have and leave you chained up for the yaghra. Think on that.",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "<Sarydil and Varallion leave.>",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Coalescing Shadows"
+            }
+        ],
+        "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon": [
+            {
+                "speaker": "Jakarn",
+                "line": "Varallion! I believe you have something of mine.",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "You are prideful for an errand boy. Come and take it.",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "<Jakarn begins to run up to him but stumbles in pain.>",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Jakarn",
+                "line": "Oh, bet your arse I w—ow, ow, ow!",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Captain Kaleen",
+                "line": "Reopened your wounds, didn't you?",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "<Kaleen crouches next to Jakarn.>",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "Captain Kaleen",
+                "line": "Would you take care of Varallion while I mummify this idiot? Thanks.",
+                "trigger": "Once you have freed Jakarn you will need to chase down Sarydil and Varallion to take back the letter and medallion that was taken. Varallion will be waiting in the Cove Lagoon",
+                "ability": "Coalescing Shadows"
+            }
+        ],
+        "During the fight, Varallion will call one of his trained Gryphons to fight": [
+            {
+                "speaker": "Varallion",
+                "line": "Mafremare! To me!",
+                "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+                "ability": "Kargaeda"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "Ofallo, descend! Kill!",
+                "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+                "ability": "Kargaeda"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "Iliata! Swoop and destroy!",
+                "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+                "ability": "Kargaeda"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "Kargaeda! Protect me!",
+                "trigger": "During the fight, Varallion will call one of his trained Gryphons to fight",
+                "ability": "Kargaeda"
+            }
+        ],
+        "Water attacks": [
+            {
+                "speaker": "",
+                "line": "Both the sea and sky are at my command!",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "\"Those who fight the tides of change",
+                "line": "drown!\"",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "An ocean's worth of pain awaits you!",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "We'll wash away all their foolish plans. And you with them!",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "The Ascendant are like the tides! Inexorable!",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            },
+            {
+                "speaker": "",
+                "line": "more lines",
+                "trigger": "Water attacks",
+                "ability": "Coalescing Shadows"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "An Order Gone Awry: A secretive society named the Ascendant Order has set up operations on Coral Aerie."
+    ],
+    "summary": "Varallion is a High Elf and leader of the Ascendant Order cell that can be found on Coral Aerie. He is also a former member of the Veiled Heritance who would attack ships in Altmeri waters with his trained gryphons, Iliata, Kargaeda, Mafremare and Ofallo.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Varallion",
+        "page_title": "Online:Varallion",
+        "revision_id": 3544550,
+        "retrieved_at": "2026-08-12T21:17:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

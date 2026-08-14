@@ -1,0 +1,18 @@
+{
+    "id": "sutch_mine",
+    "name": "Sutch Mine",
+    "content_type": "dungeon",
+    "summary": "Sutch Mine is a mine found at the eastern edge of Sutch. Once the lifeblood of the town, it has since been overtaken by bloodfiend dens, including that of their leader, Balandrus the Terror.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sutch_Mine",
+        "page_title": "Online:Sutch Mine",
+        "revision_id": 3539535,
+        "retrieved_at": "2026-08-12T21:35:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

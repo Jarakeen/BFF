@@ -1,0 +1,28 @@
+{
+    "id": "shadowgreen",
+    "name": "Shadowgreen",
+    "content_type": "dungeon",
+    "summary": "Shadowgreen is a delve in Haafingar Hold of Western Skyrim, located northwest of Solitude containing Reachmen and wildlife. It is a system of temperate and lush caves deep inside the heart of Mount Kilkreath. The Reachmen are attempting a dangerous ritual to force the dormant mountain to erupt.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "greymoor_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Shadowgreen also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shadowgreen",
+        "page_title": "Online:Shadowgreen",
+        "revision_id": 3608421,
+        "retrieved_at": "2026-08-12T21:33:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

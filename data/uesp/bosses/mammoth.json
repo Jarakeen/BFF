@@ -1,0 +1,60 @@
+{
+    "id": "mammoth",
+    "name": "Mammoth",
+    "content_id": "falkreath_hold",
+    "content_name": "Falkreath Hold",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Mammoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Vigorous Swipe",
+            "description": "The mammoth swings its tusks around in front of itself, indicated by a wide red cone, dealing continuous moderate physical damage to its target."
+        },
+        {
+            "name": "Stomp",
+            "description": "The mammoth rears back and stomps the ground in front of itself, indicated by a red circle, dealing moderate physical damage and staggering its target. Blocking prevents the stagger."
+        },
+        {
+            "name": "Charge",
+            "description": "The mammoth charges forward, indicated by a red rectangle, dealing high physical damage and knocking down its target. Blocking prevents the knockdown."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Enlightenment Needs Salt: Aid an Argonian alchemist in her attempts to join the Mages Guild.",
+        "The Farmer's Champion: Save the survivors of a Worm Cult attack.",
+        "Sacred Prey, Hunt Profane: Stop the mammoth poachers at Treehenge.",
+        "Salty Meats: Help gather food supplies for Cyrodilic Collections latest Murkmire expedition.",
+        "The Siege of Cradlecrush: Disrupt the Stormfist operations, and defeat the Orc warlord and his followers.",
+        "Something Rotten: Find the cause of all the chaos at the Vulkwasten brewery."
+    ],
+    "summary": "Eastmarch, Echo Pond, Green's Marrow, Mammoth Ridge, The Rift, Treva's Farm, Wilderking Court\nShatul Range, Wrothgar\nSil-Var-Woad\nGiant Camps, Hjaalmarch, West of Lendoran Ruin\nNear Druadach Redoubt, Faolan's Ire, Near Wildspear Clan Camp\nEverlasting Fair Mammoths are large creatures usually found herded by giants. They are most commonly found in the Rift and Eastmarch, though they can be found in Wrothgar, northern Cyrodiil, and the western regions of Valenwood. When killed, they may drop a lead for the Rune-Carved Mammoth Skull furnishing.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mammoth",
+        "page_title": "Online:Mammoth",
+        "revision_id": 3452281,
+        "retrieved_at": "2026-08-12T21:21:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

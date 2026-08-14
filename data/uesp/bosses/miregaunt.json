@@ -1,0 +1,78 @@
+{
+    "id": "miregaunt",
+    "name": "Miregaunt",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "The Shivering Isles\nDeep-Root, Deepmire, Vakka-Bok Xanmeer\nBlackwood Bog, Glenbridge Xanmeer, Gloomire, The Silent Halls\nEast of Caterwaul Cove, Northwest part of Western Solstice, Xul-Katama",
+    "species": "Miregaunt",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Smash",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Bramble Whip",
+            "description": "A basic mid-range attack dealing moderate physical damage."
+        },
+        {
+            "name": "Ruin",
+            "description": "The miregaunt extends out its arms and shoots out sharp vines from them, indicated by a red cone, dealing high physical damage and knocking back."
+        },
+        {
+            "name": "Undergrowth",
+            "description": "The miregaunt stomps the ground, causing vines to travel forward, indicated by a large red circle, which later splits into three smaller ones after a short distance, dealing moderate physical damage and immobilizing targets."
+        },
+        {
+            "name": "Binding Undergrowth",
+            "description": "If caught in the \"Undergrowth\" ability, targets are restrained and suffer continuous low poison damage."
+        },
+        {
+            "name": "Caustic Sap",
+            "description": "The miregaunt gets a 25% Max Health damage shield. When the shield is destroyed or after some time, it creates a pool of Hist sap on the ground, indicated by a very large red circle, dealing continuous moderate oblivion damage. (see #Bugs)"
+        },
+        {
+            "name": "Archaic Totem",
+            "description": "The Miregaunt summons two totems to assist it with their own abilities."
+        },
+        {
+            "name": "Spring Bound",
+            "description": "The Miregaunt burrows underground and tunnels to a target, indicated by a large red circle, dealing moderate physical damage and staggering them when erupting."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A Miregaunt appears as a hazard in The Feral Gallery. Approaching its cage can prompt it to launch vines at you, dealing minor physical damage over 4 seconds as well as rooting you for that amount of time (Vine Trap). The DoT is tied to the root, so cleansing it via an ability or simply roll-dodging will purge it."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Light the Way to Freedom: Help Sharp-as-Night find Dimik-ei and stop the Reformer once and for all.",
+        "Monument of Change: Help restore an ancient Argonian calendar.",
+        "Old Baubles: Kill a powerful miregaunt and collect some antiquities.",
+        "Old Enemies: Kill a powerful miregaunt and burn some supply caches.",
+        "Old Growth: Kill a powerful miregaunt and gather some nightbloom vine for the Naga-Kur.",
+        "The Remnant of Argon: Pass through an Ayleid realm of portals to locate the lost Remnant."
+    ],
+    "summary": "Miregaunts are large, tree-like creatures that can be primarily found in Murkmire. According to Argonian folklore, they have existed as long as the Argonians themselves. Some believe them to be the \"wrath of Murkmire,\" while others believe the Hist sends them to teach lessons. They consist mainly of plant materials, and will sometimes incorporate other materials into their shape, including mud, stone, vines, and even pieces of ancient architecture. Miregaunts bear some resemblance to certain aspects of lurchers and similar creatures found in other parts of Tamriel. Every miregaunt has a large cavity in its mid-section. Sometimes, an encountered miregaunt's cavity is empty; other times, a random piece of stone or other detritus fills the empty space. In rare cases, something valuable rests within the miregaunt, such as a precious stone, an ancient relic, or even a living creature. The local Argonians believe that these valuable objects have been taken into the miregaunt to purposely protect or imprison them.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Miregaunt",
+        "page_title": "Online:Miregaunt",
+        "revision_id": 3607864,
+        "retrieved_at": "2026-08-12T21:30:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

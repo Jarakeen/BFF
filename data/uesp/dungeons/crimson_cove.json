@@ -1,0 +1,26 @@
+{
+    "id": "crimson_cove",
+    "name": "Crimson Cove",
+    "content_type": "dungeon",
+    "summary": "The Crimson Cove is a cave in Malabal Tor. A band of pirates known as the Crimson Raiders have taken up residence here. A letter can be found on Captain Siro's desk. A Coded Rutter can be found outside the entrance of the cave after completing Naval Intelligence. Centipedes, rats and snakes are found in number within. Hazards include ogre cages.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crimson_Cove",
+        "page_title": "Online:Crimson Cove",
+        "revision_id": 3598315,
+        "retrieved_at": "2026-08-12T21:18:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

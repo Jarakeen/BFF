@@ -1,0 +1,26 @@
+{
+    "id": "atanaz_ruins",
+    "name": "Atanaz Ruins",
+    "content_type": "dungeon",
+    "summary": "The Atanaz Ruins are ancient Argonian ruins in eastern Shadowfen, east of Alten Corimont containing a tribe of ruthless Argonian warriors. The tribe raids other villages, steals their valuables and kills the inhabitants. They also worship a wamasu, which resides deep within the ruins. A guide to caring for this wamasu can be found near the beast. An old Orc's journal can be found next to his corpse. The ruins are home to two species of unique plants with healing properties. A copy of the lore book Sithis can be found next to the delve's entrance. A herd of kagouti and plenty of giant wasps live on the hillside leading up towards the ruin.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Atanaz_Ruins",
+        "page_title": "Online:Atanaz Ruins",
+        "revision_id": 3195044,
+        "retrieved_at": "2026-08-12T21:13:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

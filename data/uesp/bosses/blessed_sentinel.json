@@ -1,0 +1,53 @@
+{
+    "id": "blessed_sentinel",
+    "name": "Blessed Sentinel",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Argonian ruins south of Sunport, Above Black Gem Foundry's entrance, Southwest of Corelanya Manor Wayshrine, South of Xul Haj†",
+    "species": "Blessed Sentinel",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Singing Slice/Singing Strike",
+            "description": "A basic melee attack dealing low physical damage."
+        },
+        {
+            "name": "Dissonant Blow",
+            "description": "Charged melee attack dealing moderate physical damage and staggering the target. This can be blocked to set the Blessed Sentinel off-balance instead."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "†There are some Blessed Sentinels in the overland Solstice which use the Meridian Sentinel texture but are mistakenly called Mournful Aegis.",
+        "Blessed Sentinels were first added in Update 21 and originally had no formal name provided, only being referred to by terms such as \"Meridian guardians\". Their name was eventually revealed in Update 46.",
+        "They use the same animation rig as Mournful Aegides and have the internal mesh name TombGuardian_B_MornAeg."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Dust Smote: Collect magical dust from a temple inhabited by a powerful Meridian Guardian.",
+        "Fletching Fetching: Retrieve arrows from a dangerous Meridian temple.",
+        "Scholarly Observations: Gather scattered notes detailing a mysterious Meridian temple."
+    ],
+    "summary": "Blessed Sentinels are giant suits of Auroran armor serving Meridia. They are similar in appearance to Mournful Aegises. They can have one or two pairs of arms.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blessed_Sentinel",
+        "page_title": "Online:Blessed Sentinel",
+        "revision_id": 3461456,
+        "retrieved_at": "2026-08-12T21:19:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

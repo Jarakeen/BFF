@@ -1,0 +1,28 @@
+{
+    "id": "crow_s_wood",
+    "name": "Crow's Wood",
+    "content_type": "dungeon",
+    "summary": "Crow's Wood is a pocket plane of Evergloam accessed via a cleverly disguised portal in Davon's Watch, in Stonefalls. It is inhabited by wolves, wisps, giant bats, ghosts, and various talking crows that collectively call themselves the Blackfeather Court. To reach it, look for a small cave on the shore just to the east of Davon's Watch. Inside, there's what appears to be a treasure chest. Touch it, and a portal will open that transports you into Crow's Wood. It seems the portal's creator didn't think too carefully about his choice of a non-tempting camouflage for his portal. Crow's Wood consists of an island surrounded by a lake. Several lake fishing holes can be found around the shoreline. None of the fishing holes can be found around the perimeter; they're all located near the main island. Several lost souls can be encountered throughout the dungeon. They have no names and no unique dialogue, and fade away when you approach them. Torchbugs can be seen fluttering around the realm. If you look at the sky, you can see things that look like shooting stars falling from the sky in the distance. Occasionally, strange magical phenomena appear several meters out of reach above the grotto. They resemble rifts with blue light pouring out of them. An ore node can be found on one of the strips of land northwest of the main island. A chest can be found on the northwest corner of the island. There's a ruined tower on the northeast corner of the island. A lake fishing hole can be found in the water near the tower. A runestone can be found on the strip of land east of the main island. Bosses have a chance to drop the Torc Tonal Focus antiquity lead for the Torc of Tonal Constancy.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "It was possible to mount in Crow's Wood up until Update 36."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crow%27s_Wood",
+        "page_title": "Online:Crow's Wood",
+        "revision_id": 3139476,
+        "retrieved_at": "2026-08-12T21:18:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "id": "hircine_s_haunt",
+    "name": "Hircine's Haunt",
+    "content_type": "dungeon",
+    "summary": "Hircine's Haunt is a cave in central Craglorn, north of Belkarth, containing Greycloak Mercenaries and wildlife. The bandits inside are at various stages of lycanthropy, and are also accompanied by wolves as a result. The spacious cave is also home to some ferocious crocodiles. Centipedes are found in numbers within. Bosses have a chance to drop the Chain of the Werewolf antiquity lead for the Shapeshifter's Chain",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "A skyshard can be found on a ledge near the end of the delve.",
+        "The original experience gain from this delve initially made it a popular grinding location before it was decreased."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hircine%27s_Haunt",
+        "page_title": "Online:Hircine's Haunt",
+        "revision_id": 3206834,
+        "retrieved_at": "2026-08-12T21:25:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

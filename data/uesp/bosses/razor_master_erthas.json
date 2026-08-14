@@ -1,0 +1,112 @@
+{
+    "id": "razor_master_erthas",
+    "name": "Razor Master Erthas",
+    "content_id": "city_of_ash_i",
+    "content_name": "City of Ash I",
+    "location": "City of Ash I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,703,728",
+        "hardmode": "5,409,287"
+    },
+    "abilities": [
+        {
+            "name": "Quick Draw",
+            "description": "A basic ranged attack that does minor physical damage."
+        },
+        {
+            "name": "Lava Pitch",
+            "description": "The boss throws a ball of fire on the ground that spreads out into 4 fire lines. Avoid these."
+        },
+        {
+            "name": "Blazing Arrow",
+            "description": "The boss shoots a flaming arrow at a target, dealing moderately high flame damage over time for a very long time. This DOT cannot be purged, but can be removed by swimming in the water between islands in the boss arena."
+        },
+        {
+            "name": "Summon Flame Atronach",
+            "description": "The boss summons a flame atronach to attack the party. These should be killed quickly to simplify the fight. At around 20% health, he will summon 4 at once."
+        },
+        {
+            "name": "Teleport",
+            "description": "The boss will teleport between islands occasionally. Simply follow him around accordingly and save ultimates for just after he teleports to ensure they will not be wasted."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Razor Master Erthas",
+            "line": "Your hide will make a wonderful rug for the master.\nSurrender, and I'll devour you quickly.",
+            "trigger": "As he emerges from the Oblivion gate, he addresses you.",
+            "ability": "Summon Flame Atronach"
+        },
+        {
+            "speaker": "Razor Master Erthas",
+            "line": "Rise, minions!",
+            "trigger": "Summoning a Flame Atronach",
+            "ability": "Summon Flame Atronach"
+        },
+        {
+            "speaker": "Razor Master Erthas",
+            "line": "Stop them before it's too late!",
+            "trigger": "Execute Phase",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As he emerges from the Oblivion gate, he addresses you.": [
+            {
+                "speaker": "Razor Master Erthas",
+                "line": "Your hide will make a wonderful rug for the master.\nSurrender, and I'll devour you quickly.",
+                "trigger": "As he emerges from the Oblivion gate, he addresses you.",
+                "ability": "Summon Flame Atronach"
+            }
+        ],
+        "Summoning a Flame Atronach": [
+            {
+                "speaker": "Razor Master Erthas",
+                "line": "Rise, minions!",
+                "trigger": "Summoning a Flame Atronach",
+                "ability": "Summon Flame Atronach"
+            }
+        ],
+        "Execute Phase": [
+            {
+                "speaker": "Razor Master Erthas",
+                "line": "Stop them before it's too late!",
+                "trigger": "Execute Phase",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Razor's Edge: Drive back the Daedra from a burning Bosmeri city.",
+        "Pledge: City of Ash I: Prove you are truly Undaunted by clearing the City of Ash I."
+    ],
+    "summary": "This article is about the City of Ash I boss. For the Infinite Archive version, see Razor Master Erthas (Infinite Archive). Razor Master Erthas is a Wood Elf leading the cult devouted to Mehrunes Dagon located in the City of Ash I. Gilraen says he was their original leader, convincing the community to reject the Dominion and build the city of Whisper Grove, masquerading as a decent elf for years before revealing true colors as the leader of the Dagon Cell. His unique loot is the Bow of the Deadlands and Betrayer's Axe.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Razor_Master_Erthas",
+        "page_title": "Online:Razor Master Erthas",
+        "revision_id": 3543908,
+        "retrieved_at": "2026-08-12T21:17:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

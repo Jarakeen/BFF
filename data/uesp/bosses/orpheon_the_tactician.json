@@ -1,0 +1,116 @@
+{
+    "id": "orpheon_the_tactician",
+    "name": "Orpheon the Tactician",
+    "content_id": "lep_seclusa",
+    "content_name": "Lep Seclusa",
+    "location": "Lep Seclusa — Cliff Sanctuary/Scroll Room",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,209,965",
+        "veteran": "12,829,988",
+        "hardmode": "20,527,982"
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "Light attack (AOE)"
+        },
+        {
+            "name": "Reality Fracture",
+            "description": "Heavy attack, summons a small Watchling above him"
+        },
+        {
+            "name": "Abyssal Conjuration",
+            "description": "Summons Abyssal Tendrils"
+        },
+        {
+            "name": "Arcane Planemeld",
+            "description": "Opens Apocryphal Gate, summons Arcane Hulks and Arcane Wraiths (which both cast Arcane Void), Arcane Rippers, Hounds, and Hoppers"
+        },
+        {
+            "name": "Call Alcunar",
+            "description": "The massive gryphon Alcunar will join Orpheon the Tactician in battle"
+        },
+        {
+            "name": "Wing Gust",
+            "description": "In Veteran, touching these will cause an AoE to appear around you"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Chana Narine",
+            "line": "You'll never read this scroll!",
+            "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+            "ability": "Wing Gust"
+        },
+        {
+            "speaker": "Orpheon the Tactician",
+            "line": "You think you can stop me? When I already proved my might?",
+            "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+            "ability": "Wing Gust"
+        },
+        {
+            "speaker": "Orpheon the Tactician",
+            "line": "One more fight and then the scroll is mine.",
+            "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+            "ability": "Wing Gust"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll": [
+            {
+                "speaker": "Sister Chana Narine",
+                "line": "You'll never read this scroll!",
+                "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+                "ability": "Wing Gust"
+            },
+            {
+                "speaker": "Orpheon the Tactician",
+                "line": "You think you can stop me? When I already proved my might?",
+                "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+                "ability": "Wing Gust"
+            },
+            {
+                "speaker": "Orpheon the Tactician",
+                "line": "One more fight and then the scroll is mine.",
+                "trigger": "Upon entering the scroll room, Sister Chana Nirine will block his access to the Elder Scroll",
+                "ability": "Wing Gust"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He wears the helm and pauldrons from the eponymous set, House Hexos Style armor [verification needed — can't see gloves/boots], and wields a House Hexos Style staff. He has a chest tattoo as well.Which one?",
+        "Despite his Imperial-sounding name, he is a Dark Elf in-game. It is vague as to whether this was his birthname or a name he chose for himself.",
+        "He is mentioned in the Letter to Orpheon and The Sacking of Bruma."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Upstart Emperor: Repel an invading army from Lep Seclusa and secure an Elder Scroll.",
+        "Pledge: Lep Seclusa: Explore Lep Seclusa and return Undaunted."
+    ],
+    "summary": "This article is about the person. For the item set, see Orpheon the Tactician (set). Orpheon the Tactician is a Dark Elf commander and a former \"Battlefield Emperor\" of Cyrodiil. Orpheon broke his allegiance to his previous alliance and recruited despondent deserters into a fearsome army. He has tracked down and laid siege to the hidden island of Lep Seclusa in search of an Elder Scroll that he believes contains a prophecy that will force the alliances to bend the knee and end the Three Banners War. According to Noriwen's findings, there are avenues that suggest he could have Dragonblood in his ancestry. He is fought as the final boss of the dungeon.Add how to activate Hardmode",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Orpheon_the_Tactician",
+        "page_title": "Online:Orpheon the Tactician",
+        "revision_id": 3575947,
+        "retrieved_at": "2026-08-12T21:27:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

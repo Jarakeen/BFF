@@ -1,0 +1,113 @@
+{
+    "id": "stormreeve_neidir",
+    "name": "Stormreeve Neidir",
+    "content_id": "tempest_island",
+    "content_name": "Tempest Island",
+    "location": "Tempest Island, Summit of Storms",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,233,356",
+        "hardmode": "4,868,360"
+    },
+    "abilities": [
+        {
+            "name": "Sparking Strike",
+            "description": "A basic ranged attack that deals minor shock damage."
+        },
+        {
+            "name": "Wind Charge",
+            "description": "Neidir charges at a person far away from her and knocks them back, dealing a very high amount of physical damage usually enough to one-shot on vet. This should be blocked or dodged if possible. If all players stay relatively near the boss, this attack will not be used."
+        },
+        {
+            "name": "Gust of Wind",
+            "description": "The boss summons a large blast of wind that deals very high physical damage to all players around her and knocking them back as indicated by a red circle. This attack must be avoided on vet if possible as it is usually a one-shot."
+        },
+        {
+            "name": "Lightning Strike",
+            "description": "The boss shoots a bolt of lightning at a random target dealing high shock damage. This is unavoidable, so be prepared to heal after this is cast."
+        },
+        {
+            "name": "Electrical Shock",
+            "description": "Many Twisters will roam the arena at random. Touching one will stagger and deal moderate shock damage to a player. As time passes, more Twisters will appear. The group should ensure they have enough damage to kill the boss before the damage from the Twisters is overwhelming. Do note that the Twisters can also push players into the boss's AOEs and interrupt rezzes, and may prove very dangerous if group damage is low."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Battlereeve Alduril",
+            "line": "No!",
+            "trigger": "However as you attempted to destroy the conduit, a massive lightning bolt will strike nearby revealing Neidir, killing Alduril's soldiers",
+            "ability": "Lightning Strike"
+        },
+        {
+            "speaker": "Stormreeve Neidir",
+            "line": "You Altmer are so predictable. So arrogant.",
+            "trigger": "However as you attempted to destroy the conduit, a massive lightning bolt will strike nearby revealing Neidir, killing Alduril's soldiers",
+            "ability": "Lightning Strike"
+        },
+        {
+            "speaker": "Stormreeve Neidir",
+            "line": "A valiant effort, but the invasion will proceed as planned. My storm will behead Malabal Tor, and the Maormer army will feast on its remains.",
+            "trigger": "When your group wipes? (Check to see if it's vet)",
+            "ability": "Gust of Wind"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "However as you attempted to destroy the conduit, a massive lightning bolt will strike nearby revealing Neidir, killing Alduril's soldiers": [
+            {
+                "speaker": "Battlereeve Alduril",
+                "line": "No!",
+                "trigger": "However as you attempted to destroy the conduit, a massive lightning bolt will strike nearby revealing Neidir, killing Alduril's soldiers",
+                "ability": "Lightning Strike"
+            },
+            {
+                "speaker": "Stormreeve Neidir",
+                "line": "You Altmer are so predictable. So arrogant.",
+                "trigger": "However as you attempted to destroy the conduit, a massive lightning bolt will strike nearby revealing Neidir, killing Alduril's soldiers",
+                "ability": "Lightning Strike"
+            }
+        ],
+        "When your group wipes? (Check to see if it's vet)": [
+            {
+                "speaker": "Stormreeve Neidir",
+                "line": "A valiant effort, but the invasion will proceed as planned. My storm will behead Malabal Tor, and the Maormer army will feast on its remains.",
+                "trigger": "When your group wipes? (Check to see if it's vet)",
+                "ability": "Gust of Wind"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is the author of Stormreeve Neidir's Orders.",
+        "Cut achievement text found in the files for Update 10 (Defeat Admiral Neidir) indicates she was once called \"Admiral Neidir\" during development."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Eye of the Storm: Defeat the invading Maormer on Tempest Island.",
+        "Pledge: Tempest Island: Prove you are truly Undaunted by clearing Tempest Island."
+    ],
+    "summary": "Stormreeve Neidir is the Maormer leader of the Sea Vipers and the third and final boss of Tempest Island. She has a chance to drop the unique item, Neidir's Thundering Staff, and will drop a helmet in the Stormfist set on veteran. During combat, she uses a variety of shock-based attacks and must be fought close-up, as she will use deadly abilities on group members who fight her from too far away. There will also be various twisters moving throughout the platform during battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stormreeve_Neidir",
+        "page_title": "Online:Stormreeve Neidir",
+        "revision_id": 3490705,
+        "retrieved_at": "2026-08-12T21:35:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

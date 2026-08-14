@@ -1,0 +1,37 @@
+{
+    "id": "volenfell",
+    "name": "Volenfell",
+    "content_type": "dungeon",
+    "summary": "Volenfell is a group dungeon found in Alik'r Desert. The researcher Tharayya wants your help finding a Dwemer artifact called the Guardian's Eye. You can learn about its location from Earrona Kneecapper outside Velyn Harbor, Magnifico Jalid in Sentinel, or Felvyn the Swordarm in Windhelm.",
+    "location": "",
+    "boss_ids": [
+        "quintus_verres",
+        "monstrous_gargoyle",
+        "tremorscale",
+        "guardian_council",
+        "the_guardian_s_spark",
+        "the_guardian_s_soul",
+        "the_guardian_s_strength"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Volenfell was designed for levels 34–37.",
+        "This dungeon contains curious references to the movie \"Tremors\" (Underwood, 1990). The boss Tremorscale, whose name already suggests this, is a big Duneripper, whose shape is very similar to the creatures from the movie. Also, Tremorscale's Rupture skill, through which he burrows, moves under the terrain, and launches himself out of it, is the typical \"attack\" of the original creatures."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Volenfell",
+        "page_title": "Online:Volenfell",
+        "revision_id": 3559223,
+        "retrieved_at": "2026-08-12T21:37:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

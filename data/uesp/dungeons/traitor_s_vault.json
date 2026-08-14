@@ -1,0 +1,26 @@
+{
+    "id": "traitor_s_vault",
+    "name": "Traitor's Vault",
+    "content_type": "dungeon",
+    "summary": "Traitor's Vault is a delve on Artaeum found just southeast of the Colosseum of the Old Ways, containing undead. This once-popular hall was shut down long ago on sudden command from the Psijic Order after profane experiments were performed inside by one of their most problematic members.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Traitor%27s_Vault",
+        "page_title": "Online:Traitor's Vault",
+        "revision_id": 3450038,
+        "retrieved_at": "2026-08-12T21:36:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

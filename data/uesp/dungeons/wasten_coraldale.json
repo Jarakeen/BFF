@@ -1,0 +1,29 @@
+{
+    "id": "wasten_coraldale",
+    "name": "Wasten Coraldale",
+    "content_type": "dungeon",
+    "summary": "Wasten Coraldale is an island delve off the west coast of Summerset, containing aquatic wildlife and Storm Sharks. It can be reached by boat from a landing north of Alinor. Most of Wasten Coraldale has been overrun by the Storm Sharks raiders, who have fortified the beaches in advance of a larger force incoming, all under the nose of Queen Ayrenn's navy. A cooking fire can be found at the Storm Sharks' camp on the beach. There is a camp south of the boat that takes you to the island which contains a chest. A chest is located west of the passage blocked by coral, which lies at the southeastern corner of the delve. Storm Sharks are trying to clear the path to no avail. Maorbet resides north of the southern path, in the eastern half of the delve. Frogs, lesser sea adders and mud hoppers are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This location previously appeared in Arena as Wasten Coridale. It was also the subject of the book Hanging Gardens.",
+        "Mounts cannot be used in the open air section of the delve."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wasten_Coraldale",
+        "page_title": "Online:Wasten Coraldale",
+        "revision_id": 3461799,
+        "retrieved_at": "2026-08-12T21:38:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

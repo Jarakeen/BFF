@@ -1,0 +1,76 @@
+{
+    "id": "argonian_behemoth",
+    "name": "Argonian Behemoth",
+    "content_id": "ruins_of_mazzatun",
+    "content_name": "Ruins of Mazzatun",
+    "location": "Deepmire, Murkmire\nDoomvault Capraxus, Gloomire, Niben Forest, The Silent Halls, Xi-Tsei",
+    "species": "Argonian Behemoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Savage Swipe",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Ravenous Chomp",
+            "description": "Charged melee attack dealing high physical damage. This can be blocked to stagger the Argonian Behemoth."
+        },
+        {
+            "name": "Deep Bite/Wrecking Jaws",
+            "description": "The Argonian Behemoth slams the target with its fist, dealing moderate physical damage and staggering, then chomps at its target, and applying/refreshing \"Jagged Wound\" which deals minor bleed damage over 8 seconds."
+        },
+        {
+            "name": "Bog Slam",
+            "description": "The Argonian Behemoth slams its fists into the ground, indicated by a large red circle, dealing high physical damage and knocking down affected targets."
+        },
+        {
+            "name": "Quaking Stomp/Marsh Masher",
+            "description": "The Argonian Behemoth stomps the ground and sends out four traveling shockwaves, indicated by small red circles, dealing moderate physical damage and staggering targets."
+        },
+        {
+            "name": "Stinging Sputum",
+            "description": "When standing further away, the Argonian Behemoth spits a blistering green substance on the ground at its target location, indicated by a red circle, dealing continuous minor poison damage."
+        },
+        {
+            "name": "Summon Crocodiles",
+            "description": "The behemoth summons two slightly stronger crocodiles to assist it."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In earlier announcements, they were referred to as Behemoths or Berserkers. Developer commentary at QuakeCon 2014 also stated that they like to eat Naga."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Cursed Skull: Help Cyrodilic Collections locate the cursed skull of Beela-Kaar.",
+        "Death Among the Dead-Water: Rescue the Naga-Kur from self-destruction.",
+        "Empty Nest: Investigate strange occurrences at the Bright-Throat egg nursery.",
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena.",
+        "Reavers of the Reef: Drive the Dreadsail pirates from the Systres.",
+        "Sap and Stone: Eliminate the Xit-Xaht threat in the Ruins of Mazzatun.",
+        "The Trophy-Taker: Defeat Xeemhok the Trophy-Taker and retrieve tokens from his fallen challengers.",
+        "Unstuck From Time: Investigate a temporal disturbance at the remote Telvanni settlement of Bal Sunnar."
+    ],
+    "summary": "This article is about the Argonian subtype. For the opponent in the Maelstrom Arena, see Argonian Behemoth (Maelstrom Arena). Argonian Behemoths are massive Argonians predominantly found in Blackwood and Murkmire. They have powerful melee attacks and can also spew poison.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Argonian_Behemoth",
+        "page_title": "Online:Argonian Behemoth",
+        "revision_id": 3585517,
+        "retrieved_at": "2026-08-12T21:32:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

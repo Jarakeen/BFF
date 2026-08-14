@@ -1,0 +1,497 @@
+{
+    "id": "dro_zakar",
+    "name": "Dro'zakar",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Moongrave Fane, Fane of Waning Moons",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,989,063",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Cleave",
+            "description": "A basic melee attack."
+        },
+        {
+            "name": "Blood Mist",
+            "description": "Dro'zakar disappears and swirling blood fumes appear in his place and starts chasing players, indicated by a moving AoE, dealing continuous damage."
+        },
+        {
+            "name": "Blood Drain",
+            "description": "Targeted ability that leeches health from one player"
+        },
+        {
+            "name": "Sangiin Shield",
+            "description": "After every Helot consumption phase, he gains a damage shield similar to Zhaj'hassa the Forgotten, where he deals continuous damage to the group as he shields himself. The group must dps his shield down as the healer keeps everyone alive."
+        },
+        {
+            "name": "Consume Hemo Helot",
+            "description": "A group of Sacrificial Helots rush into the arena and sacrifice themselves to create an Hemo Helot. When Dro'zakar begins to feed on the Hemo Helot, one group member must destroy it to stop him from becoming empowered. This can be done easily with a heavy attack. If he manages to consume a hemo helot, Dro'zakar will deal massive damage to the group."
+        },
+        {
+            "name": "Red Breath",
+            "description": "Dro'zakar sprays a blood breath attack in a cone in front of him, dealing high magic damage and stunning targets hit."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "Other Hollowfang Clan enemies will rush into the arena to assist Dro'zakar during the boss fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Dro'zakar",
+            "line": "You are not the skulking rat, but you are my prey all the same.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Dro'zakar will taste your blood before the Dragon's. He is always hungry.",
+            "trigger": "When engaged in combat",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Show the Clan Mother your worth!",
+            "trigger": "While attacking",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Feel your pulse quicken ... and stop!",
+            "trigger": "While attacking",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Can you feel your blood betraying you?",
+            "trigger": "While attacking",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Do you hear the Doom Drum growing louder in your ears?",
+            "trigger": "Sangiin Shield",
+            "ability": "Sangiin Shield"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Your heart will beat to bursting!",
+            "trigger": "Sangiin Shield",
+            "ability": "Sangiin Shield"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I'll seep into your veins.",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Am I too slippery?",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "You can't corner me.",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Try not to slip.",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Did you not wish to spill my blood?",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Perhaps you should try a straw.",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I'll drown you in blood.",
+            "trigger": "Transforming into a blood pool",
+            "ability": "Blood Mist"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Hah. I am not a solitary hunter.",
+            "trigger": "When summoning enemy NPCs",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Take a bite of my prey, blood-kin!",
+            "trigger": "When summoning enemy NPCs",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Herd them like the cattle they are!",
+            "trigger": "When summoning enemy NPCs",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Hollowfangs! Feast on these fools!",
+            "trigger": "When summoning enemy NPCs",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Hah! Swine that bleed themselves! You're only fit for slaughter!",
+            "trigger": "When a player or NPC bleeds to create a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Your sacrifice is in vain.",
+            "trigger": "When a player or NPC bleeds to create a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I accept you [sic] offering, but you'll still die.",
+            "trigger": "When a player or NPC bleeds to create a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Keep your blood in your veins. I prefer to drink from your throats!",
+            "trigger": "When a player or NPC bleeds to create a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I'll be taking this.",
+            "trigger": "When feeding on a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Your blood has no power over me.",
+            "trigger": "When feeding on a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Blood is too precious for you to waste.",
+            "trigger": "When feeding on a hemo helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I'll drown you in blood.",
+            "trigger": "After successfully consuming a helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "You forgot something.",
+            "trigger": "After successfully consuming a helot",
+            "ability": "Consume Hemo Helot"
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "And here I was just toying with you.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I am embarrassed for you.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Feh. You taste of vermin.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "The deer make better prey.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "I'll leave your sluggish blood for the rats.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "Dro'zakar is thirsty. Kind of you to offer your throats.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Dro'zakar",
+            "line": "(?)",
+            "trigger": "Upon defeat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before combat": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "You are not the skulking rat, but you are my prey all the same.",
+                "trigger": "Idling before combat",
+                "ability": null
+            }
+        ],
+        "When engaged in combat": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "Dro'zakar will taste your blood before the Dragon's. He is always hungry.",
+                "trigger": "When engaged in combat",
+                "ability": "Consume Hemo Helot"
+            }
+        ],
+        "While attacking": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "Show the Clan Mother your worth!",
+                "trigger": "While attacking",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Feel your pulse quicken ... and stop!",
+                "trigger": "While attacking",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Can you feel your blood betraying you?",
+                "trigger": "While attacking",
+                "ability": null
+            }
+        ],
+        "Sangiin Shield": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "Do you hear the Doom Drum growing louder in your ears?",
+                "trigger": "Sangiin Shield",
+                "ability": "Sangiin Shield"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Your heart will beat to bursting!",
+                "trigger": "Sangiin Shield",
+                "ability": "Sangiin Shield"
+            }
+        ],
+        "Transforming into a blood pool": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "I'll seep into your veins.",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Am I too slippery?",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "You can't corner me.",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Try not to slip.",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Did you not wish to spill my blood?",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Perhaps you should try a straw.",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "I'll drown you in blood.",
+                "trigger": "Transforming into a blood pool",
+                "ability": "Blood Mist"
+            }
+        ],
+        "When summoning enemy NPCs": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "Hah. I am not a solitary hunter.",
+                "trigger": "When summoning enemy NPCs",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Take a bite of my prey, blood-kin!",
+                "trigger": "When summoning enemy NPCs",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Herd them like the cattle they are!",
+                "trigger": "When summoning enemy NPCs",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Hollowfangs! Feast on these fools!",
+                "trigger": "When summoning enemy NPCs",
+                "ability": "Consume Hemo Helot"
+            }
+        ],
+        "When a player or NPC bleeds to create a hemo helot": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "Hah! Swine that bleed themselves! You're only fit for slaughter!",
+                "trigger": "When a player or NPC bleeds to create a hemo helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Your sacrifice is in vain.",
+                "trigger": "When a player or NPC bleeds to create a hemo helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "I accept you [sic] offering, but you'll still die.",
+                "trigger": "When a player or NPC bleeds to create a hemo helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Keep your blood in your veins. I prefer to drink from your throats!",
+                "trigger": "When a player or NPC bleeds to create a hemo helot",
+                "ability": "Consume Hemo Helot"
+            }
+        ],
+        "When feeding on a hemo helot": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "I'll be taking this.",
+                "trigger": "When feeding on a hemo helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Your blood has no power over me.",
+                "trigger": "When feeding on a hemo helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Blood is too precious for you to waste.",
+                "trigger": "When feeding on a hemo helot",
+                "ability": "Consume Hemo Helot"
+            }
+        ],
+        "After successfully consuming a helot": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "I'll drown you in blood.",
+                "trigger": "After successfully consuming a helot",
+                "ability": "Consume Hemo Helot"
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "You forgot something.",
+                "trigger": "After successfully consuming a helot",
+                "ability": "Consume Hemo Helot"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "And here I was just toying with you.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "I am embarrassed for you.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Feh. You taste of vermin.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "The deer make better prey.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "I'll leave your sluggish blood for the rats.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Dro'zakar",
+                "line": "Dro'zakar is thirsty. Kind of you to offer your throats.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Upon defeat": [
+            {
+                "speaker": "Dro'zakar",
+                "line": "(?)",
+                "trigger": "Upon defeat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Dro'zakar is a Pahmar-raht vampire from the Hollowfang Clan that serves as the second boss of Moongrave Fane.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dro%27zakar",
+        "page_title": "Online:Dro'zakar",
+        "revision_id": 3432515,
+        "retrieved_at": "2026-08-12T21:29:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

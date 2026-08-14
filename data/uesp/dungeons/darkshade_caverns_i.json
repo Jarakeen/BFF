@@ -1,0 +1,34 @@
+{
+    "id": "darkshade_caverns_i",
+    "name": "Darkshade Caverns I",
+    "content_type": "dungeon",
+    "summary": "Darkshade Caverns I is a group dungeon found in southeastern Deshaan. As Deshaan's largest kwama mine, the caverns' ownership remains hotly contested. The caverns also contain the hidden Dwemer ruin of Rkugamz. In the normal version, Tervur Sadri wants you to help him reclaim his mine from the thugs within. You can learn about its location from Mad Zebba outside Elden Root, Lady Blade outside Wayrest, or Hranir Icy-Mane outside Mournhold. The following item sets will drop both Darkshade Caverns I and II: Armor of Truth, Netch's Touch, and Strength of the Automaton.",
+    "location": "",
+    "boss_ids": [
+        "foreman_llothan",
+        "the_hive_lord",
+        "sentinel_of_rkugamz",
+        "dwarven_centurion"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Darkshade Caverns was designed for levels 20–23, and Veteran Darkshade Caverns was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Darkshade Caverns I was only available in Normal mode, and Darkshade Caverns II was only available in Veteran mode. These were named Darkshade Caverns and Veteran Darkshade Caverns respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Darkshade_Caverns_I",
+        "page_title": "Online:Darkshade Caverns I",
+        "revision_id": 3323663,
+        "retrieved_at": "2026-08-12T21:18:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

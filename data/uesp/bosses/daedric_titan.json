@@ -1,0 +1,80 @@
+{
+    "id": "daedric_titan",
+    "name": "Daedric Titan",
+    "content_id": "city_of_ash_ii",
+    "content_name": "City of Ash II",
+    "location": "Dark Anchors, The Valley of Blades",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Punch",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Scourge Bolt",
+            "description": "A basic ranged attack dealing moderate flame damage."
+        },
+        {
+            "name": "Fire Blast",
+            "description": "The Daedric Titan generates a path of flame directly in front of where it was cast, dealing high flame damage and stunning. This can be interrupted to stagger the Daedric Titan and it will cast \"Swallowing Souls\" instead. Blocking does not prevent the stun."
+        },
+        {
+            "name": "Soul Flame",
+            "description": "The AoE dealing continuous direct low flame damage left in front of the Titan by Fire Blast if not interrupted."
+        },
+        {
+            "name": "Swallowing Souls",
+            "description": "The Daedric Titan unleashes a violent explosion in a short area around itself, dealing high magic damage."
+        },
+        {
+            "name": "Wing Gust",
+            "description": "The Daedric Titan gets down on the ground and raises its wings, then unleashes a powerful gust, dealing high physical damage and launching you away."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Most generic Daedric Titans were simply named \"Titan\" before Update 6.",
+        "A Shackled Titan can be obtained as a mount."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "The Bleeding Temple: Rescue the priests of the Imperial clergy from the Daedra.",
+        "The Citadel Must Fall: Storm the Dremora defenses to reach the Endless Stair.",
+        "Consuming Darkness: Delve into Oblivion and save Bakkhara.",
+        "Enemy Reinforcements: Track down Daedric reinforcements.",
+        "The Final Assault: Launch an assault on the Endless Stair and destroy the Planar Vortex.",
+        "God of Schemes: Use the power of the Amulet of Kings to defeat Molag Bal.",
+        "Heresy of Ignorance: Stop the Worm Cult from summoning a terrible champion.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Planemeld Obverse: Fulfill the prophecy of an Elder Scroll by freeing the White-Gold Tower from Coldharbour's clutches.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "Uncaged: Seal an ancient laboratory filled with angry Celestials.",
+        "Valley of Blades: Retrieve the Ring of Stendarr's Mercy from the Valley of Blades.",
+        "Will of the Council: Enter Coldharbour and destroy the Mortuum Vivicus.",
+        "The Weight of Three Crowns: Convince all three alliances to invade Coldharbour."
+    ],
+    "summary": "Daedric Titans, sometimes referred to simply as Titans, are quadrupedal imitations of Dragons created by Molag Bal. Though he created them to serve him, other Daedric Princes came into possession of their own soon after their appearance. The Ash Titans thrive among Mehrunes Dagon's servants. Daedric Titans are often deployed as the higher-echelons of Molag Bal's armies. One titan, Ozzozachar, even carries the title \"Son of Molag Bal\". Unlike the Dragons whose image they were created in, the titans have four fully-functioning limbs in addition to their wings. However, they cannot use the Thu'um: instead they have a crude imitation consisting solely of a flaming essence-drain spell.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Daedric_Titan",
+        "page_title": "Online:Daedric Titan",
+        "revision_id": 3607171,
+        "retrieved_at": "2026-08-12T21:17:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

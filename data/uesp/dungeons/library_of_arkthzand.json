@@ -1,0 +1,20 @@
+{
+    "id": "library_of_arkthzand",
+    "name": "Library of Arkthzand",
+    "content_type": "dungeon",
+    "summary": "The Library of Arkthzand is an expansive Dwemer ruin found in Blackreach: Arkthzand Cavern, located northeast of Nchuand-Zel. It served as a place for scholarly pursuit when the Dwemer were still in Tamriel. The ruins have recently been infested by mysterious beings from the void, who are now assailing the defenders. Dwarven Scarab and Shroom Beetle can be found here. An Anomaly and several Void Crystals are involved during a related quest inside. The Arkthzand Great Lift is located outside the library's wall, to the north. Philosopher's Cradle is located southwest of the library, and Ghostlight Grotto is to the east.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Library of Arkthzand uses the standard estate map icon instead of the Dwemer ruins icon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Library_of_Arkthzand",
+        "page_title": "Online:Library of Arkthzand",
+        "revision_id": 3608116,
+        "retrieved_at": "2026-08-12T21:27:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

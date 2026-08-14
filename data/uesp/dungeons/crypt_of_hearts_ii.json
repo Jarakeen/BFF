@@ -1,0 +1,40 @@
+{
+    "id": "crypt_of_hearts_ii",
+    "name": "Crypt of Hearts II",
+    "content_type": "dungeon",
+    "summary": "The Crypt of Hearts II is a group dungeon found in Rivenspire. Formerly a school teaching Destruction magic, sword fighting, alchemy, and possibly even Daedric summoning, the crypt is now home to some of the tortured souls of its teachers and of its students. The storyline continues from the events of Crypt of Hearts I. In this version, Alanwe once again needs your help defeating her former husband, who has returned to torment her following her escape from torture. You can learn about its location from Eraegaer the Kill-Happy in Marbruk, Ilmindil the Incendiary in Shornhelm, or Roaring Ramavel in Stormhold. The final boss, Nerien'eth, has a chance to drop the Great Eltheric Pearl antiquity lead for the Pearls of Ehlnofey. See also: Crypt of Hearts I",
+    "location": "",
+    "boss_ids": [
+        "ruzozuzalpamaz",
+        "spider_daedra",
+        "ilambris_amalgam",
+        "bone_colossus",
+        "ilambris_athor",
+        "ilambris_zaven",
+        "nerien_eth",
+        "ebony_blade"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Crypt of Hearts appeared in both Arena and Shadowkey.",
+        "Before dungeon scaling was introduced in Update 5, Normal Crypt of Hearts was designed for levels 28–31, and Veteran Crypt of Hearts was designed for Veteran Ranks 11–12.",
+        "Prior to Update 12, Crypt of Hearts I was only available in Normal mode, and Crypt of Hearts II was only available in Veteran mode. These were named Crypt of Hearts and Veteran Crypt of Hearts respectively.",
+        "The Wraithhome player home is located nearby and uses the same architectural style."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crypt_of_Hearts_II",
+        "page_title": "Online:Crypt of Hearts II",
+        "revision_id": 3369633,
+        "retrieved_at": "2026-08-12T21:18:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

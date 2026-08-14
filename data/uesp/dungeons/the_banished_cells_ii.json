@@ -1,0 +1,33 @@
+{
+    "id": "the_banished_cells_ii",
+    "name": "The Banished Cells II",
+    "content_type": "dungeon",
+    "summary": "The Banished Cells II is a group dungeon found at the northern tip of Auridon. The story started in Banished Cells I is continued in this version; High Kinlord Rilis has escaped again, and Keeper Cirion once again needs help banishing him for good. You can learn about its location from Turuk Redclaws in Vulkhel Guard, Abzag the Monster in Daggerfall, or Roaring Ramavel in Davon's Watch. Hazards include flame walls.",
+    "location": "",
+    "boss_ids": [
+        "maw_of_the_infernal",
+        "keeper_imiril",
+        "high_kinlord_rilis_banished_cells_ii"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Banished Cells was designed for levels 12-15 and Veteran Banished Cells was designed for Veteran Ranks 1-5.",
+        "Prior to Update 12, The Banished Cells I was only available in Normal mode, and The Banished Cells II was only available in Veteran mode. These were named The Banished Cells and Veteran Banished Cells respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Banished_Cells_II",
+        "page_title": "Online:The Banished Cells II",
+        "revision_id": 3598273,
+        "retrieved_at": "2026-08-12T21:13:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

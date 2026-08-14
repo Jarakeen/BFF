@@ -1,0 +1,20 @@
+{
+    "id": "fissure_ruins",
+    "name": "Fissure Ruins",
+    "content_type": "dungeon",
+    "summary": "The Fissure Ruins are a Daedric Ruin within a cave near the Sunport Rampart Camp.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Mannimarco's Notes refer to this location as the shrine of Mortha Khevur."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fissure_Ruins",
+        "page_title": "Online:Fissure Ruins",
+        "revision_id": 3459982,
+        "retrieved_at": "2026-08-12T21:22:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

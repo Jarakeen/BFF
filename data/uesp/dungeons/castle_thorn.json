@@ -1,0 +1,36 @@
+{
+    "id": "castle_thorn",
+    "name": "Castle Thorn",
+    "content_type": "dungeon",
+    "summary": "Castle Thorn is a group dungeon nestled in the Haafingar Mountains of Western Skyrim. It is part of the Stonethorn dungeon pack DLC, along with Stone Garden. The vampire lord Lady Thorn, once a High Elf of Clan Direnni named Lady Ingerien, rules from here, commanding her Thorn Legion. Crows, fleshflies, rats and spiders can be found in numbers within the dungeon.",
+    "location": "",
+    "boss_ids": [
+        "dread_tindulra",
+        "blood_twilight",
+        "grievous_twilight",
+        "vaduroth",
+        "wraith_of_crows",
+        "talfyg",
+        "lady_thorn"
+    ],
+    "achievements": [
+        {
+            "id": "stonethorn_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The entrance to Castle Thorn has been present since Update 26, with one of the towers also being present in the distance."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Castle_Thorn",
+        "page_title": "Online:Castle Thorn",
+        "revision_id": 3608055,
+        "retrieved_at": "2026-08-12T21:16:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

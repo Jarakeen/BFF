@@ -1,0 +1,74 @@
+{
+    "id": "varaine_pellingare",
+    "name": "Varaine Pellingare",
+    "content_id": "wayrest_sewers_i",
+    "content_name": "Wayrest Sewers I",
+    "location": "Wayrest Sewers II, cavern chamber",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Smite",
+            "description": "A heavy melee attack that deals high physical damage and knocks the target down. This attack should be blocked or dodged if possible."
+        },
+        {
+            "name": "Spinning Cleave",
+            "description": "The boss spins around dealing moderate physical damage and knocking players down as indicated by a red circle around himself."
+        },
+        {
+            "name": "Tidal Slash",
+            "description": "The boss smashes the ground causing a wave of water that deals moderate physical damage and knocks players back as indicated by a red cone. This attack has a fast cast time and can be hard to avoid if you are standing too near the boss."
+        },
+        {
+            "name": "Poisoned Blade",
+            "description": "The boss throws a poisoned dagger at a target dealing moderate poison damage over time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "several",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "When walking by a nearby guard tower before completing the dungeons, Master Pellingare comments that his son is \"a sniveling coward\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Deception in the Dark: Prevent an underground invasion of Wayrest.",
+        "No Second Chances: Return the Pellingare siblings to the grave.",
+        "Pledge: Wayrest Sewers I: Explore Wayrest Sewers I and return Undaunted.",
+        "Pledge: Wayrest Sewers II: Explore Wayrest Sewers II and return Undaunted.",
+        "Wayrest Sewers Pledge: Explore Wayrest Sewers and return Undaunted. (disabled since Patch 2.6.4)",
+        "Veteran Wayrest Sewers Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Wayrest Sewers. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Varaine Pellingare is a Breton noble who, along with his sister, is the leader of a potential coup in Wayrest. Their forces have been preparing down in the Wayrest Sewers. Varaine Pellingare is killed in Wayrest Sewers I, and as a result, his mourning father made a deal with Investigator Garron to have him raised from the dead. He returns in the final battle of Wayrest Sewers II, fighting alongside his sister. He will use a variety of melee attacks, while Allene uses ranged attacks.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Varaine_Pellingare",
+        "page_title": "Online:Varaine Pellingare",
+        "revision_id": 3510337,
+        "retrieved_at": "2026-08-12T21:38:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

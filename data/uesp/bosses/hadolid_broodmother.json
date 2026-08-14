@@ -1,0 +1,65 @@
+{
+    "id": "hadolid_broodmother",
+    "name": "Hadolid Broodmother",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "Hadolid",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Basic melee attack which deals minor physical damage to a target."
+        },
+        {
+            "name": "Cleave",
+            "description": "A cone attack which deals damage and snares targets hit."
+        },
+        {
+            "name": "Whirlpool",
+            "description": "Hadolid Broodmother plunges her sword in the ground, creating an area under the target that deal continuous damage and slows every tick."
+        },
+        {
+            "name": "Immune",
+            "description": "At 60% and 30% health, Hadolid Broodmother goes in the center of the arena and becomes invincible. At 60% a small wave of Hadolid Hullcleavers, Hadolid Peelers and Hadolid Tidecallers needs to be defeated in order to fight Hadolid Broodmother again. At 30% it's a larger Hadolid wave. After Hadolid Broodmother finishes her second Immune phase, Hadolids continuously spawn in the arena to fight for her."
+        },
+        {
+            "name": "Water Geyser",
+            "description": "Only when \"Immune\" is active, Water Geysers appear in the arena which deal magic damage and stuns targets hit."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Hadolid Broodmother is a large hadolid who can be found in Ghost Haven Bay. It serves as the group event for the public dungeon and can be found on the easternmost side of the map in a large circular arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hadolid_Broodmother",
+        "page_title": "Online:Hadolid Broodmother",
+        "revision_id": 3372987,
+        "retrieved_at": "2026-08-12T21:23:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

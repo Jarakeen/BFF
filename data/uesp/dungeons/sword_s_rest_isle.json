@@ -1,0 +1,18 @@
+{
+    "id": "sword_s_rest_isle",
+    "name": "Sword's Rest Isle",
+    "content_type": "dungeon",
+    "summary": "Sword's Rest Isle is an island retreat owned by High King Emeric, located in the waters south of Daggerfall. It has recently been overtaken by the Ascendant Order, who are here to assassinate the high king. It can be reached by boat from a landing in Skywatch during the related quest. Sword's Rest Keep is the only accessible interior on the isle.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sword%27s_Rest_Isle",
+        "page_title": "Online:Sword's Rest Isle",
+        "revision_id": 3550291,
+        "retrieved_at": "2026-08-12T21:35:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

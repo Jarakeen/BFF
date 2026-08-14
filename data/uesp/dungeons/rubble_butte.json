@@ -1,0 +1,26 @@
+{
+    "id": "rubble_butte",
+    "name": "Rubble Butte",
+    "content_type": "dungeon",
+    "summary": "Rubble Butte is an Ayleid ruin in western Bangkorai, north of Hallin's Stand containing Disloyal Nobles and their minions.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rubble_Butte",
+        "page_title": "Online:Rubble Butte",
+        "revision_id": 3598268,
+        "retrieved_at": "2026-08-12T21:31:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

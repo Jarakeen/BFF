@@ -1,0 +1,26 @@
+{
+    "id": "mournful_catacomb",
+    "name": "Mournful Catacomb",
+    "content_type": "dungeon",
+    "summary": "The Mournful Catacomb is a crypt found in western Sorrow's Friend, where the Gilded Fateline's Knell resides. The path to the catacomb is covered in Baleful Darkness, so you will require the Gleaming Lamp to reach the Mournful Catacomb and gilded keys from Argent enemies to enter it. The catacomb is a singular room, and when you reach the center of the room, Fateline's Knell will be summoned. The Elegy of Forgotten Fatelines can be found on a plaque to the right of the door after entering.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mournful_Catacomb",
+        "page_title": "Online:Mournful Catacomb",
+        "revision_id": 3560166,
+        "retrieved_at": "2026-08-12T21:29:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

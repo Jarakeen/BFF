@@ -1,0 +1,78 @@
+{
+    "id": "anthelmir_s_construct",
+    "name": "Anthelmir's Construct",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "Oathsworn Pit",
+    "species": "Miregaunt",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,413,503",
+        "hardmode": "10,827,006"
+    },
+    "abilities": [
+        {
+            "name": "Root Smash",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Bramble Whip",
+            "description": "A basic mid-range attack dealing moderate physical damage."
+        },
+        {
+            "name": "Retrieve Axe",
+            "description": "The construct points at one of the axe statues in the arena and pulls the axe head from it to use as a weapon. Targets in the way of the axe head being pulled to the construct, indicated by a long and wide red rectangle, are dealt high physical damage."
+        },
+        {
+            "name": "Monstrous Blow",
+            "description": "While the construct is equipped with the axe head, it performs a powerful downward strike, dealing very high physical attack and knocking down. This can be blocked."
+        },
+        {
+            "name": "Hurl Axe",
+            "description": "The construct discards the axe head by throwing it in the direction of a target, indicated by a long and wide red rectangle, dealing high physical damage."
+        },
+        {
+            "name": "Construct Transformation",
+            "description": "When the construct reaches 70% health, both it and Anthelmir rush to the center of the arena and the construct plants one of its hands into the ground, causing the arena to shake. Shortly after, the head of a Malacath statue falls on top of the construct, causing the construct to fall over, landing on Anthelmir and killing her instantly. Afterward, the construct gets up, fortifies the statue head with vines, and gains new abilities."
+        },
+        {
+            "name": "Angry Inferno/Angry Balefire",
+            "description": "Ability gained from \"Construct Transformation\". The construct's core becomes infused with fire, and the statue head begins to breathe fire, indicated by a wide red cone, dealing continuous moderate flame damage. Targets hit are dealt moderate damage over time. The construct can continue to move and perform other attacks while performing this ability."
+        },
+        {
+            "name": "Summon Cindermoth",
+            "description": "Starts after \"Construct Transformation\", and occurs during the rest of the fight. Cindermoths are continuously spat out from the statue head. They rush at targets before detonating, indicated by a red circle, dealing high flame damage."
+        },
+        {
+            "name": "Kindlepitch Barrel",
+            "description": "Kindlepitch barrels are scattered around the arena, which explode if fire from enemies makes contact with them. The resulting explosion deals immediate high flame damage, indicated by a red circle around them, and causes flames to linger for the rest of the fight, dealing continuous low flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Technically \"Summon Cindermoth\" is cast by Anthelmir even though she is dead by then. Also this ability somehow deals 1,000 flame damage to Chief/King Bazrag each time it is cast."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Victory Through Strife: Repel the Recollection from the Oathsworn Pit.",
+        "Pledge: Oathsworn Pit: Explore Oathsworn Pit and return Undaunted."
+    ],
+    "summary": "This article is about the boss. For the set, see Anthelmir's Construct (set). Anthelmir's Construct is a massive miregaunt found with its master in Oathsworn Pit, the duo serving as the dungeon's second boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Anthelmir%27s_Construct",
+        "page_title": "Online:Anthelmir's Construct",
+        "revision_id": 3282078,
+        "retrieved_at": "2026-08-12T21:30:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

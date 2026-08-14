@@ -1,0 +1,384 @@
+{
+    "id": "domihaus_the_bloody_horned",
+    "name": "Domihaus the Bloody-Horned",
+    "content_id": "falkreath_hold",
+    "content_name": "Falkreath Hold",
+    "location": "Jarl's Hall, Falkreath Hold",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,233,356",
+        "hardmode": "4,868,360"
+    },
+    "abilities": [
+        {
+            "name": "Fire Bolt",
+            "description": "A basic ranged attack that deals minor flame damage."
+        },
+        {
+            "name": "Fiery Blast",
+            "description": "A charged heavy ranged attack that deals very high flame damage. This must be blocked or dodged if possible if you are the dps."
+        },
+        {
+            "name": "Ring of Fire",
+            "description": "The boss summons flames on the ground behind the pillars dealing continuous direct high flame damage. This forces players into the center of the arena."
+        },
+        {
+            "name": "Pillar Eruption/Pillars of Nirn",
+            "description": "While Ring of Fire is active, the boss pulls all players towards him and snares them. Following that, nirncrux pillars will appear under each player's feet, dealing moderate flame damage (Pillar Eruption) and linger which deal continuous direct moderate flame damage (Pillars of Nirn). Keep moving and do not overlap with other players to avoid the red AOEs."
+        },
+        {
+            "name": "Pillar Explosion",
+            "description": "After a brief moment, the pillars explode dealing moderate flame damage."
+        },
+        {
+            "name": "Pyroclasm",
+            "description": "The boss summons flames around him dealing continuous direct high flame damage as indicated by a red circle. This forces players to stay behind the pillars on the edge of the arena."
+        },
+        {
+            "name": "Stoke the Embers",
+            "description": "The boss pounds the ground causing fireballs to shoot out from itself traveling along the ground dealing moderately high flame damage. If the outer edge is safe, players can hide behind the pillars to avoid the fireballs."
+        },
+        {
+            "name": "Master of the Elements/Horned Monolith",
+            "description": "At 80%, 60%, 40% and 20% health, the boss becomes invulnerable and summons a flame, frost, stone, and storm atronach to attack the group (Master of the Elements). They should be killed quickly before the boss wakes up, as dealing with the boss and the adds at once can be overwhelming. When Domihaus wakes up, he deals moderate generic damage in a small area around him (Horned Monolith) [verification needed]. Do note that as the boss's health depletes, he will become invulnerable for shorter amounts of time giving the group less time to deal with the adds."
+        },
+        {
+            "name": "Shout of Desolation",
+            "description": "This attack is denoted by an onscreen notification saying Domihaus is preparing to shout! At 70, 50, 30 and 10% Health, the boss shouts dealing very high amounts of oblivion damage. This attack is lethal on veteran mode. To prevent this, all players should hide behind an unbroken pillar in the hall. However, any of the pillars hidden behind will break, so to maximize the amount of hiding spots you have make sure all four group members hide behind the same pillar."
+        },
+        {
+            "name": "Scorch/Slam/Snap/Spark",
+            "description": "During the fight when ?, each of the four totems in the room (Flame, Frost, Shock and Stone) shoot a projectile of their element at a random player, dealing moderate flame damage (Scorch), frost damage (Snap), shock damage (Spark) or earth damage (Slam)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Jarl Skjoralmor",
+            "line": "I said to keep the fight out there! Oh, you aren't my guards. Nor are you Reachmen. We've won then?",
+            "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "Domihaus the Bloody-Horned",
+            "line": "This hall. Is mine!",
+            "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "Domihaus the Bloody-Horned",
+            "line": "Falkreath burns! As will you!",
+            "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "",
+            "line": "Grovel!",
+            "trigger": "Preparing to roar",
+            "ability": "Shout of Desolation"
+        },
+        {
+            "speaker": "",
+            "line": "Nowhere to hide.",
+            "trigger": "Preparing to roar",
+            "ability": "Shout of Desolation"
+        },
+        {
+            "speaker": "",
+            "line": "Let it all burn!",
+            "trigger": "Casting Ring of Fire",
+            "ability": "Ring of Fire"
+        },
+        {
+            "speaker": "",
+            "line": "This hall will be your pyre!",
+            "trigger": "Casting Ring of Fire",
+            "ability": "Ring of Fire"
+        },
+        {
+            "speaker": "",
+            "line": "Wreathed in fire! I reign!",
+            "trigger": "Casting Ring of Fire",
+            "ability": "Ring of Fire"
+        },
+        {
+            "speaker": "",
+            "line": "Only ash will remain!",
+            "trigger": "Casting Ring of Fire",
+            "ability": "Ring of Fire"
+        },
+        {
+            "speaker": "",
+            "line": "Come and be trampled.",
+            "trigger": "Pulling all four players to the center",
+            "ability": "Stoke the Embers"
+        },
+        {
+            "speaker": "",
+            "line": "No escape from me.",
+            "trigger": "Pulling all four players to the center",
+            "ability": "Stoke the Embers"
+        },
+        {
+            "speaker": "",
+            "line": "Nowhere to hide.",
+            "trigger": "Pulling all four players to the center",
+            "ability": "Stoke the Embers"
+        },
+        {
+            "speaker": "",
+            "line": "Be consumed in fire!",
+            "trigger": "Casting Fiery Blast",
+            "ability": "Fiery Blast"
+        },
+        {
+            "speaker": "",
+            "line": "Withstand my inner fire!",
+            "trigger": "Casting Fiery Blast",
+            "ability": "Fiery Blast"
+        },
+        {
+            "speaker": "",
+            "line": "Come! Dance in flame!",
+            "trigger": "Casting Fiery Blast",
+            "ability": "Fiery Blast"
+        },
+        {
+            "speaker": "",
+            "line": "I embrace the flame!",
+            "trigger": "Casting Fiery Blast",
+            "ability": "Fiery Blast"
+        },
+        {
+            "speaker": "",
+            "line": "This land knows its master.",
+            "trigger": "Summoning Pillars of Nirn",
+            "ability": "Pillar Eruption/Pillars of Nirn"
+        },
+        {
+            "speaker": "",
+            "line": "Earth and fire obey!",
+            "trigger": "Summoning Pillars of Nirn",
+            "ability": "Pillar Eruption/Pillars of Nirn"
+        },
+        {
+            "speaker": "",
+            "line": "The world is my ally.",
+            "trigger": "Summoning Pillars of Nirn",
+            "ability": "Pillar Eruption/Pillars of Nirn"
+        },
+        {
+            "speaker": "",
+            "line": "I wield the earth and sky. This land is mine!",
+            "trigger": "Summoning Pillars of Nirn",
+            "ability": "Pillar Eruption/Pillars of Nirn"
+        },
+        {
+            "speaker": "",
+            "line": "My line is unbroken.",
+            "trigger": "Summoning atronachs",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "",
+            "line": "Elements, answer me!",
+            "trigger": "Summoning atronachs",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "",
+            "line": "Let the elements decide.",
+            "trigger": "Summoning atronachs",
+            "ability": "Master of the Elements/Horned Monolith"
+        },
+        {
+            "speaker": "",
+            "line": "I am the stone.",
+            "trigger": "Summoning atronachs",
+            "ability": "Master of the Elements/Horned Monolith"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.": [
+            {
+                "speaker": "Jarl Skjoralmor",
+                "line": "I said to keep the fight out there! Oh, you aren't my guards. Nor are you Reachmen. We've won then?",
+                "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+                "ability": "Master of the Elements/Horned Monolith"
+            },
+            {
+                "speaker": "Domihaus the Bloody-Horned",
+                "line": "This hall. Is mine!",
+                "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+                "ability": "Master of the Elements/Horned Monolith"
+            },
+            {
+                "speaker": "Domihaus the Bloody-Horned",
+                "line": "Falkreath burns! As will you!",
+                "trigger": "Upon entering the Jarl's Hall, Jarl Skjoralmor will address your group moments before Domihaus flies through the window behind him and bursts into the hall on wings of fire, crushing the jarl as he lands.",
+                "ability": "Master of the Elements/Horned Monolith"
+            }
+        ],
+        "Preparing to roar": [
+            {
+                "speaker": "",
+                "line": "Grovel!",
+                "trigger": "Preparing to roar",
+                "ability": "Shout of Desolation"
+            },
+            {
+                "speaker": "",
+                "line": "Nowhere to hide.",
+                "trigger": "Preparing to roar",
+                "ability": "Shout of Desolation"
+            }
+        ],
+        "Casting Ring of Fire": [
+            {
+                "speaker": "",
+                "line": "Let it all burn!",
+                "trigger": "Casting Ring of Fire",
+                "ability": "Ring of Fire"
+            },
+            {
+                "speaker": "",
+                "line": "This hall will be your pyre!",
+                "trigger": "Casting Ring of Fire",
+                "ability": "Ring of Fire"
+            },
+            {
+                "speaker": "",
+                "line": "Wreathed in fire! I reign!",
+                "trigger": "Casting Ring of Fire",
+                "ability": "Ring of Fire"
+            },
+            {
+                "speaker": "",
+                "line": "Only ash will remain!",
+                "trigger": "Casting Ring of Fire",
+                "ability": "Ring of Fire"
+            }
+        ],
+        "Pulling all four players to the center": [
+            {
+                "speaker": "",
+                "line": "Come and be trampled.",
+                "trigger": "Pulling all four players to the center",
+                "ability": "Stoke the Embers"
+            },
+            {
+                "speaker": "",
+                "line": "No escape from me.",
+                "trigger": "Pulling all four players to the center",
+                "ability": "Stoke the Embers"
+            },
+            {
+                "speaker": "",
+                "line": "Nowhere to hide.",
+                "trigger": "Pulling all four players to the center",
+                "ability": "Stoke the Embers"
+            }
+        ],
+        "Casting Fiery Blast": [
+            {
+                "speaker": "",
+                "line": "Be consumed in fire!",
+                "trigger": "Casting Fiery Blast",
+                "ability": "Fiery Blast"
+            },
+            {
+                "speaker": "",
+                "line": "Withstand my inner fire!",
+                "trigger": "Casting Fiery Blast",
+                "ability": "Fiery Blast"
+            },
+            {
+                "speaker": "",
+                "line": "Come! Dance in flame!",
+                "trigger": "Casting Fiery Blast",
+                "ability": "Fiery Blast"
+            },
+            {
+                "speaker": "",
+                "line": "I embrace the flame!",
+                "trigger": "Casting Fiery Blast",
+                "ability": "Fiery Blast"
+            }
+        ],
+        "Summoning Pillars of Nirn": [
+            {
+                "speaker": "",
+                "line": "This land knows its master.",
+                "trigger": "Summoning Pillars of Nirn",
+                "ability": "Pillar Eruption/Pillars of Nirn"
+            },
+            {
+                "speaker": "",
+                "line": "Earth and fire obey!",
+                "trigger": "Summoning Pillars of Nirn",
+                "ability": "Pillar Eruption/Pillars of Nirn"
+            },
+            {
+                "speaker": "",
+                "line": "The world is my ally.",
+                "trigger": "Summoning Pillars of Nirn",
+                "ability": "Pillar Eruption/Pillars of Nirn"
+            },
+            {
+                "speaker": "",
+                "line": "I wield the earth and sky. This land is mine!",
+                "trigger": "Summoning Pillars of Nirn",
+                "ability": "Pillar Eruption/Pillars of Nirn"
+            }
+        ],
+        "Summoning atronachs": [
+            {
+                "speaker": "",
+                "line": "My line is unbroken.",
+                "trigger": "Summoning atronachs",
+                "ability": "Master of the Elements/Horned Monolith"
+            },
+            {
+                "speaker": "",
+                "line": "Elements, answer me!",
+                "trigger": "Summoning atronachs",
+                "ability": "Master of the Elements/Horned Monolith"
+            },
+            {
+                "speaker": "",
+                "line": "Let the elements decide.",
+                "trigger": "Summoning atronachs",
+                "ability": "Master of the Elements/Horned Monolith"
+            },
+            {
+                "speaker": "",
+                "line": "I am the stone.",
+                "trigger": "Summoning atronachs",
+                "ability": "Master of the Elements/Horned Monolith"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Falkreath's Demise: Lift the siege of Falkreath to save the city's inhabitants.",
+        "Pledge: Falkreath Hold: Prove you are truly Undaunted by clearing Falkreath Hold."
+    ],
+    "summary": "This article is about the creature. For the item set, see Domihaus. Domihaus the Bloody-Horned is a minotaur of the Dreadhorn Clan, and acts as the final boss of Falkreath Hold. He will arrive by bursting through the Jarl's Hall and landing on Jarl Skjoralmor, fatally crushing him. During the fight, he will summon four types of atronachs (Flame, Frost, Stone, Storm). He has a chance to drop a Minotaur Bezoar.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Domihaus_the_Bloody-Horned",
+        "page_title": "Online:Domihaus the Bloody-Horned",
+        "revision_id": 3469877,
+        "retrieved_at": "2026-08-12T21:21:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,311 @@
+{
+    "id": "zysax",
+    "name": "Zysax",
+    "content_id": "writhing_fortress",
+    "content_name": "Writhing Fortress",
+    "location": "Writhing Fortress",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Molten Rain",
+            "description": "Zysax makes molten cold fire rain on all players in small areas for a moment, each dealing high frost damage. Some of those areas leave a larger flaming area dealing continuous direct moderate frost damage, each hit adding 100 frost damage against you (This resets for every cast of Molten Rain)."
+        },
+        {
+            "name": "Scourge Bolt",
+            "description": "Zysax spits a coldfire bolt at all targets in front of him, each dealing high flame damage."
+        },
+        {
+            "name": "Coldfire Storm",
+            "description": "Zysax flies still then fires a constant torrent of lightning in an area dealing continuous direct moderate flame damage. During this, many projectiles travel along the ground in all directions from the point of impact, each dealing moderate flame damage."
+        },
+        {
+            "name": "Strike",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Backhand",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Monstrous Cleave",
+            "description": "Zysax swipes in front of him with its two hands, dealing extreme physical damage, knocking back and stunning in a cone. This can be blocked to be staggered instead."
+        },
+        {
+            "name": "Fly/Relocate",
+            "description": "When Zysax is at the Soul Spire's entrance, he can relocate to a perch in the northeast or southwest, dealing extreme physical damage in an area upon landing. Zysax can then relocate between the two perches. After some time, he will fly back to the Soul Spire's entrance."
+        },
+        {
+            "name": "Wing Gust",
+            "description": "When Zysax is on the perches, he gets down on the ground and raises its wings, then unleashes a powerful gust launching nearby targets away."
+        },
+        {
+            "name": "Soul Tear",
+            "description": "Zysax shouts and all targets in range are linked to him via brief blue links. Targets are dealt moderate magic damage over time, applied extreme Heal Absorption and are applied the \"Corrupting Defile\" debuff which reduces your healing and damage shield strength, all three for 16 seconds."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "In death, you will serve. The Soul Spire is ever hungry.",
+            "trigger": "Upon your approach, Zysax will say",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "",
+            "line": "There is no escape. Your souls shall remain in the Writhing Fortress forever!",
+            "trigger": "Upon your approach, Zysax will say",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "",
+            "line": "I will end you swiftly. The Writhing Wall needs more souls.",
+            "trigger": "Upon your approach, Zysax will say",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "",
+            "line": "Have you brought enough to defeat me?",
+            "trigger": "If you idle before battle",
+            "ability": "Molten Rain"
+        },
+        {
+            "speaker": "",
+            "line": "I grow bored with your lack of courage.",
+            "trigger": "If you idle before battle",
+            "ability": "Molten Rain"
+        },
+        {
+            "speaker": "",
+            "line": "Did you think you could escape unscathed?",
+            "trigger": "If you idle before battle",
+            "ability": "Molten Rain"
+        },
+        {
+            "speaker": "",
+            "line": "Die, fools, die!",
+            "trigger": "As battle begins",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I am the destroyer, fools!",
+            "trigger": "As battle begins",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Follow me if you dare!",
+            "trigger": "When Zysax moved from its perch, it would say",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "",
+            "line": "We are not through yet, mortals!",
+            "trigger": "When Zysax moved from its perch, it would say",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "",
+            "line": "You all must be destroyed!",
+            "trigger": "Molten Rain",
+            "ability": "Molten Rain"
+        },
+        {
+            "speaker": "",
+            "line": "You can run but you cant [sic] hide!",
+            "trigger": "Molten Rain",
+            "ability": "Molten Rain"
+        },
+        {
+            "speaker": "",
+            "line": "Molag Bal, answer my call!",
+            "trigger": "Coldfire Storm",
+            "ability": "Coldfire Storm"
+        },
+        {
+            "speaker": "",
+            "line": "Your souls will burn!",
+            "trigger": "Coldfire Storm",
+            "ability": "Coldfire Storm"
+        },
+        {
+            "speaker": "",
+            "line": "Stormcallers come to my aid!",
+            "trigger": "Summoning Storm Callers",
+            "ability": "Coldfire Storm"
+        },
+        {
+            "speaker": "",
+            "line": "The eye of the storm is upon you!",
+            "trigger": "Summoning Storm Callers",
+            "ability": "Coldfire Storm"
+        },
+        {
+            "speaker": "Zysax",
+            "line": "Its [sic] not over, it will end soon enough!",
+            "trigger": "When it falls in battle, Zysax shouts",
+            "ability": "Fly/Relocate"
+        },
+        {
+            "speaker": "Prince Azah",
+            "line": "Good riddance! Head for the spire, comrades. Walks-in-Ash and I will join you inside.",
+            "trigger": "When it falls in battle, Zysax shouts",
+            "ability": "Fly/Relocate"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Upon your approach, Zysax will say": [
+            {
+                "speaker": "",
+                "line": "In death, you will serve. The Soul Spire is ever hungry.",
+                "trigger": "Upon your approach, Zysax will say",
+                "ability": "Fly/Relocate"
+            },
+            {
+                "speaker": "",
+                "line": "There is no escape. Your souls shall remain in the Writhing Fortress forever!",
+                "trigger": "Upon your approach, Zysax will say",
+                "ability": "Fly/Relocate"
+            },
+            {
+                "speaker": "",
+                "line": "I will end you swiftly. The Writhing Wall needs more souls.",
+                "trigger": "Upon your approach, Zysax will say",
+                "ability": "Fly/Relocate"
+            }
+        ],
+        "If you idle before battle": [
+            {
+                "speaker": "",
+                "line": "Have you brought enough to defeat me?",
+                "trigger": "If you idle before battle",
+                "ability": "Molten Rain"
+            },
+            {
+                "speaker": "",
+                "line": "I grow bored with your lack of courage.",
+                "trigger": "If you idle before battle",
+                "ability": "Molten Rain"
+            },
+            {
+                "speaker": "",
+                "line": "Did you think you could escape unscathed?",
+                "trigger": "If you idle before battle",
+                "ability": "Molten Rain"
+            }
+        ],
+        "As battle begins": [
+            {
+                "speaker": "",
+                "line": "Die, fools, die!",
+                "trigger": "As battle begins",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I am the destroyer, fools!",
+                "trigger": "As battle begins",
+                "ability": null
+            }
+        ],
+        "When Zysax moved from its perch, it would say": [
+            {
+                "speaker": "",
+                "line": "Follow me if you dare!",
+                "trigger": "When Zysax moved from its perch, it would say",
+                "ability": "Fly/Relocate"
+            },
+            {
+                "speaker": "",
+                "line": "We are not through yet, mortals!",
+                "trigger": "When Zysax moved from its perch, it would say",
+                "ability": "Fly/Relocate"
+            }
+        ],
+        "Molten Rain": [
+            {
+                "speaker": "",
+                "line": "You all must be destroyed!",
+                "trigger": "Molten Rain",
+                "ability": "Molten Rain"
+            },
+            {
+                "speaker": "",
+                "line": "You can run but you cant [sic] hide!",
+                "trigger": "Molten Rain",
+                "ability": "Molten Rain"
+            }
+        ],
+        "Coldfire Storm": [
+            {
+                "speaker": "",
+                "line": "Molag Bal, answer my call!",
+                "trigger": "Coldfire Storm",
+                "ability": "Coldfire Storm"
+            },
+            {
+                "speaker": "",
+                "line": "Your souls will burn!",
+                "trigger": "Coldfire Storm",
+                "ability": "Coldfire Storm"
+            }
+        ],
+        "Summoning Storm Callers": [
+            {
+                "speaker": "",
+                "line": "Stormcallers come to my aid!",
+                "trigger": "Summoning Storm Callers",
+                "ability": "Coldfire Storm"
+            },
+            {
+                "speaker": "",
+                "line": "The eye of the storm is upon you!",
+                "trigger": "Summoning Storm Callers",
+                "ability": "Coldfire Storm"
+            }
+        ],
+        "When it falls in battle, Zysax shouts": [
+            {
+                "speaker": "Zysax",
+                "line": "Its [sic] not over, it will end soon enough!",
+                "trigger": "When it falls in battle, Zysax shouts",
+                "ability": "Fly/Relocate"
+            },
+            {
+                "speaker": "Prince Azah",
+                "line": "Good riddance! Head for the spire, comrades. Walks-in-Ash and I will join you inside.",
+                "trigger": "When it falls in battle, Zysax shouts",
+                "ability": "Fly/Relocate"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "During the Writhing Fortress' first release, the health threshold mechanic was disabled on November 18 2025 at 00:00 CET in a hotfix, due to bugs that could make the encounter unfinishable. This was fixed and reintroduced in its second release."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Support the Fellowship: Assist the Stirk Fellowship during the Battle for the Writhing Wall. (disabled)"
+    ],
+    "summary": "Zysax is a giant Daedric Titan and the final boss of the Writhing Fortress, he will be guarding entrance the Soul Spire which is powering the Writhing Wall back on Nirn. He is found at the end of the Soul Spire Path, which is accessible once the guardians of the eastern and western wings have been slain.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zysax",
+        "page_title": "Online:Zysax",
+        "revision_id": 3584694,
+        "retrieved_at": "2026-08-12T21:38:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

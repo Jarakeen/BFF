@@ -1,0 +1,21 @@
+{
+    "id": "black_kiergo_arena",
+    "name": "Black Kiergo Arena",
+    "content_type": "arena",
+    "summary": "The Black Kiergo Arena is an underground fighting ring in the outlaws refuge beneath Senchal. Caska the Unconquered was the 11-time undefeated champion of the arena before she retired to join Za'ji's crew. Do'mazir the Deadly and Jiren-dar are the current champions. Shirnama, a high-ranking member of the Order of the New Moon, is currently present, scoping out the arena for potential new recruits, and will provide guest commentary during your time here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Black Kiergo: Primed for Peryite? talks about the history of the location.",
+        "The friendly NPCs in the starting bar area lack nameplates."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Black_Kiergo_Arena",
+        "page_title": "Online:Black Kiergo Arena",
+        "revision_id": 3196275,
+        "retrieved_at": "2026-08-12T21:46:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

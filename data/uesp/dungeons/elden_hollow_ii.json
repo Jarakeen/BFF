@@ -1,0 +1,37 @@
+{
+    "id": "elden_hollow_ii",
+    "name": "Elden Hollow II",
+    "content_type": "dungeon",
+    "summary": "Elden Hollow II is a group dungeon found under Elden Root in central Grahtwood. The story continues from the events of Elden Hollow I. In this version, Kargand needs your help rescuing his sister Bakkhara from a Daedric realm. She has been trapped there because of the ritual performed by Canonreeve Oraneth earlier. You can learn about its location from Venomous Fauridil outside Elden Root, Hel Ra'Lala outside Wayrest, or Thongar the Stout outside Mournhold.",
+    "location": "",
+    "boss_ids": [
+        "dark_root",
+        "spriggan",
+        "murklight",
+        "lurcher",
+        "bogdan_the_nightflame",
+        "daedric_titan"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Elden Hollow was designed for levels 20–23, and Veteran Elden Hollow was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Elden Hollow I was only available in Normal mode, and Elden Hollow II was only available in Veteran mode. These were named Elden Hollow and Veteran Elden Hollow respectively.",
+        "The part of Oblivion where Murklight and Bogdan are found was initially called \"Nightflame\", before being changed to \"Daedric Ruins\" a few updates later, and again to \"Daedric Realm\" after that."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Elden_Hollow_II",
+        "page_title": "Online:Elden Hollow II",
+        "revision_id": 3223192,
+        "retrieved_at": "2026-08-12T21:20:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

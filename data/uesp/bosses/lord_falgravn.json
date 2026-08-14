@@ -1,0 +1,104 @@
+{
+    "id": "lord_falgravn",
+    "name": "Lord Falgravn",
+    "content_id": "kyne_s_aegis",
+    "content_name": "Kyne's Aegis",
+    "location": "Kyne's Aegis",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw",
+            "description": "Lord Falgravn strikes a single target with a light attack which deals high physical damage."
+        },
+        {
+            "name": "Cross Swipe",
+            "description": "Lord Falgravn strikes a single target with a heavy attack which deals very high physical damage."
+        },
+        {
+            "name": "Instability",
+            "description": "Lord Falgravn places a small shock circle on 3 (6 if hard mode is active) players which will explode after 4 seconds dealing high shock damage. Players should spread out to avoid taking more damage."
+        },
+        {
+            "name": "Lieutenant Njordal",
+            "description": "10 seconds after the group enters combat with Lord Falgravn, Lieutenant Njordal will spawn on the north side of the room."
+        },
+        {
+            "name": "Call Lightning",
+            "description": "At 91% and 81% health, Lord Falgravn will raise his right hand and begin channeling Grievous Pulse, which will deal slowly increasing magic damage the longer he is allowed to channel it. He will also activate 1 of the 4 conduits around the room. Group members must form a chain of bodies between the active conduit and Lord Falgravn in order to briefly stun him. This must be repeated for the 3 remaining conduits in order to stop the him from channeling. He also takes reduced damage while channeling this ability."
+        },
+        {
+            "name": "Channel on the Conduits",
+            "description": "At 71% health, Lord Falgravn breaks the floor, forcing you and your companions to fall to the mid level. Here, you will fight a Bitter Knight, a Blood Knight, and a Crimson Knight. When all of them are dead, Lord Falgravn will descend and the next phase of the fight will begin."
+        },
+        {
+            "name": "Blood Spear",
+            "description": "While battling his Knights, Lord Falgravn will target a random player every few seconds with a projectile which deals moderate magic damage."
+        },
+        {
+            "name": "Hemorrhage",
+            "description": "Lord Falgravn will place a debuff on every player that is currently on the mid level of the barrow which will last for 30 seconds. The initial application will deal a moderate amount of magic damage which can be blocked. Players should only move when absolutely necessary (such as to avoid stacking multiple instabilities.) as they will receive a large amount of damage for a short time after doing so. During this phase, Lord Falgravn will summon several Coagulants which will begin moving towards a blood orb which has spawned in the center of the room. The group must kill as many as possible before they can reach the center."
+        },
+        {
+            "name": "Floor Shatter Mid",
+            "description": "At 36% health, Lord Falgravn will break the floor once again, forcing any group members still on the mid level to fall to the lowest level of the barrow."
+        },
+        {
+            "name": "Apotheosis",
+            "description": "After Lord Falgravn lands on the lower level, he will recover 6% of his max health. The amount of healing done cannot be reduced by Major or Minor Defile."
+        },
+        {
+            "name": "Ravenous Swarm",
+            "description": "After healing himself after landing, Lord Falgravn shrouds himself in a swarm of bats that will deal constant damage to the party and heal himself for the applied damage."
+        },
+        {
+            "name": "Unstable Energy",
+            "description": "When Lord Falgravn lands at the lowest level of the barrow, the room will be surrounded by a field which deals slowly increasing magic damage to group members."
+        },
+        {
+            "name": "Open the doors",
+            "description": "Lord Falgravn will fly up into the air and briefly deactivate unstable energy on the upper section. 2 of the doors will then open, each with a Torturer who will begin draining the life from a prisoner. If not dealt with by the time Unstable Energy reactivates, they will receive a large health buff and make their way down to the group, now enraged. This will be repeated up to 3 more times during the fight. Killing two torturers during this ability results in their captive helping the party attack the boss afterward."
+        },
+        {
+            "name": "Cowardice",
+            "description": "Any player on the upper section of the lower level when Unstable Energy is active will take very heavy oblivion damage."
+        },
+        {
+            "name": "Incorporeal Fiend",
+            "description": "While Falgravn is still on the top or mid level of the barrow, death seekers will be continuously spawning on the lower level away from the center of the room. Any player hit by their ground slam will be killed instantly."
+        },
+        {
+            "name": "Banishment",
+            "description": "On Hard Mode, if a player resurrects another fallen player, they are sent on a lower level of the arena, where they must flee one-shotting entities and reach a portal that brings them back to the boss."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "On Normal and Veteran, you will loot an Amulet of Bats, and if you complete Hard Mode, you will loot a Bloodstone Chalice.",
+            "Enabling Hard Mode:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Fight for Kyne's Aegis: Retake Kyne's Aegis from a Vampire Lord's army."
+    ],
+    "achievements": [],
+    "summary": "Lord Falgravn is an ancient Vampire Lord pirate who has invaded the island of Kyne's Aegis with his Sea Giant allies. He has taken up occupation of the Dragon Cult ruins in the island's interior. If you failed to pick up the related quest from Thane Ogvar at the trial's entrance, Lord Falgravn will drop one of two items for you to give to him so that you can collect your weekly reward. On Normal and Veteran, you will loot an Amulet of Bats, and if you complete Hard Mode, you will loot a Bloodstone Chalice.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lord_Falgravn",
+        "page_title": "Online:Lord Falgravn",
+        "revision_id": 3608446,
+        "retrieved_at": "2026-08-12T05:33:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

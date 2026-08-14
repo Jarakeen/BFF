@@ -1,0 +1,21 @@
+{
+    "id": "reachwind_depths",
+    "name": "Reachwind Depths",
+    "content_type": "dungeon",
+    "summary": "Reachwind Depths is a Dwemer ruin found in The Reach, located northeast of the Reachwind Ritual Site. The depths serve as the lair of the ancient Lothid Clan, a group of vampires that, until recently, kept to themselves, but are now ravaging the region on orders of their new leader, Boss Trenlor. Many different kinds of traps can be encountered inside, ranging from green mushrooms that release poison around them on approach, dealing constant low poison damage, Dwemer pistons dealing damage and knocking back, steam vents on the floor dealing constant low flame damage, and more dangerous shocking beams dealing constant high damage and snaring. Various passive critters, mostly Blackreach-themed, can be found inside, consisting of; blackreach jellies, centipedes, cockroaches, dwarven scarabs, rats, shroom beetles, torchbugs, vale deer bucks, vale deer does and winter moths. Hazards include bad fungi, Dwarven charge-wires, electrical discharge valves, and steam vents. A copy of Scary Tales of the Druadach, Book 2 is located atop a crate beside a heavy sack at a camp just west of the ruins. Clans of the Reach: A Guide (a lore book) is sitting next to a cooking fire at a camp slightly northwest of the ruins. There is a backpack and a soul gem at this camp, which can be looted freely. A copy of The Gray Host: A History Part 1 is located at a Gray Host camp located northwest of the ruin's entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Reachwind Depths appears in Skyrim as Reachwind Eyrie.",
+        "The loading screen and maps for this location are labeled as belonging to the \"Halls of the Betrayed\"."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reachwind_Depths",
+        "page_title": "Online:Reachwind Depths",
+        "revision_id": 3567149,
+        "retrieved_at": "2026-08-12T21:31:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

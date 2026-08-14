@@ -1,0 +1,115 @@
+{
+    "id": "solemn",
+    "name": "Solemn",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Assault",
+            "description": "When standing further away from him, Solemn teleports and stabs the target, dealing moderate physical damage."
+        },
+        {
+            "name": "Brand",
+            "description": "Charged melee attack dealing moderate-high physical damage then stunning and dealing low flame damage for 2 seconds (for 5 ticks in total). This can be blocked to negate the flame damage and to stagger Solemn instead."
+        },
+        {
+            "name": "Aperture",
+            "description": "Solemn dashes three times in succession while rapidly throw daggers around, then he rapidly launches more daggers under a target for five seconds. All the daggers acts as traps which detonate when stepping on them, each dealing moderate-high physical damage. The daggers disappear after some time."
+        },
+        {
+            "name": "Blast Powder",
+            "description": "Solemn throws powder at a target from range, which creates small lingering electric areas, each dealing continuous direct moderate shock damage."
+        },
+        {
+            "name": "Deadeye/Daggerstorm",
+            "description": "Solemn launches fire all around him which creates many small flaming areas forming a large ring, dealing continuous direct moderate flame damage (Deadeye). After a very brief delay he bursts with fire, dealing moderate flame damage and knocking back in a large area around him (Daggerstorm)."
+        },
+        {
+            "name": "Storm Atronach Summons [sic]",
+            "description": "Solemn periodically becomes briefly invulnerable to summon four Gorne Wolves to assist him."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Solemn",
+            "line": "You really are foolish.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Solemn",
+            "line": "Wolves, attack!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Solemn",
+            "line": "Try to move around now!",
+            "trigger": "When he does an AoE attack",
+            "ability": "Aperture"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "During combat": [
+            {
+                "speaker": "Solemn",
+                "line": "You really are foolish.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Solemn",
+                "line": "Wolves, attack!",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "When he does an AoE attack": [
+            {
+                "speaker": "Solemn",
+                "line": "Try to move around now!",
+                "trigger": "When he does an AoE attack",
+                "ability": "Aperture"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Solemn is a Dark Seducer who can be found in the southeastern-most room, surrounded by wolves. He serves as one of the champions of the Gorne public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Solemn",
+        "page_title": "Online:Solemn",
+        "revision_id": 3544431,
+        "retrieved_at": "2026-08-12T21:24:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

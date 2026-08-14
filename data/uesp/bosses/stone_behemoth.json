@@ -1,0 +1,94 @@
+{
+    "id": "stone_behemoth",
+    "name": "Stone Behemoth",
+    "content_id": "stone_garden",
+    "content_name": "Stone Garden",
+    "location": "Stone Garden; Refinement Wing, Testing Chamber",
+    "species": "Stone Husk",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,736,815",
+        "hardmode": "12,315,720"
+    },
+    "abilities": [
+        {
+            "name": "Punch",
+            "description": "The behemoth punches its target, dealing high physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "The behemoth punches upwards, dealing high physical damage."
+        },
+        {
+            "name": "Shattered Ground",
+            "description": "The behemoth removes its core and holds it up above its head, causing a blast of blue energy, indicated by a growing red circle, that deals very high magic damage and knocks down targets. Blocking negates the knockdown. Additional blasts fly around the behemoth afterward, dealing high damage and also knocking down, as indicated by red circles."
+        },
+        {
+            "name": "Ground Pound",
+            "description": "The behemoth prepares briefly then punches the ground with one of its fists, indicated by a red circle, dealing very high physical damage and stunning, then does the same with its other fist."
+        },
+        {
+            "name": "Ice Burst",
+            "description": "While the room is attuned to ice, \"Ground Pound\" becomes \"Ice Burst\". The behemoth digs both hands into the floor, causing ice shards to erupt at targets, indicated by red circles, dealing very high frost damage. The shards then linger at the affected locations for some time, dealing continuous moderate frost damage."
+        },
+        {
+            "name": "Shatter",
+            "description": "At the end of the \"Ice Burst\" lingering shards, the behemoth slams its fists together, causing the shards to burst, covering the entire arena with bright ice, dealing high frost damage and freezing targets (Break Free can be used). This removes the ice attunement from the behemoth."
+        },
+        {
+            "name": "Flame Burst",
+            "description": "While the room is attuned to fire, \"Ground Pound\" becomes \"Flame Burst\". The behemoth digs both hands into the floor, causing fire bouts to erupt underneath targets, indicated by red circles, dealing very high flame damage. Flames continue to linger at the affected locations for some time, dealing continuous moderate flame damage."
+        },
+        {
+            "name": "Detonate",
+            "description": "At the end of the \"Flame Burst\" lingering flames, the behemoth slams its fists together, causing the fire to explode across the arena, dealing major flame damage. This removes the fire attunement from the behemoth."
+        },
+        {
+            "name": "Lightning Generator",
+            "description": "Arkasis aims at all targets in the arena with his machine, firing a bolt of electricity at all of them, indicated by small hollow red circles, which expand when the bolts strike. It deals high shock damage and stuns, and deals additional damage if targets overlap each other."
+        },
+        {
+            "name": "Attunement",
+            "description": "Arkasis throws either an icy or molten concoction on the behemoth, which modifies its \"Ground Pound\" ability until the attunement is later removed."
+        },
+        {
+            "name": "Freezer",
+            "description": "Arkasis adjusts the room to an icy climate. During this period, ice bursts throughout the arena floor constantly, indicated by small red circles, dealing moderate frost damage each."
+        },
+        {
+            "name": "Heater",
+            "description": "Arkasis adjusts the room to a hot climate. During this period, flame swirls appear throughout the arena floor constantly, indicated by small red circles, dealing moderate flame damage each."
+        },
+        {
+            "name": "Activate Husks",
+            "description": "Throughout the fight, stone husks that lay dormant on the sides of the arena will activate to assist the boss. These however will remain against the walls and only use the stone husk's \"Feed\" ability."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Stone Behemoth count as Stone Atronach for the purpose of the Destroy 5 Stone Atronachs daily endeavor."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Method and Madness: Disrupt the vile lycanthropic experiments being conducted deep beneath Skyrim.",
+        "Pledge: Stone Garden: Prove you are truly Undaunted by clearing Stone Garden."
+    ],
+    "summary": "The Stone Behemoth is a giant stone husk found in the Testing Chamber of Stone Garden. Arkasis will put it through its paces and you have no choice but to participate if you wish to survive. It serves as the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stone_Behemoth",
+        "page_title": "Online:Stone Behemoth",
+        "revision_id": 3338885,
+        "retrieved_at": "2026-08-12T21:35:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

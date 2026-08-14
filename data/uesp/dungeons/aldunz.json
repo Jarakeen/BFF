@@ -1,0 +1,28 @@
+{
+    "id": "aldunz",
+    "name": "Aldunz",
+    "content_type": "dungeon",
+    "summary": "Aldunz is a Dwemer ruin in the southern Alik'r Desert, east of Bergama containing Dwemer constructs. Scorpions are found in numbers within. Hazards include lava pools.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This is one of the locations where the Precursor Dummy parts resides"
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Aldunz",
+        "page_title": "Online:Aldunz",
+        "revision_id": 3598249,
+        "retrieved_at": "2026-08-12T21:12:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

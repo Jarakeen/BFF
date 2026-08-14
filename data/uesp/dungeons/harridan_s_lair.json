@@ -1,0 +1,29 @@
+{
+    "id": "harridan_s_lair",
+    "name": "Harridan's Lair",
+    "content_type": "dungeon",
+    "summary": "Harridan's Lair is a cave in eastern Greenshade, northwest of Marbruk containing senche-tigers. The pride that lives in the cave is led by the matriarch, Razorclaw. Torchbugs and an unusually high amount of frogs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Letter from Bashshi-ra, found in Woodhearth, marks this location on your map.",
+        "In order to get the achievement, you not only have to kill Razorclaw, but the two Senche-Tigers accompanying her."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Harridan%27s_Lair",
+        "page_title": "Online:Harridan's Lair",
+        "revision_id": 3598311,
+        "retrieved_at": "2026-08-12T21:25:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

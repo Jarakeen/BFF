@@ -1,0 +1,40 @@
+{
+    "id": "khajiit",
+    "name": "Khajiit",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Before release, it was suggested that more subspecies could be available later on.[1]",
+        "While the original interview stated that the playable characters were Suthay-raht, this was later proved incorrect with the advent of ESO:Elsweyr, where it was stated they were Cathay.[1]",
+        "A diverse group of Khajiit can sometimes be found near the road northeast of The Stitches wayshrine. If spoken to, each will provide a little information about their subspecies."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The population of the proud feline Khajiit (listen Link⏵) has dwindled in recent years following a devastating outbreak of Knahaten Flu. They owe a great debt to Ayrenn, Queen of the High Elves, for her help in restoring order from the chaos that followed the plague. They have a wry wit and a hedonistic outlook, but they are fearsome on the field of battle. They are the strong arm of the Aldmeri Dominion. For more information, see the main lore article. There are many breeds of Khajiit including the Cathay, Alfiq, Cathay-raht, Dagi, Dagi-raht, Pahmar, Pahmar-raht, and Senche-raht.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Khajiit",
+        "page_title": "Online:Khajiit",
+        "revision_id": 3185070,
+        "retrieved_at": "2026-08-12T21:29:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

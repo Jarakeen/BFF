@@ -1,0 +1,23 @@
+{
+    "id": "clockwork_city_vaults",
+    "name": "Clockwork City Vaults",
+    "content_type": "dungeon",
+    "summary": "This article is about a location visited in the Clockwork City DLC. For a similar location visited in the Morrowind chapter, see Clockwork City Vault. Clockwork City Vaults is a cavern beneath the city of Mournhold. Though intended to lead you to the Brass Fortress, the tampering of other forces causes the pathway to be diverted to the Pneumatic Forge on the outskirts of the city. They contain the Dwemer ruin of Bamz-Amschend, which in turn is home to Seht's Vault, where the Clockwork City is located. The entrance to the Vaults is behind the Tribunal Temple in Mournhold, hidden behind a waterfall, which Divayth Fyr reveals during the related quest. Hazards include bottomless pits, flamethrowers, spinning blades, spinning chains, pendulums, and whirring blade traps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Seht's Vault is also seen the during the quest Divine Restoration in the Morrowind chapter, appearing as a part of the Clockwork City Vault.",
+        "Bamz-Amschend also appears in Tribunal.",
+        "The glow bugs and rats in the Dwemer ruins have higher health and cannot be killed, as they serve as added scenery, scurrying off as you approach.",
+        "If the vault is visited before the completion of the Vvardenfell zone story, Clockwork Guardians and Factotum Assemblers will be present in Seht's Vault. With the story zone completed, destroyed factotums will be present instead, as you will have fought and destroyed them in the other version of this location during Divine Restoration. Divayth Fyr will also deliver a different line of dialogue depending on whether the factotums are intact or destroyed."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Clockwork_City_Vaults",
+        "page_title": "Online:Clockwork City Vaults",
+        "revision_id": 3567134,
+        "retrieved_at": "2026-08-12T21:17:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

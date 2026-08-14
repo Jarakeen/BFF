@@ -1,0 +1,20 @@
+{
+    "id": "norg_tzel",
+    "name": "Norg-Tzel",
+    "content_type": "dungeon",
+    "summary": "Norg-Tzel is an abandoned tropical island in southeastern Black Marsh.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Norg-Tzel appears on the Tamriel map and Locations list, despite not being a Zone in its own right."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Norg-Tzel",
+        "page_title": "Online:Norg-Tzel",
+        "revision_id": 3598036,
+        "retrieved_at": "2026-08-12T21:30:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

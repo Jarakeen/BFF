@@ -1,0 +1,26 @@
+{
+    "id": "carapace_cavern",
+    "name": "Carapace Cavern",
+    "content_type": "dungeon",
+    "summary": "Carapace Cavern is a cave on the northwest coast of Western Solstice. A long time ago, Argonians of the island built shrines to Sithis within this place, and remains of an underground village can be found in the southwest corner of the cavern. It is also a hotspot for the Hadolids who come here on their migratory routes. The cavern also has large formations of bismuth—both naturally formed and carved—which can be found scattered throughout the tunnels. Closer to the present, the Maormer Sealord Gandelec and his Shadowstorm set up a base and plunder vault within Carapace Cavern. During their time here, they discovered the amplifying properties of the bismuth on necromantic magic. As Gandelec was well-versed in necromancy, he used the site to perform a ritual that would both ward the cavern and grant he and his captains lichdom. However, it appears the ritual was disrupted, so the ghostly remains of the Shadowstorm fleet are trapped in the cavern in an eternal battle. Along with the Shadowstorm ghosts and Hadolids, various creatures like Reefborn, Pangrits and Coral Crabs can be found in the cavern. Hermit crabs, lesser sea adders, sandroaches and torchbugs are found in number within. As for hazards, Geysers can be found in the watery areas which can knock you over, and Necromantic Runes have been placed in the passages and will activate if walked into. Outside the cave, a distant relative of Sealord Gandelec has come to Carapace Cavern to break the ritual before the Worm Cult can take advantage of it.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Carapace_Cavern",
+        "page_title": "Online:Carapace Cavern",
+        "revision_id": 3459586,
+        "retrieved_at": "2026-08-12T21:16:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

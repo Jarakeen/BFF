@@ -1,0 +1,185 @@
+{
+    "id": "captain_tuvacca",
+    "name": "Captain Tuvacca",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing moderate-high physical damage."
+        },
+        {
+            "name": "Power Bash",
+            "description": "A heavy shield bash dealing high physical damage, stunning and setting off balance. This can be blocked to stagger Captain Tuvacca instead."
+        },
+        {
+            "name": "Brace",
+            "description": "Captain Tuvacca may also briefly block with her shield, reducing damage taken greatly. Players who attempt melee heavy attacks on Captain Tuvacca while she is blocking will be set off balance."
+        },
+        {
+            "name": "Dark Talons",
+            "description": "Captain Tuvacca calls forth talons from the ground, dealing moderate flame damage and rooting anyone hit for 4 seconds."
+        },
+        {
+            "name": "Bloodstream",
+            "description": "Captain Tuvacca dashes at a target and when she arrives, she spins around, dealing moderate-high magic damage and staggering targets hit."
+        },
+        {
+            "name": "Fiery Favor",
+            "description": "Captain Tuvacca summons her Totem that creates an area around it which deals continuous direct minor flame damage to targets inside and provides Captain Tuvacca with invincibility in the form of damage shields. It automatically expires just after the next one has spawned."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Vanisande Maul",
+            "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "",
+            "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Commodore Malfairre",
+            "line": "I said take the idols! Place them how I showed you. Do as I command and we may yet escape this with our lives.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Captain Fauvette",
+            "line": "Y—yes, sir!",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Captain Tuvacca",
+            "line": "I hope you know what you're doing.",
+            "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Vanisande Maul",
+            "line": "I can feel the dread clinging to this one.",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "",
+            "line": "<A vision of Captain Altair and Captain Tuvacca talking will appear.>",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Captain Altair",
+            "line": "The Commodore keeps those old idols as good luck charms, but you have to wonder whose favor he's attracting.",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Fiery Favor"
+        },
+        {
+            "speaker": "Captain Tuvacca",
+            "line": "Aye, and he claims that crusty old tome keeps the secrets of the seas. Why aren't we all bending knee to druids then?",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Fiery Favor"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log": [
+            {
+                "speaker": "Vanisande Maul",
+                "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "",
+                "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "Commodore Malfairre",
+                "line": "I said take the idols! Place them how I showed you. Do as I command and we may yet escape this with our lives.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "Captain Fauvette",
+                "line": "Y—yes, sir!",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "Captain Tuvacca",
+                "line": "I hope you know what you're doing.",
+                "trigger": "This can be found from reading various captain logs around the caverns and witnessing the visions of the past she conjures. Captain Tuvacca appears in two: After reading Debonaire's Captain Log",
+                "ability": "Fiery Favor"
+            }
+        ],
+        "After reading Dour Lady's Captain Log": [
+            {
+                "speaker": "Vanisande Maul",
+                "line": "I can feel the dread clinging to this one.",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "",
+                "line": "<A vision of Captain Altair and Captain Tuvacca talking will appear.>",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "Captain Altair",
+                "line": "The Commodore keeps those old idols as good luck charms, but you have to wonder whose favor he's attracting.",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Fiery Favor"
+            },
+            {
+                "speaker": "Captain Tuvacca",
+                "line": "Aye, and he claims that crusty old tome keeps the secrets of the seas. Why aren't we all bending knee to druids then?",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Fiery Favor"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Buried at the Bay: Retrieve the treasure of Captain Maul for her great great great great grand … something."
+    ],
+    "summary": "Captain Tuvacca is the spirit of a Redguard ship captain in Ghost Haven Bay.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Tuvacca",
+        "page_title": "Online:Captain Tuvacca",
+        "revision_id": 3493118,
+        "retrieved_at": "2026-08-12T21:23:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

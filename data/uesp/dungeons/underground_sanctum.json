@@ -1,0 +1,18 @@
+{
+    "id": "underground_sanctum",
+    "name": "Underground Sanctum",
+    "content_type": "dungeon",
+    "summary": "The Underground Sanctum is a repository belonging to the Mages Guild, built beneath Shornhelm. The entrance to the Sanctum can be found in the southwest wall behind the Shornhelm Mages Guildhall. While the Sanctum is used to store rare tomes, it has also been used as a secure area to have top-secret Guild meetings. However, during the Guild's most recent meeting, the defenses were breached and the place came under the attack of the Worm Cult remnants. Centipedes and rats are found in numbers within. Hazards include bottomless pits, Daedric mines, and falling rocks.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Underground_Sanctum",
+        "page_title": "Online:Underground Sanctum",
+        "revision_id": 3567114,
+        "retrieved_at": "2026-08-12T21:36:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

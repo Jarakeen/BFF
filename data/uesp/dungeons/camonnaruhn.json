@@ -1,0 +1,26 @@
+{
+    "id": "camonnaruhn",
+    "name": "Camonnaruhn",
+    "content_type": "dungeon",
+    "summary": "Camonnaruhn is a cave that can be found on the Telvanni Peninsula. It can be found along the road directly west of the Clamorclap Bowl. Ash Hoppers, centipedes, netch calves, shroom beetles and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Camonnaruhn",
+        "page_title": "Online:Camonnaruhn",
+        "revision_id": 3432965,
+        "retrieved_at": "2026-08-12T21:16:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,70 @@
+{
+    "id": "death_s_leviathan",
+    "name": "Death's Leviathan",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "Crypt of Hearts I",
+    "species": "Bone Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Backhand",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Trample",
+            "description": "The boss rushes forward dealing moderate physical damage and knocking players down as indicated by a red circle. The tank should face the boss towards a wall to minimize the chance that it hits anyone when charging. After the boss gets Ignited, this attack will leave behind a burning trail."
+        },
+        {
+            "name": "Fire Trail",
+            "description": "A wall of fire that deals moderate flame damage over time created by Trample after the boss is Ignited."
+        },
+        {
+            "name": "Paralyzing Slam",
+            "description": "The boss stomps dealing high physical damage as indicated by a large red circle. This attack can be blocked to reduce damage taken. After the boss is Ignited, the stomp will also produce an unavoidable wave of fire that knocks all players down. Blocking is even more crucial at this stage as the player will get hit by both the stomp and the fire wave simultaneously, which can be lethal if unblocked."
+        },
+        {
+            "name": "Ignite",
+            "description": "When at around 50% health, the boss runs to a nearby brazier to pick up some flaming embers granting itself a buff that increases its damage done."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Ilambris Amalgam re-appears at the same site the Leviathan is found at."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I."
+    ],
+    "summary": "Death's Leviathan is a powerful Bone Colossus found in the Crypt of Hearts I. It may drop the Bonehammer when defeated.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Death%27s_Leviathan",
+        "page_title": "Online:Death's Leviathan",
+        "revision_id": 3322243,
+        "retrieved_at": "2026-08-12T21:18:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

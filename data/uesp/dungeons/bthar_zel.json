@@ -1,0 +1,20 @@
+{
+    "id": "bthar_zel",
+    "name": "Bthar-Zel",
+    "content_type": "dungeon",
+    "summary": "Bthar-Zel is a Dwarven ruin found in Blackreach: Arkthzand Cavern, located northeast of the Arkthzand Wayshrine. It also has an entrance on the surface, located just north of Deep Folk Crossing, which is sealed off until revealing it during the quest Blood of the Reach. The vaults contain a vast quantity of silver, which is of interest to the Reachfolk rebellion fighting the Gray Host. Electrical Discharge Valves, as well as Catapult Cabbage and Lantern Mantis plants serve as hazards in the ruins. You can acquire several Dwarven Scarab pet part leads by killing Dwarven Architons inside the ruins. A large quantity of dwarven scarabs, rats, shroom beetles and torchbugs can be found inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Although the location icon is placed in the Blackreach: Arkthzand Cavern map, the \"Location Discovered\" pop-up can be triggered by completing the puzzle on the surface in the Reach. As the location doesn't have a replicating icon on the Reach zone map, this can be confusing, as Bthar-Zel gives the appearance of an unnmarked location initially."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bthar-Zel",
+        "page_title": "Online:Bthar-Zel",
+        "revision_id": 3550171,
+        "retrieved_at": "2026-08-12T21:16:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

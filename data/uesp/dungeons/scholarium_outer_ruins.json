@@ -1,0 +1,20 @@
+{
+    "id": "scholarium_outer_ruins",
+    "name": "Scholarium Outer Ruins",
+    "content_type": "dungeon",
+    "summary": "The Scholarium Outer Ruins are a series of halls leading towards the Scholarium proper. The halls are plagued by bouts of unstable magical anomalies called Unstable Voids. Centipedes, cockroaches, spiders and torchbugs scuttle across the floors. Sunnamere Corridor connects to Sunnamere Study where a portal to The Scholarium has appeared. The \"Unstable Portal to a Distant Place\" connects to The Scholarium Ruins, a pathway that is partly outdoors and partly tunnels. At the end is a ruin with a door to The Scholarium proper. The Outer Ruins can also be re-accessed from the door in the Guild Portal Hub.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "According to Adept Irnard Rirnil, these ruins are part of an old complex called Sunnamere located beneath the Sunhold Mages Guild. However, when you zoom out on the map while in this location, you are shown the zone map for Eyevea, not Summerset."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Scholarium_Outer_Ruins",
+        "page_title": "Online:Scholarium Outer Ruins",
+        "revision_id": 3433100,
+        "retrieved_at": "2026-08-12T21:32:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

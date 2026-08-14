@@ -1,0 +1,42 @@
+{
+    "id": "nereid",
+    "name": "Nereid",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Near the Alcaire Dolmen, Dread Vullain, Grahtwood, Weeping Giant",
+    "species": "Nereid",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Force of Nature: Help three nereid sisters reclaim an abandoned Imperial fort.",
+        "Mistress of the Lake: Prevent forbidden knowledge from falling into the wrong hands.",
+        "Siren's Song: Defeat a powerful nereid and recover cargo from a wreckage.",
+        "Sunken Knowledge: Help the Primeval Seekers overcome the nereid and her disciples.",
+        "The Water Stone: Help the Rain Disciples overcome the dremora and her seekers."
+    ],
+    "summary": "Nereids are mer-like, feminine water creatures found near bodies of water, such as rivers, lakes, and the sea, thoughout Tamriel. Nereids can be either benevolent or hostile, and can sometimes be twisted into the latter by actions that impact the areas they protect. Nereids that linger near corrupted waters may have green skin and black bile coating their chins and throats.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nereid",
+        "page_title": "Online:Nereid",
+        "revision_id": 3564893,
+        "retrieved_at": "2026-08-12T21:19:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "id": "grievous_twilight",
+    "name": "Grievous Twilight",
+    "content_id": "maw_of_lorkhaj",
+    "content_name": "Maw of Lorkhaj",
+    "location": "Dark Anchors, Soul Reapers, Worm Cult Nest\nLambent Passage\nDreloth Ancestral Tomb\nEvergloam, The Shadow Cleft\nEastern Solstice, Deetra Grotto",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw Strike",
+            "description": "A melee ability which deals low physical damage."
+        },
+        {
+            "name": "Shadow Bolt",
+            "description": "A ranged ability wherein the grievous twilight fires a single bolt at its target, dealing low to moderate magic damage."
+        },
+        {
+            "name": "Shadow Strike",
+            "description": "The grievous twilight teleports behind its target and strikes them with its claw, dealing high physical damage and snaring. The Grievous Twilight is immune to roots during this attack. This can be blocked to stagger the Grievous Twilight instead."
+        },
+        {
+            "name": "Blend into Shadows",
+            "description": "The grievous twilight teleports a short distance away or toward its target."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In the Imperial City & Beyond - The Elder Scrolls Online: Tamriel Unlimited QuakeCon 2015 Panel stream, grievous twilights are confirmed to be winged twilights corrupted by Molag Bal. Future content also features them in service to other Princes.",
+        "All Grievous Twilights, even named ones, are immune to roots and snares while performing \"Shadow Strike\" and \"Blend into Shadows\", thought most Grievous Twilights are immune to crowd control due to their rank.",
+        "During the quest Priceless Treasures, you must kill grievous twilights for their claws in order to create a concoction that will protect relics of the Imperial Temple from being destroyed by the Daedra.",
+        "The grievous twilights found in the Evergloam are smaller than usual."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancestral Adversity: Accompany Narsis Dren on a Vvardenfell grave robbing expedition.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "The Knot Awaits: Enter Lucent Citadel and steal the Arcane Knot.",
+        "Priceless Treasures: Place a ward on the Temple of the One's treasured artifacts."
+    ],
+    "achievements": [],
+    "summary": "Grievous Twilights are powerful winged daedra found mostly in the Imperial City. They are a corruption of the common winged twilight. Grievous Twilights have the ability to teleport and often use it to outflank their enemies.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Grievous_Twilight",
+        "page_title": "Online:Grievous Twilight",
+        "revision_id": 3584523,
+        "retrieved_at": "2026-08-12T05:33:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

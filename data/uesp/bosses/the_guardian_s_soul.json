@@ -1,0 +1,52 @@
+{
+    "id": "the_guardian_s_soul",
+    "name": "The Guardian's Soul",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "Volenfell, The Eye's Chamber",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "471,516",
+        "veteran": "1,258,098",
+        "hardmode": "1,446,813"
+    },
+    "abilities": [
+        {
+            "name": "Hammer Strike",
+            "description": "A basic melee attack that does moderate physical damage in a red cone."
+        },
+        {
+            "name": "Decapitation Function",
+            "description": "A heavy melee attack that does high physical damage and knocks the target back. This attack should be dodged or blocked at all costs."
+        },
+        {
+            "name": "Equilibrium Function",
+            "description": "Occasionally, the boss channels a beam that redistributes the remaining health among the three centurions, making them all equal. (i.e. transferring health from healthier centurions to ones with less health)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell."
+    ],
+    "summary": "The Guardian's Soul is a green Dwarven Centurion that, along with The Guardian's Spark and The Guardian's Strength, makes up the Guardian Council, serving as the final bosses of Volenfell. It is found in The Eye's Chamber, in front of the Guardian's Eye.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Guardian%27s_Soul",
+        "page_title": "Online:The Guardian's Soul",
+        "revision_id": 3498945,
+        "retrieved_at": "2026-08-12T21:37:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

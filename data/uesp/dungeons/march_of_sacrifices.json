@@ -1,0 +1,41 @@
+{
+    "id": "march_of_sacrifices",
+    "name": "March of Sacrifices",
+    "content_type": "dungeon",
+    "summary": "The March of Sacrifices is a dungeon shaped around the theme of Hircine's Great Hunt. It is part of the Wolfhunter DLC, along with Moon Hunter Keep. The entrance can be found at a Hircine statue southwest of Serpent's Grotto in Greenshade. Spectral animals such as goats, herons and springboks can be found within. The following item sets will drop in the dungeon: Hanu's Compassion, Blood Moon, Haven of Ursus, and Balorgh.",
+    "location": "",
+    "boss_ids": [
+        "wyress_rangifer",
+        "wyress_strigidae",
+        "wyress_ursus",
+        "glenmoril_wyrd",
+        "aghaedh_of_the_solstice",
+        "spriggan",
+        "dagrund_the_bulky",
+        "nord",
+        "werebear",
+        "tarcyr",
+        "indrik",
+        "balorgh",
+        "orc",
+        "werewolf_behemoth"
+    ],
+    "achievements": [
+        {
+            "id": "wolfhunter_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:March_of_Sacrifices",
+        "page_title": "Online:March of Sacrifices",
+        "revision_id": 3565188,
+        "retrieved_at": "2026-08-12T21:28:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

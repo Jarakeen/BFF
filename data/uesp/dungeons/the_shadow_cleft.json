@@ -1,0 +1,26 @@
+{
+    "id": "the_shadow_cleft",
+    "name": "The Shadow Cleft",
+    "content_type": "dungeon",
+    "summary": "The Shadow Cleft is a delve accessible through a portal leading into a region of the Evergloam, Nocturnal's realm, that opened up northwest of the Vale of Tiers. It contains shadowy creatures and Shrikes. Wafts can be seen throughout the delve, and can be interacted with to collect ectoplasm.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "clockwork_city_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Shadow_Cleft",
+        "page_title": "Online:The Shadow Cleft",
+        "revision_id": 3532903,
+        "retrieved_at": "2026-08-12T21:33:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

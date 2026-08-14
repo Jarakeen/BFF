@@ -1,0 +1,41 @@
+{
+    "id": "selene_s_web",
+    "name": "Selene's Web",
+    "content_type": "dungeon",
+    "summary": "Selene's Web is a group dungeon found in Reaper's March. A group of Mages Guild members led by Warlock Carindon are exploring Selene's Web in search of a mysterious forest spirit, and need protection from hostile natives and wildlife. You can learn about its location from Thulga, Empress of Bone in Rawl'kha, Slays-By-Moon in Evermore, or Kailstig the Axe in Riften. Hazards include bear traps and bottomless pits.",
+    "location": "",
+    "boss_ids": [
+        "longclaw",
+        "khajiit",
+        "senche",
+        "heartstalker",
+        "nighteyes",
+        "shadowhiskers",
+        "silentpaw",
+        "foulhide",
+        "bear",
+        "selene",
+        "changeling"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Selene's Web also appeared in Arena.",
+        "Before dungeon scaling was introduced in Update 5, Selene's Web was designed for levels 40-43."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Selene%27s_Web",
+        "page_title": "Online:Selene's Web",
+        "revision_id": 3567133,
+        "retrieved_at": "2026-08-12T21:33:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "id": "bloodroot_forge",
+    "name": "Bloodroot Forge",
+    "content_type": "dungeon",
+    "summary": "Bloodroot Forge is a group dungeon in Craglorn. It's part of the Horns of the Reach dungeon pack DLC, along with Falkreath Hold. The entrance is located west of Elinhir. The dungeon itself takes place at an ancient Nedic site that is associated with Hircine, and is located high in the Jerall Mountains, where the Dreadhorn Clan of Reachmen are performing foul rituals with the ancient magic located here.",
+    "location": "",
+    "boss_ids": [
+        "caillaoife",
+        "hagraven",
+        "galchobhar",
+        "minotaur",
+        "earthgore_amalgam",
+        "iron_atronach"
+    ],
+    "achievements": [
+        {
+            "id": "horns_of_the_reach_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bloodroot_Forge",
+        "page_title": "Online:Bloodroot Forge",
+        "revision_id": 3585294,
+        "retrieved_at": "2026-08-12T21:15:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

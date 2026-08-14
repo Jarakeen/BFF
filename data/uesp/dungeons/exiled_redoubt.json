@@ -1,0 +1,37 @@
+{
+    "id": "exiled_redoubt",
+    "name": "Exiled Redoubt",
+    "content_type": "dungeon",
+    "summary": "Exiled Redoubt is a group dungeon in the northern mountains of the West Weald. It is included in the Fallen Banners DLC alongside Lep Seclusa. The entrance is located north of Skingrad. Beetles, cockroaches, fleshflies, frogs, rats, spiders and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [
+        "executioner_jerensi",
+        "prime_sorcerer_vandorallen",
+        "squall_of_retribution"
+    ],
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Exiled_Redoubt",
+        "page_title": "Online:Exiled Redoubt",
+        "revision_id": 3424671,
+        "retrieved_at": "2026-08-12T21:21:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

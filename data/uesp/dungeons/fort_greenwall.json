@@ -1,0 +1,28 @@
+{
+    "id": "fort_greenwall",
+    "name": "Fort Greenwall",
+    "content_type": "dungeon",
+    "summary": "Fort Greenwall is a fort in the eastern Rift, north of Riften containing bandits. Uggurek the Vile can be found in the large chamber in the southern part of the fort.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Fort Greenwall also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fort_Greenwall",
+        "page_title": "Online:Fort Greenwall",
+        "revision_id": 3598175,
+        "retrieved_at": "2026-08-12T21:22:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

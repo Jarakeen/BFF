@@ -1,0 +1,20 @@
+{
+    "id": "infinite_archive",
+    "name": "Infinite Archive",
+    "content_type": "arena",
+    "summary": "The Infinite Archive (previously called the Endless Archive)[nb 1] is a two-person arena located in a demiplane linked to Apocrypha. A portal to the Infinite Archive can be found north of Runemaster's Acropolis, inside a cavern that can be accessed on the shoreline. Alternatively, it can be accessed by clicking on the icon on the Apocrypha map and teleporting directly to the Archive. You can also get there by talking with Filer Pix, who can be found outside of Molag Mar in Vvardenfell. It is an endless library which has become infected by Tho'at Replicanum, a Daedric being of living ink. The Infinite Archive is part of the base game and is accessible for all players, regardless of ESO Plus subscription or ownership of the Necrom Chapter.",
+    "location": "",
+    "boss_ids": [
+        "penetration"
+    ],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Infinite_Archive",
+        "page_title": "Online:Infinite Archive",
+        "revision_id": 3597058,
+        "retrieved_at": "2026-08-12T21:46:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

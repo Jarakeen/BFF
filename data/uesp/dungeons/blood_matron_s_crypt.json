@@ -1,0 +1,18 @@
+{
+    "id": "blood_matron_s_crypt",
+    "name": "Blood Matron's Crypt",
+    "content_type": "dungeon",
+    "summary": "The Blood Matron's Crypt is the resting place of Lamae Bal, the first vampire. Her coven will be surrounding the black pool of blood in the center, where Lamae eventually arises from. It's there that newly infected vampires go to accomplish their full transformation. It can be found in Rawl'kha (Reaper's March), Evermore (Bangkorai), or Riften (The Rift), depending on your alliance. During the quest, a few visions of Lamae's past play out at the basins, and the shrines to Arkay and Molag Bal are profaned. When Lamae arrives, she orders you to go to the tunnels and kill Worm Cultists. Nomads can be seen during a quest-related vision within the crypt.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blood_Matron%27s_Crypt",
+        "page_title": "Online:Blood Matron's Crypt",
+        "revision_id": 3550247,
+        "retrieved_at": "2026-08-12T21:15:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

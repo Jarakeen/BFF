@@ -1,0 +1,18 @@
+{
+    "id": "tideholm",
+    "name": "Tideholm",
+    "content_type": "dungeon",
+    "summary": "Tideholm is an island off the coast of Southern Elsweyr, due east of the South Guard Ruins. It houses an ancient fort known as Fort Vashr that was formerly a Dragonguard stronghold. The bulk of the island can only be explored during The Dragon's Lair when fighting the Order of the New Moon cult, as once you reach the temple summit, only the courtyard with Nahfahlaar and the Dragonguard Sanctum itself is accessible.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tideholm",
+        "page_title": "Online:Tideholm",
+        "revision_id": 3550273,
+        "retrieved_at": "2026-08-12T21:35:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

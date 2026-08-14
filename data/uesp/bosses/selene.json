@@ -1,0 +1,66 @@
+{
+    "id": "selene",
+    "name": "Selene",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Selene's Web, Lair of Maarselok",
+    "species": "",
+    "reaction": "Varies",
+    "health": {
+        "normal": "",
+        "veteran": "2,677,221",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Poison Bolt",
+            "description": "A basic ranged attack dealing moderate poison damage."
+        },
+        {
+            "name": "Poison Wave",
+            "description": "Periodically she will release a green mist into the air, which will cause poison damage until she is stopped by interrupting her. [verification needed — that this is the ability this description matches up with.]"
+        },
+        {
+            "name": "Venomous Stinger",
+            "description": "She lobs an orb of poison at you, dealing high poison damage."
+        },
+        {
+            "name": "Summon Shagrath's Host",
+            "description": "Selene will occasionally summon Shagrath's Hosts to deal with you."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Veteran Hard Mode has unique dialogue if you activate it:",
+            "(Alternavely, Carindon might be the one who talks when Hard Mode is activated.)",
+            "Idle dialogue (Hard Mode only):"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Selene first appeared in The Elder Scrolls: Arena.",
+        "She uses a different style staff in Lair of Maarselok.",
+        "She is quoted in the description of the Shagrath's Favor Body Marks body marking."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web.",
+        "The Azure Blight: Take down an awakened dragon to stop the spread of an unnatural blight.",
+        "Pledge: Lair of Maarselok: Prove you are truly Undaunted by conquering Lair of Maarselok."
+    ],
+    "summary": "This article is about the boss in Selene's Web and Lair of Maarselok. For the boss in Infinite Archive, see Selene (Infinite Archive). For the set, see Selene (set). Selene is a Changeling priestess of Shagrath found in Selene's Web, serving as the matriarch of the Bosmer there. She has a chance to drop either Selene's Scepter or Webcutter. She is also the namesake of the Selene set and the basis of a trophy and bust. At the conclusion of the dungeon, her soul is bound by Warlock Carindon, and he traps her spirit to research it for his future experiments. Selene returns in the Lair of Maarselok, having been subject to various experiments and painful bindings by Carindon. He brought her spirit and carcass to the Tenmar Valley until Maarselok awoke. The Stags of Z'en have enlisted Carindon's assistance to stop Maarselok, requiring him to unbind Selene at times to halt the effects of the Azureblight. Carindon worries that by loosening his hold on Selene, he risks allowing Maarselok to influence and corrupt her. Selene will use her magic to assist you and cleanse your group members of the Azureblight.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Selene",
+        "page_title": "Online:Selene",
+        "revision_id": 3545314,
+        "retrieved_at": "2026-08-12T21:33:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

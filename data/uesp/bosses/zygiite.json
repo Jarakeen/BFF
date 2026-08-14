@@ -1,0 +1,77 @@
+{
+    "id": "zygiite",
+    "name": "Zygiite",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "Hunger",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Basic melee attack dealing moderate physical damage"
+        },
+        {
+            "name": "Rake/Puncture Wound",
+            "description": "A basic double-hitting melee attack dealing moderate physical damage each hit and applying \"Puncture Wound\" which deals 10 ticks of direct minor physical damage over 5 seconds."
+        },
+        {
+            "name": "Spring",
+            "description": "Zygiite leaps at its target from further away, indicated by a red circle, dealing moderate-high physical damage, staggering and snaring for 4 seconds."
+        },
+        {
+            "name": "Hunger Prangs",
+            "description": "Zygiite jumps into the air and vanishes into a portal, before landing behind its target with a slamming attack, dealing high physical damage and knocking down both in an area around it. This purges all Damage over Time effects on Zygiite, even status effects, but not debuffs such as Major Breach."
+        },
+        {
+            "name": "Retch/Retched Bile INC",
+            "description": "Zygiite spews poison in a wide cone, dealing continuous direct moderate poison damage as indicated by a red cone in front of it (Retch). Pools of poison will appear under whoever is hit, each dealing cobntinuous direct minor poison damage (Retched Bile INC)."
+        },
+        {
+            "name": "Torpor",
+            "description": "At 75%, 50% and 25% Health, Zygiite spews poison all over itself and all over the arena, temporarily removing itself from the fight as well as blurring and obscuring your screen, staggering all targets then dealing continuous minor poison damage. While the visual effect is active, hungers will continuously spawn to get 4 Hungers at the same time. After 30 seconds of fighting them, they disappear and Zygiite becomes visible again somewhere in the arena, where it then uses \"Devour\"."
+        },
+        {
+            "name": "Damage",
+            "description": "During \"Torpor\", each Hunger killed makes Zygiite take 0,5% of its current Health in oblivion damage."
+        },
+        {
+            "name": "Devour",
+            "description": "Zygiite snatches a target with its tongue and pulls them to it, where it feasts on them, dealing high physical damage on hit then 6 ticks of half that amount in direct physical damage, healing for 0,2% of its Max Health per tick, and at the end knocks them back. While caught, there is no way to free yourself from this ability on your own except with Precognition and you cannot block it, an other player must interrupt Zygiite to stop the ability prematurely and stagger it."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Zygiite is a Hunger who can found in the northwestern-most room, in a cave. He serves as one of the champions of the Gorne public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zygiite",
+        "page_title": "Online:Zygiite",
+        "revision_id": 3536642,
+        "retrieved_at": "2026-08-12T21:24:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,166 @@
+{
+    "id": "foreman_bradiggan",
+    "name": "Foreman Bradiggan",
+    "content_id": "shipwright_s_regret",
+    "content_name": "Shipwright's Regret",
+    "location": "Shipwright's Regret — Overgrown Lumber Mill",
+    "species": "Wraith",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,694,377",
+        "veteran": "4,330,803",
+        "hardmode": "8,228,526"
+    },
+    "abilities": [
+        {
+            "name": "Magic Bolt",
+            "description": "A basic range attack dealing high magical damage."
+        },
+        {
+            "name": "Soul Toss",
+            "description": "Foreman Bradiggan forms an orb of soul magic and tosses it at you, exploding on impact, dealing massive magical damage. This attack can be blocked."
+        },
+        {
+            "name": "Soul Charge",
+            "description": "Foreman Bradiggan lurches forward before dashing ahead at full speed, indicated by a long rectangular AoE, dealing very high physical damage. Harrowing Haunters and Skeletal Flame Shapers are summoned in its wake."
+        },
+        {
+            "name": "Soul Quake",
+            "description": "Foreman Bradiggan overloads itself with soul magic before releasing it in the form of four magical tornadoes going outward from his position, indicated by large traveling AoEs, dealing very high magical damage and staggering you."
+        },
+        {
+            "name": "Possession",
+            "description": "At 60%/30% health, Foreman Bradiggan teleports away, summons a powerful flesh colossus and enters its body to hide from you. You must slay the colossus in order to make Foreman Bradiggan vulnerable to damage again."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "You've come for a job … I don't tolerate tardiness.",
+            "trigger": "As you approach the area, he will appear from the sky",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "Get a move on! I said get!",
+            "trigger": "When you initialized combat",
+            "ability": "Soul Toss"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "I'll hound you from dawn to dinner bell, loafer.",
+            "trigger": "During combat",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "Stubborn arses, I'll drive you like mules then.",
+            "trigger": "During combat",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "I have my eye on you. I'm always watching.",
+            "trigger": "During combat",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "Move, or you can work the plagueyards instead!",
+            "trigger": "During combat",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "I can sniff out a dawdler no matter where you linger.",
+            "trigger": "During combat",
+            "ability": "Possession"
+        },
+        {
+            "speaker": "Foreman Braddigan",
+            "line": "Don't raise your hand to me, whelps!",
+            "trigger": "Close to finishing him",
+            "ability": "Possession"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you approach the area, he will appear from the sky": [
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "You've come for a job … I don't tolerate tardiness.",
+                "trigger": "As you approach the area, he will appear from the sky",
+                "ability": "Possession"
+            }
+        ],
+        "When you initialized combat": [
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "Get a move on! I said get!",
+                "trigger": "When you initialized combat",
+                "ability": "Soul Toss"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "I'll hound you from dawn to dinner bell, loafer.",
+                "trigger": "During combat",
+                "ability": "Possession"
+            },
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "Stubborn arses, I'll drive you like mules then.",
+                "trigger": "During combat",
+                "ability": "Possession"
+            },
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "I have my eye on you. I'm always watching.",
+                "trigger": "During combat",
+                "ability": "Possession"
+            },
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "Move, or you can work the plagueyards instead!",
+                "trigger": "During combat",
+                "ability": "Possession"
+            },
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "I can sniff out a dawdler no matter where you linger.",
+                "trigger": "During combat",
+                "ability": "Possession"
+            }
+        ],
+        "Close to finishing him": [
+            {
+                "speaker": "Foreman Braddigan",
+                "line": "Don't raise your hand to me, whelps!",
+                "trigger": "Close to finishing him",
+                "ability": "Possession"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Wright of Passage: Help Za'ji retrieve plans to upgrade his ship from a haunted shipyard.",
+        "Pledge: Shipwright's Regret: Enter Shipwright's Regret and return Undaunted."
+    ],
+    "summary": "Foreman Bradiggan is a spectral wraith who can be found at the lumber yard of Shipwright's Regret. He acts as the first boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Foreman_Bradiggan",
+        "page_title": "Online:Foreman Bradiggan",
+        "revision_id": 3387823,
+        "retrieved_at": "2026-08-12T21:33:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

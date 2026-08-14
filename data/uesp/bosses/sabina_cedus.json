@@ -1,0 +1,58 @@
+{
+    "id": "sabina_cedus",
+    "name": "Sabina Cedus",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "Ghost",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "52000",
+        "veteran": "148,734",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Arrow",
+            "description": "A basic range attack that does minor frost damage."
+        },
+        {
+            "name": "Chill Touch",
+            "description": "A short ranged spell that does moderate frost damage and slows the player down."
+        },
+        {
+            "name": "Haunting Spectre",
+            "description": "The ghost winds up and releases an apparition in the direction it is facing. Touching the apparition will do moderate frost damage, as well as fear the player, causing them to run around randomly for a few seconds. Avoiding the fear effect will net players an achievement."
+        },
+        {
+            "name": "Spectral Chains",
+            "description": "Sabina will fly to a side of the room, chain a player down and start dragging them towards her. If they reach her, Ulfnor will walk over slowly. Players have to kill Sabina to free the player before Ulfnor reaches them and stabs them for an instant kill."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "During combat, she can often not be damaged when she is floating above Ulfnor, and will only move from that spot periodically."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "Sabina Cedus is a Ghost found in Fang Lair. She was originally an Imperial and one of the adventurers who slew the dragon Thurvokun in the First Era, along with Ulfnor and Caluurion. In undeath she has been bound to serve the necromancer Orryn the Black. When the ghost version of her and skeleton version of Ulfnor are defeated, they will be freed from Orryn the Black's control. Her spirit will help you to kill Orryn the Black, and tell you of Thurvokun's death.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sabina_Cedus",
+        "page_title": "Online:Sabina Cedus",
+        "revision_id": 3606989,
+        "retrieved_at": "2026-08-12T21:22:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

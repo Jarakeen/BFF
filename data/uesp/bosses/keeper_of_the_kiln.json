@@ -1,0 +1,56 @@
+{
+    "id": "keeper_of_the_kiln",
+    "name": "Keeper of the Kiln",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "Unhallowed Grave—The Kiln",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Sword Strike",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "The Keeper of the Kiln winds her sword back then strikes with force, dealing massive physical damage and knocking you back. This attack can be blocked."
+        },
+        {
+            "name": "Blazing Kiln",
+            "description": "Flames start rising in the vents around the arena. Some party members will need to use the grappling points to reach the upper levels. Once there they will need to find the glowing sigil and activate it, the Keeper can then be kited to the corresponding sigil on the lower level to stop flames and heat. If the Fiery Vents are not stopped in time, they will cause continuous fire damage until the players are dead. The Keeper briefly becomes invulnerable to damage while she extinguishes the vents."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "The Keeper of the Kiln will constantly summon fellow animated warriors to assist during the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unhallowed Grave: Help the last Pyre Watch Sentinel and a vampire investigator in the Unhallowed Grave.",
+        "Pledge: Unhallowed Grave: Prove you are truly Undaunted by clearing Unhallowed Grave."
+    ],
+    "summary": "The Keeper of the Kiln is a massive Grave Guardian which defends the Kiln in the Unhallowed Grave. It is necessary to defeat the Keeper to open the doors to the deeper parts of the tomb. The construct acts as the second boss for the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Keeper_of_the_Kiln",
+        "page_title": "Online:Keeper of the Kiln",
+        "revision_id": 3339562,
+        "retrieved_at": "2026-08-12T21:36:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

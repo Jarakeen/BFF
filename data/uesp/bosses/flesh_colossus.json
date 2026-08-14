@@ -1,0 +1,48 @@
+{
+    "id": "flesh_colossus",
+    "name": "Flesh Colossus",
+    "content_id": "imperial_city_prison",
+    "content_name": "Imperial City Prison",
+    "location": "Dark Anchors",
+    "species": "Flesh Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Flesh Colossi first appeared in the cinematic trailers for the game before debuting in the Imperial City DLC."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Bastion Nymic - Fallen Hues: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Fungal Downs: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Glasscrag: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Writhing Wastes: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Gift of Death: Learn more about Wormblood's plans and find a way to deal with him once and for all.",
+        "A Guild in Crisis: Discover who is attacking Fighters Guild halls by tracking Guildmaster Merric at-Aswala.",
+        "Prisoner of Fate: Stop Torvesard from freeing Prince Ithelia!",
+        "Struck from Memory: Recover and seal away forbidden tomes."
+    ],
+    "summary": "Flesh Colossi are giant flesh atronachs, a type of Daedra made of stitched skin and muscle. They can be encountered at Dark Anchors.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flesh_Colossus",
+        "page_title": "Online:Flesh Colossus",
+        "revision_id": 3598627,
+        "retrieved_at": "2026-08-12T21:26:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

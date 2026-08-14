@@ -1,0 +1,30 @@
+{
+    "id": "opulent_ordeal",
+    "name": "Opulent Ordeal",
+    "content_type": "dungeon",
+    "summary": "The Opulent Ordeal is a trial created by the enigmatic Opulent entities of the Night Market to test newcomers. To enter the trial, you will need all three relics from the districts, as well as Opulent keys that drop from the Gilded enemies of the district dungeons. Once you enter the trial, the Opulent trio will taunt you, and you can start the fight by burning your faction banner. You can find the bloodstained book, Slumbering Danger: Who are the Opulent? near the banners by the entrance.",
+    "location": "",
+    "boss_ids": [
+        "opulent_arid_varlet",
+        "opulent_knightshade",
+        "opulent_web_eater"
+    ],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Opulent_Ordeal",
+        "page_title": "Online:Opulent Ordeal",
+        "revision_id": 3574373,
+        "retrieved_at": "2026-08-12T05:33:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

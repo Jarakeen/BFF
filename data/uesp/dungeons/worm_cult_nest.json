@@ -1,0 +1,18 @@
+{
+    "id": "worm_cult_nest",
+    "name": "Worm Cult Nest",
+    "content_type": "dungeon",
+    "summary": "The Worm Cult Nest is a small cave containing Ayleid ruins used by the Worm Cult. The entrance to the Nest can be found in cove along the northern Rivenspire coast near the Westwind Lighthouse. The Ayleid ruins within the cave have been used to house the reemerged Worm Cult and has been used to test and store their deadly Soul Reaper devices. In the wake of the attack on the Shornhelm Mages Guild, the only lead you can find directs you to this place. During the related quest, you will accompany Vanus Galerion and squad of Fighters Guild warriors in exploring the Nest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Worm_Cult_Nest",
+        "page_title": "Online:Worm Cult Nest",
+        "revision_id": 3416656,
+        "retrieved_at": "2026-08-12T21:38:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

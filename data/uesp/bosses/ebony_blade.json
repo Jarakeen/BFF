@@ -1,0 +1,36 @@
+{
+    "id": "ebony_blade",
+    "name": "Ebony Blade",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Ebony Blade, also known as the Vampire or the Leech, is a Daedric artifact created by the Daedric Prince Mephala. It resembles an ebony katana, and is considered to be an artifact of great evil, having the ability to absorb the life essence of those that it strikes. Part of the damage inflicted flows into the wielder as raw power, draining the victim of their health and sometimes stamina. It has also been known to fortify the wielder's skill at using long blades, magically silence opponents to prevent them from casting spells, and deceive victims. Khajiiti myths do not mention the blade by name, but instead refer to it as 'the killing word of the Spider' and 'the black edge of shadow'. The Blade has corrupted and perverted the desires of great men and women, and is infamous due to the many lives it has taken at the hands of its dark owners. It is popularly believed that all who wield the blade are driven insane, and some even believe that the souls of its wielders are consigned to Oblivion.[1] In 2E 582, a charm was cast on it by a mage so it would not remain with any one individual for long, in an attempt to save the souls of any too infatuated by the Blade.[1][2]",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Lore:Ebony_Blade",
+        "page_title": "Lore:Ebony Blade",
+        "revision_id": 3599893,
+        "retrieved_at": "2026-08-12T21:18:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "lower_bthanual",
+    "name": "Lower Bthanual",
+    "content_type": "dungeon",
+    "summary": "Lower Bthanual is a Dwemer ruin in central Deshaan, containing Dwemer constructs. It is located just north of the monastery at Muth Gnaar. Two books can be found here: the lorebook Dwemer Dreams can be found in the boss chamber, and a copy of War of Two Houses can be found on a table outside. Centipedes and rats are found in numbers within. The Construct's Pelvis is found on an anvil in the southwest corner of the north room.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Swarming Dwarven Spiders in Lower Bthanual were called \"Dwemer Spider Swarm‎\" when ESO released, but they were quickly renamed properly."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lower_Bthanual",
+        "page_title": "Online:Lower Bthanual",
+        "revision_id": 3598141,
+        "retrieved_at": "2026-08-12T21:28:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

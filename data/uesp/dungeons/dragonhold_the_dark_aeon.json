@@ -1,0 +1,18 @@
+{
+    "id": "dragonhold_the_dark_aeon",
+    "name": "Dragonhold (The Dark Aeon)",
+    "content_type": "dungeon",
+    "summary": "Dragonhold is an island on the southern coast of Southern Elsweyr. It was Kaalgrontiid's seat of power in ancient times, and he has returned to put it to use.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dragonhold_(The_Dark_Aeon)",
+        "page_title": "Online:Dragonhold (The Dark Aeon)",
+        "revision_id": 3550274,
+        "retrieved_at": "2026-08-12T21:20:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

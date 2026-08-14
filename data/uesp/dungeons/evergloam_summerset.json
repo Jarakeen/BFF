@@ -1,0 +1,18 @@
+{
+    "id": "evergloam_summerset",
+    "name": "Evergloam (Summerset)",
+    "content_type": "dungeon",
+    "summary": "This article is about the portion of the realm visited in the Summerset chapter. For the portion visited during the Clockwork City chapter, see Evergloam (Clockwork City). Evergloam is the Daedric plane of Nocturnal. The plane is visited during the related quest, while looking for the possible location of where Ritemaster Iachesis hid the Heart of Transparent Law. Several Blackfeather Crows will appear on the path to the mountain to pester you and give hints about what occurred during the Ritemaster's previous visit to the realm.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Evergloam_(Summerset)",
+        "page_title": "Online:Evergloam (Summerset)",
+        "revision_id": 3550261,
+        "retrieved_at": "2026-08-12T21:21:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

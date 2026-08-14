@@ -1,0 +1,39 @@
+{
+    "id": "the_dread_cellar",
+    "name": "The Dread Cellar",
+    "content_type": "dungeon",
+    "summary": "The Dread Cellar is a group dungeon in northern Blackwood. It is one of two dungeons available with the Waking Flame DLC, the other being Red Petal Bastion. The dungeon once served as a prison run by the Imperial Battlemages, but the facility was abandoned after the collapse of the Empire. It has recently been taken over by the Order of the Waking Flame and their Daedric allies, the Crimson Oath. Centipedes, dragonflies, fiendroth, rats and spiders are found in number within. Carts and Wheelbarrows yielding Bone, Crawlers, Gnawed Bone, Guts and Worms are scattered throughout the dungeon. Hazards include lava pools and dread surges.",
+    "location": "",
+    "boss_ids": [
+        "scorion_broodlord",
+        "scorion",
+        "cyronin_artellian",
+        "magma_incarnate",
+        "ruinach"
+    ],
+    "achievements": [
+        {
+            "id": "waking_flame_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Dread_Cellar",
+        "page_title": "Online:The Dread Cellar",
+        "revision_id": 3586226,
+        "retrieved_at": "2026-08-12T21:20:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

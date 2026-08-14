@@ -1,0 +1,53 @@
+{
+    "id": "fighters_guild",
+    "name": "Fighters Guild",
+    "content_id": "spindleclutch_ii",
+    "content_name": "Spindleclutch II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "character_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Prior to Update 39, the daily quest to destroy one Dark Anchor required destroying three Dark Anchors."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Joining Quests",
+        "Anchors from the Harbour: Find two Guild members who were investigating Dark Anchors.",
+        "The Dangerous Past: Search a Dwemer ruin for signs of an ancient weapon.",
+        "The Prismatic Core: Help the Guildmaster understand the threat to the present in the events of the past.",
+        "Proving the Deed: Investigate the circumstances surrounding Jofnir's death.",
+        "Will of the Council: Enter Coldharbour and destroy the Mortuum Vivicus."
+    ],
+    "summary": "This article is about the faction. For one of the various places, see Category:Online-Places. The Fighters Guild is a mercenary organization which has a presence all throughout Tamriel. To join, go to any Fighters Guild hall and speak with Aicessar, Basile Fenandre, or Hilan (regardless of your alliance) and tell them you're ready to join. To gain reputation with them, you must destroy Dark Anchors and Mirrormoor Mosaics or kill Daedra and undead. Good relations with the guild has many benefits, including new skills and abilities. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fighters_Guild",
+        "page_title": "Online:Fighters Guild",
+        "revision_id": 3504631,
+        "retrieved_at": "2026-08-12T21:34:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "mor_naril",
+    "name": "Mor Naril",
+    "content_type": "dungeon",
+    "summary": "Mor Naril is a sprawling, ancient Daedric temple dedicated to Molag Bal, located north of Xor-Hist.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mor_Naril",
+        "page_title": "Online:Mor Naril",
+        "revision_id": 3578424,
+        "retrieved_at": "2026-08-12T21:29:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

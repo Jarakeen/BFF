@@ -1,0 +1,84 @@
+{
+    "id": "minotaur",
+    "name": "Minotaur",
+    "content_id": "black_drake_villa",
+    "content_name": "Black Drake Villa",
+    "location": "Random Encounter during Zeal of Zenithar\nGarlas Malatar, Gold Coast, Random Encounter\nTomb of the Serpents\nNear the South Guard Ruins Wayshrine, Western Plains\nThe Reach\nNiben Forest, Undertow Cavern, Zenithar's Abbey\nRandom Encounter\nNear and inside Silorn, West Weald",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chop",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Cleave",
+            "description": "A melee attack dealing moderate physical damage and staggering the target."
+        },
+        {
+            "name": "Clobber",
+            "description": "The minotaur performs a strong overhead swing with its cleaver, dealing high physical damage and stunning its target. This can be blocked to stagger the minotaur instead."
+        },
+        {
+            "name": "Flying Leap",
+            "description": "If the target is far away, the minotaur throws its cleaver at them and leaps over to pick it up, indicated by a red circle, dealing moderate physical damage."
+        },
+        {
+            "name": "Ram",
+            "description": "The minotaur charges forward, indicated by a red circle around them, dealing high physical damage and knocking down targets."
+        },
+        {
+            "name": "Elemental Weapon",
+            "description": "The minotaur slams its weapon on the ground, heating it up and making it glow. This buff lasts for about 30 seconds."
+        },
+        {
+            "name": "Elemental Pool",
+            "description": "When Elemental Weapon is active, all attacks done will leave behind a pool of fire, indicated by a red circle, dealing continuous low flame damage."
+        },
+        {
+            "name": "Flame Cross",
+            "description": "When Elemental Weapon is active, the minotaur gains an ability where it swings its flaming cleaver across the ground, sending three flaming swirls forward close together as indicated by red circles, each dealing moderate flame damage each and staggering."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Minotaurs were first added to the game with Update 10, with the Dark Brotherhood DLC.",
+        "Minotaur Shamans found in various locations such as Knightsgrave and throughout Northern Elsweyr are simply called \"Minotaur\" and have the same health as the warriors instead of their usually slightly weaker health.",
+        "A minotaur polymorph is available for players to wear, allowing them to take on the form of a minotaur.",
+        "Minotaurs in the Illumination Academy Stacks appear as spiris."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Breaking the Chains: Break up an illegal fight ring.",
+        "The Crystal Tower: Ascend the Crystal Tower and put an end to Nocturnal's machinations.",
+        "Legend of the Man-Bull: Defeat the twin Minotaurs Bhrum and Koska, and retrieve the heirlooms unearthed by the unlucky scholars.",
+        "Looming Shadows: Recover ancient relics found in the ruins of Fort Faleria.",
+        "The Lunacy of Two Moons: Investigate the madness infecting a Khajiit temple.",
+        "Paths of Chaos: Investigate disturbances across West Weald caused by Ithelia's return.",
+        "Reavers of the Reef: Drive the Dreadsail pirates from the Systres.",
+        "Thick as Thieves: Help a thief with a heist.",
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "This article is about the creature. For the polymorph, see Minotaur (polymorph). Minotaurs are a race of bull-like humanoids found on the Gold Coast and in Northern Elsweyr. They tend to congregate at ancient First Era ruins. Although usually considered to be nothing more than beasts, minotaurs possess rudimentary equipment and some shamans have the ability to use magic. Minotaurs have a chance to drop Oxblood Fungus Spores. In Horns of the Reach, Minotaurs have allied with Reachmen to attack the people of Falkreath. In Northern Elsweyr, Minotaurs can often be seen clashing with gryphons. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Minotaur",
+        "page_title": "Online:Minotaur",
+        "revision_id": 3598606,
+        "retrieved_at": "2026-08-12T21:14:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

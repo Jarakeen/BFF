@@ -1,0 +1,55 @@
+{
+    "id": "shalk",
+    "name": "Shalk",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Ash Mountain, Bad Man's Hallows, Bloodmayne Cave, Hightide Hollow, Senie, Sulfur Pools\nDreudurai Glass Mine, Forgotten Wastes, Nchuleftingth, Vvardenfell\nThe Burn\nLava Vents\nGalen",
+    "species": "Shalk",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "As of Update 10, shalks have a chance to drop beetle scuttle.",
+        "Although described as a type of shalk, the dire ash beetle Ash-Eater has the appearance of an assassin beetle."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Can't Take It With Them: Help prevent the return of a malevolent minor Daedra.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Guardian of Y'ffelon: Go to Y'ffelon and stop the Firesong Circle.",
+        "Percussive Ranching: Help a kwama farmer gather his herd.",
+        "Peril at the Pools: Locate the farmers who were displaced by the Covenant invasion.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell.",
+        "Proving Trust: Aid a town in the wake of a volcanic eruption.",
+        "Recovering the Guar: Locate the guar that ran away during the Covenant attack.",
+        "The Show Must Go On: Rescue the Dancing Scrib from the Steel Shrikes.",
+        "Season of Harvest: Participate in the Harvest Festival at Bad Man's Hallows.",
+        "Stem the Tide: Prevent a Covenant attack on Kragenmoor.",
+        "The Truth about Spiders: Figure out what is controlling the spiders in Hightide Hollow.",
+        "Unbridled Wealth: Recover a merchant's wares and her favorite guar."
+    ],
+    "summary": "Shalks are aggressive giant beetles native to Morrowind. They attack with fire and can move through lava unharmed.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shalk",
+        "page_title": "Online:Shalk",
+        "revision_id": 3605924,
+        "retrieved_at": "2026-08-12T21:15:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

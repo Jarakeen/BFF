@@ -1,0 +1,28 @@
+{
+    "id": "zainsipilu",
+    "name": "Zainsipilu",
+    "content_type": "dungeon",
+    "summary": "Zainsipilu is a cave located in the Bitter Coast region of Vvardenfell, northwest of Seyda Neen, containing Black Darts bandits and wildlife. Owing to the immense lushness and fertility of the cavern's soil, Halinjirr chose it as his secret location to grow moon sugar. However, his operation was recently seized by the Black Darts. The notes Journal of a Fallen Officer, Halinjirr's Notes, and Bandit's Letter can be found here. The cave also contains the Ascendant Order Hideout, an area only accessible during Ascending Doubt.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Zainsipilu also appears in TES III: Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zainsipilu",
+        "page_title": "Online:Zainsipilu",
+        "revision_id": 3548746,
+        "retrieved_at": "2026-08-12T21:39:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

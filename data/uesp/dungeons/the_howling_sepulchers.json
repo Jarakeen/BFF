@@ -1,0 +1,32 @@
+{
+    "id": "the_howling_sepulchers",
+    "name": "The Howling Sepulchers",
+    "content_type": "dungeon",
+    "summary": "The Howling Sepulchers are a set of valleys with ancient Nedic ruins in eastern Upper Craglorn containing draugr, harpies and undead wolves. In order to clear the dungeon you need to defeat Akiirdal, a resurrected dragon priest. A friendly wolf named Shayla, her runt and her two other pups can also be found down in the ravine. Frogs are also found by the river. Passive Spiders are found in numbers within the ruins. Although described as Nedic in origin, the Howling Sepulchers have several elements distinctive of ancient Nordic tombs.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve.",
+        "Neither of the two actual Craglorn-based zone quests require this delve to be completed, or the boss to be even encountered, let alone defeated. In fact, both require turning southwest right after entering, and heading into the lower part of the canyon by the river, which does not take you towards the boss's area. However, the Clockwork City prologue \"Of Knives and Long Shadows\" quest requires entering the Dragon Priest chamber and killing the boss who guards the final chest.",
+        "The skyshard can be found by taking the southwestern tunnel from the open space in front of the Dragon Priest chamber (this space being entered from the northwest). From the skyshard, it's either a case of retracing your steps to the entrance, or - if you can survive a fall - jumping straight down.",
+        "Mounts cannot be used in the exterior sections.",
+        "The pedestals in the Sanctum of Farsight can be interacted with while not on the relevant quest, to no effect."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Howling_Sepulchers",
+        "page_title": "Online:The Howling Sepulchers",
+        "revision_id": 3468059,
+        "retrieved_at": "2026-08-12T21:25:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,99 @@
+{
+    "id": "captain_marley",
+    "name": "Captain Marley",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shock",
+            "description": "A basic ranged attack dealing minor shock damage."
+        },
+        {
+            "name": "Impending Storm",
+            "description": "Captain Marley charges up and releases lightning from himself as indicated by red circles dealing moderate shock damage to all targets hit. This can be interrupted to stagger Captain Marley."
+        },
+        {
+            "name": "Waterspout",
+            "description": "Captain Marley conjures raging water that surges up from the ground and flows forward, indicated by a circular AoE, dealing moderate shock damage and knocking you away. This can be interrupted to stagger Captain Marley."
+        },
+        {
+            "name": "Summon Totem",
+            "description": "Captain Marley periodically summons a Totem (Ghost Haven Bay) which periodically deals lightning strikes that travel in a line, each dealing moderate shock damage. Multiple totems can be up at once."
+        },
+        {
+            "name": "Steak",
+            "description": "Captain Marley uses a Streak-like ability, dashing to his target as a bolt of electricity."
+        },
+        {
+            "name": "Run Away!",
+            "description": "When close to Captain Marley, backs up to put some distance between his target and himself."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Captain Marley",
+            "line": "We're spared Oblivion, can't you see? He's saved us!",
+            "trigger": "Combat is intitiated",
+            "ability": null
+        },
+        {
+            "speaker": "Captain Marley",
+            "line": "The Commodore knows best. Don't question him!",
+            "trigger": "Combat is intitiated",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Combat is intitiated": [
+            {
+                "speaker": "Captain Marley",
+                "line": "We're spared Oblivion, can't you see? He's saved us!",
+                "trigger": "Combat is intitiated",
+                "ability": null
+            },
+            {
+                "speaker": "Captain Marley",
+                "line": "The Commodore knows best. Don't question him!",
+                "trigger": "Combat is intitiated",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Buried at the Bay: Retrieve the treasure of Captain Maul for her great great great great grand … something."
+    ],
+    "summary": "Captain Marley is the spirit of a Breton ship captain in Ghost Haven Bay.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Marley",
+        "page_title": "Online:Captain Marley",
+        "revision_id": 3493121,
+        "retrieved_at": "2026-08-12T21:23:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

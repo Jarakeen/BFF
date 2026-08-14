@@ -1,0 +1,39 @@
+{
+    "id": "asylum_sanctorium",
+    "name": "Asylum Sanctorium",
+    "content_type": "dungeon",
+    "summary": "The Asylum Sanctorium is a mini trial found within the Reactor District in the Brass Fortress. You will receive a Radiance Resonator with your other rewards after defeating Saint Olms with hard mode engaged.",
+    "location": "",
+    "boss_ids": [
+        "saint_olms_the_just",
+        "saint_felms_the_bold",
+        "saint_llothis_the_pious"
+    ],
+    "achievements": [
+        {
+            "id": "clockwork_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "You will receive a Radiance Resonator for completing the trial on Hard Mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Asylum_Sanctorium",
+        "page_title": "Online:Asylum Sanctorium",
+        "revision_id": 3517364,
+        "retrieved_at": "2026-08-12T05:31:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

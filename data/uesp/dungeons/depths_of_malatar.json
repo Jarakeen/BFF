@@ -1,0 +1,39 @@
+{
+    "id": "depths_of_malatar",
+    "name": "Depths of Malatar",
+    "content_type": "dungeon",
+    "summary": "Depths of Malatar is a group dungeon on the Gold Coast. It's part of the Wrathstone dungeon pack DLC, along with Frostvault. It is located beneath the Ayleid ruin of Garlas Malatar, connected to the sunken ruins of Fort Mistwatch. The ruins are occupied by followers of Meridia who have devoted their very life and essence to keeping one half of the Wrathstone Tablet hidden deep within. An unlikely partnership with the spirit of her treacherous ex-husband, Quintus Verres, leads the acclaimed relic hunter Tharayya to the wreckage of an Imperial fort built to plunder Ayleid ruins on the Gold Coast. Believed to be abandoned after its destruction in an unnamed calamity, Tharayya's search reveals a terrible secret—the Imperials never left. With your help, Tharayya hopes to overcome the unnatural guardians protecting the legendary artifact that brought the Imperials to Garlas Malatar, and to ruin.",
+    "location": "",
+    "boss_ids": [
+        "the_scavenging_maw",
+        "hunger",
+        "the_weeping_woman",
+        "frozen",
+        "nereid",
+        "dark_orb",
+        "king_narilmor",
+        "symphony_of_blades",
+        "blessed_sentinel"
+    ],
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Garlas Malatar also appeared in the Knights of the Nine download for Oblivion.",
+        "Although the dungeon entrance is located in the Gold Coast zone, you are not required to own the Dark Brotherhood DLC in order to access Depths of Malatar, as it can be directly ported into like any group dungeon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Depths_of_Malatar",
+        "page_title": "Online:Depths of Malatar",
+        "revision_id": 3357847,
+        "retrieved_at": "2026-08-12T21:19:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

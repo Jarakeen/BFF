@@ -1,0 +1,104 @@
+{
+    "id": "akash_gra_mal",
+    "name": "Akash gra-Mal",
+    "content_id": "elden_hollow_i",
+    "content_name": "Elden Hollow I",
+    "location": "Elden Hollow I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee ability that deals low physical damage."
+        },
+        {
+            "name": "Battlecry",
+            "description": "Akash shouts in a cone-shaped radius in front of her, dealing minor physical damage, staggering anyone in range."
+        },
+        {
+            "name": "Leaping Strike",
+            "description": "If Akash's target moves too far away from her, she leaps at them to close the gap, dealing physical damage when she lands."
+        },
+        {
+            "name": "Berserker Frenzy",
+            "description": "Akash swings her battleaxe around her, dealing moderate physical damage to anyone standing in range."
+        },
+        {
+            "name": "Executioner's Strike",
+            "description": "A heavy attack that deals major physical damage and knocks back the target if it isn't blocked."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Akash gra-Mal",
+            "line": "I don't know how you caught wind of the Canonreeve's plan, but you will not stop us.",
+            "trigger": "If you group wipes, she says",
+            "ability": "Leaping Strike"
+        },
+        {
+            "speaker": "Akash gra-Mal",
+            "line": "Your bones will finish this altar. An altar for my Oraneth.",
+            "trigger": "If you group wipes, she says",
+            "ability": "Leaping Strike"
+        },
+        {
+            "speaker": "Akash gra-Mal",
+            "line": "Well fought.",
+            "trigger": "When killed, she says",
+            "ability": "Leaping Strike"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "If you group wipes, she says": [
+            {
+                "speaker": "Akash gra-Mal",
+                "line": "I don't know how you caught wind of the Canonreeve's plan, but you will not stop us.",
+                "trigger": "If you group wipes, she says",
+                "ability": "Leaping Strike"
+            },
+            {
+                "speaker": "Akash gra-Mal",
+                "line": "Your bones will finish this altar. An altar for my Oraneth.",
+                "trigger": "If you group wipes, she says",
+                "ability": "Leaping Strike"
+            }
+        ],
+        "When killed, she says": [
+            {
+                "speaker": "Akash gra-Mal",
+                "line": "Well fought.",
+                "trigger": "When killed, she says",
+                "ability": "Leaping Strike"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She has authored a note."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancient Remains: Investigate Wood Orc activity in the ruins beneath Elden Root.",
+        "Pledge: Elden Hollow I: Explore Elden Hollow I and return Undaunted."
+    ],
+    "summary": "Akash gra-Mal is an Orc warrior of the Darkfern Clan found in Elden Hollow I. She can be found in the second room after the waterfall, in front of a blacksmith's forge and a flaming altar of bone. She is clad in Wood Elf Style heavy armor. She and Canonreeve Oraneth are in an intimate relationship, as is evident from a letter from the canonreeve and Akash's dialogue.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Akash_gra-Mal",
+        "page_title": "Online:Akash gra-Mal",
+        "revision_id": 3322084,
+        "retrieved_at": "2026-08-12T21:20:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

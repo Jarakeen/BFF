@@ -1,0 +1,99 @@
+{
+    "id": "olashyn_the_twisted",
+    "name": "Olashyn the Twisted",
+    "content_id": "leftwheal_trading_post",
+    "content_name": "Leftwheal Trading Post",
+    "location": "Leftwheal Trading Post",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Heavy Strike",
+            "description": "Charged melee attack dealing moderate-high physical damage and staggering. This can be blocked to stagger Olashyn instead."
+        },
+        {
+            "name": "Powerful Throw",
+            "description": "Olashyn starts an Uppercut-like attack but instead transforms into her weapon which flies in an arc and lands with force, dealing moderate-high physical damage in an area and staggering. This ability can only be cast one at a time between enemies."
+        },
+        {
+            "name": "Shard Shield",
+            "description": "Olashyn channels a glass shield around her which grants her a moderate damage shield and deals moderate magic damage."
+        },
+        {
+            "name": "Bouncing Light",
+            "description": "Olashyn launches a glass orb to her twin that bounces back to her, each time dealing moderate magic damage in an area."
+        },
+        {
+            "name": "Return, My Twin",
+            "description": "If Olashyn isn't killed within two seconds of Ranishyn the Marred, Ranishyn is revived with 50% Health."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Olashyn the Twisted",
+            "line": "No quarter, nonbeliever!",
+            "trigger": "When combat is initiated",
+            "ability": "Return, My Twin"
+        },
+        {
+            "speaker": "Olashyn the Twisted",
+            "line": "Return, my twin!",
+            "trigger": "When she revives her twin sister",
+            "ability": "Bouncing Light"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When combat is initiated": [
+            {
+                "speaker": "Olashyn the Twisted",
+                "line": "No quarter, nonbeliever!",
+                "trigger": "When combat is initiated",
+                "ability": "Return, My Twin"
+            }
+        ],
+        "When she revives her twin sister": [
+            {
+                "speaker": "Olashyn the Twisted",
+                "line": "Return, my twin!",
+                "trigger": "When she revives her twin sister",
+                "ability": "Bouncing Light"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Olashyn the Twisted is a Dremora who serves as one of the champions of the Leftwheal Trading Post alongside Ranishyn the Marred.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Olashyn_the_Twisted",
+        "page_title": "Online:Olashyn the Twisted",
+        "revision_id": 3281825,
+        "retrieved_at": "2026-08-12T21:27:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

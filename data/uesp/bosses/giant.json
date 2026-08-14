@@ -1,0 +1,124 @@
+{
+    "id": "giant",
+    "name": "Giant",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Giant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Kick",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Sweep",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Shatter",
+            "description": "The giant rakes the ground with his hammer, sending three shockwaves in different directions in front of him, dealing moderate physical damage each to targets hit. These don't have AoE indicators."
+        },
+        {
+            "name": "Obliterate",
+            "description": "The giant winds up his hammer into the air before slamming it into the ground in front of him, indicated by a growing red circle, dealing high physical damage, knocking back and stunning targets hit."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "<The giant stares at you expectantly.>",
+            "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+            "ability": "Shatter"
+        },
+        {
+            "speaker": "",
+            "line": "<Poke the giant.>",
+            "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+            "ability": "Shatter"
+        },
+        {
+            "speaker": "",
+            "line": "<The giant gestures to a nearby spot.>",
+            "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+            "ability": "Shatter"
+        },
+        {
+            "speaker": "",
+            "line": "Now what?",
+            "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+            "ability": "Shatter"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.": [
+            {
+                "speaker": "",
+                "line": "<The giant stares at you expectantly.>",
+                "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+                "ability": "Shatter"
+            },
+            {
+                "speaker": "",
+                "line": "<Poke the giant.>",
+                "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+                "ability": "Shatter"
+            },
+            {
+                "speaker": "",
+                "line": "<The giant gestures to a nearby spot.>",
+                "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+                "ability": "Shatter"
+            },
+            {
+                "speaker": "",
+                "line": "Now what?",
+                "trigger": "Aspera Giant-Friend tells you to speak with a friendly giant who will help you sneak into the Stormfist-controlled fortress at Cradlecrush.",
+                "ability": "Shatter"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Hamelyn Serpe mentions being chased by a giantess who he claims may have wanted to mate with him. However, no giantesses can actually be found in Wrothgar, excluding the realm where Maelstrom Arena takes place."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Aiding Sigunn: Help recover a merchant's supplies from a giant.",
+        "The Farmer's Champion: Save the survivors of a Worm Cult attack.",
+        "Fierce Beasts of Ivarstead: Help a frightened woman make Ivarstead safer.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "A Friend in Mead: Clear the Stormfists out of the meadery.",
+        "Giant Problems: Drive the rampaging giants out of Lower Yorgrim.",
+        "Names of the Fallen: Collect the amulets of the fallen Pact soldiers.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "The Pride of a Prince: Convince the Nords, Dunmer and Argonians to act on your information.",
+        "The Rise of Sage Svari: Help a skald become a sage.",
+        "Shattered Hopes: Turn the tide in the Pact's war against the Worm Cult.",
+        "The Siege of Cradlecrush: Disrupt the Stormfist operations, and defeat the Orc warlord and his followers.",
+        "Stomping Sinmur: Use the fragments of Wuuthrad to banish Sinmur's spirit.",
+        "Strange Allies: Ally with the giants to collect intel about the Stormfist clan.",
+        "Unearthed: Discover an ancient enemy buried in Shor's Stone mine.",
+        "Worm Cult Summoner: Defeat the Worm Cult Spirit Healer at Trolhetta."
+    ],
+    "summary": "North of Dragon's Hallow, Giant's Heart, Honeystrand Hill, Lower Yorgrim, Mammoth Ridge, Near Mournhoth Keep, The Rift, Treva's Farm, Trolhetta, Near Troll's Toothpick\nMzark Cavern\nShatul Range, Wrothgar\nGiant Camps, South of Sword's Point Watchtower, Verglas Hollow\nNear Druadach Redoubt, Faolan's Ire, Near Wildspear Clan Camp\nChroma Incognito, The Mythos Giants are large primitive humanoids most often found in Skyrim and other mountainous areas. They are also often accompanied by mammoths, whom they use as companions and livestock. Giantesses are the female version of giants but are much rarer, with only two encountered as bosses, Matriarch Aldis and Matriarch Runa.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Giant",
+        "page_title": "Online:Giant",
+        "revision_id": 3539238,
+        "retrieved_at": "2026-08-12T21:25:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

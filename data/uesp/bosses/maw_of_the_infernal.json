@@ -1,0 +1,54 @@
+{
+    "id": "maw_of_the_infernal",
+    "name": "Maw of the Infernal",
+    "content_id": "the_banished_cells_ii",
+    "content_name": "The Banished Cells II",
+    "location": "The Banished Cells II",
+    "species": "Daedroth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,702,217",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Breath of Flame",
+            "description": "The boss breathes fire out dealing moderate flame damage over time as indicated by a red cone."
+        },
+        {
+            "name": "Immolating Bite",
+            "description": "The boss bites the tank causing flaming AOEs to appear at the target's location. A new AOE appears every few seconds. This AOE persists for a long time and thus the room will eventually fill with fire if the boss is not killed quickly enough."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Getting the Maw to stand on the flame trap will cause it to take high amounts of damage, killing it much faster."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Plan: Return to the Banished Cells and free its keepers from Daedric servitude.",
+        "Pledge: Banished Cells II: Explore The Banished Cells II and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Maw of the Infernal (set). The Maw of the Infernal is a colossal daedroth boss of the Banished Cells II. When first seen, it is tied up by chains and will break them off to enter combat. It has the ability to create fire obstacles every time it strikes. Combined with its high health, this ability can quickly fill the room with fire if this boss isn't kited carefully. It has a chance to drop the Staff of Conflagration, a unique item in the Sanctuary set. It is also the namesake of the Maw of the Infernal set and the basis of a trophy and bust.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maw_of_the_Infernal",
+        "page_title": "Online:Maw of the Infernal",
+        "revision_id": 3137063,
+        "retrieved_at": "2026-08-12T21:14:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

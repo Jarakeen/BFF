@@ -1,0 +1,18 @@
+{
+    "id": "phaer_catacombs",
+    "name": "Phaer Catacombs",
+    "content_type": "dungeon",
+    "summary": "Phaer Catacombs is an old mine in the northwest of Phaer, recently converted to a quarantine site. The mine can only be accessed during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Phaer_Catacombs",
+        "page_title": "Online:Phaer Catacombs",
+        "revision_id": 3598277,
+        "retrieved_at": "2026-08-12T21:30:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "id": "stone_atronach",
+    "name": "Stone Atronach",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Bloodroot Forge — Sanguinary Veins",
+    "species": "Stone Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "117,879266,574",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [
+            "Defense Prism crystals from both Normal and Veteran Lucent Citadel counted as Stone Atronachs for the purpose of the Daily Endeavor, but it is not known if this was intended."
+        ],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Generic Stone Atronachs were first introduced in Update 15. Before that, the Foundation Stone Atronach from Update 1 was the only named one.",
+        "Galchobhar previously had two atronachs that he would continuously revive, and they would brace themselves by turning their stone black and eyes red and briefly halting their attacks when he threw his weapon.",
+        "A Target Stone Atronach training dummy is present in the game files, but is yet to be available.",
+        "Stone Atronachs are mentioned in the book Once."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Avarice of the Eldertide: Stop the encroachment of Eldertide theurges.",
+        "Blood for Blood: Neutralize an ancient forge and put an end to the evil plans of the Dreadhorn clan.",
+        "Burdensome Beasts: Daedric creatures from Plokun's menagerie run wild across Blackwood.",
+        "Falkreath's Demise: Lift the siege of Falkreath to save the city's inhabitants.",
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent.",
+        "The Sanguine Successor: Prevent a clan of vampires from draining the blood of a captured dragon.",
+        "Deadly Armaments: A regretful summoner needs help destroying arms and armor for the Worm Cult invasion of Solstice."
+    ],
+    "achievements": [],
+    "summary": "Stone Atronachs are a rare type of elemental Daedra. They resemble six-legged creatures with two towering frontal limbs, four smaller hind limbs and a central glowing eye. They are most often encountered in group dungeons. In the Bloodroot Forge, Stoneheart summons multiple stone atronachs and will periodically revive them throughout the fight if they have died. In Falkreath Hold, Domihaus the Bloody-Horned will summon one stone atronach at a time when he calls forth the atronachs of each element. In Moongrave Fane, various stone atronachs, named Moongrave Sentinels, serve the Hollowfang clan. In Earthen Root Enclave, the Corruption of Stone summons stone atronachs. In Black Gem Foundry, the Soulbinders use summoned stone atronachs to mine black soul gems.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stone_Atronach",
+        "page_title": "Online:Stone Atronach",
+        "revision_id": 3594888,
+        "retrieved_at": "2026-08-12T05:31:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

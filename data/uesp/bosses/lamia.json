@@ -1,0 +1,67 @@
+{
+    "id": "lamia",
+    "name": "Lamia",
+    "content_id": "sanctum_ophidia",
+    "content_name": "Sanctum Ophidia",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Lamia",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "31,364",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "Basic melee attack with claws that deals minor physical damage."
+        },
+        {
+            "name": "Howling Strike",
+            "description": "The lamia howls, indicated by a red cone, dealing moderate magic damage and staggering the target. Despite having yellow sparks, blocking this ability doesn't set the lamia off-balance."
+        },
+        {
+            "name": "Harmony",
+            "description": "The lamia sings, granting 9,100/18,200 (Group Dungeons and Trials) spell and physical resistance for the caster and all allies within range for the duration of the effect. Affected enemies are highlighted. This can be interrupted to set the lamia off-balance. This cannot be cast if there is only one lamia."
+        },
+        {
+            "name": "Block",
+            "description": "The lamia blocks, reducing damage taken. Heavy attacking a blocking lamia with a melee weapon causes the target to be staggered and be put off-balance. Only used when you attempt a melee attack at a lamia."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Lamias summoned by Spinner Urthrendir only use the \"Strike\" attack."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Eye of the Storm: Defeat the invading Maormer on Tempest Island.",
+        "The Final Assault: Launch an assault on the Endless Stair and destroy the Planar Vortex.",
+        "Force of Nature: Help three nereid sisters reclaim an abandoned Imperial fort.",
+        "Into the Woods: Search a dark forest for signs of the Fighters Guild.",
+        "Lamia Demonstration: Show a Northern Elsweyr Defense Force recruit how to combat lamia.",
+        "The Lost Pearls: Retrieve an old silver pendant that once belonged to a patron's wife.",
+        "The Lunacy of Two Moons: Investigate the madness infecting a Khajiit temple.",
+        "Pledge: Arx Corinium: Prove you are truly Undaunted by clearing Arx Corinium.",
+        "Pledge: Tempest Island: Prove you are truly Undaunted by clearing Tempest Island.",
+        "The Shadow's Embrace: Convince the Shadow Walkers to break their pact with Molag Bal.",
+        "Spinning Out: Survive the illusory mushrooms and defeat Spinner Urthrendir.",
+        "The Swamp's Embrace: Recover the bodies of the Dominion's Argonian prisoners.",
+        "An Unusual Circumstance: Rescue the lamias' children from the savage Wood Elves."
+    ],
+    "achievements": [],
+    "summary": "Ancestor's Landing, Outside Bitterroot Cave, Outside Chid-Moska Ruins, Fallen Wastes lake, Around Halcyon Lake, Loth'Na Caverns, Loriasel, The Moonless Walk, Nilata Falls, Roots of Silvenar, Serpent's Grotto, The Underroot\nKo Estaran\nSkooma Cat's Cloister\nThe Collector's Villa\nSummoned by Spinner Urthrendir\nNear the Shrine of Vakkan, Sandy shores of Western Solstice Lamias are a species of amphibious beastfolk. They have a serpentine appearance, with the head and tail of a snake and the torso of a woman. Lizards encountered in the Skooma Cat's Cloister transform into lamias upon approach.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lamia",
+        "page_title": "Online:Lamia",
+        "revision_id": 3574787,
+        "retrieved_at": "2026-08-12T05:34:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "id": "frostvault",
+    "name": "Frostvault",
+    "content_type": "dungeon",
+    "summary": "Frostvault is a group dungeon in northern Eastmarch. It's part of the Wrathstone dungeon pack DLC, along with Depths of Malatar. It is a Dwarven vault buried deep in the mountains of Giant's Run, and one half of the Wrathstone Tablet has been sealed within. Despite events in Volenfell, the scholar Tharayya refuses to be deterred from her quest for Dwarven relics. Tharayya's research leads her to a long-lost Dwarven ruin buried in a thawing glacier, where the Dwarves secreted away an object of immeasurable importance. Within the complex, a massive vault holds a piece of the legendary Wrathstone, a tablet carved with mysterious and arcane writing. With your help, she'll brave the Frostvault and seek the Wrathstone.",
+    "location": "",
+    "boss_ids": [
+        "warlord_tzogvin",
+        "riekling",
+        "vault_protector",
+        "rizzuk_bonechill",
+        "avalanche",
+        "the_stonekeeper",
+        "dwarven_colossus",
+        "wrathstone"
+    ],
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The entrance to the Frostvault Chasm player house is located at this location's exterior."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Frostvault",
+        "page_title": "Online:Frostvault",
+        "revision_id": 3585440,
+        "retrieved_at": "2026-08-12T21:22:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "id": "skorkhif",
+    "name": "Skorkhif",
+    "content_id": "ossein_cage",
+    "content_name": "Ossein Cage",
+    "location": "Ossein Cage",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is the author of a personal note."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Vault of Agony: Enter the Ossein Cage and destroy a nefarious relic for the Fighters Guild."
+    ],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "summary": "Skorkhif is a Xivkyn torturer found in the Ossein Cage. He specializes in flame magic, and his partner is Blazeforged Valneer.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Skorkhif",
+        "page_title": "Online:Skorkhif",
+        "revision_id": 3526899,
+        "retrieved_at": "2026-08-12T05:33:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,79 @@
+{
+    "id": "the_mage_celestial",
+    "name": "The Mage (Celestial)",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Aetherian Archive\nInfinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chain Lightning",
+            "description": "Basic ranged attack dealing extremely high shock damage that arcs up to 8 other players. It is advised that ranged dps stand on the outside of the stone circle while melee dps stand on the Mage as to reduce the chance of chain lightning spreading."
+        },
+        {
+            "name": "Conjured Mines",
+            "description": "The Mage summons Daedric Mines-like areas dealing high magic damage in an area when stepped on."
+        },
+        {
+            "name": "Black Hole",
+            "description": "The Mage summons an expanding area containing the starry void dealing continuous direct high frost damage to targets inside. Multiple Black Holes can be up at a time."
+        },
+        {
+            "name": "Cosmic Impact",
+            "description": "Mono-target attack dealing high physical damage."
+        },
+        {
+            "name": "Summon Conjured Reflection",
+            "description": "The Mage will summon a Conjured Reflection, which looks like a miniature-sized version of herself. These reflections will periodically damage the four closest players so burn them down as soon as they are summoned."
+        },
+        {
+            "name": "Conjure Axe",
+            "description": "The Mage will summon a Conjured Axe which will begin to deal damage to one person in the group. It is advised that the tank taunts these axes when they're spawned and brings far away from the group. The area the group ended up after taking the teleportation pads to the tower's summit (the rock platform opposite of where the Mage was meditating before you killed the Firstmages she had turned on you) is a good spot. The tank must hold these axes in place and keep them taunted so they do not kill the other group members. On veteran difficulty, they all but one-shot most party members."
+        },
+        {
+            "name": "Arcane Vortex/StarEndPhase",
+            "description": "When reaching (?)% The Mage will slam her staff down on the ground five times. When she does this, the group must roll dodge into the middle as close to The Mage as possible. Each slam knocks down all targets. After the fifth hit from her staff, she will begin channeling a devastating spell dealing continuous direct moderate-high flame damage to all targets and that will destroy your group if she is not killed fast enough. Focus all damage on The Mage and burn her down to avoid the one-hit kill explosion."
+        },
+        {
+            "name": "Unstable Explosion",
+            "description": "The Mage's Storm Atronachs (which are spawned every ten to twenty seconds or so on hard mode) will enter execute phase when they reach 20% health, and begin spraying lightning everywhere. This attack is similar to Stormfist's enrage mechanic. For easy burning, the main tank should pull every atronach to the middle on the mage as soon as they are noticed. These storm atronachs must be focused by the stamina dps to be brought down as soon as possible when they reach 20%. They have a total of 2,875,839 health each."
+        },
+        {
+            "name": "Meteor",
+            "description": "Meteors will constantly fall on the arena during hard mode, causing circular AoEs to appear on the ground and dealing high flame damage. Do not take your chances with rolling, as you either may not make it, or risk roll-dodging off the cliff and into the void."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Hard Mode Mechanics:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "As a constellation, the Mage is usually referred to as male.",
+        "Early concept art shows that the Mage was originally planned to be Ius, the God of Animals."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Shattered and the Lost: Investigate two Altmer claiming to be aspects of the Mage.",
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent."
+    ],
+    "achievements": [],
+    "summary": "The Mage is the embodiment of the Mage Constellation. She appears as a large sorceress wearing a celestial-styled mask. The Firstmages refer to her as the Learned One. By corrupting her Apex Stone, the Serpent drove the Mage into a physical form, where it split her into five aspects to corrupt them one by one. While the Serpent managed to corrupt one aspect now only known as the Lost One, Mahlia and Faryan have gone into hiding in the dungeons of Rkundzelft and Hircine's Haunt, respectively. The remaining two aspects, Ahlora and Valla, went to Belkarth to get the support of the Star-Gazers in stopping the Serpent's plans. During The Shattered and the Lost, you are tasked with investigating whether they are really aspects of the Mage, and how to help them in their endeavor. After you locate all the aspects, they reunite with the Lost One to once again become the Mage. Still suffering from the Serpent's corruption of the Lost One, the Mage has withdrawn to the upper levels of the Aetherian Archive to contain the damage she causes.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Mage_(Celestial)",
+        "page_title": "Online:The Mage (Celestial)",
+        "revision_id": 3356812,
+        "retrieved_at": "2026-08-12T05:31:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

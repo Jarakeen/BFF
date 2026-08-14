@@ -1,0 +1,20 @@
+{
+    "id": "the_hideaway",
+    "name": "The Hideaway",
+    "content_type": "dungeon",
+    "summary": "The Hideaway is a hidden base that serves as a heist location. You'll be taken here by Fa'ren-dar during the related quest. It can be inhabited by several factions, including the Dark Witnesses, the Legion of the West Weald, and Khajiit Smugglers. Possible bosses that may appear near the exit include The Highland Lion, The Ratcatcher, and The Shade-Witch of Mournoth.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Scouting Report: The Hideaway has a bit of information about this location."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Hideaway",
+        "page_title": "Online:The Hideaway",
+        "revision_id": 3579051,
+        "retrieved_at": "2026-08-12T21:25:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

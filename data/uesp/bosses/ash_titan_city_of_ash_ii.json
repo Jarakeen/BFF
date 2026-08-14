@@ -1,0 +1,63 @@
+{
+    "id": "ash_titan_city_of_ash_ii",
+    "name": "Ash Titan (City of Ash II)",
+    "content_id": "city_of_ash_ii",
+    "content_name": "City of Ash II",
+    "location": "City of Ash, Knives of Discord",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,002,427",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lava Bolt",
+            "description": "A basic ranged attack that deals minor flame damage. This attack will hit anyone standing in front of the boss (not just the tank) so players are advised to keep behind the boss if possible."
+        },
+        {
+            "name": "Ethereal Flame",
+            "description": "Getting hit by Lava Bolt will cause a flame AOE to appear under you dealing moderate flame damage over time."
+        },
+        {
+            "name": "Monstrous Cleave",
+            "description": "The boss swings its arm dealing high flame damage and knockback to all enemies in front of it as indicated by a red cone."
+        },
+        {
+            "name": "Molten Rain",
+            "description": "The boss shoots flame in the air causing fireballs to rain down on players and the general area dealing moderate flame damage as indicated by red circles. Some of the fireballs are unavoidable, and so players should be ready to shield up or heal up once the attack occurs."
+        },
+        {
+            "name": "Fire Swarm",
+            "description": "The boss flaps its wings knocking back nearby players. Following that the boss releases waves of flame that deal high flame damage and stunning any players hit. Stay far away from the boss during this to avoid being hit. If you are hit, break free immediately so you can avoid any other incoming waves."
+        },
+        {
+            "name": "Summon Air Atronach",
+            "description": "At 60 and 30% health, the boss becomes invulnerable and walks to a nearby pad to activate an Air Atronach to attack the party. The atronachs will continuously spin and chase a target. A common strategy is to have the tank taunt the atronachs as they spawn and kite them around the edge of the arena while the rest of the group kills the boss. Alternatively, it is also possible to kill the atronach first before killing the boss, although this will take longer."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Return to Ash: Enter the Deadlands to rescue a failed invasion force."
+    ],
+    "summary": "The Ash Titan is Daedric Titan which serves Mehrunes Dagon and has been imbued with destructive flame. It serves as a guardian for Valkyn Skoria and is a boss for the City of Ash II. It may drop the unique Splitting Axe of the Titan, part of the Sunderflame set.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ash_Titan_(City_of_Ash_II)",
+        "page_title": "Online:Ash Titan (City of Ash II)",
+        "revision_id": 3023796,
+        "retrieved_at": "2026-08-12T21:17:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

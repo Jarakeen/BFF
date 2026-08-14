@@ -1,0 +1,38 @@
+{
+    "id": "daedra",
+    "name": "Daedra",
+    "content_id": "elden_hollow_i",
+    "content_name": "Elden Hollow I",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Daedra were originally particularly vulnerable to Fighters Guild abilities. This was later removed in Update 31."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Daedra are immortal creatures from the planes of Oblivion. There are many variations, which can be categorized into two subtypes— Atronachs and Humanoids—along with other lesser daedra. For historical information, see the lore article. Blessed Sentinels",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Daedra",
+        "page_title": "Online:Daedra",
+        "revision_id": 3600432,
+        "retrieved_at": "2026-08-12T21:20:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

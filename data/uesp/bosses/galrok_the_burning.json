@@ -1,0 +1,81 @@
+{
+    "id": "galrok_the_burning",
+    "name": "Galrok the Burning",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fiery Surge",
+            "description": "A basic ranged attack that deals moderate flame damage and applies/refreshes \"Scorch\"."
+        },
+        {
+            "name": "Scorch",
+            "description": "Deals moderate damage over 4 seconds."
+        },
+        {
+            "name": "Flame Wave",
+            "description": "Galrok does a cone fire breath attack dealing moderate flame damage."
+        },
+        {
+            "name": "Pillar Eruption",
+            "description": "Galrok summons red spikes from the ground, indicated by red circles, each dealing moderate flame damage."
+        },
+        {
+            "name": "Pillar of Nirn",
+            "description": "Standing in the circles from Pillar Eruption deals additional continuous moderate flame damage."
+        },
+        {
+            "name": "Pillar Explosion",
+            "description": "The spikes explode after a short while, dealing moderate flame damage."
+        },
+        {
+            "name": "Brimstone Hailfire",
+            "description": "Galrok summons a large flaming pool at a target's location, indicated by a very large red circle, dealing continuous moderate flame damage and continuously snaring for 2 seconds targets inside. This ability also summons 3 Flame Hounds."
+        },
+        {
+            "name": "Ram",
+            "description": "Galrok charges in a straight line, dealing moderate-high physical damage and knocking down targets hit. Blocking will negate the knockdown."
+        },
+        {
+            "name": "Molten Armor",
+            "description": "Galrok covers itself in magical armor, granting itself a damage shield as well as increasing its outgoing damage for about 25 seconds."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Galrok the Burning is a minotaur who serves as one of the champions of Silorn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Galrok_the_Burning",
+        "page_title": "Online:Galrok the Burning",
+        "revision_id": 3263107,
+        "retrieved_at": "2026-08-12T21:34:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

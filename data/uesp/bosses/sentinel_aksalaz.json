@@ -1,0 +1,193 @@
+{
+    "id": "sentinel_aksalaz",
+    "name": "Sentinel Aksalaz",
+    "content_id": "black_drake_villa",
+    "content_name": "Black Drake Villa",
+    "location": "Black Drake Villa — Black Drake Athenaeum",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "2,700,000",
+        "hardmode": "15,975,836"
+    },
+    "abilities": [
+        {
+            "name": "Axe Swing",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "Sentinel Aksalaz rears his axe and strikes hard, dealing massive physical damage and knocking you back. This attack can be blocked."
+        },
+        {
+            "name": "Storm Swing",
+            "description": "Sentinel Aksalaz cleaves with his axe, sending out three small ice storms forward, indicated by small circular AoEs, dealing high frost damage and snaring you."
+        },
+        {
+            "name": "Frost Eruption",
+            "description": "Sentinel Aksalaz curls up into himself as he prepares to unleash a large explosion, as a circular AoE slowly fills almost the entirety of the arena, dealing massive frost damage and imprisoning all targets hit in a block of ice which stuns them."
+        },
+        {
+            "name": "Roving Storms",
+            "description": "Occasionally, Sentinel Aksalaz will summon ice storms that will circle the outer edge of the arena, indicated by circular AoEs, dealing high frost damage."
+        },
+        {
+            "name": "(?)",
+            "description": "Sentinel Aksalaz plunges his battle-axe in the ground which creates areas of ice under targets feet every half second that deal continuous high frost damage and snares targets inside. You should keep moving while in this attack."
+        },
+        {
+            "name": "Aspect of Frost",
+            "description": "A large area under every player slowly fills. When filled everyone inside those zones are dealt high frost damage, knocked down and stunned. If blocked you don't get crowd control."
+        },
+        {
+            "name": "Summon Avatar",
+            "description": "At 75%, Sentinel Aksalaz summons a weaker version of the Avatar of Zeal. At 55%, the same with the Avatar of Vigor. And finally at 30%, the Avatar of Fortitude."
+        },
+        {
+            "name": "Summon Frostkin",
+            "description": "Throughout the fight, weak Frostkin will appear in the arena to assist Sentinel Aksalaz."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Voice on the Wind",
+            "line": "Find me mortal. Free me.",
+            "trigger": "When a player transforms into an Ice Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "I shall watch how you use my power.",
+            "trigger": "When a player transforms into an Ice Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "Could you be my freedom?",
+            "trigger": "When a player transforms into an Ice Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "Do you even know what you seek?",
+            "trigger": "When a player transforms into an Ice Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "A step even closer to my release.",
+            "trigger": "When a player transforms into an Ice Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "Who brings me forth after an eternity?",
+            "trigger": "After defeating his first Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "You accept my might … but are you worthy of it?",
+            "trigger": "After defeating his second Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Voice on the Wind",
+            "line": "The circle is complete. Your final test awaits.",
+            "trigger": "After defeating his third Avatar",
+            "ability": "Summon Avatar"
+        },
+        {
+            "speaker": "Sentinel Aksalaz",
+            "line": "Through your wisdom, you have earned the right to challenge me. I shall not go easy.",
+            "trigger": "After touching his last Avatar Artifact, causing him to appear and challenge you",
+            "ability": "Summon Avatar"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When a player transforms into an Ice Avatar": [
+            {
+                "speaker": "Voice on the Wind",
+                "line": "Find me mortal. Free me.",
+                "trigger": "When a player transforms into an Ice Avatar",
+                "ability": "Summon Avatar"
+            },
+            {
+                "speaker": "Voice on the Wind",
+                "line": "I shall watch how you use my power.",
+                "trigger": "When a player transforms into an Ice Avatar",
+                "ability": "Summon Avatar"
+            },
+            {
+                "speaker": "Voice on the Wind",
+                "line": "Could you be my freedom?",
+                "trigger": "When a player transforms into an Ice Avatar",
+                "ability": "Summon Avatar"
+            },
+            {
+                "speaker": "Voice on the Wind",
+                "line": "Do you even know what you seek?",
+                "trigger": "When a player transforms into an Ice Avatar",
+                "ability": "Summon Avatar"
+            },
+            {
+                "speaker": "Voice on the Wind",
+                "line": "A step even closer to my release.",
+                "trigger": "When a player transforms into an Ice Avatar",
+                "ability": "Summon Avatar"
+            }
+        ],
+        "After defeating his first Avatar": [
+            {
+                "speaker": "Voice on the Wind",
+                "line": "Who brings me forth after an eternity?",
+                "trigger": "After defeating his first Avatar",
+                "ability": "Summon Avatar"
+            }
+        ],
+        "After defeating his second Avatar": [
+            {
+                "speaker": "Voice on the Wind",
+                "line": "You accept my might … but are you worthy of it?",
+                "trigger": "After defeating his second Avatar",
+                "ability": "Summon Avatar"
+            }
+        ],
+        "After defeating his third Avatar": [
+            {
+                "speaker": "Voice on the Wind",
+                "line": "The circle is complete. Your final test awaits.",
+                "trigger": "After defeating his third Avatar",
+                "ability": "Summon Avatar"
+            }
+        ],
+        "After touching his last Avatar Artifact, causing him to appear and challenge you": [
+            {
+                "speaker": "Sentinel Aksalaz",
+                "line": "Through your wisdom, you have earned the right to challenge me. I shall not go easy.",
+                "trigger": "After touching his last Avatar Artifact, causing him to appear and challenge you",
+                "ability": "Summon Avatar"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "This article is about the boss in Black Drake Villa. For the boss in the Infinite Archive, see Sentinel Aksalaz (Infinite Archive). Sentinel Aksalaz is a race? and the final secret boss of Black Drake Villa. The nature of the Sentinel is shrouded in mystery, one of the few details being his eternal duty to test and kill those who seek him, and that falling in battle to worthy opponents will finally grant him freedom. To face him, your group must defeat the three other optional bosses, the Avatars of Zeal, Vigor, and Fortitude, in addition to the main three boss encounters. Furthermore, each player must collect at least 25 Avatar Fragments, found throughout the dungeon. Each player can only see the fragments that only they can collect. If your group fulfills these requirements, each player then needs to activate the Avatar Artifact found at the side of the Athenaeum, which will summon Sentinel Aksalaz in the central pit. Throughout various points in the dungeon, you can temporarily take on the Sentinel's form by going to the marked pads and activating them, which will allow you to use his ice ability and freeze opponents in place. This is the effect of the Relic of the Sentinel tool.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sentinel_Aksalaz",
+        "page_title": "Online:Sentinel Aksalaz",
+        "revision_id": 3195542,
+        "retrieved_at": "2026-08-12T21:14:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

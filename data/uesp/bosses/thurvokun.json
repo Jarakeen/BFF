@@ -1,0 +1,63 @@
+{
+    "id": "thurvokun",
+    "name": "Thurvokun",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "Bone Dragon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,594,564",
+        "hardmode": "5,427,792"
+    },
+    "abilities": [
+        {
+            "name": "Icy Bolt",
+            "description": "A basic ranged attack that deals moderate frost damage."
+        },
+        {
+            "name": "Biting Cold",
+            "description": "Getting hit by Icy Bolt applies a moderate frost damage over time."
+        },
+        {
+            "name": "Cold Snap",
+            "description": "The boss swings its tail dealing moderate frost damage and knocking back all players hit in front of it as indicated by three large cones. This attack can be easily avoided by standing in the gaps between cones. Roll dodging will also negate the damage and knockback."
+        },
+        {
+            "name": "Bilious Blight",
+            "description": "A large expanding AOE that is placed beneath the boss that deals high disease damage over time. Stay out of it."
+        },
+        {
+            "name": "Revolting Scarab",
+            "description": "The boss targets the tank with a projectile that does very high disease damage in a small AOE around the target, as well as summoning two Giant Scarabs to attack the party. This attack must be dodged if possible. The party should also kill the Giant Scarabs as soon as possible, as once they touch the tank they will cast Degenerative Acid. This attack deals minor poison damage over time but reduces the tank's defenses significantly."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Thurvokun was originally mentioned in Arena as part of the Fang Lair quest (\"Legend has it that a Great Wyrm drove the Dwarves from their home in the Dragon's Teeth, and took the Lair for itself.\"), making him the first dragon mentioned in the whole series. However, he was not given a name at the time.",
+        "Thurvokun may translate to \"Overlord-Opposite-Moonlight\" or \"Overlord Shadow\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "This article is about the creature. For the item set, see Thurvokun (set). Thurvokun is a long-dead Dragon who once dwelled in the Dwarven ruin of Fang Lair. The necromancer Orryn the Black has discovered his remains there and is attempting to resurrect him. At the end of the dungeon, he will succeed in doing so and Thurvokun's undead skeleton must be fought. In life his Dragon Priest was Zaan the Scalecaller, though he later abandoned her and the Dragon Cult to go to Arkngthamz-Phng and drive the Dwemer from it so he could inhabit it in isolation. He was one of the few dragons to have survived the Dragon War, until the adventurers Caluurion, Sabina Cedus, and Ulfnor slew him in the late First Era.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Thurvokun",
+        "page_title": "Online:Thurvokun",
+        "revision_id": 3606995,
+        "retrieved_at": "2026-08-12T21:22:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "id": "the_warrior_celestial",
+    "name": "The Warrior (Celestial)",
+    "content_id": "hel_ra_citadel",
+    "content_name": "Hel Ra Citadel",
+    "location": "The Warrior's Hall, Hel Ra Citadel\nInfinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Early concept art shows that the Warrior was originally planned to be Ebonarm, the God of War."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Assaulting the Citadel: Launch an attack on the Celestial Warrior's stronghold."
+    ],
+    "achievements": [],
+    "summary": "This article is about the enemy in Hel Ra Citadel. For the friendly version, see The Celestial Warrior. The Warrior is one of the three guardian signs who protect Tamriel from the Celestial Serpent. However, before the events of Craglorn, the Serpent corrupted the Mage and the Warrior, turning them against Tamriel and into agents of chaos. The Warrior resembles a large soldier with a Yokudan mask. He is encountered throughout the Hel Ra Citadel, and is the final enemy of the trial. In it, he is fought in his stone-like Anka-Ra form within the Hall of the Warrior, the final chamber. Upon defeat, he will turn into a pile of dust and speak to The Thief, saying he is free from the Serpent's control. He is also encountered in the Infinite Archive as a maligraphy.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Warrior_(Celestial)",
+        "page_title": "Online:The Warrior (Celestial)",
+        "revision_id": 3356773,
+        "retrieved_at": "2026-08-12T05:32:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

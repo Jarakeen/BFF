@@ -1,0 +1,30 @@
+{
+    "id": "pulk",
+    "name": "Pulk",
+    "content_type": "dungeon",
+    "summary": "Pulk is a delve found in the Grazelands region of Vvardenfell, south of Vos, containing bandits and nix-hounds. Pulk's cave network is currently being used as a hideout by a bandit gang led by Bralsa Inlador. These bandits have targeted the nearby settlements of Molag Mar, Sadrith Mora, and Vos, and you may be sent here on a Hall of Justice to recover stolen taxes and prevent the bandits from pulling off even more heists. Othuk's Hideout can be found in the back of the delve during A Madcap Mystery, through a hidden door behind the waterfall.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Pulk also appears in TES III: Morrowind.",
+        "Prior to Update 16, you could be sent to Pulk to track down Bulag Idolus (found hiding on the lower levels) as part of the deprecated quest A Friend In Need.",
+        "The bandits have attempted and partially succeeded at taming the resident nix-hounds of the cavern. However as a result, several of them are found in a wounded state, holding their ribs, which makes them slower to draw their weapons when initiating combat."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pulk",
+        "page_title": "Online:Pulk",
+        "revision_id": 3605621,
+        "retrieved_at": "2026-08-12T21:31:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

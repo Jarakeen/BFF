@@ -1,0 +1,73 @@
+{
+    "id": "cold_flame_atronach",
+    "name": "Cold-Flame Atronach",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "The Black Forge, Outside the Library of Dusk",
+    "species": "Flame Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flare",
+            "description": "A basic ranged attack that deals minor flame damage."
+        },
+        {
+            "name": "Radiance",
+            "description": "The atronach surrounds itself in an aura of flames, dealing continuous low flame damage to all nearby targets."
+        },
+        {
+            "name": "Lava Geyser",
+            "description": "The atronach summons a pillar of flame from the ground at its target's location, indicated by a red circle, dealing moderate flame damage."
+        },
+        {
+            "name": "Combustion",
+            "description": "When defeated, the atronach explodes, indicated by a growing red circle, dealing moderate flame damage to targets caught in the blast."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Cold Flame Atronach Wolf is an atronach bound in the form of a wolf for use as a mount.",
+        "Dark Anchors/Dark Fissures",
+        "The Chill Hollow",
+        "Village of the Lost",
+        "Vaults of Madness",
+        "Garrison defense in the Imperial City's Nobles District",
+        "Prison of Xykenaz",
+        "Summoned by Dremora Harstryl",
+        "The Land Sundered from Tamriel",
+        "Gorne",
+        "Underground Sanctum",
+        "The Earth Forge",
+        "Soul Reapers",
+        "All Solstice locations",
+        "Flame Atronachs in the following locations are cold-flame blue but are not labeled as such:"
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Valley of Blades: Retrieve the Ring of Stendarr's Mercy from the Valley of Blades.",
+        "Vanus Unleashed: Prevent the Daedra from using Galerion's essence to power the Planemeld."
+    ],
+    "summary": "Cold-Flame Atronachs are the freezing opposite of their better-known cousins, the flame atronach. They serve as sentries in Coldharbour where one would expect to find a normal flame atronach. A book has been written on the subject. Friendly cold-flame atronachs can be summoned in Oathsworn Pit, while fighting Grubduthag Many-Fates.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cold-Flame_Atronach",
+        "page_title": "Online:Cold-Flame Atronach",
+        "revision_id": 3566886,
+        "retrieved_at": "2026-08-12T21:38:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

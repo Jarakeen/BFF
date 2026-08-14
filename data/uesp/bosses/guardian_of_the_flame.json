@@ -1,0 +1,39 @@
+{
+    "id": "guardian_of_the_flame",
+    "name": "Guardian of the Flame",
+    "content_id": "direfrost_keep",
+    "content_name": "Direfrost Keep",
+    "location": "Direfrost Keep",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Nobles' Rest: Release an ancient fortress from the grasp of a witch.",
+        "Pledge: Direfrost Keep: Prove you are truly Undaunted by clearing Direfrost Keep."
+    ],
+    "summary": "The Guardian of the Flame is a powerful Draugr which guards the Direfrost Flame within Direfrost Keep.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Guardian_of_the_Flame",
+        "page_title": "Online:Guardian of the Flame",
+        "revision_id": 2208171,
+        "retrieved_at": "2026-08-12T21:20:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "deadhollow_halls",
+    "name": "Deadhollow Halls",
+    "content_type": "dungeon",
+    "summary": "Deadhollow Halls are Daedric ruins that serve as a heist location. You'll be taken here by Fa'ren-dar during the related quest. It is possible for the Maulborn, a group of Outlaws or the Stonefire Cult to be located here. A scouting report has been written on the location.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "There are no treasures in the hidden rooms."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Deadhollow_Halls",
+        "page_title": "Online:Deadhollow Halls",
+        "revision_id": 3606680,
+        "retrieved_at": "2026-08-12T21:19:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

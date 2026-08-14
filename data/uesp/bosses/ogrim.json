@@ -1,0 +1,55 @@
+{
+    "id": "ogrim",
+    "name": "Ogrim",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "Black Garrison, Near the Chancel of Divine Entreaty, Dark Anchors, Eidolon's Hollow, Falinesti Summer Site, The Foundry of Woe, Obsidian Scar, Sanguine's Demesne, Tower of Lies\nColdwind's Den",
+    "species": "Ogrim",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "An Ambition Fulfilled: Help a daedra, banned from Coldharbour, get smuggled into the realm.",
+        "Betnihk's Boon: Prove your strength to the Seamount Clan during New Life.",
+        "Crossing the Chasm: Secure the Chasm and gain access to Molag Bal's personal domain.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Daughter of Giants: Rescue Lyris Titanborn from her Coldharbour prison.",
+        "Getting the Band Together: Liven up the Jester's Festival with a Daedric concert.",
+        "The Judgment of Veloth: Confront Magistrix Vox and end her plot.",
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "The Prisoner of Jathsogur: Free the Silvenar from the Drublog ritual.",
+        "Rites of the Sul-Xan: Defeat the Sul-Xan ritualists and rescue the captives.",
+        "Soul Shriven in Coldharbour: Escape from the depths of Coldharbour.",
+        "Truth, Lies, and Prisoners: Jump into a deep pit and help rescue the prisoners there.",
+        "Will of the Council: Enter Coldharbour and destroy the Mortuum Vivicus."
+    ],
+    "summary": "Ogrim are enormous Daedra with very little intellect. They are sent into the mortal world to menace living things for the amusement of Daedric Princes, and are primarily associated with Malacath.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ogrim",
+        "page_title": "Online:Ogrim",
+        "revision_id": 3607882,
+        "retrieved_at": "2026-08-12T21:14:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

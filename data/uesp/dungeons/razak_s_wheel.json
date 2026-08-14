@@ -1,0 +1,28 @@
+{
+    "id": "razak_s_wheel",
+    "name": "Razak's Wheel",
+    "content_type": "dungeon",
+    "summary": "Razak's Wheel is a Dwemer ruin in Bangkorai. The ruins have recently become occupied by the invading Seventh Legion, who are looking to find a way to crack the vault inside. Beetles, lizards, rats and scorpions are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "There are a large number of Dwarven urns to be looted."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Razak%27s_Wheel",
+        "page_title": "Online:Razak's Wheel",
+        "revision_id": 3513306,
+        "retrieved_at": "2026-08-12T21:31:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

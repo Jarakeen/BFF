@@ -1,0 +1,71 @@
+{
+    "id": "shambleback",
+    "name": "Shambleback",
+    "content_id": "spire_of_the_crimson_coin",
+    "content_name": "Spire of the Crimson Coin",
+    "location": "Spire of the Crimson Coin",
+    "species": "Flesh Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw",
+            "description": "A basic melee attack with its mace arm that deals minor physical damage."
+        },
+        {
+            "name": "Stomp",
+            "description": "A melee attack by stomping the ground with its foot, which deals moderate physical damage."
+        },
+        {
+            "name": "Fire Brand",
+            "description": "The flesh atronach swings its torch hand, as indicated by a red cone, dealing moderate flame damage to its target."
+        },
+        {
+            "name": "Unyielding Mace",
+            "description": "The flesh atronach slams its mace fist on its target, dealing moderate physical damage and stunning them. It also applies a \"Bleeding\" effect, dealing minor bleed damage over time, and a snaring effect for 8 seconds both. This attack can be blocked to prevent the stun (but not the bleeding and snare) and to set the flesh atronach off-balance."
+        },
+        {
+            "name": "Toxic Slam",
+            "description": "Similar to \"Unyielding Mace\", Shambleback slams its mace fist on its target, dealing high physical damage and stunning them. This attack can be blocked to prevent the stun and to stagger Shambleback. Regarless if it is blocked or not, \"Lingering Toxicity\" is cast."
+        },
+        {
+            "name": "Lingering Toxicity",
+            "description": "Two poisonous areas appear under the target hit which deal continuous moderate poison damage. These disappear after some time but Shambleback often casts this ability so the arena can be quickly filled with those poisonous areas."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Shambleback uses the old flesh atronach skin."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Shambleback is a powerful flesh atronach boss found inside the Spire of the Crimson Coin public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shambleback",
+        "page_title": "Online:Shambleback",
+        "revision_id": 3219574,
+        "retrieved_at": "2026-08-12T21:35:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "isle_of_joys",
+    "name": "Isle of Joys",
+    "content_type": "dungeon",
+    "summary": "The Isle of Joys is an abandoned retreat of the Longhouse Emperors in the Deadlands. It was used as a Daedric hunting grounds by them, and those Daedra still roam the area to this day. Crumbling Imperial ruins dot the landscape. It is accessed via an Oblivion portal located at the top of the Traitor's Ascent, which only becomes active during the related quest. A Battered Map is found here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The isle previously appeared in Battlespire as Dagon's Hunting Lodge."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Isle_of_Joys",
+        "page_title": "Online:Isle of Joys",
+        "revision_id": 3550292,
+        "retrieved_at": "2026-08-12T21:26:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

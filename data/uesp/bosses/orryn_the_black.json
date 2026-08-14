@@ -1,0 +1,43 @@
+{
+    "id": "orryn_the_black",
+    "name": "Orryn the Black",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "",
+    "reaction": "Hostile\nFriendly (In projections before fighting him)",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "",
+        "hardmode": "3,993,959"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "He drops more samples if defeated in Veteran Hard mode."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He wears a Temple Spike Torc."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "Orryn the Black is a Nord necromancer found in Fang Lair. He is the leader of the Blackmarrow Cult and is trying to reanimate the skeleton of the long-dead dragon Thurvokun. During the battle with Thurvokun, he will initially be summoning thralls and casting spells from the sidelines, but after Thurvokun's defeat he will merge with the dragon's bones and fight you. Once defeated in his dragon form, Orryn is guaranteed to drop a sample of Dragon Bone. He drops more samples if defeated in Veteran Hard mode.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Orryn_the_Black",
+        "page_title": "Online:Orryn the Black",
+        "revision_id": 3163148,
+        "retrieved_at": "2026-08-12T21:22:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

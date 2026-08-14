@@ -1,0 +1,68 @@
+{
+    "id": "shadowrend",
+    "name": "Shadowrend",
+    "content_id": "the_banished_cells_i",
+    "content_name": "The Banished Cells I",
+    "location": "The Banished Cells I",
+    "species": "Clannfear",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,007,499",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Spiked Headbutt",
+            "description": "A basic melee attack that does moderate physical damage."
+        },
+        {
+            "name": "Tail Smite",
+            "description": "The clannfear swings its tail dealing high physical damage around itself as indicated by a red circle. This attack will also stun the player briefly."
+        },
+        {
+            "name": "Summon Shadow Proxy",
+            "description": "The boss summons a clone of itself that attacks the group. This clone has little health and should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Pounce",
+            "description": "The boss jumps on a player and pins them down, dealing moderate physical damage. The player will be stunned for a moderate time after this. This attack is only used against players standing far away from Shadowrend."
+        },
+        {
+            "name": "Feeding",
+            "description": "While on top of the player, the boss feeds on them to heal itself up. This also deals moderate physical damage over time to the player. To escape this, the player can break free; allies can also interrupt the boss to free their allies."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Banishing the Banished: Help imprison the spirit of an evil Altmer.",
+        "Pledge: Banished Cells I: Explore the Banished Cells I and return Undaunted."
+    ],
+    "summary": "This article is about the clannfear. For the set, see Shadowrend (set). Shadowrend is a shadowy clannfear encountered in the Banished Cells I. It is the namesake of the Shadowrend set, but does not drop any set pieces.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shadowrend",
+        "page_title": "Online:Shadowrend",
+        "revision_id": 3139230,
+        "retrieved_at": "2026-08-12T21:13:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

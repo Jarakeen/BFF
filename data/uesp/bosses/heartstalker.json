@@ -1,0 +1,39 @@
+{
+    "id": "heartstalker",
+    "name": "Heartstalker",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Selene's Web",
+    "species": "Senche",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "78,586",
+        "veteran": "225,562",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web."
+    ],
+    "summary": "Heartstalker is one of Longclaw's senche. After she is killed, she will be raised as a Senche Spirit.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Heartstalker",
+        "page_title": "Online:Heartstalker",
+        "revision_id": 2937197,
+        "retrieved_at": "2026-08-12T21:33:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

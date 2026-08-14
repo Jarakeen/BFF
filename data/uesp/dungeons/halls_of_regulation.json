@@ -1,0 +1,31 @@
+{
+    "id": "halls_of_regulation",
+    "name": "Halls of Regulation",
+    "content_type": "dungeon",
+    "summary": "This article is about the place. For the quest, see The Halls of Regulation. The Halls of Regulation is a malfunctioning water treatment facility in the eastern Clockwork City. Skeevatons can be seen scurrying through the halls.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "clockwork_city_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Halls of Regulation also appears in Legends.",
+        "After killing Dancing and Firepot Spiders near tunnels in the halls of the delve, the nearby tunnel will emit a noise and release an overcharged Firepot Spider that will charge and explode at you.",
+        "Some of the Firepot Spiders found inside are already overcharged when encountered.",
+        "Unlike in most other locations, the skeevatons inside the delve actively flee from you if you get close."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Halls_of_Regulation",
+        "page_title": "Online:Halls of Regulation",
+        "revision_id": 3585451,
+        "retrieved_at": "2026-08-12T21:25:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

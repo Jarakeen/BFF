@@ -1,0 +1,43 @@
+{
+    "id": "hel_ra_citadel",
+    "name": "Hel Ra Citadel",
+    "content_type": "dungeon",
+    "summary": "Hel Ra Citadel is an ancient Yokudan fortress in southwestern Craglorn. It has been taken over by The Warrior and his Anka-Ra armies, having been corrupted by The Serpent. Hel Ra Citadel Hard Mode can be triggered by entering the Veteran version of the trial and destroying the statues in the room before the Warrior's chamber. Completing a full run of Veteran Hel Ra Citadel will reward 12 Undaunted Plunder worth 12000 gold total (2 from Ra Kotu, 2 from Yokeda Kai or Yokeda Rok'dun, and 8 from The Warrior). You will receive a Star-Studded Champion's Baldric for defeating The Warrior with hard mode active.",
+    "location": "",
+    "boss_ids": [
+        "ra_kotu",
+        "air_atronach",
+        "yokeda_kai",
+        "yokeda_rok_dun",
+        "the_warrior_celestial",
+        "celestial"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This trial scales to the Champion Points of the group leader, to a maximum of 160.",
+        "Hel Ra Citadel originally scaled to 12 and had no Normal mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hel_Ra_Citadel",
+        "page_title": "Online:Hel Ra Citadel",
+        "revision_id": 3205407,
+        "retrieved_at": "2026-08-12T05:32:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

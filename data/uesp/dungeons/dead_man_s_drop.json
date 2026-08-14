@@ -1,0 +1,28 @@
+{
+    "id": "dead_man_s_drop",
+    "name": "Dead Man's Drop",
+    "content_type": "dungeon",
+    "summary": "Dead Man's Drop is a mine in eastern Malabal Tor, on the shore east of Fuller's Break containing Ra Gada pirates. They are led by Captain Shammin. Centipedes, rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The book Dead Man's Drop, found in the Velyn Harbor Mages Guild, marks this location on your map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dead_Man%27s_Drop",
+        "page_title": "Online:Dead Man's Drop",
+        "revision_id": 3598321,
+        "retrieved_at": "2026-08-12T21:19:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "sanctuary_of_whispers",
+    "name": "Sanctuary of Whispers",
+    "content_type": "dungeon",
+    "summary": "The Sanctuary of Whispers is an old, hidden sanctuary of the followers of the Webspinner. It can be found through a trapdoor in Mephala's Nest in the northern room. This area has two sections, a square chamber with ritual circle which opens a portal when activated. This leads to the second room which is considered the true sanctuary, and once held the Skein of Secrets, one of Mephala's Daedric Artifacts. In the first chamber, you can find A Dance Along the Webs on a table which is needed during the quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanctuary_of_Whispers",
+        "page_title": "Online:Sanctuary of Whispers",
+        "revision_id": 3513157,
+        "retrieved_at": "2026-08-12T21:32:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

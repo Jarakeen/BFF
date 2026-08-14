@@ -1,0 +1,115 @@
+{
+    "id": "executioner_jerensi",
+    "name": "Executioner Jerensi",
+    "content_id": "exiled_redoubt",
+    "content_name": "Exiled Redoubt",
+    "location": "Exiled Redoubt",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,704,769",
+        "veteran": "5,954,854",
+        "hardmode": "8,932,282"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Cato Albus",
+            "line": "Who dares interrupt? I cannot avenge my son without these deaths!",
+            "trigger": "When entering the Executioner's Chamber, she will execute several prisoners with her Spike Traps.",
+            "ability": null
+        },
+        {
+            "speaker": "Executioner Jerensi",
+            "line": "You'll die here like the rest of these dogs.",
+            "trigger": "When entering the Executioner's Chamber, she will execute several prisoners with her Spike Traps.",
+            "ability": null
+        },
+        {
+            "speaker": "Cato Albus",
+            "line": "Blaggards! Enemies of peace! Reprobates!",
+            "trigger": "Upon her defeat",
+            "ability": null
+        },
+        {
+            "speaker": "Cato Albus",
+            "line": "I do this for Caecilius. Nobles won't stop this war until they feel the pain of loss!",
+            "trigger": "Upon her defeat",
+            "ability": null
+        },
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "Caecilius? Oh no. I know why Cato started this.",
+            "trigger": "Upon her defeat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When entering the Executioner's Chamber, she will execute several prisoners with her Spike Traps.": [
+            {
+                "speaker": "Cato Albus",
+                "line": "Who dares interrupt? I cannot avenge my son without these deaths!",
+                "trigger": "When entering the Executioner's Chamber, she will execute several prisoners with her Spike Traps.",
+                "ability": null
+            },
+            {
+                "speaker": "Executioner Jerensi",
+                "line": "You'll die here like the rest of these dogs.",
+                "trigger": "When entering the Executioner's Chamber, she will execute several prisoners with her Spike Traps.",
+                "ability": null
+            }
+        ],
+        "Upon her defeat": [
+            {
+                "speaker": "Cato Albus",
+                "line": "Blaggards! Enemies of peace! Reprobates!",
+                "trigger": "Upon her defeat",
+                "ability": null
+            },
+            {
+                "speaker": "Cato Albus",
+                "line": "I do this for Caecilius. Nobles won't stop this war until they feel the pain of loss!",
+                "trigger": "Upon her defeat",
+                "ability": null
+            },
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "Caecilius? Oh no. I know why Cato started this.",
+                "trigger": "Upon her defeat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She wears the Deep Elf Executioner's Hood."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Undying Requiem: Help clear out Exiled Redoubt.",
+        "Pledge: Exiled Redoubt: Explore Exiled Redoubt and return Undaunted."
+    ],
+    "summary": "Executioner Jerensi is an Imperial executioner of House Albus serving as the first boss of Exiled Redoubt.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Executioner_Jerensi",
+        "page_title": "Online:Executioner Jerensi",
+        "revision_id": 3425948,
+        "retrieved_at": "2026-08-12T21:21:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

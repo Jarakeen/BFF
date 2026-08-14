@@ -1,0 +1,50 @@
+{
+    "id": "the_stonekeeper",
+    "name": "The Stonekeeper",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "Frostvault",
+    "species": "Dwarven Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,667,146",
+        "veteran": "2,963,349",
+        "hardmode": "5,334,028"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "The following attacks are added on hard mode.",
+            "The skeevaton phase for hard mode is also completely different:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Lock and Keystone: Search the depths of a Dwemer vault for a powerful artifact.",
+        "Pledge: Frostvault: Prove you are truly Undaunted by clearing Frostvault."
+    ],
+    "summary": "This article is about the creature. For the item set, see Stonekeeper. The Stonekeeper is a Dwarven Colossus that serves as the final boss of Frostvault, guarding one half of the Wrathstone. Due to having a shield active, it cannot be damaged unless both its Flame Bellows Gauntlet and Rotary Blades Gauntlet are destroyed, creating a period of time where it can be attacked until it repairs its arms. The Dwemer took extraordinary measures to keep the Wrathstone from the Ayleids, and the Stonekeeper is the last line of defense. Periodically, you and your group members will be tasked with controlling skeevatons to disable shock conveyors during the battle. Tharayya will provide helpful commentary during the battle to warn you of attacks.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Stonekeeper",
+        "page_title": "Online:The Stonekeeper",
+        "revision_id": 3387766,
+        "retrieved_at": "2026-08-12T21:23:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,45 @@
+{
+    "id": "infernium",
+    "name": "Infernium",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Ardent Hope, The Brandfire Reformatory, The Burn, Deadlight Citadel",
+    "species": "Infernium",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "An Infernium is seen caged in The Feral Gallery.",
+        "Inferniums and Skitterises both resemble Siege Crawlers, giant Daedric siege engines seen in Oblivion and Legends."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "Dangerous Business: Kill the Unmaker and retrieve Daedric treasures.",
+        "Deadlight: Invade a lost realm of Oblivion that serves as Sister Celdina's headquarters.",
+        "The Mind's Eye: Kill the Unmaker and place seeing stones in the Den of the Unmaker.",
+        "Unmaker's Hoard: Kill the Unmaker and retrieve Daedric equipment."
+    ],
+    "summary": "Inferniums are large centipede-like creatures that can be found in the Burn. They are often found in the presence of Skitteris, smaller forms of the infernium.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Infernium",
+        "page_title": "Online:Infernium",
+        "revision_id": 3553083,
+        "retrieved_at": "2026-08-12T21:32:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "id": "nord",
+    "name": "Nord",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Nords once conquered most of Tamriel, and as a result, feel a certain entitlement to rule. They broke the power of the Ayleids, nearly drove the High Elves out of High Rock, and conquered much of Resdayn, the precursor to Morrowind. The Nords are excellent with arms. They are quick to anger, boisterous, and strong. They are natural-born warriors who fight with an ecstatic ferocity that terrifies their enemies. For more information, see the main lore article. A list of all the Nords encountered in ESO can be found here.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nord",
+        "page_title": "Online:Nord",
+        "revision_id": 3090145,
+        "retrieved_at": "2026-08-12T21:28:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

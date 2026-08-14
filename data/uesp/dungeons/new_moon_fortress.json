@@ -1,0 +1,18 @@
+{
+    "id": "new_moon_fortress",
+    "name": "New Moon Fortress",
+    "content_type": "dungeon",
+    "summary": "The New Moon Fortress is a ruined citadel in the north of Southern Elsweyr. It has recently been occupied by the Order of the New Moon cult as their new headquarters. It is here that new recruits to the cult must pass their trials, overseen by Trial Master Zayri. Vinbaza guards the entrance to the fortress. While passing the trials, several New Moon Acolytes can be seen going to and from different sections of the fortress.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:New_Moon_Fortress",
+        "page_title": "Online:New Moon Fortress",
+        "revision_id": 3548076,
+        "retrieved_at": "2026-08-12T21:30:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

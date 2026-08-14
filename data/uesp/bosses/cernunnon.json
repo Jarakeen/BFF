@@ -1,0 +1,184 @@
+{
+    "id": "cernunnon",
+    "name": "Cernunnon",
+    "content_id": "falkreath_hold",
+    "content_name": "Falkreath Hold",
+    "location": "Falkreath Hold",
+    "species": "Bone Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,214,120",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Coldfire Blast",
+            "description": "A basic ranged attack that deals minor frost damage."
+        },
+        {
+            "name": "Clash of Bones",
+            "description": "A charged heavy melee attack that deals very high physical damage and knocking the target back. This must be blocked by the tank or dodged if you are not the tank."
+        },
+        {
+            "name": "Aspect of Winter",
+            "description": "The boss summons meteors that will land on top of all players dealing high frost damage around them. When the rune appears around you, move away from your group members and hold block. Avoid stacking on top of each other during this attack as the damage from multiple meteors can be overwhelming."
+        },
+        {
+            "name": "Brush with Death",
+            "description": "The boss summons wraiths that will roam the arena, touching one will deal moderate frost damage and fear you momentarily. This will also summon some Ravenous Revenants to attack the group."
+        },
+        {
+            "name": "Pull of the Underworld",
+            "description": "When you enter the arena, you'll see a message declaring that the Void tugs at your soul. You will notice a barrier of swirling soul energy around the area. If you stand outside the designated area, you'll take high magical damage over time. To avoid this, stand in the eye of the soulstorm when this happens."
+        },
+        {
+            "name": "Summon Minions",
+            "description": "At 50% health, the boss disappears and resurrects the three necromancers from before. Kill them as you did earlier and the boss returns and the fight repeats."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Cernunnon",
+            "line": "Your flames will flicker and die.",
+            "trigger": "When summoned",
+            "ability": "Aspect of Winter"
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "Our compact is eternal.",
+            "trigger": "When summoned",
+            "ability": "Aspect of Winter"
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "I will claim you myself.",
+            "trigger": "When summoned",
+            "ability": "Aspect of Winter"
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "I will keep your bones as a trophy.",
+            "trigger": "When summoned",
+            "ability": "Aspect of Winter"
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "Don't keep your ancestors waiting.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "Welcome, slaves eternal.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "The living serve, but the dead obey. You will find no sanctuary in these halls!",
+            "trigger": "Upon his defeat, he invades the Hall of the Dead.",
+            "ability": "Pull of the Underworld"
+        },
+        {
+            "speaker": "Cernunnon",
+            "line": "Wake, little Jarl. See how your kingdom burns? Reap your vengeance.",
+            "trigger": "In the Hall of the Dead, he will raise Deathlord Bjarfrud Skjoralmor.",
+            "ability": "Pull of the Underworld"
+        },
+        {
+            "speaker": "Deathlord Bjarfrud Skjoralmor",
+            "line": "Usurpers …? In my hall! Let them come!",
+            "trigger": "In the Hall of the Dead, he will raise Deathlord Bjarfrud Skjoralmor.",
+            "ability": "Pull of the Underworld"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When summoned": [
+            {
+                "speaker": "Cernunnon",
+                "line": "Your flames will flicker and die.",
+                "trigger": "When summoned",
+                "ability": "Aspect of Winter"
+            },
+            {
+                "speaker": "Cernunnon",
+                "line": "Our compact is eternal.",
+                "trigger": "When summoned",
+                "ability": "Aspect of Winter"
+            },
+            {
+                "speaker": "Cernunnon",
+                "line": "I will claim you myself.",
+                "trigger": "When summoned",
+                "ability": "Aspect of Winter"
+            },
+            {
+                "speaker": "Cernunnon",
+                "line": "I will keep your bones as a trophy.",
+                "trigger": "When summoned",
+                "ability": "Aspect of Winter"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Cernunnon",
+                "line": "Don't keep your ancestors waiting.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Cernunnon",
+                "line": "Welcome, slaves eternal.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Upon his defeat, he invades the Hall of the Dead.": [
+            {
+                "speaker": "Cernunnon",
+                "line": "The living serve, but the dead obey. You will find no sanctuary in these halls!",
+                "trigger": "Upon his defeat, he invades the Hall of the Dead.",
+                "ability": "Pull of the Underworld"
+            }
+        ],
+        "In the Hall of the Dead, he will raise Deathlord Bjarfrud Skjoralmor.": [
+            {
+                "speaker": "Cernunnon",
+                "line": "Wake, little Jarl. See how your kingdom burns? Reap your vengeance.",
+                "trigger": "In the Hall of the Dead, he will raise Deathlord Bjarfrud Skjoralmor.",
+                "ability": "Pull of the Underworld"
+            },
+            {
+                "speaker": "Deathlord Bjarfrud Skjoralmor",
+                "line": "Usurpers …? In my hall! Let them come!",
+                "trigger": "In the Hall of the Dead, he will raise Deathlord Bjarfrud Skjoralmor.",
+                "ability": "Pull of the Underworld"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Cernunnon is a reference to the Cernunnos, a name for the \"Horned God\" in Celtic Mythology."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Falkreath's Demise: Lift the siege of Falkreath to save the city's inhabitants.",
+        "Pledge: Falkreath Hold: Prove you are truly Undaunted by clearing Falkreath Hold."
+    ],
+    "summary": "Cernunnon is a bone colossus encountered in Falkreath Hold. It is summoned after the trio of necromancers― Erbogar, Mochveda and Tuecille―are killed. It serves as the second boss of the dungeon. It has a chance to drop a Minotaur Bezoar.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cernunnon",
+        "page_title": "Online:Cernunnon",
+        "revision_id": 3354711,
+        "retrieved_at": "2026-08-12T21:21:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

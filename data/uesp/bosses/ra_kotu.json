@@ -1,0 +1,57 @@
+{
+    "id": "ra_kotu",
+    "name": "Ra Kotu",
+    "content_id": "hel_ra_citadel",
+    "content_name": "Hel Ra Citadel",
+    "location": "Hel Ra Citadel",
+    "species": "Air Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals moderate physical damage. Ra Kotu alternates sword hands after every strike."
+        },
+        {
+            "name": "Cleave",
+            "description": "Ra Kotu winds all six of its swords back behind itself before slashing the three pairs together in front of itself, as indicated by a large red cone, dealing high physical damage and knocking you back."
+        },
+        {
+            "name": "Heavy Attack",
+            "description": "Ra Kotu shields himself with all six of its swords before fanning them out with strength in front of itself, dealing massive physical damage. This attack must be blocked."
+        },
+        {
+            "name": "Six Sword Assault",
+            "description": "Ra Kotu clutches four of its swords against its chest before throwing them outward from its position a moderate distance before they boomerang back into its hands, as indicated by large red circular AoEs under the traveling swords, dealing very high physical damage."
+        },
+        {
+            "name": "Sword Swirl",
+            "description": "Upon reaching 30% health, Ra Kotu begins to spin its body and all of its blades around in place nonstop for a long duration, as indicated by a large red circular AoE beneath itself, dealing very high continuous physical damage and snaring targets hit."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Assaulting the Citadel: Launch an attack on the Celestial Warrior's stronghold."
+    ],
+    "achievements": [],
+    "summary": "Ra Kotu is a massive air atronach encountered in Hel Ra Citadel, where it serves as the first boss. It is found at the first gate, and is summoned after the waves of Anka Ra there are defeated, accompanied by one Anka-Ra Destroyer and two Anka-Ra War-Priests.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ra_Kotu",
+        "page_title": "Online:Ra Kotu",
+        "revision_id": 3388005,
+        "retrieved_at": "2026-08-12T05:32:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

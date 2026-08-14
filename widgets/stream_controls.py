@@ -37,11 +37,11 @@ class StreamControls(QWidget):
         #
 
         self.brb_button = QPushButton(
-            "☕ BRB"
+            "BRB"
         )
 
         self.end_stream_button = QPushButton(
-            "🌙 End Stream"
+            "End Stream"
         )
 
         self.reset_button = QPushButton(

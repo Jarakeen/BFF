@@ -1,0 +1,30 @@
+{
+    "id": "bewan",
+    "name": "Bewan",
+    "content_type": "dungeon",
+    "summary": "Bewan is an elven ruin on the western coast of Auridon, just southwest of the town of Dawnbreak containing Sea Viper raiders. Some of the Sea Vipers are acting drunk. Parts of the ruin are flooded with shallow water. Argar's corpse can be found near the delve boss during Ruthless Competition. Rats and snakes are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The large southernmost room of the dungeon was added in Update 16 to be used in the quest Through a Veil Darkly. In Update 17, a few Maormer corpses and passive spiders were added.",
+        "This includes finding the Dusk Mushrooms for The Demon Weapon even as a Covenant or Pact character, since they are available in all three delves, so even though the quest has pointed you to a faction-appropriate one, they can be collected here instead if you're at the right stage of the quest.",
+        "Despite the number of quests requiring this dungeon, it is possible to actually do them all in one visit, even for Aldmeri Dominion characters, if one juggles one's prologue quests carefully."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bewan",
+        "page_title": "Online:Bewan",
+        "revision_id": 3598286,
+        "retrieved_at": "2026-08-12T21:14:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

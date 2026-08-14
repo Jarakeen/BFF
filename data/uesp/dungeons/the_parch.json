@@ -1,0 +1,26 @@
+{
+    "id": "the_parch",
+    "name": "The Parch",
+    "content_type": "dungeon",
+    "summary": "The Parch is an arid and sandy district of the Night Market. It is reached by going through the western gate of the Starlit Plaza, and while the market is open it can be explored to earn favor for your chosen faction. The sand walls caused by the frequent sandstorms may block your way until you procure the district's relic. This district is separated into two small \"towns\" in the southwest and northeast corners of the map, which are separated by a desert. The roaming boss of the Parch is the Calamitous Dunegorger, a giant Duneripper that can be seen swimming through the sands and streets of the Parch. The Parch is also the location of the Timeless Wallow, a small dungeon that is the home of Gilded B'Kyfxi. The southwest settlement is filled with Anka-Ra, Mantikora and Sandwings. The northeast settlement is home to battlescribes and various summons like Imps and Soulrazer Knights.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Parch",
+        "page_title": "Online:The Parch",
+        "revision_id": 3575574,
+        "retrieved_at": "2026-08-12T21:30:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

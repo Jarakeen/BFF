@@ -1,0 +1,35 @@
+{
+    "id": "arx_corinium",
+    "name": "Arx Corinium",
+    "content_type": "dungeon",
+    "summary": "Arx Corinium is a group dungeon found in southwestern Shadowfen. While previously constructed and held by the Imperials, the fort has fallen into disrepair and is overrun with Lamias. A group of nereids now occupy the flooded fort and focus on restoring balance to the land. Rumors say the fort is home to a great source of power, although it is perverse, corrupted. You can learn about its location from Mindil the Untested in Marbruk, Abzag the Monster in Shornhelm, or Maela the Crone in Stormhold. Its dungeon sets are Lamia's Song, Medusa, and Undaunted Infiltrator. There are always 4 treasure chests available to find in this dungeon, which may contain weapons, armor or jewelry from the dungeon's sets.",
+    "location": "",
+    "boss_ids": [
+        "ganakton_the_tempest",
+        "wamasu",
+        "sliklenia_the_songstress",
+        "songstress_snake",
+        "sellistrix_the_lamia_queen"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Arx Corinium was designed for levels 28-31.",
+        "While traveling Shadowfen within the vicinity of Arx Corinium, you may spot a distant, non-hostile nereid in the direction of the dungeon that vanishes into the swamp when approached, only to reappear again in the direction of the dungeon, leading you toward it."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Arx_Corinium",
+        "page_title": "Online:Arx Corinium",
+        "revision_id": 3208487,
+        "retrieved_at": "2026-08-12T21:13:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

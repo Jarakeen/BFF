@@ -1,0 +1,33 @@
+{
+    "id": "the_banished_cells_i",
+    "name": "The Banished Cells I",
+    "content_type": "dungeon",
+    "summary": "The Banished Cells I is a group dungeon found at the northern tip of Auridon. In this version, Keeper Cirion needs your help binding the spirit of a dangerous Altmer, High Kinlord Rilis. You can learn about its location from Turuk Redclaws in Vulkhel Guard, Abzag the Monster in Daggerfall, or Roaring Ramavel in Davon's Watch. The final boss, High Kinlord Rilis, has a chance to drop the Nilumin River Pearls antiquity lead for the Pearls of Ehlnofey. See also: Banished Cells II",
+    "location": "",
+    "boss_ids": [
+        "shadowrend",
+        "high_kinlord_rilis_banished_cells_i",
+        "altmer"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Banished Cells was designed for levels 12-15 and Veteran Banished Cells was designed for Veteran Ranks 1-5.",
+        "Prior to Update 12, The Banished Cells I was only available in Normal mode, and The Banished Cells II was only available in Veteran mode. These were named The Banished Cells and Veteran Banished Cells respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Banished_Cells_I",
+        "page_title": "Online:The Banished Cells I",
+        "revision_id": 3598272,
+        "retrieved_at": "2026-08-12T21:13:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "dark_water_temple",
+    "name": "Dark Water Temple",
+    "content_type": "dungeon",
+    "summary": "Dark Water Temple is a Dragonguard sanctuary accessed through a trapdoor in Kynesgrove. The temple was used as a training ground for new recruits before the fall of the Dragonguard, and had a chasm that could only be navigated with the use of Dragonbone powder. Among the archives, you'll find Letter to Marillan and Searching for the Horn of Ja'darri.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dark_Water_Temple",
+        "page_title": "Online:Dark Water Temple",
+        "revision_id": 3136604,
+        "retrieved_at": "2026-08-12T21:18:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

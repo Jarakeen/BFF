@@ -1,0 +1,28 @@
+{
+    "id": "the_tangle",
+    "name": "The Tangle",
+    "content_type": "dungeon",
+    "summary": "The Tangle is a delve in southeastern Northern Elsweyr, containing Ruddy Fangs bandits and wildlife.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "elsweyr_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Bear traps placed by the bandits can be found throughout the delve. Stepping in one inflicts damage and stuns you, and break free cannot be used to cancel out the stun."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Tangle",
+        "page_title": "Online:The Tangle",
+        "revision_id": 3548058,
+        "retrieved_at": "2026-08-12T21:35:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

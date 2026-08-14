@@ -1,0 +1,28 @@
+{
+    "id": "knife_ear_grotto",
+    "name": "Knife Ear Grotto",
+    "content_type": "dungeon",
+    "summary": "Knife Ear Grotto is a Daedric ruin in eastern Deshaan, northeast of the town of Silent Mire containing Daedra. A chest can be found under the stairs in the first large chamber. Rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The dungeon originally contained a statue of Boethiah, which has since been removed."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Knife_Ear_Grotto",
+        "page_title": "Online:Knife Ear Grotto",
+        "revision_id": 3260263,
+        "retrieved_at": "2026-08-12T21:27:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

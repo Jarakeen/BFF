@@ -1,0 +1,252 @@
+{
+    "id": "sister_gohlla",
+    "name": "Sister Gohlla",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach—Icereach Ramparts",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "336,797",
+        "veteran": "",
+        "hardmode": "1,218,039"
+    },
+    "abilities": [
+        {
+            "name": "Ice Tornado",
+            "description": "She summons a large ice tornado, indicated by a large circular AoE, that will swirl around the arena in your general direction, dealing continuous high frost damage while inside and snaring you."
+        },
+        {
+            "name": "Flame Swirl",
+            "description": "She summons a fire swirl that tracks your movement as it builds up, before erupting, dealing very high flame damage. After the eruption, a pool of flame will continue to follow your movement for a few more seconds, dealing continuous high flame damage that must be healed through."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "Throughout the fight, Envervating Thralls will constantly appear in the arena to join the fight."
+        },
+        {
+            "name": "Thunderous Pursuit",
+            "description": "She calls forth fourteen lightning strikes to hit you, all chaining quickly one after the other as indicated by small circular AoEs, dealing high shock damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Gohlla",
+            "line": "More intruders? Marvelous. On your feet, my sweet boy. Smash them for mother, won't you?",
+            "trigger": "She is first encountered in the Underkeep on the balcony above Kjarg and will encourage him to fight you.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Let's stir the pot a bit, hmm?",
+            "trigger": "During the fight, she will support him by summoning Frost Atronachs.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Here, sweet boy. You need more playmates!",
+            "trigger": "During the fight, she will support him by summoning Frost Atronachs.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Come, fools. Feel winter's bite!",
+            "trigger": "She will also summon frozen winds that whirl around the room.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Frosts of Oblivion, come forth!",
+            "trigger": "She will also summon frozen winds that whirl around the room.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "This should cool you off ….",
+            "trigger": "She will also summon frozen winds that whirl around the room.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Come, fools. Feel winter's bite!",
+            "trigger": "She will also summon frozen winds that whirl around the room.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Kjarg, be a good little boy and smash them to bits.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Between brute strength and the secrets of the arcane … you don't stand a chance.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "You survive the storm only to die here? How tragic.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Don't slouch, Kjarg. Make mother proud!",
+            "trigger": "Idling before engaging combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "You dare kill my pets? My sweet boy? You'll pay soon enough ….",
+            "trigger": "When you kill Kjarg, she will flee while promising vengeance.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "They killed Skelga! Right in front of me!",
+            "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+            "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+            "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+            "ability": "Ice Tornado"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "She is first encountered in the Underkeep on the balcony above Kjarg and will encourage him to fight you.": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "More intruders? Marvelous. On your feet, my sweet boy. Smash them for mother, won't you?",
+                "trigger": "She is first encountered in the Underkeep on the balcony above Kjarg and will encourage him to fight you.",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "During the fight, she will support him by summoning Frost Atronachs.": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Let's stir the pot a bit, hmm?",
+                "trigger": "During the fight, she will support him by summoning Frost Atronachs.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Here, sweet boy. You need more playmates!",
+                "trigger": "During the fight, she will support him by summoning Frost Atronachs.",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "She will also summon frozen winds that whirl around the room.": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Come, fools. Feel winter's bite!",
+                "trigger": "She will also summon frozen winds that whirl around the room.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Frosts of Oblivion, come forth!",
+                "trigger": "She will also summon frozen winds that whirl around the room.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "This should cool you off ….",
+                "trigger": "She will also summon frozen winds that whirl around the room.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Come, fools. Feel winter's bite!",
+                "trigger": "She will also summon frozen winds that whirl around the room.",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "Idling before engaging combat": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Kjarg, be a good little boy and smash them to bits.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Between brute strength and the secrets of the arcane … you don't stand a chance.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "You survive the storm only to die here? How tragic.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Don't slouch, Kjarg. Make mother proud!",
+                "trigger": "Idling before engaging combat",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "When you kill Kjarg, she will flee while promising vengeance.": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "You dare kill my pets? My sweet boy? You'll pay soon enough ….",
+                "trigger": "When you kill Kjarg, she will flee while promising vengeance.",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "They killed Skelga! Right in front of me!",
+                "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+                "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+                "trigger": "Sister Gohlla is re-encountered in the courtyard on the ramparts. She will be with the other witches, performing the storm ritual and can be overheard as you approach.",
+                "ability": "Ice Tornado"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is quoted in the description of the Visage of Gohlla hat."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Sister Gohlla is a member of the Icereach Coven's inner circle, headed by Mother Ciannait. She is the \"mother\" of the giant Kjarg the Tuskscraper and specializes in frost magic. She is involved in the final boss fight of the dungeon, assisting Mother Ciannait, alongside her sisters Bani, Hiti and Maefyn. In the veteran mode of the final boss fight, Sister Gohlla will summon Gohlla's Giant at the opening of the battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sister_Gohlla",
+        "page_title": "Online:Sister Gohlla",
+        "revision_id": 3545226,
+        "retrieved_at": "2026-08-12T21:25:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

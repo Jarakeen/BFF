@@ -1,0 +1,24 @@
+{
+    "id": "writhing_fortress",
+    "name": "Writhing Fortress",
+    "content_type": "dungeon",
+    "summary": "The Writhing Fortress is a daedric installation in Coldharbour which guards the power source of the Writhing Wall. This area was formed through the interaction of the Oblivion realm and the Reverse Planemeld on Solstice and was built around the Soul Spire, which maintains the Wall. Its existence was first revealed during the Battle for the Writhing Wall during an investigation of the Worm Cult's sabotage of the Stirk Fellowship's war efforts. Damage caused by the Meridian Lens eventually allowed access to the fortress, so a team could shut down the Soul Tower. Hazards include bottomless pits and searing azureplasm. While initially only accessible during the event, the Fortress was brought back again for Content Pass owners from January 21 to January 28.[1] There are plans to bring it back as a permanent location in early 2026.[2]",
+    "location": "",
+    "boss_ids": [
+        "gauztuul_the_terror",
+        "guuffetarez",
+        "zysax"
+    ],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "When viewing the Coldharbour map while within the Writhing Fortress, your location will be shown as being far north of The Endless Stair at the very edge of the map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Writhing_Fortress",
+        "page_title": "Online:Writhing Fortress",
+        "revision_id": 3584592,
+        "retrieved_at": "2026-08-12T21:38:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

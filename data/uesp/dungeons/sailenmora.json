@@ -1,0 +1,18 @@
+{
+    "id": "sailenmora",
+    "name": "Sailenmora",
+    "content_type": "dungeon",
+    "summary": "Sailenmora is a holy site located in the middle of the Telvanni Peninsula. Pilgrims flock here to congregate around the shrine of Saint Vorys. Parables of Saint Vorys sits on a stone step behind and left of the shrine. The Note to Rilasi appears directly behind the shrine during the related quest. A Bantam Guar idles at the temple near the shrine, and Torchbugs flit through the air here and there. There are two entrances to the Sailenmora Crypts on either side of the temple structure. The Padomaic Crest Wayshrine is located at the crossroads southeast of the settlement. A Baandari Pedlar camp lies southeast of the temple, between the settlement and the wayshrine. You can find The Eye of Baan Dar in a tent here during the related quest. The Old Sailenmora Outpost lies east of the temple.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sailenmora",
+        "page_title": "Online:Sailenmora",
+        "revision_id": 3432890,
+        "retrieved_at": "2026-08-12T21:32:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "id": "shipwright_s_regret",
+    "name": "Shipwright's Regret",
+    "content_type": "dungeon",
+    "summary": "Shipwright's Regret is a shipyard located in eastern Rivenspire, east of Fell's Run. During the time of the Thrassian Plague, it became one of the shipyards responsible for building ships for the nascent All Flags Navy. At some point afterwards, it was abandoned and now it is a dismal, haunted place. It is included in the Ascending Tide DLC alongside Coral Aerie. Centipedes, frogs, rats, spiders and torchbugs are found in numbers within. Hazards include slaughterfish.",
+    "location": "",
+    "boss_ids": [
+        "foreman_bradiggan",
+        "wraith",
+        "nazaray",
+        "spriggan",
+        "captain_numirril",
+        "maormer"
+    ],
+    "achievements": [
+        {
+            "id": "ascending_tide_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shipwright%27s_Regret",
+        "page_title": "Online:Shipwright's Regret",
+        "revision_id": 3581313,
+        "retrieved_at": "2026-08-12T21:33:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

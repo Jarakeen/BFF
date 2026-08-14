@@ -1,0 +1,26 @@
+{
+    "id": "rulanyil_s_fall",
+    "name": "Rulanyil's Fall",
+    "content_type": "dungeon",
+    "summary": "Rulanyil's Fall is an Ayleid ruin in central Greenshade, northeast of the city of Woodhearth. It is one of the most extensive and impressive Ayleid ruins in Valenwood. The builders of the city settled here after being driven out of Cyrodiil by Alessia's slave rebellion. They are said to have come from Vilverin on the shores of Lake Rumare. More recently, the Merethic Society has set up a museum of antiquities inside the ruins, but is having trouble with the Worm Cult invading the ruins and attempting to raise an Ayleid warlord entombed within from the dead. Fleshflies and rats are found in great numbers within. During The Garland Ring, you can access the usually locked Ceythalmor Hideout via a door between Hannat the Bonebringer's room and the big south room.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rulanyil%27s_Fall",
+        "page_title": "Online:Rulanyil's Fall",
+        "revision_id": 3524854,
+        "retrieved_at": "2026-08-12T21:32:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}
