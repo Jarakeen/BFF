@@ -1,0 +1,85 @@
+{
+    "id": "the_serpent_celestial",
+    "name": "The Serpent (Celestial)",
+    "content_id": "sanctum_ophidia",
+    "content_name": "Sanctum Ophidia",
+    "location": "Sanctum Ophidia\nInfinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "Basic melee attack dealing very high physical damage."
+        },
+        {
+            "name": "Celestial Spray",
+            "description": "The Serpent swings his sword in a forward arc, dealing very high magic damage in a cone AoE."
+        },
+        {
+            "name": "Poison Strike",
+            "description": "The Serpent winds up his sword then strikes it from the top on a player, dealing extremely high poison damage. This attack must be blocked."
+        },
+        {
+            "name": "Eclipse Tear",
+            "description": "The Serpent charges up a ball of green energy in his left hand and continuously launch poisonous projectiles at multiple random players multiple times, each projectile dealing high poison damage. When this ends, World Shaper is always cast."
+        },
+        {
+            "name": "World Shaper",
+            "description": "Once Eclipse Tear ends, he throws it either on the left or right side of the arena at random, forming a AoE that always deal lethal Oblivion Damage to players."
+        },
+        {
+            "name": "Repulse",
+            "description": "The Serpent leans back and a ghostly form drifts out of them into the air. They say that the stone has held them too long and they \"will never go back\", at which point the ghost is pulled back into the Serpent and purple orbs flies out of him into the ground. Walk into an orb to get protected against the incoming pulse that covers the platform, always dealing lethal Oblivion Damage to unprotected players."
+        },
+        {
+            "name": "Poison Mist",
+            "description": "The Serpent plants his sword in the ground and summons a large bubble of green energy that applies constant high poison damage. You must heal through the damage applied."
+        },
+        {
+            "name": "Summon Cursed Totem",
+            "description": "Summons a Cursed Totem."
+        },
+        {
+            "name": "Summon Empower Totem",
+            "description": "Summons a Empower Totem."
+        },
+        {
+            "name": "Summon Wrest Totem",
+            "description": "Summons a Wrest Totem."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "The Serpent will summon Lamia Howlers and Mantikoras during the fight."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "During their confrontation, The Mage refers to The Serpent as \"Malazar\". Given that the Celestials may have once been mortals that ascended to becoming manifestations of the constellations, Malazar may have been the Serpent's original mortal name."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Oldest Ghost: Launch a direct assault on the Celestial Serpent.",
+        "The Shattered and the Lost: Investigate two Altmer claiming to be aspects of the Mage.",
+        "The Corrupted Stone: Gain access to the Warrior's Apex Stone."
+    ],
+    "achievements": [],
+    "summary": "The Serpent is a constellation that has fallen to Tamriel as a Celestial and now seeks to corrupt the other constellations and remake Nirn. He has taken over the minds of two of the Guardian Celestials, The Mage and The Warrior, with only The Thief escaping his grasp. He commands the Scaled Court, a group of fanatics operating in Craglorn that worship him.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Serpent_(Celestial)",
+        "page_title": "Online:The Serpent (Celestial)",
+        "revision_id": 3505623,
+        "retrieved_at": "2026-08-12T05:34:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

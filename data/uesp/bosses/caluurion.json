@@ -1,0 +1,80 @@
+{
+    "id": "caluurion",
+    "name": "Caluurion",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "Lich",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,736,815",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Necrotic Spear",
+            "description": "A basic ranged attack that does minor magical damage, and can be blocked or dodged to reduce damage."
+        },
+        {
+            "name": "Soul Cage",
+            "description": "The lich will summon three to five lich crystals from the ground around it, as indicated by white cracks on the ground. Standing near the crystals as indicated by the red circles will do moderate magical damage over time to the player. This attack is always followed by Soul Rupture. Stay at range when this spell is cast to avoid the lich crystals."
+        },
+        {
+            "name": "Soul Rupture",
+            "description": "After a short time, the crystals explode, dealing moderate magical damage to all players within the red circle. Getting hit by the exploding crystals will cause the player to be lifted above ground briefly; the player can break free from this."
+        },
+        {
+            "name": "Necrotic Barrage",
+            "description": "The boss summons magical bolts that hit the ground around itself dealing moderate magical damage as indicated by red circles."
+        },
+        {
+            "name": "Shalk's Breath",
+            "description": "Activating the shalk relic will allow the boss to spray fire in a cone in front of him, dealing high flame damage over time."
+        },
+        {
+            "name": "Storm Lizard's Rage",
+            "description": "Activating the wamasu relic will allow the boss to place lightning AOEs on top of all players, dealing moderate shock damage over time."
+        },
+        {
+            "name": "Tusks of Ice",
+            "description": "Activating the mammoth relic will allow the boss to place ice AOEs on the ground, dealing high frost damage over time."
+        },
+        {
+            "name": "Nature's Clutches",
+            "description": "Activating the lurcher relic will allow the boss to spread root AOEs outwards from itself, immobilizing and dealing high physical damage to all players hit as indicated by red circles."
+        },
+        {
+            "name": "Serpent's Sting",
+            "description": "Activating the serpent relic will allow the boss to summon many smaller serpents to attack the party, each dealing moderate poison damage."
+        },
+        {
+            "name": "Enrage",
+            "description": "When around 20% health, the boss will activate all relics at once. Players should save ultimates to burn the boss down fast during this phase before damage from overlapping mechanics becomes overwhelming."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "This article is about the boss in Fang Lair. For the boss in the Infinite Archive, see Caluurion (Infinite Archive). Caluurion is a Lich who serves as the third boss of Fang Lair. During the fight, he will activate the Wamasu, Serpent, Lurcher, Mammoth, and Shalk relics, which will give him varying boosts. He has a chance to drop a sample of Dragon Bone. He was originally an Altmer and one of the adventurers who slew the dragon Thurvokun in the First Era, along with Ulfnor and Sabina Cedus. In undeath he has been bound to serve the necromancer Orryn the Black. Once he is defeated, his spirit will be freed and can be spoken to in later stages of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Caluurion",
+        "page_title": "Online:Caluurion",
+        "revision_id": 3537709,
+        "retrieved_at": "2026-08-12T21:22:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

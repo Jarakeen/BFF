@@ -1,0 +1,52 @@
+{
+    "id": "cloudrest",
+    "name": "Cloudrest",
+    "content_type": "dungeon",
+    "summary": "Cloudrest is a city found on the mountain of Eton Nir in Summerset, east of Ebon Stadmont. It serves as the home base for the Welkynar Gryphon Knights and their Aerie. Due to an unforeseen catastrophe, the once-thriving city stands cloaked in a toxic, purple mist. To ensure that the corruption does not spread to the rest of the island, the city is under quarantine by the Divine Prosecution, who were forced to evacuate the city and barricade the main gate. A cart from Alinor can be taken to get there, and a side entrance lies straight to the west: there is a note found next to it. You will receive a Crest of the Welkynar for completing this trial on hard mode.",
+    "location": "",
+    "boss_ids": [
+        "shade_of_galenwe",
+        "shade_of_falarielle",
+        "galenwe",
+        "gryphon",
+        "falarielle",
+        "shade_of_relequen",
+        "shade_of_belanaril",
+        "relequen",
+        "belanaril",
+        "shade_of_siroria",
+        "shade_of_silaeda",
+        "siroria",
+        "silaeda",
+        "z_maja",
+        "sea_sload",
+        "shade_of_z_maja"
+    ],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Cloudrest also appears in Arena."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cloudrest",
+        "page_title": "Online:Cloudrest",
+        "revision_id": 3608508,
+        "retrieved_at": "2026-08-12T05:31:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

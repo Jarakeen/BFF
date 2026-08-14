@@ -1,0 +1,221 @@
+{
+    "id": "crimson_apprentice",
+    "name": "Crimson Apprentice",
+    "content_id": "spire_of_the_crimson_coin",
+    "content_name": "Spire of the Crimson Coin",
+    "location": "Spire of the Crimson Coin",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fright Force",
+            "description": "A basic ranged magical attack."
+        },
+        {
+            "name": "Pool of Shadow",
+            "description": "The enemy slams their staff into the ground, creating a pool of dark energy all around them, indicated by a circular AoE, which lingers for a time and deals constant damage when inside."
+        },
+        {
+            "name": "Shadeway",
+            "description": "The enemy casts a spell that launches two slow and heavier-hitting projectiles. This can be interrupted to set the enemy off-balance."
+        },
+        {
+            "name": "Shadowy Duplicate",
+            "description": "The enemy teleports a short distance away, leaving a Shadow in their place. The shadow will cast Fright Force dealing minor magic damage until it is killed. When killed, it explodes and leaves a Pool of Shadow in its place."
+        },
+        {
+            "name": "Summon Vampiric Mines",
+            "description": "Crimson Apprentice summons five vampiric mines in a pattern like the deprecated Daedric Minefield skill morph, albeit larger."
+        },
+        {
+            "name": "Vanish",
+            "description": "At 75%, 50% and 25% Health, the Crimson Apprentice will teleport not far away in the maze, a discreet trail shows where he is going then a tall red light shows above him. A Blood/Gore Storm dealing continuous low magic damage follows you and will spawn a Lesser Coagulant if it hits you. At the 75% phase, one Unstable Specter will appear, two at the 50% phase and three at the 25% phase, and all disappear when a phase ends. The Crimson Apprentice is invincible, channeling and healing himself over time (Blood Empowerment). Once you find the Crimson Apprentice, you have to interrupt him and he'll go back to the altar arena with a small damage shield."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Welcome to my domain. Careful not to lose yourself.",
+            "trigger": "When you begin combat with him",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Come into the maze and find me…if you can.",
+            "trigger": "When he teleports in the hedge maze, he will taunt you",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "How did you find me?",
+            "trigger": "Finding him for the first time",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Where could I be? Come into the maze and find out.",
+            "trigger": "When he teleports again the second time into the maze",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Next time it won't be so easy.",
+            "trigger": "Finding him the second time",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "I grow tired of this. You will die in this maze.",
+            "trigger": "When he teleports the third time into the maze, this making multiple shadow copies of himself and unleashing trailing power attacks",
+            "ability": "Pool of Shadow"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Am I to the left? Or perhaps to the right?",
+            "trigger": "If you delay finding him",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Ah, where could I be?",
+            "trigger": "If you delay finding him",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "Oh no. Are you lost?",
+            "trigger": "If you delay finding him",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "A lucky guess!",
+            "trigger": "Finding him this time",
+            "ability": "Vanish"
+        },
+        {
+            "speaker": "Crimson Apprentice",
+            "line": "You'll never get out of here alive….",
+            "trigger": "Finishing him off, he will curse you",
+            "ability": "Vanish"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you begin combat with him": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Welcome to my domain. Careful not to lose yourself.",
+                "trigger": "When you begin combat with him",
+                "ability": "Vanish"
+            }
+        ],
+        "When he teleports in the hedge maze, he will taunt you": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Come into the maze and find me…if you can.",
+                "trigger": "When he teleports in the hedge maze, he will taunt you",
+                "ability": "Vanish"
+            }
+        ],
+        "Finding him for the first time": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "How did you find me?",
+                "trigger": "Finding him for the first time",
+                "ability": "Vanish"
+            }
+        ],
+        "When he teleports again the second time into the maze": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Where could I be? Come into the maze and find out.",
+                "trigger": "When he teleports again the second time into the maze",
+                "ability": "Vanish"
+            }
+        ],
+        "Finding him the second time": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Next time it won't be so easy.",
+                "trigger": "Finding him the second time",
+                "ability": "Vanish"
+            }
+        ],
+        "When he teleports the third time into the maze, this making multiple shadow copies of himself and unleashing trailing power attacks": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "I grow tired of this. You will die in this maze.",
+                "trigger": "When he teleports the third time into the maze, this making multiple shadow copies of himself and unleashing trailing power attacks",
+                "ability": "Pool of Shadow"
+            }
+        ],
+        "If you delay finding him": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Am I to the left? Or perhaps to the right?",
+                "trigger": "If you delay finding him",
+                "ability": "Vanish"
+            },
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Ah, where could I be?",
+                "trigger": "If you delay finding him",
+                "ability": "Vanish"
+            },
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "Oh no. Are you lost?",
+                "trigger": "If you delay finding him",
+                "ability": "Vanish"
+            }
+        ],
+        "Finding him this time": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "A lucky guess!",
+                "trigger": "Finding him this time",
+                "ability": "Vanish"
+            }
+        ],
+        "Finishing him off, he will curse you": [
+            {
+                "speaker": "Crimson Apprentice",
+                "line": "You'll never get out of here alive….",
+                "trigger": "Finishing him off, he will curse you",
+                "ability": "Vanish"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Crimson Apprentice is a Breton boss that can be encountered in the Spire of the Crimson Coin. He is seen strangling a Mercenary Butcher at a distance. When entering combat the mercenary butcher is sacrificed. His special mechanic involves him teleporting around the hedge maze, taunting you to find him. (Bash to 'tag' him as 'found')",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crimson_Apprentice",
+        "page_title": "Online:Crimson Apprentice",
+        "revision_id": 3513954,
+        "retrieved_at": "2026-08-12T21:34:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

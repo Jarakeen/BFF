@@ -1,0 +1,64 @@
+{
+    "id": "dread_tindulra",
+    "name": "Dread Tindulra",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Castle Thorn",
+    "species": "Death Hound",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Ferocious Bite",
+            "description": "Dread Tindulra bites you with fiery jaws, dealing high flame damage. This can be blocked."
+        },
+        {
+            "name": "Fire Spit",
+            "description": "Dread Tindulra spits fire continuously, indicated by a wide red cone, dealing constant high flame damage. Dread Tindulra can move while performing this ability."
+        },
+        {
+            "name": "Flame Retch",
+            "description": "Dread Tindulra vomits fire all over the arena, indicated by several red circles, dealing high flame damage each on impact, and then flames linger, dealing continuous moderate flame damage. The flames linger long enough that two applications of the ability can cover the arena at once."
+        },
+        {
+            "name": "Quake",
+            "description": "Towards the end of Flame Retch's lingering flames, Dread Tindulra jumps off the ground and back down to the ground, causing the previously affected areas to shatter, indicated by red circles and jagged rocks, dealing high physical damage and knocking targets back."
+        },
+        {
+            "name": "Summon Broodlings",
+            "description": "Dread Tindulra raises its head skyward and howls, summoning a swarm of Death Hound Broodlings from beneath the soil."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood of the Past: Launch a frontal assault on a Vampire Lord's castle.",
+        "Pledge: Castle Thorn: Prove you are truly Undaunted by clearing Castle Thorn."
+    ],
+    "summary": "Dread Tindulra is a giant death hound who can be found in Castle Thorn's courtyard. It is the first boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dread_Tindulra",
+        "page_title": "Online:Dread Tindulra",
+        "revision_id": 3335424,
+        "retrieved_at": "2026-08-12T21:16:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

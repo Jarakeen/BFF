@@ -1,0 +1,60 @@
+{
+    "id": "talfyg",
+    "name": "Talfyg",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Castle Thorn",
+    "species": "",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Talons",
+            "description": "Basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Cross Swipe",
+            "description": "A powerful claws melee attack that deals very high physical damage and staggers. This can be blocked."
+        },
+        {
+            "name": "Annihilate",
+            "description": "Talfyg raises his hand forward as a beam of concentrated blood magic shoots off at a target, indicated by a red circle, dealing continuous high magical damage. Once Talfyg is below 50% health, this ability becomes able to follow targets instead of remaining static at the initial point of casting."
+        },
+        {
+            "name": "Disintegrate",
+            "description": "Once Talfyg is below 50% health, this ability becomes available. Talfyg conjures a storm of blood around himself, then slams the ground fiercely, shattering the storm leaving lingering residue behind, indicated by a very large red circle. The initial impact deals very high magical damage and the lingering residue deals continuous high magical damage."
+        },
+        {
+            "name": "Summon",
+            "description": "Talfyg can summon various adds. When he shouts, a Volatile Hound materializes in the arena nearby. He can also channel energy into the statues around the arena, which erupts them as a Seething Gargoyle for the smaller statues, and Frozen Gargoyles for the larger statues."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood of the Past: Launch a frontal assault on a Vampire Lord's castle.",
+        "Pledge: Castle Thorn: Prove you are truly Undaunted by clearing Castle Thorn."
+    ],
+    "summary": "Talfyg is a Nord vampire who can be found in Castle Thorn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Talfyg",
+        "page_title": "Online:Talfyg",
+        "revision_id": 3608066,
+        "retrieved_at": "2026-08-12T21:16:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

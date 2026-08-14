@@ -1,0 +1,84 @@
+{
+    "id": "molten_guardian",
+    "name": "Molten Guardian",
+    "content_id": "the_cauldron",
+    "content_name": "The Cauldron",
+    "location": "The Cauldron — Unsealed Cauldron",
+    "species": "Iron Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Molten Strike",
+            "description": "A basic melee attack dealing moderate physical and flame damage."
+        },
+        {
+            "name": "Lava Wave",
+            "description": "The Molten Guardian rakes its hand into the lava and sends a wave of it towards you, indicated by a conical AoE, dealing high flame damage."
+        },
+        {
+            "name": "Lava Slam",
+            "description": "The Molten Guardian slams its hand into the ground at your location, indicated by a circular AoE around you, dealing very high physical damage. A lingering lava pool remains at the site of the impact for a duration, dealing moderate continuous flame damage."
+        },
+        {
+            "name": "Flame Mortar",
+            "description": "The Molten Guardian opens up its core and fires a spree of fireballs into the arena, creating lingering flame fields, indicated by small circular AoEs, that deal continuous moderate flame damage."
+        },
+        {
+            "name": "Annihilation Strike",
+            "description": "The Molten Guardian's core begins to fume and he raises both hands into the air before slamming them down into the lava, causing a gigantic shockwave, dealing massive flame damage. The AoE of this attack is so large and grows so fast that dodging or blocking is the only viable option to negate the damage."
+        },
+        {
+            "name": "Summon Atronachs",
+            "description": "During the encounter, the Molten Guardian will occasionally summon lesser Molten Fiends to assist."
+        },
+        {
+            "name": "Deep Dive",
+            "description": "The Molten Guardian plunges into the lava and moves elsewhere around the edge of the arena, becoming invulnerable to damage for the duration."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Waking Flame Invoker",
+            "line": "You go no further!",
+            "trigger": "As you enter the Unsealed Cauldron, an invoker of the Waking Flame will hastily summon the Molten Guardian in an attempt to stop you then disappears",
+            "ability": "Summon Atronachs"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you enter the Unsealed Cauldron, an invoker of the Waking Flame will hastily summon the Molten Guardian in an attempt to stop you then disappears": [
+            {
+                "speaker": "Waking Flame Invoker",
+                "line": "You go no further!",
+                "trigger": "As you enter the Unsealed Cauldron, an invoker of the Waking Flame will hastily summon the Molten Guardian in an attempt to stop you then disappears",
+                "ability": "Summon Atronachs"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Deep: Help Lyranth recover a map from a group of cultists.",
+        "Pledge: The Cauldron: Enter the Cauldron and return Undaunted."
+    ],
+    "summary": "The Molten Guardian is a large iron atronach that serves as the third boss of the Cauldron.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Molten_Guardian",
+        "page_title": "Online:Molten Guardian",
+        "revision_id": 3383481,
+        "retrieved_at": "2026-08-12T21:16:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

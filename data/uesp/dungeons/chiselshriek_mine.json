@@ -1,0 +1,26 @@
+{
+    "id": "chiselshriek_mine",
+    "name": "Chiselshriek Mine",
+    "content_type": "dungeon",
+    "summary": "Chiselshriek Mine is a mine in northeastern Craglorn, containing Iron Orcs and wispmothers. According to a note written by the former foreman, Chiselshriek Mine was closed after the work was interrupted by mystical beings. The Gracious Beacon is found here, acting as the delve's boss. Centipedes and Sandroaches are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Chiselshriek_Mine",
+        "page_title": "Online:Chiselshriek Mine",
+        "revision_id": 3598813,
+        "retrieved_at": "2026-08-12T21:16:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

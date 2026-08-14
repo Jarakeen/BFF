@@ -1,0 +1,26 @@
+{
+    "id": "crestshade_mine",
+    "name": "Crestshade Mine",
+    "content_type": "dungeon",
+    "summary": "This article is about the mine. For the village, see Crestshade. Crestshade Mine is a mine in central Rivenspire, northwest of Shornhelm containing trolls. The mine was responsible for most of Crestshade's prosperity, but was closed down when trouble came to the village. It has since been overrun by trolls. Bitterhand Brutes, Bitterhand Menders, Bitterhand Rogues, Bitterhand Scouts and Skeevers are found near the entrance. Fleshflies and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crestshade_Mine",
+        "page_title": "Online:Crestshade Mine",
+        "revision_id": 3598212,
+        "retrieved_at": "2026-08-12T21:18:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,70 @@
+{
+    "id": "dragon",
+    "name": "Dragon",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Northern Elsweyr\nSouthern Elsweyr\nHalls of Colossus",
+    "species": "Dragon",
+    "reaction": "Hostile\nFriendly (Red dragons in starter cities)",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "alliance_war_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A giant golden dragon can be seen in the Spilled Sand.",
+        "Meteor Storm was previously seen in Skyrim as the shout Alduin used to burn down Helgen.",
+        "The black dragons are seen again in Legends as the cards Glacial Dragon and Fallen Dragon.",
+        "The red and dark gray color scheme for generic dragonscour dragons is a reference to the two types dragons mentioned in Mysterious Akavir. White frost dragons and black storm dragons were later introduced in Dragonhold."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Bane of Dragons: Polish up your dragonslaying skills with the Elsweyr Dragon Defense Force.",
+        "The Battle for Riverhold: Defend Riverhold from Euraxia's attack forces.",
+        "Bright Moons, Warm Sands: Survive the Dragon attack in Star Haven Adeptorium. (disabled since Update 30)",
+        "The Dark Aeon: Infiltrate the island of Dragonhold.",
+        "Dawn of the Dragonguard: Slay a Dragon at a Dragonscour in Northern or Southern Elsweyr. (disabled)",
+        "Dragon Hunt: Hunt down a dragon spotted near their hunting grounds.",
+        "The Dragon's Lair: Investigate a Dragon's lair off the coast of Senchal.",
+        "The Dragonguard: End the New Moon threat.",
+        "The Dragonguard's Quarry: Help the Dragonguard cull the Dragons in Southern Elsweyr.",
+        "The Halls of Colossus: Find the demon weapon hidden in the Halls of Colossus before Euraxia Tharn does.",
+        "Jode's Core: Defend the Moon Gate of Anequina and the power within from the Dragon threat.",
+        "The Margins of Ire: Enter the Infinite Archive and hunt down Tho'at Replicanum.",
+        "New Moon Rising: Face Kaalgrontiid at the height of his power.",
+        "Order of the New Moon: Infiltrate the Order of the New Moon and learn more about their intentions.",
+        "Reformation: Convince the crew of the Perfect Pounce to join the Dragonguard.",
+        "The Pride of Alkosh: Investigate the Order of the New Moon's invasion of Pridehome.",
+        "Replication Elimination: Enter the Infinite Archive and defeat the Tho'at Replicanum.",
+        "Uneasy Alliances: Help Nahfahlaar find an old ally.",
+        "The Wing of the Crow: Enter the sealed door and take on the Scholarium's final trial.",
+        "The Wing of the Dragon: Find the Dragon Luminary and earn her sigil to power the Scribing Altar."
+    ],
+    "summary": "Dragons are a rare race of fearsome reptilian beasts. They are considerably large, standing much taller than the average mortal. They possess large clawed wings that enable them to fly, and an affinity for magic, which is used in combat through various spells and shouts. Their status as powerful beings is not to be understated, as they are divine children of Akatosh who are specially attuned to time, possessing unique souls and never aging, allowing them to live for millennia on end. They were commonly thought to have been extinct, as many of the dragons were hunted in the past, until a rage of dragons was released from the Halls of Colossus, beginning the Season of the Dragon. Dragons can be fought at Dragonscour hunting Events, found at various sites in Northern and Southern Elsweyr. Dragons fought in Northern Elsweyr will fly around the area of the dragonscour, while dragons in Southern Elsweyr move to farther parts of the zone, and can fly off to a different area if not defeated. Given their powerful nature, it is recommended to fight them in groups to successfully defeat the beasts. They drop various valuable rewards upon death. Dragons also serve as the bosses of certain dungeons and as foes in the Sunspire trial. Several unique dragons are fought during the course of the Elsweyr zone story as well. Certain unique dragons (i.e. Sahrotnax) will be friendly during certain quests, though they are often fought as part of the story later on (such as Mulaamnir), and may even be fought multiple times (such as Kaalgrontiid and Bahlokdaan).",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dragon",
+        "page_title": "Online:Dragon",
+        "revision_id": 3498040,
+        "retrieved_at": "2026-08-12T21:22:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "id": "cartoqueen",
+    "name": "Cartoqueen",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Scrivener's Hall, The Vault",
+    "species": "Scamp",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,273,381",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw Swipe",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Firebolt",
+            "description": "A basic range attack dealing moderate flame damage."
+        },
+        {
+            "name": "Fire Wave",
+            "description": "The Cartoqueen charges a spell then releases three waves of fire going outward from her position, dealing high flame damage. This attack has no indicator."
+        },
+        {
+            "name": "Flame Scatter",
+            "description": "The Cartoqueen fires out fireballs in all directions from her position, indicated by circular AoEs, six in total, dealing high flame damage. Fire lingers at the explosion site for an extended duration, dealing moderate continuous flame damage."
+        },
+        {
+            "name": "Rolling Boulders",
+            "description": "The Cartoqueen summons several portals around the arena that create large volcanic boulders, that then tumble down into the arena. If hit, they deal high physical damage and knock you down."
+        },
+        {
+            "name": "Rumble",
+            "description": "The Cartoqueen causes the ceiling to rumble, triggering several stalactites to fall onto the arena floor, as indicated by circular AoEs, dealing high physical damage and knocking you down."
+        },
+        {
+            "name": "Molten Wall",
+            "description": "The Cartoqueen summons a wall of Molten Pillars around itself for protection against attacks."
+        },
+        {
+            "name": "Teleport",
+            "description": "The Cartoqueen teleports to any of the far ends of the arena."
+        },
+        {
+            "name": "Summon Totem",
+            "description": "The Cartoqueen occasionally summons a Fiery Totem that will continuously shoot fireballs at you until it is destroyed, dealing moderate flame damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "To fight the Cartoqueen, all small chests have to be opened on Normal difficulty, while all large chests have to be opened on Veteran difficulty. This must be done in the same instance.",
+        "There are 20 small chests, which need Small Vault Keys, obtained from Cartoklepts in normal Scrivener's Hall.",
+        "There are 20 large chests, which need Large Vault Keys, obtained from Cartoklepts in veteran Scrivener's Hall"
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Cartoqueen is a hidden scamp boss found in Scrivener's Hall.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cartoqueen",
+        "page_title": "Online:Cartoqueen",
+        "revision_id": 3579790,
+        "retrieved_at": "2026-08-12T21:32:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

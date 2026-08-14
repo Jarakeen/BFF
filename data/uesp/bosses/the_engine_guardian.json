@@ -1,0 +1,47 @@
+{
+    "id": "the_engine_guardian",
+    "name": "The Engine Guardian",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "Darkshade Caverns II, Rkugamz",
+    "species": "Dwarven Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,702,217",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "What Was Lost: Help Shatasha investigate Dwemer ruins.",
+        "Pledge: Darkshade II: Explore Darkshade Caverns II and return Undaunted."
+    ],
+    "summary": "This article is about the enemy. For the item set, see Engine Guardian. The Engine Guardian is a giant Dwarven Spider that serves as the final boss of Darkshade Caverns II. It is found behind the door to Rkugamz. It has a chance to drop an Ancient Great Axe and the Antiquity lead for Dwarven Horngrip. In Veteran mode it can drop an Engine Guardian set helmet.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Engine_Guardian",
+        "page_title": "Online:The Engine Guardian",
+        "revision_id": 3451060,
+        "retrieved_at": "2026-08-12T21:19:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

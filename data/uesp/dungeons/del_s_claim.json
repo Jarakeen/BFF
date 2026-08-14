@@ -1,0 +1,26 @@
+{
+    "id": "del_s_claim",
+    "name": "Del's Claim",
+    "content_type": "dungeon",
+    "summary": "Del's Claim is a mine in southern Auridon, just northwest of the city of Vulkhel Guard, containing Veiled Heritance members. The miners were all slain when the heritants moved in. They plan to use it as a secure base of operations.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Del%27s_Claim",
+        "page_title": "Online:Del's Claim",
+        "revision_id": 3533589,
+        "retrieved_at": "2026-08-12T21:19:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

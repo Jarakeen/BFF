@@ -1,0 +1,265 @@
+{
+    "id": "valkyn_skoria_person",
+    "name": "Valkyn Skoria (person)",
+    "content_id": "city_of_ash_ii",
+    "content_name": "City of Ash II",
+    "location": "City of Ash II, Red-Zeal Keep",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,742,925",
+        "veteran": "5,409,287",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flame Strike",
+            "description": "A basic melee attack that deals minor flame damage."
+        },
+        {
+            "name": "Meteor Strike",
+            "description": "A heavy melee attack that deals high physical damage."
+        },
+        {
+            "name": "Fire Stab",
+            "description": "The boss summons a flaming pool at its location that releases lines of flame dealing moderate flame damage. Stay away from it to avoid the fire lines."
+        },
+        {
+            "name": "Platform Detonation",
+            "description": "After an amount of time, he will move to the center of the platform he's standing on and drive his claymore into it, breaking the platform and forcing players to migrate to a new one to avoid the lava. He will summon a few flame atronachs after teleporting to a new platform. This will continue until no platforms remain. Players should ensure the group has enough damage to kill the boss before all platforms are gone."
+        },
+        {
+            "name": "Flame Spit",
+            "description": "After teleporting, the boss summons a shield around himself that shoots fireballs continuously as long as its up dealing moderate flame damage over time to all players."
+        },
+        {
+            "name": "Magma Prison",
+            "description": "The boss throws rocks at two random players stunning them for a long time. While stunned, players will take moderate flame damage over time. Break free to counter this."
+        },
+        {
+            "name": "Flame Bolt",
+            "description": "The boss will randomly target a player and channel a fireball in one hand that will knock back (called Flame Bolt Knockdown) its target if it hits."
+        },
+        {
+            "name": "Meteor [verification needed]",
+            "description": "Throughout the fight meteors will randomly strike the platform dealing moderate flame damage as indicated by red circles."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Fingaenion",
+            "line": "Gilraen! You look—are you all right?",
+            "trigger": "When Urata is defeated",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Fingaenion",
+            "line": "What did they do to you?",
+            "trigger": "When Urata is defeated",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Gilraen",
+            "line": "Never mind that. How about you try not getting yourself killed? The Valkyn and his pet Titan—we're going to slay them before they do the same to us.",
+            "trigger": "When Urata is defeated",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Valkyn Skoria",
+            "line": "I will see to it the Golden Flame erases you.",
+            "trigger": "When Urata is defeated",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Valkyn Skoria",
+            "line": "Your skins will make fine banners!",
+            "trigger": "Arriving at the Ash Titan",
+            "ability": "Fire Stab"
+        },
+        {
+            "speaker": "Monynen",
+            "line": "What is that, up in the sky? It's like no fowl I've ever seen.",
+            "trigger": "Arriving at the Ash Titan",
+            "ability": "Fire Stab"
+        },
+        {
+            "speaker": "Ash Titan",
+            "line": "This is the end of the line. Valkyn Skoria wants you dead.",
+            "trigger": "Arriving at the Ash Titan",
+            "ability": "Fire Stab"
+        },
+        {
+            "speaker": "",
+            "line": "<The Titan lands, and breathes fire at him.>does he breathe fire at Monyen, or does a giant circle of flame explode out from underneath him when he lands?",
+            "trigger": "Arriving at the Ash Titan",
+            "ability": "Fire Stab"
+        },
+        {
+            "speaker": "Valkyn Skoria",
+            "line": "Do you have a deathwish, mortal wretch? You've been complacent for so long—why seek open war now?",
+            "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Gilraen",
+            "line": "I'm leaving. The deal was my husband and the others would be spared. You violated the Pact, and before the day is done, I will see you dead.",
+            "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Valkyn Skoria",
+            "line": "A Daedra doesn't know the meaning of that word, my dear. This will be unpleasant.",
+            "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Gilraen",
+            "line": "For you.",
+            "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Valkyn Skoria",
+            "line": "You don't need to come down here for me to hurt you.",
+            "trigger": "Reaching Skoria during Return to Ash",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Gilraen",
+            "line": "No! Fingaenion!",
+            "trigger": "Reaching Skoria during Return to Ash",
+            "ability": "Platform Detonation"
+        },
+        {
+            "speaker": "Gilraen",
+            "line": "Tear his heart out! I'll tend to my husband.",
+            "trigger": "Reaching Skoria during Return to Ash",
+            "ability": "Platform Detonation"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When Urata is defeated": [
+            {
+                "speaker": "Fingaenion",
+                "line": "Gilraen! You look—are you all right?",
+                "trigger": "When Urata is defeated",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Fingaenion",
+                "line": "What did they do to you?",
+                "trigger": "When Urata is defeated",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Gilraen",
+                "line": "Never mind that. How about you try not getting yourself killed? The Valkyn and his pet Titan—we're going to slay them before they do the same to us.",
+                "trigger": "When Urata is defeated",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Valkyn Skoria",
+                "line": "I will see to it the Golden Flame erases you.",
+                "trigger": "When Urata is defeated",
+                "ability": "Platform Detonation"
+            }
+        ],
+        "Arriving at the Ash Titan": [
+            {
+                "speaker": "Valkyn Skoria",
+                "line": "Your skins will make fine banners!",
+                "trigger": "Arriving at the Ash Titan",
+                "ability": "Fire Stab"
+            },
+            {
+                "speaker": "Monynen",
+                "line": "What is that, up in the sky? It's like no fowl I've ever seen.",
+                "trigger": "Arriving at the Ash Titan",
+                "ability": "Fire Stab"
+            },
+            {
+                "speaker": "Ash Titan",
+                "line": "This is the end of the line. Valkyn Skoria wants you dead.",
+                "trigger": "Arriving at the Ash Titan",
+                "ability": "Fire Stab"
+            },
+            {
+                "speaker": "",
+                "line": "<The Titan lands, and breathes fire at him.>does he breathe fire at Monyen, or does a giant circle of flame explode out from underneath him when he lands?",
+                "trigger": "Arriving at the Ash Titan",
+                "ability": "Fire Stab"
+            }
+        ],
+        "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.": [
+            {
+                "speaker": "Valkyn Skoria",
+                "line": "Do you have a deathwish, mortal wretch? You've been complacent for so long—why seek open war now?",
+                "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Gilraen",
+                "line": "I'm leaving. The deal was my husband and the others would be spared. You violated the Pact, and before the day is done, I will see you dead.",
+                "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Valkyn Skoria",
+                "line": "A Daedra doesn't know the meaning of that word, my dear. This will be unpleasant.",
+                "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Gilraen",
+                "line": "For you.",
+                "trigger": "When you reach the crossroads in front of the broken bridge during the quest, Skoria will address Gilraen.",
+                "ability": "Platform Detonation"
+            }
+        ],
+        "Reaching Skoria during Return to Ash": [
+            {
+                "speaker": "Valkyn Skoria",
+                "line": "You don't need to come down here for me to hurt you.",
+                "trigger": "Reaching Skoria during Return to Ash",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Gilraen",
+                "line": "No! Fingaenion!",
+                "trigger": "Reaching Skoria during Return to Ash",
+                "ability": "Platform Detonation"
+            },
+            {
+                "speaker": "Gilraen",
+                "line": "Tear his heart out! I'll tend to my husband.",
+                "trigger": "Reaching Skoria during Return to Ash",
+                "ability": "Platform Detonation"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Scoria is a type of volcanic rock.",
+        "He wears Xivkyn style heavy armor with an unobtainable chestplate. It is dyed white with red undertones, but due to the magma skin applied to him, the color cannot be seen under regular circumstances."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Return to Ash: Enter the Deadlands to rescue a failed invasion force.",
+        "Pledge: City of Ash II: Prove you are truly Undaunted by clearing the City of Ash II."
+    ],
+    "summary": "This article is about the creature. For the item set, see Valkyn Skoria (set). Valkyn Skoria is a minion of Mehrunes Dagon. He leads the attack on the graht-oak city formerly known as Whisper Grove in Greenshade.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valkyn_Skoria_(person)",
+        "page_title": "Online:Valkyn Skoria (person)",
+        "revision_id": 3200640,
+        "retrieved_at": "2026-08-12T21:17:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

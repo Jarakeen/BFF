@@ -1,0 +1,107 @@
+{
+    "id": "longclaw",
+    "name": "Longclaw",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Selene's Web",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Longclaw",
+            "line": "Selene promised Longclaw would hunt tonight. And here you are.\nThe Forest Mother was right again. See how she takes care of us, my daughters?",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "Longclaw",
+            "line": "Yet this one wonders—what kind of prey walks so willingly into the hunter's lair?",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "Longclaw",
+            "line": "Ah well. We're not picky, are we girls? Fresh meat is good meat, no?\nLet's find out how this meat tastes!",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "Longclaw",
+            "line": "You may have taken their lives, but Longclaws's daughters are not gone.",
+            "trigger": "Once his senche pack is killed, he will raise them",
+            "ability": null
+        },
+        {
+            "speaker": "Longclaw",
+            "line": "Selene blessed them with her gift—the gift of spirit life. See their hunt begin anew!",
+            "trigger": "Once his senche pack is killed, he will raise them",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Engaging in combat": [
+            {
+                "speaker": "Longclaw",
+                "line": "Selene promised Longclaw would hunt tonight. And here you are.\nThe Forest Mother was right again. See how she takes care of us, my daughters?",
+                "trigger": "Engaging in combat",
+                "ability": null
+            },
+            {
+                "speaker": "Longclaw",
+                "line": "Yet this one wonders—what kind of prey walks so willingly into the hunter's lair?",
+                "trigger": "Engaging in combat",
+                "ability": null
+            },
+            {
+                "speaker": "Longclaw",
+                "line": "Ah well. We're not picky, are we girls? Fresh meat is good meat, no?\nLet's find out how this meat tastes!",
+                "trigger": "Engaging in combat",
+                "ability": null
+            }
+        ],
+        "Once his senche pack is killed, he will raise them": [
+            {
+                "speaker": "Longclaw",
+                "line": "You may have taken their lives, but Longclaws's daughters are not gone.",
+                "trigger": "Once his senche pack is killed, he will raise them",
+                "ability": null
+            },
+            {
+                "speaker": "Longclaw",
+                "line": "Selene blessed them with her gift—the gift of spirit life. See their hunt begin anew!",
+                "trigger": "Once his senche pack is killed, he will raise them",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In early drafts, he was named Kudda-dar."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web."
+    ],
+    "summary": "This article is about the Khajiit in Selene's Web. For the Argonian in Xal Ithix, see Long-Claw. Longclaw is a Khajiit hunter who serves as the first main boss in Selene's Web. He is found with his Senche-Tiger pack, consisting of Shadowhiskers, Nighteyes, Heartstalker, and Silentpaw. When they are killed, he will raise them as Senche Spirits.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Longclaw",
+        "page_title": "Online:Longclaw",
+        "revision_id": 3542680,
+        "retrieved_at": "2026-08-12T21:33:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

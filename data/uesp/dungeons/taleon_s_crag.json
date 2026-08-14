@@ -1,0 +1,28 @@
+{
+    "id": "taleon_s_crag",
+    "name": "Taleon's Crag",
+    "content_type": "dungeon",
+    "summary": "Taleon's Crag is a cave in southern Deshaan, just south of the Vale of the Ghost Snake, containing kwama. Scribs and torchbugs are found in numbers inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This dungeon was invaded by the Worm Cult during the Battle for the Writhing Wall event."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Taleon%27s_Crag",
+        "page_title": "Online:Taleon's Crag",
+        "revision_id": 3431073,
+        "retrieved_at": "2026-08-12T21:35:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

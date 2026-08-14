@@ -1,0 +1,74 @@
+{
+    "id": "lich",
+    "name": "Lich",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Dark Anchors, Dark Fissures\nRimmen Necropolis",
+    "species": "Lich",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Necrotic Spear",
+            "description": "A basic ranged attack that deals minor frost damage."
+        },
+        {
+            "name": "Defiled Ground",
+            "description": "The lich casts a rune on the ground, indicated by a red circle, at or near its target's location, which deals continuous fast ticks of direct minor magic damage and snares."
+        },
+        {
+            "name": "Soul Cage",
+            "description": "The lich summons three then five lich crystals from the ground around itself, as indicated by large red circles. Standing near the crystals deals continuous direct low frost damage. This ability is always followed by Soul Rupture."
+        },
+        {
+            "name": "Soul Rupture",
+            "description": "After a short time, the crystals explode, dealing moderate frost damage and briefly lifting all targets within the red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A non-NPC Lich is caged in the Forbidden Exhibit part of The Feral Gallery. It can cast the generic \"Soul Cage/Soul Rupture\" and \"Defiled Ground\" lich abilities if you approach its cage. Approaching its cage also allows you to \"examine\" it with a press of your action button.",
+        "Mannimarco and Vastarie are considered liches in lore, but have been excluded from here as they do not function mechanically like a lich.",
+        "Liches also have \"Flying Immunities\" which protects them from snares and roots, but it is bypassed by their elite (and higher) rank immunity which also does this."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Amputating the Hand: End the threat of the Withered Hand in Alik'r.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Fulfilling One's Fate: Stop the Worm Cult from defiling the Ouze burial site.",
+        "Gods Save the King: Rescue the king from his nightmares.",
+        "Haunted Grounds: Help drive out spirits infesting a nobleman's new property.",
+        "Looming Shadows: Recover ancient relics found in the ruins of Fort Faleria.",
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Memories of Youth: Recover a lost engagement ring.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "The Prismatic Core: Help the Guildmaster understand the threat to the present in the events of the past.",
+        "Song of Awakening: Find out why the sky has turned a nightmarish purple.",
+        "The Spirit Trap in Malabal Tor: Put the spirits of Shael Ruins to rest.",
+        "Striking at the Heart: Defeat the shade of Prince Naemon.",
+        "Those She Devours: Save some captives from having their souls consumed in a necromancer's rituals."
+    ],
+    "summary": "This article is about the creature. For the collectible polymorph, see Lich (polymorph). Liches are aggressive undead creatures which attack using powerful spells. Liches are generally not found in the wild, but can occasionally be seen emerging from Dark Anchors and Dark Fissures, present among necromantic organizations or in places teeming with the dead.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lich",
+        "page_title": "Online:Lich",
+        "revision_id": 3579279,
+        "retrieved_at": "2026-08-12T21:22:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

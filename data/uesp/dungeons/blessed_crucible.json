@@ -1,0 +1,44 @@
+{
+    "id": "blessed_crucible",
+    "name": "Blessed Crucible",
+    "content_type": "dungeon",
+    "summary": "The Blessed Crucible is a group dungeon found in the Rift. This dungeon takes place in a vast daedric ruin repurposed as a gladiatorial arena. In it, you must help Talres Voren pay off his debts by winning the tournament and becoming the Champion of the Crucible. You can learn about its location from Vlesyl the Skin-Stealer in Rawl'kha, Sluz the Beryl-Chested in Evermore, or Kailstig the Axe in Riften. Bottomless Pits and Lava Pools serve as environmental hazards in the dungeon. A letter is located on the top bunk of one of the beds to the right of the entrance to the Gladiator's Quarters. There is a chest to the left of this room's exit. Several books are located on the plaques of statues in the chamber preceding the Lava Queen's arena, which tell of the Crucible's ten champions: Aleris the Shroud, Crow Bringer, Hagrof the Righteous, The Thousand Arrows, Lucius the Stalwart, Whitebear, Ferian Darkstorm, Felhorn, Sanarel the Great and The Lava Queen. The tale of Josef the Intolerant is located in the previous room.",
+    "location": "",
+    "boss_ids": [
+        "werewolf_npc",
+        "dynus_aralas",
+        "kayd_at_sal",
+        "nusana",
+        "snagg_gro_mashul",
+        "incineration_beetle",
+        "shalk",
+        "stinger",
+        "giant_scorpion",
+        "the_troll_king",
+        "troll",
+        "the_beast_master",
+        "the_lava_queen_person"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Despite being dungeon bosses, the members of the Pack are not immune to crowd control. Use this to your advantage during the fight.",
+        "Before dungeon scaling was introduced in Update 5, Blessed Crucible was designed for levels 40–43.",
+        "When you exit this dungeon at the end, you'll wind up in Stonefalls instead of The Rift."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blessed_Crucible",
+        "page_title": "Online:Blessed Crucible",
+        "revision_id": 3533810,
+        "retrieved_at": "2026-08-12T21:15:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

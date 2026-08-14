@@ -1,0 +1,28 @@
+{
+    "id": "tomb_of_the_apostates",
+    "name": "Tomb of the Apostates",
+    "content_type": "dungeon",
+    "summary": "The Tomb of the Apostates is a cave in southern Malabal Tor, west of Tanglehaven containing undead. They are led by a skeletal sorcerer, Gwaeregil. Elorwen's spirit can also be found here, guiding people to her skeleton and family heirloom. Centipedes, spiders and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The letter Rogue Elements, found in Deepwoods, marks this location on your map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tomb_of_the_Apostates",
+        "page_title": "Online:Tomb of the Apostates",
+        "revision_id": 3598322,
+        "retrieved_at": "2026-08-12T21:36:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

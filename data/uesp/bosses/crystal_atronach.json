@@ -1,0 +1,70 @@
+{
+    "id": "crystal_atronach",
+    "name": "Crystal Atronach",
+    "content_id": "bedlam_veil",
+    "content_name": "Bedlam Veil",
+    "location": "Lucent Citadel, Fargrave Inner Quarter, Leftwheal Trading Post, Miscarcand, Mirrormoor Incursions, Broken Path Cave",
+    "species": "Crystal Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Crystal Spear",
+            "description": "Basic melee attack dealing low frost damage."
+        },
+        {
+            "name": "Crunch",
+            "description": "Slightly stronger basic melee attack dealing low frost damage."
+        },
+        {
+            "name": "Glittering Scrape",
+            "description": "The atronach stomps the ground and three glass tendrils emerge from the ground that swipe around, dealing minor physical damage and knocking back around them."
+        },
+        {
+            "name": "Pane Bound",
+            "description": "The Crystal Atronach teleports nearby through a yellow portal."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Crystal Atronachs fought in the Catalyst Nook of the Lucent Citadel are much smaller, standing equal to average player height.",
+        "They are called Glass Atronachs in the files. This name was later reused for a polymorph.",
+        "Despite sharing a Frost Atronach model, killing Crystal Atronachs does not count towards the \"Destroy 5 Frost Atronachs\" endeavor.",
+        "They share the same model as Frost Atronachs (their mesh name is even called FrostAtronach_A_Basic) but with a different texture applied.",
+        "Prior to Update 42, Crystal Atronachs summoned by The Blind in Bedlam Veil were named Glass Remnant."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Caught in a Trap: Save Leftwheal Trading Post citizens from a Mirrormoor and Recollection invasion.",
+        "Fate of the Forgotten Prince: Face Prince Ithelia and decide her fate.",
+        "Fate-Eater: Defeat a unique creature in the far north.",
+        "Ithelia's Fury: Investigate the threat caused by Ithelia's unstable power, and find a way to stop her.",
+        "King Nantharion's Gambit: Confront the leader of the Recollection to save West Weald from being overtaken by jungle.",
+        "The Margins of Ire: Enter the Infinite Archive and hunt down Tho'at Replicanum.",
+        "Mirrormoor Incursion: Disrupt a Mirrormoor Incursion.",
+        "Prisoner of Fate: Stop Torvesard from freeing Prince Ithelia!",
+        "Replication Elimination: Enter the Infinite Archive and defeat the Tho'at Replicanum.",
+        "The Untraveled Road: Enter Mirrormoor and prevent Ithelia from rewriting history."
+    ],
+    "summary": "Crystal Atronachs are crystalline Daedra that are composed of a reflective crystalline glass. They resemble Frost Atronachs in build.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crystal_Atronach",
+        "page_title": "Online:Crystal Atronach",
+        "revision_id": 3610349,
+        "retrieved_at": "2026-08-12T21:14:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

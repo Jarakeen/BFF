@@ -1,0 +1,28 @@
+{
+    "id": "fyrelight_cave",
+    "name": "Fyrelight Cave",
+    "content_type": "dungeon",
+    "summary": "Fyrelight Cave is a cave found just north of the Ostumir Wayshrine in West Weald. It is filled with plant life and various beasts, however in recent times, the animals have become more aggressive and dangerous Tharrikers have been sighted in the area. Amaurel believes this change is the result of \"Wild Magic\" that has ruined the sanctuary from her parents the cave once was for her. Frogs, Spiders and Torchbugs are found in numbers within. A Cooking Fire is situated in the camp to the northeast. The delve's boss, a large Tharriker called Scourgetail, is in a cavern immediately south of the entrance to the delve. Scourgetail may drop an Antiquities lead for the Ayleid Blacksmithing Station: the Wildsmith Anointing Decoction.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Fyrelight Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fyrelight_Cave",
+        "page_title": "Online:Fyrelight Cave",
+        "revision_id": 3277553,
+        "retrieved_at": "2026-08-12T21:23:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

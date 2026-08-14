@@ -1,0 +1,18 @@
+{
+    "id": "prison_of_xykenaz",
+    "name": "Prison of Xykenaz",
+    "content_type": "dungeon",
+    "summary": "The Prison of Xykenaz is a nanoplane of Coldharbour to which Molag Bal banished the Dremora Xykenaz.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Prison_of_Xykenaz",
+        "page_title": "Online:Prison of Xykenaz",
+        "revision_id": 3586237,
+        "retrieved_at": "2026-08-12T21:31:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

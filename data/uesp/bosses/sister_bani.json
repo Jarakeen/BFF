@@ -1,0 +1,277 @@
+{
+    "id": "sister_bani",
+    "name": "Sister Bani",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach—Bani's Laboratory, Icereach Ramparts",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "336,797",
+        "veteran": "",
+        "hardmode": "1,218,039"
+    },
+    "abilities": [
+        {
+            "name": "Ice Tornado",
+            "description": "She summons a large ice tornado, indicated by a large circular AoE, that will swirl around the arena in your general direction, dealing continuous high frost damage while inside and snaring you."
+        },
+        {
+            "name": "Flame Swirl",
+            "description": "She summons a fire swirl that tracks your movement as it builds up, before erupting, dealing very high flame damage. After the eruption, a pool of flame will continue to follow your movement for a few more seconds, dealing continuous high flame damage that must be healed through."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "Throughout the fight, Envervating Thralls will constantly appear in the arena to join the fight."
+        },
+        {
+            "name": "Thunderous Pursuit",
+            "description": "She calls forth fourteen lightning strikes to hit you, all chaining quickly one after the other as indicated by small circular AoEs, dealing high shock damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Bani",
+            "line": "Disgusting intruders! I won't have it. I will not have it!",
+            "trigger": "Sister Bani is first encountered in her laboratory, as soon as she notices you she will awaken one of her recent works to deal with you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "<Vearogh the Shambler is roused.>",
+            "trigger": "Sister Bani is first encountered in her laboratory, as soon as she notices you she will awaken one of her recent works to deal with you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Ugh, the smell! You're putrid. Putrid!",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "You did not wipe your feet, did you? Did you?",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "You're rotten! You're all rotten!",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "We'll make you clean. Naught but bones and ashes!",
+            "trigger": "Idling before engaging in combat",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Stinking, sweaty animals! Kill them! Kill them!",
+            "trigger": "When Vearogh is engaged",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Filthy beasts! How dare you soil my refuge! Crush them!",
+            "trigger": "When Vearogh is engaged",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Greasy interlopers! Filth! Slime! Kill them all!",
+            "trigger": "When Vearogh is engaged",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "The dead heed my call!",
+            "trigger": "When she summons Enervating Thralls, Bani will announce",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "Dead? Good. Gather the rats to pick them clean!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Ugh, look at their corpses. What a mess. What a mess!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Well done, beast! Now, we boil the bones! Make them clean!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Filthy, disgusting interlopers! You think summoning is all I can do?",
+            "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "Lyris Titanborn \"Why not come down and show us, hag?\"",
+            "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Brought a beast of your own, eh? She'll die soon enough. You all will!",
+            "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+            "ability": "Ice Tornado"
+        },
+        {
+            "speaker": "",
+            "line": "<Sister Bani teleports away.>",
+            "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+            "ability": "Ice Tornado"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Sister Bani is first encountered in her laboratory, as soon as she notices you she will awaken one of her recent works to deal with you.": [
+            {
+                "speaker": "Sister Bani",
+                "line": "Disgusting intruders! I won't have it. I will not have it!",
+                "trigger": "Sister Bani is first encountered in her laboratory, as soon as she notices you she will awaken one of her recent works to deal with you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "<Vearogh the Shambler is roused.>",
+                "trigger": "Sister Bani is first encountered in her laboratory, as soon as she notices you she will awaken one of her recent works to deal with you.",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Idling before engaging in combat": [
+            {
+                "speaker": "",
+                "line": "Ugh, the smell! You're putrid. Putrid!",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "You did not wipe your feet, did you? Did you?",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "You're rotten! You're all rotten!",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "We'll make you clean. Naught but bones and ashes!",
+                "trigger": "Idling before engaging in combat",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "When Vearogh is engaged": [
+            {
+                "speaker": "Sister Bani",
+                "line": "Stinking, sweaty animals! Kill them! Kill them!",
+                "trigger": "When Vearogh is engaged",
+                "ability": null
+            },
+            {
+                "speaker": "Sister Bani",
+                "line": "Filthy beasts! How dare you soil my refuge! Crush them!",
+                "trigger": "When Vearogh is engaged",
+                "ability": null
+            },
+            {
+                "speaker": "Sister Bani",
+                "line": "Greasy interlopers! Filth! Slime! Kill them all!",
+                "trigger": "When Vearogh is engaged",
+                "ability": null
+            }
+        ],
+        "When she summons Enervating Thralls, Bani will announce": [
+            {
+                "speaker": "",
+                "line": "The dead heed my call!",
+                "trigger": "When she summons Enervating Thralls, Bani will announce",
+                "ability": "Ice Tornado"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Dead? Good. Gather the rats to pick them clean!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Ugh, look at their corpses. What a mess. What a mess!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Well done, beast! Now, we boil the bones! Make them clean!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly": [
+            {
+                "speaker": "Sister Bani",
+                "line": "Filthy, disgusting interlopers! You think summoning is all I can do?",
+                "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "Lyris Titanborn \"Why not come down and show us, hag?\"",
+                "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "Sister Bani",
+                "line": "Brought a beast of your own, eh? She'll die soon enough. You all will!",
+                "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+                "ability": "Ice Tornado"
+            },
+            {
+                "speaker": "",
+                "line": "<Sister Bani teleports away.>",
+                "trigger": "Once Vearogh is defeated, Lyris Titanborn will arrive and argue with Bani briefly",
+                "ability": "Ice Tornado"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "One of her letters can be found.",
+        "She is quoted in the description of the Visage of Bani hat."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Sister Bani is a member of the Icereach Coven who specializes in necromancy. She can be found in their island fortress on Icereach. She is involved in the final boss fight of the dungeon, assisting Mother Ciannait, alongside her sisters Gohlla, Hiti and Maefyn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sister_Bani",
+        "page_title": "Online:Sister Bani",
+        "revision_id": 3545225,
+        "retrieved_at": "2026-08-12T21:26:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

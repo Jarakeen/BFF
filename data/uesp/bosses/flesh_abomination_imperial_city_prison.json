@@ -1,0 +1,68 @@
+{
+    "id": "flesh_abomination_imperial_city_prison",
+    "name": "Flesh Abomination (Imperial City Prison)",
+    "content_id": "imperial_city_prison",
+    "content_name": "Imperial City Prison",
+    "location": "Imperial City Prison",
+    "species": "Flesh Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,007,499",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Hemorrhaging Strike",
+            "description": "A basic melee attack that deals moderate physical damage then moderate physical damage over time."
+        },
+        {
+            "name": "Monstrous Cleave",
+            "description": "The Abomination swings its heavy arms in front of it, indicated by a conical AoE, stumbling forward as it does. Its arms swing several times, and the momentum of its forward movement carries the beast. If you're hit by its clumsy strikes, you'll take high physical damage and get knocked back and stunned. If you block you get staggered each time instead."
+        },
+        {
+            "name": "Poison Well",
+            "description": "After some time, the boss places poison AOEs under each player that will follow them, dealing moderate poison damage and knocking them back. Block to prevent this. Following that, the boss places a ring around a random player. This ring deals very high poison damage over time and must be avoided, if you are within the ring simply wait for it to dissipate."
+        },
+        {
+            "name": "Summon Necrotic Hoarvor",
+            "description": "Throughout the fight, the boss summons Necrotic Hoarvors to attack the party. They should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Bursting Slam and Exploading [sic] Hoarvor",
+            "description": "After Poison Well, the boss runs to the middle of the arena and summons 4 Necrotic Hoarvors. The boss them slams the ground stunning all players while the hoarvors explode dealing high poison damage as indicated by large red circles. To avoid this, players should hug the walls of the arena to avoid the AOEs."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "imperial_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Summary Execution: Aid Lyranth on her path to vengeance, and liberate some lost souls along the way.",
+        "Pledge: Imperial City Prison: Prove you are truly Undaunted by clearing Imperial City Prison."
+    ],
+    "summary": "The Flesh Abomination is a massive armored flesh colossus found in the Imperial City Prison. It serves as the dungeon's second boss, and summons two necrotic hoarvors in combat.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flesh_Abomination_(Imperial_City_Prison)",
+        "page_title": "Online:Flesh Abomination (Imperial City Prison)",
+        "revision_id": 3387814,
+        "retrieved_at": "2026-08-12T21:26:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

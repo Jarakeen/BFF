@@ -1,0 +1,66 @@
+{
+    "id": "ganakton_the_tempest",
+    "name": "Ganakton the Tempest",
+    "content_id": "arx_corinium",
+    "content_name": "Arx Corinium",
+    "location": "Arx Corinium",
+    "species": "Wamasu",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shed Lightning",
+            "description": "The boss deals moderate shock damage over time to all players. This attack cannot be avoided."
+        },
+        {
+            "name": "Shocking Breath",
+            "description": "The boss breaths lightning from its mouth dealing moderate shock damage over time in front of itself as indicated by a red cone."
+        },
+        {
+            "name": "Trapping Bolt",
+            "description": "The boss pins a player down dealing moderate shock damage, this can be broken free from."
+        },
+        {
+            "name": "Lightning Spit",
+            "description": "The boss releases a fast moving lightning whirl toward a player dealing high shock damage and stunning them afterwards. It may be difficult to avoid this if you are standing too near the boss."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Its unique drop, Belisaro's Bolt, is named after Belisaro, the Imperial that named the wamasu. \"Ganakton\" was a moniker for an aunt that he hated, who was rumored to possess Orcish blood. Ganakton terrorized the Imperials while they were constructing Arx Corinium, having razed the eastern wall a dozen times."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Force of Nature: Help three nereid sisters reclaim an abandoned Imperial fort.",
+        "Pledge: Arx Corinium: Prove you are truly Undaunted by clearing Arx Corinium."
+    ],
+    "summary": "Ganakton the Tempest is a large Wamasu and the first boss in Arx Corinium. Its unique drop is Belisaro's Bolt, a unique item in the Lamia's Song item set.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ganakton_the_Tempest",
+        "page_title": "Online:Ganakton the Tempest",
+        "revision_id": 3139182,
+        "retrieved_at": "2026-08-12T21:13:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

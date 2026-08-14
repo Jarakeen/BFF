@@ -1,0 +1,128 @@
+{
+    "id": "kayd_at_sal",
+    "name": "Kayd at-Sal",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "589,395",
+        "veteran": "947,363",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Dynus Aralas",
+            "line": "It looks as like there's some fight in our challengers, after all. Take them down!",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Snagg gro-Mashul",
+            "line": "Congratulations. You've passed the first trial.",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Kayd at-Sal",
+            "line": "Yeah, they bested the finest sloths, drunkards, and fools we had to offer!",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Nusana",
+            "line": "Adorable. Shall we give them a pendant?",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<The Pack jumps into the arena.>",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Dynus Aralas",
+            "line": "I say, let's see how these soft skins fair against a real challenge!",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Snagg gro-Mashul",
+            "line": "To arms!",
+            "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Before entering the arena to fight Kayd and the Pack will have conversation": [
+            {
+                "speaker": "Dynus Aralas",
+                "line": "It looks as like there's some fight in our challengers, after all. Take them down!",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Snagg gro-Mashul",
+                "line": "Congratulations. You've passed the first trial.",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Kayd at-Sal",
+                "line": "Yeah, they bested the finest sloths, drunkards, and fools we had to offer!",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Nusana",
+                "line": "Adorable. Shall we give them a pendant?",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<The Pack jumps into the arena.>",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Dynus Aralas",
+                "line": "I say, let's see how these soft skins fair against a real challenge!",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Snagg gro-Mashul",
+                "line": "To arms!",
+                "trigger": "Before entering the arena to fight Kayd and the Pack will have conversation",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Blessed Crucible Pledge: Explore the Blessed Crucible and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Kayd at-Sal is a Redguard werewolf encountered at the Blessed Crucible. In his werewolf form, he will periodically turn into a shadowy aura.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kayd_at-Sal",
+        "page_title": "Online:Kayd at-Sal",
+        "revision_id": 3345370,
+        "retrieved_at": "2026-08-12T21:15:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

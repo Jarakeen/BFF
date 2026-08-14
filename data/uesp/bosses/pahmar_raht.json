@@ -1,0 +1,38 @@
+{
+    "id": "pahmar_raht",
+    "name": "Pahmar-raht",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "As of v5.0.8, Pahmar-raht can no longer be killed by the Blade of Woe."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Pahmar-raht are a giant form of Khajiit that can be found in Northern Elsweyr. They resemble tigers and are said to be the strongest furstock, and are usually deployed as bodyguards and warriors. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pahmar-raht",
+        "page_title": "Online:Pahmar-raht",
+        "revision_id": 3035034,
+        "retrieved_at": "2026-08-12T21:29:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

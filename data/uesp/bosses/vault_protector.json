@@ -1,0 +1,88 @@
+{
+    "id": "vault_protector",
+    "name": "Vault Protector",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "Frostvault (Athenaeum Substructure/Warlord Tzogvin's Lair)",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,221,619",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Axe",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Hammer",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Bleeding",
+            "description": "Getting hit by Axe or Hammer deals minor physical damage over time."
+        },
+        {
+            "name": "Steel Cyclone",
+            "description": "The boss spins around, dealing moderate physical damage over time as indicated by a red circle."
+        },
+        {
+            "name": "Steam Breath",
+            "description": "The boss breaths out steam dealing moderate flame damage over time as indicated by a red cone in front of itself."
+        },
+        {
+            "name": "Barrage Function",
+            "description": "The boss shoots out shock balls, dealing moderate shock damage as indicated by red circles."
+        },
+        {
+            "name": "Summon Dwarven Spider and Dwarven Sphere",
+            "description": "A dwarven spider and sphere will spawn whenever Searing Ray is activated."
+        },
+        {
+            "name": "Searing Rays",
+            "description": "These rays deal very high flame damage to anyone touching it, this is lethal on veteran mode. To avoid the rays, simply jump over, roll through, or use the boss's shield to block them for you. The end of the beam with the red bloom effect is opposite to the emitter and is the side of the boss that you need to hide behind."
+        },
+        {
+            "name": "Shield Shock",
+            "description": "Standing inside the boss's shield will deal high shock damage. Avoid doing this."
+        },
+        {
+            "name": "Summon Volatile Sphere[verification needed — I have never seen this recently, esp after the frostvault rebalance]",
+            "description": "Smaller rolling spheres will appear and travel slowly towards the opposite wall. Touching them will deal moderate shock damage and stun you."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Lock and Keystone: Search the depths of a Dwemer vault for a powerful artifact.",
+        "Pledge: Frostvault: Prove you are truly Undaunted by clearing Frostvault."
+    ],
+    "summary": "The Vault Protector is a Dwarven Centurion that serves as the second boss of Frostvault. It will encase itself in a glass prism and activate a searing ray trap, though the lazers can be avoided by hiding behind its shield. It can also summon other automatons, which should be killed before being allowed to charge up.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vault_Protector",
+        "page_title": "Online:Vault Protector",
+        "revision_id": 3607972,
+        "retrieved_at": "2026-08-12T21:23:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

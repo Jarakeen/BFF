@@ -1,0 +1,26 @@
+{
+    "id": "mobar_mine",
+    "name": "Mobar Mine",
+    "content_type": "dungeon",
+    "summary": "Mobar Mine is a mine just south of Elden Root in Grahtwood containing bandits. It was opened to help provide building materials for Elden Root, but no one has heard from the owners in some time. Enslaved Miners can be found within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mobar_Mine",
+        "page_title": "Online:Mobar Mine",
+        "revision_id": 3598296,
+        "retrieved_at": "2026-08-12T21:28:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

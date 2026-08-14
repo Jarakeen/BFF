@@ -1,0 +1,99 @@
+{
+    "id": "swarmkeeper_xvarcon",
+    "name": "Swarmkeeper Xvarcon",
+    "content_id": "leftwheal_trading_post",
+    "content_name": "Leftwheal Trading Post",
+    "location": "Leftwheal Trading Post",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shock",
+            "description": "A basic ranged attack that does minor shock damage."
+        },
+        {
+            "name": "Thunder Thrall",
+            "description": "The enemy teleports to you and summons a bolt of lightning that strikes a large area around itself. This attack does moderate shock damage to all targets as indicated by the red circle."
+        },
+        {
+            "name": "Crush Crawler",
+            "description": "Swarmkeeper Xvarcon casts an explosion on itself dealing moderate-high magic damage in an area."
+        },
+        {
+            "name": "Toss Crawler",
+            "description": "Swarmkeeper Xvarcon throws a Mirrorworm under the target. The Mirrorworm explodes after a small delay."
+        },
+        {
+            "name": "Summon Prism Wasp",
+            "description": "Swarmkeeper Xvarcon summons two to four Crystaljacks to fight for him. Those Crystaljacks die after some time and always explode on death after a small delay."
+        },
+        {
+            "name": "Run Away!",
+            "description": "When too close to them, the storm mage backs up to put some distance between their target and themselves."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Swarmkeeper Xvarcon",
+            "line": "Face the swarm, intruder!",
+            "trigger": "When combat is initiated",
+            "ability": "Run Away!"
+        },
+        {
+            "speaker": "Swarmkeeper Xvarcon",
+            "line": "No! I am done!",
+            "trigger": "When he is defeated",
+            "ability": "Run Away!"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When combat is initiated": [
+            {
+                "speaker": "Swarmkeeper Xvarcon",
+                "line": "Face the swarm, intruder!",
+                "trigger": "When combat is initiated",
+                "ability": "Run Away!"
+            }
+        ],
+        "When he is defeated": [
+            {
+                "speaker": "Swarmkeeper Xvarcon",
+                "line": "No! I am done!",
+                "trigger": "When he is defeated",
+                "ability": "Run Away!"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Swarmkeeper Xvarcon is a Shardborn Dremora who serves as one of the champions of Leftwheal Trading Post.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Swarmkeeper_Xvarcon",
+        "page_title": "Online:Swarmkeeper Xvarcon",
+        "revision_id": 3283609,
+        "retrieved_at": "2026-08-12T21:27:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

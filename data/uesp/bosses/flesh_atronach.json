@@ -1,0 +1,52 @@
+{
+    "id": "flesh_atronach",
+    "name": "Flesh Atronach",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Abamath, Dark Anchors, Hectahame, Reliquary of Stars, Village of the Lost\nLabyrinthian Temple",
+    "species": "Flesh Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Flesh atronachs originally had a different model with a smaller head and more clearly defined neck. This model was used for flesh atronachs in the Spire of the Crimson Coin until Update 45, where it was changed to use the newer model."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Blood-Cursed Town: Help free a cursed village.",
+        "Castle of the Worm: Grant a request for asylum from a prisoner in the Castle of the Worm.",
+        "Chateau of the Ravenous Rodent: Explore Sheogorath's dark manse to recover the final book.",
+        "Crossing the Chasm: Secure the Chasm and gain access to Molag Bal's personal domain.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The General's Demise: Put an end to the Covenant invasion of Stonefalls.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Paths Unwalked: Continue helping Azandar with cleaning up his frayed fates.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "Prisoner of Fate: Stop Torvesard from freeing Prince Ithelia!",
+        "Shadow Tactics: Enter an ancient Dark Brotherhood burial site and destroy documents for the Morag Tong.",
+        "The Soul-Meld Mage: Help separate the souls of Gadris and Zur.",
+        "Valley of Blades: Retrieve the Ring of Stendarr's Mercy from the Valley of Blades."
+    ],
+    "summary": "Flesh Atronachs are a type of Daedra made of stitched skin and muscle. They are most commonly encountered when summoned by bonelords, to assist them in battle. Flesh Colossi are similar creatures, although much bigger in size.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flesh_Atronach",
+        "page_title": "Online:Flesh Atronach",
+        "revision_id": 3607837,
+        "retrieved_at": "2026-08-12T21:26:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

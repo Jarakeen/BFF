@@ -1,0 +1,18 @@
+{
+    "id": "lyranth_s_hidden_lair",
+    "name": "Lyranth's Hidden Lair",
+    "content_type": "dungeon",
+    "summary": "Lyranth's Hidden Lair is a hideout used by Lyranth that has been infiltrated by the Order of the Waking Flame. It is accessed during the related quest by a portal discovered in either Dead Man's Drop, Silumm, or Fort Greenwall depending on your alliance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lyranth%27s_Hidden_Lair",
+        "page_title": "Online:Lyranth's Hidden Lair",
+        "revision_id": 3550285,
+        "retrieved_at": "2026-08-12T21:28:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

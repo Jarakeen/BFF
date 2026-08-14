@@ -1,0 +1,101 @@
+{
+    "id": "assembly_general",
+    "name": "Assembly General",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Core Assembly, Halls of Fabrication",
+    "species": "Dwarven Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Seeker Projectiles",
+            "description": "The Assembly General shoots out multiple lightning orbs throughout the arena, both on the upper platforms and the floor, indicated by several medium-sized circular AoEs, dealing high shock damage. More projectiles are sent out after the boss loses its arms"
+        },
+        {
+            "name": "Energy Propulsion",
+            "description": "The Assembly General expulses a large amount of excess energy behind itself, as indicated by a massive rectangular AoE, dealing very large physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "If you are standing on the floor, the Assembly General performs a massive uppercut, dealing massive physical damage and launching you across the arena if not blocked or avoided."
+        },
+        {
+            "name": "Grasping Stomp",
+            "description": "If you are standing on the floor, the Assembly General stomps the floor with its right foot, sending out grasping tendrils across the floor, indicated by traveling circular AoEs. If touched by one, it inflicts moderate physical damage and immobilizes and primes you for further attacks."
+        },
+        {
+            "name": "Quake Stomp",
+            "description": "If you are standing on the floor, the Assembly General stomps the floor with its left foot, sending out a shockwave of energy forward, indicated by a large rectangular AoE, dealing very high physical damage and knocking you back."
+        },
+        {
+            "name": "Flamethrower",
+            "description": "If you are standing on the upper right platform, the Assembly General attacks you with its large flamethrower hand, dousing the platform in flames, indicated by a large circular AoE, dealing continuous high flame damage."
+        },
+        {
+            "name": "Arm Swipe",
+            "description": "If you are standing on the upper left platform, the Assembly General swipes its spinning blade arm across it, dealing very high physical damage."
+        },
+        {
+            "name": "Head Scan",
+            "description": "Throughout the fight, if a party member dies, the Assembly General's head will start to glow as it performs a scan. After the scan is complete, a Tactical Facsimile is summoned into the arena to aid the boss. It copies the same class as the party member that died."
+        },
+        {
+            "name": "Blade Arm Removal",
+            "description": "At 91%, 71%, 51%, and 31% health, the Assembly General's blade arm falls off. At the same time, Calefactors and Capacitors appear in the arena to assist the boss."
+        },
+        {
+            "name": "Flamethower Arm Removal",
+            "description": "88%, 68%, 48%, and 28% health, the Assembly General's flamethower arm falls off, with another wave of the same adds being summoned."
+        },
+        {
+            "name": "Electrified Platform",
+            "description": "After the Assembly General reaches the center of the arena, he electrifies the majority of the arena's floor, save for some safe locations close to the Terminals' spawn points. If hit by the electrified floor, it inflicts massive shock damage."
+        },
+        {
+            "name": "Bombard",
+            "description": "While the Assembly General is reforming its arms, it fires rockets from its back at you, indicated by large circular AoEs, dealing high flame damage. Also, if the boss is attacked while rebuilding its arms, no damage is inflicted and in return, the boss fires an additional missile."
+        },
+        {
+            "name": "Summon Terminals",
+            "description": "While the Assembly General is reforming its arms, four Terminals appear in four locations within the arena. At the same time, various additional traps, including poison and shock traps, appear to impede your way to them, dealing high poison and shock damage. If at least two of the terminals aren't destroyed fast enough, a burst of electricity is sent out, dealing massive shock damage."
+        },
+        {
+            "name": "Final Onslaught",
+            "description": "At 25%, the Assembly General walks to the center of the arena one last time. However, this time no terminals are summoned, and instead the boss will focus fire missiles back to back all over the arena, increasing in quantity and rate of fire over time, dealing high flame damage each. At the same time, poison fills the edge of the central platform, indicated by rectangular AoEs, dealing very high continuous poison damage and keeping you close to itself."
+        },
+        {
+            "name": "Spinning Blade Traps",
+            "description": "Throughout the fight, the Assembly General activates traveling spinning blade traps that patrol the ground floor of the arena, indicated by circular AoEs, dealing continuous high physical damage and snaring you."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [
+        "The Assembly General has three attacks with its feet: a stomp with its right foot, which sends out 3 sets of grasping limbs; a stomp with its left foot, which will cause any players standing too close in the trench to be knocked back if they do not block or dodge; and Quake (a move indicated by him jumping) which will knock all players back and stun them temporarily. Quake will only be used if the Assembly General does not detect a player standing close enough to its feet. Bombs will be launched out of the General's back in sets of three, and will home in on random players. Two arms that operate independently of its main body (The Truncating Arm and the Enkindling Arm), and deal damage to players on the top platforms. At 91%, 71%, 51%, and 31%, The Truncating arm will be destroyed, causing highly damaging sparks to begin striking the adjacent platform. A Calefactor and Capacitor will spawn at this time, and will persist until killed. At 88%, 68%, 48%, and 28%, the Enkindling arm will be destroyed, which will result in another Calefactor and Capacitor being spawned in, and the adjacent platform to be showered with highly damaging sparks. Periodically, the Assembly General's head will glow and he will announce that he is scanning a player. A Tactical Facsimile will be created at the scanned player's location. At 86%, 66%, and 46%, the Assembly General will enter his second phase.",
+        "During the second phase, the Assembly General will move to the center of the arena, where it will regenerate both arms, and begin launching rockets out of its Enkindling Arm. Four terminals will spawn at each end of the arena, and traps including toxic coolant, spinning blades, and shock fields, will fill the arena. Players must kill the four terminals within a certain time frame or they will suffer a large amount of shock damage. Standing on the top platforms will cause the players to take shock damage, while standing on anything except the track of the spinning blade will cause the player to take damage from the Toxic Coolant.",
+        "At 26%, the Assembly General will enter his third phase. He will move to the center and begin firing out guided rockets, which increase in frequency as time progresses. Care must be taken during this phase, as every time a player dies, the rockets will deal more damage per hit."
+    ],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Assembly General is a Dwarven Colossus serving as the final boss of the Halls of Fabrication. Though technically an artificial intelligence in charge of reassembly, it will control a physical body during the fight, and must be dealt with while Divayth Fyr attempts to hack its main console. The Assembly General remains rooted in place throughout the fight, except when moving places during transitions, but has many attacks that can both reach in front of itself on the floor as well as on the upper levels on its sides, as well as being able to attack both areas at the same time with its limbs. It also controls the Truncation Appendage, Ventilation System, and Whirring Blade Traps in the Core Assembly",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Assembly_General",
+        "page_title": "Online:Assembly General",
+        "revision_id": 3280470,
+        "retrieved_at": "2026-08-12T05:32:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

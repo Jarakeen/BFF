@@ -1,0 +1,28 @@
+{
+    "id": "red_ruby_cave",
+    "name": "Red Ruby Cave",
+    "content_type": "dungeon",
+    "summary": "Red Ruby Cave is a cave in northern Cyrodiil, north of Chalman Keep containing Black Daggers. A letter titled Orders from Hegris can be found next to Zandur.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Red Ruby Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Red_Ruby_Cave",
+        "page_title": "Online:Red Ruby Cave",
+        "revision_id": 3598805,
+        "retrieved_at": "2026-08-12T21:31:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

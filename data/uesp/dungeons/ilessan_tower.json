@@ -1,0 +1,26 @@
+{
+    "id": "ilessan_tower",
+    "name": "Ilessan Tower",
+    "content_type": "dungeon",
+    "summary": "This article is about the place. For the note, see Ilessan Tower (note). Ilessan Tower is a ruin just west of the Baelborne Rock Wayshrine and east of Daggerfall in Glenumbra containing Red Rook bandits. This delve can be split into two sections, there are the tower ruins on the western side of the map. Here the Rooks have dispatched an exploration team to loot the tower, led by a powerful storm mage named Gaetane. Rats are found in ample numbers within the tower. In the northeast area of the map is an outdoor area filled with harpies and their nests. The Red Rooks and Harpies have been fighting each other, with casualties on both sides. During \"Three Thieves in Daggerfall\", you will get access to the Lower Dungeon, an area below the main delve.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ilessan_Tower",
+        "page_title": "Online:Ilessan Tower",
+        "revision_id": 3601048,
+        "retrieved_at": "2026-08-12T21:26:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

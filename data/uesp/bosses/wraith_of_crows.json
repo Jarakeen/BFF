@@ -1,0 +1,78 @@
+{
+    "id": "wraith_of_crows",
+    "name": "Wraith-of-Crows",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Mines of Khuras\nIncarnatorium",
+    "species": "Wraith-of-Crows",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chop/Cleave",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Shadow Blast/Seeker Crows",
+            "description": "A basic ranged attack dealing moderate magic damage."
+        },
+        {
+            "name": "Reap",
+            "description": "The wraith soars through the air in a forward trajectory towards its target, indicated by a red circle situated under it, dealing moderate physical damage and knocking affected targets away, while snaring them in the process."
+        },
+        {
+            "name": "Murder",
+            "description": "The wraith shoots a charged bolt of purple energy at its target, raising and trapping them in the air. It then follows with a vicious overhead strike with its scythe on its trapped target, dealing moderate physical damage. Break Free can be used to escape."
+        },
+        {
+            "name": "Shadow Belch",
+            "description": "The wraith throws up a shadowy cloud of energy in front of itself, indicated by a large red circle, which lingers on for some time and travels slowly. Standing in it snares and inflicts continuous very high magic damage. After being active for long enough, projectiles are launched from the cloud outwards, indicated by smaller red circles, dealing moderate magic damage."
+        },
+        {
+            "name": "Carrion Swarm",
+            "description": "The wraith runs to the center of the arena and begins spewing out black smoke, which quickly fills the room. In conjunction, several large groups of swirling crows appear in the arena, one large under the wraith and four in total all around the wraith, as indicated by large red circles dealing continuous low magic damage. Even if not standing in those circles, the swirling crows will continuously bombard you with lobbed shadowy projectiles, dealing low magic damage over time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A Wraith of Crows polymorph was available for purchase in the Crown Store, although unlike Wraith-of-Crows creatures the polymorph has no wings and uses a standard NPC skeleton.",
+        "The entrance animation for the Wraith-of-Crows features a large murder of crows traveling in a circle with the Wraith corporealizing in the center."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Fine-Feathered Foe: Defeat the Wraith-of-Crows and other Daedric incursions in Clockwork City's Radius.",
+        "Lost in the Gloam: Assist the Blackfeather Court to reclaim a mysterious key.",
+        "Through a Veil Darkly: Save a Wyress Oracle from the clutches of Mephala.",
+        "Lost in Translation: Locate the Heart of Transparent Law.",
+        "Plucking the Crow: Save Tamriel from the Crowborne Horror."
+    ],
+    "summary": "This article is about the creature. For the polymorph, see Wraith-of-Crows (polymorph). Wraiths-of-Crows (or Wraiths of Crows) are otherworldly creatures created when several Crow Daedra combine to create a semi-humanoid skeletal figure. They possess both physical and magical attacks. They are usually found in service to Nocturnal. One of them is summoned during Lost in the Gloam by the Shadow of Sotha Sil, and another is fought in the Mines of Khuras during Through a Veil Darkly. A number of generic wraiths are encountered in the Crystal Tower and Evergloam. Three unique Wraith-of-Crows can be found behind the portal at Exarchs' Egress.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wraith-of-Crows",
+        "page_title": "Online:Wraith-of-Crows",
+        "revision_id": 3581446,
+        "retrieved_at": "2026-08-12T21:16:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

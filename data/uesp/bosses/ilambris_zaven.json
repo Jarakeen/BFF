@@ -1,0 +1,68 @@
+{
+    "id": "ilambris_zaven",
+    "name": "Ilambris-Zaven",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "Central chamber of Crypt of Hearts II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "5,879,660",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fire Bolt",
+            "description": "A basic ranged attack that does minor flame damage."
+        },
+        {
+            "name": "Rolling Fire",
+            "description": "The boss releases a line of fire that deals moderate flame damage to all players hit."
+        },
+        {
+            "name": "Pyrocasm",
+            "description": "Zaven will perform an animation akin to a fire mage using Heat Wave, unleashing lines of fire that crawl to the edge of the arena, lighting the cowering statues that surround the playing field on fire. This culminates in the boss releasing a fiery explosion around itself, dealing moderate flame damage and knocking players back as indicated by a large red circle. The knockdown cannot be prevented even by blocking."
+        },
+        {
+            "name": "Rain Fire",
+            "description": "If Ilambris-Athor dies first, Zaven will start to summon large flame AOEs that deal moderate flame damage over time as indicated by red circles."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His name is mistakenly spelled as \"Ilambris-Zavon\" a few times in dialogue with the Shard of Alanwe."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I.",
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Pledge: Crypt of Hearts II: Prove you are truly Undaunted by clearing the Crypt of Hearts II."
+    ],
+    "summary": "This article is about the creature. For the item set, see Ilambris. Ilambris-Zaven is a Xivilai fire mage found in the Crypt of Hearts I. Together with his twin Ilambris-Athor, he was summoned by Nerien'eth to torture Alanwe and keep the shards of her soul from reuniting. He is one of the final bosses of this dungeon, and killing him and his brother dispels their magic, allowing Alanwe to reform, completing the dungeon. Ilambris-Zaven and Athor reappear in Crypt of Hearts II at a suspected ritual site. Early into the fight, they merge together to become the Ilambris Amalgam.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ilambris-Zaven",
+        "page_title": "Online:Ilambris-Zaven",
+        "revision_id": 3139206,
+        "retrieved_at": "2026-08-12T21:18:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

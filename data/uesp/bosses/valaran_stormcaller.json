@@ -1,0 +1,90 @@
+{
+    "id": "valaran_stormcaller",
+    "name": "Valaran Stormcaller",
+    "content_id": "tempest_island",
+    "content_name": "Tempest Island",
+    "location": "Tempest Island, Temple of Storms",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,721,493",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Crushing Blow",
+            "description": "A charged heavy melee attack that deals high physical damage and knocking the target back. This attack should be blocked or dodged if possible."
+        },
+        {
+            "name": "Enervating Bolt",
+            "description": "The boss shoots a bolt of lightning that deals moderate shock damage and stuns the target. Break free to counter this."
+        },
+        {
+            "name": "Summon Lightning Avatar",
+            "description": "The boss summons a Lightning Avatar to attack the party. This should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Shock",
+            "description": "A Storm will continuously roam the arena at random, dealing shock damage over time to all players as indicated by a red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Valaran Stormcaller",
+            "line": "The storms are powerful, now! You'll die before I let you touch the Conduit Stone!",
+            "trigger": "When entering combat, he will be shocked by the conduit stone and knocked back, saying",
+            "ability": "Crushing Blow"
+        },
+        {
+            "speaker": "Valaran Stormcaller",
+            "line": "It's too late to stop the storm, now. Your death will be the first of many.",
+            "trigger": "If your party is wiped, he will comment",
+            "ability": "Shock"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When entering combat, he will be shocked by the conduit stone and knocked back, saying": [
+            {
+                "speaker": "Valaran Stormcaller",
+                "line": "The storms are powerful, now! You'll die before I let you touch the Conduit Stone!",
+                "trigger": "When entering combat, he will be shocked by the conduit stone and knocked back, saying",
+                "ability": "Crushing Blow"
+            }
+        ],
+        "If your party is wiped, he will comment": [
+            {
+                "speaker": "Valaran Stormcaller",
+                "line": "It's too late to stop the storm, now. Your death will be the first of many.",
+                "trigger": "If your party is wiped, he will comment",
+                "ability": "Shock"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Eye of the Storm: Defeat the invading Maormer on Tempest Island.",
+        "Pledge: Tempest Island: Prove you are truly Undaunted by clearing Tempest Island."
+    ],
+    "summary": "Valaran Stormcaller is a Maormer found at Tempest Island, of which he is a boss. He has a chance to drop Stormcaller's Blade. A \"Sudden Storm\" summoned near him will move around the room, electrocuting those who touch it, and should be avoided.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valaran_Stormcaller",
+        "page_title": "Online:Valaran Stormcaller",
+        "revision_id": 3482477,
+        "retrieved_at": "2026-08-12T21:35:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

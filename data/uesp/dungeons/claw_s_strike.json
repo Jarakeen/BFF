@@ -1,0 +1,26 @@
+{
+    "id": "claw_s_strike",
+    "name": "Claw's Strike",
+    "content_type": "dungeon",
+    "summary": "Claw's Strike is a ruined Khajiiti temple in western Reaper's March, north of the Do'Krin Monastery, containing Dawnmead Bandits. They are led by Fishbreath. This delve contains a Skyshard, three copies of Skooma Runner Logs, and a Note to Marianas. The Shrine of the Golden Eye is located through one of two hidden doors here and must be visited to complete the quest Eye of Fate. Due to being a skooma-manufacturing den, a large number of lootable alchemy bottles are found inside, offering a good source of potions concentrated in one location. Rats and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Claw%27s_Strike",
+        "page_title": "Online:Claw's Strike",
+        "revision_id": 3539623,
+        "retrieved_at": "2026-08-12T21:17:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

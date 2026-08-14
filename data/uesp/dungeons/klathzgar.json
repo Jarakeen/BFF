@@ -1,0 +1,26 @@
+{
+    "id": "klathzgar",
+    "name": "Klathzgar",
+    "content_type": "dungeon",
+    "summary": "Klathzgar is a Dwemer ruin in southeastern Bangkorai, east of Hallin's Stand and south of the Bangkorai Garrison. An Altmeri scholar named Pelorrah has been studying these ruins. Beetles and scorpions are found in numbers inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Klathzgar",
+        "page_title": "Online:Klathzgar",
+        "revision_id": 3602220,
+        "retrieved_at": "2026-08-12T21:26:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

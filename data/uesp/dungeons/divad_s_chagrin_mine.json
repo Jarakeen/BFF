@@ -1,0 +1,28 @@
+{
+    "id": "divad_s_chagrin_mine",
+    "name": "Divad's Chagrin Mine",
+    "content_type": "dungeon",
+    "summary": "Divad's Chagrin Mine is a mine in central Alik'r Desert, southeast of Sentinel containing Sandgrubber goblins. Beetles, lizards and rats are found in numbers within. Sorhab and his goat are located near the wayshrine. The Lost Caravan lies south of the mine, and Tu'whacca's Throne is to the north. Several dead Dunmer are located in the tunnel near the entrance. A note on top of a stack of crates explains that the goblins in the mine were laborers in the mine, and that no one wanted to buy them. The mine's overseers had gone missing. The Dunmer corpses presumably belong to the people who owned the goblins. A chest can spawn near this stack of crates. The western chamber contains a camp with cots located beneath tarps. There is a dining table further south, and Dunmer corpses are everywhere. Some of them are laying on cots, and may have been killed as they slept. A shield is propped up by a greatsword over a circle of bones, which lies beneath a small tree to the south. Armin is located here A note is located atop a pile of crates near a Dunmer corpse in the southern chamber. The note is located south of the creek. The skyshard is located to the north. a heavy sack is located on top of a raised platform in the southwest corner of the room. There is a tunnel south of this chamber which leads to the eastern room. There is a note in the middle of this tunnel, at the base of a small incline three durzogs are standing upon. A chest can spawn at the top of the incline, south of the durzogs. The delve boss is located in the southern part of the eastern chamber, beside a bonfire. A chest can spawn north of the bonfire. There are many ogres in this room. A chest can spawn beneath two stone slabs leaning against each other to form a shelter above a bed of furs.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "All Alik'r Desert delves were enlarged with Update 5. For Divad's Chagrin Mine, the eastern part was added and the middle part was opened to no longer be one-way. The Sandgrubber Butchers, Sandgrubber Hunters and Sandgrubber Savages were deleted, and Durzogs, Even Bigger, Ogres, Sandgrubber Deadeyes and Sandgrubber Fire Mages were added. The Sandgrubber Shaman was present in both. Finally Armin was located at the southern dead end (which now links the middle and eastern parts)."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Divad%27s_Chagrin_Mine",
+        "page_title": "Online:Divad's Chagrin Mine",
+        "revision_id": 3598248,
+        "retrieved_at": "2026-08-12T21:20:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

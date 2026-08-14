@@ -1,0 +1,26 @@
+{
+    "id": "koeglin_mine",
+    "name": "Koeglin Mine",
+    "content_type": "dungeon",
+    "summary": "Koeglin Mine is a mine on the southwest shore of Stormhaven, southeast of Koeglin Village containing Ember-Eye Slavers. They are forcing Enslaved Villagers to work the old mines. Beetles, rats and snakes are found within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Koeglin_Mine",
+        "page_title": "Online:Koeglin Mine",
+        "revision_id": 3598203,
+        "retrieved_at": "2026-08-12T21:27:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

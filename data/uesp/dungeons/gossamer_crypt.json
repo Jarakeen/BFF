@@ -1,0 +1,26 @@
+{
+    "id": "gossamer_crypt",
+    "name": "Gossamer Crypt",
+    "content_type": "dungeon",
+    "summary": "The Gossamer Crypt is a cavern that is the home of Gilded Alziriix in the Skittering Precinct. You will require the Egg of Arac relic to use the grappling points to reach the Gossamer Crypt, and gilded keys from Argent enemies to enter it. The cave consists of a single, circular cavern. Once you enter, a group of Broodlings will scatter when Alziriix and her spiderkith arrive.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gossamer_Crypt",
+        "page_title": "Online:Gossamer Crypt",
+        "revision_id": 3570197,
+        "retrieved_at": "2026-08-12T21:24:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

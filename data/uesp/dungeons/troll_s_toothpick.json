@@ -1,0 +1,26 @@
+{
+    "id": "troll_s_toothpick",
+    "name": "Troll's Toothpick",
+    "content_type": "dungeon",
+    "summary": "The Troll's Toothpick is a cave in northeastern Bangkorai, north of Kerbol's Hollow containing trolls and bandits.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Troll%27s_Toothpick",
+        "page_title": "Online:Troll's Toothpick",
+        "revision_id": 3598261,
+        "retrieved_at": "2026-08-12T21:36:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

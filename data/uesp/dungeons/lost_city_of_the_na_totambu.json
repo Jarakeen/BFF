@@ -1,0 +1,26 @@
+{
+    "id": "lost_city_of_the_na_totambu",
+    "name": "Lost City of the Na-Totambu",
+    "content_type": "dungeon",
+    "summary": "The Lost City of the Na-Totambu is an ancient Yokudan ruin in the Alik'r Desert. The ruins have recently become occupied by the Duneraider bandits, who are scavenging them for relics they can sell outside. Beetles, lizards, scorpions and snakes are found in numbers within. Hazards include flame walls and spike traps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lost_City_of_the_Na-Totambu",
+        "page_title": "Online:Lost City of the Na-Totambu",
+        "revision_id": 3588949,
+        "retrieved_at": "2026-08-12T21:27:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

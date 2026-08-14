@@ -1,0 +1,176 @@
+{
+    "id": "liramindrel",
+    "name": "Liramindrel",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "Red Petal Bastion Vaults",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "673,594",
+        "veteran": "1,203,000",
+        "hardmode": "2,815,023"
+    },
+    "abilities": [
+        {
+            "name": "Arrow Shot",
+            "description": "A basic ranged attack dealing moderate physical damage."
+        },
+        {
+            "name": "Magical Spray",
+            "description": "Liramindrel takes aim and fires a magically-empowered spray of arrows, indicated by a wide conical AoE, dealing high magical damage."
+        },
+        {
+            "name": "Crackling Arrows",
+            "description": "Liramindrel takes aim upwards and shoots a volley of arrows that crack the floor of the arena in several spots, indicated by small circular AoEs, dealing continuous high magical damage."
+        },
+        {
+            "name": "Teleport",
+            "description": "Liramindrel can teleport to opposite ends of the arena."
+        },
+        {
+            "name": "Resurrection",
+            "description": "When Eliam Merick reaches 35%, if Liramindrel was slain before, she is resurrected back to full health by the Eliam, along with Ihudir."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Prior Thierric Sarazen",
+            "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Liramindrel",
+            "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Ihudir",
+            "line": "Two shares of the spoils for me, me.",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "I got this! There won't be much left after I stomp them into paste.",
+            "trigger": "Before combat when you enter the room",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "They're tougher than they look.",
+            "trigger": "At (?)% health, Eliam Merick will call for assistance",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "Liramindrel",
+            "line": "Biting off more than you can chew, Eliam? No surprise there.",
+            "trigger": "At (?)% health, Eliam Merick will call for assistance",
+            "ability": "Resurrection"
+        },
+        {
+            "speaker": "",
+            "line": "The light playing tricks on you?",
+            "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+            "ability": "Crackling Arrows"
+        },
+        {
+            "speaker": "",
+            "line": "Scintillating, isn't it?",
+            "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+            "ability": "Crackling Arrows"
+        },
+        {
+            "speaker": "",
+            "line": "The light playing tricks on you?",
+            "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+            "ability": "Crackling Arrows"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Before combat when you enter the room": [
+            {
+                "speaker": "Prior Thierric Sarazen",
+                "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Liramindrel",
+                "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Ihudir",
+                "line": "Two shares of the spoils for me, me.",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Eliam Merick",
+                "line": "I got this! There won't be much left after I stomp them into paste.",
+                "trigger": "Before combat when you enter the room",
+                "ability": "Resurrection"
+            }
+        ],
+        "At (?)% health, Eliam Merick will call for assistance": [
+            {
+                "speaker": "Eliam Merick",
+                "line": "They're tougher than they look.",
+                "trigger": "At (?)% health, Eliam Merick will call for assistance",
+                "ability": "Resurrection"
+            },
+            {
+                "speaker": "Liramindrel",
+                "line": "Biting off more than you can chew, Eliam? No surprise there.",
+                "trigger": "At (?)% health, Eliam Merick will call for assistance",
+                "ability": "Resurrection"
+            }
+        ],
+        "Liramindrel joins fight and will call out the following as she uses her attack": [
+            {
+                "speaker": "",
+                "line": "The light playing tricks on you?",
+                "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+                "ability": "Crackling Arrows"
+            },
+            {
+                "speaker": "",
+                "line": "Scintillating, isn't it?",
+                "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+                "ability": "Crackling Arrows"
+            },
+            {
+                "speaker": "",
+                "line": "The light playing tricks on you?",
+                "trigger": "Liramindrel joins fight and will call out the following as she uses her attack",
+                "ability": "Crackling Arrows"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "A Rose of Many Thorns: A knightly order has been hoarding dangerous relics, and Lyranth wishes to claim one.",
+        "Pledge: Red Petal Bastion: Enter Red Petal Bastion and return Undaunted."
+    ],
+    "summary": "Liramindrel is a High Elf found in Red Petal Bastion. She is equipped with the Opal Charm and accompanied by Eliam Merick and Ihudir, who together make up the second boss of the dungeon as the Artifact Bearers.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Liramindrel",
+        "page_title": "Online:Liramindrel",
+        "revision_id": 3386297,
+        "retrieved_at": "2026-08-12T21:31:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

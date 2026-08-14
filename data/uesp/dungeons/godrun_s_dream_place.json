@@ -1,0 +1,18 @@
+{
+    "id": "godrun_s_dream_place",
+    "name": "Godrun's Dream (place)",
+    "content_type": "dungeon",
+    "summary": "Godrun's Dream is a pocket realm of Quagmire encountered only in the Daggerfall Covenant quest Godrun's Dream.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Godrun%27s_Dream_(place)",
+        "page_title": "Online:Godrun's Dream (place)",
+        "revision_id": 3598211,
+        "retrieved_at": "2026-08-12T21:24:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

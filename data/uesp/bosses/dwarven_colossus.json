@@ -1,0 +1,42 @@
+{
+    "id": "dwarven_colossus",
+    "name": "Dwarven Colossus",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Core Assembly, Halls of Fabrication\nFrostvault: Vault of Mhuvnak\nColossus Charging Station\nOutskirts of Ald Carac (inactive)\nSotha Sil's Study, Ceporah Tower (unactivated)\nThe Feral Gallery (Hazard)",
+    "species": "Dwarven Colossus",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A non-NPC Dwarven Colossus]] is caged in The Feral Gallery. When you approach its cage, it will periodically either stomp the ground with its left foot (Stomp) or jump to stomp with both feet (Quake). The first deals low physical damage and stuns for 1 second in a large area, while the jumping one deals low physical damage, knocks back and stuns for 1 second in a large area but it cannot be blocked. Both attacks do not have indicators.",
+        "A Dwarven Colossus was seen in the cinematic Morrowind chapter announcement trailer. The experience was later described from Naryu Virian's point of view in her Journal, where it was established that the Colossus was located at Mudan Ruins. A collectible physical figure of the Colossus is also included with the Collector's Edition of Morrowind.",
+        "Imperfects are similar constructs created by Sotha Sil.",
+        "Dwarven Colossi also appear in Legends."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr.",
+        "Problem Growth: Clear Blackreach of a dangerous self-repairing Dwarven Colossus."
+    ],
+    "achievements": [],
+    "summary": "Dwarven Colossi are a very powerful type of Dwarven Automaton that resemble a much larger Dwarven Centurion. They possess specialized weapons on their arms, the right one having a rotary blade gauntlet and the left one having a flame bellows cannon. There are only three that can be fought in the game: the avatar of the Assembly General, the Stonekeeper and Dismantler. Dozens of them are found on assembly lines within the Halls of Fabrication, in the battleground Ald Carac, among a foyada flowing into the ruins, and within the Imperfect's Sanctuary of Verification. A dormant Colossus is also found in Sotha Sil's quarters inside the Ceporah Tower.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dwarven_Colossus",
+        "page_title": "Online:Dwarven Colossus",
+        "revision_id": 3579090,
+        "retrieved_at": "2026-08-12T05:32:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

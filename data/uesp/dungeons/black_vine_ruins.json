@@ -1,0 +1,26 @@
+{
+    "id": "black_vine_ruins",
+    "name": "Black Vine Ruins",
+    "content_type": "dungeon",
+    "summary": "This article is about the dungeon. For the related note, see Black Vine Ruins (note). Black Vine Ruins are a set of Ayleid ruins in northeastern Malabal Tor, west of the Baandari Trading Post containing Red Sun bandits and stranglers. A Blackvine Strangler can be found deep within the ruin. Rats and spiders are found in numbers within. Black Vine Villa lies east of the ruins, and the Silvenar Vale Dolmen lies to the south.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Black_Vine_Ruins",
+        "page_title": "Online:Black Vine Ruins",
+        "revision_id": 3598324,
+        "retrieved_at": "2026-08-12T21:14:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

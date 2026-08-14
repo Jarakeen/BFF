@@ -1,0 +1,121 @@
+{
+    "id": "gujelag",
+    "name": "Gujelag",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Heavy Attack",
+            "description": "Gujelag performs an overhead swing dealing moderate physical damage. This can be blocked to stagger Gujelag."
+        },
+        {
+            "name": "Empower Weapon: Frost",
+            "description": "Gujelag infuses her weapon with frost which makes \"Heavy Attack\" apply a snaring effect (Frost Edge)."
+        },
+        {
+            "name": "Hand of Flame",
+            "description": "Gujelag sends three fire lines towards her target, indicated by moving red circles, dealing high flame damage. The fires split off a second time shortly afterward. This can be interrupted to stagger Gujelag."
+        },
+        {
+            "name": "Emblazoned Strike/Lava Tremor",
+            "description": "An Uppercut-like attack dealing high flame damage (Emblazoned Strike) and launching five fast areas in an arc, each dealing moderate-high flame damage (Lava Tremor). This can be blocked to stagger Gujelag and to prevent \"Lava Tremor\"."
+        },
+        {
+            "name": "Fire Chain",
+            "description": "Gujelag shoots a flaming spear at a faraway target, dealing low flame damage and pulling them to her."
+        },
+        {
+            "name": "Cleave",
+            "description": "Gujelag imbues her weapon with flames before striking their target three to five times back to back, dealing low flame damage each."
+        },
+        {
+            "name": "Sundogs",
+            "description": "Gujelag plants her weapon into the ground, summoning two orbs of solar energy near her, which then move towards their target and launch themselves at them, dealing moderate flame damage followed by low flame damage over time. This attack can be interrupted to stagger Gujelag."
+        },
+        {
+            "name": "Fiery Breath",
+            "description": "Gujelag breathes fire as indicated by a red cone, dealing high flame damage."
+        },
+        {
+            "name": "Body of Flame/Flame Spout/Bombardment",
+            "description": "Gujelag holds her blade aloft and shrouds herself in a flaming aura, granting her invulnerability (Body of Flame). Three spouts of fire also appear on the outside of this aura that spin, which deal fast direct moderate flame damage if you get hit by them (Flame Spout). Keep moving in a circle around the boss to prevent being hit by this ability. If you go outside the spouts' range, Gujelag continuously launches fireballs at you, each dealing very high flame damage (Bombardment)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Gujelag",
+            "line": "You are no match for us!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Gujelag",
+            "line": "Burn bright!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Gujelag",
+            "line": "You all must burn!",
+            "trigger": "During combat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "During combat": [
+            {
+                "speaker": "Gujelag",
+                "line": "You are no match for us!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Gujelag",
+                "line": "Burn bright!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Gujelag",
+                "line": "You all must burn!",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Gujelag is a Golden Saint who can found in a northern room, near a furnace with Stupulag. She serves as one of the champions of the Gorne public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gujelag",
+        "page_title": "Online:Gujelag",
+        "revision_id": 3583940,
+        "retrieved_at": "2026-08-12T21:24:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

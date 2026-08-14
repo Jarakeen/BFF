@@ -1,0 +1,28 @@
+{
+    "id": "underpall_cave",
+    "name": "Underpall Cave",
+    "content_type": "dungeon",
+    "summary": "Underpall Cave is a cave in northern Cyrodiil, northwest of Fort Aleswell containing Bloodborn vampires. Outside the cave lies an encampment where the vampires reside. There are cages for captives, and Breton-style tents for the vampires to rest comfortably. In the northern chamber, a Letter to Raelynne can be found on one of the sarcophagi near Raelynne Ashham. A chest lies in the narrow tunnel leading north out of the western chamber, into Emelin the Returned's chamber (in the northeast). A heavy sack can be found in the room to the west, by the bridge leading over the watery chasm. Another heavy sack can be found in the southwestern nook inside Emelin's large chamber. Its bosses have a chance to drop the Magicka-Imbued Metal Plates antiquity lead for the Snow Treaders.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Underpall Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Underpall_Cave",
+        "page_title": "Online:Underpall Cave",
+        "revision_id": 3598811,
+        "retrieved_at": "2026-08-12T21:36:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

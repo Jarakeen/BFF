@@ -1,0 +1,18 @@
+{
+    "id": "deadlight",
+    "name": "Deadlight",
+    "content_type": "dungeon",
+    "summary": "This article is about the place. For the quest, see Deadlight (quest). Deadlight is a ravaged realm of Oblivion. Many Fargravians and Daedra consider it to be nothing more than an old legend. According to The Legend of Deadlight, it was once ruled by an unknown Daedric Prince, until Mehrunes Dagon destroyed the Prince and the realm itself. Dagon has since given this dead realm to the Order of the Waking Flame to use as a refuge and base of operations for them. You must travel here during the related quest to confront Sister Celdina. While progressing through the citadel, Valkynaz Nokvroz's forces manage to breach the ward and lead their own attack on the cult.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Deadlight",
+        "page_title": "Online:Deadlight",
+        "revision_id": 3550288,
+        "retrieved_at": "2026-08-12T21:19:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

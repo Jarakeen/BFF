@@ -1,0 +1,30 @@
+{
+    "id": "haddock_s_market",
+    "name": "Haddock's Market",
+    "content_type": "dungeon",
+    "summary": "Haddock's Market is a cave in south-central Craglorn, just east of Belkarth containing Greycloak Mercenaries. They are operating their illegitimate business inside the delve. Sandroaches are found in numbers within. Numerous beasts can be found in cages, though no nameplates appear when viewing them (excluding one caged monkey and rat). These include a bear, two bantam guars, a pony guar, a senche, and a spider.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "A group boss named Packleader Stigthar can be found outside Haddock's Market during the Zeal of Zenithar event. He is related to the event quest The Unrefusable Offer.",
+        "When Haddock's Market was released, it was littered with \"Missing\" texture error boxes.",
+        "Prior to Update 12, this location was an instanced 4-player Group Delve. Bosses were Boss rank. Ariana's Guards, Greycloak Necromancers and Mudcrabs were also present."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Haddock%27s_Market",
+        "page_title": "Online:Haddock's Market",
+        "revision_id": 3500097,
+        "retrieved_at": "2026-08-12T21:25:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

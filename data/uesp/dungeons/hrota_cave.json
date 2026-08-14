@@ -1,0 +1,30 @@
+{
+    "id": "hrota_cave",
+    "name": "Hrota Cave",
+    "content_type": "dungeon",
+    "summary": "Hrota Cave is a cave located just north of Anvil containing wispmothers and undead. Wisps can be found throughout the cave, and will animate nearby corpses if not killed quickly enough. The cave contains several named wispmothers, but only Exulus needs to be killed to clear the delve. The vampire lord Zalar-do also lairs here. Torchbugs are found in great numbers within. Exulus has a chance to drop the following chapters of the Assassins League style: Boots, Bows, Chests, Maces, and Swords.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dark_brotherhood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The cave has several cave-ins which appear to be dead ends. However, approaching one will allow you to activate a \"Secret Passage\" and emerge on the other side.",
+        "Despite having weaker health, the reanimating wisps still give leveled experience when slain.",
+        "Hrota Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hrota_Cave",
+        "page_title": "Online:Hrota Cave",
+        "revision_id": 3562037,
+        "retrieved_at": "2026-08-12T21:25:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,50 @@
+{
+    "id": "poxito",
+    "name": "Poxito",
+    "content_id": "naj_caldeesh",
+    "content_name": "Naj-Caldeesh",
+    "location": "Naj-Caldeesh, Death's Walk",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,420,463",
+        "veteran": "7,105,223",
+        "hardmode": "10,657,834"
+    },
+    "abilities": [
+        {
+            "name": "Bone Armor",
+            "description": "A layer of skeletal armor that adds extra protection."
+        },
+        {
+            "name": "Soul Storm",
+            "description": "Poxito will summon bone effigies that have an additional effect of being tied to her Soul Storm ability, where a beam of blue plasma will connect her sword to the effigies. If there is a bone effigy left standing when Poxito finishes casting the ability, the entire group will be killed instantly, so destroying the bone effigies at the opposite sides of room is essential for surviving the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "A challenge banner at the entrance of the room can be activated to turn hard mode on or off."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unearthed and Unexplored: Recover the keystone and expel the Wuj-Laxul from Naj-Caldeesh.",
+        "Pledge: Naj-Caldeesh: Explore Naj-Caldeesh and return Undaunted."
+    ],
+    "summary": "Poxito is an Argonian warrior of the Wuj-Laxul necromancers who is encountered in the Death's Walk section of Naj-Caldeesh. She serves as the first boss of the dungeon. There are a number of traps such as saw bladesand Flame Crests? in the room. A challenge banner at the entrance of the room can be activated to turn hard mode on or off.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Poxito",
+        "page_title": "Online:Poxito",
+        "revision_id": 3483822,
+        "retrieved_at": "2026-08-12T21:29:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

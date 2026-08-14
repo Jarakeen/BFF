@@ -1,0 +1,65 @@
+{
+    "id": "all_seeing_ky_zuu",
+    "name": "All-Seeing Ky'zuu",
+    "content_id": "the_underweave",
+    "content_name": "The Underweave",
+    "location": "Underweave Courtyard",
+    "species": "Watcher",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Gaze",
+            "description": "All-Seeing Ky'zuu shoots a beam from its eye directly at its target as a basic ranged attack, dealing moderate magic damage."
+        },
+        {
+            "name": "Tentacle Rush",
+            "description": "All-Seeing Ky'zuu swiftly spins around while dashing towards a target, as indicated by a large red circle, dealing very high physical damage, knocking back and snaring all targets in its wake. Blocking prevents the knockback but not the snare."
+        },
+        {
+            "name": "Doom-Truth's Gaze",
+            "description": "All-Seeing Ky'zuu shoots three green beams from its eye. They all start in front of Uzur and disperse in straight lines but here is no indicator for these. Getting hit by a beam deals moderate magic damage and stuns. Blocking negates the stun. Each beam creates a \"\" area when they disappear."
+        },
+        {
+            "name": "Lingering Grasp",
+            "description": "Tentacles areas dealing continuous moderate magic damage and continuously stunning."
+        },
+        {
+            "name": "Summon Hushed",
+            "description": "When the combat starts, at 80% and 20% Health, All-Seeing Ky'zuu summons a wave of four Hushed Reavers and Hushed Spellfiends in a random composition."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "All-Seeing Ky'zuu is a Watcher who can be found in the Underweave on the upper tier of the entry room. They serve as the group event of the public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:All-Seeing_Ky%27zuu",
+        "page_title": "Online:All-Seeing Ky'zuu",
+        "revision_id": 3298014,
+        "retrieved_at": "2026-08-12T21:36:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

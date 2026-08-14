@@ -1,0 +1,91 @@
+{
+    "id": "tarcyr",
+    "name": "Tarcyr",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices",
+    "species": "Indrik",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,189,182",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Horn Blast",
+            "description": "A basic ranged attack that deals minor frost damage."
+        },
+        {
+            "name": "Horn Burst",
+            "description": "A charged heavy attack that deals very high shock damage in an area around the target as indicated by a red circle. The tank must block this, and do not stand near the tank when this is cast. This attack can also be dodged."
+        },
+        {
+            "name": "Cold Snap",
+            "description": "Getting hit by Horn Blast will deal minor frost damage over time."
+        },
+        {
+            "name": "Static Charge",
+            "description": "The boss channels a spell that causes lightning to strike dealing unavoidable moderate shock damage over time to all players. This can be interrupted."
+        },
+        {
+            "name": "Rapid Frost",
+            "description": "The boss places a frost AoE around the tank that follows the target around dealing moderate frost damage over time as indicated by a red circle. This can only be mitigated through healing."
+        },
+        {
+            "name": "Hyper Awareness",
+            "description": "The boss sends out ghostly versions of itself towards all players dealing moderate physical damage and stunning them. Keep some distance from the boss to easily avoid this, and break free quickly if you are stunned."
+        },
+        {
+            "name": "Projection",
+            "description": "The boss sends out a projection of itself towards a single target dealing moderate physical damage."
+        },
+        {
+            "name": "Conflagration",
+            "description": "The boss runs around randomly leaving a trail of flame AoEs that deal moderate flame damage over time as indicated by red circles."
+        },
+        {
+            "name": "Summon Bloodscent Butcher",
+            "description": "The boss occasionally summons two Bloodscent Butchers to attack the group. Kill them quickly to simplify the fight."
+        },
+        {
+            "name": "Teleport",
+            "description": "The boss will teleport around to avoid your attacks."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wolfhunter_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Hanu comments after defeating Tarcyr's Nord thralls the abilities the Indrik has displayed are not normal.",
+        "Tarcyr's name means \"Wood Heart\" in Ayleid."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt.",
+        "Pledge: March of Sacrifices: Prove you are truly Undaunted by clearing the March of Sacrifices."
+    ],
+    "summary": "The Great Indrik Tarcyr is the hare of Hircine's latest Great Hunt in the March of Sacrifices. The hunters must slay Tarcyr and bring his heart to Daedric Prince for a boon. This is no easy task, as the creature sports abilities not typical of an Indrik, for it has been imbued with special powers from Hircine himself. Tarcyr shares the appearance of the Pure-Snow Indrik breed.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tarcyr",
+        "page_title": "Online:Tarcyr",
+        "revision_id": 3607142,
+        "retrieved_at": "2026-08-12T21:28:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

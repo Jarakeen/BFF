@@ -1,0 +1,422 @@
+{
+    "id": "eliam_merick",
+    "name": "Eliam Merick",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "Red Petal Bastion Vaults",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,092,086",
+        "veteran": "5,413,499",
+        "hardmode": "12,667,598"
+    },
+    "abilities": [
+        {
+            "name": "Thunderous Entrance",
+            "description": "Eliam Merick jumps down from his ledge to start the fight, creating a moderate shockwave around him, indicated by a circular AoE, dealing moderate physical damage and staggering you if close."
+        },
+        {
+            "name": "Axe Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Stomp",
+            "description": "Eliam Merick swiftly stomps the ground, sending shockwaves forward from the impact point, indicated by small circular AoEs, dealing high physical damage and launching you backwards."
+        },
+        {
+            "name": "Heinous Highkick",
+            "description": "A melee heavy attack where the boss will kick whoever holds aggro. If taunted this should just be the tank. He shares this ability with Prior Thierric Sarazen."
+        },
+        {
+            "name": "Golden Stomp",
+            "description": "Eliam Merick slowly winds up his foot before stomping the ground, causing a burst of golden energy, indicated by a large growing circular AoE, dealing high magical damage. The impact point remains affected by lingering magic, dealing continuous moderate magical damage."
+        },
+        {
+            "name": "Charge",
+            "description": "Eliam Merick brings his shield up and charges forward, indicated by a circular AoE beneath him, dealing high physical damage and knocking you down."
+        },
+        {
+            "name": "Allies Resurrection",
+            "description": "When Eliam Merick reaches 35% health, if Ihudir and Liramindrel are dead, Eliam resurrects them both back to full health so that they can continue assisting him."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Prior Thierric Sarazen",
+            "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+            "trigger": "Before combat",
+            "ability": "Golden Stomp"
+        },
+        {
+            "speaker": "Liramindrel",
+            "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+            "trigger": "Before combat",
+            "ability": "Golden Stomp"
+        },
+        {
+            "speaker": "Ihudir",
+            "line": "Two shares of the spoils for me, me.",
+            "trigger": "Before combat",
+            "ability": "Golden Stomp"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "I got this! There won't be much left after I stomp them into paste.",
+            "trigger": "Before combat",
+            "ability": "Golden Stomp"
+        },
+        {
+            "speaker": "",
+            "line": "I can see you trembling. Or is it the boots?",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I've been waiting to break in these boots. Though most of the breaking will be happening to you.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Come on, you cowards! I'm even letting you make the first move!",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I'm looking forward to stomping all over you!",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Don't worry, I'll try to save a couple for you two to play with.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Can't wait to see what happens after a swift kick between the legs with these.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Quake in fear!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Quake in fear! Hahaha!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Goodbye to your teeth!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "I'll stomp you to mush!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Pulverised!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "You'll feel this in your bones!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Charge!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Ooo, I felt that.",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Kiss my boot!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "\"Down you go!\"'",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "I'll stomp you like grapes!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Taste my heel!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "",
+            "line": "Boot to the head!",
+            "trigger": "During Combat",
+            "ability": "Thunderous Entrance"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "They're tougher than they look.",
+            "trigger": "At (?)% he will call for assistance",
+            "ability": "Heinous Highkick"
+        },
+        {
+            "speaker": "Liramindrel",
+            "line": "Biting off more than you can chew, Eliam? No surprise there.",
+            "trigger": "At (?)% he will call for assistance",
+            "ability": "Heinous Highkick"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "Jump in anytime!",
+            "trigger": "At 60% Ihudir will join in",
+            "ability": "Heinous Highkick"
+        },
+        {
+            "speaker": "Ihudir",
+            "line": "Need a hand, or two?",
+            "trigger": "At 60% Ihudir will join in",
+            "ability": "Heinous Highkick"
+        },
+        {
+            "speaker": "Eliam Merick",
+            "line": "Rally! We can't loose to these heathens!",
+            "trigger": "At 35% he will raise the other two if they have been defeated and say",
+            "ability": "Allies Resurrection"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Before combat": [
+            {
+                "speaker": "Prior Thierric Sarazen",
+                "line": "Does the heathen priest believe he can stand in the way of our divine purpose?",
+                "trigger": "Before combat",
+                "ability": "Golden Stomp"
+            },
+            {
+                "speaker": "Liramindrel",
+                "line": "The powers of Oblivion aren't to be worshiped, they are to be commanded!",
+                "trigger": "Before combat",
+                "ability": "Golden Stomp"
+            },
+            {
+                "speaker": "Ihudir",
+                "line": "Two shares of the spoils for me, me.",
+                "trigger": "Before combat",
+                "ability": "Golden Stomp"
+            },
+            {
+                "speaker": "Eliam Merick",
+                "line": "I got this! There won't be much left after I stomp them into paste.",
+                "trigger": "Before combat",
+                "ability": "Golden Stomp"
+            }
+        ],
+        "Idling before combat": [
+            {
+                "speaker": "",
+                "line": "I can see you trembling. Or is it the boots?",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I've been waiting to break in these boots. Though most of the breaking will be happening to you.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Come on, you cowards! I'm even letting you make the first move!",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I'm looking forward to stomping all over you!",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Don't worry, I'll try to save a couple for you two to play with.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Can't wait to see what happens after a swift kick between the legs with these.",
+                "trigger": "Idling before combat",
+                "ability": null
+            }
+        ],
+        "Beginning combat": [
+            {
+                "speaker": "",
+                "line": "Quake in fear!",
+                "trigger": "Beginning combat",
+                "ability": null
+            }
+        ],
+        "During Combat": [
+            {
+                "speaker": "",
+                "line": "Quake in fear! Hahaha!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Goodbye to your teeth!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "I'll stomp you to mush!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Pulverised!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "You'll feel this in your bones!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Charge!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Ooo, I felt that.",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Kiss my boot!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "\"Down you go!\"'",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "I'll stomp you like grapes!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Taste my heel!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            },
+            {
+                "speaker": "",
+                "line": "Boot to the head!",
+                "trigger": "During Combat",
+                "ability": "Thunderous Entrance"
+            }
+        ],
+        "At (?)% he will call for assistance": [
+            {
+                "speaker": "Eliam Merick",
+                "line": "They're tougher than they look.",
+                "trigger": "At (?)% he will call for assistance",
+                "ability": "Heinous Highkick"
+            },
+            {
+                "speaker": "Liramindrel",
+                "line": "Biting off more than you can chew, Eliam? No surprise there.",
+                "trigger": "At (?)% he will call for assistance",
+                "ability": "Heinous Highkick"
+            }
+        ],
+        "At 60% Ihudir will join in": [
+            {
+                "speaker": "Eliam Merick",
+                "line": "Jump in anytime!",
+                "trigger": "At 60% Ihudir will join in",
+                "ability": "Heinous Highkick"
+            },
+            {
+                "speaker": "Ihudir",
+                "line": "Need a hand, or two?",
+                "trigger": "At 60% Ihudir will join in",
+                "ability": "Heinous Highkick"
+            }
+        ],
+        "At 35% he will raise the other two if they have been defeated and say": [
+            {
+                "speaker": "Eliam Merick",
+                "line": "Rally! We can't loose to these heathens!",
+                "trigger": "At 35% he will raise the other two if they have been defeated and say",
+                "ability": "Allies Resurrection"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is voiced by Keith Silverstein."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Rose of Many Thorns: A knightly order has been hoarding dangerous relics, and Lyranth wishes to claim one.",
+        "Pledge: Red Petal Bastion: Enter Red Petal Bastion and return Undaunted."
+    ],
+    "summary": "Eliam Merick is a Breton found in Red Petal Bastion. He is equipped with the Groundsplitters and accompanied by Ihudir and Liramindrel, who together make up the second boss of the dungeon as the Artifact Bearers.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Eliam_Merick",
+        "page_title": "Online:Eliam Merick",
+        "revision_id": 3332842,
+        "retrieved_at": "2026-08-12T21:31:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

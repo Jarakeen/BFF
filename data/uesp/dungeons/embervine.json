@@ -1,0 +1,18 @@
+{
+    "id": "embervine",
+    "name": "Embervine",
+    "content_type": "dungeon",
+    "summary": "Embervine is a cavernous basin found in eastern Galen.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Embervine",
+        "page_title": "Online:Embervine",
+        "revision_id": 3497086,
+        "retrieved_at": "2026-08-12T21:21:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

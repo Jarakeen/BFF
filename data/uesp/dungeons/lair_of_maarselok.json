@@ -1,0 +1,28 @@
+{
+    "id": "lair_of_maarselok",
+    "name": "Lair of Maarselok",
+    "content_type": "dungeon",
+    "summary": "The Lair of Maarselok is a group dungeon within the mountain valleys of Tenmar, Grahtwood entered from a lake northeast of the Ossuary of Telacar. It is part of the Scalebreaker dungeon pack DLC, along with the Moongrave Fane. The Azureblight, a deathly corruption originating from an abandoned Khajiiti temple within the Tenmar Mountain valley, threatens the Elden Tree. When Grahtwood's protectors tried and failed to destroy the Dragon Maarselok at the center of the blight, a second plan is hatched to enlist the help of the forest spirit Selene and her captor, the warlock Carindon. Together in an uneasy truce, and with your help, they must stop Maarselok and his blight before the corruption can spread further.",
+    "location": "",
+    "boss_ids": [
+        "maarselok"
+    ],
+    "achievements": [
+        {
+            "id": "scalebreaker_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lair_of_Maarselok",
+        "page_title": "Online:Lair of Maarselok",
+        "revision_id": 3607003,
+        "retrieved_at": "2026-08-12T21:27:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

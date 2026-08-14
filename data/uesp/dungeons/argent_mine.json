@@ -1,0 +1,29 @@
+{
+    "id": "argent_mine",
+    "name": "Argent Mine",
+    "content_type": "dungeon",
+    "summary": "Argent Mine is a silver mine south of Morkul Stronghold, containing werewolves. It was the original founding place of the Order of the Silver Dawn, but recently has been taken over by the Magnar Pack, a band of werewolves. The Silver Linings quest involves recovering the sacred banner of the order from the mine.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "A relic for the House of Orsimer Glories, Liquid Silver, is located inside a tent in the room at the center-right of the map.",
+        "The boulder fall traps inside mentioned by Dirdre pose little threat, as even when triggered, the boulders take a long time to actually drop, giving plenty of time to continue moving forward. Even if hit, the damage they inflict is minimal. The bear traps however remain a lot more dangerous."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Argent_Mine",
+        "page_title": "Online:Argent Mine",
+        "revision_id": 3212385,
+        "retrieved_at": "2026-08-12T21:13:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

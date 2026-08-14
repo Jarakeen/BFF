@@ -1,0 +1,39 @@
+{
+    "id": "voskrona_stonehulk_poxito",
+    "name": "Voskrona Stonehulk Poxito",
+    "content_id": "naj_caldeesh",
+    "content_name": "Naj-Caldeesh",
+    "location": "Naj-Caldeesh",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "5,051,957",
+        "veteran": "8,120,255",
+        "hardmode": "12,180,382"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unearthed and Unexplored: Recover the keystone and expel the Wuj-Laxul from Naj-Caldeesh.",
+        "Pledge: Naj-Caldeesh: Explore Naj-Caldeesh and return Undaunted."
+    ],
+    "summary": "Voskrona Stonehulk Poxito is a Voskrona Guardian that has been imbued with Poxito's spirit by Wuj-Laxul leader Talen-Lah in Naj-Caldeesh. It serves as the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Voskrona_Stonehulk_Poxito",
+        "page_title": "Online:Voskrona Stonehulk Poxito",
+        "revision_id": 3498025,
+        "retrieved_at": "2026-08-12T21:29:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

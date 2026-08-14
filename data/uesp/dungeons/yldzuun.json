@@ -1,0 +1,26 @@
+{
+    "id": "yldzuun",
+    "name": "Yldzuun",
+    "content_type": "dungeon",
+    "summary": "Yldzuun is a Dwemer ruin in the southeastern Alik'r Desert, southeast of Kozanset containing Imperial soldiers and Dwemer constructs. The Imperials were hired by Quintus Verres to stop his ex-wife, Tharayya. Rats and scorpions are found in numbers within. Imperials and Dwarven constructs can be found fighting against each other in the western room, which is near the entrance. The western chamber has three sections: the northern section, the center, and the southern section. The north and south lead out to tunnels into other sections of the ruin. A heavy sack is in the southeastern corner of the northern section of the room. A chest lies along the western wall in the north. The center contains a Dwarven Centurion and a heavy sack. Tharayya's Journal, Entry 19 can be found on a table in the western room, surrounded by empty bottles. The southwestern room is in a cave with a waterfall. A chest can be found at the base of the waterfall, and a skeleton holding a bottle of wine can be found under the bridge. There is a heavy sack in the eastern part of the room, at a camp containing bedrolls and Imperials. The delve's boss, Captain Candidus, can be found in the southeastern room. A chest can be found above him, on top of a rock wall in the northern part of the room. Swarming Dwarven Spiders and a Dwarven Centurion can be found in the eastern chamber. Tharayya's Journal, Entry 16 can be found on a table in the southern part of the room. A heavy sack can be found against the southwestern wall. The delve's skyshard can be found against a pillar in the center of the room, along the pillar's northeastern wall. Tharayya's Journal, Entry 15 can be found on a table in the northern hallway.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yldzuun",
+        "page_title": "Online:Yldzuun",
+        "revision_id": 3598253,
+        "retrieved_at": "2026-08-12T21:39:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,356 @@
+{
+    "id": "sister_skelga",
+    "name": "Sister Skelga",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Underkeep",
+    "species": "Hagraven",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,178,790",
+        "veteran": "4,330,803",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Bolt",
+            "description": "Basic ranged attack dealing high frost damage."
+        },
+        {
+            "name": "Flame Swirl",
+            "description": "Sister Skelga summons a fire swirl that tracks your movement as it builds up, before erupting, dealing very high flame damage. After the eruption, a pool of flame will continue to follow your movement for a few more seconds, dealing continuous high flame damage that must be healed through."
+        },
+        {
+            "name": "Ice Burst",
+            "description": "Sister Skelga raises her hands in the air, causing ice to burst from her, releasing four ice tornadoes going outward from her position, dealing very high ice damage and snaring you."
+        },
+        {
+            "name": "Dark Beam",
+            "description": "Sister Skelga channels a beam of concentrated dark magic at you, dealing very high magical damage."
+        },
+        {
+            "name": "Teleport",
+            "description": "Sister Skelga teleports to any of the arena's far end to put distance between you and her."
+        },
+        {
+            "name": "Summon Stranglers",
+            "description": "Sister Skelga will periodically summon stranglers buffed with a large damage shield on the outskirts of the arena to pester you."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Skelga",
+            "line": "I knew this ritual would bring trouble. Your new patron asks too much of us!",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Enough of your mewling! These slow-witted Nords pose little threat.",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "<They notice you.>",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Look here. More of them! Stay out of my way, Hiti.",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "I do as I please, sister!",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Look at them quiver! Cold, are you? Ha!",
+            "trigger": "Idling before entering in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Leave the trespassers to me, sister.",
+            "trigger": "Idling before entering in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "I can smell your terror. Mmm … delicious!",
+            "trigger": "Idling before entering in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "If your flames scorch my children, Hiti, I'll gouge out your eyes!",
+            "trigger": "Idling before entering in combat",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "I'll have your bones for a stew!",
+            "trigger": "When she is engaged",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Get out of my garden! Get out!",
+            "trigger": "When she is engaged",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "I'll feed your frozen corpses to the sea!",
+            "trigger": "When she is engaged",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "You will never leave this island!",
+            "trigger": "When she is engaged",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Wake, children! Wake!",
+            "trigger": "While summoning frosted stranglers",
+            "ability": "Summon Stranglers"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Come out, pretties! Come out!",
+            "trigger": "While summoning frosted stranglers",
+            "ability": "Summon Stranglers"
+        },
+        {
+            "speaker": "",
+            "line": "More feed for the garden ….",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Finally, some peace and quiet.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Dead? Good. Now, where's my cauldron ….",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Step aside, Skelga. I'll burn them alive!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Your flames are a blight shrew. Go join the rest of your coven.",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Enough fooling about. Burn!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Leave this to me witch!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Skelga? Skelga! You … I'll burn you to cinders for this!",
+            "trigger": "Once you kill Skelga, Hiti will swear vengeance before teleporting away.",
+            "ability": "Flame Swirl"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.": [
+            {
+                "speaker": "Sister Skelga",
+                "line": "I knew this ritual would bring trouble. Your new patron asks too much of us!",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "Enough of your mewling! These slow-witted Nords pose little threat.",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "<They notice you.>",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Look here. More of them! Stay out of my way, Hiti.",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "I do as I please, sister!",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Skelga and Sister Hiti will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Idling before entering in combat": [
+            {
+                "speaker": "Sister Skelga",
+                "line": "Look at them quiver! Cold, are you? Ha!",
+                "trigger": "Idling before entering in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Leave the trespassers to me, sister.",
+                "trigger": "Idling before entering in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "I can smell your terror. Mmm … delicious!",
+                "trigger": "Idling before entering in combat",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "If your flames scorch my children, Hiti, I'll gouge out your eyes!",
+                "trigger": "Idling before entering in combat",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "When she is engaged": [
+            {
+                "speaker": "Sister Skelga",
+                "line": "I'll have your bones for a stew!",
+                "trigger": "When she is engaged",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Get out of my garden! Get out!",
+                "trigger": "When she is engaged",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "I'll feed your frozen corpses to the sea!",
+                "trigger": "When she is engaged",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "You will never leave this island!",
+                "trigger": "When she is engaged",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "While summoning frosted stranglers": [
+            {
+                "speaker": "Sister Skelga",
+                "line": "Wake, children! Wake!",
+                "trigger": "While summoning frosted stranglers",
+                "ability": "Summon Stranglers"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Come out, pretties! Come out!",
+                "trigger": "While summoning frosted stranglers",
+                "ability": "Summon Stranglers"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "More feed for the garden ….",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Finally, some peace and quiet.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Dead? Good. Now, where's my cauldron ….",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "Step aside, Skelga. I'll burn them alive!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Your flames are a blight shrew. Go join the rest of your coven.",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "Enough fooling about. Burn!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Leave this to me witch!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Once you kill Skelga, Hiti will swear vengeance before teleporting away.": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "Skelga? Skelga! You … I'll burn you to cinders for this!",
+                "trigger": "Once you kill Skelga, Hiti will swear vengeance before teleporting away.",
+                "ability": "Flame Swirl"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Sister Skelga is a hagraven associated with the Icereach Coven. She can be found outside after exiting the Icereach Underkeep and serves as the second boss for the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sister_Skelga",
+        "page_title": "Online:Sister Skelga",
+        "revision_id": 3339482,
+        "retrieved_at": "2026-08-12T21:26:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

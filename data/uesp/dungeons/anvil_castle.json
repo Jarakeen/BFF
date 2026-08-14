@@ -1,0 +1,21 @@
+{
+    "id": "anvil_castle",
+    "name": "Anvil Castle",
+    "content_type": "dungeon",
+    "summary": "Anvil Castle is a castle in southeastern Anvil. It's actually on an island, accessible from the city proper via a bridge. While the main areas are safe, there are also several restricted zones, filled with Red Sails pirates who will both attack and give you a bounty on sight. The castle also has a number of secret passages, identified by alcoves with red drapes beside them.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Anvil Castle Caves also appears in Oblivion as the Smuggler's Cave.",
+        "Anvil Castle also appears in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Anvil_Castle",
+        "page_title": "Online:Anvil Castle",
+        "revision_id": 3549760,
+        "retrieved_at": "2026-08-12T21:12:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

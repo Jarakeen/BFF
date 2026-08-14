@@ -1,0 +1,74 @@
+{
+    "id": "prior_thierric_sarazen",
+    "name": "Prior Thierric Sarazen",
+    "content_id": "red_petal_bastion",
+    "content_name": "Red Petal Bastion",
+    "location": "Red Petal Bastion — Vaults\nInfinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,378,363",
+        "veteran": "7,412,883",
+        "hardmode": "15,344,666"
+    },
+    "abilities": [
+        {
+            "name": "Sword Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Cleave",
+            "description": "The Prior performs a wide sword cleave, indicated by a large conical AoE, dealing high physical attack."
+        },
+        {
+            "name": "Heinous Highkick",
+            "description": "A melee heavy attack where the boss will kick whoever holds aggro. If taunted this should just be the tank. He shares this ability with Eliam Merick."
+        },
+        {
+            "name": "Opalescent Impale",
+            "description": "The boss will teleport to one of the four corners of the room and target a random player (indicated by a red target under their feet) with a channeled attack, if he is not interrupted he will kill that player with an opal sword though them."
+        },
+        {
+            "name": "Blade Projection",
+            "description": "He will slam his sword into the ground and each player will gain a kite as blades will follow them around the room. These blades will likely kill a non-tank in hard mode."
+        },
+        {
+            "name": "Golden Stomp",
+            "description": "The Prior has an augmented version of Eliam Meric's Golden Stomp ability. He performs it in the same way, but his version includes four magical shield walls that travel across the arena after he has performed the charge, dealing very high magical damage and staggering you."
+        },
+        {
+            "name": "Dark Spin/Spectral Slash",
+            "description": "The Prior becomes rooted in place and swings his greatsword around, as dark red magic appears beneath him, indicated by a circular AoE, dealing high magical damage. The more the spin goes on, more similar dark red swirls propagate throughout the arena, and will linger for an extended duration after the Prior is done swinging his sword."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "The Prior periodically summons allies into the arena to assist him. They are comprised of Silver Rose Realmshapers and Relic Fiends."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His appearance will change between the second boss fight and the final boss fight to reflect him wielding all three artifacts. In the second boss fight he wears Silver Rose sabatons and has no sword. In the final boss fight he will change to Ancient Daedric sabatons, he will also gain an ancient daedric greatsword and a prismatic effect on his chest."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Rose of Many Thorns: A knightly order has been hoarding dangerous relics, and Lyranth wishes to claim one.",
+        "Pledge: Red Petal Bastion: Enter Red Petal Bastion and return Undaunted."
+    ],
+    "summary": "This article is about the NPC. For the item set, see Prior Thierric. Prior Thierric Sarazen is a Breton found in the Red Petal Bastion. He is the knight-commander of the Knights of the Silver Rose, and acts as the final boss of the dungeon. His abilities are based on the artifacts he has equipped: The Duplici Gladio, Groundsplitters, and the Opal Charm.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Prior_Thierric_Sarazen",
+        "page_title": "Online:Prior Thierric Sarazen",
+        "revision_id": 3332848,
+        "retrieved_at": "2026-08-12T21:31:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

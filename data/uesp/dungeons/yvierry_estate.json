@@ -1,0 +1,18 @@
+{
+    "id": "yvierry_estate",
+    "name": "Yvierry Estate",
+    "content_type": "dungeon",
+    "summary": "The Yvierry Estate is a large home owned by the Yvierry family in Daggerfall. It is found in the northeast corner of the city, and is surrounded by walls and the gardens are patrolled by Yvierry Sentries. During the related quest, you and Quen will need to break into the property to steal a valuable book.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yvierry_Estate",
+        "page_title": "Online:Yvierry Estate",
+        "revision_id": 3595144,
+        "retrieved_at": "2026-08-12T21:39:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

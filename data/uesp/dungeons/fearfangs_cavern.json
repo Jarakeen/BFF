@@ -1,0 +1,28 @@
+{
+    "id": "fearfangs_cavern",
+    "name": "Fearfangs Cavern",
+    "content_type": "dungeon",
+    "summary": "Fearfangs Cavern is a Nedic ruin in Upper Craglorn containing Scaled Court cultists and wildlife. They use the local scorpion nesting grounds as part of their project for creating mantikora. Additionally, the cultists are searching for information about the usage of nirncrux. Scorpions and snakes are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve. The larger Giant Snakes, one Scaled Court Arcanist, the Scaled Court Illusionists, the Scaled Court Ironskins and the Scaled Court Ravagers were elite rank. A Scaled Court Healer and Scorplings were also present. Both bosses were Boss rank."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fearfangs_Cavern",
+        "page_title": "Online:Fearfangs Cavern",
+        "revision_id": 3578385,
+        "retrieved_at": "2026-08-12T21:22:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

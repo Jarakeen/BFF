@@ -1,0 +1,68 @@
+{
+    "id": "bogdan_the_nightflame",
+    "name": "Bogdan the Nightflame",
+    "content_id": "elden_hollow_ii",
+    "content_name": "Elden Hollow II",
+    "location": "Elden Hollow II, Daedric Ruins",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,131,995",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Burn Down",
+            "description": "The boss breathes fire dealing high flame damage to a single target, usually the tank."
+        },
+        {
+            "name": "Daedric Flame",
+            "description": "Bogdan spews fire that lands and stays on various areas around the platform, dealing high flame damage to those that touch it. The fire persists for a very long time, and the only time it is cleared is during Pulverize. The party should ensure they have enough damage to bring the boss to the respective health checkpoints before the fire covers the entire ground."
+        },
+        {
+            "name": "Pulverize",
+            "description": "At 75, 50 and 25%, the boss jumps up and lands dealing unavoidable high flame damage to all players. Healers should be prepared to top up the party's health when that happens. In addition, this attack will remove all Daedric Flame AOEs on the ground and kill all Shadow Tendrils/Nova Tendrils currently alive."
+        },
+        {
+            "name": "Summon Tendrils",
+            "description": "The boss summons Shadow Tendrils from below to fear random players, and should be killed if possible. On hard mode, Nova Tendrils that heal the boss will also be summoned. The heal can be interrupted or the tendril killed to stop this."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Consuming Darkness: Delve into Oblivion and save Bakkhara.",
+        "Pledge: Elden Hollow II: Explore Elden Hollow II and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Nightflame. Bogdan the Nightflame is a Daedric Titan that serves as the third and final boss of Elden Hollow II. Bogdan is the ruler of a plane of Oblivion that specializes in shadows. In an attempt to bring the Three Banners War to a quick end, Canonreeve Oraneth made a deal with him, promising to grant his forces passage into Nirn in exchange for power. When the Khajiit mage Bakkhara is imprisoned in Bogdan's realm in the aftermath of Oraneth's defeat, her brother Kargand leads a rescue attempt with the player's help. You must save Bakkhara and kill Bogdan, but as he dies the Titan's spirit possesses Kargand; forcing you to choose between killing Kargand and ending Bogdan's threat forever, or sparing him in the hopes that Bakkhara can help her brother. If Kargand is spared, then Bogdan, through Kargand, will mock you for your mercy; claiming that it is only a matter of time before he takes complete control over Kargand's body, and vowing that you will be his first target once he does so.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bogdan_the_Nightflame",
+        "page_title": "Online:Bogdan the Nightflame",
+        "revision_id": 3552937,
+        "retrieved_at": "2026-08-12T21:21:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

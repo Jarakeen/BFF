@@ -1,0 +1,37 @@
+{
+    "id": "earthen_root_enclave",
+    "name": "Earthen Root Enclave",
+    "content_type": "dungeon",
+    "summary": "Earthen Root Enclave is an islet located off the southeast coast of High Isle, reached from a ship west of the Coral Road Wayshrine. It is a meeting place for druids from all three Circles in the Systres Archipelago, and several nature spirits reside there. It is included in the Lost Depths DLC alongside Graven Deep. Found in numbers are Butterflies, rabbits, squirrels and torchbugs in the outside areas and cave jellies and shroom bettles in the cave section.",
+    "location": "",
+    "boss_ids": [
+        "corruption_of_stone",
+        "corruption_of_root",
+        "archdruid_devyric"
+    ],
+    "achievements": [
+        {
+            "id": "lost_depths_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Earthen_Root_Enclave",
+        "page_title": "Online:Earthen Root Enclave",
+        "revision_id": 3569922,
+        "retrieved_at": "2026-08-12T21:20:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "id": "ghost_haven_bay",
+    "name": "Ghost Haven Bay",
+    "content_type": "dungeon",
+    "summary": "Ghost Haven Bay is an ancient pirate cove and ship graveyard on Amenos. *Beetles, bright moons lunar moths, centipedes, hermit crabs, lesser Sea Adders, lizards, monkeys, rats, spider, torchbugs and wasps are found in numbers within. Hazards include ghostly grip and slaughterfish.",
+    "location": "",
+    "boss_ids": [
+        "captain_altair",
+        "captain_fauvette",
+        "captain_marley",
+        "captain_tuvacca",
+        "razor_fangs",
+        "hadolid_broodmother"
+    ],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ghost_Haven_Bay",
+        "page_title": "Online:Ghost Haven Bay",
+        "revision_id": 3567065,
+        "retrieved_at": "2026-08-12T21:23:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

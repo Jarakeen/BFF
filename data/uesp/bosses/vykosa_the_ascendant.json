@@ -1,0 +1,180 @@
+{
+    "id": "vykosa_the_ascendant",
+    "name": "Vykosa the Ascendant",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "Moon Hunter Keep, Moon Hunter Overlook",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,233,356",
+        "hardmode": "5,503,363"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Was Vykosa not told the intruders would be dealt with? Must she handle everything herself?",
+            "trigger": "She can first be seen standing on the balcony overlooking the Keep Bailey.",
+            "ability": null
+        },
+        {
+            "speaker": "Mylenne Moon-Caller",
+            "line": "They shall not intrude much longer, my mistress. I swear it.",
+            "trigger": "She can first be seen standing on the balcony overlooking the Keep Bailey.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Vykosa never wanted this curse. Hircine forced it upon her. Forced this never ending life of anger. Of pain.",
+            "trigger": "When she finally reached in person she will launch into a tirade about how Hircine ruined her life.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "But make no mistake. She will not become the hunted.",
+            "trigger": "When she finally reached in person she will launch into a tirade about how Hircine ruined her life.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Do you think you're the first to hunt Vykosa? Her whole life she has been running.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "The moons sing within Vykosa's veins. Always thrumming. Always hungry.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "The Silver Dawn thought to lure her. Trap her. But Vykosa was prepared.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Always the hunted, always the hated. Until this one chose to fight back.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "You could join us. Freedom, power. Strength. It could be yours.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        },
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Do you truly crave death? Join us. Know what it is to hunt with a pack by your side.",
+            "trigger": "She has a few words for you if you idle without fighting her for a while.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "She can first be seen standing on the balcony overlooking the Keep Bailey.": [
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Was Vykosa not told the intruders would be dealt with? Must she handle everything herself?",
+                "trigger": "She can first be seen standing on the balcony overlooking the Keep Bailey.",
+                "ability": null
+            },
+            {
+                "speaker": "Mylenne Moon-Caller",
+                "line": "They shall not intrude much longer, my mistress. I swear it.",
+                "trigger": "She can first be seen standing on the balcony overlooking the Keep Bailey.",
+                "ability": null
+            }
+        ],
+        "When she finally reached in person she will launch into a tirade about how Hircine ruined her life.": [
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Vykosa never wanted this curse. Hircine forced it upon her. Forced this never ending life of anger. Of pain.",
+                "trigger": "When she finally reached in person she will launch into a tirade about how Hircine ruined her life.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "But make no mistake. She will not become the hunted.",
+                "trigger": "When she finally reached in person she will launch into a tirade about how Hircine ruined her life.",
+                "ability": null
+            }
+        ],
+        "She has a few words for you if you idle without fighting her for a while.": [
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Do you think you're the first to hunt Vykosa? Her whole life she has been running.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "The moons sing within Vykosa's veins. Always thrumming. Always hungry.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "The Silver Dawn thought to lure her. Trap her. But Vykosa was prepared.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Always the hunted, always the hated. Until this one chose to fight back.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "You could join us. Freedom, power. Strength. It could be yours.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            },
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Do you truly crave death? Join us. Know what it is to hunt with a pack by your side.",
+                "trigger": "She has a few words for you if you idle without fighting her for a while.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "On hard mode, additional mechanics will appear."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Vykosa has authored a lore book and two letters.",
+        "Vykosa wields a Daedric-style inferno staff and uses the Werewolf Lord polymorph. Any female Khajiit can look like Vykosa with this collectible."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Moonlight Ascent: Explore an old Silver Dawn stronghold and deal with the werewolves controlling it.",
+        "Pledge: Moon Hunter Keep: Prove you are truly Undaunted by clearing the Moon Hunter Keep."
+    ],
+    "summary": "This article is about the creature. For the item set, see Vykosa. Vykosa the Ascendant is a Khajiit Werewolf Lord and the leader of Moon Hunter Pack, a group of werewolves who have infiltrated Moon Hunter Keep. She serves as the dungeon's final boss. During the fight Vykosa is assisted by her powerful Dire Wolf companions Ary and Zel.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vykosa_the_Ascendant",
+        "page_title": "Online:Vykosa the Ascendant",
+        "revision_id": 3347831,
+        "retrieved_at": "2026-08-12T21:29:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "id": "cavot_agnan",
+    "name": "Cavot Agnan",
+    "content_id": "lucent_citadel",
+    "content_name": "Lucent Citadel",
+    "location": "Lucent Citadel, Sunken Ruins",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "You can find part of his journal in the citadel."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Knot Awaits: Enter Lucent Citadel and steal the Arcane Knot."
+    ],
+    "achievements": [],
+    "summary": "Cavot Agnan is a Breton found in the final room of the Sunken Ruins in Lucent Citadel where he serves as the second boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cavot_Agnan",
+        "page_title": "Online:Cavot Agnan",
+        "revision_id": 3526929,
+        "retrieved_at": "2026-08-12T05:33:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

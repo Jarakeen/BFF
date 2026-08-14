@@ -1,0 +1,20 @@
+{
+    "id": "elinhir_sewerworks",
+    "name": "Elinhir Sewerworks",
+    "content_type": "dungeon",
+    "summary": "Elinhir Sewerworks is a sewer system that runs beneath Elinhir. Many citizens of Elinhir fled into the sewers to escape the Blackcaster attacks above. However, most sections of the sewers have become infested with crazed spellfiends. The Mage's Apex Stone is also located in the sewerworks. Skavengers are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "A vision of the Apex Stone chamber is seen at the start of the quest The Shattered and the Lost."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Elinhir_Sewerworks",
+        "page_title": "Online:Elinhir Sewerworks",
+        "revision_id": 3598814,
+        "retrieved_at": "2026-08-12T21:21:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

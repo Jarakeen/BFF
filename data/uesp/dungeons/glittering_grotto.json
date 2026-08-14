@@ -1,0 +1,18 @@
+{
+    "id": "glittering_grotto",
+    "name": "Glittering Grotto",
+    "content_type": "dungeon",
+    "summary": "The Glittering Grotto is a cave network that serves as a heist location. You'll be taken here by Fa'ren-dar during the related quest. The caves are rich in gems, and can be occupied by the Keerilth Clan, the Sea Vipers, or the Steel Shrikes. Hazards include dart traps and oil traps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Glittering_Grotto",
+        "page_title": "Online:Glittering Grotto",
+        "revision_id": 3567051,
+        "retrieved_at": "2026-08-12T21:24:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

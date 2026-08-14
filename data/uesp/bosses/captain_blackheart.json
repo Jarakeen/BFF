@@ -1,0 +1,110 @@
+{
+    "id": "captain_blackheart",
+    "name": "Captain Blackheart",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "Blackheart Haven, Blackheart's Cove",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,326,139",
+        "veteran": "2,008,408",
+        "hardmode": "2,309,669"
+    },
+    "abilities": [
+        {
+            "name": "Jab",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Cleave",
+            "description": "Captain Blackheart crouches then spins around, dealing moderate physical damage around himself as indicated by a red circle."
+        },
+        {
+            "name": "Polymorph Skeleton",
+            "description": "Captain Blackheart teleports to a player, knocks them down then temporarily turns them into a Skeleton, where they are unable to cast abilities. This attack can only be escaped by using Precognition in the very brief moment Captain Blackheart teleports to a player and immediately moving out of reach; using it after will not work. Also it can be completely avoided by being in Werewolf form."
+        },
+        {
+            "name": "Summon Skeletons",
+            "description": "Captain Blackheart summons Bone Scouts and Undying Pillagers to attack the party. These adds while weak will spawn constantly, and thus players may want to clear them out while damaging the boss if possible."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Captain Blackheart",
+            "line": "What's this? Who disturbs Captain Blackheart at his rest?\nCome a long way to die.",
+            "trigger": "As he emerges from the water",
+            "ability": "Polymorph Skeleton"
+        },
+        {
+            "speaker": "Captain Blackheart",
+            "line": "My crew will rig the mast will your entrails. Get up, boys. Time to earn your keep!",
+            "trigger": "When he first summons his undead crew",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Captain Blackheart",
+            "line": "Let me fix that complexion for you!",
+            "trigger": "Using Black Plague on someone",
+            "ability": "Polymorph Skeleton"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As he emerges from the water": [
+            {
+                "speaker": "Captain Blackheart",
+                "line": "What's this? Who disturbs Captain Blackheart at his rest?\nCome a long way to die.",
+                "trigger": "As he emerges from the water",
+                "ability": "Polymorph Skeleton"
+            }
+        ],
+        "When he first summons his undead crew": [
+            {
+                "speaker": "Captain Blackheart",
+                "line": "My crew will rig the mast will your entrails. Get up, boys. Time to earn your keep!",
+                "trigger": "When he first summons his undead crew",
+                "ability": "Summon Skeletons"
+            }
+        ],
+        "Using Black Plague on someone": [
+            {
+                "speaker": "Captain Blackheart",
+                "line": "Let me fix that complexion for you!",
+                "trigger": "Using Black Plague on someone",
+                "ability": "Polymorph Skeleton"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His armor is in the Nord Style, his hat is in the Lich Style, and his shield is in the Daedric Style."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven."
+    ],
+    "summary": "This article is about the boss in Blackheart Haven. For the item set, see Pirate Skeleton. For the boss in the Infinite Archive, see Captain Blackheart (Infinite Archive). Captain Blackheart is the skeleton leader of the pirates of Blackheart Haven. He can be found in the cove at the final part of the dungeon, next to his ship, the Black Death. During the battle with him, he will be accompanied by Bone Scouts and Undying Pillagers. Blackheart came to be in this state after making a deal with Molag Bal. His log can be found on the beach.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Blackheart",
+        "page_title": "Online:Captain Blackheart",
+        "revision_id": 3515898,
+        "retrieved_at": "2026-08-12T21:15:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

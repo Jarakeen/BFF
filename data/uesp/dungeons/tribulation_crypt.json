@@ -1,0 +1,26 @@
+{
+    "id": "tribulation_crypt",
+    "name": "Tribulation Crypt",
+    "content_type": "dungeon",
+    "summary": "Tribulation Crypt is a tomb in southeastern Rivenspire, east of Hoarfrost Downs containing skeletons. It is the preferred cemetery of the Rivenspire nobility. The Legend of Dame Marcelle can be found in the last room of the crypt. The spirit of Marcelle Stenric can be encountered inside, where she will guide you. Centipedes and fleshflies are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tribulation_Crypt",
+        "page_title": "Online:Tribulation Crypt",
+        "revision_id": 3598214,
+        "retrieved_at": "2026-08-12T21:36:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

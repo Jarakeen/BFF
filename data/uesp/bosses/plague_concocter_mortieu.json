@@ -1,0 +1,447 @@
+{
+    "id": "plague_concocter_mortieu",
+    "name": "Plague Concocter Mortieu",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Scalecaller Peak",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "4,520,275",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Shot",
+            "description": "A basic ranged attack that deals minor physical damage."
+        },
+        {
+            "name": "Acid Spray",
+            "description": "The boss fires poison arrows in a spray dealing moderate poison damage over time as indicated by a red cone."
+        },
+        {
+            "name": "Release Flame",
+            "description": "The boss throws a fireball at a target location that spreads out in four directions once it lands dealing moderate flame damage."
+        },
+        {
+            "name": "Plague Well",
+            "description": "The grates around the arena will randomly activate shooting balls of poison at all players dealing moderate poison damage over time (this shows up as Spewing Plague). If unblocked, a larger poison ball (Plague Eruption) will trigger dealing high poison damage to the group. The tank should stand on the grates when they activate as indicated by a green circle to block the balls for the group."
+        },
+        {
+            "name": "Decaying Infection",
+            "description": "Decaying Infection lowers the healing you receive. Your screen will glow red to indicate this."
+        },
+        {
+            "name": "Wilting Infection",
+            "description": "Wilting Infection increases the cost of your Magicka abilities. Your screen will glow blue to indicate this."
+        },
+        {
+            "name": "Degenerative Infection",
+            "description": "Degenerative Infection increases the cost of your Stamina abilities. Your screen will glow green to indicate this."
+        },
+        {
+            "name": "Summon Creatures",
+            "description": "After the disease is applied, imps, stranglers, and Online:beetles will appear to attack the party. Jorvuld will call out for specific creatures to be killed to make the cure, but all of them should be killed to make the fight simpler."
+        },
+        {
+            "name": "Taking Aim",
+            "description": "The boss will attempt to snipe Jorvuld while he is preparing the antidote. Interrupt this attack to prevent the boss from stunning Jorvuld so you can cure yourself quicker."
+        },
+        {
+            "name": "Antidote [verification needed]",
+            "description": "Jorvuld will throw the antidote on the ground when it is ready. Run over to the green circle to pick up the buff, which dispels the Blistering Plague and its effects. The boss will also get stunned at this point. In addition, players will gain large bonuses to damage done, ultimate generation, and resource recovery, so use this chance to deal massive damage to the boss."
+        },
+        {
+            "name": "Summon Mortieu's Guard",
+            "description": "When he gets stunned, he will summon a guard to help him. The guard deals high damage with its shield bash and should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "So busy, so busy, and now I must entertain these guests?",
+            "trigger": "Once you enter his chamber",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "You've caused quite the ruckus, yes. Quite the stir. Nasty, nasty guests",
+            "trigger": "If you idle, he'll say one of the following",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "We'll purge this world, make it clean! All shall be blessed … and perish!",
+            "trigger": "When he is engaged in combat",
+            "ability": "Antidote [verification needed]"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Too quick! Lets slow you all down.",
+            "trigger": "Stamina Drain",
+            "ability": "Degenerative Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Let's drain that pesky energy, shall we?",
+            "trigger": "Stamina Drain",
+            "ability": "Degenerative Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "My blessing will leave you weak!",
+            "trigger": "Stamina Drain",
+            "ability": "Degenerative Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "It spreads within you! Pulsing! Yes!",
+            "trigger": "Healing received reduced",
+            "ability": "Decaying Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Such robust guests. I'll put an end to that!",
+            "trigger": "Healing received reduced",
+            "ability": "Decaying Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Do you feel it oozing? Such loving sickness!",
+            "trigger": "Healing received reduced",
+            "ability": "Decaying Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Nasty, nasty! I'll drain that pesky magic!",
+            "trigger": "Magicka Draining Disease",
+            "ability": "Wilting Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Do you feel it? Your magic draining! Failing!",
+            "trigger": "Magicka Draining Disease",
+            "ability": "Wilting Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Nasty, nasty spells! Let's put a stop to that.",
+            "trigger": "Magicka Draining Disease",
+            "ability": "Wilting Infection"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Let's light things up a bit, shall we?",
+            "trigger": "Using Blazing Embers",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Ah, nothing like the smell of charred flesh!",
+            "trigger": "Using Blazing Embers",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "I also bring the blessing of fire's end! Ha!",
+            "trigger": "Using Blazing Embers",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Fools! Get in here and protect me!",
+            "trigger": "Calling his Guard",
+            "ability": "Summon Mortieu's Guard"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Where are my guards? Get in here!",
+            "trigger": "Calling his Guard",
+            "ability": "Summon Mortieu's Guard"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Are you fools going to watch me suffer? Come out!",
+            "trigger": "Calling his Guard",
+            "ability": "Summon Mortieu's Guard"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Guards! Our guests need some extra care.",
+            "trigger": "Calling his Guard",
+            "ability": "Summon Mortieu's Guard"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "This will end your meddling, you nasty mage!",
+            "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Will you stop with those nasty antidotes?",
+            "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "No, leave my guests be! They belong with us now!",
+            "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Stop fiddling with my ingredients! Nasty, nasty!",
+            "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+            "ability": "Plague Well"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Feel my blessing! Let it spread!",
+            "trigger": "Poison Spray",
+            "ability": "Acid Spray"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "A little poison, some fumes. The ideal mixture for death!",
+            "trigger": "Poison Spray",
+            "ability": "Acid Spray"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Your bodies shall wither away. Beautiful, beautiful!",
+            "trigger": "Poison Spray",
+            "ability": "Acid Spray"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "It oozes and pulses along your skin. Can you feel it spreading?",
+            "trigger": "Poison Spray",
+            "ability": "Acid Spray"
+        },
+        {
+            "speaker": "Plague Concocter Mortieu",
+            "line": "Nasty, nasty …. She'll kill you all. Zaan the Scalecaller … will ….",
+            "trigger": "When killed",
+            "ability": "Summon Mortieu's Guard"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once you enter his chamber": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "So busy, so busy, and now I must entertain these guests?",
+                "trigger": "Once you enter his chamber",
+                "ability": "Taking Aim"
+            }
+        ],
+        "If you idle, he'll say one of the following": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "You've caused quite the ruckus, yes. Quite the stir. Nasty, nasty guests",
+                "trigger": "If you idle, he'll say one of the following",
+                "ability": "Taking Aim"
+            }
+        ],
+        "When he is engaged in combat": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "We'll purge this world, make it clean! All shall be blessed … and perish!",
+                "trigger": "When he is engaged in combat",
+                "ability": "Antidote [verification needed]"
+            }
+        ],
+        "Stamina Drain": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Too quick! Lets slow you all down.",
+                "trigger": "Stamina Drain",
+                "ability": "Degenerative Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Let's drain that pesky energy, shall we?",
+                "trigger": "Stamina Drain",
+                "ability": "Degenerative Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "My blessing will leave you weak!",
+                "trigger": "Stamina Drain",
+                "ability": "Degenerative Infection"
+            }
+        ],
+        "Healing received reduced": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "It spreads within you! Pulsing! Yes!",
+                "trigger": "Healing received reduced",
+                "ability": "Decaying Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Such robust guests. I'll put an end to that!",
+                "trigger": "Healing received reduced",
+                "ability": "Decaying Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Do you feel it oozing? Such loving sickness!",
+                "trigger": "Healing received reduced",
+                "ability": "Decaying Infection"
+            }
+        ],
+        "Magicka Draining Disease": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Nasty, nasty! I'll drain that pesky magic!",
+                "trigger": "Magicka Draining Disease",
+                "ability": "Wilting Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Do you feel it? Your magic draining! Failing!",
+                "trigger": "Magicka Draining Disease",
+                "ability": "Wilting Infection"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Nasty, nasty spells! Let's put a stop to that.",
+                "trigger": "Magicka Draining Disease",
+                "ability": "Wilting Infection"
+            }
+        ],
+        "Using Blazing Embers": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Let's light things up a bit, shall we?",
+                "trigger": "Using Blazing Embers",
+                "ability": "Plague Well"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Ah, nothing like the smell of charred flesh!",
+                "trigger": "Using Blazing Embers",
+                "ability": "Plague Well"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "I also bring the blessing of fire's end! Ha!",
+                "trigger": "Using Blazing Embers",
+                "ability": "Plague Well"
+            }
+        ],
+        "Calling his Guard": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Fools! Get in here and protect me!",
+                "trigger": "Calling his Guard",
+                "ability": "Summon Mortieu's Guard"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Where are my guards? Get in here!",
+                "trigger": "Calling his Guard",
+                "ability": "Summon Mortieu's Guard"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Are you fools going to watch me suffer? Come out!",
+                "trigger": "Calling his Guard",
+                "ability": "Summon Mortieu's Guard"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Guards! Our guests need some extra care.",
+                "trigger": "Calling his Guard",
+                "ability": "Summon Mortieu's Guard"
+            }
+        ],
+        "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "This will end your meddling, you nasty mage!",
+                "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+                "ability": "Plague Well"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Will you stop with those nasty antidotes?",
+                "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+                "ability": "Plague Well"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "No, leave my guests be! They belong with us now!",
+                "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+                "ability": "Plague Well"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Stop fiddling with my ingredients! Nasty, nasty!",
+                "trigger": "Plague Concocter Mortieu will also yell at Jorvuld Davaux throughout the fight.",
+                "ability": "Plague Well"
+            }
+        ],
+        "Poison Spray": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Feel my blessing! Let it spread!",
+                "trigger": "Poison Spray",
+                "ability": "Acid Spray"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "A little poison, some fumes. The ideal mixture for death!",
+                "trigger": "Poison Spray",
+                "ability": "Acid Spray"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Your bodies shall wither away. Beautiful, beautiful!",
+                "trigger": "Poison Spray",
+                "ability": "Acid Spray"
+            },
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "It oozes and pulses along your skin. Can you feel it spreading?",
+                "trigger": "Poison Spray",
+                "ability": "Acid Spray"
+            }
+        ],
+        "When killed": [
+            {
+                "speaker": "Plague Concocter Mortieu",
+                "line": "Nasty, nasty …. She'll kill you all. Zaan the Scalecaller … will ….",
+                "trigger": "When killed",
+                "ability": "Summon Mortieu's Guard"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His progress on his plague research is detailed in his journals, Volumes One, Two and Three.",
+        "Mortieu's mother was a Vaermina cultist and was disappointed in her son for worshiping Peryite. Mortieu for his part, resented her."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Plans of Pestilence: Conquer Scalecaller Peak and stop a dangerous plague from spreading.",
+        "Pledge: Scalecaller Peak: Prove you are truly Undaunted by clearing Scalecaller Peak."
+    ],
+    "summary": "Nathien Mortieu, also known as Plague Concocter Mortieu, is a Breton found in Scalecaller Peak. He was the leader of the Peryite Cult which created the plague within the caverns and woke up Zaan the Scalecaller, before she was given control. In combat, he is very proficient in unleashing his various afflictions to hinder his enemies.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Plague_Concocter_Mortieu",
+        "page_title": "Online:Plague Concocter Mortieu",
+        "revision_id": 3501191,
+        "retrieved_at": "2026-08-12T21:32:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

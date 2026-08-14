@@ -1,0 +1,18 @@
+{
+    "id": "the_hunting_grounds_hircine_s_gift",
+    "name": "The Hunting Grounds (Hircine's Gift)",
+    "content_type": "dungeon",
+    "summary": "The Hunting Grounds are Hircine's realm of Oblivion. It is visited only during the Hircine's Gift quest to become a Werewolf.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Hunting_Grounds_(Hircine%27s_Gift)",
+        "page_title": "Online:The Hunting Grounds (Hircine's Gift)",
+        "revision_id": 3550240,
+        "retrieved_at": "2026-08-12T21:25:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

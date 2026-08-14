@@ -1,0 +1,579 @@
+{
+    "id": "valinna",
+    "name": "Valinna",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Scrivener's Hall",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "6,671,594",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Keshargo",
+            "line": "The hall, bask in its magnificence— shh! That's Valinna!",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<He heads over to listen.>",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I need that staff. Lock the gates, Riftmaster. No one leaves until I find it.",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "No one has ever challenged me and lived, Magnastylus.",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "She has them calling her Magnastylus? No matter, the staff remains hidden. Our efforts may yet be successful.",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna and Naqri move on.>",
+            "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I must consult the web of truth. Alert me with any news of the staff or the old fool.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Riftmaster Naqri",
+            "line": "No need to involve you, Magnastylus. I'll beat anyone who tries to get through here.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna goes through door and Riftmaster Naqri stalks to the middle of the room.>",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "Naqri guards the rifts due to his more … aggressive nature. There'll be no reasoning with him.",
+            "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "Keshargo swears the Itinerant Staff lies in the Spiral Skein!",
+            "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "She didn't tell me? Nevertheless, you really are a fool.",
+            "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna sends Keshargo through a portal>",
+            "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I serve Mephala. Once the staff is mine, so will everyone else.",
+            "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+            "ability": null
+        },
+        {
+            "speaker": "Mazandi",
+            "line": "There they are, but Valinna blocked our path. We'll have to go the long way.",
+            "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "You turned your back on Hermorah.",
+            "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "He is weak. Words and drawings change nothing!",
+            "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "You believe lies and deception do? Mafala is using your guilt against you.",
+            "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "With the staff and her guidance, we won't have to watch idly while terrible things happen.",
+            "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+            "ability": null
+        },
+        {
+            "speaker": "Keshargo",
+            "line": "You … lied? I will enjoy feeding you to the spiders.",
+            "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "It's not too late. We can leave without the staff.",
+            "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Valinna notices Mazandi's arrival with the staff.>",
+            "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Ah, the staff. I don't need you anymore, Magnastylus. The Spinner provides.",
+            "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+            "ability": null
+        },
+        {
+            "speaker": "Mazandi",
+            "line": "Keshargo!",
+            "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "We will string you up and watch you burn slowly.",
+            "trigger": "If you idle before the fight starts",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Hand over the Itinerant Staff and I'll have Lamikhai kill you quickly.",
+            "trigger": "If you idle before the fight starts",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "This won't take long.",
+            "trigger": "At this point, the fight with Valinna and Lamikhai will begin",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "I'll burn everyone in my way.",
+            "trigger": "At this point, the fight with Valinna and Lamikhai will begin",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "The staff is mine by right. I am the Magnastylus.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Your fate is sealed. I'm only helping it along.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "One spark is all it takes to change the future.",
+            "trigger": "When she casts Immolation trap",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Spiders like their meals precooked.",
+            "trigger": "When she casts Immolation trap",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Insolence! Why won't you stay put?",
+            "trigger": "In the first phase of the fight, Valinna will shield herself and support Lamikhai with fire magic. Eventually she will have enough and bombard the area with fire",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "You will burn.",
+            "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Outside the hall, everything is mine to burn!",
+            "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "You are nothing more than ash.",
+            "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Watch your step.",
+            "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "You think running will save you?",
+            "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Let's be done with this. I have important tasks to see to.",
+            "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "What are you waiting for? Keshargo? Come and get him.",
+            "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Your little rebellion will burn.",
+            "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+            "ability": null
+        },
+        {
+            "speaker": "Valinna",
+            "line": "Fear my flames.",
+            "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation": [
+            {
+                "speaker": "Keshargo",
+                "line": "The hall, bask in its magnificence— shh! That's Valinna!",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<He heads over to listen.>",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "I need that staff. Lock the gates, Riftmaster. No one leaves until I find it.",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "No one has ever challenged me and lived, Magnastylus.",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "She has them calling her Magnastylus? No matter, the staff remains hidden. Our efforts may yet be successful.",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna and Naqri move on.>",
+                "trigger": "Valinna is first encountered once you enter the Halls proper, Keshargo will ask you to take a look around before he notices Valinna and Riftmaster Naqri in conversation",
+                "ability": null
+            }
+        ],
+        "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster": [
+            {
+                "speaker": "Valinna",
+                "line": "I must consult the web of truth. Alert me with any news of the staff or the old fool.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "Riftmaster Naqri",
+                "line": "No need to involve you, Magnastylus. I'll beat anyone who tries to get through here.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna goes through door and Riftmaster Naqri stalks to the middle of the room.>",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "Naqri guards the rifts due to his more … aggressive nature. There'll be no reasoning with him.",
+                "trigger": "Following Keshargo, you soon arrive in a vast library where Valinna will be giving orders to the Riftmaster",
+                "ability": null
+            }
+        ],
+        "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff": [
+            {
+                "speaker": "Keshargo",
+                "line": "Keshargo swears the Itinerant Staff lies in the Spiral Skein!",
+                "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "She didn't tell me? Nevertheless, you really are a fool.",
+                "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna sends Keshargo through a portal>",
+                "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "I serve Mephala. Once the staff is mine, so will everyone else.",
+                "trigger": "Once you have defeated the Riftmaster, you continue to travel to the Deadlands Rift with Keshargo to retrieve the Itinerant Staff which he hid there. However, he is later ambushed by Sama-Rei and Mazandi accompanies you in Keshargo's place. After you retrieve the staff from the Deadlands you return to the Hall to meet with Keshargo but you learn something has gone wrong as he is not waiting for you. You follow Mazandi and Zilipif through the passages leading to the Spiral Skein rift, and soon find that Keshargo has been captured by Valinna for the location of the staff",
+                "ability": null
+            }
+        ],
+        "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more": [
+            {
+                "speaker": "Mazandi",
+                "line": "There they are, but Valinna blocked our path. We'll have to go the long way.",
+                "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "You turned your back on Hermorah.",
+                "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "He is weak. Words and drawings change nothing!",
+                "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+                "ability": null
+            },
+            {
+                "speaker": "Keshargo",
+                "line": "You believe lies and deception do? Mafala is using your guilt against you.",
+                "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "With the staff and her guidance, we won't have to watch idly while terrible things happen.",
+                "trigger": "To rescue Keshargo, you and Mazandi will have to catch up. As you approach you will hear Keshargo and Valinna talk some more",
+                "ability": null
+            }
+        ],
+        "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her": [
+            {
+                "speaker": "Keshargo",
+                "line": "You … lied? I will enjoy feeding you to the spiders.",
+                "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "It's not too late. We can leave without the staff.",
+                "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Valinna notices Mazandi's arrival with the staff.>",
+                "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Ah, the staff. I don't need you anymore, Magnastylus. The Spinner provides.",
+                "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+                "ability": null
+            },
+            {
+                "speaker": "Mazandi",
+                "line": "Keshargo!",
+                "trigger": "When you catch up to Valinna in the Spiral Skien, she will have just learnt Keshargo tricked her",
+                "ability": null
+            }
+        ],
+        "If you idle before the fight starts": [
+            {
+                "speaker": "Valinna",
+                "line": "We will string you up and watch you burn slowly.",
+                "trigger": "If you idle before the fight starts",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Hand over the Itinerant Staff and I'll have Lamikhai kill you quickly.",
+                "trigger": "If you idle before the fight starts",
+                "ability": null
+            }
+        ],
+        "At this point, the fight with Valinna and Lamikhai will begin": [
+            {
+                "speaker": "Valinna",
+                "line": "This won't take long.",
+                "trigger": "At this point, the fight with Valinna and Lamikhai will begin",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "I'll burn everyone in my way.",
+                "trigger": "At this point, the fight with Valinna and Lamikhai will begin",
+                "ability": null
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Valinna",
+                "line": "The staff is mine by right. I am the Magnastylus.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Your fate is sealed. I'm only helping it along.",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "When she casts Immolation trap": [
+            {
+                "speaker": "Valinna",
+                "line": "One spark is all it takes to change the future.",
+                "trigger": "When she casts Immolation trap",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Spiders like their meals precooked.",
+                "trigger": "When she casts Immolation trap",
+                "ability": null
+            }
+        ],
+        "In the first phase of the fight, Valinna will shield herself and support Lamikhai with fire magic. Eventually she will have enough and bombard the area with fire": [
+            {
+                "speaker": "Valinna",
+                "line": "Insolence! Why won't you stay put?",
+                "trigger": "In the first phase of the fight, Valinna will shield herself and support Lamikhai with fire magic. Eventually she will have enough and bombard the area with fire",
+                "ability": null
+            }
+        ],
+        "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase": [
+            {
+                "speaker": "Valinna",
+                "line": "You will burn.",
+                "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Outside the hall, everything is mine to burn!",
+                "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "You are nothing more than ash.",
+                "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Watch your step.",
+                "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "You think running will save you?",
+                "trigger": "To survive, you will need to flee through a passage to another room and jump down the ledge to continue the fight with Lamikhai. Valinna may say the following lines in the next phase",
+                "ability": null
+            }
+        ],
+        "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now": [
+            {
+                "speaker": "Valinna",
+                "line": "Let's be done with this. I have important tasks to see to.",
+                "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "What are you waiting for? Keshargo? Come and get him.",
+                "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Your little rebellion will burn.",
+                "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+                "ability": null
+            },
+            {
+                "speaker": "Valinna",
+                "line": "Fear my flames.",
+                "trigger": "Once Lamikhai is dead, Valinna will flee deeper into the Spiral Skein. You will have to follow her over a narrow bridge to a platform where Keshargo is tied up. You will fight Valinna directly now",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "scribes_of_fate_achievements",
+            "name": "Achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Scribes of Mephala was written by Valinna."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A War of Scribes: A usurper has taken control of the Scribes of Mora.",
+        "Pledge: Scrivener's Hall: Explore Scrivener's Hall and return Undaunted."
+    ],
+    "summary": "Valinna is a Wood Elf and member of the Scribes of Mora who can be found in the Scrivener's Hall. She was the protégée of the Magnastylus Keshargo but after an incident in Apocrypha, she began to question the Scribes' role in the world. Valinna eventually found a new patron and initiated a coup to overthrow Keshargo and become the new Magnastylus of their order, seeking to redub it the \"Scribes of Mephala\". Alongside Lamikhai, Valinna is the final boss of the Scrivener's Hall dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valinna",
+        "page_title": "Online:Valinna",
+        "revision_id": 3492883,
+        "retrieved_at": "2026-08-12T21:32:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

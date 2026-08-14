@@ -1,0 +1,18 @@
+{
+    "id": "nchu_duabthar_threshold",
+    "name": "Nchu Duabthar Threshold",
+    "content_type": "dungeon",
+    "summary": "Nchu Duabthar Threshold is a remote valley surrounded by Dwemer ruins in the center of Bangkorai visited during the Daggerfall Covenant quest The Parley. The gates to the ruins have defied all attempts to open them. The valley is considered neutral territory between the Imperials and the Daggerfall Covenant, and is the location of a meeting between Magus-General Septima Tharn and Queen Arzhela of Evermore. It is only accessible during the related quest, and cannot be reached from the main Bangkorai area.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nchu_Duabthar_Threshold",
+        "page_title": "Online:Nchu Duabthar Threshold",
+        "revision_id": 3598270,
+        "retrieved_at": "2026-08-12T21:29:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,287 @@
+{
+    "id": "kovan_giryon",
+    "name": "Kovan Giryon",
+    "content_id": "bal_sunnar",
+    "content_name": "Bal Sunnar",
+    "location": "Bal Sunnar",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,428,241",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Sword Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Mind Blast",
+            "description": "Kovan Giryon casts a spell that assaults your mind, dealing high magical damage. This attack must be dodged at the right time."
+        },
+        {
+            "name": "Mind Manipulation",
+            "description": "Kovan Giryon casts a spell that inflicts torment upon your mind for a duration, indicated by a circular AoE that tracks your movement, dealing moderate continuous magical damage that cannot be avoided."
+        },
+        {
+            "name": "Dash",
+            "description": "Kovan Giryon dashes to the outer edge of the arena, hitting those in his way for high magical damage, indicated by a circular AoE around him. He uses this before and after Chaotic Ray."
+        },
+        {
+            "name": "Chaotic Ray",
+            "description": "Kovan Giryon casts a spell for a brief moment, releasing a long beam of yellow energy that courses across the arena, indicated by a long rectangular AoE, dealing very high magical damage. The beam lingers for an extended duration. After the first summoning phase, Kovan Giryon's clones in the room will assist him in this abilities, casting rays of their own, making the arena harder to traverse."
+        },
+        {
+            "name": "Magical Slam",
+            "description": "Kovan Giryon teleports to the center of the arena and slams into the ground, causing a magical explosion, indicated by a large growing circular AoE, dealing very high magical damage. Following the first summon phase, a clone of Kovan Giryon that floats in the center of the arena will take over for him in using this ability, freeing Kovan Giryon to do other things."
+        },
+        {
+            "name": "Converge",
+            "description": "Occasionally, Kovan Giryon will cause one of his clones resting dormant in the room to come rushing towards him, hitting anyone in its path, ad indicated by a circular AoE, dealing high magical damage. An explosion occurs when the clone reaches Kovan Giryon, which also deals high magical damage."
+        },
+        {
+            "name": "Summons from the Past",
+            "description": "At 70%, Kovan Giryon floats into the air in the center of the arena and becomes invulnerable to damage. The screen becomes darker and creatures from the past are summoned into the arena. These include Primitive Nix-Ox as the most dangerous opponent, accompanied by Primitive Kwama and Primitive Nix-Hounds. The creatures must all be slain to make Kovan Giryon come down and become vulnerable to damage again. At 45% health, the enemies are comprised of an Iron Atronach, accompanied by Fire Shalks and Flame Salamanders. At 20%, all of the enemies in both enemy pools appear together."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Scourge! I've waited a lifetime for you.",
+            "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+            "ability": "Chaotic Ray"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "Draw the guardian's ire so I can contain the distortion.",
+            "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+            "ability": "Chaotic Ray"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Your rampage ends now!",
+            "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+            "ability": "Chaotic Ray"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Time weaves all around us.",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Creatures of the past obey my will!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Do you see now? My power has no limit.",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Too fast!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Time is so fragile.",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "So easy to shred!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Your future arrives early!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Now you see how I control your fate.",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Do you feel adrift?",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "I exist in all of time!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "Over here!",
+            "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+            "ability": "Summons from the Past"
+        },
+        {
+            "speaker": "Kovan Giryon",
+            "line": "How? I didn't see my end.",
+            "trigger": "While you fight Kovan, Saresea will attempt to unravel the distortion. However, once the fight is concluded, the following happens",
+            "ability": "Magical Slam"
+        },
+        {
+            "speaker": "Saresea",
+            "line": "The threads are too many. The knot is too tight. I can't ….",
+            "trigger": "Kovan dies.",
+            "ability": "Mind Blast"
+        },
+        {
+            "speaker": "",
+            "line": "<Your vision goes black.>",
+            "trigger": "Kovan dies.",
+            "ability": "Mind Blast"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you": [
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Scourge! I've waited a lifetime for you.",
+                "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+                "ability": "Chaotic Ray"
+            },
+            {
+                "speaker": "Saresea",
+                "line": "Draw the guardian's ire so I can contain the distortion.",
+                "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+                "ability": "Chaotic Ray"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Your rampage ends now!",
+                "trigger": "Once in the main room of the tower, you will notice two things. A strange ball on energy hovering above the room and that Kovan Giryon is waiting for you",
+                "ability": "Chaotic Ray"
+            }
+        ],
+        "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat": [
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Time weaves all around us.",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Creatures of the past obey my will!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Do you see now? My power has no limit.",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Too fast!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Time is so fragile.",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "So easy to shred!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Your future arrives early!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Now you see how I control your fate.",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Do you feel adrift?",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "I exist in all of time!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            },
+            {
+                "speaker": "Kovan Giryon",
+                "line": "Over here!",
+                "trigger": "Many glowing alternate time variants of Kovan will be found in the room, and will walk to the middle to merge with Kovan. During combat",
+                "ability": "Summons from the Past"
+            }
+        ],
+        "While you fight Kovan, Saresea will attempt to unravel the distortion. However, once the fight is concluded, the following happens": [
+            {
+                "speaker": "Kovan Giryon",
+                "line": "How? I didn't see my end.",
+                "trigger": "While you fight Kovan, Saresea will attempt to unravel the distortion. However, once the fight is concluded, the following happens",
+                "ability": "Magical Slam"
+            }
+        ],
+        "Kovan dies.": [
+            {
+                "speaker": "Saresea",
+                "line": "The threads are too many. The knot is too tight. I can't ….",
+                "trigger": "Kovan dies.",
+                "ability": "Mind Blast"
+            },
+            {
+                "speaker": "",
+                "line": "<Your vision goes black.>",
+                "trigger": "Kovan dies.",
+                "ability": "Mind Blast"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is the author of a journal found near the entrance of Bal Sunnar."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Unstuck From Time: Investigate a temporal disturbance at the remote Telvanni settlement of Bal Sunnar."
+    ],
+    "summary": "Kovan Giryon is a member of House Telvanni and the first boss of Bal Sunnar.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kovan_Giryon",
+        "page_title": "Online:Kovan Giryon",
+        "revision_id": 3585497,
+        "retrieved_at": "2026-08-12T21:13:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

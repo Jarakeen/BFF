@@ -1,0 +1,29 @@
+{
+    "id": "zalgaz_s_den",
+    "name": "Zalgaz's Den",
+    "content_type": "dungeon",
+    "summary": "Zalgaz's Den is a cave west of Belkarth, inhabited by lamias and aquatic wildlife. The boss is a lamia named Zalgaz, and she is accompanied by two of her handmaidens. Snakes are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "According to a note, Zalgaz's Den might also be known as Thalia's Retreat.",
+        "Prior to Update 12, this delve used to contain Swarming Mudcrabs."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zalgaz%27s_Den",
+        "page_title": "Online:Zalgaz's Den",
+        "revision_id": 3501118,
+        "retrieved_at": "2026-08-12T21:39:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

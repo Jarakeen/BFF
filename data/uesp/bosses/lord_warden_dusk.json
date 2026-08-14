@@ -1,0 +1,636 @@
+{
+    "id": "lord_warden_dusk",
+    "name": "Lord Warden Dusk",
+    "content_id": "imperial_city_prison",
+    "content_name": "Imperial City Prison",
+    "location": "Imperial City Prison, Last Cell Block",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,993,959",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shadow Bolt",
+            "description": "A basic ranged attack that deals minor magical damage."
+        },
+        {
+            "name": "Shadow Barrage",
+            "description": "The boss shoots a series of orbs rapidly at a random player. The tank should get in front of the target and absorb the magic damage. If that is not possible, the player targeted should block or shield up to absorb the magic damage while healing up."
+        },
+        {
+            "name": "Shadow Orb",
+            "description": "The boss summons floating orbs that tether to nearby players dealing moderate magical damage over time and snaring them. The tether can be broken by keeping a distance from the orbs."
+        },
+        {
+            "name": "Shadow Strike",
+            "description": "The boss teleports onto whoever has aggro stunning them and dealing moderate physical damage."
+        },
+        {
+            "name": "Darklight Burst",
+            "description": "The Lord Warden flies up and channels a magical ball in his hands, shooting it down at everyone below. The only way to avoid it is to jump into the portals before he casts it. Only two people are allowed per portal. This attack deals ~95% of your max health as oblivion damage in normal difficulty while it is always lethal on veteran mode."
+        },
+        {
+            "name": "Summon Shades",
+            "description": "At 66 and 33% health, the boss disappears and summons 4 Shades to attack the party. Once all shades are defeated, the boss reappears."
+        },
+        {
+            "name": "Coldharbour Meteor",
+            "description": "Lord Warden casts a meteor on one player during the Shade phase stunning them and dealing moderate magical damage. This attack must be blocked to negate the incoming damage."
+        },
+        {
+            "name": "Summon Portal/Rift",
+            "description": "The boss summons portals that move on the ground. Entering one will cause you to fall through and drop down from the ceiling. Do not enter the portals until Darklight Burst is cast, as using the portal early will waste a slot, causing a death later during Darklight Burst. In veteran HM, only two players are allowed per portal."
+        },
+        {
+            "name": "Portal Feedback",
+            "description": "Falling into a portal after falling from another portal will deal lethal damage. Do not enter the portals until Darklight Burst is cast."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Overfiend",
+            "line": "Lord Warden! Aid me.",
+            "trigger": "Summoning the Harvester to aid the Overfiend",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Pitiful. Aid the Overfiend, my darling!",
+            "trigger": "Summoning the Harvester to aid the Overfiend",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Gravelight Sentry",
+            "line": "The intruders are coming, Lord Warden.",
+            "trigger": "Approaching the Gravelight Sentry",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "You've allowed them far enough. Fail here, and I'll feed you to the Abomination!",
+            "trigger": "Approaching the Gravelight Sentry",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Did Lyranth think killing the Sculptor would disarm me? His creations live on!",
+            "trigger": "Approaching the Flesh Abomination",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Your corpses will join with the Abomination.",
+            "trigger": "When you engage the Flesh Abomination in combat, he shouts",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Mind where you stand!",
+            "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "This delightful new strain of Hoarvor will fight on the front lines soon!",
+            "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "These fumes will burn your blood!",
+            "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "May your lungs rot, your body perish!",
+            "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Breathe! Breathe and suffer!",
+            "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "The Abomination doesn't know his own strength!",
+            "trigger": "When the Abomination swings its mace",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Mortal flesh has so many uses. Yours will not go to waste.",
+            "trigger": "If the group wipes on the Abomination",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "We will add you to the might of the Abomination.",
+            "trigger": "If the group wipes on the Abomination",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Feed on their corpses. Yours is growing flesh.",
+            "trigger": "If the group wipes on the Abomination",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Consume them. You must grow larger if you are to serve in the war.",
+            "trigger": "If the group wipes on the Abomination",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Your bodies will become one with the Abomination.",
+            "trigger": "If the group wipes on the Abomination",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Lord Bal frowns on battle amongst his servants, but Lyranth is cunning to have a mortal of your strength fight for her.",
+            "trigger": "While approaching the Lord Warden",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "I had a champion like you, once, who helped me rip the living essence out of her clan members. Daedric animus make great weapons and armor, you see. Dear Lyranth bears a grudge.",
+            "trigger": "While approaching the Lord Warden",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Come! Meet Lyranth's clan for yourself! They fit quite comfortably!",
+            "trigger": "While approaching the Lord Warden",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "I walk the shadows!",
+            "trigger": "Teleport Strike",
+            "ability": "Shadow Strike"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "I can strike from anywhere, mortal!",
+            "trigger": "Teleport Strike",
+            "ability": "Shadow Strike"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "My prey never escapes!",
+            "trigger": "Teleport Strike",
+            "ability": "Shadow Strike"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Run, mortal!",
+            "trigger": "Summoning a portal",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Watch your step!",
+            "trigger": "Summoning a portal",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "The dark of Coldharbour take you!",
+            "trigger": "Summoning a portal",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "This spell will break you.",
+            "trigger": "Summoning a portal",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "This is the end!",
+            "trigger": "Charging Darklight Burst",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Bask in Coldharbour's light!",
+            "trigger": "Charging Darklight Burst",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Perish in Coldharbour's flame!",
+            "trigger": "Charging Darklight Burst",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "This flame will darken your soul!",
+            "trigger": "Charging Darklight Burst",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "My shadows will tear your life away!",
+            "trigger": "Performing Shadow Barrage",
+            "ability": "Shadow Barrage"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Let shadow flay the meat from your bones!",
+            "trigger": "Performing Shadow Barrage",
+            "ability": "Shadow Barrage"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Let the darkness take you!",
+            "trigger": "Performing Shadow Barrage",
+            "ability": "Shadow Barrage"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "You fools are beneath me. My shadows will contend with you. What did Lyranth promise you? Why aid that wretch? There are no spoils here but death. Her clan deserved their fate; their souls will serve me unendingly.",
+            "trigger": "When he splits into shades",
+            "ability": "Summon Shades"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Impressive, for insects! All you've done is delay the inevitable!",
+            "trigger": "Defeating the shades",
+            "ability": "Summon Shades"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "With your death will come many others.",
+            "trigger": "If your group is defeated during the battle",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "More bodies for the prison. Our occupancy is inexhaustible.",
+            "trigger": "If your group is defeated during the battle",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "We will harvest what's left of you, and your corpse will serve Lord Bal.",
+            "trigger": "If your group is defeated during the battle",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Your bodies will aid us in the destruction of your kind.",
+            "trigger": "If your group is defeated during the battle",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Lord Warden Dusk",
+            "line": "Do not fear. Even in death, your organs will serve us.",
+            "trigger": "If your group is defeated during the battle",
+            "ability": "Summon Portal/Rift"
+        },
+        {
+            "speaker": "Soul of Dusk",
+            "line": "No! I will not suffer this!",
+            "trigger": "After defeating the Lord Warden, his soul will emerge from his corpse",
+            "ability": "Darklight Burst"
+        },
+        {
+            "speaker": "Lyranth",
+            "line": "My clan suffered it. And now, you will.",
+            "trigger": "After defeating the Lord Warden, his soul will emerge from his corpse",
+            "ability": "Darklight Burst"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Summoning the Harvester to aid the Overfiend": [
+            {
+                "speaker": "Overfiend",
+                "line": "Lord Warden! Aid me.",
+                "trigger": "Summoning the Harvester to aid the Overfiend",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Pitiful. Aid the Overfiend, my darling!",
+                "trigger": "Summoning the Harvester to aid the Overfiend",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "Approaching the Gravelight Sentry": [
+            {
+                "speaker": "Gravelight Sentry",
+                "line": "The intruders are coming, Lord Warden.",
+                "trigger": "Approaching the Gravelight Sentry",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "You've allowed them far enough. Fail here, and I'll feed you to the Abomination!",
+                "trigger": "Approaching the Gravelight Sentry",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "Approaching the Flesh Abomination": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Did Lyranth think killing the Sculptor would disarm me? His creations live on!",
+                "trigger": "Approaching the Flesh Abomination",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "When you engage the Flesh Abomination in combat, he shouts": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Your corpses will join with the Abomination.",
+                "trigger": "When you engage the Flesh Abomination in combat, he shouts",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "When the Necrotic Hoarvors rise from the earth and explode": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Mind where you stand!",
+                "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "This delightful new strain of Hoarvor will fight on the front lines soon!",
+                "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "These fumes will burn your blood!",
+                "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "May your lungs rot, your body perish!",
+                "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Breathe! Breathe and suffer!",
+                "trigger": "When the Necrotic Hoarvors rise from the earth and explode",
+                "ability": "Summon Portal/Rift"
+            }
+        ],
+        "When the Abomination swings its mace": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "The Abomination doesn't know his own strength!",
+                "trigger": "When the Abomination swings its mace",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "If the group wipes on the Abomination": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Mortal flesh has so many uses. Yours will not go to waste.",
+                "trigger": "If the group wipes on the Abomination",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "We will add you to the might of the Abomination.",
+                "trigger": "If the group wipes on the Abomination",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Feed on their corpses. Yours is growing flesh.",
+                "trigger": "If the group wipes on the Abomination",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Consume them. You must grow larger if you are to serve in the war.",
+                "trigger": "If the group wipes on the Abomination",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Your bodies will become one with the Abomination.",
+                "trigger": "If the group wipes on the Abomination",
+                "ability": "Summon Portal/Rift"
+            }
+        ],
+        "While approaching the Lord Warden": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Lord Bal frowns on battle amongst his servants, but Lyranth is cunning to have a mortal of your strength fight for her.",
+                "trigger": "While approaching the Lord Warden",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "I had a champion like you, once, who helped me rip the living essence out of her clan members. Daedric animus make great weapons and armor, you see. Dear Lyranth bears a grudge.",
+                "trigger": "While approaching the Lord Warden",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Come! Meet Lyranth's clan for yourself! They fit quite comfortably!",
+                "trigger": "While approaching the Lord Warden",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "Teleport Strike": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "I walk the shadows!",
+                "trigger": "Teleport Strike",
+                "ability": "Shadow Strike"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "I can strike from anywhere, mortal!",
+                "trigger": "Teleport Strike",
+                "ability": "Shadow Strike"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "My prey never escapes!",
+                "trigger": "Teleport Strike",
+                "ability": "Shadow Strike"
+            }
+        ],
+        "Summoning a portal": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Run, mortal!",
+                "trigger": "Summoning a portal",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Watch your step!",
+                "trigger": "Summoning a portal",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "The dark of Coldharbour take you!",
+                "trigger": "Summoning a portal",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "This spell will break you.",
+                "trigger": "Summoning a portal",
+                "ability": "Summon Portal/Rift"
+            }
+        ],
+        "Charging Darklight Burst": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "This is the end!",
+                "trigger": "Charging Darklight Burst",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Bask in Coldharbour's light!",
+                "trigger": "Charging Darklight Burst",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Perish in Coldharbour's flame!",
+                "trigger": "Charging Darklight Burst",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "This flame will darken your soul!",
+                "trigger": "Charging Darklight Burst",
+                "ability": "Darklight Burst"
+            }
+        ],
+        "Performing Shadow Barrage": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "My shadows will tear your life away!",
+                "trigger": "Performing Shadow Barrage",
+                "ability": "Shadow Barrage"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Let shadow flay the meat from your bones!",
+                "trigger": "Performing Shadow Barrage",
+                "ability": "Shadow Barrage"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Let the darkness take you!",
+                "trigger": "Performing Shadow Barrage",
+                "ability": "Shadow Barrage"
+            }
+        ],
+        "When he splits into shades": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "You fools are beneath me. My shadows will contend with you. What did Lyranth promise you? Why aid that wretch? There are no spoils here but death. Her clan deserved their fate; their souls will serve me unendingly.",
+                "trigger": "When he splits into shades",
+                "ability": "Summon Shades"
+            }
+        ],
+        "Defeating the shades": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Impressive, for insects! All you've done is delay the inevitable!",
+                "trigger": "Defeating the shades",
+                "ability": "Summon Shades"
+            }
+        ],
+        "If your group is defeated during the battle": [
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "With your death will come many others.",
+                "trigger": "If your group is defeated during the battle",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "More bodies for the prison. Our occupancy is inexhaustible.",
+                "trigger": "If your group is defeated during the battle",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "We will harvest what's left of you, and your corpse will serve Lord Bal.",
+                "trigger": "If your group is defeated during the battle",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Your bodies will aid us in the destruction of your kind.",
+                "trigger": "If your group is defeated during the battle",
+                "ability": "Summon Portal/Rift"
+            },
+            {
+                "speaker": "Lord Warden Dusk",
+                "line": "Do not fear. Even in death, your organs will serve us.",
+                "trigger": "If your group is defeated during the battle",
+                "ability": "Summon Portal/Rift"
+            }
+        ],
+        "After defeating the Lord Warden, his soul will emerge from his corpse": [
+            {
+                "speaker": "Soul of Dusk",
+                "line": "No! I will not suffer this!",
+                "trigger": "After defeating the Lord Warden, his soul will emerge from his corpse",
+                "ability": "Darklight Burst"
+            },
+            {
+                "speaker": "Lyranth",
+                "line": "My clan suffered it. And now, you will.",
+                "trigger": "After defeating the Lord Warden, his soul will emerge from his corpse",
+                "ability": "Darklight Burst"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "You used to have to activate a synergy called \"Brace for Impact\" to survive the fall from Lord Warden Dusk's portals. This was changed in Update 29."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Summary Execution: Aid Lyranth on her path to vengeance, and liberate some lost souls along the way.",
+        "Pledge: Imperial City Prison: Prove you are truly Undaunted by clearing Imperial City Prison."
+    ],
+    "summary": "This article is about the boss in Imperial City Prison. For the boss in the Infinite Archive, see Lord Warden Dusk (Infinite Archive). For the item set, see Lord Warden. Lord Warden Dusk is a large armored grievous twilight found in the Last Cell Block of the Imperial City Prison. He serves as the dungeon's third and final boss. In combat he summons small draining portals and two large floor-bound portals. Stepping on one of the floor portals will lock your character in place before teleporting you high above the fighting area, where you will likely die if you don't use the \"Brace For Impact\" synergy. He can also split into four Shades, which the players must defeat in order to progress the fight. He has a chance to drop the Warden's Courage, a one-handed sword. On veteran difficulty, he drops a helm from the Lord Warden set. His loot is found in a chest by the exit after his defeat. The Warden returns as Low Warden Dusk when he is summoned by Overfiend Kazpian to defend the Dolorous Cista in the Ossein Cage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lord_Warden_Dusk",
+        "page_title": "Online:Lord Warden Dusk",
+        "revision_id": 3567899,
+        "retrieved_at": "2026-08-12T21:26:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "id": "grundwulf",
+    "name": "Grundwulf",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Moongrave Fane: Moonlight's Mausoleum",
+    "species": "",
+    "reaction": "Friendly → Hostile",
+    "health": {
+        "normal": "1,010,391",
+        "veteran": "2,030,064",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Sanguine Successor: Prevent a clan of vampires from draining the blood of a captured dragon.",
+        "Pledge: Moongrave Fane: Prove you are truly Undaunted by conquering Moongrave Fane."
+    ],
+    "summary": "This article is about the creature. For the item set, see Grundwulf (set). Grundwulf is a Nord member of the Dragonguard who can be found in Moongrave Fane. There, he allied with the Fane's denizens, the vampiric Hollowfang Clan, and plots to drink the blood of the dragon Sahrotnax. He hopes that doing so will result in him becoming Dragonborn, making him the rightful heir to the throne of Cyrodiil. Friend and fellow Dragonguard Chevalier Renald seeks to convince Grundwulf to turn away from the Hollowfang Clan. He initially fights alongside the Hollowfang Clan Mother, Nisaazda. He uses the Thu'um in battle, having been trained by the Greybeards in his youth. At the end of the battle, Nisaazda will die but Grundwulf survives, living for one more battle. Following Nisaazda's death, Grundwulf is weakened in your first encounter, and he will descend towards the site of Sahrotnax's crash-landing. There, he will complete the ritual, draining the dragon and becoming empowered by its blood.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Grundwulf",
+        "page_title": "Online:Grundwulf",
+        "revision_id": 3511995,
+        "retrieved_at": "2026-08-12T21:29:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

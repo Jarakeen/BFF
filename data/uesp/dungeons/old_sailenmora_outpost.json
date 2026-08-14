@@ -1,0 +1,18 @@
+{
+    "id": "old_sailenmora_outpost",
+    "name": "Old Sailenmora Outpost",
+    "content_type": "dungeon",
+    "summary": "Old Sailenmora Outpost is an abandoned Telvanni research station located east of Sailenmora. Deal with a Daedric Prince is sitting just outside the entrance. Nix creatures stalk the caverns of the entrance, while Shadeya's sellswords lurk further in. Hazards include lava pools.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Old_Sailenmora_Outpost",
+        "page_title": "Online:Old Sailenmora Outpost",
+        "revision_id": 3567078,
+        "retrieved_at": "2026-08-12T21:30:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

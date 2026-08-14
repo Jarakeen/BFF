@@ -1,0 +1,26 @@
+{
+    "id": "deetra_grotto",
+    "name": "Deetra Grotto",
+    "content_type": "dungeon",
+    "summary": "Deetra Grotto is a cave and lagoon found in Western Solstice to the north of Sunport. It is the home of many pirates, smugglers and individuals that do not wish to live in the city or smaller villages around the island. Beyond the small cave near the entrance, it leads to a large lagoon hidden in the mountains with a settlement built around and on the water, connected by wooden bridges. These buildings are built on the older Argonian ruins scattered around. A boat in the lower docks can be used to leave the public dungeon and leaves you at the south of Sunport Docks, this boat cannot be used to travel back to the Deetra Grotto. Recently, the grotto has come under attack by daedra from Coldharbour, the enviroment included, having undergone a planemeld, with the surroundings changing to match the Oblivion realm. In the wake of this, a strange sickness termed the Daedric Scourge has infected the people, animals and plants of the grotto. Eventually, the infected lose all sense and become feral. If you enter any of the glowing blue liquid (Azure Plasm) in the grotto, you will be hit with a Soul Shriven debuff that weakens you, by \"reducing your Weapon Damage, Spell Damage and Max Health by 50%\" (in practice it is bugged, see its trap section) for five minutes. Once you leave the azure plasm, the debuff is purged. Any of the enemies here have the chance of dropping a Phial of Tainted Blood which can be used to unlock the Eviscerate, Violet Purple skill style. Also, any of the boss enemies in the dungeon have a chance of dropping the Lead: Gnarl-fiber Laces lead needed for the Mad God's Dancing Shoes mythic item. Hermit crabs and lesser sea adders skulk along the shoreline, while beetles and rats slink around the docks. Centipedes, spiders and torchbugs are found everywhere.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Deetra_Grotto",
+        "page_title": "Online:Deetra Grotto",
+        "revision_id": 3552253,
+        "retrieved_at": "2026-08-12T21:19:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "bearclaw_mine",
+    "name": "Bearclaw Mine",
+    "content_type": "dungeon",
+    "summary": "The Bearclaw Mine is a mine on the far east of Stormhaven, north-northwest of the Weeping Giant Wayshrine containing bandits. An unfinished letter can be found at the entrance to the mine. Followers of Vaermina seem to have an interest of the mine, according to the orders found deeper inside the cave. A partly destroyed book and a final note can be found farther in the cave, telling about the sad fate of a miner's family. Killing bandits will sometimes free peasant miners. Beetles and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bearclaw_Mine",
+        "page_title": "Online:Bearclaw Mine",
+        "revision_id": 3598206,
+        "retrieved_at": "2026-08-12T21:14:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

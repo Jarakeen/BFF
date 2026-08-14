@@ -1,0 +1,48 @@
+{
+    "id": "praxin_douare",
+    "name": "Praxin Douare",
+    "content_id": "spindleclutch_ii",
+    "content_name": "Spindleclutch II",
+    "location": "Spindleclutch II",
+    "species": "Wraith",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "54,028",
+        "veteran": "150,375",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Whispers: Aid the Fighters Guild members in clearing the Spindleclutch I caves.",
+        "Blood Relations: Rescue Sud-Hareem's son At'avar from a powerful vampire.",
+        "Pledge: Spindleclutch II: Explore Spindleclutch II and return Undaunted."
+    ],
+    "summary": "Praxin Douare is a Breton member of the Fighters Guild and one the few remaining sane persons that was part of the original expedition that went into Spindleclutch I. After the party defeats the Swarm Mother, Praxin and his soldiers suddenly go insane and attack them, forcing the party to slay them. This event reveals the true nature of the Whisperer and the threat she poses. Praxin Douare is encountered again as a wraith in Spindleclutch II, where he serves as the second boss. He is later raised as a deranged ghost by a coven of Vampires who took over the cave following the Whisperer's death. He believes he is still ensnared by the Whisperer. At first, he will be a ghostly version of his former self, but during the course of the fight, he will change into a wraith.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Praxin_Douare",
+        "page_title": "Online:Praxin Douare",
+        "revision_id": 3580501,
+        "retrieved_at": "2026-08-12T21:34:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

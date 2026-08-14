@@ -1,0 +1,508 @@
+{
+    "id": "cyronin_artellian",
+    "name": "Cyronin Artellian",
+    "content_id": "the_dread_cellar",
+    "content_name": "The Dread Cellar",
+    "location": "The Dread Cellar - Confessional",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,873,301",
+        "veteran": "9,324,750",
+        "hardmode": "8,392,278"
+    },
+    "abilities": [
+        {
+            "name": "Shock",
+            "description": "A basic ranged attack dealing moderate shock damage."
+        },
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack dealing low physical damage."
+        },
+        {
+            "name": "Staff Strike",
+            "description": "Cyronin Artellian performs a jumping attack with his staff, dealing high physical damage. This can be blocked."
+        },
+        {
+            "name": "Lightning Bolt",
+            "description": "Follow-up of \"Staff Strike\", regardless of if it landed or missed. A red circle appears on who was targeted previously, where a shocking bolt strikes down, dealing very high shock damage. Try to make it land away from other group members."
+        },
+        {
+            "name": "Dread Surge",
+            "description": "Cyronin Artellian animates the Crystal Cathode on the arena's ceiling by shooting it with electrified orbs, which in turn causes waves of crimson energy to flow throughout the room. They navigate in quick successive waves, leaving only a short route to navigate around. Being touched by one deals massive magical damage. Counter by looking where Martus puts up a shield wall and lead the boss there."
+        },
+        {
+            "name": "Soulstorm",
+            "description": "Cyronin Artellian raises his staff upwards, releasing large red skull projectiles from it at targets, each dealing massive magical damage. These must be dodged. Going further back will help with detection."
+        },
+        {
+            "name": "Summon Boltwyrms",
+            "description": "Cyronin Artellian summons a group of Boltwyrms nearby. These will tether to a specific target at random and need to be destroyed by whoever is tethered (even a tank) as they will take increasing damage and snares, which can make dodging \"Dread Surge\" harder."
+        },
+        {
+            "name": "Summon Dead",
+            "description": "Occasionally, Restless Dead will burrow out of the ground to harass the party."
+        },
+        {
+            "name": "Summon Atronachs",
+            "description": "If the initial two Storm Atronachs have been slain, Cyronin Artellian will summon two more not long after."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Martus Tullius",
+            "line": "We stopped its harvesting, at least, but I feel far greater concentrations of this power ahead.",
+            "trigger": "At the Confessional",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "Is that you, Martus? I thought you'd lost your appetite for screams.",
+            "trigger": "At the Confessional",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "A battlemage? Martus, you know him?",
+            "trigger": "At the Confessional",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "Whatever you've gotten yourself involved in, Cyronin, it ends here.",
+            "trigger": "At the Confessional",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "You know, Martus, I might have offered a place here to an old comrade, but I have no need for a man who's lost his resolve.",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "What's the saying? That which does not kill me, makes me stronger? Oh, ho ho ho. If only they knew.",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "You can't imagine what the Waking Flame has accomplished here, with me. Maybe I'll let you live long enough to see it.",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Has the Battlespire stooped to hiring mercenaries, Martus? Or did you run away from there too?",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Is that a potential with you? She still has a sparkle of innocence in her eyes. I love watching it die.",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "To be honest, I'm glad the Empire fell. Abandoning the pretense of interrogation has made my work so much more fulfilling.",
+            "trigger": "If you delay starting combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Can you feel it? The palpable dread?",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Cower and beg for release!",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Drown in their fear!",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Claw over yourselves for an escape.",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "If you listen carefully, you can still hear all their screams.",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "\"It won't be near so quick or so gentle for you, Martus.\"[verification needed — Circumstances for saying this?]",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Do you know what it's like to beg for death? I'll show you.",
+            "trigger": "During combat",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "A little fresh agony for the Scorions to lap up.",
+            "trigger": "Upon a group wipe",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "I expected more, Martus. But I suppose I always was superior in the application of pain.",
+            "trigger": "Upon a group wipe",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "No, no. I can't have you all die on me. Where would be the fun in that?",
+            "trigger": "Upon a group wipe",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "They were lucky to die so quickly. Come, Martus, we have catching up to do.",
+            "trigger": "Upon a group wipe",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Clear your minds of all but pain and fear!",
+            "trigger": "Upon a group wipe",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "Is that malice in your eyes, Martus? Have I rekindled your passion for causing pain?",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "You've always had a special place of loathing in my heart, Cyronin.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "It's not the killing I enjoy most. But I do enjoy it.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "Your potential didn't know the depths you were leading her down. Maybe I'll show her how deep they go.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "Our concern for how low you've sunk ends when we bury you.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "The terror wells up in this place. It wells up in you.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "He's gathered a fair amount of energy. Be ready to dodge!",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "Can you feel it? The palpable dread?",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "Stay light on your feet, he's about to make you dance.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "\"Why so glum, Martus? Aren't you pleased to know I turned all that pointless suffering into something greater?",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "I do take some satisfaction knowing you've damned your soul to Oblivion.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Cyronin Artellian",
+            "line": "Your problem is you always think too small. You can't even imagine what the Prince of Ambition has planned.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "No need to imagine when it ends here.",
+            "trigger": "With Martus",
+            "ability": "Dread Surge"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "At the Confessional": [
+            {
+                "speaker": "Martus Tullius",
+                "line": "We stopped its harvesting, at least, but I feel far greater concentrations of this power ahead.",
+                "trigger": "At the Confessional",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "Is that you, Martus? I thought you'd lost your appetite for screams.",
+                "trigger": "At the Confessional",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "A battlemage? Martus, you know him?",
+                "trigger": "At the Confessional",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "Whatever you've gotten yourself involved in, Cyronin, it ends here.",
+                "trigger": "At the Confessional",
+                "ability": "Dread Surge"
+            }
+        ],
+        "If you delay starting combat": [
+            {
+                "speaker": "",
+                "line": "You know, Martus, I might have offered a place here to an old comrade, but I have no need for a man who's lost his resolve.",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "What's the saying? That which does not kill me, makes me stronger? Oh, ho ho ho. If only they knew.",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "You can't imagine what the Waking Flame has accomplished here, with me. Maybe I'll let you live long enough to see it.",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Has the Battlespire stooped to hiring mercenaries, Martus? Or did you run away from there too?",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Is that a potential with you? She still has a sparkle of innocence in her eyes. I love watching it die.",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "To be honest, I'm glad the Empire fell. Abandoning the pretense of interrogation has made my work so much more fulfilling.",
+                "trigger": "If you delay starting combat",
+                "ability": "Dread Surge"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "",
+                "line": "Can you feel it? The palpable dread?",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Cower and beg for release!",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Drown in their fear!",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Claw over yourselves for an escape.",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "If you listen carefully, you can still hear all their screams.",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "\"It won't be near so quick or so gentle for you, Martus.\"[verification needed — Circumstances for saying this?]",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Do you know what it's like to beg for death? I'll show you.",
+                "trigger": "During combat",
+                "ability": "Dread Surge"
+            }
+        ],
+        "Upon a group wipe": [
+            {
+                "speaker": "",
+                "line": "A little fresh agony for the Scorions to lap up.",
+                "trigger": "Upon a group wipe",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "I expected more, Martus. But I suppose I always was superior in the application of pain.",
+                "trigger": "Upon a group wipe",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "No, no. I can't have you all die on me. Where would be the fun in that?",
+                "trigger": "Upon a group wipe",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "They were lucky to die so quickly. Come, Martus, we have catching up to do.",
+                "trigger": "Upon a group wipe",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Clear your minds of all but pain and fear!",
+                "trigger": "Upon a group wipe",
+                "ability": "Dread Surge"
+            }
+        ],
+        "With Martus": [
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "Is that malice in your eyes, Martus? Have I rekindled your passion for causing pain?",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "You've always had a special place of loathing in my heart, Cyronin.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "It's not the killing I enjoy most. But I do enjoy it.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "Your potential didn't know the depths you were leading her down. Maybe I'll show her how deep they go.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "Our concern for how low you've sunk ends when we bury you.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "The terror wells up in this place. It wells up in you.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "He's gathered a fair amount of energy. Be ready to dodge!",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "Can you feel it? The palpable dread?",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "Stay light on your feet, he's about to make you dance.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "\"Why so glum, Martus? Aren't you pleased to know I turned all that pointless suffering into something greater?",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "I do take some satisfaction knowing you've damned your soul to Oblivion.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Cyronin Artellian",
+                "line": "Your problem is you always think too small. You can't even imagine what the Prince of Ambition has planned.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "No need to imagine when it ends here.",
+                "trigger": "With Martus",
+                "ability": "Dread Surge"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Quaking Dread: Assist a contingent of Imperial Battlemages sent to investigate Daedric activity within an abandoned prison.",
+        "Pledge: The Dread Cellar: Enter The Dread Cellar and return Undaunted."
+    ],
+    "summary": "Cyronin Artellian is an Imperial Waking Flame cultist that serves as the second boss of The Dread Cellar. He is a disgraced Imperial Battlemage that was posted to the Cellar with Martus Tullius as an interrogator, and they both tortured many of the inmates to extract their memories. Unlike Martus, he enjoyed the work. The Spire Council eventually abandoned the Cellar. Martus did not know what happened to Cyronin after he left, but tried to forget him. Cyronin stayed behind, and with the help of the Waking Flame, he is now overseeing the creation of the Antecedent Cataclyst.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cyronin_Artellian",
+        "page_title": "Online:Cyronin Artellian",
+        "revision_id": 3466134,
+        "retrieved_at": "2026-08-12T21:20:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "id": "molavar",
+    "name": "Molavar",
+    "content_type": "dungeon",
+    "summary": "Molavar is an Ayleid ruin located west of Elinhir in Lower Craglorn containing fire creatures and undead. According to a transcript found in the ruins, a person found guilty of necromancy and other various crimes has been imprisoned there. Beetles are found in numbers within. Lava Pools scour throughout the delve. Magdra Ibrai can be found in the Flame Lair during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve.",
+        "By activating a switch system, you can summon a Scion of Molavar who acts as a follower for the whole delve."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Molavar",
+        "page_title": "Online:Molavar",
+        "revision_id": 3598816,
+        "retrieved_at": "2026-08-12T21:28:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,434 @@
+{
+    "id": "dagrund_the_bulky",
+    "name": "Dagrund the Bulky",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Ravaging Blow",
+            "description": "A charged heavy melee attack that deals very high physical damage. This must be blocked by the tank or dodged if you are not."
+        },
+        {
+            "name": "Decimate",
+            "description": "The boss jumps in the air and lands dealing moderate physical damage as indicated by a red circle."
+        },
+        {
+            "name": "Upheaval",
+            "description": "After landing, the boss releases tremors that will chase all group members dealing moderate damage as indicated by red circles. Roll dodge or block the tremors to reduce the damage done."
+        },
+        {
+            "name": "Summon Bearfang Hunter",
+            "description": "When changing elements, the boss will summon two Bearfang Hunters to attack the group. Kill them first to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Staking your claim to Lord Hircine's boon, huh? Good luck! You're going to need it with competition like us.",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "",
+            "line": "What makes your group so special?",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "",
+            "line": "\"The blood of werebears runs through our veins.",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "",
+            "line": "You know, the cozies out there are always quick to associate Lord Hircine with werewolves. And they're fine and all, I suppose. But nothing beats a werebear's might!\"",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "",
+            "line": "And what favor do you want to ask Hircine?",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "",
+            "line": "Not sure yet. Winning the Great Hunt is sure to earn us eternal glory. Any prize we earn afterward is just icing on the sweetroll.",
+            "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+            "ability": "Summon Bearfang Hunter"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Troll's blood, it has to be here somewhere! Keep an eye out!",
+            "trigger": "Dangrund can be encountered again in the Wispwood, where his group has been tracking Tarcyr and the area has become suspiciously foggy.",
+            "ability": "Decimate"
+        },
+        {
+            "speaker": "Bearfang Hunter",
+            "line": "Where did he go?",
+            "trigger": "<Dagrund is teleported away by Tarcyr.>",
+            "ability": "Ravaging Blow"
+        },
+        {
+            "speaker": "Bearfang Hunter",
+            "line": "By Kyne!",
+            "trigger": "<His corpse drops from the sky. and the rest of the hunters are teleported into the air as well.>",
+            "ability": "Decimate"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Don't you see? You're the Hare now, hunter!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "It's time for the hunt to truly begin!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "I feel its power coursing through me! I feel it calling for your deaths!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "You shall join us in our eternal hunt!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "I'll strike you down!",
+            "trigger": "Casting Decimate",
+            "ability": "Decimate"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Feel a werebear's strength!",
+            "trigger": "Casting Decimate",
+            "ability": "Decimate"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Behold a werebear's might!",
+            "trigger": "Casting Decimate",
+            "ability": "Decimate"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Fire and ash! I'll burn you all!",
+            "trigger": "Entering Flame Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Burn beneath the flames!",
+            "trigger": "Entering Flame Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Scorching heat! Smoldering flesh!",
+            "trigger": "Entering Flame Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Freeze and perish!",
+            "trigger": "Entering Frost Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Feel winter's wrath!",
+            "trigger": "Entering Frost Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "May glacial winds take you!",
+            "trigger": "Entering Frost Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Face my storm's wrath!",
+            "trigger": "Entering Shock Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Lightning's might! Storm's fury!",
+            "trigger": "Entering Shock Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "My storm will strike you down!",
+            "trigger": "Entering Shock Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "It seems the Great Hunt has come to an end.",
+            "trigger": "Upon a Group Wipe",
+            "ability": "Ravaging Blow"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "And so your hunt has ended.",
+            "trigger": "Upon a Group Wipe",
+            "ability": "Ravaging Blow"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "This grove is now your grave.",
+            "trigger": "Upon a Group Wipe",
+            "ability": "Ravaging Blow"
+        },
+        {
+            "speaker": "Dagrund the Bulky",
+            "line": "Join us within the Hunting Grounds. Forever.",
+            "trigger": "Upon a Group Wipe",
+            "ability": "Ravaging Blow"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.": [
+            {
+                "speaker": "",
+                "line": "Staking your claim to Lord Hircine's boon, huh? Good luck! You're going to need it with competition like us.",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            },
+            {
+                "speaker": "",
+                "line": "What makes your group so special?",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            },
+            {
+                "speaker": "",
+                "line": "\"The blood of werebears runs through our veins.",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            },
+            {
+                "speaker": "",
+                "line": "You know, the cozies out there are always quick to associate Lord Hircine with werewolves. And they're fine and all, I suppose. But nothing beats a werebear's might!\"",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            },
+            {
+                "speaker": "",
+                "line": "And what favor do you want to ask Hircine?",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            },
+            {
+                "speaker": "",
+                "line": "Not sure yet. Winning the Great Hunt is sure to earn us eternal glory. Any prize we earn afterward is just icing on the sweetroll.",
+                "trigger": "Dagrund can be first encountered at the entrance to the Bloodscent Pass along with the other competitors.",
+                "ability": "Summon Bearfang Hunter"
+            }
+        ],
+        "Dangrund can be encountered again in the Wispwood, where his group has been tracking Tarcyr and the area has become suspiciously foggy.": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Troll's blood, it has to be here somewhere! Keep an eye out!",
+                "trigger": "Dangrund can be encountered again in the Wispwood, where his group has been tracking Tarcyr and the area has become suspiciously foggy.",
+                "ability": "Decimate"
+            }
+        ],
+        "<Dagrund is teleported away by Tarcyr.>": [
+            {
+                "speaker": "Bearfang Hunter",
+                "line": "Where did he go?",
+                "trigger": "<Dagrund is teleported away by Tarcyr.>",
+                "ability": "Ravaging Blow"
+            }
+        ],
+        "<His corpse drops from the sky. and the rest of the hunters are teleported into the air as well.>": [
+            {
+                "speaker": "Bearfang Hunter",
+                "line": "By Kyne!",
+                "trigger": "<His corpse drops from the sky. and the rest of the hunters are teleported into the air as well.>",
+                "ability": "Decimate"
+            }
+        ],
+        "Beginning combat": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Don't you see? You're the Hare now, hunter!",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "It's time for the hunt to truly begin!",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "I feel its power coursing through me! I feel it calling for your deaths!",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "You shall join us in our eternal hunt!",
+                "trigger": "Beginning combat",
+                "ability": null
+            }
+        ],
+        "Casting Decimate": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "I'll strike you down!",
+                "trigger": "Casting Decimate",
+                "ability": "Decimate"
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Feel a werebear's strength!",
+                "trigger": "Casting Decimate",
+                "ability": "Decimate"
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Behold a werebear's might!",
+                "trigger": "Casting Decimate",
+                "ability": "Decimate"
+            }
+        ],
+        "Entering Flame Phase": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Fire and ash! I'll burn you all!",
+                "trigger": "Entering Flame Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Burn beneath the flames!",
+                "trigger": "Entering Flame Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Scorching heat! Smoldering flesh!",
+                "trigger": "Entering Flame Phase",
+                "ability": null
+            }
+        ],
+        "Entering Frost Phase": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Freeze and perish!",
+                "trigger": "Entering Frost Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Feel winter's wrath!",
+                "trigger": "Entering Frost Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "May glacial winds take you!",
+                "trigger": "Entering Frost Phase",
+                "ability": null
+            }
+        ],
+        "Entering Shock Phase": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Face my storm's wrath!",
+                "trigger": "Entering Shock Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Lightning's might! Storm's fury!",
+                "trigger": "Entering Shock Phase",
+                "ability": null
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "My storm will strike you down!",
+                "trigger": "Entering Shock Phase",
+                "ability": null
+            }
+        ],
+        "Upon a Group Wipe": [
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "It seems the Great Hunt has come to an end.",
+                "trigger": "Upon a Group Wipe",
+                "ability": "Ravaging Blow"
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "And so your hunt has ended.",
+                "trigger": "Upon a Group Wipe",
+                "ability": "Ravaging Blow"
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "This grove is now your grave.",
+                "trigger": "Upon a Group Wipe",
+                "ability": "Ravaging Blow"
+            },
+            {
+                "speaker": "Dagrund the Bulky",
+                "line": "Join us within the Hunting Grounds. Forever.",
+                "trigger": "Upon a Group Wipe",
+                "ability": "Ravaging Blow"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "It's not clear during the fight but according to Hanu, Tarcyr killed Dagrund and the rest of the Bearfang and puppeteered their corpses.",
+        "Though he is a werebear, he never transforms into one.",
+        "Dagrund uses the Misanthropic Lycanthrope hairstyle."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt.",
+        "Pledge: March of Sacrifices: Prove you are truly Undaunted by clearing the March of Sacrifices."
+    ],
+    "summary": "Dagrund the Bulky is a Nord who can be found in the March of Sacrifices. He is the leader of one of the groups competing in Hircine's Great Hunt and claims to be descended from werebears. Later on in the Whispwood, Tarcyr will kill him and his fellow hunters, raising him as an undead thrall.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dagrund_the_Bulky",
+        "page_title": "Online:Dagrund the Bulky",
+        "revision_id": 3532933,
+        "retrieved_at": "2026-08-12T21:28:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

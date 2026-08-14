@@ -1,0 +1,26 @@
+{
+    "id": "quires_wind",
+    "name": "Quires Wind",
+    "content_type": "dungeon",
+    "summary": "Quires Wind is a delve that can be found in Apocrypha. It can be found on the road leading to the west, between the Writhing Wastes Wayshrine and the Soundless Bight Wayshrine. Bookbinder Spiders, crows, fiendroths, nixads, tomeshells and torchbugs are found in numbers within. Hazards include bottomless pits, gaze sentries, grasping tentacles, and heretical literature.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Quires_Wind",
+        "page_title": "Online:Quires Wind",
+        "revision_id": 3567071,
+        "retrieved_at": "2026-08-12T21:31:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

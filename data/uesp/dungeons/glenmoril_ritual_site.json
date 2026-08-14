@@ -1,0 +1,18 @@
+{
+    "id": "glenmoril_ritual_site",
+    "name": "Glenmoril Ritual Site",
+    "content_type": "dungeon",
+    "summary": "Glenmoril Ritual Site is a ritual site located within the Sunken Road.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Glenmoril_Ritual_Site",
+        "page_title": "Online:Glenmoril Ritual Site",
+        "revision_id": 3025105,
+        "retrieved_at": "2026-08-12T21:23:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

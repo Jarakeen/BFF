@@ -1,0 +1,192 @@
+{
+    "id": "prime_sorcerer_vandorallen",
+    "name": "Prime Sorcerer Vandorallen",
+    "content_id": "exiled_redoubt",
+    "content_name": "Exiled Redoubt",
+    "location": "Exiled Redoubt — Consignment Grotto",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,169,856",
+        "veteran": "7,200,895",
+        "hardmode": "12,601,566"
+    },
+    "abilities": [
+        {
+            "name": "Blackspine Curse",
+            "description": "Vandorallen targets a player with a debuff that applies a healing absorption effect."
+        },
+        {
+            "name": "Chain Lightning",
+            "description": "All nearby players will take lightning damage when at least one player is standing in one of Vandorallen's Storm Bolt AOEs."
+        },
+        {
+            "name": "Coruscating Orb",
+            "description": "On Hard Mode, Vandorallen will spawn two lightning AOEs that chase the nearest player."
+        },
+        {
+            "name": "Iron Charge",
+            "description": "Vandorallen becomes immune to damage and mounts his horse, knocking down any player in his path. He will also summon Iron Atronach Spiders around the arena. Lucilla will summon an ice shield that will stun any spiders that come into contact."
+        },
+        {
+            "name": "Lightning Rod Slam",
+            "description": "Vandorallen's heavy attack, which spawns lightning AOEs under each player when it finishes."
+        },
+        {
+            "name": "Racing Flames",
+            "description": "Vandorallen will summon flames that spread in a circle around him."
+        },
+        {
+            "name": "Storm Bolt",
+            "description": "Vandorallen spawns a lightning bolt either at the furthest player or around himself, creating a large AOE. Standing in the AOE will chain lightning the group."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "Vandorallen, I should have guessed that was your magic.",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "Prime Sorcerer Vandorallen",
+            "line": "You think you can stop me? You never succeeded in the Spire.",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "",
+            "line": "<Vandorallen runs away, while Lucilla swings her sword and chases him.>",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "Prime Sorcerer Vandorallen",
+            "line": "The war for your precious Empire killed innocents.",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "You're murdering kidnapped soldiers!",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "",
+            "line": "<Vandorallen throws a green fireball at Lucilla before running away again. She dodges, then continues to chase him.>",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "Why are you even going along with Cato's plan?",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "Prime Sorcerer Vandorallen",
+            "line": "Cato's son died under a diplomatic banner. The alliances must end!",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        },
+        {
+            "speaker": "",
+            "line": "<Vandorallen aims a torrent of fire magic at Lucilla. She blocks his attack with ice magic and her shield. She chases him one final time.>",
+            "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+            "ability": "Iron Charge"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen": [
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "Vandorallen, I should have guessed that was your magic.",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "Prime Sorcerer Vandorallen",
+                "line": "You think you can stop me? You never succeeded in the Spire.",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "",
+                "line": "<Vandorallen runs away, while Lucilla swings her sword and chases him.>",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "Prime Sorcerer Vandorallen",
+                "line": "The war for your precious Empire killed innocents.",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "You're murdering kidnapped soldiers!",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "",
+                "line": "<Vandorallen throws a green fireball at Lucilla before running away again. She dodges, then continues to chase him.>",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "Why are you even going along with Cato's plan?",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "Prime Sorcerer Vandorallen",
+                "line": "Cato's son died under a diplomatic banner. The alliances must end!",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            },
+            {
+                "speaker": "",
+                "line": "<Vandorallen aims a torrent of fire magic at Lucilla. She blocks his attack with ice magic and her shield. She chases him one final time.>",
+                "trigger": "As you progress through Exiled Redoubt, Lucilla Caprenia will find out that you are being surveilled by Vandorallen",
+                "ability": "Iron Charge"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "On Hard Mode, he will also summon Simulacrums."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His journal can be found in Exiled Redoubt, next to a bunk bed near the door to Docent Domitius."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Undying Requiem: Help clear out Exiled Redoubt.",
+        "Pledge: Exiled Redoubt: Explore Exiled Redoubt and return Undaunted."
+    ],
+    "summary": "Prime Sorcerer Vandorallen is an Imperial battlemage of House Albus who serves as the second boss of Exiled Redoubt. He is the nephew of Cato Albus.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Prime_Sorcerer_Vandorallen",
+        "page_title": "Online:Prime Sorcerer Vandorallen",
+        "revision_id": 3466136,
+        "retrieved_at": "2026-08-12T21:21:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

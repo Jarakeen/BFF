@@ -1,0 +1,76 @@
+{
+    "id": "sliklenia_the_songstress",
+    "name": "Sliklenia the Songstress",
+    "content_id": "arx_corinium",
+    "content_name": "Arx Corinium",
+    "location": "Arx Corinium",
+    "species": "Lamia",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that does moderate physical damage."
+        },
+        {
+            "name": "Venomous Bite",
+            "description": "A heavy melee attack that does high physical damage and knocks the target back."
+        },
+        {
+            "name": "Cacophony",
+            "description": "The boss screams dealing high magical damage over time throughout the room. To counter this, stand in the bubble the pet snake creates as this will prevent all damage done from this attack. The cue for this is when the boss says \"Hide from my song, my pet\". The snake will then run and create a bubble around itself. If the snake is killed, it will no longer provide a bubble, resulting in players having no shelter from the attack."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sliklenia the Songstress",
+            "line": "Hide from my song, my pet.",
+            "trigger": "When she uses Cacophony, she calls out to her pet snake.",
+            "ability": "Cacophony"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When she uses Cacophony, she calls out to her pet snake.": [
+            {
+                "speaker": "Sliklenia the Songstress",
+                "line": "Hide from my song, my pet.",
+                "trigger": "When she uses Cacophony, she calls out to her pet snake.",
+                "ability": "Cacophony"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Force of Nature: Help three nereid sisters reclaim an abandoned Imperial fort.",
+        "Pledge: Arx Corinium: Prove you are truly Undaunted by clearing Arx Corinium."
+    ],
+    "summary": "Sliklenia the Songstress is a Lamia boss found in Arx Corinium (here) with her pet snake. Upon defeating her, there will be a small chance to earn Sweetsong (epic-level quality in Veteran), a unique item in the Undaunted Infiltrator item set.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sliklenia_the_Songstress",
+        "page_title": "Online:Sliklenia the Songstress",
+        "revision_id": 3139181,
+        "retrieved_at": "2026-08-12T21:13:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

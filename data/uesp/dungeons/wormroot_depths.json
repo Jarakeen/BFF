@@ -1,0 +1,29 @@
+{
+    "id": "wormroot_depths",
+    "name": "Wormroot Depths",
+    "content_type": "dungeon",
+    "summary": "Wormroot Depths is an Ayleid ruin in the northwest corner of Grahtwood containing Daedra. They are led by a dremora named Raynia. This delve can be discovered by reading a note at Nazura's Nibbles in the Redfur Trading Post.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Archibert Dantaine erroneously states the Worm Cult occupies the ruins. His information is more likely out of date than outright incorrect: it clearly *was* once a Worm Cult lair, because Mannimarco has used it to stash some copies of his records from the interrogation of Sai Sahan. But there are no actual cultists or summoned undead present when the player visits, only Daedra.",
+        "Aside from the delve's regular quest (Light in the Darkness), and the Undaunted daily (Ayleid Trinkets in Grahtwood), Aldmeri Dominion characters can be sent here twice by Abnur Tharn, in both the Main Quest (The Tharn Speaks) and the Elsweyr prologue (The Demon Weapon). However, since it is impossible to be on both of these quests simultaneously since being on one of them prevents the other from starting, it is impossible to fulfill all the quest-related visits to this dungeon in a single visit; it must be visited twice. Covenant and Pact characters are unaffected by this, since they are sent elsewhere during the Main Quest."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wormroot_Depths",
+        "page_title": "Online:Wormroot Depths",
+        "revision_id": 3598299,
+        "retrieved_at": "2026-08-12T21:38:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

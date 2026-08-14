@@ -1,0 +1,26 @@
+{
+    "id": "apogee_of_the_tormenting_eye",
+    "name": "Apogee of the Tormenting Eye",
+    "content_type": "dungeon",
+    "summary": "Apogee of the Tormenting Eye is a delve that can be found in Apocrypha. It can be found to the northwest of the Apogee Nadir Wayshrine. Coast jellies, daedrats, fiendroths, tomeshells and torchbugs are found within. Hazards include a bottomless pit.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Apogee_of_the_Tormenting_Eye",
+        "page_title": "Online:Apogee of the Tormenting Eye",
+        "revision_id": 3567103,
+        "retrieved_at": "2026-08-12T21:13:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

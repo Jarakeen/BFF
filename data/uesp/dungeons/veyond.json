@@ -1,0 +1,20 @@
+{
+    "id": "veyond",
+    "name": "Veyond",
+    "content_type": "dungeon",
+    "summary": "Veyond is an Ayleid ruin in Blackwood, located northeast of Leyawiin. The ruins are infested with skeletons. Given the presence of this undead, Revus Demnevanni of House Telvanni has chosen this location has the testing ground of his latest device. An Ancient Spirit appears in the ruin during the related quest. Hazards within include Swinging Blades.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Veyond previously appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Veyond",
+        "page_title": "Online:Veyond",
+        "revision_id": 3548165,
+        "retrieved_at": "2026-08-12T21:37:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "orc_s_finger_ruins",
+    "name": "Orc's Finger Ruins",
+    "content_type": "dungeon",
+    "summary": "Orc's Finger Ruins are Ayleid ruins in eastern Rivenspire, northeast of Fell's Run containing Bitterhand Bandits. Teeba-Ja can be found held captive inside. Rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Orc%27s_Finger_Ruins",
+        "page_title": "Online:Orc's Finger Ruins",
+        "revision_id": 3598215,
+        "retrieved_at": "2026-08-12T21:30:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

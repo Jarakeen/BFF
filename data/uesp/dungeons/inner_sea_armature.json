@@ -1,0 +1,26 @@
+{
+    "id": "inner_sea_armature",
+    "name": "Inner Sea Armature",
+    "content_type": "dungeon",
+    "summary": "Inner Sea Armature is a Dwemer ruin west of Davon's Watch in Stonefalls containing outlaws and Dwarven constructs. The delve consists of circular Dwarven corridors connecting two main chambers, and breaking through into a natural cavern to the south. A Skyshard can be found in the large northernmost chamber. A Tattered Note can be found at a four-way intersection near the entrance to the natural caves. These caves contain the Construct's Left Hand, found laying on the ground near some gears; this is needed for the quest The Precursor. The unique Dwarven Sphere Zozuzetharus can be found in a shallow pool in the center of the natural cavern. During the quest A Mother's Obsession, Irenni Elendis can be found here, imprisoned by the bandits in their pantry. During the quest Long Lost Lore, a Forgotten Tome can be found here if your character is of the Pact.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Inner_Sea_Armature",
+        "page_title": "Online:Inner Sea Armature",
+        "revision_id": 3598103,
+        "retrieved_at": "2026-08-12T21:26:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

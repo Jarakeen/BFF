@@ -1,0 +1,21 @@
+{
+    "id": "valthume",
+    "name": "Valthume",
+    "content_type": "dungeon",
+    "summary": "Valthume is a Nordic ruin found in The Reach, located east of Vateshran Hollows. It is occupied by the Gray Host. There is a gathering circle located to the northwest, where Gray Host and Icereach Coven forces have set up camp. Inside the circle, there is an altar with a letter atop it (provided the player has reached the related step in the quest).",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Valthume also appeared in Skyrim.",
+        "Only one draugr spawn point is located in the entire barrow, in the same room as Pentarch Hautring, but the type of draugr can vary after each time the one is killed."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valthume",
+        "page_title": "Online:Valthume",
+        "revision_id": 3550162,
+        "retrieved_at": "2026-08-12T21:37:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

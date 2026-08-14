@@ -1,0 +1,26 @@
+{
+    "id": "obsidian_scar",
+    "name": "Obsidian Scar",
+    "content_type": "dungeon",
+    "summary": "Obsidian Scar is a cave in Rivenspire. The cave and ruins system are inhabited by the Oathbound Orc clan and their Daedra allies. Beetles, rats, scorpions and spiders are found in numbers within. An antiquity dig site can be found in the ruins southeast of the cave's entrance. A chest is nestled against a ruined tower on the side of the road southeast of the Obsidian Scar.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Obsidian_Scar",
+        "page_title": "Online:Obsidian Scar",
+        "revision_id": 3576336,
+        "retrieved_at": "2026-08-12T21:30:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

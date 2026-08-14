@@ -1,0 +1,26 @@
+{
+    "id": "wansalen",
+    "name": "Wansalen",
+    "content_type": "dungeon",
+    "summary": "Wansalen is an Aldmeri ruin in northeastern Auridon, on the western edge of Quendeluun containing Ebonheart Pact soldiers and undead. The tunnels are off limits to the First Auridon Marines as they are prone to collapse. As a result, forces of the Pact have been using the tunnels as a base of operations on Auridon. To reach the skyshard, go straight into the large room with two staircases, follow the watery path south, and head to the corner of the west room between two guards.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wansalen",
+        "page_title": "Online:Wansalen",
+        "revision_id": 3539823,
+        "retrieved_at": "2026-08-12T21:38:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

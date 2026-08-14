@@ -1,0 +1,40 @@
+{
+    "id": "the_cauldron",
+    "name": "The Cauldron",
+    "content_type": "dungeon",
+    "summary": "The Cauldron is a group dungeon in western Deshaan. It is included in the Flames of Ambition DLC alongside Black Drake Villa. The entrance is located west of Narsis. There is a small camp with two bedrolls, a backpack, a seasoning sack and a barrel located just northeast of the Cauldron, sitting against a large boulder. A copy of the lore book, Noxiphilic Sanguivoria, is sitting atop the barrel at this camp. A Dark Fissure spawns nearby. Ash Hoppers, fetcherlies, fiendroths and rats are found in numbers within. Carts and Wheelbarrows yielding Bone, Crawlers, Gnawed Bone, Guts and Worms are scattered throughout the dungeon. Hazards include lava pools and taskmaster snares.",
+    "location": "",
+    "boss_ids": [
+        "oxblood_the_depraved",
+        "ogrim",
+        "taskmaster_viccia",
+        "molten_guardian",
+        "baron_zaudrus",
+        "havocrel"
+    ],
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Cauldron",
+        "page_title": "Online:The Cauldron",
+        "revision_id": 3608140,
+        "retrieved_at": "2026-08-12T21:16:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

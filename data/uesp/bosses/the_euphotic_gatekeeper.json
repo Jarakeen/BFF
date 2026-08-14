@@ -1,0 +1,64 @@
+{
+    "id": "the_euphotic_gatekeeper",
+    "name": "The Euphotic Gatekeeper",
+    "content_id": "graven_deep",
+    "content_name": "Graven Deep",
+    "location": "Graven Deep, Uncharted Island",
+    "species": "Hadolid",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,428,241",
+        "hardmode": "6,642,362"
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "The boss deals moderate physical damage with its sword."
+        },
+        {
+            "name": "Bristlebarb",
+            "description": "The boss throws a glob of poison at one person which deals moderate poison damage. It will explode after a short time unless the afflicted uses the synergy to fling the poison to the ground at their feet. The boss usually afflicts someone with poison after a Pangrit Den appears. In order to smother the den and keep Pangrits from entering the field, the afflicted must run to the Pangrit Den and throw the poison down on top of it. The den will disappear, and any Pangrits caught in the AoE will die. The poison should ideally be flung away from the group."
+        },
+        {
+            "name": "Bristlepitch",
+            "description": "The poison AoE left behind when someone afflicted with Bristlebarb throws the poison down or the barb explodes. This deals massive continuous damage to targets standing inside."
+        },
+        {
+            "name": "Bristlebarage [sic]",
+            "description": "The boss stops, targets one party member, and assaults them with a barrage of poison globs. This deals major damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Haunted Depths: Explore an uncharted region of the Abecean Sea and make it back alive.",
+        "Pledge: Graven Deep: Explore Graven Deep and return Undaunted."
+    ],
+    "summary": "This article is about the boss. For the armor set, see Euphotic Gatekeeper (set). The Euphotic Gatekeeper is a red Hadolid found on the Uncharted Island at Graven Deep. He serves as the first boss and guards the Dwarven Hatch leading into the Dwarven Station section of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Euphotic_Gatekeeper",
+        "page_title": "Online:The Euphotic Gatekeeper",
+        "revision_id": 3585400,
+        "retrieved_at": "2026-08-12T21:25:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

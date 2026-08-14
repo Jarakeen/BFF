@@ -1,0 +1,63 @@
+{
+    "id": "pinnacle_factotum",
+    "name": "Pinnacle Factotum",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Abanabi Cave, Halls of Fabrication",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Heavy Attack",
+            "description": "The heavy attack has some additional shock charges that are thrown around the arena when it lands. Anyone not blocking those charges will be CC'd"
+        },
+        {
+            "name": "Cone Blast",
+            "description": "A charge/release a conical blast. As a dps or healer, block, step out, or roll dodge to avoid the main damage of this attack. Any character caught in the cone without a block will be tossed back."
+        },
+        {
+            "name": "Lightning AOE",
+            "description": "A teleport strike to a player that lays a static AOE at the drop site."
+        },
+        {
+            "name": "Homing AoE",
+            "description": "AoEs appear under every player in the party, and go off after a few seconds. Avoid overlapping together to reduce the damage applied, which is otherwise very high if overlap occurs."
+        },
+        {
+            "name": "Resource Drain",
+            "description": "A channeled attack that will drain resources from all players until interrupted. If the attack completes, it hits for a final burst of damage."
+        },
+        {
+            "name": "Simulacra [Starts after 80% HP]",
+            "description": "The boss will CC whatever currently has aggro and split into 4 copies around the target. The target will have a small friendly AOE under their feet, and leaving it will instantly kill that character. Each simulacrum will wake up and start a palm strike that fires in a cone pattern. The character locked in the middle needs to turn and block the animating simulacrum before it goes off to mitigate the damage to the party."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Pinnacle Factotum model predates the Series 7 Factotum model, which is why they use the Refabricated Style and have more Dwemer-inspired humanoid features."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Pinnacle Factotum is a Factotum encountered in the Halls of Fabrication after Hunter-Killer Positrox and Hunter-Killer Negatrix are defeated, serving as the second boss of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pinnacle_Factotum",
+        "page_title": "Online:Pinnacle Factotum",
+        "revision_id": 3025169,
+        "retrieved_at": "2026-08-12T05:32:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

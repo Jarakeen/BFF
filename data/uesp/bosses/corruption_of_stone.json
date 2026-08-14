@@ -1,0 +1,184 @@
+{
+    "id": "corruption_of_stone",
+    "name": "Corruption of Stone",
+    "content_id": "earthen_root_enclave",
+    "content_name": "Earthen Root Enclave",
+    "location": "Earthen Root Enclave",
+    "species": "Storm Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,413,503",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Bash",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Chin Shatter",
+            "description": "Charged melee attack dealing high physical damage, knocking back and stunning. This can be blocked to stagger the Corruption of Stone instead."
+        },
+        {
+            "name": "Shockwave Bash/Boulder",
+            "description": "(?) dealing high physical damage, knocking back and stunning (Shockwave Bash). (?) dealing moderate physical damage (Boulder)."
+        },
+        {
+            "name": "Earthquake Stomp/Shockwave",
+            "description": "(?) dealing high physical damage (Earthquake Stomp). (?) dealing high physical damage (Shockwave)."
+        },
+        {
+            "name": "Rock Shower",
+            "description": "(?) dealing very high physical damage."
+        },
+        {
+            "name": "Rock Shards",
+            "description": "(?) dealing minor physical damage."
+        },
+        {
+            "name": "Unstable Explosion",
+            "description": "(?) dealing very high earth damage. \"Earth Damage\" is reduced by your armor and damage taken reduction effects."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Druid Laurel",
+            "line": "The Dais of Stonesight! It's wrong, like a gale offshore.",
+            "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Keep the corruption going.",
+            "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Corruption? Stop this! Firesong, what are you doing?",
+            "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Spirit! Stop. Please stop!",
+            "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "We can't let this corrupted spirit do more damage.",
+            "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "This poor stone spirit. I hope I can cleanse it of Archdruid Devyric's filthy magic.",
+            "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "",
+            "line": "<Druid Laurel raises her staff and green light surrounds the remains.>",
+            "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+            "ability": "Chin Shatter"
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Archdruid Devyric went down to the Deeproot. Follow him while I take care of this corruption.",
+            "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+            "ability": "Chin Shatter"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong": [
+            {
+                "speaker": "Druid Laurel",
+                "line": "The Dais of Stonesight! It's wrong, like a gale offshore.",
+                "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Keep the corruption going.",
+                "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Corruption? Stop this! Firesong, what are you doing?",
+                "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Spirit! Stop. Please stop!",
+                "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "We can't let this corrupted spirit do more damage.",
+                "trigger": "When you reach the Dais of Stonesight, you and Druid Laurel will discover the Spirit of Stone being corrupted by the Firesong",
+                "ability": "Chin Shatter"
+            }
+        ],
+        "After slaying the spirit, Druid Laurel will approach the remains": [
+            {
+                "speaker": "Druid Laurel",
+                "line": "This poor stone spirit. I hope I can cleanse it of Archdruid Devyric's filthy magic.",
+                "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "",
+                "line": "<Druid Laurel raises her staff and green light surrounds the remains.>",
+                "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+                "ability": "Chin Shatter"
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Archdruid Devyric went down to the Deeproot. Follow him while I take care of this corruption.",
+                "trigger": "After slaying the spirit, Druid Laurel will approach the remains",
+                "ability": "Chin Shatter"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "lost_depths_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The spirit is mentioned in their original capacity as the Spirit of Stone in the book Message of Welcome."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Stonelore Defense: Repel the Firesong Circle's attack on Earthen Root Enclave.",
+        "Pledge: Earthen Root Enclave: Enter Earthen Root Enclave and return Undaunted."
+    ],
+    "summary": "The Corruption of Stone (originally the Spirit of Stone) is nature spirit that resides in the Earthen Root Enclave on the Dais of Stonesight. It has been corrupted by the Firesong Druids lead by Archdruid Devyric. It resembles a Storm Atronach that lacks any lightning.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Corruption_of_Stone",
+        "page_title": "Online:Corruption of Stone",
+        "revision_id": 3557296,
+        "retrieved_at": "2026-08-12T21:20:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

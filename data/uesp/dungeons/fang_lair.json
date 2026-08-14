@@ -1,0 +1,41 @@
+{
+    "id": "fang_lair",
+    "name": "Fang Lair",
+    "content_type": "dungeon",
+    "summary": "Fang Lair is a group dungeon in Bangkorai. It is part of the Dragon Bones dungeon pack DLC, along with Scalecaller Peak. The entrance is located in northeastern Bangkorai. The dungeon itself is located in an ancient Dwemer ruin site, where necromancers are attempting to resurrect a once-living Dragon. Notes on the Dwemer ruin, written by Neramo, can be found near the entrance to the dungeon.",
+    "location": "",
+    "boss_ids": [
+        "cadaverous_menagerie",
+        "cadaverous_bear",
+        "cadaverous_guar",
+        "cadaverous_senche_tiger",
+        "caluurion",
+        "lich",
+        "sabina_cedus",
+        "ulfnor",
+        "ghost",
+        "orryn_the_black",
+        "thurvokun",
+        "dragon"
+    ],
+    "achievements": [
+        {
+            "id": "dragon_bones_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Fang Lair also appears in Arena, where it is the location of a piece of the Staff of Chaos."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fang_Lair",
+        "page_title": "Online:Fang Lair",
+        "revision_id": 3347961,
+        "retrieved_at": "2026-08-12T21:21:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

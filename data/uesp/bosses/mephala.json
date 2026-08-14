@@ -1,0 +1,47 @@
+{
+    "id": "mephala",
+    "name": "Mephala",
+    "content_id": "cradle_of_shadows",
+    "content_name": "Cradle of Shadows",
+    "location": "Anexiel's Lair, Nilata Ruins\nInner Temple, Falinesti Autumn Site\nEvergloam\nThe Dreaming Cave, Artaeum",
+    "species": "",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The vision of Mephala encountered during the quest A Marriage in Ruins was originally very translucent and difficult to see. The shader was eventually brightened by a patch.",
+        "Factions associated with Mephala include the Arbordawn Cult, the Silken Ring, the Spider Cult, the Ulath Tribe, the Morag Tong, and the Court of Bedlam.",
+        "If you did not lose your soul to Molag Bal, and you meet Mephala during the quest A Marriage in Ruins, she will still think you are a prisoner of Coldharbour."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Marriage in Ruins: Find out what happened to a mage and her sister.",
+        "The Arbordawn Cult: Assist Telenger with a problem at the Falinesti Autumn Site.",
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Lost in Translation: Locate the Heart of Transparent Law.",
+        "A Necessary Alliance: Figure out a way to get into the Crystal Tower with the help of Clavicus Vile and Mephala.",
+        "The Crystal Tower: Ascend the Crystal Tower and put an end to Nocturnal's machinations."
+    ],
+    "summary": "Mephala, also known as The Lady of Whispers and the Webspinner, is the Daedric Prince of murder, sex, and secrets.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mephala",
+        "page_title": "Online:Mephala",
+        "revision_id": 3608604,
+        "retrieved_at": "2026-08-12T21:18:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

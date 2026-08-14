@@ -1,0 +1,18 @@
+{
+    "id": "mount_firesong",
+    "name": "Mount Firesong",
+    "content_type": "dungeon",
+    "summary": "Mount Firesong is a volcano that dominates the island of Y'ffelon. You must travel here during the related quest to confront Lord Bacaro Volorus. The interior of Mount Firesong can be accessed from the northern coast of Y'ffelon.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mount_Firesong",
+        "page_title": "Online:Mount Firesong",
+        "revision_id": 3598060,
+        "retrieved_at": "2026-08-12T21:29:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

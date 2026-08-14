@@ -1,0 +1,448 @@
+{
+    "id": "zaan_the_scalecaller",
+    "name": "Zaan the Scalecaller",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Scalecaller Peak",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,131,995",
+        "hardmode": "5,901,794"
+    },
+    "abilities": [
+        {
+            "name": "Chilling Strike",
+            "description": "A basic melee attack that does moderate physical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Fatal Chill",
+            "description": "Getting hit by Chilling Strike applies moderate frost damage over time to the player."
+        },
+        {
+            "name": "Dragon's Fury",
+            "description": "Zaan will target one player with her fire breath. Zaan will stand in place and turn to face you as she exhales. Keep some distance and sidestep the fire waves as they come; the rest of the party should stand behind Zaan to avoid being hit."
+        },
+        {
+            "name": "Spellbreaker's Malice",
+            "description": "Zaan will bash a target with her shield, dealing very high physical damage around her as indicated by a red circle. If taunted she will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Winter's Purge",
+            "description": "At 80%, 60%, 40% and 20%, Zaan will summon two Frozen Simulacrums (three on HM) that the group must destroy to progress the fight. The Simulacra themselves cannot attack the group, but while they are alive players will take moderately high frost damage over time that must be healed through. If they are not killed fast enough, the entire group will freeze to death after 10 or seconds. After this mechanic will be a special room wide version of Pestilent Breath."
+        },
+        {
+            "name": "Glacial Impact",
+            "description": "The boss slams her mace into the ground dealing high physical damage and knocking back all enemies near her as indicated by a red circle. While this usually occurs randomly, this attack is guaranteed to happen right after Pestilent Breath when Zaan picks up her shield. If you are standing near Spellbreaker when she picks it up, you will be badly hurt."
+        },
+        {
+            "name": "Inferno's Hold",
+            "description": "Zaan will knock back all enemies around herself as indicated by an expanding red circle, dealing moderate flame damage to all enemies near her. This stun can be broken free from. Following that, Zaan will lift one player into the air, preventing them from moving or using abilities. This stun cannot be broken and is part of the Jet of Flame mechanic."
+        },
+        {
+            "name": "Jet of Flame",
+            "description": "A beam of fire will connect Zaan and the targeted player, dealing very high flame damage over time, with each consecutive hit dealing more damage. Another teammate must rush in front of the beam of fire connecting the affected player to Zaan and block the incoming damage to protect them. It is advised that the tank does, as most DPS players will not be able to withstand more than two or three hits from the beam even with blocking. Alternatively, players can take turns blocking the beam if needed to keep the overall damage on each player low. This attack is usually followed by Pestilent Breath, albeit with only one statue active."
+        },
+        {
+            "name": "Pestilent Breath",
+            "description": "Every now and then, one of the three statues dedicated to Peryite in the north corner of the room will spit poisonous fumes, dealing high poison damage on normal and flat-out one-shotting players on veteran difficulty. Each statue corresponds to the left, middle and right side of the arena respectively. Stand near the edges of these areas to be better able to avoid the poison. Standing nearer to the statues also reduces the amount of distance you need to travel to avoid the poison as the cones are thinner near the statues.\nA special room wide version of this attack occurs right after Winter's Purge is complete and the Simulacrums are dead. Zaan will drop her shield and all three statues will glow while a massive AOE will fill the whole room. You must run to where Zaan drops her shield and stand in its protective aura in order to survive. On hard mode, only one person can use Zaan's shield as an avoidance mechanic. For more information, see the hardmode achievement for this fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Did Thurvokun send you to usurp me? To take this temple back?",
+            "trigger": "Intro",
+            "ability": "Glacial Impact"
+        },
+        {
+            "speaker": "",
+            "line": "No matter. This mountaintop shall be your grave. Just as it was mine.",
+            "trigger": "Intro",
+            "ability": "Glacial Impact"
+        },
+        {
+            "speaker": "",
+            "line": "He left me, abandoned me! But now I serve another!",
+            "trigger": "Beginning combat",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "Once, I was worshiped. Now I shall be feared!",
+            "trigger": "Beginning combat",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "I rule over this mountain! And you shall feel my wrath.",
+            "trigger": "Beginning combat",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "My Lord demands an offering! Your corpses shall do nicely.",
+            "trigger": "Beginning combat",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "Peryite's wrath will bring your ruin!",
+            "trigger": "Casting room wide Pestilent Breath",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "Prince of Pestilence! Make them pay!",
+            "trigger": "Casting room wide Pestilent Breath",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "My Lord! Lend me your aid!",
+            "trigger": "Casting room wide Pestilent Breath",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "Peryite! Send my foes your blessing!",
+            "trigger": "Casting room wide Pestilent Breath",
+            "ability": "Pestilent Breath"
+        },
+        {
+            "speaker": "",
+            "line": "Feel Spellbreaker's might!",
+            "trigger": "Casting Spellbreaker's Malice",
+            "ability": "Spellbreaker's Malice"
+        },
+        {
+            "speaker": "",
+            "line": "Your bones will break on my shield!",
+            "trigger": "Casting Spellbreaker's Malice",
+            "ability": "Spellbreaker's Malice"
+        },
+        {
+            "speaker": "",
+            "line": "Kneel or be crushed!",
+            "trigger": "Casting Spellbreaker's Malice",
+            "ability": "Spellbreaker's Malice"
+        },
+        {
+            "speaker": "",
+            "line": "Feel winter's cold embrace!",
+            "trigger": "Casting Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "Frost and blight hold you!",
+            "trigger": "Casting Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "I'll freeze you where you stand!",
+            "trigger": "Casting Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "I will bury you in blinding snow!",
+            "trigger": "Casting Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "No, no! Stay away from Spellbreaker!",
+            "trigger": "Picking up Spellbreaker after Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "Stay back! You are unworthy of Spellbreaker's might!",
+            "trigger": "Picking up Spellbreaker after Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "My Lord's gift! Stay away from it!",
+            "trigger": "Picking up Spellbreaker after Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "My shield! How dare you fools make me drop it!",
+            "trigger": "Picking up Spellbreaker after Winter's Purge",
+            "ability": "Winter's Purge"
+        },
+        {
+            "speaker": "",
+            "line": "Thurvokun's gift endures! Feel my flames!",
+            "trigger": "Casting Dragon's Fury",
+            "ability": "Dragon's Fury"
+        },
+        {
+            "speaker": "",
+            "line": "Fury and flame!",
+            "trigger": "Casting Dragon's Fury",
+            "ability": "Dragon's Fury"
+        },
+        {
+            "speaker": "",
+            "line": "I've lost my voice, but my fire remains!",
+            "trigger": "Casting Dragon's Fury",
+            "ability": "Dragon's Fury"
+        },
+        {
+            "speaker": "",
+            "line": "Nothing but ash will remain!",
+            "trigger": "Casting Dragon's Fury",
+            "ability": "Dragon's Fury"
+        },
+        {
+            "speaker": "",
+            "line": "Roast over the flames!",
+            "trigger": "Casting Inferno's Hold",
+            "ability": "Inferno's Hold"
+        },
+        {
+            "speaker": "",
+            "line": "May the flames take you!",
+            "trigger": "Casting Inferno's Hold",
+            "ability": "Inferno's Hold"
+        },
+        {
+            "speaker": "",
+            "line": "Let the fire consume you!",
+            "trigger": "Casting Inferno's Hold",
+            "ability": "Inferno's Hold"
+        },
+        {
+            "speaker": "",
+            "line": "Feel how the fire burns!",
+            "trigger": "Casting Inferno's Hold",
+            "ability": "Inferno's Hold"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Intro": [
+            {
+                "speaker": "",
+                "line": "Did Thurvokun send you to usurp me? To take this temple back?",
+                "trigger": "Intro",
+                "ability": "Glacial Impact"
+            },
+            {
+                "speaker": "",
+                "line": "No matter. This mountaintop shall be your grave. Just as it was mine.",
+                "trigger": "Intro",
+                "ability": "Glacial Impact"
+            }
+        ],
+        "Beginning combat": [
+            {
+                "speaker": "",
+                "line": "He left me, abandoned me! But now I serve another!",
+                "trigger": "Beginning combat",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "Once, I was worshiped. Now I shall be feared!",
+                "trigger": "Beginning combat",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "I rule over this mountain! And you shall feel my wrath.",
+                "trigger": "Beginning combat",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "My Lord demands an offering! Your corpses shall do nicely.",
+                "trigger": "Beginning combat",
+                "ability": "Pestilent Breath"
+            }
+        ],
+        "Casting room wide Pestilent Breath": [
+            {
+                "speaker": "",
+                "line": "Peryite's wrath will bring your ruin!",
+                "trigger": "Casting room wide Pestilent Breath",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "Prince of Pestilence! Make them pay!",
+                "trigger": "Casting room wide Pestilent Breath",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "My Lord! Lend me your aid!",
+                "trigger": "Casting room wide Pestilent Breath",
+                "ability": "Pestilent Breath"
+            },
+            {
+                "speaker": "",
+                "line": "Peryite! Send my foes your blessing!",
+                "trigger": "Casting room wide Pestilent Breath",
+                "ability": "Pestilent Breath"
+            }
+        ],
+        "Casting Spellbreaker's Malice": [
+            {
+                "speaker": "",
+                "line": "Feel Spellbreaker's might!",
+                "trigger": "Casting Spellbreaker's Malice",
+                "ability": "Spellbreaker's Malice"
+            },
+            {
+                "speaker": "",
+                "line": "Your bones will break on my shield!",
+                "trigger": "Casting Spellbreaker's Malice",
+                "ability": "Spellbreaker's Malice"
+            },
+            {
+                "speaker": "",
+                "line": "Kneel or be crushed!",
+                "trigger": "Casting Spellbreaker's Malice",
+                "ability": "Spellbreaker's Malice"
+            }
+        ],
+        "Casting Winter's Purge": [
+            {
+                "speaker": "",
+                "line": "Feel winter's cold embrace!",
+                "trigger": "Casting Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "Frost and blight hold you!",
+                "trigger": "Casting Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "I'll freeze you where you stand!",
+                "trigger": "Casting Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "I will bury you in blinding snow!",
+                "trigger": "Casting Winter's Purge",
+                "ability": "Winter's Purge"
+            }
+        ],
+        "Picking up Spellbreaker after Winter's Purge": [
+            {
+                "speaker": "",
+                "line": "No, no! Stay away from Spellbreaker!",
+                "trigger": "Picking up Spellbreaker after Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "Stay back! You are unworthy of Spellbreaker's might!",
+                "trigger": "Picking up Spellbreaker after Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "My Lord's gift! Stay away from it!",
+                "trigger": "Picking up Spellbreaker after Winter's Purge",
+                "ability": "Winter's Purge"
+            },
+            {
+                "speaker": "",
+                "line": "My shield! How dare you fools make me drop it!",
+                "trigger": "Picking up Spellbreaker after Winter's Purge",
+                "ability": "Winter's Purge"
+            }
+        ],
+        "Casting Dragon's Fury": [
+            {
+                "speaker": "",
+                "line": "Thurvokun's gift endures! Feel my flames!",
+                "trigger": "Casting Dragon's Fury",
+                "ability": "Dragon's Fury"
+            },
+            {
+                "speaker": "",
+                "line": "Fury and flame!",
+                "trigger": "Casting Dragon's Fury",
+                "ability": "Dragon's Fury"
+            },
+            {
+                "speaker": "",
+                "line": "I've lost my voice, but my fire remains!",
+                "trigger": "Casting Dragon's Fury",
+                "ability": "Dragon's Fury"
+            },
+            {
+                "speaker": "",
+                "line": "Nothing but ash will remain!",
+                "trigger": "Casting Dragon's Fury",
+                "ability": "Dragon's Fury"
+            }
+        ],
+        "Casting Inferno's Hold": [
+            {
+                "speaker": "",
+                "line": "Roast over the flames!",
+                "trigger": "Casting Inferno's Hold",
+                "ability": "Inferno's Hold"
+            },
+            {
+                "speaker": "",
+                "line": "May the flames take you!",
+                "trigger": "Casting Inferno's Hold",
+                "ability": "Inferno's Hold"
+            },
+            {
+                "speaker": "",
+                "line": "Let the fire consume you!",
+                "trigger": "Casting Inferno's Hold",
+                "ability": "Inferno's Hold"
+            },
+            {
+                "speaker": "",
+                "line": "Feel how the fire burns!",
+                "trigger": "Casting Inferno's Hold",
+                "ability": "Inferno's Hold"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "She drops more samples if defeated in Veteran Hard mode."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Zaan is the only known female Dragon Priest.",
+        "Her outfit was available in the Crown Store as the Renegade Dragon Priest costume.",
+        "\"Zaan\" translates to \"Shout\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Plans of Pestilence: Conquer Scalecaller Peak and stop a dangerous plague from spreading.",
+        "Pledge: Scalecaller Peak: Prove you are truly Undaunted by clearing Scalecaller Peak."
+    ],
+    "summary": "This article is about the creature. For the item set, see Zaan. Zaan the Scalecaller is a renegade Dragon Priest serving as the final boss of Scalecaller Peak. She formerly served the dragon Thurvokun, but after his departure she turned to worshiping Peryite and has been granted his artifact, the Spellbreaker. Following her death at the hands of her irritated followers, she has now been awakened by a cult of Peryite, who plan to unleash a terrible plague upon Tamriel. Zaan drops a guaranteed sample of Infected Flesh, and on Veteran difficulty drops a random head piece from her associated set. She drops more samples if defeated in Veteran Hard mode.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zaan_the_Scalecaller",
+        "page_title": "Online:Zaan the Scalecaller",
+        "revision_id": 3607043,
+        "retrieved_at": "2026-08-12T21:32:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "prince_ithelia_s_prison",
+    "name": "Prince Ithelia's Prison",
+    "content_type": "dungeon",
+    "summary": "Prince Ithelia's Prison is a small cell within the Mythos. It's entrance can be found at the base of the tower that stands at the higher part of the Mythos. The entrance will be forcibly opened by Torvesard after he views the third Glyphic. Through this gateway, there is a small, circular area which is surrounded by glass walls, these show considerable damage and have shattered and buckled outward. At the other end of this room is a throne that had been covered with a dome of glass which had also shattered. The alien sky is filled with the Gazers of Mirrormoor and resembles the skyline of Fargrave. Most importantly, the prison is unoccupied.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Prince_Ithelia%27s_Prison",
+        "page_title": "Online:Prince Ithelia's Prison",
+        "revision_id": 3595345,
+        "retrieved_at": "2026-08-12T21:31:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

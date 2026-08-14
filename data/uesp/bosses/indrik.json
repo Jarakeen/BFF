@@ -1,0 +1,69 @@
+{
+    "id": "indrik",
+    "name": "Indrik",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "Alaxon'ald, Archon's Grove, Ebon Stadmont, Karndar Watch, Sil-Var-Woad, Summerset\nThe Collector's Villa, Random Encounters",
+    "species": "Indrik",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Projection",
+            "description": "The indrik channels its connection to Nirn and teleports between nearby locations. The entrance and exit points will be marked with orbs of blue light. It can also retreat back to its initial portal for a brief moment. This ability has a short cooldown, and is used to help the indrik evade its attacker."
+        },
+        {
+            "name": "Rime",
+            "description": "The indrik bows its head, and a beam of white frost is fired at the target, dealing minor frost damage. Can be avoided by roll dodging."
+        },
+        {
+            "name": "Hyper Awareness",
+            "description": "The creature rears up, stomping on the ground and bowing its head. An indrik spirit will manifest and rush at the target, knocking them over. Inflicts a stagger if it hits; can be avoided by rolling."
+        },
+        {
+            "name": "Static Charge",
+            "description": "The indrik rears up onto its hind legs and bellows, calling patches of lightning to rain down around it as it bucks wildly. The lightning bolts deal minor shock damage if you are hit by them. They don't have AoE indicators. The storm lasts for a few seconds and can be interrupted to set the indrik off-balance."
+        },
+        {
+            "name": "Conflagration",
+            "description": "The indrik becomes infused with fire and starts runnning around, leaving trails of flames in its wake. Deals a very large amount of fire damage and applies an additional burning DoT. Players affected by the wall of fire are snared. This attack is rarely used in comparison to the rest however."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Impresario previously sold four indrik feathers that, when combined, summoned a Nascent Indrik mount. These could be further upgraded into numerous unique mounts.",
+        "There are also a number of indrik pets available, which could be bought outright for 00000055 .",
+        "Indrik pets, mounts, and evolutionary fragments can now be acquired from the Indrik Vendor during in-game events.",
+        "The Evergloam Indrik, Hollowjack Indrik, and Solstice Indrik are unique for being the only indrik mounts to be offered in the Crown Store instead of as a purchase from the indrik vendor. The Galerion's Indrik and Carnaval Indrik are the only indrik mounts available in Crown Crates. The Autumnal Indrik is similarly the only indrik pet that is available in Crown Crates.",
+        "An Indrik is seen teleporting between floating rocks above The Feral Gallery.",
+        "The Corrupted Indrik is an as of yet unreleased indrik mount that has existed in the game's files since 2019."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Destruction Incarnate: Investigate the purpose of the Waking Flame's Cataclyst devices.",
+        "Wildhorn's Wrath: Kill a dangerous faun lord.",
+        "The Wing of the Crow: Enter the sealed door and take on the Scholarium's final trial.",
+        "The Wing of the Indrik: Find the Indrik Luminary and earn his sigil to power the Scribing Altar."
+    ],
+    "summary": "Indriks are magical deer-like creatures that fight using elemental-based attacks. They can be found throughout the forests of Summerset, though they are hostile to those who approach them. When Indriks die, they are reduced to a pile of blue dust. Indriks can also appear in the Deadlands during a random encounter.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Indrik",
+        "page_title": "Online:Indrik",
+        "revision_id": 3575966,
+        "retrieved_at": "2026-08-12T21:28:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "wind_scour_temple",
+    "name": "Wind Scour Temple",
+    "content_type": "dungeon",
+    "summary": "Wind Scour Temple is a Dragonguard temple hidden beneath HoonDing's Watch. It houses statues dedicated to the grandmasters: Ghelin-Brol, Vashu-Pir, Jaiv-Yora, and Ettiene Volusus, along with the Dragongaurd Archives. The archives contain three unreadable books which are These are: Tales of the Akavari (not Akaviri, even though the description says it is \"a book of Akaviri legends that has been handed down through the Dragonguard for generations\"), Dragonguard Ranks and Ceremony (\"a book that appears to describe Dragonguard ranks and ceremonies for promotion\"), and Etiquette for Royal Meetings (\"a book advising Dragonguard on how to behave in the presence of royalty\") as well as Commander Oholin's journal Searching for the Horn of Ja'darri which is needed to progress the quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Wind Scour Temple was first mentioned in the TES V: Skyrim book The Rise and Fall of the Blades."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wind_Scour_Temple",
+        "page_title": "Online:Wind Scour Temple",
+        "revision_id": 3295572,
+        "retrieved_at": "2026-08-12T21:38:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

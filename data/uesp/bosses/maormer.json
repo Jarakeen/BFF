@@ -1,0 +1,38 @@
+{
+    "id": "maormer",
+    "name": "Maormer",
+    "content_id": "shipwright_s_regret",
+    "content_name": "Shipwright's Regret",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "One can briefly play as a Maormer (only in terms of appearance) when polymorphed into one by the \"Guise of Ylahizu\" cast by Ylahizu the Magnificent."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Maormer (also known as Sea Elves or derogatorily as Fish Elves) are a race of Mer that reside on the island kingdom of Pyandonea, far south of the Summerset Isles. Maormer can largely be encountered on Khenarthi's Roost, Auridon, Greenshade, Malabal Tor, Summerset as well as in Hew's Bane, Southern Elsweyr, Blackwood, High Isle, Galen and Solstice to a lesser extent. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maormer",
+        "page_title": "Online:Maormer",
+        "revision_id": 3583815,
+        "retrieved_at": "2026-08-12T21:33:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

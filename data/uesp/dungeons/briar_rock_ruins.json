@@ -1,0 +1,28 @@
+{
+    "id": "briar_rock_ruins",
+    "name": "Briar Rock Ruins",
+    "content_type": "dungeon",
+    "summary": "Briar Rock Ruins is a Nordic ruin found in the Reach, located northwest of Vateshran Hollows, occupied by the Thornroot Clan. Under their new alliance with the hagravens, led by Matron Grygarsnit, the Thornroots have been kidnapping members of other clans and transforming them into briarheart warriors against their will, their latest victims being the Hillhunter Clan. Rats, spiders and torchbugs are found in numbers within. Minotaurs roam the bank of the river flowing in front of the ruins and down the valley, while herons hunt for fish along the river's edge. A heavy sack is located by the waterfall in front of the ruins, to the west. A minotaur is bathing beneath said waterfall. A Minotaur Shaman kneels next to a chest spawn point on the western bank of the Karth River.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "markarth_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Briar Rock Ruins previously appeared in Skyrim, where it consisted of Hag Rock Redoubt and Dead Crone Rock."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Briar_Rock_Ruins",
+        "page_title": "Online:Briar Rock Ruins",
+        "revision_id": 3347296,
+        "retrieved_at": "2026-08-12T21:15:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

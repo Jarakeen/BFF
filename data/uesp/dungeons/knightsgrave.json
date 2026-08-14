@@ -1,0 +1,18 @@
+{
+    "id": "knightsgrave",
+    "name": "Knightsgrave",
+    "content_type": "dungeon",
+    "summary": "Knightsgrave is an Imperial ruin far northwest of Anvil, near the mouth of the Brena River. The ruins were founded by the original Order of the Hour, but were eventually abandoned over time, and continue to be even after the order's recent resurgence. It was built over an even older temple of Akatosh, which lies buried deep underground. Minotaurs have since flocked to the ruins, acting as guardians of sorts, alongside roaming undead warriors of the order. Rats and spiders are found in numbers within. There is a book near the entrance to the ruins discussing the historical background of Knightsgrave.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Knightsgrave",
+        "page_title": "Online:Knightsgrave",
+        "revision_id": 3597923,
+        "retrieved_at": "2026-08-12T21:27:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

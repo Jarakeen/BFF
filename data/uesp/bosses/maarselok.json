@@ -1,0 +1,43 @@
+{
+    "id": "maarselok",
+    "name": "Maarselok",
+    "content_id": "lair_of_maarselok",
+    "content_name": "Lair of Maarselok",
+    "location": "Lair of Maarselok",
+    "species": "Dragon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "7,409,538",
+        "veteran": "22,580,776",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "The Veteran Hard Mode has unique dialogue if you activate the Azureblight Seed:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His name means \"Terror-Of-Sky\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Azure Blight: Take down an awakened dragon to stop the spread of an unnatural blight.",
+        "Pledge: Lair of Maarselok: Prove you are truly Undaunted by conquering Lair of Maarselok."
+    ],
+    "summary": "This article is about the enemy. For the set, see Maarselok (set). Maarselok is a Dragon located in Lair of Maarselok. His influence corrupts the Green, as he is imbued with a mysterious disease known as the Azure Blight. Maarselok seeks to corrupt Selene, a Changeling with close ties to Shagrath, so that he could shape the world to his liking with her powers. For centuries, Maarselok slept deep in the mountains between Elsweyr and Grahtwood. However, upon the opening of the Halls of Colossus, this monstrous Dragon has awoken as a consequence of the release of his brethren.[1] Hungry and vengeful, Maarselok has ravaged the wilds and now threatens to spread his corruption into the domain of Valenwood, risking the infection of the Elden Tree if left unchecked.[2]",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maarselok",
+        "page_title": "Online:Maarselok",
+        "revision_id": 3607004,
+        "retrieved_at": "2026-08-12T21:27:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

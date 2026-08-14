@@ -1,0 +1,457 @@
+{
+    "id": "xal_nur_the_slaver",
+    "name": "Xal-Nur the Slaver",
+    "content_id": "ruins_of_mazzatun",
+    "content_name": "Ruins of Mazzatun",
+    "location": "Ruins of Mazzatun, Stone Stockade",
+    "species": "Argonian Behemoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Savage Swipe",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Barbarous Bite",
+            "description": "The boss bites its target dealing moderate physical damage followed by minor physical damage over time."
+        },
+        {
+            "name": "Brutal Bellow",
+            "description": "The boss roars dealing moderate physical damage over time in front of him as indicated by a red cone. Do not stand in front of the boss unless you are the tank."
+        },
+        {
+            "name": "Mudquake",
+            "description": "The boss stomps causing shockwaves to travel out from himself dealing moderate physical damage and staggering all players hit."
+        },
+        {
+            "name": "Slaver Slam",
+            "description": "The boss slams both of his fists on the ground, dealing high physical damage and knocking players down as indicated by a red circle."
+        },
+        {
+            "name": "Monstrous Blitz",
+            "description": "The boss charges at a target dealing high physical damage and knocking them back. The target will glow red to telegraph this. Group members can choose to hold block in front of the boss to intercept him before he reaches his target. If you are targeted and the boss reaches you, hold block to lessen the damage done and prevent the knockback."
+        },
+        {
+            "name": "Swamp Spice",
+            "description": "At certain health intervals (75%, 50% and 25%), the boss will spit Swamp Spice. Cleansing the spice is necessary as the boss is invulnerable as long as the spice is up. At the same time, adds will spawn constantly to attack the party. To cleanse the spice, one player (usually the dps) will run into the spice's green AOE to pick it up and bring it to a geyser near the entrance or exit. It is advised tanks and healers not touch the spice as it will silence you as long as you are carrying it."
+        },
+        {
+            "name": "Summon Xit-Xaht Lookout",
+            "description": "While the group is dealing with the Swamp Spice, adds will spawn to attack the group. If you're being overwhelmed by adds, kill one of the Argonian Wranglers holding the chained wamasu. They've been mistreated by the Xit-Xaht, so if you're struggling, free them and watch them pick off the adds. Keep in mind that Xal-Nur will eventually kill the freed wamasu."
+        },
+        {
+            "name": "Furious Roar",
+            "description": "Xal-Nur will roar angrily after the Swamp Spice is cleansed, dealing moderate physical damage to everyone in the arena. This is unavoidable and must be healed through."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Kill puny rat!",
+            "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+            "ability": "Monstrous Blitz"
+        },
+        {
+            "speaker": "Heem-Jas",
+            "line": "Stand back, or I will....",
+            "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+            "ability": "Monstrous Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "<Xal-Nur breathes in his face, frightening him into passing out.>",
+            "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+            "ability": "Monstrous Blitz"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Rats! I eat you now!",
+            "trigger": "Engaging players in combat",
+            "ability": "Brutal Bellow"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You not escape! You die!",
+            "trigger": "Engaging players in combat",
+            "ability": "Brutal Bellow"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Smash the rats! Smash!",
+            "trigger": "Engaging players in combat",
+            "ability": "Brutal Bellow"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "More rats? You die!",
+            "trigger": "Engaging players in combat",
+            "ability": "Brutal Bellow"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Die! Die! Die!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur strong!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You die, slave-scum!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur will crush your heads!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Puny rats fall down!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "All fear Xal-Nur!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur break ground! Ground break you!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You weak! Xal-Nur strong!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Hahahahaha!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Trample stupid rats!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur make you spit blood!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur make you flat!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You break chain, Xal-Nur breaks you!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur make lizard dead!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur kill stupid lizard!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Xal-Nur crush puny wamasu!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You not be clean for long!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Washing not make you safe, slave-scum",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "\"Xal-Nur will spit again! You'll see!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You all wet! Xal-Nur hates wet rats!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "You stay down, or I make you dead again!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "Ha! Now you feed the worms and lizards!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "Xal-Nur the Slaver",
+            "line": "The rats are weak! Xal-Nur is strongest!",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        },
+        {
+            "speaker": "",
+            "line": "No! You die! You...",
+            "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+            "ability": "Summon Xit-Xaht Lookout"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He will first be seen menacing Heem-Jas and knocking him out.": [
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Kill puny rat!",
+                "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+                "ability": "Monstrous Blitz"
+            },
+            {
+                "speaker": "Heem-Jas",
+                "line": "Stand back, or I will....",
+                "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+                "ability": "Monstrous Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "<Xal-Nur breathes in his face, frightening him into passing out.>",
+                "trigger": "He will first be seen menacing Heem-Jas and knocking him out.",
+                "ability": "Monstrous Blitz"
+            }
+        ],
+        "Engaging players in combat": [
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Rats! I eat you now!",
+                "trigger": "Engaging players in combat",
+                "ability": "Brutal Bellow"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You not escape! You die!",
+                "trigger": "Engaging players in combat",
+                "ability": "Brutal Bellow"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Smash the rats! Smash!",
+                "trigger": "Engaging players in combat",
+                "ability": "Brutal Bellow"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "More rats? You die!",
+                "trigger": "Engaging players in combat",
+                "ability": "Brutal Bellow"
+            }
+        ],
+        "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.": [
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Die! Die! Die!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur strong!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You die, slave-scum!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur will crush your heads!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Puny rats fall down!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "All fear Xal-Nur!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur break ground! Ground break you!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You weak! Xal-Nur strong!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Hahahahaha!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Trample stupid rats!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur make you spit blood!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur make you flat!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You break chain, Xal-Nur breaks you!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur make lizard dead!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur kill stupid lizard!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Xal-Nur crush puny wamasu!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You not be clean for long!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Washing not make you safe, slave-scum",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "\"Xal-Nur will spit again! You'll see!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You all wet! Xal-Nur hates wet rats!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "You stay down, or I make you dead again!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "Ha! Now you feed the worms and lizards!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "Xal-Nur the Slaver",
+                "line": "The rats are weak! Xal-Nur is strongest!",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            },
+            {
+                "speaker": "",
+                "line": "No! You die! You...",
+                "trigger": "Xal-Nur will shout various things during the fight, some signify upcoming attacks, others not so much.",
+                "ability": "Summon Xit-Xaht Lookout"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Ruins of Mazzatun Pledge: Prove you are truly Undaunted by conquering the Ruins of Mazzatun. (disabled since Patch 2.6.4)",
+        "Pledge: Ruins of Mazzatun: Prove you are truly Undaunted by conquering the Ruins of Mazzatun.",
+        "Sap and Stone: Eliminate the Xit-Xaht threat in the Ruins of Mazzatun."
+    ],
+    "summary": "Xal-Nur the Slaver is a monstrous Argonian found in the Ruins of Mazzatun. Xal-Nur becomes invulnerable when he summons swamp spice, and a group member will need to walk into the green AoE circle and bring the spice debuff to a geyser in order to damage him again. The behemoth is resurrected during the final battle against Tree-Minder Na-Kesh, who uses amber plasm to summon a Phantom of Xal-Nur.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xal-Nur_the_Slaver",
+        "page_title": "Online:Xal-Nur the Slaver",
+        "revision_id": 3506490,
+        "retrieved_at": "2026-08-12T21:32:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

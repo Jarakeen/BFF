@@ -1,0 +1,88 @@
+{
+    "id": "zvartek_the_weapon_master",
+    "name": "Zvartek the Weapon Master",
+    "content_id": "leftwheal_trading_post",
+    "content_name": "Leftwheal Trading Post",
+    "location": "Leftwheal Trading Post",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Zvartek the Weapon Master",
+            "line": "Prove your mettle, outsider!",
+            "trigger": "When combat is initiated",
+            "ability": null
+        },
+        {
+            "speaker": "Zvartek the Weapon Master",
+            "line": "We're not so different!",
+            "trigger": "When she charges to Bow",
+            "ability": null
+        },
+        {
+            "speaker": "Zvartek the Weapon Master",
+            "line": "I yield!",
+            "trigger": "When she is defeated",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When combat is initiated": [
+            {
+                "speaker": "Zvartek the Weapon Master",
+                "line": "Prove your mettle, outsider!",
+                "trigger": "When combat is initiated",
+                "ability": null
+            }
+        ],
+        "When she charges to Bow": [
+            {
+                "speaker": "Zvartek the Weapon Master",
+                "line": "We're not so different!",
+                "trigger": "When she charges to Bow",
+                "ability": null
+            }
+        ],
+        "When she is defeated": [
+            {
+                "speaker": "Zvartek the Weapon Master",
+                "line": "I yield!",
+                "trigger": "When she is defeated",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Zvartek the Weapon Master is a Shardborn Dremora who serves as one of the champions of Leftwheal Trading Post.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zvartek_the_Weapon_Master",
+        "page_title": "Online:Zvartek the Weapon Master",
+        "revision_id": 3492847,
+        "retrieved_at": "2026-08-12T21:27:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

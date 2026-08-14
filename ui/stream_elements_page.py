@@ -14,7 +14,7 @@
 
 from datetime import datetime
 from pathlib import Path
-
+from PySide6.QtGui import QIcon
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QWidget,
@@ -229,6 +229,23 @@ class LiveOperationsPage(FoundryPage):
 
         self.set_status(self.status)
 
+        self.start_run_button = self.status.add_action(
+            "",
+            self.start_run,
+            "Start a new run",
+        )
+
+        self.save_button = self.status.add_action(
+            "",
+            self.save_run,
+            "Save current run",
+        )
+
+        self.archive_button = self.status.add_action(
+            "",
+            self.archive_run,
+            "Archive current timeline",
+        )
         #
         # Restore Session
         #
@@ -663,3 +680,16 @@ class LiveOperationsPage(FoundryPage):
         self.session.set_elapsed_time(
             f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         )
+
+
+    def _set_status_icon(self, button, icon_name: str):
+        """Use one of the real Foundry SVG icons for a status action."""
+        icon_path = Path("assets") / "icons" / f"{icon_name}.svg"
+
+        if not icon_path.exists():
+            return
+
+        button.setText("")
+        button.setIcon(
+            QIcon(str(icon_path))
+        )        

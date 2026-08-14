@@ -1,0 +1,26 @@
+{
+    "id": "shipwreck_shoals",
+    "name": "Shipwreck Shoals",
+    "content_type": "dungeon",
+    "summary": "Shipwreck Shoals is a small island found off the coast of High Isle, just west of the Dufort Shipyards. Butterflies, centipedes, lesser sea adders and rats are found in number inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shipwreck_Shoals",
+        "page_title": "Online:Shipwreck Shoals",
+        "revision_id": 3334528,
+        "retrieved_at": "2026-08-12T21:33:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

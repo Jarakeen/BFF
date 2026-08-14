@@ -1,0 +1,122 @@
+{
+    "id": "canonreeve_oraneth",
+    "name": "Canonreeve Oraneth",
+    "content_id": "elden_hollow_i",
+    "content_name": "Elden Hollow I",
+    "location": "Elden Hollow I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,702,217",
+        "hardmode": "7,127,771"
+    },
+    "abilities": [
+        {
+            "name": "Phantasmal Bolt",
+            "description": "A basic ranged attack that deals minor magical damage."
+        },
+        {
+            "name": "Necrotic Burst",
+            "description": "The boss releases a burst of magic around itself that deals very high magical damage as indicated by a red circle."
+        },
+        {
+            "name": "Necrotic Shield",
+            "description": "The boss occasionally summons a shield around itself that absorbs all incoming damage before being broken. This occurs periodically so the party should ensure they have enough damage to break the shield and damage the boss in a timely manner."
+        },
+        {
+            "name": "Necrotic Circle",
+            "description": "The boss places a rune under a player that roots whoever falls into it in place dealing moderate magical damage over time."
+        },
+        {
+            "name": "Rotting Bolt",
+            "description": "The boss winds up and shoots a projectile that deals high poison damage over time to a random target. This must be dodged if possible."
+        },
+        {
+            "name": "Summon Darkfern Skeleton",
+            "description": "When Necrotic Circle ends, several Darkfern Skeletons will be summoned from the circle to attack the party. They should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Canonreeve Oraneth",
+            "line": "You won't stop me. My Prince is coming, with an army that will end this war for the Altmer.",
+            "trigger": "When she approach her, she will let out a high-pitch scream signaling the start of combat",
+            "ability": "Necrotic Burst"
+        },
+        {
+            "speaker": "Canonreeve Oraneth",
+            "line": "What did you think you could do here?",
+            "trigger": "If your group wipes, she says",
+            "ability": "Rotting Bolt"
+        },
+        {
+            "speaker": "Canonreeve Oraneth",
+            "line": "Your bodies will feed the darkness. And the darkness will win this war for the Altmer.",
+            "trigger": "If your group wipes, she says",
+            "ability": "Rotting Bolt"
+        },
+        {
+            "speaker": "Canonreeve Oraneth",
+            "line": "Death … is not the end!",
+            "trigger": "Once she is defeated, she will ominously say",
+            "ability": "Summon Darkfern Skeleton"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When she approach her, she will let out a high-pitch scream signaling the start of combat": [
+            {
+                "speaker": "Canonreeve Oraneth",
+                "line": "You won't stop me. My Prince is coming, with an army that will end this war for the Altmer.",
+                "trigger": "When she approach her, she will let out a high-pitch scream signaling the start of combat",
+                "ability": "Necrotic Burst"
+            }
+        ],
+        "If your group wipes, she says": [
+            {
+                "speaker": "Canonreeve Oraneth",
+                "line": "What did you think you could do here?",
+                "trigger": "If your group wipes, she says",
+                "ability": "Rotting Bolt"
+            },
+            {
+                "speaker": "Canonreeve Oraneth",
+                "line": "Your bodies will feed the darkness. And the darkness will win this war for the Altmer.",
+                "trigger": "If your group wipes, she says",
+                "ability": "Rotting Bolt"
+            }
+        ],
+        "Once she is defeated, she will ominously say": [
+            {
+                "speaker": "Canonreeve Oraneth",
+                "line": "Death … is not the end!",
+                "trigger": "Once she is defeated, she will ominously say",
+                "ability": "Summon Darkfern Skeleton"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Her model is that of an upscaled Bosmer, this is likely erroneous as her dialogue and her actions intend her to be an Altmer."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancient Remains: Investigate Wood Orc activity in the ruins beneath Elden Root.",
+        "Pledge: Elden Hollow I: Explore Elden Hollow I and return Undaunted."
+    ],
+    "summary": "This article is about the Bosmer canonreeve in Elden Hollow I. For the Bosmer from Deepwoods, see Oraneth. Canonreeve Oraneth is a disgruntled Wood Elf (see note below) member of the Thalmor. She is extremely unhappy with the number of Altmer dying on behalf of the Aldmeri Dominion in the Alliance War. As her proposal to abdicate the Altmer from the Dominion was strongly opposed, Oraneth started to search for other means to save her people. She has now come to the point where she is prepared to do something that might make her an enemy of her own people in order to end the war. She is also a former member of the Mages Guild, but quit to take up a career in politics as she found manipulating people and policy to be more satisfying. After becoming frustrated with the number of Altmer dying during the war, she started working on a secret project to end the war swiftly. The Mages Guild discovered her plans but not the exact nature of the ritual she planned to perform, so they sent three mages, Bakkhara, Dracien Montue, and Speaks-With-Lights, to look into the situation and stop her if they could. They arrived at Elden Hollow but were unable to make any progress because of the Thalmor. They ask for your help to kill the enemies within, and they will follow and disrupt the ritual. By the third altar you will find and have to defeat the Canonreeve, but she managed to progress the ritual enough to release the evil in the cave. She has a chance to drop the Face of the Serpent antiquity lead for the Ring of the Wild Hunt.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Canonreeve_Oraneth",
+        "page_title": "Online:Canonreeve Oraneth",
+        "revision_id": 3322069,
+        "retrieved_at": "2026-08-12T21:20:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "id": "archcustodian",
+    "name": "Archcustodian",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Transport Circruit, Halls of Fabrication",
+    "species": "Dwarven Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Vaporization Protocol",
+            "description": "At the start of the fight, the Archcustodian appears surrounded by a large field of energy which grants it an impenetrable damage shield and therefore is invulnerable. Standing in the field of energy deals continuous very high shock damage. To dispel the shield, lure it further down the hallway, and activate the Shock Pylons. After the shield is removed, the Archcustodian becomes stunned for a moderate duration, allowing for a burn phase, before the shield becomes active again. Each time the Archcustodian regains its shield, its walk speed increases."
+        },
+        {
+            "name": "Spinning Traps",
+            "description": "Throughout the entirety of the fight, spinning blade traps will move about the arena, indicated by large circular AoEs, dealing continuous high physical damage and snaring you if touched."
+        },
+        {
+            "name": "Summon Factotums",
+            "description": "After each burn phases is complete and the Archcustodian is walking again, Calefactors and Dissectors are summoned to aid the boss."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Archcustodian always moves counter-clockwise through the hall, no matter from which side you approach.",
+        "In early versions, the Archcustodian was called The Janitor."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Archcustodian is a large Dwarven Spider found at the Halls of Fabrication. It is the third boss of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archcustodian",
+        "page_title": "Online:Archcustodian",
+        "revision_id": 3175476,
+        "retrieved_at": "2026-08-12T05:32:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

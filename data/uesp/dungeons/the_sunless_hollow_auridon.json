@@ -1,0 +1,20 @@
+{
+    "id": "the_sunless_hollow_auridon",
+    "name": "The Sunless Hollow (Auridon)",
+    "content_type": "dungeon",
+    "summary": "The Sunless Hollow is a cave in Auridon used by the Blackguards to hide Murkmire artifacts.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The journal of Margus Derius can be found within the Hollow, on a pile of crates near a tent."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Sunless_Hollow_(Auridon)",
+        "page_title": "Online:The Sunless Hollow (Auridon)",
+        "revision_id": 3598137,
+        "retrieved_at": "2026-08-12T21:35:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

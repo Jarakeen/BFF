@@ -1,0 +1,39 @@
+{
+    "id": "cadaverous_menagerie",
+    "name": "Cadaverous Menagerie",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "The Cadaverous Menagerie consists of a Cadaverous Bear, Guar, and Senche-Tiger which have been reanimated and can be found within Fang Lair. They are the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cadaverous_Menagerie",
+        "page_title": "Online:Cadaverous Menagerie",
+        "revision_id": 2397761,
+        "retrieved_at": "2026-08-12T21:21:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

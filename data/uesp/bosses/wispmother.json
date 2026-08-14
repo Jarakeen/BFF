@@ -1,0 +1,57 @@
+{
+    "id": "wispmother",
+    "name": "Wispmother",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Wispmother",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Rain of Wisps",
+            "description": "The wispmother summons a volley of wisps that crash into the ground all around its position, indicated by numerous red circles, each dealing moderate frost damage."
+        },
+        {
+            "name": "Clone",
+            "description": "The wispmother summons two clones of itself with its current Health as well as having identical appearance and mimicking its attacks. They disappear when the wispmother is defeated."
+        },
+        {
+            "name": "Summon Wisp",
+            "description": "All throughout the fight, wisps passively appear near the wispmother to attack its target."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "During the quest Broken Apart, a wispmother is able to disguise herself as the Altmer, Alanya, and manifest an entire alternate reality in the shape of Valrendil and Alanya's home.",
+        "The wispmothers found in the March of Sacrifices are considerably larger than those found elsewhere.",
+        "A Wispmother is seen on top of a stone arch in the Feral Gallery.",
+        "After Update 6, the Wispmother at Snapleg Cave was renamed to Frostmaiden Apa."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Azura's Aid: Cleanse the Shrine of Azura and pray for guidance.",
+        "Broken Apart: Banish the wispmother that is corrupting Deep Graves.",
+        "Buried Evil: Avenge the fallen warriors in Hrota Cave.",
+        "Saving Hosni: Take another trip into the Dreamstride at the At-Tura Estate."
+    ],
+    "achievements": [],
+    "summary": "The Chill Hollow, Near Do'Krin Monastery, Drowned Coast Dolmen, Near Fisherman's Rest, Northeast of Gavaudon Dolmen, Near Lakewatch Tower, Pelin Graveyard, Near Serenity Falls Estate, Silaseli Ruins, Sunken Road, Near Twin Falls Rest\nEbon Stadmont, Saltbreeze Cave, At and South of The Steed (Mundus Stone) in Reaper's March, Southeast of the Sunhold Wayshrine, The Vaults of Heinarwe\nDark Moon Grotto, Dusktown Cavern, Lightless Hollow, The Lightless Hollow, Midnight Barrow\nNear and inside Nighthollow Keep\nEast of Borderwatch, North of Gideon, South of Vunalk, Northeast/Northwest of Veyond, South of Withered Root, East of Xeemhok's Lagoon, Near and inside Zenithar's Abbey\nGhost Haven Bay Caverns, Lake west of Mornard Falls, Spire of the Crimson Coin\nWest Weald Wispmothers are ghostlike, feminine creatures that are usually accompanied by wisps. They are predominantly found in cold areas, but can also be found along some waterways throughout Tamriel.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wispmother",
+        "page_title": "Online:Wispmother",
+        "revision_id": 3562045,
+        "retrieved_at": "2026-08-12T05:31:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

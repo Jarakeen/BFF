@@ -1,0 +1,90 @@
+{
+    "id": "juxheis_the_dread",
+    "name": "Juxheis the Dread",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Juxheis the Dread",
+            "line": "Begone wretch! The power of the well is mine!",
+            "trigger": "When combat is initiated",
+            "ability": null
+        },
+        {
+            "speaker": "Juxheis the Dread",
+            "line": "Rise, minions, and break this fool's bones!",
+            "trigger": "She will summon skeletons to help her",
+            "ability": null
+        },
+        {
+            "speaker": "Juxheis the Dread",
+            "line": "Enough! You cannot stop me!",
+            "trigger": "Once you dispatch her minions, she transforms into a Bone colossus",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When combat is initiated": [
+            {
+                "speaker": "Juxheis the Dread",
+                "line": "Begone wretch! The power of the well is mine!",
+                "trigger": "When combat is initiated",
+                "ability": null
+            }
+        ],
+        "She will summon skeletons to help her": [
+            {
+                "speaker": "Juxheis the Dread",
+                "line": "Rise, minions, and break this fool's bones!",
+                "trigger": "She will summon skeletons to help her",
+                "ability": null
+            }
+        ],
+        "Once you dispatch her minions, she transforms into a Bone colossus": [
+            {
+                "speaker": "Juxheis the Dread",
+                "line": "Enough! You cannot stop me!",
+                "trigger": "Once you dispatch her minions, she transforms into a Bone colossus",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She wears the Gravegrasp Style."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Juxheis the Dread is a not a beast race who serves as one of the champions of Silorn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Juxheis_the_Dread",
+        "page_title": "Online:Juxheis the Dread",
+        "revision_id": 3263055,
+        "retrieved_at": "2026-08-12T21:34:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

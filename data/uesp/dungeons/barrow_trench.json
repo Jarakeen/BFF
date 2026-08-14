@@ -1,0 +1,26 @@
+{
+    "id": "barrow_trench",
+    "name": "Barrow Trench",
+    "content_type": "dungeon",
+    "summary": "The Barrow Trench is a mine in northwestern Greenshade, north of Moonhenge containing bandits. A skyshard is located east of the delve, along the base of the cliff. They are mining ore throughout and are led by Overseer Basri. There is a camp with a cooking fire outside the delve. There is a Delivery Contract at the delve's entrance that grants the related quest. A note lies on the picnic table in the center of the northern chamber. The delve's boss is located atop a wooden platform in the southern side of the southwestern chamber. The delve's skyshard is located outside the one-way exit outside the eastern side of the southwestern chamber. Rats are found in number within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Barrow_Trench",
+        "page_title": "Online:Barrow Trench",
+        "revision_id": 3598312,
+        "retrieved_at": "2026-08-12T21:14:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

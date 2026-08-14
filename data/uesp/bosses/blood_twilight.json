@@ -1,0 +1,39 @@
+{
+    "id": "blood_twilight",
+    "name": "Blood Twilight",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Castle Thorn",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,020,783",
+        "veteran": "3,248,102",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood of the Past: Launch a frontal assault on a Vampire Lord's castle.",
+        "Pledge: Castle Thorn: Prove you are truly Undaunted by clearing Castle Thorn."
+    ],
+    "summary": "This article is about the boss in Castle Thorn. For the generic enemy, see Blood Twilight (Solstice). The Blood Twilight is a grievous twilight summoned by Talfyg after he steals some of Gwendis's essence. It appears in the Garden Conservatory of Castle Thorn, and serves as the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blood_Twilight",
+        "page_title": "Online:Blood Twilight",
+        "revision_id": 3608070,
+        "retrieved_at": "2026-08-12T21:16:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

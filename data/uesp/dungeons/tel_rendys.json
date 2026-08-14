@@ -1,0 +1,18 @@
+{
+    "id": "tel_rendys",
+    "name": "Tel Rendys",
+    "content_type": "dungeon",
+    "summary": "Tel Rendys is a mushroom tower located east of Ald Isra. Beetles, rats and shroom beetles are found inside. Hazards include bad fungi.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tel_Rendys",
+        "page_title": "Online:Tel Rendys",
+        "revision_id": 3567102,
+        "retrieved_at": "2026-08-12T21:35:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

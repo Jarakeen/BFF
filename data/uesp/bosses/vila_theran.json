@@ -1,0 +1,54 @@
+{
+    "id": "vila_theran",
+    "name": "Vila Theran",
+    "content_id": "fungal_grotto_ii",
+    "content_name": "Fungal Grotto II",
+    "location": "Fungal Grotto II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "52,831",
+        "veteran": "36,004",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shadow Bolt",
+            "description": "A basic ranged attack that does high magic damage."
+        },
+        {
+            "name": "Growing Corruption",
+            "description": "Vila Theran teleports to three different players and drops black circles on them. These black circles grow in size and do continuous direct high frost damage as indicated by red circles. To minimize the area covered, players should stay near each other so that the circles overlap as much as possible. A common strategy is for the party to stay near the entrance and wait for her to teleport over and drop the circles. When that happens, the party moves over to her starting position. When she teleports back, the party moves back to the entrance and so on."
+        },
+        {
+            "name": "Shadow Conduit",
+            "description": "This attack is telegraphed by a pillar of light appearing over Vila Theran's head. Vila Theran will then fire lasers at all players, dealing continuous direct high magic damage. To stop this, players can run into the protective bubble around the nearby wayshrine. Alternatively, if the party has enough healing, the players may choose to out heal the damage instead. Killing Vila Theran without using the protective bubble is the Hard Mode challenge of the dungeon."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Kings of the Grotto: Clear out an old grotto for a group of Mephala worshipers.",
+        "Lighting the Shadows: Help the Fighters Guild stop the Spider Cult from raising an army of shadows.",
+        "Pledge: Fungal Grotto II: Explore Fungal Grotto II and return Undaunted.",
+        "Veteran Fungal Grotto Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Fungal Grotto. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "This article is about the boss in Fungal Grotto II. For the boss in the Infinite Archive, see Vila Theran (Infinite Archive). Vila Theran is the head of the expedition searching for the Spinner's Shrine within Fungal Grotto. While she is initially friendly in Fungal Grotto I, she serves as the third and final boss of Fungal Grotto II.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vila_Theran",
+        "page_title": "Online:Vila Theran",
+        "revision_id": 3553373,
+        "retrieved_at": "2026-08-12T21:23:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

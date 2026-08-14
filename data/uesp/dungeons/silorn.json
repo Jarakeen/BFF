@@ -1,0 +1,35 @@
+{
+    "id": "silorn",
+    "name": "Silorn",
+    "content_type": "dungeon",
+    "summary": "Silorn is an Ayleid ruin in southeastern West Weald. It is to the southeast of the Trader's Luck Wayshrine. The ruins are inhabited by minotaurs and an allied goblin tribe; however, in recent times a group of necromancers has also come to the ruins. The two groups are in conflict with each other and have divided the ruins between themselves, with the minotaurs in the north and east, and the necromancers in the southern areas. A mage apprentice can be found outside and is looking for help. All creatures here have a chance to drop a Remnant of Deception. Hazards include swinging blades, trip wires, Welkynd bolts, Welkynd chills and Welkynd flares. A number of critters, including butterflies, centipedes, dragonflies, frogs, rats, squirrels and torchbugs are found within.",
+    "location": "",
+    "boss_ids": [
+        "bloodmane",
+        "spitetooth",
+        "galrok_the_burning",
+        "juxheis_the_dread",
+        "shaman_rezzutum",
+        "bone_breaker",
+        "shepherd_of_the_doomed",
+        "viikor_brazen_hoof"
+    ],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Silorn",
+        "page_title": "Online:Silorn",
+        "revision_id": 3567105,
+        "retrieved_at": "2026-08-12T21:34:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

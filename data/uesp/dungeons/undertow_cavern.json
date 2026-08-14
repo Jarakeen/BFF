@@ -1,0 +1,28 @@
+{
+    "id": "undertow_cavern",
+    "name": "Undertow Cavern",
+    "content_type": "dungeon",
+    "summary": "Undertow Cavern is a partially flooded cave found in Blackwood, located northwest of Leyawiin, containing goblins and minotaurs. A scholar, Amalia Vasatoln, sits outside requesting assistance in recovering the relics of a famous minotaur hunter. Undertow Torchbugs can be found inside during one of the related daily quest. A copy of Legend of Veyond is found outside the entrance in Amalia's camp. A copy of The Last Battle of Phalevon Vero is found inside the first room to the right in the cave.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Undertow Cavern previously appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Undertow_Cavern",
+        "page_title": "Online:Undertow Cavern",
+        "revision_id": 3548177,
+        "retrieved_at": "2026-08-12T21:36:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

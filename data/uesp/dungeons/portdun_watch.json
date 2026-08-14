@@ -1,0 +1,26 @@
+{
+    "id": "portdun_watch",
+    "name": "Portdun Watch",
+    "content_type": "dungeon",
+    "summary": "Portdun Watch is a ruin just west of Firebrand Keep in Stormhaven containing bandits. Several Captured Knights from the nearby fort can be found inside. Beetles, rats and snakes are found within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Portdun_Watch",
+        "page_title": "Online:Portdun Watch",
+        "revision_id": 3598201,
+        "retrieved_at": "2026-08-12T21:30:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

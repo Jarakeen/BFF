@@ -1,0 +1,39 @@
+{
+    "id": "falkreath_hold",
+    "name": "Falkreath Hold",
+    "content_type": "dungeon",
+    "summary": "Falkreath Hold is a group dungeon in Craglorn. It's part of the Horns of the Reach dungeon pack DLC, along with Bloodroot Forge. It can be entered by cart from the Cyrodiil Gate Garrison, just east of Elinhir. The dungeon takes place during the Dreadhorn Clan's siege of the city.",
+    "location": "",
+    "boss_ids": [
+        "siege_mammoth",
+        "mammoth",
+        "cernunnon",
+        "bone_colossus",
+        "domihaus_the_bloody_horned",
+        "minotaur"
+    ],
+    "achievements": [
+        {
+            "id": "horns_of_the_reach_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Locations from Skyrim reappear, such as the Falkreath Watchtower and South Shriekwind Bastion; they can be seen in the distance but cannot be traveled to.",
+        "Falkreath appeared in Arena as Falcrenth, and also appears in Skyrim and Legends.",
+        "Hakkvild's High Hall has a view of the city.",
+        "Dialogue with Denskar Earth-Turner reveals that he lived here in his youth.",
+        "Falkreath Hold was seen on a pre-beta map of the game as a planned full-sized zone, extending across the northern edge of Cyrodiil all the way from Craglorn to The Rift, much as it was seen in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Falkreath_Hold",
+        "page_title": "Online:Falkreath Hold",
+        "revision_id": 3568500,
+        "retrieved_at": "2026-08-12T21:21:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

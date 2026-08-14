@@ -1,0 +1,29 @@
+{
+    "id": "exarch_s_stronghold",
+    "name": "Exarch's Stronghold",
+    "content_type": "dungeon",
+    "summary": "Exarch's Stronghold is an ancient Nordic ruin in Upper Craglorn containing Iron Orcs. It is located in the Valley of Scars. It contains two boss fights, which you need to complete to clear the location: the troll Grothuska and Ordooth the Corruptor. Two quest-related boss fights also take place here. Agganor is found here and must be killed during the quest Iron and Scales. As part of the quest The Serpent's Fang, you will gain access to a locked throne room containing Exarch Braadoth, the leader of the Iron Orcs, and his nirncrux-infused troll Kurzoth. Skavengers are found in ample numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve. Notably, there were two Iron Orc Fire Shamans guarding Grothuska when the location was a Group Delve, and all the bosses both outside and inside the delve itself were difficulty 2 or 3. They have now all been reduced to difficulty 1.",
+        "None of the delve bosses here are necessary for the quests in the region, and the quest-related bosses don't count towards completion of this delve."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Exarch%27s_Stronghold",
+        "page_title": "Online:Exarch's Stronghold",
+        "revision_id": 3268216,
+        "retrieved_at": "2026-08-12T21:21:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

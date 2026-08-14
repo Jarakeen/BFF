@@ -1,0 +1,28 @@
+{
+    "id": "bahraha_s_gloom",
+    "name": "Bahraha's Gloom",
+    "content_type": "dungeon",
+    "summary": "Bahraha's Gloom is a Yokudan tomb located west of Abah's Landing, containing undead. The tomb served as the headquarters of a local cult of necromancers known as the Bleak Veil, which was led by Prince Hew's uncle. After discovering what they were doing inside, Prince Hew decided to act to save face by sealing them inside. However, rather than dying, they fully committed to their cause and turned themselves into undead. Their confinement has recently been broken by treasure-hunting pirates known as the Salt Catchers, who entered the tomb and disturbed the seal. The pirates have since then been either turned into skeletons to serve the necromancers or their spirits being tormented instead. The boss battle of the delve involves killing a mournful aegis named the First in order to awaken Magnifico Bahraha, a lich. The delve also has an optional boss, a flesh atronach named the Covetous Damned. Although visible in the first room, the skyshard can only be reached by means of a hidden passage just off the final chamber. A book can be found on a table in the central chamber.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "thieves_guild_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "An early development map in the game files refer to this location as Sep's Gullet."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bahraha%27s_Gloom",
+        "page_title": "Online:Bahraha's Gloom",
+        "revision_id": 3578199,
+        "retrieved_at": "2026-08-12T21:13:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

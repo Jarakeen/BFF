@@ -1,0 +1,21 @@
+{
+    "id": "nchuand_zel",
+    "name": "Nchuand-Zel",
+    "content_type": "dungeon",
+    "summary": "Nchuand-Zel is a Dwarven ruin found in Blackreach: Arkthzand Cavern, located southwest of the Library of Arkthzand. Gray Host forces have amassed within for their planned strike on Markarth. Nchuand-Zel also has an entrance within Understone Keep in Markarth, but it is inaccessible until reaching the related step during A Feast of Souls has begun, but may be accessed from its Blackreach entrance at any time. Blackreach jellies, centipedes, cockroaches, dwarven scarabs, rats, spiders and winter moths are found in numbers within. Several hazards are found inside, consisting of; Dwarven Charge-Wires, Electrical Discharge Valves, steam vents, , spinning blades, as well as Catapult Cabbage and Static Pitcher plants. A heavy sack can spawn by the western wall on Blackreach's side of the Nchuand-Zel lift.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Nchuand-Zel also appears in Skyrim.",
+        "If Nchuand-Zel is visited from Blackreach before starting the related quest, it is possible to go all the way to the Keystone Chamber, but the second Keystone won't exist in the receptacle then."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nchuand-Zel",
+        "page_title": "Online:Nchuand-Zel",
+        "revision_id": 3570691,
+        "retrieved_at": "2026-08-12T21:29:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

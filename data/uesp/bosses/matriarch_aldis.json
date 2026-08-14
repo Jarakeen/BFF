@@ -1,0 +1,90 @@
+{
+    "id": "matriarch_aldis",
+    "name": "Matriarch Aldis",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Scalecaller Rise, Scalecaller Rise",
+    "species": "Giant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,578,737",
+        "veteran": "2,324,015",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Sweep",
+            "description": "A basic melee attack that deals minor physical damage and knocks the target back."
+        },
+        {
+            "name": "Shatter",
+            "description": "The boss releases shockwaves in front of itself dealing moderate physical damage."
+        },
+        {
+            "name": "Freezing Stomp",
+            "description": "The boss stomps dealing moderate physical damage around itself as indicated by a red circle."
+        },
+        {
+            "name": "Pulverizing Pummel",
+            "description": "The boss smashes its club in front of itself dealing very high physical damage as indicated by a red cone. Avoid this if possible."
+        },
+        {
+            "name": "Frozen Aura",
+            "description": "The boss releases frost around itself dealing moderate frost damage as indicated by a large red circle. It can be hard to avoid this attack due to its large telegraph so be prepared to heal up once it occurs."
+        },
+        {
+            "name": "Intimidating Roar",
+            "description": "The boss shouts fearing all players momentarily. Break free to counter this."
+        },
+        {
+            "name": "Frigid Waters",
+            "description": "The water around the arena will deal moderate frost damage over time to players standing in it. Stay on the islands to avoid this."
+        },
+        {
+            "name": "Summon Leimenid",
+            "description": "Every 10% health lost will cause the boss to summon a Leimenid to attack the party. They are priority targets and should be killed first. If group damage is good, it is possible to burn the boss before the damage from the Leimenids becomes overwhelming."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Matriarch Aldis",
+            "line": "Gara go yara ar!",
+            "trigger": "When she is engaged in combat she will shout",
+            "ability": "Frigid Waters"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When she is engaged in combat she will shout": [
+            {
+                "speaker": "Matriarch Aldis",
+                "line": "Gara go yara ar!",
+                "trigger": "When she is engaged in combat she will shout",
+                "ability": "Frigid Waters"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Her line of dialogue is shared with Matriarch Runa, who is the only other giantess."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Plans of Pestilence: Conquer Scalecaller Peak and stop a dangerous plague from spreading.",
+        "Pledge: Scalecaller Peak: Prove you are truly Undaunted by clearing Scalecaller Peak."
+    ],
+    "summary": "Matriarch Aldis is a giantess found in a mountainous vale of Scalecaller Peak, acting as the second boss of the dungeon. She leads the giants found there and is infected with Nathan Mortieu's plague, making her much stronger. She is aided by Corrupted Leimenids who attempt to cause geyser eruptions throughout the fight. The water beneath the icesheet is infected with a deadly plague and causes damage when stood in. The Corrupted Leimenid Corpse to the left of the door out of the area can be interacted with to obtain part of the cure for Jorvuld Davaux. She has a chance to collectively drop a sample of Infected Flesh.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Matriarch_Aldis",
+        "page_title": "Online:Matriarch Aldis",
+        "revision_id": 3348051,
+        "retrieved_at": "2026-08-12T21:32:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

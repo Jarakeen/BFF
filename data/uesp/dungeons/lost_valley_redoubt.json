@@ -1,0 +1,30 @@
+{
+    "id": "lost_valley_redoubt",
+    "name": "Lost Valley Redoubt",
+    "content_type": "dungeon",
+    "summary": "Lost Valley Redoubt is a Nordic ruin found in the Reach, located southeast of Gloomreach. The Dark Descent, an ancient ritual site, is located deep below, which the ruins were built over.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "markarth_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Red Eagle's Flight achievement is unlocked at the same location as Bard's Leap Summit from Skyrim.",
+        "Lost Valley Redoubt also appeared in Skyrim.",
+        "Draugr can be seen in many open sarcophagi in the barrow, but none of them will come alive."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lost_Valley_Redoubt",
+        "page_title": "Online:Lost Valley Redoubt",
+        "revision_id": 3548133,
+        "retrieved_at": "2026-08-12T21:27:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,128 @@
+{
+    "id": "nusana",
+    "name": "Nusana",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "589,395",
+        "veteran": "947,363",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Dynus Aralas",
+            "line": "It looks as like there's some fight in our challengers, after all. Take them down!",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "Snagg gro-Mashul",
+            "line": "Congratulations. You've passed the first trial.",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "Kayd at-Sal",
+            "line": "Yeah, they bested the finest sloths, drunkards, and fools we had to offer!",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "Nusana",
+            "line": "Adorable. Shall we give them a pendant?",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<The Pack jumps into the arena.>",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "Dynus Aralas",
+            "line": "I say, let's see how these soft skins fair against a real challenge!",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        },
+        {
+            "speaker": "Snagg gro-Mashul",
+            "line": "To arms!",
+            "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.": [
+            {
+                "speaker": "Dynus Aralas",
+                "line": "It looks as like there's some fight in our challengers, after all. Take them down!",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "Snagg gro-Mashul",
+                "line": "Congratulations. You've passed the first trial.",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "Kayd at-Sal",
+                "line": "Yeah, they bested the finest sloths, drunkards, and fools we had to offer!",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "Nusana",
+                "line": "Adorable. Shall we give them a pendant?",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<The Pack jumps into the arena.>",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "Dynus Aralas",
+                "line": "I say, let's see how these soft skins fair against a real challenge!",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            },
+            {
+                "speaker": "Snagg gro-Mashul",
+                "line": "To arms!",
+                "trigger": "Soon Nusana and the rest of the Pack will take to the arena, as you have proven yourself to be worth fighting for a bit.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Blessed Crucible Pledge: Explore the Blessed Crucible and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Nusana is a Khajiit werewolf found at the Blessed Crucible. She possesses flame spells even in werewolf form.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nusana",
+        "page_title": "Online:Nusana",
+        "revision_id": 3345372,
+        "retrieved_at": "2026-08-12T21:15:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

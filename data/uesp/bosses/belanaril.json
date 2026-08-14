@@ -1,0 +1,36 @@
+{
+    "id": "belanaril",
+    "name": "Belanaril",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Cloudrest",
+    "species": "Gryphon",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "8,520,644",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Belanaril is a gryphon and the companion of Welkynar Relequen. She is capable of unleashing powerful lightning magic in the form of Voltaic Overload. She and her mortal partner have been captured by the sea sload sorceress, Z'Maja. If the Shades of Relequen and Belanaril are defeated, the real Belanaril and Relequen will die, as Z'Maja will \"release them from her service\" by killing them. However, if the Shade of Relequen is defeated during the fight against Z'Maja, Belanaril and her rider will live.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Belanaril",
+        "page_title": "Online:Belanaril",
+        "revision_id": 3527973,
+        "retrieved_at": "2026-08-12T05:32:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

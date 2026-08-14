@@ -1,0 +1,36 @@
+{
+    "id": "elden_hollow_i",
+    "name": "Elden Hollow I",
+    "content_type": "dungeon",
+    "summary": "Elden Hollow I is a group dungeon found under Elden Root in central Grahtwood. In this version, the Mages Guild is looking into reports of a strange ritual happening within Elden Hollow and need protection from the hostile Wood Orcs of the Darkfern Clan. You can learn about its location from Venomous Fauridil outside Elden Root, Hel Ra'Lala outside Wayrest, or Thongar the Stout outside Mournhold. Its final boss, Canonreeve Oraneth, has a chance to drop the Face of the Serpent antiquity lead for the Ring of the Wild Hunt.",
+    "location": "",
+    "boss_ids": [
+        "akash_gra_mal",
+        "chokethorn",
+        "canonreeve_oraneth",
+        "thalmor",
+        "daedra"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Elden Hollow was designed for levels 20–23, and Veteran Elden Hollow was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Elden Hollow I was only available in Normal mode, and Elden Hollow II was only available in Veteran mode. These were named Elden Hollow and Veteran Elden Hollow respectively.",
+        "Several books can be found inside the dungeon, mostly featuring the thoughts of Canonreeve Oraneth or the communication between Oraneth and Darkfern Orcs: Letter to Akash, Note from Akash, Savior of the Altmer, and Time is of the Essence."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Elden_Hollow_I",
+        "page_title": "Online:Elden Hollow I",
+        "revision_id": 3139365,
+        "retrieved_at": "2026-08-12T21:20:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

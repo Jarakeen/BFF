@@ -1,0 +1,18 @@
+{
+    "id": "the_hunting_grounds_malabal_tor",
+    "name": "The Hunting Grounds (Malabal Tor)",
+    "content_type": "dungeon",
+    "summary": "The Hunting Grounds are Hircine's realm of Oblivion, connected to Wilding Run in Malabal Tor. Captain Trelano's consciousness has been ensnared here by Gamekeeper Ozzai, and the Shade of Ulthorn assists you in freeing him. There are various braziers throughout that must be purified during the related quest. Deer and squirrels are also found throughout.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Hunting_Grounds_(Malabal_Tor)",
+        "page_title": "Online:The Hunting Grounds (Malabal Tor)",
+        "revision_id": 3550246,
+        "retrieved_at": "2026-08-12T21:25:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

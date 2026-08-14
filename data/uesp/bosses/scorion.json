@@ -1,0 +1,38 @@
+{
+    "id": "scorion",
+    "name": "Scorion",
+    "content_id": "the_dread_cellar",
+    "content_name": "The Dread Cellar",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "They share a rig with Hoarvor Daedra and Yaghra Monstrosites, even having the internal mesh name YaghraSpider_A_Collector in the files."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Scorions are large \"Deadlands-touched\" arachnid-like Daedra whose purpose seems to be collecting and transferring magical energy. They are rarely seen, but some are being used by the Order of the Waking Flame to collect residual torture energy for the construction of the Antecedent Cataclyst in the Dread Cellar. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Scorion",
+        "page_title": "Online:Scorion",
+        "revision_id": 3237248,
+        "retrieved_at": "2026-08-12T21:20:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

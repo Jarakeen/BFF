@@ -1,0 +1,36 @@
+{
+    "id": "gorne",
+    "name": "Gorne",
+    "content_type": "dungeon",
+    "summary": "Gorne is an Indoril island estate that serves as an asylum for wizards, which is currently under invasion by Daedra. The boat serving as the entrance is located directly to the west of Necrom. All creatures here have a chance to drop Lost Graht-Oak Acorns. Butterflies, centipedes, netch calves, phoenix moths, rats, shroom beetles and torchbugs are found in numbers within. Hazards include bottomless pits.",
+    "location": "",
+    "boss_ids": [
+        "keeag",
+        "gujelag",
+        "solemn",
+        "staxuira",
+        "stupulag",
+        "zygiite",
+        "gatekeeper_gruzo"
+    ],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Despite being founded by House Indoril, the island uses Hlaalu architectural styles from Vvardenfell."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gorne",
+        "page_title": "Online:Gorne",
+        "revision_id": 3567075,
+        "retrieved_at": "2026-08-12T21:24:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

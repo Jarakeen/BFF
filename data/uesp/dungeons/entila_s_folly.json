@@ -1,0 +1,28 @@
+{
+    "id": "entila_s_folly",
+    "name": "Entila's Folly",
+    "content_type": "dungeon",
+    "summary": "For the book, see Entila's Folly (book). Entila's Folly is an abandoned mine in central Auridon, just southwest of the city of Skywatch containing spiders and giant wasps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The spiders that ambush you by dropping from the ceiling throughout the delve are immune to damage until their descent animation is fully completed."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Entila%27s_Folly",
+        "page_title": "Online:Entila's Folly",
+        "revision_id": 3598283,
+        "retrieved_at": "2026-08-12T21:21:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "id": "yolnahkriin",
+    "name": "Yolnahkriin",
+    "content_id": "sunspire",
+    "content_name": "Sunspire",
+    "location": "Sunspire Temple Grounds",
+    "species": "Dragon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "Yolnahkriin bites whoever he's targeting."
+        },
+        {
+            "name": "Boiling Oil",
+            "description": "The boiling oil surrounding Yolnahkriin's perch will damage you if you stand in it."
+        },
+        {
+            "name": "Flame Aura",
+            "description": "If you are too close to Yolnahkriin (read: underneath him), you will be consumed by raging fire."
+        },
+        {
+            "name": "Fire Breath",
+            "description": "Yolnahkriin breathes fire."
+        },
+        {
+            "name": "Focused Fire",
+            "description": "Yolnahkriin will set down an orange AoE onto one player in front of him. The only way to survive Yolnahkriin's Focused Fire is to find a way to disperse the impact. Damage increases with every hit. Players must stack to distribute the damage. Works similarly to Shade of Siroria's Roaring Flare."
+        },
+        {
+            "name": "Summon Fire Atronach",
+            "description": "Summons a Flame Atronach."
+        },
+        {
+            "name": "Summon Iron Atronach",
+            "description": "Summons an Iron Servant."
+        },
+        {
+            "name": "Wing Thrash",
+            "description": "One hit kill, can connect if you fight from the side."
+        },
+        {
+            "name": "Aerial Blast",
+            "description": "At 80%/50%/25% health, Yolnahkriin flies into the air and ceases to be targetable, as more atronachs appear in the arena. While fighting the atronachs, Yolnahkriin then proceeds to spew concentrated fire down into the center of the arena, covering all of it except for the outer rim, limiting room to move around and dealing massive damage if stepping into the fire."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "145,538,704 (hard mode)"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His name translates to \"Fire-Fury-Slay\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Return of Alkosh: Defeat the Alkosh pretender and liberate the faithful of Sunspire."
+    ],
+    "achievements": [],
+    "summary": "This article is about the boss in Sunspire. For the boss in Infinite Archive, see Yolnahkriin (Infinite Archive). 145,538,704 (hard mode) Yolnahkriin is a red dragon who is masquerading as an aspect of Jode within the temple of Sunspire.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yolnahkriin",
+        "page_title": "Online:Yolnahkriin",
+        "revision_id": 3606394,
+        "retrieved_at": "2026-08-12T05:34:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

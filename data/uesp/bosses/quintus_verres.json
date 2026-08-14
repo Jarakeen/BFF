@@ -1,0 +1,40 @@
+{
+    "id": "quintus_verres",
+    "name": "Quintus Verres",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "Volenfell",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,204,050",
+        "veteran": "3,867,097",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell.",
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact."
+    ],
+    "summary": "Quintus Verres is an Imperial leading a group of treasure hunters found in the Dwemer ruins of Volenfell. Prior to that, he was the husband of Tharayya, a Redguard scholar doing research on the ruins. When she asked him to return and help her in her excavations, he left her to take up treasure hunting instead. He wears Imperial Style heavy armor and fights using a Dwarven battleaxe, using various two-handed attacks. When fought, he has a chance to drop Quintus' Exploding Staff. Around halfway through the fight, he switches to a flame staff, and towards the end of the fight, he awakens the Monstrous Gargoyle. It is likely that he will be killed before the gargoyle (who crushes him regardless if he's still alive), but even so, the gargoyle must be finished off as well. His spirit later reappears in the Depths of Malatar, reluctantly helping Tharayya from a Pneumaria Chamber. Later on during the fight with King Narilmor, he will escape and Tharayya will attempt to capture him again.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Quintus_Verres",
+        "page_title": "Online:Quintus Verres",
+        "revision_id": 3331260,
+        "retrieved_at": "2026-08-12T21:37:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

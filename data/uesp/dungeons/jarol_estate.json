@@ -1,0 +1,29 @@
+{
+    "id": "jarol_estate",
+    "name": "Jarol Estate",
+    "content_type": "dungeon",
+    "summary": "Jarol Estate is an estate northwest of Anvil. It is the private residence of Lord Quintus Jarol. The estate is patrolled by mercenaries on the outer walls and soldiers in the inner premises. It can be accessed via the smuggler tunnels beneath the Withered Rose inn. Squirrels and Rats are found in the courtyard. A Trip Wire is at the first floor of the estate and more are in the smuggler tunnels with Oil Traps. Rats are found in the Wine Cellar. Rats and Centipedes are found in the smuggler tunnels.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dark_brotherhood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The ruins of Crowhaven appeared at this location in Oblivion.",
+        "This location is called \"Varo Estate\" in the files, presumably an early name."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Jarol_Estate",
+        "page_title": "Online:Jarol Estate",
+        "revision_id": 3549732,
+        "retrieved_at": "2026-08-12T21:26:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

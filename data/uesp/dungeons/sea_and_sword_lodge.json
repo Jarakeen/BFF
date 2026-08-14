@@ -1,0 +1,26 @@
+{
+    "id": "sea_and_sword_lodge",
+    "name": "Sea and Sword Lodge",
+    "content_type": "dungeon",
+    "summary": "Sea and Sword Lodge is a training facility for the College of Sea and Sword found in Eastern Solstice. Due to a betrayal from within, the lodge has been overrun with Worm Cultists and their Darkbinder allies. Several parts of the complex have been damaged due to the fighting, and in the lower cavern levels, massive oblivion portals have been opened. Passive Daedrats are found scurrying around the lodge in numbers. An unnamed Isle of Contemplation Indrik can be found in the stables outside the lodge.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sea_and_Sword_Lodge",
+        "page_title": "Online:Sea and Sword Lodge",
+        "revision_id": 3540411,
+        "retrieved_at": "2026-08-12T21:32:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

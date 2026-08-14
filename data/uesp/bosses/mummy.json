@@ -1,0 +1,59 @@
+{
+    "id": "mummy",
+    "name": "Mummy",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Grisly Mummy Wrap costume allows players to take on the appearance of a mummy.",
+        "A Grisly Banekin Mummy and Grisly Mummy Tabby are available as pets. The Grisly Horse Mummy is available as a mount."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Amputating the Hand: End the threat of the Withered Hand in Alik'r.",
+        "Ancient Armaments in Bangkorai: Collect fragmented arms and lift the curse by defeating the Thief-Lord.",
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Circus of Cheerful Slaughter: Take part in Sheogorath's production, The Folly of Isolation.",
+        "The Impervious Vault: Stop the Withered Hand from raiding the Impervious Vault.",
+        "Secrets of the Lost City: Help a Redguard historian gain access to lost knowledge of his ancestors.",
+        "Simply Misplaced: Recover two items that the Mad God claims to have misplaced.",
+        "Riches Beyond Measure: Help find a powerful Ayleid artifact.",
+        "Tu'whacca's Breath: Help the Throne Keeper cleanse Tu'whacca's temple.",
+        "Two Queens: Help retake Rimmen from the Usurper Queen.",
+        "The Waking Darkness: Discover why the dead have risen from St. Pelin's Graveyard."
+    ],
+    "summary": "This article is about the condition. For the specific NPC, see Mummy (NPC). Mummies are a type of undead NPC. They appear as people covered in rotting bandages, with completely white eyes. Most mummies are Redguards and can be found in various places in the Alik'r Desert, but there are also some Ayleid, Altmer, Breton, and Khajiit mummies. Mummies have a rare chance to drop a Crypt Jar, a trophy needed for the Undead Hoarder achievement. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mummy",
+        "page_title": "Online:Mummy",
+        "revision_id": 3606431,
+        "retrieved_at": "2026-08-12T21:18:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

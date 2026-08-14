@@ -1,0 +1,41 @@
+{
+    "id": "bedlam_veil",
+    "name": "Bedlam Veil",
+    "content_type": "dungeon",
+    "summary": "Bedlam Veil is a demiplane and group dungeon accessed from a portal in Wrothgar. It is part of the realm of Maelstrom and is where Fa-Nuit-Hen keeps their trophies. A cult known as the Blind Path have invaded and are searching for something. The entrance is located northeast of Siege Road Wayshrine, along the walls of Old Orsinium. A Chub Loon, daedrats, fetcherflies, frogs, scorpions, shroom beetles and skein spiders are found in numbers within. Hazards include bottomless pits, frigid waters, lava pools, and volatile poison. It is included in the Scions of Ithelia DLC alongside Oathsworn Pit.",
+    "location": "",
+    "boss_ids": [
+        "shattered_champion",
+        "crystal_atronach",
+        "darkshard",
+        "mind_terror",
+        "the_blind"
+    ],
+    "achievements": [
+        {
+            "id": "scions_of_ithelia_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This dungeon incorporates elements from Skein Grotto, the cut tenth arena of Maelstrom Arena."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bedlam_Veil",
+        "page_title": "Online:Bedlam Veil",
+        "revision_id": 3567125,
+        "retrieved_at": "2026-08-12T21:14:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

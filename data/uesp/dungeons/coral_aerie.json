@@ -1,0 +1,43 @@
+{
+    "id": "coral_aerie",
+    "name": "Coral Aerie",
+    "content_type": "dungeon",
+    "summary": "Coral Aerie is an islet located off the northern coast of Summerset, accessed by taking a boat on the beach north of the Veyond Wyte Wayshrine. The Ascendant Order has established a cell there, where they are training and bolstering their ranks with gryphons in secret. It is included in the Ascending Tide DLC alongside Shipwright's Regret. An Alinor Ringtail, dragonflies, fleshflies, frogs, herons, lizards, a Tangerine Dragon Frog and torchbugs are found in numbers within. Hazards include slaughterfish.",
+    "location": "",
+    "boss_ids": [
+        "maligalig",
+        "sarydil",
+        "varallion",
+        "iliata",
+        "mafremare",
+        "ofallo",
+        "kargaeda"
+    ],
+    "achievements": [
+        {
+            "id": "ascending_tide_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "After defeating one of the optional guardian bosses, you gain the Abyssal Knowing buff, which makes it that Tendrils will occasionally appear to help you by striking your foes for the rest of the dungeon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Coral_Aerie",
+        "page_title": "Online:Coral Aerie",
+        "revision_id": 3567070,
+        "retrieved_at": "2026-08-12T21:17:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

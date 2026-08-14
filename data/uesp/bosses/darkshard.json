@@ -1,0 +1,64 @@
+{
+    "id": "darkshard",
+    "name": "Darkshard",
+    "content_id": "bedlam_veil",
+    "content_name": "Bedlam Veil",
+    "location": "Bedlam Veil: Skyvault Foyer",
+    "species": "Mind Terror",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,104,982",
+        "veteran": "3,383,439",
+        "hardmode": "5,075,159"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Terrorizing Strike",
+            "description": "Darkshard winds up a heavy strike, with a deceiving time before the animation and the strike, dealing very high physical damage and staggering. This can be blocked."
+        },
+        {
+            "name": "Feast",
+            "description": "Darkshard shrieks loudly, indicated by a wide red cone, dealing high physical damage and snaring affected targets."
+        },
+        {
+            "name": "Grasping Scream",
+            "description": "Darkshard shoots dark projectiles at nearby targets, dealing low magical damage and stunning them. If Break Free is not used, stunned targets are pulled to Darkshard, who then summons a negate field, indicated by a large red circle, dealing continuous high magical damage."
+        },
+        {
+            "name": "Maelstrom Summon",
+            "description": "At certain health threshold, Darkshard vanishes from the arena and summons bosses from Maelstrom Arena to fight in its stead. At the 80% threshold, Maxus the Many is summoned. At 60%, the Champion of Atrocity and at 40%, the Argonian Behemoth (along with Argonian Venomcallers in Hard Mode)."
+        },
+        {
+            "name": "Summon Shade",
+            "description": "After \"Terrorizing Strike\" and \"Scream\", a shadowy version of Darkshard spawns at a faraway target and performs those abilities again."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Forgotten Vault: Defend the Maelstrom's Bedlam Veil from an invading army.",
+        "Pledge: Bedlam Veil: Explore Bedlam Veil and return Undaunted."
+    ],
+    "summary": "Darkshard is a Shardborn mind terror that serves as the second boss of Bedlam Veil.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Darkshard",
+        "page_title": "Online:Darkshard",
+        "revision_id": 3224518,
+        "retrieved_at": "2026-08-12T21:14:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

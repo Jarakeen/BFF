@@ -1,0 +1,103 @@
+{
+    "id": "vorenor_winterbourne",
+    "name": "Vorenor Winterbourne",
+    "content_id": "spindleclutch_ii",
+    "content_name": "Spindleclutch II",
+    "location": "Vorenor's Lair, Spindleclutch II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,702,217",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Blood Drain",
+            "description": "A basic melee attack that does moderate physical damage and heals Vorenor for roughly twice the damage done."
+        },
+        {
+            "name": "Open Wounds",
+            "description": "Vorenor Winterbourne shoots a red beam at a random player, dealing moderate magic damage over 4 seconds."
+        },
+        {
+            "name": "Blood Pool",
+            "description": "Vorenor Winterbourne places a pool of blood under a random player. The pool deals continuous direct moderate-high physical damage as indicated by a red circle and each hit heals Vorenor for ~x1,75 times the damage done. The initial tick happens almost immediately, thus the healer should ensure that the party is fully healed before this attack is performed."
+        },
+        {
+            "name": "Blood Frenzy",
+            "description": "Vorenor Winterbourne teleports to each player one at a time and slashes them, dealing high physical damage each time."
+        },
+        {
+            "name": "Thrall Feast",
+            "description": "Vorenor Winterbourne sucks blood from the captives around the room, healing himself 5 times per captive per cast for a very small amount of Health. At first, only one captive will be used, but as the fight progresses, more and more captives will be involved, increasing the magnitude of the healing done. To prevent this, players may kill the captives to stop his healing, however the captives have a lot of health and this ability heals Vorenor poorly so it is advised to solely focus on him instead, which also nets players the hard mode achievement. If no captives are left, Vorenor stops casting this ability."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Mereel",
+            "line": "I don't know, boss. This whole place screams \"ambush\".",
+            "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+            "ability": "Thrall Feast"
+        },
+        {
+            "speaker": "Vorenor Winterbourne",
+            "line": "Ambush. What a lovely idea.",
+            "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+            "ability": "Thrall Feast"
+        },
+        {
+            "speaker": "Vorenor Winterbourne",
+            "line": "Still alive, are we? Come, I will make spigots of your throats.",
+            "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+            "ability": "Thrall Feast"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.": [
+            {
+                "speaker": "Mereel",
+                "line": "I don't know, boss. This whole place screams \"ambush\".",
+                "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+                "ability": "Thrall Feast"
+            },
+            {
+                "speaker": "Vorenor Winterbourne",
+                "line": "Ambush. What a lovely idea.",
+                "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+                "ability": "Thrall Feast"
+            },
+            {
+                "speaker": "Vorenor Winterbourne",
+                "line": "Still alive, are we? Come, I will make spigots of your throats.",
+                "trigger": "He appears in a swarm of bats, appearing from the circular hole in the center of the Ayleid structure in the final chamber.",
+                "ability": "Thrall Feast"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is voiced by Steve Blum."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood Relations: Rescue Sud-Hareem's son At'avar from a powerful vampire.",
+        "Pledge: Spindleclutch II: Explore Spindleclutch II and return Undaunted.",
+        "Veteran Spindleclutch Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Spindleclutch. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Vorenor Winterbourne is a Nord vampire found within Spindleclutch II, where he serves as the third and final boss that players must defeat. He leads the vampire clan found within the dungeon and has taken a number of civilians captive.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vorenor_Winterbourne",
+        "page_title": "Online:Vorenor Winterbourne",
+        "revision_id": 3465893,
+        "retrieved_at": "2026-08-12T21:34:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

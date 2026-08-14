@@ -1,0 +1,98 @@
+{
+    "id": "archmaster_siniel",
+    "name": "Archmaster Siniel",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "Crypt of Hearts I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Phantasmal Bolt",
+            "description": "A basic ranged attack that deals minor magical damage."
+        },
+        {
+            "name": "Summon Zombies",
+            "description": "The boss summons three Zombies to attack the party. These should be killed quickly to simplify the fight. The Archmaster summons zombies"
+        },
+        {
+            "name": "Induce Horror",
+            "description": "The bosss summons a large specter that deals moderate magical damage and fears all players it hits."
+        },
+        {
+            "name": "Necrotic Ritual",
+            "description": "The boss summons an AOE on the ground that deals moderate magical damage over time as indicated by a red circle."
+        },
+        {
+            "name": "Corpse Explosion",
+            "description": "The boss channels a large explosion that deals unavoidable magical damage that will reduce you to low health, regardless of your defenses. Healers should keep their party's health high before the attack completes to prevent deaths."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "My minions will destroy you!",
+            "trigger": "Entering combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Now the dead will rise and consume you!",
+            "trigger": "Summoning Zombies",
+            "ability": "Summon Zombies"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering combat": [
+            {
+                "speaker": "",
+                "line": "My minions will destroy you!",
+                "trigger": "Entering combat",
+                "ability": null
+            }
+        ],
+        "Summoning Zombies": [
+            {
+                "speaker": "",
+                "line": "Now the dead will rise and consume you!",
+                "trigger": "Summoning Zombies",
+                "ability": "Summon Zombies"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I."
+    ],
+    "summary": "Archmaster Siniel is a powerful High Elf necromancer found in the Crypt of Hearts I. During the fight he will summon hordes of zombies, temporarily becoming invulnerable until each wave is defeated. He may drop the Archmaster's Ritestaff when defeated.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archmaster_Siniel",
+        "page_title": "Online:Archmaster Siniel",
+        "revision_id": 3322242,
+        "retrieved_at": "2026-08-12T21:18:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

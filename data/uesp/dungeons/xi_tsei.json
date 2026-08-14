@@ -1,0 +1,28 @@
+{
+    "id": "xi_tsei",
+    "name": "Xi-Tsei",
+    "content_type": "dungeon",
+    "summary": "Xi-Tsei is a ruined xanmeer in Blackwood, located northwest of Stonewastes, containing Sul-Xan tribesmen. It can be found at the end of a broken bridge spanning a swamp, northwest of Stonewastes. This site is favored among the Sul-Xan to perform rituals at. Various hazardous plants are found through the delve, as well as weaponized traps inside the xanmeer, including arrows and flamethrowers. Various passive critters can be found, such as Glow Bugs, Glowing Frogs, Herons, Lizards, Swamp Jellies, and Torchbugs. A heavy sack can spawn beside the brazier on the right-hand side (facing the delve). Bog blights shamble amid the grave stakes in the bog just south of the delve, and a voriplasm wallows in the mire just northeast of the structure. A glowing frog stands just inside the delve's entrance. You will need to help a Jela rescue her friends from being sacrificed during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The bog blights located in and around the delve aren't wearing masks, like they do normally."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xi-Tsei",
+        "page_title": "Online:Xi-Tsei",
+        "revision_id": 3598019,
+        "retrieved_at": "2026-08-12T21:39:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

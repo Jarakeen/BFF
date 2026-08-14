@@ -1,0 +1,28 @@
+{
+    "id": "bad_man_s_hallows",
+    "name": "Bad Man's Hallows",
+    "content_type": "dungeon",
+    "summary": "Bad Man's Hallows is a cave to the west of Daggerfall in Glenumbra. Mobs have a chance to drop the Order-Etched Gallery Rail antiquity lead for the Ring of the Pale Order. Bosses have a chance to drop the Band of Water antiquity lead for the Ring of the Wild Hunt. Bad Man Followers live inside the clearing, where they are currently about to celebrate the Harvest Festival, dedicated to the Bad Man. Multiple resource nodes are found in both areas. You can find a lake fishing hole on the surface and a foul fishing hole in the caverns. Butterflies, frogs, rabbits, and squirrels are found in numbers on the surface while rats and snakes are found in the caverns.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Bad Man's Hollow's loading screen reuses the concept art of the Beldama Wyrd Tree and the glade its located in. Noticeably, it features primarily male characters, when the Beldama Wyrd are exclusively female."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bad_Man%27s_Hallows",
+        "page_title": "Online:Bad Man's Hallows",
+        "revision_id": 3532610,
+        "retrieved_at": "2026-08-12T21:13:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

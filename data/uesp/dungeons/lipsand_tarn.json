@@ -1,0 +1,28 @@
+{
+    "id": "lipsand_tarn",
+    "name": "Lipsand Tarn",
+    "content_type": "dungeon",
+    "summary": "Lipsand Tarn is an Ayleid ruin in northwestern Cyrodiil, north of Fort Rayles containing Bloodborn vampires. The ruin consists of a few chambers. The entrance hall is on the upper floor, and leads to a main chamber with stairs that lead downward. Varius and Laudine can be found inside the ruins. Their bodies must be burned so they don't transform into vampires. Gaston Ashham performs a ritual downstairs in the northwestern chamber. A chest can be found in Gaston's chamber. Another chest can be found on an altar in the northeastern chamber, which lies across the hall from Gaston's dwelling. A heavy sack can be found in front of a bench in the hallway connecting these two chambers. Marbita stands before an altar downstairs in the western chamber, which can be accessed by going down the stairs from the main hall, turning right at the stairs' landing, and making another right to enter the hallway heading west. Several bookshelves can be found against the walls in every room. Two water sacks can be found in the main chamber. The exterior of the ruin consists of camps, featuring brown tents for the vampires to take shelter in. A chest can be found outside of Lipsand Tarn, down the cliff and to the south.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Lipsand Tarn also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lipsand_Tarn",
+        "page_title": "Online:Lipsand Tarn",
+        "revision_id": 3598798,
+        "retrieved_at": "2026-08-12T21:27:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

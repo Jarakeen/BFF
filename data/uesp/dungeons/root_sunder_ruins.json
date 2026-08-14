@@ -1,0 +1,28 @@
+{
+    "id": "root_sunder_ruins",
+    "name": "Root Sunder Ruins",
+    "content_type": "dungeon",
+    "summary": "The Root Sunder Ruins are a set of Ayleid ruins between Elden Root and Haven in Grahtwood. Sitting now long-abandoned, the ruins have now become inhabited by all manners of local wildlife who have come to reclaim it for the forest. Resource Nodes are present inside. Beetles, Lizards and Torchbugs are found in numbers within. The skyshard is located in the chamber second-left from the entry point (southwest), near one of the quest markers for \"If the Dead Could Talk\". Bosses have a chance to drop the Coral Clasp antiquity lead for the Pearls of Ehlnofey.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Once \"Forgotten Soul\" is completed, all of the creatures in the dungeon (with the exception of the bosses) will be passive. This effect will end upon exiting the dungeon or logging off and back on while still in the dungeon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Root_Sunder_Ruins",
+        "page_title": "Online:Root Sunder Ruins",
+        "revision_id": 3468729,
+        "retrieved_at": "2026-08-12T21:31:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

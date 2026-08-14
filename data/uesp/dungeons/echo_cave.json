@@ -1,0 +1,28 @@
+{
+    "id": "echo_cave",
+    "name": "Echo Cave",
+    "content_type": "dungeon",
+    "summary": "Echo Cave is a cave in northwestern Cyrodiil, between Forts Dragonclaw and Warden containing undead. It only contains a single boss, a wraith named Sargos Grent. Rancid Corpse zombies can be found outside and within. The Will of Otrovor Knifeborn can be found outside in the main tent, with Otrovor's corpse lying nearby.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Echo Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Echo_Cave",
+        "page_title": "Online:Echo Cave",
+        "revision_id": 3598795,
+        "retrieved_at": "2026-08-12T21:20:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

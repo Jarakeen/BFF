@@ -1,0 +1,301 @@
+{
+    "id": "battlemage_ennodius",
+    "name": "Battlemage Ennodius",
+    "content_id": "blackrose_prison",
+    "content_name": "Blackrose Prison",
+    "location": "Blackrose Prison; Derelict Prison Yard, Mess Hall of Misery",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,864,622",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flame Bolt",
+            "description": "A basic all-range attack dealing moderate flame damage."
+        },
+        {
+            "name": "Flame Whip",
+            "description": "The same ability as the knight class. Deals high flame damage."
+        },
+        {
+            "name": "Meteor",
+            "description": "Battlemage Ennodius holds her staff in her hands, raised above her head, as block spark indicators appear. At the same time, a large growing circular AoE appears around you and tracks your movement. Once the AoE ceases to grow, a fiery meteor crashes on top of you, dealing near lethal flame damage unless the attack is blocked."
+        },
+        {
+            "name": "Flame Unleashed",
+            "description": "Upon reaching 50% health, Ennodius teleports to the center of the arena. Once in position, she engulfs the outer edge of the arena in a wall of flame, indicated by an outline AoE, that inflicts lethal flame damage if ventured into. This is used to keep you in for the other part of the ability. Ennodius then raises her staff in one hand in the air, forming a flame field around her (though it doesn't actually protect her from incoming damage), with three flame jets going out from it, forming an AoE in the shape of a circle with three thin triangles going out from it. The flame jets then move around clockwise, dealing continuous very high flame damage if they touch you. The ability lasts for 10 seconds."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "That's how the Blackguards do it!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "I want to see blood!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Strike them down!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Show them what the Blackguards are made of!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Cut them open! Spill their guts!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Make them bleed, Blackguards!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "More blood for me!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "I want to see a fight! Come on!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "More bloodshed! Bash their skulls in!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Come on, put up a fight!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Is that the best you can do, Blackguards?",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Victory for the Blackguards!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "These challengers are nothing against the Blackguards!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Watch your backs, Blackguards!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Do you want to get yourselves killed? Idiots!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Weaklings! Do you want the challengers to win?",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Blackguards! Get back up and strike back!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Get back up! Fight back!",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "\"Come on Blackguards, get it together!\"[verification needed — Does she says those last six]",
+            "trigger": "She yells out from the stands during the rounds.",
+            "ability": "Flame Unleashed"
+        },
+        {
+            "speaker": "Battlemage Ennodius",
+            "line": "Hold your weapons! I yield.",
+            "trigger": "When she is defeated",
+            "ability": "Flame Unleashed"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "She yells out from the stands during the rounds.": [
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "That's how the Blackguards do it!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "I want to see blood!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Strike them down!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Show them what the Blackguards are made of!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Cut them open! Spill their guts!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Make them bleed, Blackguards!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "More blood for me!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "I want to see a fight! Come on!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "More bloodshed! Bash their skulls in!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Come on, put up a fight!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Is that the best you can do, Blackguards?",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Victory for the Blackguards!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "These challengers are nothing against the Blackguards!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Watch your backs, Blackguards!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Do you want to get yourselves killed? Idiots!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Weaklings! Do you want the challengers to win?",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Blackguards! Get back up and strike back!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Get back up! Fight back!",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            },
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "\"Come on Blackguards, get it together!\"[verification needed — Does she says those last six]",
+                "trigger": "She yells out from the stands during the rounds.",
+                "ability": "Flame Unleashed"
+            }
+        ],
+        "When she is defeated": [
+            {
+                "speaker": "Battlemage Ennodius",
+                "line": "Hold your weapons! I yield.",
+                "trigger": "When she is defeated",
+                "ability": "Flame Unleashed"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Black Gauntlet: Enter a deadly gauntlet held by the Blackguards of Blackrose Prison."
+    ],
+    "summary": "Battlemage Ennodius is an Imperial mage serving as the boss of Round 1: Derelict Prison Yard and as one of the bosses in Round 4: Mess Hall of Misery in Blackrose Prison.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Battlemage_Ennodius",
+        "page_title": "Online:Battlemage Ennodius",
+        "revision_id": 3505580,
+        "retrieved_at": "2026-08-12T22:10:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

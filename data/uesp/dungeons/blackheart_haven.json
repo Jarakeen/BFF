@@ -1,0 +1,37 @@
+{
+    "id": "blackheart_haven",
+    "name": "Blackheart Haven",
+    "content_type": "dungeon",
+    "summary": "Blackheart Haven is a group dungeon found in Bangkorai. The island is the hideout of the infamous Captain Blackheart and his crew. A pirate, Shifty Tom, wants you to help him turn over a new leaf by defeating his former captain and crewmates. You can learn about its location from Tiny Talisse in Rawl'kha, Mighty Mordra in Evermore, or Ferocious Jakidi in Riften. Its final boss, Captain Blackheart, has a chance to drop the Torc Strand of Song antiquity lead for the Torc of Tonal Constancy.",
+    "location": "",
+    "boss_ids": [
+        "atarus",
+        "ogrim",
+        "roost_mother",
+        "hagraven",
+        "captain_blackheart",
+        "skeleton"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Blackheart Haven was designed for levels 40–43.",
+        "In the early part of this dungeon (before you go inside), you can find Pirate Disguises in baskets which you can put on and avoid much of the fighting. Note that the dogs can still detect that you're not one of them.",
+        "A brewer vendor named Martha the Wench can be found in the starting area of the dungeon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blackheart_Haven",
+        "page_title": "Online:Blackheart Haven",
+        "revision_id": 3335202,
+        "retrieved_at": "2026-08-12T21:14:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

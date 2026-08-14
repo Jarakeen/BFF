@@ -1,0 +1,22 @@
+{
+    "id": "fort_grief",
+    "name": "Fort Grief",
+    "content_type": "dungeon",
+    "summary": "This article is about the version of the fort entered from the Deadlands. For information on the fort in the Cyrodiil PvP zone, see Out-of-Bounds Locations in Cyrodiil. Fort Grief is an abandoned Legion fort in Cyrodiil, located on an island in Niben Bay. The fort has since been occupied by the Order of the Waking Flame, under the command of Sister Celdina. The Waking Flame and their Daedric allies have taken unaffiliated Dremora hostage in the fort, and are sacrificing them to the Riven Cataclyst to create a powerful Incarnate. You will enter the fort through a portal atop Annihilarch's Summit in the Deadlands during the related quest. Cataclyst Vessels are involved in the boss fight of the location.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Fort Grief previously appeared in Oblivion.",
+        "Opening the world map while in the location places the cursor in that approximative location within the Cyrodiil zone map.",
+        "The exterior is visible from the Cyrodiil zone, but is out-of-bounds. On it is a camp with three tents and a skeleton with a paintbrush looking at a map of Cyrodiil, seemingly an in-joke by the developers who created the zone."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fort_Grief",
+        "page_title": "Online:Fort Grief",
+        "revision_id": 3550257,
+        "retrieved_at": "2026-08-12T21:22:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

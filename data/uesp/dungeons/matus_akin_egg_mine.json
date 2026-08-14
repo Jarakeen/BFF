@@ -1,0 +1,28 @@
+{
+    "id": "matus_akin_egg_mine",
+    "name": "Matus-Akin Egg Mine",
+    "content_type": "dungeon",
+    "summary": "Matus-Akin Egg Mine is a kwama mine found in the Azura's Coast region of Vvardenfell, northeast of Molag Mar, containing Rumblegarde mercenaries and kwama. This House Hlaalu mine was usurped by Drovos Nelvayn, a Telvanni contractor that was working for them, when his ambitions for his legacy grew bolder. The following notes can be found here, Drovos Research Notes 1, Drovos Research Notes 2, Drovos Research Notes 3, Ridena's Letter to Drovos and Kwama Breeding Research Notes (Flora). Ash Hoppers, fetcherflies and Shroom Beetles are found in numbers within. Hazards include lava pools.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Matus-Akin Egg Mine also appears in Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Matus-Akin_Egg_Mine",
+        "page_title": "Online:Matus-Akin Egg Mine",
+        "revision_id": 3567090,
+        "retrieved_at": "2026-08-12T21:28:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

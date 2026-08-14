@@ -1,0 +1,254 @@
+{
+    "id": "kjarg_the_tuskscraper",
+    "name": "Kjarg the Tuskscraper",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Underkeep",
+    "species": "Giant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "5,472,954",
+        "veteran": "10,150,318",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Hammer Swing",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Frost Slam",
+            "description": "Kjarg winds up his hammer before slamming it down on the ground with force. The initial blow deals very high physical damage, and it is followed by five ice shockwaves being sent out from the hit radius, dealing high frost damage and snaring you. This attack can be blocked but it is better to avoid it."
+        },
+        {
+            "name": "Frost Scrape",
+            "description": "Kjarg swiftly rakes his hammer across the floor and sends out five ice shockwaves in a forward arc towards you, dealing very high ice damage and staggering you."
+        },
+        {
+            "name": "Enrage",
+            "description": "Kjarg will periodically become enraged and start to glow during the fight, greatly increasing his damage output. The only way to remove this effect is to lure him to a crystal pillar that Sister Gohlla will summon and make him use Frost Slam on it. The frost explosion from the shattered pillar will make him recoil and stip the enrage buff."
+        },
+        {
+            "name": "Ice Tornado",
+            "description": "During the fight, Sister Gohlla will periodically summon a large ice tornado, indicated by a large circular AoE, that will swirl around the arena in your general direction, dealing continuous high frost damage while inside and snaring you."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Gohlla",
+            "line": "More intruders? Marvelous. On your feet, my sweet boy. Smash them for mother, won't you?",
+            "trigger": "While searching for survivors of the Nord forces who were shipwrecked on the island, your progress through the keep will be blocked by the giant and one of the witches. He will be eager to kill you on his mother's behalf.",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "I stomp them to pieces!",
+            "trigger": "Engaging him in combat",
+            "ability": "Frost Scrape"
+        },
+        {
+            "speaker": "",
+            "line": "Grakh vahg nool! You die now!",
+            "trigger": "Engaging him in combat",
+            "ability": "Frost Scrape"
+        },
+        {
+            "speaker": "",
+            "line": "Mother want you dead. Have to please mother!",
+            "trigger": "Engaging him in combat",
+            "ability": "Frost Scrape"
+        },
+        {
+            "speaker": "",
+            "line": "Hammer wants blood!",
+            "trigger": "Engaging him in combat",
+            "ability": "Frost Scrape"
+        },
+        {
+            "speaker": "",
+            "line": "I break bones good.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "Lurag gret grool.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "I kill it for you, mother.",
+            "trigger": "Idling before engaging combat",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "Hammer crush skulls flat ….",
+            "trigger": "Idling before engaging combat",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "Die, little rats!",
+            "trigger": "When he enrages",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "No, no, no! You die now!",
+            "trigger": "When he enrages",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "You dare kill my pets? My sweet boy? You'll pay soon enough ….",
+            "trigger": "Once as Kjarg is killed",
+            "ability": "Frost Slam"
+        },
+        {
+            "speaker": "",
+            "line": "Everything dead now, mother.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Dead, dead, dead. Brul gra hoak.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Stay down.",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "While searching for survivors of the Nord forces who were shipwrecked on the island, your progress through the keep will be blocked by the giant and one of the witches. He will be eager to kill you on his mother's behalf.": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "More intruders? Marvelous. On your feet, my sweet boy. Smash them for mother, won't you?",
+                "trigger": "While searching for survivors of the Nord forces who were shipwrecked on the island, your progress through the keep will be blocked by the giant and one of the witches. He will be eager to kill you on his mother's behalf.",
+                "ability": "Frost Slam"
+            }
+        ],
+        "Engaging him in combat": [
+            {
+                "speaker": "",
+                "line": "I stomp them to pieces!",
+                "trigger": "Engaging him in combat",
+                "ability": "Frost Scrape"
+            },
+            {
+                "speaker": "",
+                "line": "Grakh vahg nool! You die now!",
+                "trigger": "Engaging him in combat",
+                "ability": "Frost Scrape"
+            },
+            {
+                "speaker": "",
+                "line": "Mother want you dead. Have to please mother!",
+                "trigger": "Engaging him in combat",
+                "ability": "Frost Scrape"
+            },
+            {
+                "speaker": "",
+                "line": "Hammer wants blood!",
+                "trigger": "Engaging him in combat",
+                "ability": "Frost Scrape"
+            }
+        ],
+        "Idling before engaging combat": [
+            {
+                "speaker": "",
+                "line": "I break bones good.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Frost Slam"
+            },
+            {
+                "speaker": "",
+                "line": "Lurag gret grool.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Frost Slam"
+            },
+            {
+                "speaker": "",
+                "line": "I kill it for you, mother.",
+                "trigger": "Idling before engaging combat",
+                "ability": "Frost Slam"
+            },
+            {
+                "speaker": "",
+                "line": "Hammer crush skulls flat ….",
+                "trigger": "Idling before engaging combat",
+                "ability": "Frost Slam"
+            }
+        ],
+        "When he enrages": [
+            {
+                "speaker": "",
+                "line": "Die, little rats!",
+                "trigger": "When he enrages",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "No, no, no! You die now!",
+                "trigger": "When he enrages",
+                "ability": null
+            }
+        ],
+        "Once as Kjarg is killed": [
+            {
+                "speaker": "Sister Gohlla",
+                "line": "You dare kill my pets? My sweet boy? You'll pay soon enough ….",
+                "trigger": "Once as Kjarg is killed",
+                "ability": "Frost Slam"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Everything dead now, mother.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Dead, dead, dead. Brul gra hoak.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Stay down.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Kjarg the Tuskscraper is a giant who is the \"son\" of Sister Gohlla of the Icereach Coven. He can be found in the Icereach Underkeep and serves as the first boss for the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kjarg_the_Tuskscraper",
+        "page_title": "Online:Kjarg the Tuskscraper",
+        "revision_id": 3553977,
+        "retrieved_at": "2026-08-12T21:25:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

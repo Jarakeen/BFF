@@ -1,0 +1,37 @@
+{
+    "id": "moongrave_fane",
+    "name": "Moongrave Fane",
+    "content_type": "dungeon",
+    "summary": "Moongrave Fane is a group dungeon in the ancient ruins of a forgotten Khajiiti faith. It is part of the Scalebreaker dungeon pack DLC, along with the Lair of Maarselok. Deep within the ancient ruins, a former member of the Dragonguard and his fellow vampires of the Hollowfang Clan have felled and captured the dragon, Sahrotnax. However, they wish to do more than simply destroy the humbled beast, as the clan prepares a ritual to drain the dragon of its blood and gain its power.",
+    "location": "",
+    "boss_ids": [
+        "risen_ruins",
+        "stone_atronach",
+        "dro_zakar",
+        "pahmar_raht",
+        "kujo_kethba",
+        "gargoyle",
+        "grundwulf",
+        "nisaazda"
+    ],
+    "achievements": [
+        {
+            "id": "scalebreaker_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The exterior of the Fane is a good place to find herons, trolls, potion solvents, butterflies, dragonflies, daggerbacks and fish."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Moongrave_Fane",
+        "page_title": "Online:Moongrave Fane",
+        "revision_id": 3607006,
+        "retrieved_at": "2026-08-12T21:29:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

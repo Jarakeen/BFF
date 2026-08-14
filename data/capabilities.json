@@ -1,0 +1,26 @@
+{
+  "Members": [
+    {
+      "Name": "Jarakeen",
+      "ReportCode": "https://www.esologs.com/reports/FPy6Tc9BzwQNbfVK",
+      "FightId": "41",
+      "EquippedSets": "Master Architect, Serpent's Disdain, Spaulder of Ruin",
+      "BossActiveSeconds": "180",
+      "Watches": [
+        {
+          "Name": "Major Slayer",
+          "Kind": "Buff",
+          "Suggested": true
+        },
+        {
+          "Name": "Minor Slayer",
+          "Kind": "Buff",
+          "Suggested": true
+        }
+      ],
+      "LastResults": [],
+      "LastFightName": "",
+      "LastFightDurationSeconds": 0.0
+    }
+  ]
+}

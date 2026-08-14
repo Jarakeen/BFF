@@ -1,0 +1,396 @@
+{
+    "id": "packmaster_rethelros",
+    "name": "Packmaster Rethelros",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "Oathsworn Pit: Malacath's Crown",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,189,182",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Shot",
+            "description": "A basic ranged ability that deals moderate physical damage."
+        },
+        {
+            "name": "Ensnaring Bolt",
+            "description": "While Malthil is using \"Scent\", \"Quick Shot\" becomes \"Ensnaring Bolt\" instead. A basic melee attack that deals moderate physical damage and snares targets, making them easier to get caught by his wolf."
+        },
+        {
+            "name": "Directed Volley",
+            "description": "Packmaster Rethelros fires a rain of arrows at a specific target, indicated by several back to back red circles, dealing continuous high physical damage."
+        },
+        {
+            "name": "Bear Trap",
+            "description": "Packmaster Rethelros lays six bear traps down in the arena, indicated by red circles. Standing in one deals high physical damage, immobilizes you and deals low bleed damage over time."
+        },
+        {
+            "name": "Cinder Shot",
+            "description": "Rethelros picks a target and lines up a shot which fires straight, indicated by a thin but very long red rectangle, dealing high flame damage. He can adjust his trajectory while channeling."
+        },
+        {
+            "name": "Bonfire",
+            "description": "hits a lot of times for litle flame damage each"
+        },
+        {
+            "name": "Totem Cast",
+            "description": "Packmaster Rethelros blows a hunting horn, and summons a Protective Totem, which tethers itself to both bosses with a blue beam. They'll take less damage while this totem is up: destroy it to maximize your group's damage output. Having the tank drag the wolf to the totem may be a worthy endeavor if the Packmaster Rethelros isn't too close to it."
+        },
+        {
+            "name": "Blood Ties",
+            "description": "Packmaster Rethelros and Malthil must be kept away from each other, or else they'll empower each other's strikes. This is indicated by massive red circles around both of them that appear when they are close enough to activate this effect. The tank should pull the wolf away while the group deals with the archer."
+        },
+        {
+            "name": "Vanish",
+            "description": "Packmaster Rethelros can teleport away or closer to targets, or his wolf, using vanishing powder."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "I'm running out of patience. Tell everyone to join us or die.",
+            "trigger": "When you enter Malacath's Crown, you'll find that Packmaster Rethelros and his wolf have cornered Black-Glove Garm.",
+            "ability": "Blood Ties"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "The Black-Glove will be dead soon. You want to join him?",
+            "trigger": "While idling, he may say one of the following",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Too scared to fight me? You can always run away.",
+            "trigger": "While idling, he may say one of the following",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "I don't suppose you want to join the winning side?",
+            "trigger": "While idling, he may say one of the following",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Orcs talk up Malacath's vengeance, but if this is what it is, I'm not scared.",
+            "trigger": "While idling, he may say one of the following",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "For the pack!",
+            "trigger": "When you enter combat, he'll say",
+            "ability": "Blood Ties"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "You'll die here!",
+            "trigger": "When you enter combat, he'll say",
+            "ability": "Blood Ties"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "We'll tear you to pieces!",
+            "trigger": "When you enter combat, he'll say",
+            "ability": "Blood Ties"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "You're definitely not surviving this now.",
+            "trigger": "Raising the challenge banner",
+            "ability": "Bear Trap"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "I will scorch you where you stand!",
+            "trigger": "Using Cinder Shot",
+            "ability": "Cinder Shot"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Choke on fire!",
+            "trigger": "Using Cinder Shot",
+            "ability": "Cinder Shot"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "No one will find your charred corpses!",
+            "trigger": "Using Cinder Shot",
+            "ability": "Cinder Shot"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "The fire will engulf you!",
+            "trigger": "Using Cinder Shot",
+            "ability": "Cinder Shot"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "No one survives me.",
+            "trigger": "Using Cinder Shot",
+            "ability": "Cinder Shot"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "We're safe, but you aren't.",
+            "trigger": "Attacked while affected a Protective Totem",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Ha! Your attacks are useless!",
+            "trigger": "Attacked while affected a Protective Totem",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Just try hurting us now!",
+            "trigger": "Attacked while affected a Protective Totem",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Malthil is my last wolf. I won't lose her.",
+            "trigger": "Attacked while affected a Protective Totem",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Looks like that oath wasn't good for anything after all.",
+            "trigger": "If your group wipes, he'll say",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "The pack feasts tonight!",
+            "trigger": "If your group wipes, he'll say",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "Even the Black-Glove lasted longer than that.",
+            "trigger": "If your group wipes, he'll say",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "The Recollection remembers, but you were forgettable.",
+            "trigger": "If your group wipes, he'll say",
+            "ability": "Totem Cast"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "I can't lose. Not to you.",
+            "trigger": "When he is close to defeat",
+            "ability": "Blood Ties"
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "No one stops the Recollection!",
+            "trigger": "Unsorted",
+            "ability": null
+        },
+        {
+            "speaker": "Packmaster Rethelros",
+            "line": "I will protect what's left of my pack.",
+            "trigger": "Unsorted",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you enter Malacath's Crown, you'll find that Packmaster Rethelros and his wolf have cornered Black-Glove Garm.": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "I'm running out of patience. Tell everyone to join us or die.",
+                "trigger": "When you enter Malacath's Crown, you'll find that Packmaster Rethelros and his wolf have cornered Black-Glove Garm.",
+                "ability": "Blood Ties"
+            }
+        ],
+        "While idling, he may say one of the following": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "The Black-Glove will be dead soon. You want to join him?",
+                "trigger": "While idling, he may say one of the following",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Too scared to fight me? You can always run away.",
+                "trigger": "While idling, he may say one of the following",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "I don't suppose you want to join the winning side?",
+                "trigger": "While idling, he may say one of the following",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Orcs talk up Malacath's vengeance, but if this is what it is, I'm not scared.",
+                "trigger": "While idling, he may say one of the following",
+                "ability": "Totem Cast"
+            }
+        ],
+        "When you enter combat, he'll say": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "For the pack!",
+                "trigger": "When you enter combat, he'll say",
+                "ability": "Blood Ties"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "You'll die here!",
+                "trigger": "When you enter combat, he'll say",
+                "ability": "Blood Ties"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "We'll tear you to pieces!",
+                "trigger": "When you enter combat, he'll say",
+                "ability": "Blood Ties"
+            }
+        ],
+        "Raising the challenge banner": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "You're definitely not surviving this now.",
+                "trigger": "Raising the challenge banner",
+                "ability": "Bear Trap"
+            }
+        ],
+        "Using Cinder Shot": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "I will scorch you where you stand!",
+                "trigger": "Using Cinder Shot",
+                "ability": "Cinder Shot"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Choke on fire!",
+                "trigger": "Using Cinder Shot",
+                "ability": "Cinder Shot"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "No one will find your charred corpses!",
+                "trigger": "Using Cinder Shot",
+                "ability": "Cinder Shot"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "The fire will engulf you!",
+                "trigger": "Using Cinder Shot",
+                "ability": "Cinder Shot"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "No one survives me.",
+                "trigger": "Using Cinder Shot",
+                "ability": "Cinder Shot"
+            }
+        ],
+        "Attacked while affected a Protective Totem": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "We're safe, but you aren't.",
+                "trigger": "Attacked while affected a Protective Totem",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Ha! Your attacks are useless!",
+                "trigger": "Attacked while affected a Protective Totem",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Just try hurting us now!",
+                "trigger": "Attacked while affected a Protective Totem",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Malthil is my last wolf. I won't lose her.",
+                "trigger": "Attacked while affected a Protective Totem",
+                "ability": "Totem Cast"
+            }
+        ],
+        "If your group wipes, he'll say": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Looks like that oath wasn't good for anything after all.",
+                "trigger": "If your group wipes, he'll say",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "The pack feasts tonight!",
+                "trigger": "If your group wipes, he'll say",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "Even the Black-Glove lasted longer than that.",
+                "trigger": "If your group wipes, he'll say",
+                "ability": "Totem Cast"
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "The Recollection remembers, but you were forgettable.",
+                "trigger": "If your group wipes, he'll say",
+                "ability": "Totem Cast"
+            }
+        ],
+        "When he is close to defeat": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "I can't lose. Not to you.",
+                "trigger": "When he is close to defeat",
+                "ability": "Blood Ties"
+            }
+        ],
+        "Unsorted": [
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "No one stops the Recollection!",
+                "trigger": "Unsorted",
+                "ability": null
+            },
+            {
+                "speaker": "Packmaster Rethelros",
+                "line": "I will protect what's left of my pack.",
+                "trigger": "Unsorted",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Victory Through Strife: Repel the Recollection from the Oathsworn Pit.",
+        "Pledge: Oathsworn Pit: Explore Oathsworn Pit and return Undaunted."
+    ],
+    "summary": "Packmaster Rethelros is a Wood Elf and a member of the Recollection. You will face him within Malacath's Crown at the Oathsworn Pit, where he acts as the first boss, alongside alongside his wolf companion, Malthil.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Packmaster_Rethelros",
+        "page_title": "Online:Packmaster Rethelros",
+        "revision_id": 3467770,
+        "retrieved_at": "2026-08-12T21:30:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

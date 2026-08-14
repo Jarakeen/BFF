@@ -1,0 +1,65 @@
+{
+    "id": "lamikhai",
+    "name": "Lamikhai",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Scrivener's Hall, The Hunter's Nest",
+    "species": "Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "6,671,594",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lunging Bite",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Stomp Down",
+            "description": "Lamikhai climbs on its hind legs before crashing down with all its weight on you, dealing massive physical damage. This attack can be blocked."
+        },
+        {
+            "name": "Rain of Fire",
+            "description": "Valinna summons a rain of fire at a location in the arena, indicated by a large circular AoE, dealing continuous high flame damage."
+        },
+        {
+            "name": "Summon Spiders",
+            "description": "Lamikhai will ocassionally summon weaker spiders from the ceiling to come assist in the fight."
+        },
+        {
+            "name": "Enrage",
+            "description": "At 75% health, Lamikhai starts glowing red and greatly increases its damage output. You must lure Lamikhai to a ring of ice that Mazandi summons in the arena to freeze Lamikhai and remove this effect and give you an attack window while Lamikhai remains frozen solid."
+        },
+        {
+            "name": "Escape",
+            "description": "At 50% health, Lamikhai escapes its arena. It will only appear later during the fight against Valinna when she also reaches 50% health, at which point both bosses join forces against you."
+        },
+        {
+            "name": "Summon Entrangler",
+            "description": "In the second arena, Lamikhai periodically summons an Ensnaring Spider."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Lamikhai is a giant Daedric spider and the third boss of Scrivener's Hall.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lamikhai",
+        "page_title": "Online:Lamikhai",
+        "revision_id": 3276599,
+        "retrieved_at": "2026-08-12T21:32:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

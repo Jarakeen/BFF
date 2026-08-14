@@ -1,0 +1,28 @@
+{
+    "id": "bloodrun_cave",
+    "name": "Bloodrun Cave",
+    "content_type": "dungeon",
+    "summary": "Bloodrun Cave is a cave in Blackwood, located northeast of Farmer's Nook, containing undead. An Argonian necromancer named Tumma-Maxath has taken up residence here, where he has raised several Dark Brotherhood members that were entombed here. Mim-Jasa requests help protecting the remains of Shadowscales that Tumma-Maxath plans to use for his rituals. Beyond the cave system lies a former Dark Brotherhood sanctuary, which remained undisturbed despite nearby residents using the caves as a charnel pit. The sanctuary is visited during An Unexpected Adversary and is inaccessible before then. Ghosts and wraiths can be seen flying through the air in several of the caverns. Bloodrun Jellies float about within the cave.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Bloodrun Cave previously appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bloodrun_Cave",
+        "page_title": "Online:Bloodrun Cave",
+        "revision_id": 3576379,
+        "retrieved_at": "2026-08-12T21:15:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

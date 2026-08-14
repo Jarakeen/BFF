@@ -1,0 +1,73 @@
+{
+    "id": "flame_atronach",
+    "name": "Flame Atronach",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Flame Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Flame Atronachs found in the residential district of Dune are much larger than most generic flame atronachs found elsewhere.",
+        "Prior to an unknown update, the Flame Atronachs summoned by Spellblades were named Xivilai's Servant."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "The Brothers Will Rise: Discover how the Brothers of Strife were born.",
+        "Climbing the Spire: Make your way to the top of the Tormented Spire.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Death of Balreth: Defeat Balreth and end his threat forever.",
+        "The Dragonguard's Quarry: Help the Dragonguard cull the Dragons in Southern Elsweyr.",
+        "The Fangs of Sithis: Find the Fangs of Sithis in the Sunscale Ruins.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "The Fires of Dune: Stop the Daedric invasion of Dune.",
+        "A Guild in Crisis: Discover who is attacking Fighters Guild halls by tracking Guildmaster Merric at-Aswala.",
+        "Hall of Judgment: Rescue Mages Guild members from Coldharbour's justice.",
+        "Halls of Torment: Save the missing companion from the Halls of Torment.",
+        "Imminent Hazard: Disrupt a Volcanic Vent on Galen.",
+        "Ithelia's Fury: Investigate the threat caused by Ithelia's unstable power, and find a way to stop her.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "Light from the Darkness: Free the Last Ayleid King.",
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Pledge: City of Ash I: Prove you are truly Undaunted by clearing the City of Ash I.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "Razor's Edge: Drive back the Daedra from a burning Bosmeri city.",
+        "Rending Flames: Retrieve Mavos' personal effects to view a vision of the past.",
+        "Restore the Silvenar: Defeat the Hound and observe the Silvenar's marriage to the Green Lady.",
+        "Restoring the Guardians: Restore the two guardians of Balreth.",
+        "The Second Era of Scribing: Investigate unstable magic with Votary Nahlia.",
+        "Simply Misplaced: Recover two items that the Mad God claims to have misplaced.",
+        "Valley of Blades: Retrieve the Ring of Stendarr's Mercy from the Valley of Blades.",
+        "Vanus Unleashed: Prevent the Daedra from using Galerion's essence to power the Planemeld.",
+        "Veiled Darkness in Auridon: Banish Daedra in Mehrunes' Spite.",
+        "Venting the Threat: Disrupt a Volcanic Vent on High Isle.",
+        "The Weight of Words: Retrieve the writings of Sithis for further study.",
+        "The Wing of the Crow: Enter the sealed door and take on the Scholarium's final trial."
+    ],
+    "summary": "Aldunz, Dark Fissures, Dawnbreak, Dune, The Earth Forge, Glister Vale's Rage Realm, Summoned by Haskill, The Lightless Oubliette, Mehrunes' Spite, Rulanyil's Fall, The Scholarium, The Scholarium Ruins, Cave northwest of Shattered Grove, Soul Reapers, Tormented Spire, Underground Sanctum, The Valley of Blades, The Vault of Haman Forgefire, Village of the Lost, Inside and outside Willowgrove Cavern\nImperial Sewers\nRimmen Necropolis\nDragonhome\nThe Land Sundered from Tamriel\nDeadlands: The Ashen Forest, Doomvault Porcixid, Doomvault Vulpinaz, Fort Redmane, Leyawiin Castle, The Silent Halls, Welke, Xynaa's Sanctuary\nArdent Hope, The Brandfire Reformatory, The Burn, Destruction's Solace, Fort Sundercliff, Isle of Joys\nThe Firepot\nGorne, Summoned by Kynreeve Kev'ni, Tel Rendys, Summoned by The Supernal Trespasser\nDeetra Grotto, Fissure Ruins, Entrance and inside Kaz-Neesak Mine, Tarnur Mine, The Colored Rooms, Worm Cult camp west of Gristmung Hold Flame Atronachs are common yet deadly Daedric creatures of an almost completely malevolent nature. Their graceful motion hides a desire to annihilate all mortals they encounter. They float across the ground, spinning and twirling at leisure, while wreathed in magical fire. When Molag Bal banished flame atronachs from his realm, one of his denizens took it upon himself to find a replacement. After searching over 37,000 planes and realms, he found a suitable replacement on the Fourth Sinus of Takubar, the apparent inversion of the flame atronach known as the cold-flame atronach.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flame_Atronach",
+        "page_title": "Online:Flame Atronach",
+        "revision_id": 3596786,
+        "retrieved_at": "2026-08-12T21:38:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

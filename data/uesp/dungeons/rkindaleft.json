@@ -1,0 +1,30 @@
+{
+    "id": "rkindaleft",
+    "name": "Rkindaleft",
+    "content_type": "dungeon",
+    "summary": "Rkindaleft is a Dwemer ruin located east of Shatul Range in Wrothgar. The ruins are inhabited by its dwarven guardians, as well as the crazed husks of Orcs adventurers that were slain and brought back to life via mysterious means. The overland sets Briarheart, Mark of the Pariah, and Trinimac's Valor can drop here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "wrothgar_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Eye of Zthenganaz relic for the House of Orsimer Glories can be found buried in a snowdrift to the right of the cave entrance. (map)",
+        "Half of the Ancient Orc style can be obtained in Rkindaleft, with the other half found in Old Orsinium.",
+        "The Rkindaleft Dwarven style is themed after this location. Despite the name, it is actually available from the New Life Festival event."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rkindaleft",
+        "page_title": "Online:Rkindaleft",
+        "revision_id": 3549006,
+        "retrieved_at": "2026-08-12T21:31:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

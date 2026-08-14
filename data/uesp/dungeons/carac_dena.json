@@ -1,0 +1,28 @@
+{
+    "id": "carac_dena",
+    "name": "Carac Dena",
+    "content_type": "dungeon",
+    "summary": "Carac Dena is an Ayleid ruin in southern Greenshade, south of the Labyrinth containing ogres. The tribe has recently moved into the ruin and is led by Urrumaz the Terrifying. Fleshflies are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The ogres with white fur and face paint in the ruins have a much lower health pool compared to the ogres found elsewhere in the game, including the other kind in the ruins, thus they pose little threat."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Carac_Dena",
+        "page_title": "Online:Carac Dena",
+        "revision_id": 3598308,
+        "retrieved_at": "2026-08-12T21:16:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

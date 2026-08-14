@@ -1,0 +1,61 @@
+{
+    "id": "saint_llothis_the_pious",
+    "name": "Saint Llothis the Pious",
+    "content_id": "asylum_sanctorium",
+    "content_name": "Asylum Sanctorium",
+    "location": "Asylum Sanctorium",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Poisonous Bolt",
+            "description": "A basic ranged attack dealing moderate poison damage."
+        },
+        {
+            "name": "Steam Spray",
+            "description": "Saint Llothis targets a member of the party, indicated by a thin tracking conical AoE, releasing high-pressured steam from his hand, dealing continuous very high physical damage. This attack must be blocked in its entirety."
+        },
+        {
+            "name": "Defiled Blast",
+            "description": "Saint Llothis raises his staff to the sky, releasing a continuous spree of poisonous bolts that split into multiple smaller ones that hit every member of the party for very high poison damage and causes a stagger. This ability should be interrupted."
+        },
+        {
+            "name": "Teleport",
+            "description": "Throughout the fight, Saint Llothis will teleport throughout the arena to create space. The location from which he teleports from and the spot he teleports to are then marked by noxious fields that linger, indicated by a large circular AoEs, dealing continuous high poison damage."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Saints' Mercy: Neutralize a threat within the Asylum Sanctorium."
+    ],
+    "achievements": [
+        {
+            "id": "clockwork_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "summary": "Saint Llothis the Pious is a contemporary and companion of the Tribunal whose soul was placed into a giant factotum body along with Saint Felms the Bold and Saint Olms the Just. Unfortunately, the process wasn't a success and the three are under the care of Alienist Llandras in the Asylum Sanctorium. During combat, Saint Llothis primarily uses poison-based attacks from his staff, and is accompanied by Imperfect Attendants, who will respawn if destroyed after a duration.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Saint_Llothis_the_Pious",
+        "page_title": "Online:Saint Llothis the Pious",
+        "revision_id": 3384698,
+        "retrieved_at": "2026-08-12T05:31:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

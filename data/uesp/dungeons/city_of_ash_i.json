@@ -1,0 +1,38 @@
+{
+    "id": "city_of_ash_i",
+    "name": "City of Ash I",
+    "content_type": "dungeon",
+    "summary": "The City of Ash I is a group dungeon found in Greenshade. Formerly known as the graht-oak city Whisper Grove, a recently opened Oblivion Gate and hordes of Daedra have turned the Bosmeri city into a dangerous burning ruin. The city's desperate inhabitants have even resorted to breaking the Green Pact, constructing barriers of fallen wood to stem the flow of invading Daedra. You can learn about its location from Mindil the Untested in Marbruk, Abzag the Monster in Shornhelm, or Roaring Ramavel in Stormhold. The story continues in City of Ash II.",
+    "location": "",
+    "boss_ids": [
+        "infernal_guardian",
+        "lurcher",
+        "warden_of_the_shrine",
+        "dremora",
+        "nightblade",
+        "razor_master_erthas",
+        "dagonites"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "In Patch 1.6.5, all Imps were replaced with Scamps.",
+        "Before dungeon scaling was introduced in Update 5, Normal City of Ash was designed for levels 28–31, and Veteran City of Ash was designed for Veteran Ranks 1-4. Until the Veteran Rank increase in Update 7, Veteran City of Ash did not scale like the other dungeons.",
+        "Prior to Update 12, City of Ash I was only available in Normal mode, and City of Ash II was only available in Veteran mode. These were named City of Ash and Veteran City of Ash respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:City_of_Ash_I",
+        "page_title": "Online:City of Ash I",
+        "revision_id": 3567055,
+        "retrieved_at": "2026-08-12T21:16:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

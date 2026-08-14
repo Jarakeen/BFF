@@ -1,0 +1,32 @@
+{
+    "id": "direfrost_keep",
+    "name": "Direfrost Keep",
+    "content_type": "dungeon",
+    "summary": "Direfrost Keep is a group dungeon found in Eastmarch. Once the ancestral home of the witch hunting Direfrost clan, the castle has been abandoned following an attack by the ice witch Drodda. A surviving member of the clan, Eboric Direfrost, needs your help to reclaim his home. You can learn about its location from Untouchable Naim outside Velyn Harbor, Twice-Lucky in Sentinel, or Felvyn the Swordarm in Windhelm. Its dungeon sets are Draugr Hulk, Magicka Furnace, and The Ice Furnace. A chest can spawn under the bridge leading to the keep's main gate, and on top of the sewer grate that leads into the dungeon. Its final boss, Drodda of Icereach, has a chance to drop the Snowy Sabre Cat Fur Strip antiquity lead for the Snow Treaders.",
+    "location": "",
+    "boss_ids": [
+        "guardian_of_the_flame",
+        "iceheart",
+        "drodda_of_icereach"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Direfrost Keep was designed for levels 34–37."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Direfrost_Keep",
+        "page_title": "Online:Direfrost Keep",
+        "revision_id": 3139407,
+        "retrieved_at": "2026-08-12T21:19:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

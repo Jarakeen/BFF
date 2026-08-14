@@ -1,0 +1,60 @@
+{
+    "id": "werewolf_npc",
+    "name": "Werewolf (NPC)",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Werewolf",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Back-Alley Murders: Help save a beggar from being murdered.",
+        "Chateau of the Ravenous Rodent: Explore Sheogorath's dark manse to recover the final book.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Fall of Faolchu: Confront Faolchu the Reborn and retake the city of Camlorn.",
+        "Farsight: Visit Orcish shrines on Betnikh to see visions of the future.",
+        "A Father's Promise: Help a mother find her missing daughter.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Freedom's Chains: Investigate a village mayor who is fabled to be able to cure any disease.",
+        "Garments by Odei: Help retrieve a tailor's supplies.",
+        "Halt the Harrowstorms: Aid Reachfolk in stopping the Gray Host's machinations by disrupting Harrowstorms.",
+        "Hidden in Flames: Cure the Camlorn citizenry of lycanthropy.",
+        "Lineage of Tooth and Claw: Discover how Faolchu was summoned back from the dead.",
+        "A Lingering Hope: Help the Lion Guard get inside the city of Camlorn.",
+        "Method and Madness: Disrupt the vile lycanthropic experiments being conducted deep beneath Skyrim.",
+        "The Misfortunate Minstrels: Find the musicians lost in the Silvenar ravine.",
+        "The Moonlit Path: Help the Lunar Champion walk the Two Moons Path.",
+        "The Nameless Soldier: Learn how Faolchu met his end at the Battle of Glenumbra Moors.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Rally Cry: Help the Lion Guard reach the city of Camlorn.",
+        "Restore the Silvenar: Defeat the Hound and observe the Silvenar's marriage to the Green Lady.",
+        "Royal Revelry: Create and set loose some magical sparklers for your \"king\".",
+        "The Skin Trade: Collect werewolf pelts for a client in Argent Mine.",
+        "Wolves in the Fold: Investigate the Camlorn refugees for any signs of Faolchu's agents."
+    ],
+    "summary": "This article is about enemies who are werewolves. For the condition lycanthropy, in particular the effects it has on you, see Werewolf. Near Aldcroft, West of Ash'abahs' Oasis, Cambray Pass, Camlorn, Near Cath Bedraud, Near Deepwoods, The Demi-Plane of Jode, Four Quarry Islet, Lion Guard Siege Camp, Silumm, Silvenar, Starwalk Cavern, Near Valanir's Rest, Weeping Wind Cave\nArgent Mine\nHordrek's Hunting Grounds\nHarrowstorms\nSummoned by Pentarch Draljura\nThe Feral Gallery Werewolves are monstrous, half-man, half-wolf hybrid creatures. They are taller and broader than man and mer, and are capable of moving on two limbs or sprinting on all four. They have a weakness to poisons, but are incredibly strong, and very fast. Some werewolves, often through alchemical or magical augmentation, can evolve into behemoths. Players can become a werewolf if infected. This unlocks the ability to transform, as well as an associated Lycanthropy skill line. For more information, see the lore page.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Werewolf_(NPC)",
+        "page_title": "Online:Werewolf (NPC)",
+        "revision_id": 3601663,
+        "retrieved_at": "2026-08-12T21:15:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

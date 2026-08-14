@@ -1,0 +1,26 @@
+{
+    "id": "the_lion_s_den_place",
+    "name": "The Lion's Den (place)",
+    "content_type": "dungeon",
+    "summary": "The Lion's Den is an isolated valley in the far west of the Rift. The pass has recently become occupied by a contingent of Lion Guard elite troops, who have formed a large camp right under the Ebonheart Pact's nose. There are seven champions in the Lion's Den. Sergeant Themond is the first of them and is east of the water and on the east side of the rocks. The Den Mother is to the northeast of Themond. Lieutenant Derone is in the east in a major encampment. Sergeant Lort is just to the southeast of Derone. Inulu the Fierce is to the far northeast in a mountain cave accessed by the lone path leading east and then north. Crazy Sebastien is quite a bit south of Lort, and Lieutenant Stenric just southeast of Sebastien. The group challenge is in a separate cave which has a couple of entrances.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Lion%27s_Den_(place)",
+        "page_title": "Online:The Lion's Den (place)",
+        "revision_id": 3513311,
+        "retrieved_at": "2026-08-12T21:27:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

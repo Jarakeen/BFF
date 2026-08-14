@@ -1,0 +1,27 @@
+{
+    "Title": "Weather Permitting: rockrove — team",
+    "Notification": "An expedition has been dispatched to rockrove. Purpose: bahsei.",
+    "Team": "team",
+    "Expedition": "rockrove",
+    "Weather": "Heavy Rain",
+    "Coffee": "Operational",
+    "CoffeeLevel": "91%",
+    "Difficulty": "Hardmode",
+    "Engineering": "Unsupervised",
+    "Incidents": "6",
+    "Focus": "Field Notes",
+    "Location": "rockrove",
+    "Objective": "bahsei",
+    "Mood": "Questing",
+    "Status": {
+        "Observe": false,
+        "Document": true,
+        "Learn": true,
+        "ShareTheLesson": false
+    },
+    "Assignment": "Locate the problem. Do not become the problem.",
+    "Observation": "",
+    "Context": "\"What is this hole doing here?\" - Rik",
+    "NextSteps": "",
+    "RandomNotes": ""
+}

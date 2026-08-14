@@ -1,0 +1,40 @@
+{
+    "id": "white_gold_tower",
+    "name": "White-Gold Tower",
+    "content_type": "dungeon",
+    "summary": "The White-Gold Tower is a group dungeon found in the center of the Imperial City. Traditionally the seat of the Empire, the Tower has been overrun with Daedra and is being pulled into Coldharbour by Molag Bal. Empress Regent Clivia Tharn is attempting to retake the structure. White-Gold Tower has both a Normal and a Veteran mode. The dungeon can be entered from the Irrigation Tunnels, the Lambent Passage, and the Harena Hypogeum.",
+    "location": "",
+    "boss_ids": [
+        "the_adjudicator",
+        "harvester",
+        "the_planar_inhibitor",
+        "cold_flame_atronach",
+        "flame_atronach",
+        "molag_kena",
+        "xivkyn"
+    ],
+    "achievements": [
+        {
+            "id": "imperial_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The dungeon originally had a minimum enemy level of 25. This was reduced to 10 in one of the updates.",
+        "Completing the dungeon will remove the Dark Anchor in the instance, but not in Cyrodiil or the Imperial City.",
+        "The tower can be seen from many places outside the dungeon; each district of the Imperial City has its own version of the tower in the distance, the tower and city can be seen from Cyrodiil, and the tower is also present in the skybox for Blackwood and the West Weald.",
+        "Green Emperor Way also appears in Oblivion.",
+        "White-Gold Tower previously appeared in Arena and Oblivion as the Imperial Palace."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:White-Gold_Tower",
+        "page_title": "Online:White-Gold Tower",
+        "revision_id": 3567850,
+        "retrieved_at": "2026-08-12T21:38:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

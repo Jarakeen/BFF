@@ -1,0 +1,20 @@
+{
+    "id": "xynaa_s_sanctuary",
+    "name": "Xynaa's Sanctuary",
+    "content_type": "dungeon",
+    "summary": "Xynaa's Sanctuary is a Daedric fortress located in the Ashen Forest of the Deadlands. It is the stronghold of Xynaa, a Dremora who acted as a mentor for Sombren. The Spidernest, the dungeon located beneath the sanctuary, is crawling with all manners of spiders as the name would suggest, of both the standard and Daedric variety. Nightmare Firestalker Cubs and Skein Spiders can be seen inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Unlike other Deadlands locations where floating watchers can be seen, those seen in the Ashen Forest use the standard model rather than the Dagonic variant."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xynaa%27s_Sanctuary",
+        "page_title": "Online:Xynaa's Sanctuary",
+        "revision_id": 3576423,
+        "retrieved_at": "2026-08-12T21:39:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

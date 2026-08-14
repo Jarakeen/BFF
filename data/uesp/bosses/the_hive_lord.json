@@ -1,0 +1,61 @@
+{
+    "id": "the_hive_lord",
+    "name": "The Hive Lord",
+    "content_id": "darkshade_caverns_i",
+    "content_name": "Darkshade Caverns I",
+    "location": "Darkshade Caverns I",
+    "species": "Kwama Warrior",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Double Swipe",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Overhead Smash",
+            "description": "An attack that dealing moderate-high physical damage, staggering and snaring all targets within the red cone in front of The Hive Lord. This attack can be difficult to dodge as it is very fast."
+        },
+        {
+            "name": "Defensive Instinct",
+            "description": "The Hive Lord will pound the ground, dealing continuous direct moderate magic damage to all targets in a very large circle around it. This can be interrupted to stagger The Hive Lord."
+        },
+        {
+            "name": "Bounding Strike",
+            "description": "The Hive Lord will randomly leap on a player, dealing moderate physical damage and stunning. The boss will only target players that are at a long distance from it, thus players may want to stay near the boss to avoid getting hit by this attack."
+        },
+        {
+            "name": "Summon Scribs",
+            "description": "The Hive Lord will summon kwama scribs to assist it in battle, and thus they should be killed quickly. The scribs will emerge from the ground as indicated by a red circle, and any target standing on that area when the scribs emerge will be dealt moderate physical damage and staggered."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Mine All Mine: Investigate a disturbance in Deshaan's largest kwama mine.",
+        "Pledge: Darkshade Caverns I: Explore Darkshade Caverns I and return Undaunted.",
+        "Darkshade Caverns Pledge: Explore Darkshade Caverns and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "The Hive Lord is a kwama warrior found in Darkshade Caverns I. It serves as an optional boss, and has a chance of dropping the Hive Lord's Shell.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Hive_Lord",
+        "page_title": "Online:The Hive Lord",
+        "revision_id": 3476224,
+        "retrieved_at": "2026-08-12T21:19:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

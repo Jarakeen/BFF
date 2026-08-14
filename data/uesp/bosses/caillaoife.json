@@ -1,0 +1,322 @@
+{
+    "id": "caillaoife",
+    "name": "Caillaoife",
+    "content_id": "bloodroot_forge",
+    "content_name": "Bloodroot Forge",
+    "location": "Jerall Cleft, Bloodroot Forge",
+    "species": "Hagraven",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,178,790",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Scorch of Summer",
+            "description": "A basic ranged attack that deals minor flame damage and causes weakness to frost, causing you to take more damage from Chill of Winter. The boss usually alternates between using this and Chill of Winter as a basic attack."
+        },
+        {
+            "name": "Chill of Winter",
+            "description": "The boss releases a wave of frost from itself dealing moderate frost damage and rooting players hit as indicated by a red circle. Getting hit by this also causes weakness to fire, causing you to take more damage from Scorch of Summer. Avoid the AOE if possible."
+        },
+        {
+            "name": "Wave of Earth",
+            "description": "The boss shoots out a barrage of rocks from itself dealing moderate physical damage and stunning all players hit as indicated by a red cone."
+        },
+        {
+            "name": "Nature's Preservation",
+            "description": "At 75, 50, and 25% health the boss shields herself with Nature's Preservation, bringing forth three trees from the ground. While inside, she cannot be damaged. Players inside the circle, or players who touch the circle, will be stunned and thrown outwards dealing moderate magical damage, so don't stand too near the boss when her health reaches that amount. Any adds inside the circle will also be invulnerable, so the tank should bring them away for the group to deal with them. Simply wait for the circle to disappear while dealing with the adds."
+        },
+        {
+            "name": "Summon Nirnblooded Animals",
+            "description": "At the same time, Cailloaife summons Nirnblooded Bears, Guars, and Senches to attack you at around 75%, 50%, and 25% of her health. Each wave increases in number. Kill them quickly to simplify the fight. The bears and stranglers are priority targets."
+        },
+        {
+            "name": "Teleport",
+            "description": "Once Nature's Preservation ends, the boss teleports away and the fight repeats."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Caillaoife",
+            "line": "Come to pluck the juicy worms from our nest. Yes, they have. Yes, they have.",
+            "trigger": "Initially she is encountered when her projection appears to summon Mathgamain, chanting",
+            "ability": "Nature's Preservation"
+        },
+        {
+            "speaker": "Caillaoife",
+            "line": "But the earth here's hungry. Yes, it is.",
+            "trigger": "Initially she is encountered when her projection appears to summon Mathgamain, chanting",
+            "ability": "Nature's Preservation"
+        },
+        {
+            "speaker": "Caillaoife",
+            "line": "Snatched the fat grubs from our hands. Yes, they have.",
+            "trigger": "When you arrive at the entrance to the Forge, she will appear, annoyed at the trouble you have made.",
+            "ability": "Nature's Preservation"
+        },
+        {
+            "speaker": "Caillaoife",
+            "line": "Never they mind, they're at the earth's hungry mouth. Yes, they are.",
+            "trigger": "When you arrive at the entrance to the Forge, she will appear, annoyed at the trouble you have made.",
+            "ability": "Nature's Preservation"
+        },
+        {
+            "speaker": "",
+            "line": "Pluck their eyes and watch them flail!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Ripe and plump!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Hungry vines will knit your bones!!",
+            "trigger": "Summon Nirnblooded Animals",
+            "ability": "Summon Nirnblooded Animals"
+        },
+        {
+            "speaker": "",
+            "line": "Bare your throat for thirsty thorns!",
+            "trigger": "Summon Nirnblooded Animals",
+            "ability": "Summon Nirnblooded Animals"
+        },
+        {
+            "speaker": "",
+            "line": "Reap what they sow. Yes, they will.",
+            "trigger": "Summon Nirnblooded Animals",
+            "ability": "Summon Nirnblooded Animals"
+        },
+        {
+            "speaker": "",
+            "line": "Bows they bend and bones they break, these branches of mine!",
+            "trigger": "Summon Nirnblooded Animals",
+            "ability": "Summon Nirnblooded Animals"
+        },
+        {
+            "speaker": "",
+            "line": "Hungry roots hear me crow! They do! They do!",
+            "trigger": "Summon Nirnblooded Animals",
+            "ability": "Summon Nirnblooded Animals"
+        },
+        {
+            "speaker": "",
+            "line": "Fly away, fly away!",
+            "trigger": "Crow Swarm",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Earth has fangs. Yes it does!",
+            "trigger": "Wave of Earth",
+            "ability": "Wave of Earth"
+        },
+        {
+            "speaker": "",
+            "line": "Rumble rubble, crash and tumble!",
+            "trigger": "Wave of Earth",
+            "ability": "Wave of Earth"
+        },
+        {
+            "speaker": "",
+            "line": "Mashed and mauled in rocky teeth!",
+            "trigger": "Wave of Earth",
+            "ability": "Wave of Earth"
+        },
+        {
+            "speaker": "",
+            "line": "Stoney talons gouge them deep!",
+            "trigger": "Wave of Earth",
+            "ability": "Wave of Earth"
+        },
+        {
+            "speaker": "",
+            "line": "Land's my kin. Yes, it is. Holds me close. Yes, it does!",
+            "trigger": "Corrupted Grove",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Safe in our nest, yes we are.",
+            "trigger": "Corrupted Grove",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Bows they bend and bones they break, these branches of mine!",
+            "trigger": "Corrupted Grove",
+            "ability": null
+        },
+        {
+            "speaker": "Caillaoife",
+            "line": "Roost the worms … yes, we will ….",
+            "trigger": "Upon defeat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Initially she is encountered when her projection appears to summon Mathgamain, chanting": [
+            {
+                "speaker": "Caillaoife",
+                "line": "Come to pluck the juicy worms from our nest. Yes, they have. Yes, they have.",
+                "trigger": "Initially she is encountered when her projection appears to summon Mathgamain, chanting",
+                "ability": "Nature's Preservation"
+            },
+            {
+                "speaker": "Caillaoife",
+                "line": "But the earth here's hungry. Yes, it is.",
+                "trigger": "Initially she is encountered when her projection appears to summon Mathgamain, chanting",
+                "ability": "Nature's Preservation"
+            }
+        ],
+        "When you arrive at the entrance to the Forge, she will appear, annoyed at the trouble you have made.": [
+            {
+                "speaker": "Caillaoife",
+                "line": "Snatched the fat grubs from our hands. Yes, they have.",
+                "trigger": "When you arrive at the entrance to the Forge, she will appear, annoyed at the trouble you have made.",
+                "ability": "Nature's Preservation"
+            },
+            {
+                "speaker": "Caillaoife",
+                "line": "Never they mind, they're at the earth's hungry mouth. Yes, they are.",
+                "trigger": "When you arrive at the entrance to the Forge, she will appear, annoyed at the trouble you have made.",
+                "ability": "Nature's Preservation"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "",
+                "line": "Pluck their eyes and watch them flail!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Ripe and plump!",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "Summon Nirnblooded Animals": [
+            {
+                "speaker": "",
+                "line": "Hungry vines will knit your bones!!",
+                "trigger": "Summon Nirnblooded Animals",
+                "ability": "Summon Nirnblooded Animals"
+            },
+            {
+                "speaker": "",
+                "line": "Bare your throat for thirsty thorns!",
+                "trigger": "Summon Nirnblooded Animals",
+                "ability": "Summon Nirnblooded Animals"
+            },
+            {
+                "speaker": "",
+                "line": "Reap what they sow. Yes, they will.",
+                "trigger": "Summon Nirnblooded Animals",
+                "ability": "Summon Nirnblooded Animals"
+            },
+            {
+                "speaker": "",
+                "line": "Bows they bend and bones they break, these branches of mine!",
+                "trigger": "Summon Nirnblooded Animals",
+                "ability": "Summon Nirnblooded Animals"
+            },
+            {
+                "speaker": "",
+                "line": "Hungry roots hear me crow! They do! They do!",
+                "trigger": "Summon Nirnblooded Animals",
+                "ability": "Summon Nirnblooded Animals"
+            }
+        ],
+        "Crow Swarm": [
+            {
+                "speaker": "",
+                "line": "Fly away, fly away!",
+                "trigger": "Crow Swarm",
+                "ability": null
+            }
+        ],
+        "Wave of Earth": [
+            {
+                "speaker": "",
+                "line": "Earth has fangs. Yes it does!",
+                "trigger": "Wave of Earth",
+                "ability": "Wave of Earth"
+            },
+            {
+                "speaker": "",
+                "line": "Rumble rubble, crash and tumble!",
+                "trigger": "Wave of Earth",
+                "ability": "Wave of Earth"
+            },
+            {
+                "speaker": "",
+                "line": "Mashed and mauled in rocky teeth!",
+                "trigger": "Wave of Earth",
+                "ability": "Wave of Earth"
+            },
+            {
+                "speaker": "",
+                "line": "Stoney talons gouge them deep!",
+                "trigger": "Wave of Earth",
+                "ability": "Wave of Earth"
+            }
+        ],
+        "Corrupted Grove": [
+            {
+                "speaker": "",
+                "line": "Land's my kin. Yes, it is. Holds me close. Yes, it does!",
+                "trigger": "Corrupted Grove",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Safe in our nest, yes we are.",
+                "trigger": "Corrupted Grove",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Bows they bend and bones they break, these branches of mine!",
+                "trigger": "Corrupted Grove",
+                "ability": null
+            }
+        ],
+        "Upon defeat": [
+            {
+                "speaker": "Caillaoife",
+                "line": "Roost the worms … yes, we will ….",
+                "trigger": "Upon defeat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood for Blood: Neutralize an ancient forge and put an end to the evil plans of the Dreadhorn clan.",
+        "Pledge: Bloodroot Forge: Prove you are truly Undaunted by clearing Bloodroot Forge."
+    ],
+    "summary": "Caillaoife is a hagraven of the Dreadhorn Clan found in Bloodroot Forge. She initially summons Mathgamain to stop you, and then fights you herself at the entrance to the Sanguinary Veins, where she serves as the first boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Caillaoife",
+        "page_title": "Online:Caillaoife",
+        "revision_id": 3354660,
+        "retrieved_at": "2026-08-12T21:15:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

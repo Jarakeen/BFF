@@ -1,0 +1,28 @@
+{
+    "id": "lair_of_the_black_worm",
+    "name": "Lair of the Black Worm",
+    "content_type": "dungeon",
+    "summary": "The Lair of the Black Worm (formerly known as Oozt-Tzel) is an Argonian village turned Worm Cult headquarters on the north coast of Eastern Solstice. When the Worm Cult claimed the town, they opened massive rifts to Coldharbour which can be seen in the ceiling and performed experiments on the surviving citizens. Cats and Mudcrabs are found inside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "It is called the \"Lair of the Worm Cult\" in the files."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lair_of_the_Black_Worm",
+        "page_title": "Online:Lair of the Black Worm",
+        "revision_id": 3598032,
+        "retrieved_at": "2026-08-12T21:27:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

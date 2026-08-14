@@ -1,0 +1,20 @@
+{
+    "id": "al_danobia_tomb",
+    "name": "Al-Danobia Tomb",
+    "content_type": "dungeon",
+    "summary": "The al-Danobia Tomb is a Redguard family tomb found near the city of Taneth. It was the target of the failed heist that caused the recent downfall of the Thieves Guild and brought the attention of the Iron Wheel onto them. You will be taken here by speaking to Zeira at Prince's Gate during the related quest, and can leave by interacting with the black camel near the entrance or by manually approaching the exit from the valley. Hazards include bottomless pits, canopic jars, flare traps, Malooc's rage, trip wires, and Yokudan traps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "After completing the objectives inside the tomb, the Iron Wheel enemies will be gone from their camp outside."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Al-Danobia_Tomb",
+        "page_title": "Online:Al-Danobia Tomb",
+        "revision_id": 3567120,
+        "retrieved_at": "2026-08-12T21:12:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

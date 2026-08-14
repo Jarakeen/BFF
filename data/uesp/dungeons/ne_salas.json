@@ -1,0 +1,26 @@
+{
+    "id": "ne_salas",
+    "name": "Ne Salas",
+    "content_type": "dungeon",
+    "summary": "Ne Salas is an Ayleid ruin south of Elden Root and west of Haven in Grahtwood, containing Daggerfall Covenant soldiers. The ruin is connected to Salas En in Alik'r by way of an ancient portal system which forms the basis of two related quests. The portal is not usable. You'll find Cirmo and Aldmeri Dominion forces camped outside the ruin. The containers in the exterior camp, including barrels, crates and a backpack, are all owned. Three dead Wood Elf Laborers are lying in front of the entrance, near a cooking fire.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ne_Salas",
+        "page_title": "Online:Ne Salas",
+        "revision_id": 3598294,
+        "retrieved_at": "2026-08-12T21:30:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

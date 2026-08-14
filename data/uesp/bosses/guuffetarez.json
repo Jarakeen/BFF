@@ -1,0 +1,161 @@
+{
+    "id": "guuffetarez",
+    "name": "Guuffetarez",
+    "content_id": "writhing_fortress",
+    "content_name": "Writhing Fortress",
+    "location": "Writhing Fortress — West Wing",
+    "species": "Harvester",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Harvester's Wrath",
+            "description": "Guuffetarez launches multiple meteors in the area which explodes on impact, indicated by a circular AoE, dealing high flame damage. Each meteor leaves a flaming area dealing continuous direct moderate flame damage."
+        },
+        {
+            "name": "Wards",
+            "description": "At 95% health and then every 10% health, Guuffetarez becomes invulnerable and summons four orange wards in front of it. You must shoot those with a flaming ballista, and when an orange ward is shot, a smaller blue one replaces it which must be shot at by a coldfire ballista instead. Once all the wards are destroyed, Guuffetarez loses its invulnerability. It also summons one champion enemy with many adds every time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Walks-in-Ash",
+            "line": "Let the storm of retribution wash over you, vile creature!",
+            "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "<The Infernium fires a magical beam at Guuffetarez.>",
+            "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "Guuffetarez",
+            "line": "Fools! Are you so ready to be stripped of your souls?",
+            "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "<Guuffetarez fires her own magic at the Infernium and kills it.>",
+            "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "Take their souls for Coldharbour!",
+            "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "Slice the skin from their bones!",
+            "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "Come, my minions. Feed on their suffering!",
+            "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "Claim what is ours. Take their souls by force!",
+            "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+            "ability": "Wards"
+        },
+        {
+            "speaker": "",
+            "line": "Disciples! Crush them like the ants they are!",
+            "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+            "ability": "Wards"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez": [
+            {
+                "speaker": "Walks-in-Ash",
+                "line": "Let the storm of retribution wash over you, vile creature!",
+                "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "<The Infernium fires a magical beam at Guuffetarez.>",
+                "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "Guuffetarez",
+                "line": "Fools! Are you so ready to be stripped of your souls?",
+                "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "<Guuffetarez fires her own magic at the Infernium and kills it.>",
+                "trigger": "Making your way through the western wing of the Fortress, Walks-in-Ash will have procured the Infernium from the Darkbinder Beast Handlers. After using it to blast through the gate, she will command it to attack Guuffetarez once you reach her. When the fight starts, Walks-in-Ash commands her infernium to fire upon Guuffetarez",
+                "ability": "Wards"
+            }
+        ],
+        "During the fight, she will shout out as she summons Daedra to attack your group.": [
+            {
+                "speaker": "",
+                "line": "Take their souls for Coldharbour!",
+                "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "Slice the skin from their bones!",
+                "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "Come, my minions. Feed on their suffering!",
+                "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "Claim what is ours. Take their souls by force!",
+                "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+                "ability": "Wards"
+            },
+            {
+                "speaker": "",
+                "line": "Disciples! Crush them like the ants they are!",
+                "trigger": "During the fight, she will shout out as she summons Daedra to attack your group.",
+                "ability": "Wards"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Support the Fellowship: Assist the Stirk Fellowship during the Battle for the Writhing Wall. (disabled)"
+    ],
+    "summary": "Guuffetarez is a powerful giant Harvester found at the end of the West Wing of the Writhing Fortress.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Guuffetarez",
+        "page_title": "Online:Guuffetarez",
+        "revision_id": 3458911,
+        "retrieved_at": "2026-08-12T21:38:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

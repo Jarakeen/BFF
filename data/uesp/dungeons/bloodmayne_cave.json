@@ -1,0 +1,28 @@
+{
+    "id": "bloodmayne_cave",
+    "name": "Bloodmayne Cave",
+    "content_type": "dungeon",
+    "summary": "Bloodmayne Cave is a cave in southern Cyrodiil, just southwest of Castle Bloodmayne containing giant insects. A dead adventurer and his journal can be found at the river next to the cave's entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Bloodmayne Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bloodmayne_Cave",
+        "page_title": "Online:Bloodmayne Cave",
+        "revision_id": 3598807,
+        "retrieved_at": "2026-08-12T21:15:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

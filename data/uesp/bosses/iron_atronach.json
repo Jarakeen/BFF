@@ -1,0 +1,51 @@
+{
+    "id": "iron_atronach",
+    "name": "Iron Atronach",
+    "content_id": "bloodroot_forge",
+    "content_name": "Bloodroot Forge",
+    "location": "Forgotten Wastes\nSummoned by Joorahmaar at Dragonhold\nThe Firepot",
+    "species": "Iron Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Iron Atronachs first appeared in a demo of Mephala's Realm during an episode of ESO Live. The name of the creature wasn't known until the release of the Legends card.",
+        "The NPC form of Iron Atronachs is available to players via the Iron Atronach polymorph collectible.",
+        "An Iron Atronach is available as a training dummy.",
+        "An Iron Atronach polymorph is available.",
+        "Non-interactable Iron Atronachs in The Deadlands are found spitting lava from out-of-bounds areas.",
+        "The Spirit of Mount Firesong and the Avatar of Mount Firesong use the polymorph instead of the traditional Iron Atronach model."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "Brandfire Reformatory Relics: Gather relics from the Brandfire Reformatory.",
+        "Deadlight: Invade a lost realm of Oblivion that serves as Sister Celdina's headquarters.",
+        "Favor for Battlereeve Urcelmo: Do a favor for Battlereeve Urcelmo and help out around Tamriel.",
+        "Guardian of Y'ffelon: Go to Y'ffelon and stop the Firesong Circle.",
+        "Imminent Hazard: Disrupt a Volcanic Vent on Galen.",
+        "Venting the Threat: Disrupt a Volcanic Vent on High Isle."
+    ],
+    "summary": "Iron Atronachs are a type of atronach composed of partially-molten iron. They are first encountered in the Forgotten Wastes. Iron atronachs are also summoned by dragons at Dragonscours in Northern and Southern Elsweyr, and the Magma Queen in Vateshran Hollows. They can also spawn at Volcanic Vents on High Isle and Galen. Some iron atronachs in The Burn are situated on elevated cliffs, spewing fireballs downward. These cannot be accessed or attacked directly. Iron Atronach names begin with the word \"Mynar\".",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Iron_Atronach",
+        "page_title": "Online:Iron Atronach",
+        "revision_id": 3598690,
+        "retrieved_at": "2026-08-12T21:15:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

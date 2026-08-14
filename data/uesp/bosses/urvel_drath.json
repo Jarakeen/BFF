@@ -1,0 +1,277 @@
+{
+    "id": "urvel_drath",
+    "name": "Urvel Drath",
+    "content_id": "bal_sunnar",
+    "content_name": "Bal Sunnar",
+    "location": "Bal Sunnar",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flame Spin",
+            "description": "A basic ranged attack dealing moderate flame damage."
+        },
+        {
+            "name": "Flame Whip",
+            "description": "Urvel Drath forms a whip of fire with his staff and strikes you with it, dealing high flame damage. This attack has no indicator."
+        },
+        {
+            "name": "Scorched Earth",
+            "description": "Urvel Drath spins his staff around for a brief moment before slamming the ground with it, causing a flaming shockwave to shoot forward, indicated by a fast moving circular AoE, dealing high flame damage and staggering you. Following the slam, several columns of basalt rock erupt from the floor to form obstacles. After a few seconds, the rocks shatter, creating small flaming wisps that home in on you and explode, dealing moderate flame damage each."
+        },
+        {
+            "name": "Rock Ring",
+            "description": "Urvel Drath summons similar basalt stones to surround him for protection, accompanied by a fiery explosion, indicated by a growing circular AoE around him, dealing high flame damage. The same shattering as Scorched Earth occurs with these stones."
+        },
+        {
+            "name": "Lightning Teleport",
+            "description": "Urvel Drath often teleports to the outer edge of the arena in a burst of lightning, dealing moderate shock damage if standing close to him."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Urvel Drath",
+            "line": "Disobedient creature. You will never escape Bal Sunnar!",
+            "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Beexilko",
+            "line": "You … not win!",
+            "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Your strength is ours. Your will is ours. You are ours! Ours!",
+            "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "This beast posed no trouble for me. What makes you different?",
+            "trigger": "When you engage Urvel in combat",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "What do you hope to accomplish? Who hired you?",
+            "trigger": "When you engage Urvel in combat",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Pain!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "\"Such a tiresome attempt.\"[verification needed]",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "\"And what is this now? Filth enters my arena?\"[verification needed]",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Beexilko",
+            "line": "Not today!",
+            "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Beexilko",
+            "line": "Ragh!",
+            "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Beexilko",
+            "line": "I show you…power!",
+            "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Down, beast!",
+            "trigger": "Urvel Drath will respond with one of two lines",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Wait for your turn, beast.",
+            "trigger": "Urvel Drath will respond with one of two lines",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "\"Know your place!\"[verification needed]",
+            "trigger": "Urvel Drath will respond with one of two lines",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Insolent cur!",
+            "trigger": "Urvel Drath will respond with one of two lines",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Urvel Drath",
+            "line": "Lackwits. Can't … defeat me. Not your place!",
+            "trigger": "Once killed, Urvel manages to spit out a few final words before Beexilko approaches to look down on the corpse.",
+            "ability": "Scorched Earth"
+        },
+        {
+            "speaker": "Beexilko",
+            "line": "Know … your place. Beast.",
+            "trigger": "Once killed, Urvel manages to spit out a few final words before Beexilko approaches to look down on the corpse.",
+            "ability": "Scorched Earth"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell": [
+            {
+                "speaker": "Urvel Drath",
+                "line": "Disobedient creature. You will never escape Bal Sunnar!",
+                "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Beexilko",
+                "line": "You … not win!",
+                "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "Your strength is ours. Your will is ours. You are ours! Ours!",
+                "trigger": "Upon arriving through the Arena Tunnels, you will see Urvel holding Beexilko down with a spell",
+                "ability": "Scorched Earth"
+            }
+        ],
+        "When you engage Urvel in combat": [
+            {
+                "speaker": "Urvel Drath",
+                "line": "This beast posed no trouble for me. What makes you different?",
+                "trigger": "When you engage Urvel in combat",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "What do you hope to accomplish? Who hired you?",
+                "trigger": "When you engage Urvel in combat",
+                "ability": "Scorched Earth"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Urvel Drath",
+                "line": "Pain!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "\"Such a tiresome attempt.\"[verification needed]",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "\"And what is this now? Filth enters my arena?\"[verification needed]",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "Beexilko will take the opportunity to shake free, saying one of the following": [
+            {
+                "speaker": "Beexilko",
+                "line": "Not today!",
+                "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Beexilko",
+                "line": "Ragh!",
+                "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Beexilko",
+                "line": "I show you…power!",
+                "trigger": "Beexilko will take the opportunity to shake free, saying one of the following",
+                "ability": "Scorched Earth"
+            }
+        ],
+        "Urvel Drath will respond with one of two lines": [
+            {
+                "speaker": "Urvel Drath",
+                "line": "Down, beast!",
+                "trigger": "Urvel Drath will respond with one of two lines",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "Wait for your turn, beast.",
+                "trigger": "Urvel Drath will respond with one of two lines",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "\"Know your place!\"[verification needed]",
+                "trigger": "Urvel Drath will respond with one of two lines",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Urvel Drath",
+                "line": "Insolent cur!",
+                "trigger": "Urvel Drath will respond with one of two lines",
+                "ability": "Scorched Earth"
+            }
+        ],
+        "Once killed, Urvel manages to spit out a few final words before Beexilko approaches to look down on the corpse.": [
+            {
+                "speaker": "Urvel Drath",
+                "line": "Lackwits. Can't … defeat me. Not your place!",
+                "trigger": "Once killed, Urvel manages to spit out a few final words before Beexilko approaches to look down on the corpse.",
+                "ability": "Scorched Earth"
+            },
+            {
+                "speaker": "Beexilko",
+                "line": "Know … your place. Beast.",
+                "trigger": "Once killed, Urvel manages to spit out a few final words before Beexilko approaches to look down on the corpse.",
+                "ability": "Scorched Earth"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unstuck From Time: Investigate a temporal disturbance at the remote Telvanni settlement of Bal Sunnar."
+    ],
+    "summary": "Urvel Drath is a Dark Elf member of House Telvanni found in Bal Sunnar, where he serves as an optional boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Urvel_Drath",
+        "page_title": "Online:Urvel Drath",
+        "revision_id": 3497840,
+        "retrieved_at": "2026-08-12T21:13:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

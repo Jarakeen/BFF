@@ -1,0 +1,327 @@
+{
+    "id": "molag_kena",
+    "name": "Molag Kena",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "White-Gold Tower Pinnacle",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,933,959",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shock Strike",
+            "description": "A basic melee attack that does high shock damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Bolt Assault",
+            "description": "The boss sends out lightning towards all players in front of her, dealing high shock damage over time and stunning them. The tank should rotate the boss so it faces away from the other group members during this attack."
+        },
+        {
+            "name": "Bolt Strike",
+            "description": "The boss spins around causing lightning to strike all group members dealing minor shock damage."
+        },
+        {
+            "name": "Streak",
+            "description": "Molag Kena shoots forward in a flash of lightning to close gaps or reach the center of the arena swiftly."
+        },
+        {
+            "name": "Shock Spear",
+            "description": "A few moments after the fight begins, the boss throws a spear into the middle of the arena to summon a Shock Wall."
+        },
+        {
+            "name": "Shock Wall",
+            "description": "The lightning wall summoned will slowly rotate, dealing very high shock damage over time to anyone caught in it as indicated by a red rectangle. On hard mode, the lightning wall rotates much faster. The tank should keep the boss taunted as close to the center of the arena as possible without actually being in the Storm Wall. This is to minimize the amount of movement the party needs to avoid the shock walls, as the speed of rotation is fastest near the outer edge.\nWhen the boss reaches 20%, two Storm Walls that rotate in opposite directions will be summoned. Players need to roll dodge over the Storm Walls to avoid getting caught in the middle."
+        },
+        {
+            "name": "Storm Surge",
+            "description": "The boss knocks players back using a large conal sweep dealing moderate shock damage. This attack can be blocked to reduce the damage and prevent the knock back. Players must be careful to avoid getting knocked off the edge of the arena when this attack occurs."
+        },
+        {
+            "name": "Eye of the Storm",
+            "description": "The boss releases small lightning storms that will roam the arena at random, dealing moderate shock damage over time to anyone who touches them."
+        },
+        {
+            "name": "Lingering Static",
+            "description": "Getting hit by the rotating Storm Walls or the radiating Storm Walls during the Lightning Aspect phase will apply a moderately high shock damage over time to the player."
+        },
+        {
+            "name": "Lightning Surge",
+            "description": "The boss summons a storm atronach to attack the party, dealing moderate damage and stunning players in the area where it lands. The atronach will then pick a random player (usually the furthest) and begin zapping them, dealing moderate shock damage over time while moving towards them."
+        },
+        {
+            "name": "Voltaic Detonation",
+            "description": "Once the atronach reaches the target it will stun the target and explode, killing anyone within the explosion in one hit. The party should kill the atronach quickly to prevent this from happening."
+        },
+        {
+            "name": "Summon Lightning Aspect",
+            "description": "At 66% and 33% health, Molag Kena will run to the center of the arena and summon four lightning copies of herself which will protect her from damage. When they are destroyed they will let off a circular AOE explosion which must be avoided as it will instantly kill anyone caught in it. These aspects must be defeated to progress through the fight."
+        },
+        {
+            "name": "Storm Slam",
+            "description": "During Lightning Aspect phase, Molag Kena will spend some time spilling lightning from the electric barrier surrounding her, and at set time intervals, she will jump, knocking back each player. With each passing Lightning Aspect phase, the knock-back from Kena's jump gets stronger. The knock-back from this ability is unavoidable although the damage can be clocked. Stay close to Kena when she jumps, or else you may be knocked off the edge of the arena."
+        },
+        {
+            "name": "Sudden Sacrifice",
+            "description": "If you hit the Cold Fire wall at the edge of the tower, your character will be sacrificed to Molag Bal. Your body will begin levitating in the air and disintegrate. It is common for players to be knocked back into the flames of sacrifice when Molag Kena jumps and knocks back each player during Lightning Aspect phase. Try to stay close to the middle of the arena to avoid this."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Empress-Regent Clivia Tharn",
+            "line": "Do you fools still believe you are dealing with Clivia Tharn? She is as lost to you as the White-Gold Tower!",
+            "trigger": "Intro",
+            "ability": "Storm Slam"
+        },
+        {
+            "speaker": "Molag Kena",
+            "line": "Lord Bal, I have the Elder Scroll! The Planemeld Obverse begins!",
+            "trigger": "Intro",
+            "ability": "Storm Slam"
+        },
+        {
+            "speaker": "",
+            "line": "My light will feast on your flesh!",
+            "trigger": "Casting Shock Spear",
+            "ability": "Shock Spear"
+        },
+        {
+            "speaker": "",
+            "line": "You cannot stop Lord Bal's will!",
+            "trigger": "Casting Shock Spear",
+            "ability": "Shock Spear"
+        },
+        {
+            "speaker": "",
+            "line": "Run, mortal!",
+            "trigger": "Casting Eye of the Storm",
+            "ability": "Eye of the Storm"
+        },
+        {
+            "speaker": "",
+            "line": "Run for your lives!",
+            "trigger": "Casting Eye of the Storm",
+            "ability": "Eye of the Storm"
+        },
+        {
+            "speaker": "",
+            "line": "Give up! Embrace my light!",
+            "trigger": "Casting Eye of the Storm",
+            "ability": "Eye of the Storm"
+        },
+        {
+            "speaker": "",
+            "line": "Kneel!",
+            "trigger": "Casting Bolt Assault",
+            "ability": "Bolt Assault"
+        },
+        {
+            "speaker": "",
+            "line": "Die!",
+            "trigger": "Casting Bolt Assault",
+            "ability": "Bolt Assault"
+        },
+        {
+            "speaker": "",
+            "line": "Be gone!",
+            "trigger": "Casting Bolt Assault",
+            "ability": "Bolt Assault"
+        },
+        {
+            "speaker": "",
+            "line": "Reduce the mortals to dust!",
+            "trigger": "Casting Summon Storm Atronach",
+            "ability": "Summon Lightning Aspect"
+        },
+        {
+            "speaker": "",
+            "line": "Silence the mortals!",
+            "trigger": "Casting Summon Storm Atronach",
+            "ability": "Summon Lightning Aspect"
+        },
+        {
+            "speaker": "",
+            "line": "Kill them!",
+            "trigger": "Casting Summon Storm Atronach",
+            "ability": "Summon Lightning Aspect"
+        },
+        {
+            "speaker": "",
+            "line": "The Planemeld obverse—it begins!",
+            "trigger": "Party wiped",
+            "ability": "Lightning Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Now the Planemeld can begin!",
+            "trigger": "Party wiped",
+            "ability": "Lightning Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Nirn and Coldharbour shall be one!",
+            "trigger": "Party wiped",
+            "ability": "Lightning Surge"
+        },
+        {
+            "speaker": "",
+            "line": "Now Lord Bal shall ascend to both Thrones!",
+            "trigger": "Party wiped",
+            "ability": "Lightning Surge"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Intro": [
+            {
+                "speaker": "Empress-Regent Clivia Tharn",
+                "line": "Do you fools still believe you are dealing with Clivia Tharn? She is as lost to you as the White-Gold Tower!",
+                "trigger": "Intro",
+                "ability": "Storm Slam"
+            },
+            {
+                "speaker": "Molag Kena",
+                "line": "Lord Bal, I have the Elder Scroll! The Planemeld Obverse begins!",
+                "trigger": "Intro",
+                "ability": "Storm Slam"
+            }
+        ],
+        "Casting Shock Spear": [
+            {
+                "speaker": "",
+                "line": "My light will feast on your flesh!",
+                "trigger": "Casting Shock Spear",
+                "ability": "Shock Spear"
+            },
+            {
+                "speaker": "",
+                "line": "You cannot stop Lord Bal's will!",
+                "trigger": "Casting Shock Spear",
+                "ability": "Shock Spear"
+            }
+        ],
+        "Casting Eye of the Storm": [
+            {
+                "speaker": "",
+                "line": "Run, mortal!",
+                "trigger": "Casting Eye of the Storm",
+                "ability": "Eye of the Storm"
+            },
+            {
+                "speaker": "",
+                "line": "Run for your lives!",
+                "trigger": "Casting Eye of the Storm",
+                "ability": "Eye of the Storm"
+            },
+            {
+                "speaker": "",
+                "line": "Give up! Embrace my light!",
+                "trigger": "Casting Eye of the Storm",
+                "ability": "Eye of the Storm"
+            }
+        ],
+        "Casting Bolt Assault": [
+            {
+                "speaker": "",
+                "line": "Kneel!",
+                "trigger": "Casting Bolt Assault",
+                "ability": "Bolt Assault"
+            },
+            {
+                "speaker": "",
+                "line": "Die!",
+                "trigger": "Casting Bolt Assault",
+                "ability": "Bolt Assault"
+            },
+            {
+                "speaker": "",
+                "line": "Be gone!",
+                "trigger": "Casting Bolt Assault",
+                "ability": "Bolt Assault"
+            }
+        ],
+        "Casting Summon Storm Atronach": [
+            {
+                "speaker": "",
+                "line": "Reduce the mortals to dust!",
+                "trigger": "Casting Summon Storm Atronach",
+                "ability": "Summon Lightning Aspect"
+            },
+            {
+                "speaker": "",
+                "line": "Silence the mortals!",
+                "trigger": "Casting Summon Storm Atronach",
+                "ability": "Summon Lightning Aspect"
+            },
+            {
+                "speaker": "",
+                "line": "Kill them!",
+                "trigger": "Casting Summon Storm Atronach",
+                "ability": "Summon Lightning Aspect"
+            }
+        ],
+        "Party wiped": [
+            {
+                "speaker": "",
+                "line": "The Planemeld obverse—it begins!",
+                "trigger": "Party wiped",
+                "ability": "Lightning Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Now the Planemeld can begin!",
+                "trigger": "Party wiped",
+                "ability": "Lightning Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Nirn and Coldharbour shall be one!",
+                "trigger": "Party wiped",
+                "ability": "Lightning Surge"
+            },
+            {
+                "speaker": "",
+                "line": "Now Lord Bal shall ascend to both Thrones!",
+                "trigger": "Party wiped",
+                "ability": "Lightning Surge"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She appears to be wearing a modified version of the Emperor's Regalia costume. Her armor looks like a corrupted version of the aforementioned costume, with Daedric influences permeating the design. Her crown in particular is unique. It has larger spires jutting skyward, and pointed segments in front of her horns that come down to her chin. She has one pauldron instead of two, and said pauldron is larger and pointier than that of the original costume's. The blue highlights on her chest piece appear to glow against the other colors on the armor, as if infused with Azure Plasm. Her armor is purple and red as opposed to gold.",
+        "Molag Kena's face (and crown) alongside her unique pauldron can be obtained as an outfit style.",
+        "In the Update 6 text file, Molag Kena is referred to as the Xivkyn Sovereign. No mention of \"Molag Kena\" appears in the text file: achievement text, her NPC name, etc are all labeled with the term \"Xivkyn Sovereign\".",
+        "In the Infinite Archive, her Lightning Aspects are called \"Storms\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Planemeld Obverse: Fulfill the prophecy of an Elder Scroll by freeing the White-Gold Tower from Coldharbour's clutches.",
+        "Pledge: White-Gold Tower: Prove you are truly Undaunted by clearing White-Gold Tower."
+    ],
+    "summary": "This article is about the Xivkyn. For the item set, see Molag Kena (set). Molag Kena is a Xivkyn who has been posing as Empress Regent Clivia Tharn. You will face her atop the White-Gold Tower as the third and final boss of the dungeon. She has a chance to drop Molag Kena's Touch. In combat she can summon storm atronachs, Lightning Aspects, and rotating walls of lightning.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Molag_Kena",
+        "page_title": "Online:Molag Kena",
+        "revision_id": 3387797,
+        "retrieved_at": "2026-08-12T21:38:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

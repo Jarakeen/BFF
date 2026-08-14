@@ -1,0 +1,29 @@
+{
+    "id": "vahtacen",
+    "name": "Vahtacen",
+    "content_type": "dungeon",
+    "summary": "Vahtacen is an Ayleid ruin in eastern Cyrodiil, between Drakelowe and Farragut Keeps containing undead. A powerful lich called The Faceless is located here. A note is located outside the ruin, next to the entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Vahtacen also appeared in Oblivion.",
+        "Update 20 added Harlun's Outpost, a fort which overlooks Vahtacen from the west."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vahtacen",
+        "page_title": "Online:Vahtacen",
+        "revision_id": 3598810,
+        "retrieved_at": "2026-08-12T21:37:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

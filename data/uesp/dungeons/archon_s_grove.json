@@ -1,0 +1,32 @@
+{
+    "id": "archon_s_grove",
+    "name": "Archon's Grove",
+    "content_type": "dungeon",
+    "summary": "Archon's Grove is a delve in southern Summerset, found northwest of Sil-Var-Woad, containing Thornfang Pack werewolves and wildlife. The Thornfang Pack have recently moved into the grove following their arrival on the mainland, and have started abducting travelers to forcibly infect into werewolves to bolster their forces. Bright Moons Lunar Moths, Butterflies, Centipedes, Frogs and Herons are found in numbers within. A report titled The Pack of Archon's Grove can be found at the fork in the road leading to Seldine Second-Skin.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Killing Seldine Second-Skin isn't required to clear the delve.",
+        "Dire wolf pups can be seen throughout the delve. They lack nameplates and cannot be harmed.",
+        "A few nereids can be seen dancing in the river in the center of the delve. They cannot be targeted however, as they plunge into the water upon getting close to them.",
+        "The wolf corpses found near indriks in the delve depict standard wolves instead of the dire wolves occupying the delve.",
+        "The bottom edge of the map appears to be open to the Summerset zone, but jumping off the edge will result in character death. This can, however, be used as a quick way to go back to the delve entrance, by respawning."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archon%27s_Grove",
+        "page_title": "Online:Archon's Grove",
+        "revision_id": 3450041,
+        "retrieved_at": "2026-08-12T21:13:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

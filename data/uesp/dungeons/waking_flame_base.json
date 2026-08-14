@@ -1,0 +1,18 @@
+{
+    "id": "waking_flame_base",
+    "name": "Waking Flame Base",
+    "content_type": "dungeon",
+    "summary": "The Waking Flame Base is a secluded cell of the Order of the Waking Flame that serves as their headquarters for their operations in Fargrave. With the help, and most importantly, the supervision of their Dremora allies, the cult hopes to activate a Cataclyst located here. Lyranth transports you here through a portal from the Marbruk Outlaws Refuge during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Waking_Flame_Base",
+        "page_title": "Online:Waking Flame Base",
+        "revision_id": 3550289,
+        "retrieved_at": "2026-08-12T21:38:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

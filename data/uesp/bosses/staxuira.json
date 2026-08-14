@@ -1,0 +1,83 @@
+{
+    "id": "staxuira",
+    "name": "Staxuira",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Staxuira deals moderate-high physical damage with his claws."
+        },
+        {
+            "name": "Rend",
+            "description": "Staxuira uses both hands to slash you with his claws, dealing moderate physical damage twice."
+        },
+        {
+            "name": "Shadow Bolt",
+            "description": "Staxuira fires a single bolt of dark magic at you, which deals moderate-high magic damage."
+        },
+        {
+            "name": "Shadow Strike",
+            "description": "Staxuira teleports behind you and strikes you hard, dealing high physical damage. This can be blocked to stagger GStaxuira."
+        },
+        {
+            "name": "Planar Eruption",
+            "description": "Staxuira jumps in the air before crashing down, dealing high magic damage and knocking back targets hit."
+        },
+        {
+            "name": "Coldharbour Meteor",
+            "description": "Staxuira makes a meteor fall on a target, dealing moderate-high flame damage."
+        },
+        {
+            "name": "Open Portal",
+            "description": "Staxuira opens two shadowy portals. Winged Twilights with average health occasionally come out of them."
+        },
+        {
+            "name": "Replenishing Portal",
+            "description": "Staxuira morphs into a shapeless shadow and enters one of his portals. He sits inside the portal to heal, making him untargetable and undamageable. He heals for 0,2% of its Max Health each tick (10,349) and heals for 11 ticks, so 113,839 Health in total. He then exits the portal, which is then consumed and disappears."
+        },
+        {
+            "name": "Annihilate",
+            "description": "Staxuira becomes invulnerable while casting a blue ray on a target, dealing continuous direct low magic damage and snaring in an area, with the first ticks increasing the damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Staxuira shares the same model as Rakkhat. The Rakkhat's Voidmantle antiquity released in 2025 retroactively stated that only one Fang of Lorkhaj (such as Rakkhat) can exist at a time, so it is unlikely that Staxuira is a Fang of Lorkhaj but rather another powerful dro-m'Athra in a Grievous Twilight-like form."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Staxuira is a dro-m'Athra resembling a Grievous Twilight who can be found on Gorne. He is located within a small cave at the end of a short dead-end passageway in the center of the southern portion of the dungeon. He serves as one of the champions of the Gorne public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Staxuira",
+        "page_title": "Online:Staxuira",
+        "revision_id": 3536681,
+        "retrieved_at": "2026-08-12T21:24:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

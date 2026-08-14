@@ -1,0 +1,26 @@
+{
+    "id": "the_corpse_garden",
+    "name": "The Corpse Garden",
+    "content_type": "dungeon",
+    "summary": "The Corpse Garden is a crypt in eastern Deshaan, north of the Tal'Deic Fortress containing skeletons. Fleshflies and rats reside within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Corpse_Garden",
+        "page_title": "Online:The Corpse Garden",
+        "revision_id": 3336609,
+        "retrieved_at": "2026-08-12T21:17:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

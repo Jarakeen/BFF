@@ -1,0 +1,26 @@
+{
+    "id": "burroot_kwama_mine",
+    "name": "Burroot Kwama Mine",
+    "content_type": "dungeon",
+    "summary": "The Burroot Kwama Mine is a kwama mine located just west of Elden Root in Grahtwood, containing thunderbugs. The thunderbugs infesting the mine have killed many of the kwama within. They are led by a massive thunderbug named Stormhead the Ravenous. Some notes can be found here. Scribs are found inside and just outside.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Burroot_Kwama_Mine",
+        "page_title": "Online:Burroot Kwama Mine",
+        "revision_id": 3598295,
+        "retrieved_at": "2026-08-12T21:16:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

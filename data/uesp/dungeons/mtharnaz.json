@@ -1,0 +1,26 @@
+{
+    "id": "mtharnaz",
+    "name": "Mtharnaz",
+    "content_type": "dungeon",
+    "summary": "Mtharnaz is a Dwemer ruin in southwestern Craglorn, near the Bangkorai Gate, inhabited by dwarven automatons and spiders. Sanavar's Research Notes can be found along the eastern wall in the eastern room. The skyshard can be found in the northern room along with an old Orrery, which starts a related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mtharnaz",
+        "page_title": "Online:Mtharnaz",
+        "revision_id": 3598817,
+        "retrieved_at": "2026-08-12T21:29:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

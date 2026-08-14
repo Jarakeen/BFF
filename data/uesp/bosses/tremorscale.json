@@ -1,0 +1,56 @@
+{
+    "id": "tremorscale",
+    "name": "Tremorscale",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "Volenfell",
+    "species": "Duneripper",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Hemorrhaging Tear",
+            "description": "A heavy melee attack that does moderate physical damage and moderate physical damage over time. This attack should be blocked if possible."
+        },
+        {
+            "name": "Tail Swipe",
+            "description": "The boss swings its tail dealing moderate physical damage and knocking players back as indicated by a red cone."
+        },
+        {
+            "name": "Rupture",
+            "description": "The boss burrows into the ground and emerges dealing moderate physical damage and knocking back as indicated by a red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell."
+    ],
+    "summary": "This article is about the creature. For the item set, see Tremorscale (set). Tremorscale is a duneripper boss of Volenfell, found in an oasis area of the dungeon guarding the door to The Guardian's Orbit. It is also the namesake of the Tremorscale set and the basis of a trophy, bust, and style; however, it does not drop any of them, as they are instead obtained from killing the Guardian Trinity.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tremorscale",
+        "page_title": "Online:Tremorscale",
+        "revision_id": 3487314,
+        "retrieved_at": "2026-08-12T21:37:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

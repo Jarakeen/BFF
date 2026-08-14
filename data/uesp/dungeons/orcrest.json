@@ -1,0 +1,28 @@
+{
+    "id": "orcrest",
+    "name": "Orcrest",
+    "content_type": "dungeon",
+    "summary": "Orcrest is a ruined city found in the center of Northern Elsweyr. The once prosperous city now lies abandoned, and the angry, flu-ridden dead have risen among the ashes. The dead stalk the dilapidated market, gangs wander the streets, cannibals rule the alleys, and strange things lurk in the fetid sewers. Beetles, Butterflies and spiders are found in number within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "elsweyr_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Orcrest previously appeared in Arena."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Orcrest",
+        "page_title": "Online:Orcrest",
+        "revision_id": 3528250,
+        "retrieved_at": "2026-08-12T21:30:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

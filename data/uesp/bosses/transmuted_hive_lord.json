@@ -1,0 +1,64 @@
+{
+    "id": "transmuted_hive_lord",
+    "name": "Transmuted Hive Lord",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "Darkshade Caverns II",
+    "species": "Kwama Warrior",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw",
+            "description": "The Hive Lord swipes at you with its claws, dealing low physical damage."
+        },
+        {
+            "name": "Double Swipe",
+            "description": "A double-hitting claw attack dealing minor physical damage twice."
+        },
+        {
+            "name": "Quaking Smash",
+            "description": "The Hive Lord smashes the ground with its fists, dealing moderate physical damage in an area around it."
+        },
+        {
+            "name": "Cave In",
+            "description": "The Hive Lord repeatedly smashes the ground, dealing continuous direct moderate physical damage to all targets in the room. He also gains a small damage shield. When this shield is burned down, he stops using this ability. His scribs dig underground when he starts this attack."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: Darkshade II: Explore Darkshade Caverns II and return Undaunted.",
+        "Veteran Darkshade Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Darkshade Caverns. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "The Transmuted Hive Lord is a kwama warrior found in Darkshade Caverns II, of which it is a boss. It is an alternate version of The Hive Lord, a miniboss from the same dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Transmuted_Hive_Lord",
+        "page_title": "Online:Transmuted Hive Lord",
+        "revision_id": 3451039,
+        "retrieved_at": "2026-08-12T21:19:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "naril_nagaia",
+    "name": "Naril Nagaia",
+    "content_type": "dungeon",
+    "summary": "Naril Nagaia is an Ayleid ruin in southwestern Greenshade, east of Woodhearth, containing Veiled Heritance members. The heritants cell here is led by Archmage Camaano. A chest can be found on an altar in the westernmost chamber, in the southeastern section of the room. The skyhard can be found in the southwestern chamber. Many Heritance members lay dead in the southern chambers. Mercano's Journal can be found in the southeastern chamber, next to Archmage Camaano. Fleshflies and Spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The name of the ruin means \"final death\" in Ayleidoon."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Naril_Nagaia",
+        "page_title": "Online:Naril Nagaia",
+        "revision_id": 3598310,
+        "retrieved_at": "2026-08-12T21:29:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

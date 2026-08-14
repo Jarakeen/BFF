@@ -1,0 +1,26 @@
+{
+    "id": "hall_of_the_dead",
+    "name": "Hall of the Dead",
+    "content_type": "dungeon",
+    "summary": "The Hall of the Dead is a tomb in Windhelm. Hjurring is a priest of Orkey responsible for maintaining the crypt. He can be found just inside the entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hall_of_the_Dead",
+        "page_title": "Online:Hall of the Dead",
+        "revision_id": 3598151,
+        "retrieved_at": "2026-08-12T21:25:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

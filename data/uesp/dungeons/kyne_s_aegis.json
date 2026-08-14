@@ -1,0 +1,41 @@
+{
+    "id": "kyne_s_aegis",
+    "name": "Kyne's Aegis",
+    "content_type": "dungeon",
+    "summary": "Kyne's Aegis is a bastion in the Sea of Ghosts, located on an island off the coast north of Solitude. Its original purpose was to be a bulwark against northern invasions which approached the coast via the easiest channel. Thane Ogvar was given ownership over the fort and over time, it morphed into a northern fishing village in addition to a fort. The island's gold veins have led to the Thane establishing a mining operation. Until recently, the fort has remained peaceful with only the occasional northern squall cropping up to cause concern. The transformation of the island to a fishing and mining spot has led to the slow decline of the fort. Rabbits, rats and squirrels are found in numbers within. Hazards include slaughterfish. A short time ago, tremendously large longships appeared to the north. Before a proper defense could be mustered, these ships crashed into the island, disgorging Sea Giants and Half-Giants onto the island, led by the powerful Vampire lord Falgravn. These creatures of myth quickly overwhelmed the northern island and have begun the assault of the fort proper. With the island threatened, the Thane has sent for assistance from anyone that can reach the island. A copy of Convergence of Maestros, Volume 2 can be found near the boat that takes you to the trial. You will receive a Defiled Oathstone with your other rewards after defeating Falgravn with hard mode engaged.",
+    "location": "",
+    "boss_ids": [
+        "yandir_the_butcher",
+        "captain_vrol",
+        "lord_falgravn"
+    ],
+    "achievements": [
+        {
+            "id": "greymoor_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This trial is commonly abbreviated as \"KA\".",
+        "This unmarked island appears a second time in ESO in the Western Skyrim zone, west of Northern Watch Ritual Site, in the same location as it was in Skyrim.",
+        "Kyne's Aegis exists in Skyrim, but as an unmarked island with two gold ore veins, as confirmed during the ESO Live announcement stream. It has no ruins, except for a skeleton clutching a flagpole at the peak of the island. The trial was based on this island (its gold mining history inspired by the ore veins) and it was retroactively named Kyne's Aegis."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kyne%27s_Aegis",
+        "page_title": "Online:Kyne's Aegis",
+        "revision_id": 3608441,
+        "retrieved_at": "2026-08-12T05:33:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

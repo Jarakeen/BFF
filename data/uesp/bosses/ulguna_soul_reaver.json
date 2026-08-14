@@ -1,0 +1,102 @@
+{
+    "id": "ulguna_soul_reaver",
+    "name": "Ulguna Soul-Reaver",
+    "content_id": "vaults_of_madness",
+    "content_name": "Vaults of Madness",
+    "location": "Vaults of Madness",
+    "species": "Harvester",
+    "reaction": "Hostile\nFriendly (when seen before combat)",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Etherial Fire",
+            "description": "A basic ranged attack that deals moderate flame damage."
+        },
+        {
+            "name": "Ethereal Burst",
+            "description": "Purple magic starts glowing in Ulguna's hands, before she throws a purple-flame ball at a player, dealing high flame damage and knocking them away. The only way to avoid it is to dodge, and she cannot be interrupted during the casting."
+        },
+        {
+            "name": "Soul Cremation",
+            "description": "Ulguna selects a player at random and tears their soul out from them, incapacitating them for a long duration, as they float off the ground and scream in pain. This attack cannot be dodged or blocked. It barely has a cooldown and Ulguna repeats this attack soon after completing Soul Flame."
+        },
+        {
+            "name": "Soul Flame",
+            "description": "After keeping the trapped player for the entire duration of Soul Cremation, blue magic orbs appear in Ulguna's hands. After charging them, she slams them into the ground to create a large wall of blue flames in front of her, which expands outwards, causing very high flame damage. Once this move completes, the trapped player from Soul Flame is released."
+        },
+        {
+            "name": "The Feast",
+            "description": "When hurt, Ulguna will grab your essence and attempt to steal it. When grabbed, you will take moderate magical damage and be briefly stunned. You may break free from this. Four Feast orbs will then appear around Ulguna and move towards her. If an orb touches her, she will be healed. To prevent this, you must destroy the orbs before they reach the Ulguna. Each orb will also heal you when destroyed."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Mad Architect",
+            "line": "\"You've doomed yourself by coming here―you know that, don't you?",
+            "trigger": "She can be first seen mocking the trapped Gasteau Charmond near the entrance to the vaults before she slithers away through the neighboring halls",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Ulguna Soul-Reaver",
+            "line": "Tearing your soul out never fails to amuse me, Gasteau. I'll return it to you. Eventually.",
+            "trigger": "She can be first seen mocking the trapped Gasteau Charmond near the entrance to the vaults before she slithers away through the neighboring halls",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Ulguna Soul-Reaver",
+            "line": "Your soul is mine!",
+            "trigger": "You will encounter Ulguna again near a bridge where you will need to defeat her to reclaim Gasteau's soul from her. When combat begins, she will shout",
+            "ability": "Soul Flame"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "She can be first seen mocking the trapped Gasteau Charmond near the entrance to the vaults before she slithers away through the neighboring halls": [
+            {
+                "speaker": "The Mad Architect",
+                "line": "\"You've doomed yourself by coming here―you know that, don't you?",
+                "trigger": "She can be first seen mocking the trapped Gasteau Charmond near the entrance to the vaults before she slithers away through the neighboring halls",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Ulguna Soul-Reaver",
+                "line": "Tearing your soul out never fails to amuse me, Gasteau. I'll return it to you. Eventually.",
+                "trigger": "She can be first seen mocking the trapped Gasteau Charmond near the entrance to the vaults before she slithers away through the neighboring halls",
+                "ability": "The Feast"
+            }
+        ],
+        "You will encounter Ulguna again near a bridge where you will need to defeat her to reclaim Gasteau's soul from her. When combat begins, she will shout": [
+            {
+                "speaker": "Ulguna Soul-Reaver",
+                "line": "Your soul is mine!",
+                "trigger": "You will encounter Ulguna again near a bridge where you will need to defeat her to reclaim Gasteau's soul from her. When combat begins, she will shout",
+                "ability": "Soul Flame"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness."
+    ],
+    "summary": "Ulguna Soul-Reaver is a harvester found in the Vaults of Madness. She serves the first boss. Her unique drops are Maleficence and Soul-Reave. She is responsible for tormenting Gasteau Chamrond, and has stolen his soul, which is witnessed when first reaching him.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ulguna_Soul-Reaver",
+        "page_title": "Online:Ulguna Soul-Reaver",
+        "revision_id": 3345184,
+        "retrieved_at": "2026-08-12T21:37:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "id": "forgotten_wastes",
+    "name": "Forgotten Wastes",
+    "content_type": "dungeon",
+    "summary": "The Forgotten Wastes are a public dungeon found on the northern coast of Vvardenfell. A large force of cultists from the forsaken Sixth House inhabit this location, where they are in the process of slowly building up their forces, by luring Dunmer from across the island to the ruins via corrupted statuettes. The dungeon is divided into several sections: a large overland area containing the stronghold of Kogoruhn, the Drinith Ancestral Tomb, the cave of Kora Dur, the Forgotten Depths, and the Caverns of Kogoruhn. The seven fragments for the Sixth House Robe costume and achievement are randomly dropped from elite enemies in this zone. Ash Hoppers, Centipedes, Fetcherflies, Shroom Beetles and Spiders are found in numbers within. Hazards include falling rocks, flamethrowers, lava pools, pyroclasts and spinning blades.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This location appears in Morrowind as three separate locations: Drinith Ancestral Tomb, Kogoruhn, and Kora-Dur.",
+        "The Forgotten Wastes are mentioned in The Official Survival Guide to Tamriel.",
+        "To solve the Sixth House bell puzzle, you must spell the word \"DREAMS\" out of the Daedric tiles. From left to right, the letters are as follows: D-R-A-E-S-M.",
+        "In the outdoors section of the public dungeon, groups of cliff striders will often swoop down from nearby cliffs to ambush you after you are done defeating groups of enemies."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Forgotten_Wastes",
+        "page_title": "Online:Forgotten Wastes",
+        "revision_id": 3567111,
+        "retrieved_at": "2026-08-12T21:22:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

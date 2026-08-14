@@ -1,0 +1,415 @@
+{
+    "id": "the_blind",
+    "name": "The Blind",
+    "content_id": "bedlam_veil",
+    "content_name": "Bedlam Veil",
+    "location": "Bedlam Veil",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,999,466",
+        "veteran": "9,750,790",
+        "hardmode": "16,088,804"
+    },
+    "abilities": [
+        {
+            "name": "Smack",
+            "description": "A basic melee attack that cleaves, in different directions indicated by red cones, dealing moderate physical damage."
+        },
+        {
+            "name": "Condemn",
+            "description": "The Blind levitates into the air and crashes back down, indicated by a large growing red circle, dealing very high physical damage. This attack can be interrupted with Catatonic Disruptor synergy, if it's unlocked by solving third Fa-Nuit-Hen's puzzle."
+        },
+        {
+            "name": "Splintered Glass",
+            "description": "The Blind channels a spell with her hand, causing glass shards to burst at targets' locations as indicated by growing red circles around them, dealing high physical damage and more if multiple targets overlap. The shards linger afterward, dealing continuous moderate physical damage if stepped into."
+        },
+        {
+            "name": "Shard Shift",
+            "description": "At 80%/60%/40%/20% health, the Blind teleports at the edge of the arena and becomes untargettable. At 80%, she summons four Blind Shards, four massive untargettable glass skeletons, at the southern end of arena which will continuously cast their abilities until the end of the battle."
+        },
+        {
+            "name": "Gleaming Deluge",
+            "description": "Starting from 80% of the Blind's health, Blind Shards will cast area-of-effect waves of glass, slowly rolling across the arena. Under 20% of the Blind's health, the intensity of this ability increases, leaving only a winding, one lane wide corridor free of glass waves. This ability can be negated by using Zephyrus Obscuris synergy, if it's unlocked by solving first Fa-Nuit-Hen's puzzle."
+        },
+        {
+            "name": "Piercing Beam",
+            "description": "Starting from 60% of the Blind's health, Blind Shards may cast beams that cover the entire arena lane in front of them, dealing continuous high physical damage."
+        },
+        {
+            "name": "Summon",
+            "description": "Starting at 90% health, Mirrorplasms are summnoned to help The Blind. Starting at 60% health, Glass Remnants are summoned as well."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Blind",
+            "line": "Ah, my generous host. I brought you a gift. You'll enjoy watching it fight.",
+            "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "",
+            "line": "<Fa-Nuit-Hen turns to you.>",
+            "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "You're not going to let something as simple as an Atronach stand between you and the Blind, are you?",
+            "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Still alive? My friend can help you with that.",
+            "trigger": "After you enter the Hall of Barons, the Blind taunt you",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "My creatures are supposed to slow you down!",
+            "trigger": "After fighting your way past the first room and entering the second room, the Blind will say",
+            "ability": "Shard Shift"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Leave me be, you incessant gnat!",
+            "trigger": "When you get to the room with the Wamasu, the Blind will be annoyed with you",
+            "ability": "Condemn"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Take care of this annoying cur! The Echonir awaits.",
+            "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+            "ability": "Shard Shift"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "Take notes, Tutor!",
+            "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+            "ability": "Shard Shift"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "It's been inspired by my arenas!",
+            "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+            "ability": "Shard Shift"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "My preparations are complete. The barrier will crumble and I will take the Echonir for my Prince!",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "You think you're getting the Echonir without a fight? In my realm?",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "You will regret getting in my way!",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "Two great combatants meet at last!",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "You insist on dying for that fool's amusement?",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "Fa-Nuit-Hen",
+            "line": "And you insist on dying for an impossible cause.",
+            "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Die already!",
+            "trigger": "When combat begins",
+            "ability": null
+        },
+        {
+            "speaker": "The Blind",
+            "line": "My spell destroys everything in my way!",
+            "trigger": "The Blind will yell out the following during the fight",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "I'll tear you down with the barrier!",
+            "trigger": "The Blind will yell out the following during the fight",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "My power only grows with time!",
+            "trigger": "The Blind will yell out the following during the fight",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "We're not through!",
+            "trigger": "The Blind will yell out the following during the fight",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "I have you now.",
+            "trigger": "The Blind will yell out the following during the fight",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Run all you want!",
+            "trigger": "When she unleashes the rows of energy",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Not dead yet? See if you can dodge this!",
+            "trigger": "When she unleashes the rows of energy",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "There's nowhere to run.",
+            "trigger": "When she unleashes the rows of energy",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Let's see if you can keep up!",
+            "trigger": "When she unleashes the rows of energy",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "Time to increase the pressure!",
+            "trigger": "When using Gleaming Deluge",
+            "ability": "Gleaming Deluge"
+        },
+        {
+            "speaker": "The Blind",
+            "line": "This… this can't be.",
+            "trigger": "As she is killed, she will weakly gasp out",
+            "ability": "Shard Shift"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it": [
+            {
+                "speaker": "The Blind",
+                "line": "Ah, my generous host. I brought you a gift. You'll enjoy watching it fight.",
+                "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "",
+                "line": "<Fa-Nuit-Hen turns to you.>",
+                "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "You're not going to let something as simple as an Atronach stand between you and the Blind, are you?",
+                "trigger": "As you approach the arena where you'll face the Shattered Champion, you'll hear the Blind summoning it",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "After you enter the Hall of Barons, the Blind taunt you": [
+            {
+                "speaker": "The Blind",
+                "line": "Still alive? My friend can help you with that.",
+                "trigger": "After you enter the Hall of Barons, the Blind taunt you",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "After fighting your way past the first room and entering the second room, the Blind will say": [
+            {
+                "speaker": "The Blind",
+                "line": "My creatures are supposed to slow you down!",
+                "trigger": "After fighting your way past the first room and entering the second room, the Blind will say",
+                "ability": "Shard Shift"
+            }
+        ],
+        "When you get to the room with the Wamasu, the Blind will be annoyed with you": [
+            {
+                "speaker": "The Blind",
+                "line": "Leave me be, you incessant gnat!",
+                "trigger": "When you get to the room with the Wamasu, the Blind will be annoyed with you",
+                "ability": "Condemn"
+            }
+        ],
+        "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat": [
+            {
+                "speaker": "The Blind",
+                "line": "Take care of this annoying cur! The Echonir awaits.",
+                "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+                "ability": "Shard Shift"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "Take notes, Tutor!",
+                "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+                "ability": "Shard Shift"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "It's been inspired by my arenas!",
+                "trigger": "After traversing the Hall of Barons, Fa and their tutor appear in the next major chamber, the Skyvault Foyer, where the Darkshard awaits combat",
+                "ability": "Shard Shift"
+            }
+        ],
+        "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew": [
+            {
+                "speaker": "The Blind",
+                "line": "My preparations are complete. The barrier will crumble and I will take the Echonir for my Prince!",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "You think you're getting the Echonir without a fight? In my realm?",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "You will regret getting in my way!",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "Two great combatants meet at last!",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "You insist on dying for that fool's amusement?",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "Fa-Nuit-Hen",
+                "line": "And you insist on dying for an impossible cause.",
+                "trigger": "When you reach the Blind, Fa-Nuit-Hen will tell her she has bitten off more than she can chew",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "When combat begins": [
+            {
+                "speaker": "The Blind",
+                "line": "Die already!",
+                "trigger": "When combat begins",
+                "ability": null
+            }
+        ],
+        "The Blind will yell out the following during the fight": [
+            {
+                "speaker": "The Blind",
+                "line": "My spell destroys everything in my way!",
+                "trigger": "The Blind will yell out the following during the fight",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "I'll tear you down with the barrier!",
+                "trigger": "The Blind will yell out the following during the fight",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "My power only grows with time!",
+                "trigger": "The Blind will yell out the following during the fight",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "We're not through!",
+                "trigger": "The Blind will yell out the following during the fight",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "I have you now.",
+                "trigger": "The Blind will yell out the following during the fight",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "When she unleashes the rows of energy": [
+            {
+                "speaker": "The Blind",
+                "line": "Run all you want!",
+                "trigger": "When she unleashes the rows of energy",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "Not dead yet? See if you can dodge this!",
+                "trigger": "When she unleashes the rows of energy",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "There's nowhere to run.",
+                "trigger": "When she unleashes the rows of energy",
+                "ability": "Gleaming Deluge"
+            },
+            {
+                "speaker": "The Blind",
+                "line": "Let's see if you can keep up!",
+                "trigger": "When she unleashes the rows of energy",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "When using Gleaming Deluge": [
+            {
+                "speaker": "The Blind",
+                "line": "Time to increase the pressure!",
+                "trigger": "When using Gleaming Deluge",
+                "ability": "Gleaming Deluge"
+            }
+        ],
+        "As she is killed, she will weakly gasp out": [
+            {
+                "speaker": "The Blind",
+                "line": "This… this can't be.",
+                "trigger": "As she is killed, she will weakly gasp out",
+                "ability": "Shard Shift"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Forgotten Vault: Defend the Maelstrom's Bedlam Veil from an invading army."
+    ],
+    "summary": "This article is about the boss. For the set, see The Blind (set). The Blind is a Dremora and the leader of the Blind Path cult. She has lead her cult to Bedlam Veil to steal the so-called Echonir from the Skyvaults and Fa-Nuit-Hen",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Blind",
+        "page_title": "Online:The Blind",
+        "revision_id": 3584232,
+        "retrieved_at": "2026-08-12T21:14:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

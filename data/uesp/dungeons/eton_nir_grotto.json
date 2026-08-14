@@ -1,0 +1,26 @@
+{
+    "id": "eton_nir_grotto",
+    "name": "Eton Nir Grotto",
+    "content_type": "dungeon",
+    "summary": "Eton Nir Grotto is a delve found in northeastern Summerset, between King's Haven Pass and Eldbur Ruins, containing various Daedra and other creatures. The Cult of Meridia recently occupied a shrine in the grotto, but they were recently wiped out by Mephala's Spiderkith, which now linger in the delve. The third part of Veya's Private Thoughts can be found within the camp.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Eton_Nir_Grotto",
+        "page_title": "Online:Eton Nir Grotto",
+        "revision_id": 3450039,
+        "retrieved_at": "2026-08-12T21:21:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

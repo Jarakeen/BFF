@@ -1,0 +1,26 @@
+{
+    "id": "fathoms_drift",
+    "name": "Fathoms Drift",
+    "content_type": "dungeon",
+    "summary": "Fathoms Drift is a ship graveyard in the Chroma Incognito of Apocrypha. It can be found along the northeastern shore of the Abyssal Sea, north of the Forlorn Palisades Wayshrine. The Legend of Fathoms Drift can be found near the entrance, and the quest-related Naanurrel's Logbook can be found aboard a shipwreck deeper within. Coast jellies, crows, daedrats, fiendroths, torchbugs are found in numbers within. Hazards include grasping tentacles and ghostly grip. Purely environmental Ghost Spirits and Wraiths can be seen floating in the air and out of your reach.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fathoms_Drift",
+        "page_title": "Online:Fathoms Drift",
+        "revision_id": 3567086,
+        "retrieved_at": "2026-08-12T21:22:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

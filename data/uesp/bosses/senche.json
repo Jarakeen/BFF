@@ -1,0 +1,62 @@
+{
+    "id": "senche",
+    "name": "Senche",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Malabal Tor\nGarlas Agea",
+    "species": "Senche",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Rend",
+            "description": "The Senche attacks with both paws, hitting twice for minor physical damage each."
+        },
+        {
+            "name": "Surround",
+            "description": "The Senche positions in a different direction from its target."
+        },
+        {
+            "name": "Backstabber",
+            "description": "The Senche has a passive ability that causes it to deal 20% more damage when attacking the target's back."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Some senche are tame and passive, unable to be attacked, but wild ones will usually attack you on sight.",
+        "They come in several colors: the typical orange tiger pattern, a gray tiger pattern (senche of this color are sometimes referred to as \"mist tigers\"), solid black, and even a spotted variety. The creatures are labeled as 'Senche' and 'Senche-Tiger' in-game.",
+        "Several Senche mounts and pets are available from the Crown Store."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Common Good: Kill a dangerous beast which has been smuggled to the Gold Coast from Craglorn.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Keepers of the Shell: Save a generation of Argonians from the Dominion.",
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web.",
+        "The Prisoner of Jathsogur: Free the Silvenar from the Drublog ritual.",
+        "The Roar of the Crowds: Defeat a Kvatch Arena champion."
+    ],
+    "summary": "Senche are large, quadrupedal felines found in Elsweyr and Valenwood. Variants include senche-leopards, senche-lions, senche-panthers and senche-tigers. They are sometimes referred to as senche-cats. Black senche can be found competing alongside the Khajiit hunters and stalkers in the Blessed Crucible's Frozen Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Senche",
+        "page_title": "Online:Senche",
+        "revision_id": 3589606,
+        "retrieved_at": "2026-08-12T21:33:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

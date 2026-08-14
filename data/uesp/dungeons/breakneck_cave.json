@@ -1,0 +1,28 @@
+{
+    "id": "breakneck_cave",
+    "name": "Breakneck Cave",
+    "content_type": "dungeon",
+    "summary": "Breakneck Cave is a cave in western Cyrodiil, southwest of Fort Ash inhabited by the Black Daggers. If the bandits and the spiders see each other, they will fight to the death. Ore veins and jewelry seams can be found within the cave. Heading west in the first large chamber will lead you to the first boss of this delve, a giant spider named Longfang. A pamphlet detailing a bounty for this spider can be found next to a skeleton in Longfang's chamber. Heading east of the first large chamber will bring you to a dead end. In this hallway, there is a chest between the cave's scaffolding and the wall to the right. The northern chamber consists of living quarters for the bandits. A chest can be found beneath the scaffolding that towers above the north side of the dock. To the west lies Hegris the Black Dagger's room. To the east lies a dead end tunnel.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Breakneck Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Breakneck_Cave",
+        "page_title": "Online:Breakneck Cave",
+        "revision_id": 3598792,
+        "retrieved_at": "2026-08-12T21:15:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

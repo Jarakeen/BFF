@@ -1,0 +1,40 @@
+{
+    "id": "songstress_snake",
+    "name": "Songstress' Snake",
+    "content_id": "arx_corinium",
+    "content_name": "Arx Corinium",
+    "location": "Arx Corinium",
+    "species": "Giant Snake",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "550,102",
+        "veteran": "1,954,875",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Prior to Update (?), this creature was named Songstress' Pet."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forces of Nature: Help three nereid sisters reclaim an abandoned Imperial fort."
+    ],
+    "summary": "The Songstress' Snake is a giant snake that accompanies Sliklenia the Songstress in Arx Corinium. When she sings, a shield appears around her pet snake that protects all within from being damaged. Keep the snake alive to use this to your advantage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Songstress%27_Snake",
+        "page_title": "Online:Songstress' Snake",
+        "revision_id": 3539851,
+        "retrieved_at": "2026-08-12T21:13:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

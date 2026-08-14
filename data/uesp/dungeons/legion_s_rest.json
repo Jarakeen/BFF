@@ -1,0 +1,28 @@
+{
+    "id": "legion_s_rest",
+    "name": "Legion's Rest",
+    "content_type": "dungeon",
+    "summary": "Legion's Rest is a cave located south of North Hook Wayshrine, in northern West Weald. It was originally a safe resting place for caravans traveling through the area, but has recently been taken over by bandits. Beetles, mirrorworms, rats, snakes and torchbugs and wasps are found in numbers inside. Environmental Crystaljacks are seen flying out of your reach. Hazards include crystaljack cocoons.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This location previously appeared in Oblivion as Wind Cave."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Legion%27s_Rest",
+        "page_title": "Online:Legion's Rest",
+        "revision_id": 3567097,
+        "retrieved_at": "2026-08-12T21:27:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

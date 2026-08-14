@@ -1,0 +1,40 @@
+{
+    "id": "oathsworn_pit",
+    "name": "Oathsworn Pit",
+    "content_type": "dungeon",
+    "summary": "Oathsworn Pit is a group dungeon in the northern mountains of the Reach. It is included in the Scions of Ithelia DLC alongside Bedlam Veil. The entrance is located east of Deep Folk Crossing. Butterflies, centipedes, elks, foxes, rabbits and torchbugs are found in numbers within. Hazards include bottomless pits, kindlepitch barrels and poison barrels.",
+    "location": "",
+    "boss_ids": [
+        "packmaster_rethelros",
+        "malthil",
+        "anthelmir",
+        "anthelmir_s_construct",
+        "miregaunt",
+        "aradros_the_awakened"
+    ],
+    "achievements": [
+        {
+            "id": "scions_of_ithelia_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Oathsworn_Pit",
+        "page_title": "Online:Oathsworn Pit",
+        "revision_id": 3567130,
+        "retrieved_at": "2026-08-12T21:30:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

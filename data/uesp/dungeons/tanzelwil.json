@@ -1,0 +1,21 @@
+{
+    "id": "tanzelwil",
+    "name": "Tanzelwil",
+    "content_type": "dungeon",
+    "summary": "Tanzelwil is a haunted elven ruin in southern Auridon, due west of the town of Phaer. The ruin is a traditional worship site for Altmer royalty, and one of Queen Ayrenn's stops on her grand tour of Auridon. The First Auridon Marines are here with the queen. The ancestral spirits here are hostile until you destroy all the Corruption Stones that have been placed around the ruins. You'll encounter Ancient Spirits when completing the objective. There is a chest leaning against a boulder northeast of the road where the queen's carts are parked.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "This only applies to the spirits above ground however, those encountered within the ruins during the quest Rites of the Queen will remain hostile.",
+        "The ancestral spirit enemies in the ruins become Neutral once the quest Corruption Stones is completed."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tanzelwil",
+        "page_title": "Online:Tanzelwil",
+        "revision_id": 3454257,
+        "retrieved_at": "2026-08-12T21:35:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "id": "siege_mammoth",
+    "name": "Siege Mammoth",
+    "content_id": "falkreath_hold",
+    "content_name": "Falkreath Hold",
+    "location": "Falkreath Hold",
+    "species": "Mammoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Charge",
+            "description": "The boss charges forwards dealing moderate physical damage and knocking targets down as indicated by a red rectangle. The tank should position the boss facing the wall to prevent this."
+        },
+        {
+            "name": "Sweeping Tusks",
+            "description": "A charged heavy melee attack that deals high physical damage. This must be blocked or dodged if possible. Do not stand in front of the boss if you are not the tank."
+        },
+        {
+            "name": "Stomp",
+            "description": "At 50%, the Reachmen will light the boss on fire, adding a new attack to the fight. Occasionally, the boss rears up and stomps, dealing very high flame damage around itself. This must be blocked by everyone when it occurs."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Unlike Timber Mammoths and Pocket Mammoths, the Siege Mammoth has four tusks. This is a reference to the appearance of mammoths in Skyrim."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Falkreath's Demise: Lift the siege of Falkreath to save the city's inhabitants."
+    ],
+    "summary": "The Siege Mammoth is a large mammoth owned by the Dreadhorn Clan. It can be found within Falkreath Hold, attempting to break down Falkreath's main gates. It serves as the dungeon's first boss. During the fight, Dreadhorn reachmen will be stationed atop the rocks above and shoot projectiles at the ground near the mammoth, serving as an unkillable hazard. It has a chance to drop a Minotaur Bezoar.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Siege_Mammoth",
+        "page_title": "Online:Siege Mammoth",
+        "revision_id": 3354705,
+        "retrieved_at": "2026-08-12T21:21:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

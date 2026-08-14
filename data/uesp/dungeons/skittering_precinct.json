@@ -1,0 +1,26 @@
+{
+    "id": "skittering_precinct",
+    "name": "Skittering Precinct",
+    "content_type": "dungeon",
+    "summary": "Skittering Precinct is a spider-infested district of the Night Market. It is reached by going through the northern gate of the Starlit Plaza, and while the market is open it can be explored to earn favor for your chosen faction.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Skittering_Precinct",
+        "page_title": "Online:Skittering Precinct",
+        "revision_id": 3570210,
+        "retrieved_at": "2026-08-12T21:34:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

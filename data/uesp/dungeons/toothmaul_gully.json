@@ -1,0 +1,29 @@
+{
+    "id": "toothmaul_gully",
+    "name": "Toothmaul Gully",
+    "content_type": "dungeon",
+    "summary": "Toothmaul Gully is a cave in central Auridon, southwest of the town of Mathiisen and northwest of Tanzelwil. A tribe of goblins resides in the cave, though they have recently been disturbed by several Altmer intruders, including members of the Veiled Heritance. Caerel the traveling merchant walks along the road nearest to the dungeon. Spiders and torchbugs are found in numbers within. Hazards include bear traps.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Chief's Den originally had a bear skull. It was changed to a dragon skeleton some point after Update 8.",
+        "If you go into the Chief's Den after completing the related quest, there will instead be random Toothmaul enemies for you to fight."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Toothmaul_Gully",
+        "page_title": "Online:Toothmaul Gully",
+        "revision_id": 3567074,
+        "retrieved_at": "2026-08-12T21:36:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

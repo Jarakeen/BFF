@@ -1,0 +1,28 @@
+{
+    "id": "broken_tusk",
+    "name": "Broken Tusk",
+    "content_type": "dungeon",
+    "summary": "Broken Tusk is a Daedric ruin in eastern Shadowfen, north-northeast of the Forsaken Hamlet, containing Daedra. The shrine contains a number of dead Molag Bal Cultists, who were summoning Daedra to control and release upon the world in the name of Molag Bal, but were quickly overwhelmed. A dying priest of Arkay and a cursed urn can be found deep within the shrine. A book of rituals can be found in the hallway leading to Naeraizozan's chamber. A chest can be found in this hallway as well. Another chest can be found in the northwest corner of Naeraizozan's room. Four banners depicting the emblem of Sheogorath can be found in the hallway beyond the entrance, and a single banner depicting Hircine can be found in the first large chamber. A copy of Ruminations on the Elder Scrolls can be found south from the ruins, across the river. A Thieves Trove is hiding on the other side of the river, beneath a fern just up the slope towards Camp Merciful Reduction. Two crocodiles, a giant wasp and a guar loiter just outside the entrance to the ruins. Rats and Spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Broken Tusk Ritual Notes, located at a camp north of Bogmother, will mark Broken Tusk's location on your map if you haven't discovered it already."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Broken_Tusk",
+        "page_title": "Online:Broken Tusk",
+        "revision_id": 3587470,
+        "retrieved_at": "2026-08-12T21:15:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

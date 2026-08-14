@@ -1,0 +1,20 @@
+{
+    "id": "vahlokzin_s_lair",
+    "name": "Vahlokzin's Lair",
+    "content_type": "dungeon",
+    "summary": "Vahlokzin's Lair is a dragon lair in a dormant volcano on the coast of Southern Elsweyr, occupied by Vahlokzin. At some point, an attempt was made to farm kwama but this was unsuccessful. When Vahlokzin stole the Horn of Ja'darri, the Dragonguard tried to retrieve it but were cut down by the kwama, and their remains are still found inside to this day. The following notes can be found as you progress through: The Illustrious Azashig's Letter, Letter to Halakaku, and the Final Letter of Sergeant Berarah.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Despite being described as coastal, this location appears on the map just south of Northern Elsweyr."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vahlokzin%27s_Lair",
+        "page_title": "Online:Vahlokzin's Lair",
+        "revision_id": 3598063,
+        "retrieved_at": "2026-08-12T21:37:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

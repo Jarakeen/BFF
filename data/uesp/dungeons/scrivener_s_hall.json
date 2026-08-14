@@ -1,0 +1,40 @@
+{
+    "id": "scrivener_s_hall",
+    "name": "Scrivener's Hall",
+    "content_type": "dungeon",
+    "summary": "Scrivener's Hall is a group dungeon in the Rift. It is a Nedic library occupied by the Scribes of Mora, an organization associated with Hermaeus Mora who document all observable things for the Daedric Prince's perusal. This dungeon is included in the Scribes of Fate DLC alongside Bal Sunnar. The entrance is located west of the Smokefrost Peaks Dolmen. Broodlings, Centipedes, deadlands scorpions, nixads, rats, scorpions and spiders are found in numbers within. Hazards include bottomless pits and fire.",
+    "location": "",
+    "boss_ids": [
+        "riftmaster_naqri",
+        "ozezan_the_inferno",
+        "infernium",
+        "lamikhai",
+        "valinna",
+        "cartoqueen"
+    ],
+    "achievements": [
+        {
+            "id": "scribes_of_fate_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Scrivener%27s_Hall",
+        "page_title": "Online:Scrivener's Hall",
+        "revision_id": 3567064,
+        "retrieved_at": "2026-08-12T21:32:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

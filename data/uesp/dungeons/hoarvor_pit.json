@@ -1,0 +1,28 @@
+{
+    "id": "hoarvor_pit",
+    "name": "Hoarvor Pit",
+    "content_type": "dungeon",
+    "summary": "This article is about the dungeon. For the book, see The Hoarvor Pit. The Hoarvor Pit is a cave in central Malabal Tor, southwest of Vulkwasten containing hostile wildlife. An ogrim named Oghezai is bound deep within the cave, being fed on by the blood-sucking hoarvors that inhabit it. The hoarvors also feed on dead senche, crocodiles, and Bosmer. A small valley is found in the northern part, infested with crocodiles. Centipedes, lizards, spiders and torchbugs are found in numbers within. A copy of Horrors of the Strid Basin can be found in a tunnel leading to the second floor in the southern portion of the delve. A copy of the Lorebook A Nereid Stole My Husband can be found on the second floor, in the tunnel west of Oghezai's chamber. A note can be found in the round chamber at the western end of this tunnel, where it turns north towards the northernmost chamber. A chest can also be found in this portion of the tunnel. The skyshard can be found in the northernmost chamber. A chest can be found east of the skyshard. Another chest can be found further east, near the mouth of the cave leading into the tunnel heading back towards the first floor.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The letter She Dared Me, found in the Dra'bul Chieftain's Longhouse, marks this location on your map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hoarvor_Pit",
+        "page_title": "Online:Hoarvor Pit",
+        "revision_id": 3598318,
+        "retrieved_at": "2026-08-12T21:25:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

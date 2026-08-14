@@ -1,0 +1,26 @@
+{
+    "id": "haldain_lumber_camp",
+    "name": "Haldain Lumber Camp",
+    "content_type": "dungeon",
+    "summary": "Haldain Lumber Camp is a lumber camp located across the river south of Skingrad, in southern West Weald. Badgers, butterflies, dragonflies, frogs, rats, squirrels and torchbugs are found in numbers within. Hazards include wildburn grasping roots.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Haldain_Lumber_Camp",
+        "page_title": "Online:Haldain Lumber Camp",
+        "revision_id": 3567092,
+        "retrieved_at": "2026-08-12T21:25:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

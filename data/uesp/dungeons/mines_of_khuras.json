@@ -1,0 +1,29 @@
+{
+    "id": "mines_of_khuras",
+    "name": "Mines of Khuras",
+    "content_type": "dungeon",
+    "summary": "The Mines of Khuras are located on the shore east of Aldcroft, in Glenumbra, and contain Bloodthorn cultists. Peasants have been enslaved by the cult and forced to mine. Rats are found in ample numbers within the tunnels. A heavy sack is located near the end of the tunnel connecting the central chamber to the entrance. Bloodthorn Orders are located in this same tunnel, closer to the delve's entrance. The delve's boss is located in the north central chamber at the end of a dock where there is a pick embedded in stone.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Mines of Khuras appeared in Arena.",
+        "The small tunnel to the northeastern chamber is only open to find Oracle Marieve during the quest Through a Veil Darkly. Enter it on the east side of the east \"finger\" of the lake where Lilou is."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mines_of_Khuras",
+        "page_title": "Online:Mines of Khuras",
+        "revision_id": 3598196,
+        "retrieved_at": "2026-08-12T21:28:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

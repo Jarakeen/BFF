@@ -1,0 +1,106 @@
+{
+    "id": "vearogh_the_shambler",
+    "name": "Vearogh the Shambler",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Underkeep — Bani's Laboratory",
+    "species": "Flesh Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "5,954,854",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Torch Slam",
+            "description": "Basic melee attack dealing high physical damage and some flame damage over time."
+        },
+        {
+            "name": "Hammer Slam",
+            "description": "Vearogh winds up his hammer hand and slams it down at you, dealing very high physical attack and knocking you down. This attack can be blocked."
+        },
+        {
+            "name": "Flame Stomp",
+            "description": "Vearogh swiftly stomps the ground, causing a flame eruption to trigger beneath you, indicated by a quickly growing circular AoE, dealing very high flame damage."
+        },
+        {
+            "name": "Flame Chuck",
+            "description": "Vearogh ignites his torch hand with his hammer hand to make it light stronger, before throwing a heavy handful of flame forward at you, dealing very high flame damage. This attack has no indicator."
+        },
+        {
+            "name": "Flame Burst",
+            "description": "Vearogh screams out into the arena, causing flames to burst out from his body, causing an initial hit of high flame damage. These flames then form into two tornadoes that quickly swirl around the arena for a long duration, dealing continuous high flame damage when touched by them."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "Throughout the fight, Envervating Thralls will constantly appear in the arena to join the fight. At certain health intervals, necromantic runes will appear in the corner of the arena, releasing Rift Wraiths and Rift Zombies to also come in and assist."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Bani",
+            "line": "Disgusting intruders! I won't have it. I will not have it!",
+            "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+            "ability": "Summon Undead"
+        },
+        {
+            "speaker": "",
+            "line": "<Vearogh is roused.>",
+            "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+            "ability": "Summon Undead"
+        },
+        {
+            "speaker": "Sister Bani",
+            "line": "Filthy beasts! How dare you soil my refuge! Crush them!",
+            "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+            "ability": "Summon Undead"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.": [
+            {
+                "speaker": "Sister Bani",
+                "line": "Disgusting intruders! I won't have it. I will not have it!",
+                "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+                "ability": "Summon Undead"
+            },
+            {
+                "speaker": "",
+                "line": "<Vearogh is roused.>",
+                "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+                "ability": "Summon Undead"
+            },
+            {
+                "speaker": "Sister Bani",
+                "line": "Filthy beasts! How dare you soil my refuge! Crush them!",
+                "trigger": "Once you enter the laboratory and interrupt Sister Bani, she will summon Vearogh to deal with you.",
+                "ability": "Summon Undead"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "According to a letter from Bani, Vearogh was a clan member who was chosen to help further her necromantic research."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Vearogh the Shambler is a giant Flesh Atronach who is summoned by Sister Bani after you trespass in her laboratory in Icereach. This is the third boss fight of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vearogh_the_Shambler",
+        "page_title": "Online:Vearogh the Shambler",
+        "revision_id": 3339486,
+        "retrieved_at": "2026-08-12T21:26:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

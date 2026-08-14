@@ -1,0 +1,231 @@
+{
+    "id": "wyress_strigidae",
+    "name": "Wyress Strigidae",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,031,441",
+        "veteran": "1,549,884",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Shot",
+            "description": "A basic ranged attack that deals minor physical damage."
+        },
+        {
+            "name": "Teleport Strike",
+            "description": "The enemy teleports and stabs the player. This attack does moderate physical damage and stuns the player briefly."
+        },
+        {
+            "name": "Arrow Spray",
+            "description": "The enemy shoots out a spray of arrows in front of herself dealing moderate physical damage and snaring all targets hit as indicated by a red cone."
+        },
+        {
+            "name": "Owl's Silence",
+            "description": "The boss is surrounded by a blue aura (see image) that silences you, preventing players from using any ability costing Health, Magicka, Ultimate or have no cost at all. When killed, she will spawn an owl that emanates the same aura. The owl cannot be damaged and will move on its own. Stand at range to avoid the silence."
+        },
+        {
+            "name": "Taking Aim",
+            "description": "The boss winds up a charged shot on a random target that deals very high physical damage. This must be interrupted or dodged."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "It appears Lord Hircine has gifted us with fresh prey.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "Make sure to put up a fight. I wouldn't want to bore our Lord Hircine.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "In the Huntsman's name, I shall strike you down.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "I'm taking aim!",
+            "trigger": "Taking Aim",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "I'm ready to fire!",
+            "trigger": "Taking Aim",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "\"I've got the target in sight!\" (When performing her interruptible bow attack.)",
+            "trigger": "Taking Aim",
+            "ability": "Taking Aim"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "Lord Hircine shall be pleased by our victory.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "Hopefully our next prey will put up more of a fight.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "You're now as silent as the owl's wings.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "My spirit remains with you, sisters.",
+            "trigger": "After she is killed",
+            "ability": "Owl's Silence"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "The spirit of the owl lives on.",
+            "trigger": "After she is killed",
+            "ability": "Owl's Silence"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "I can never be truly defeated.",
+            "trigger": "After she is killed",
+            "ability": "Owl's Silence"
+        },
+        {
+            "speaker": "Wyress Strigidae",
+            "line": "So we have become the prey ... how pathetic.",
+            "trigger": "When she is the last to be defeated",
+            "ability": "Owl's Silence"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before battle": [
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "It appears Lord Hircine has gifted us with fresh prey.",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "Make sure to put up a fight. I wouldn't want to bore our Lord Hircine.",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "In the Huntsman's name, I shall strike you down.",
+                "trigger": "Idling before battle",
+                "ability": null
+            }
+        ],
+        "Taking Aim": [
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "I'm taking aim!",
+                "trigger": "Taking Aim",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "I'm ready to fire!",
+                "trigger": "Taking Aim",
+                "ability": "Taking Aim"
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "\"I've got the target in sight!\" (When performing her interruptible bow attack.)",
+                "trigger": "Taking Aim",
+                "ability": "Taking Aim"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "Lord Hircine shall be pleased by our victory.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "Hopefully our next prey will put up more of a fight.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "You're now as silent as the owl's wings.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "After she is killed": [
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "My spirit remains with you, sisters.",
+                "trigger": "After she is killed",
+                "ability": "Owl's Silence"
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "The spirit of the owl lives on.",
+                "trigger": "After she is killed",
+                "ability": "Owl's Silence"
+            },
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "I can never be truly defeated.",
+                "trigger": "After she is killed",
+                "ability": "Owl's Silence"
+            }
+        ],
+        "When she is the last to be defeated": [
+            {
+                "speaker": "Wyress Strigidae",
+                "line": "So we have become the prey ... how pathetic.",
+                "trigger": "When she is the last to be defeated",
+                "ability": "Owl's Silence"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is the author of The Glory of the Hunt.",
+        "Prior to being removed from her wardrobe in live, she wore Jhunal's Owl Mask.",
+        "It was revealed that she along with her sisters each represent a different aspect of Hircine in ESO Live's preview of Wolfhunter (Timestamp 32:30). She however fits none of the aspects listed in the book Aspects of Lord Hircine."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt."
+    ],
+    "summary": "Wyress Strigidae is a Redguard wyress who can be found along with her sisters, Rangifer and Ursus, in the March of Sacrifices. They amuse themselves by hunting and testing themselves against the competitors in Hircine's Great Hunt. Wyress Strigidae is armed with a bow, complementing Rangifer's magic and Ursus' mace.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wyress_Strigidae",
+        "page_title": "Online:Wyress Strigidae",
+        "revision_id": 3347524,
+        "retrieved_at": "2026-08-12T21:28:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

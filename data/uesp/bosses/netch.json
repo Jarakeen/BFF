@@ -1,0 +1,36 @@
+{
+    "id": "netch",
+    "name": "Netch",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Netches are cnidarian-like creatures native to the province of Morrowind, and they will not attack unless provoked. They normally attack with their long tentacles or electricity. There are three different types of netch: Bull Netches, Betty Netches and Calves. Bull Netches are far more powerful, and calves are the least powerful. There are also Netchlings, which appear to be akin to calves though much larger.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Netch",
+        "page_title": "Online:Netch",
+        "revision_id": 3238175,
+        "retrieved_at": "2026-08-12T21:19:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

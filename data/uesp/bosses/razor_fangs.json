@@ -1,0 +1,67 @@
+{
+    "id": "razor_fangs",
+    "name": "Razor Fangs",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "Reef Viper",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "Razor Fangs strikes at a target within melee range. Can be avoided."
+        },
+        {
+            "name": "Spring",
+            "description": "Razor Fangs coils up and launches into the air, rapidly gliding towards the target. This is a gap closer."
+        },
+        {
+            "name": "Constricting Strike",
+            "description": "Razor Fangs rises, then launches an attack. You will be stunned if you don't block, as Razor Fangs attempts to coil around you and bite you. You'll be knocked to the ground after it releases you. If you block, Razor Fangs will be staggered."
+        },
+        {
+            "name": "Bile Sac",
+            "description": "Razor Fangs regurgitates its last meal and projects it at you. This creates sticky AoEs that snare you if you step in them. Move out of the circle to break free or wait until the pools expire. Bile Sac is an indirect attack."
+        },
+        {
+            "name": "Water Geyser",
+            "description": "Water geysers areas appear periodically in the arena, dealing flame damage and knocking back targets hit."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Despite being water-based, Water Geysers of this boss deal flame damage."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Razor Fangs is a massive reef viper who can be found in Ghost Haven Bay.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Razor_Fangs",
+        "page_title": "Online:Razor Fangs",
+        "revision_id": 3492781,
+        "retrieved_at": "2026-08-12T21:23:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

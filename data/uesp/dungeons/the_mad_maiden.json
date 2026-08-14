@@ -1,0 +1,18 @@
+{
+    "id": "the_mad_maiden",
+    "name": "The Mad Maiden",
+    "content_type": "dungeon",
+    "summary": "The Mad Maiden is a ship captained by Captain Siravaen. It can initially be found at Westport, having been stolen and used by Sealord Nalos. After recovering it during the Siege of Vastyr it is used to travel to Vastyr. Later it is used to travel to Y'ffelon.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Mad_Maiden",
+        "page_title": "Online:The Mad Maiden",
+        "revision_id": 3550294,
+        "retrieved_at": "2026-08-12T21:28:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

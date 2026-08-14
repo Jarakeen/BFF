@@ -1,0 +1,31 @@
+{
+    "id": "old_orsinium",
+    "name": "Old Orsinium",
+    "content_type": "dungeon",
+    "summary": "Old Orsinium is an Orcish ruin in western Wrothgar, located north of Bedlam Veil. It consists of the ravaged and sieged remnants of one of the previous Orsinium. Now, only wildlife and Winterborn Reachmen inhabit it. On the eastern side of the forges is a door leading to Old Orsinium Shrine, which you need to visit when doing Flames of Forge and Fallen. A southern exit from the shrine will lead you back to the central hub room. Mobs have a chance to drop Anvil of Old Orsinium antiquity lead for the furnishing of the same name. Bosses have a chance to drop Malacath's Brutal Might Loop antiquity lead for the Malacath's Band of Brutality. The overland sets Briarheart, Mark of the Pariah, and Trinimac's Valor can drop here.[verification needed — see talk page]",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "wrothgar_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Half of the Ancient Orc style can be obtained in Old Orsinium, with the other half found in Rkindaleft.",
+        "The Horn of Beasts can be found in a small cave on the shoreline just southeast of the entrance, guarded by a troll.",
+        "The Hammer of Glass can be found near some beds on the way out of the shrine within the ruins.",
+        "Two relics for the House of Orsimer Glories can be found near and in Old Orsinium:"
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Old_Orsinium",
+        "page_title": "Online:Old Orsinium",
+        "revision_id": 3212425,
+        "retrieved_at": "2026-08-12T21:30:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

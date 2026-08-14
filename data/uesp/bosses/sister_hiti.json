@@ -1,0 +1,222 @@
+{
+    "id": "sister_hiti",
+    "name": "Sister Hiti",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "336,797",
+        "veteran": "",
+        "hardmode": "1,218,039"
+    },
+    "abilities": [
+        {
+            "name": "Ice Tornado",
+            "description": "She summons a large ice tornado, indicated by a large circular AoE, that will swirl around the arena in your general direction, dealing continuous high frost damage while inside and snaring you."
+        },
+        {
+            "name": "Flame Swirl",
+            "description": "She summons a fire swirl that tracks your movement as it builds up, before erupting, dealing very high flame damage. After the eruption, a pool of flame will continue to follow your movement for a few more seconds, dealing continuous high flame damage that must be healed through."
+        },
+        {
+            "name": "Summon Undead",
+            "description": "Throughout the fight, Envervating Thralls will constantly appear in the arena to join the fight."
+        },
+        {
+            "name": "Thunderous Pursuit",
+            "description": "She calls forth fourteen lightning strikes to hit you, all chaining quickly one after the other as indicated by small circular AoEs, dealing high shock damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Skelga",
+            "line": "I knew this ritual would bring trouble. Your new patron asks too much of us!",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Enough of your mewling! These slow-witted Nords pose little threat.",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "<They notice you.>",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Look here. More of them! Stay out of my way, Hiti.",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "I do as I please, sister!",
+            "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Step aside, Skelga. I'll burn them alive!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Your flames are a blight shrew. Go join the rest of your coven.",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Enough fooling about. Burn!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Skelga",
+            "line": "Leave this to me witch!",
+            "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "Skelga? Skelga! You … I'll burn you to cinders for this!",
+            "trigger": "Once you kill Skelga, Hiti will swear vengeance before teleporting away.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Hiti",
+            "line": "They killed Skelga! Right in front of me!",
+            "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+            "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+            "ability": "Flame Swirl"
+        },
+        {
+            "speaker": "",
+            "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+            "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+            "ability": "Flame Swirl"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.": [
+            {
+                "speaker": "Sister Skelga",
+                "line": "I knew this ritual would bring trouble. Your new patron asks too much of us!",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "Enough of your mewling! These slow-witted Nords pose little threat.",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "<They notice you.>",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Look here. More of them! Stay out of my way, Hiti.",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "I do as I please, sister!",
+                "trigger": "After encountering Lyris Titanborn who is also fighting her way through the fortress, you exit the underkeep and enter an outdoor area with an altar. Hiti and Sister Skelga will be arguing before they notice you.",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "Step aside, Skelga. I'll burn them alive!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Your flames are a blight shrew. Go join the rest of your coven.",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Hiti",
+                "line": "Enough fooling about. Burn!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Skelga",
+                "line": "Leave this to me witch!",
+                "trigger": "During the fight Hiti will use her fire magic, uncaring if it inadvertently gets in the way of Skelga's own attacks. When this happens, the pair will argue. Both characters have a pool of dialogue lines which are randomly chosen",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Once you kill Skelga, Hiti will swear vengeance before teleporting away.": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "Skelga? Skelga! You … I'll burn you to cinders for this!",
+                "trigger": "Once you kill Skelga, Hiti will swear vengeance before teleporting away.",
+                "ability": "Flame Swirl"
+            }
+        ],
+        "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "They killed Skelga! Right in front of me!",
+                "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+                "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+                "ability": "Flame Swirl"
+            },
+            {
+                "speaker": "",
+                "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+                "trigger": "Sister Hiti is encountered again as you reach the courtyard where the storm ritual is being performed.",
+                "ability": "Flame Swirl"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "Sister Hiti is a member of the Icereach Coven who specializes in fire magic. She can be found on their island home of Icereach. She is involved in the final boss fight of the dungeon, assisting Mother Ciannait, alongside her sisters Bani, Gohlla and Maefyn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sister_Hiti",
+        "page_title": "Online:Sister Hiti",
+        "revision_id": 3387865,
+        "retrieved_at": "2026-08-12T21:26:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

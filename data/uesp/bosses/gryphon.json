@@ -1,0 +1,54 @@
+{
+    "id": "gryphon",
+    "name": "Gryphon",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Summerset Isle, Gryphon Aerie, The Vaults of Heinarwe\nNchuthnkarst\nGrove of the Chimera",
+    "species": "Gryphon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Several gryphon are available as pets, including the Aurulun Fledgling Gryphon, Azure Fledgling Gryphon, Firepoint Fledgling Gryphon, Fledgling Gryphon, Pale-Plume Fledgling Gryphon, Skald-Muse Fledgling Gryphon, Snowcap Fledgling Gryphon, Gloam Gryphon Fledgling, and Fledgling Vulture Gryphon.",
+        "An official Gryphon plush was released by Gaming Heads in 2018.",
+        "When Cloudrest appeared in Arena, there were two inns called the \"King's Griffin\" and \"Silver Griffin\".",
+        "The Gryphon's Ferocity set is named after the titular Gryphon, and can be found on Summerset.",
+        "Gryphon nests resemble real-life eagle nests.",
+        "Gryphons are depicted in several Alinor furnishings, including a tapestry and a statue. They can be crafted or purchased for housing.",
+        "Yokudan statues that appear in the al-Danobia Tomb are similar in appearance to gryphons, but with the head of the ibis. They can purchased as furnishings, but are referred to as \"griffins\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Birds of a Feather: Defeat Haeliata and Nagravia and collect their feathers.",
+        "Guardian of Y'ffelon: Go to Y'ffelon and stop the Firesong Circle.",
+        "Gryphon Grievance: Help a Bosmer find her lost companions within gryphon nesting grounds.",
+        "Manor of Masques: Audition for the House of Reveries and help find a missing sibling.",
+        "Recovered Relics: Defeat a chimera and gather druidic relics.",
+        "Shrines on Shaky Ground: Defeat a chimera and restore Stonelore shrines.",
+        "Sunhold Sundered: Help Kinlady Helenaere save her city from Maormer.",
+        "Three-Pronged Approach: Defeat a chimera and gather chimera components.",
+        "The Wing of the Crow: Enter the sealed door and take on the Scholarium's final trial.",
+        "The Wing of the Gryphon: Find the Gryphon Luminary and earn his sigil to power the Scribing Altar.",
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Gryphons are large, carnivorous flying creatures with the body of a lion and the wings, talons, and beak of an eagle. They are native to Summerset Isle, and have a chance to drop the Antiquity lead for the Prismatic Sunbird Feather. Adult gryphons can often be found near Fledgling Gryphons in the wilds of Summerset. They are also found near gryphon nests or eating prey that they've caught in the wild. A wild gryphon eating prey can be found on the shores of the lake outside Archon's Grove. Gryphon nests can be found at Gryphon Run, Gryphon Aerie, and near Rellenthil. Aesthetic, non-hostile flying gryphons can be seen consistently in the skies above Gryphon Run, as the area is chock-full of massive gryphon nests. A few can also be seen flying in the skies near locations such as Cloudrest, the Gryphon Aerie, Sil-Var-Woad. Gryphons can also be found in the crags of Northern Elsweyr near Cicatrice and flying around the cliffs of the Ashen Scar, and can sometimes be seen fighting against other imposing creatures such as haj mota and minotaurs.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gryphon",
+        "page_title": "Online:Gryphon",
+        "revision_id": 3595941,
+        "retrieved_at": "2026-08-12T05:31:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "id": "crypt_of_hearts_i",
+    "name": "Crypt of Hearts I",
+    "content_type": "dungeon",
+    "summary": "The Crypt of Hearts I is a group dungeon found in Rivenspire. Formerly a school teaching Destruction magic, sword fighting, alchemy, and possibly even Daedric summoning, the crypt is now home to some of the tortured souls of its teachers and of its students. In this version Alanwe needs you to piece together her soul which is currently contained in three phylacteries scattered throughout the Crypt. You can learn about its location from Eraegaer the Kill-Happy in Marbruk, Ilmindil the Incendiary in Shornhelm, or Roaring Ramavel in Stormhold. The final bosses, Ilambris-Athor and Ilambris-Zaven, have a chance to drop the Thirsting Girdle antiquity lead for the Bloodlord's Embrace. See also: Crypt of Hearts II",
+    "location": "",
+    "boss_ids": [
+        "archmaster_siniel",
+        "altmer",
+        "mummy",
+        "death_s_leviathan",
+        "ilambris_athor",
+        "ilambris_zaven",
+        "xivilai"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Crypt of Hearts appeared in both Arena and Shadowkey.",
+        "Before dungeon scaling was introduced in Update 5, Normal Crypt of Hearts was designed for levels 28–31, and Veteran Crypt of Hearts was designed for Veteran Ranks 11–12.",
+        "Prior to Update 12, Crypt of Hearts I was only available in Normal mode, and Crypt of Hearts II was only available in Veteran mode. These were named Crypt of Hearts and Veteran Crypt of Hearts respectively.",
+        "The Wraithhome player home is located nearby and uses the same architectural style."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crypt_of_Hearts_I",
+        "page_title": "Online:Crypt of Hearts I",
+        "revision_id": 3385947,
+        "retrieved_at": "2026-08-12T21:18:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

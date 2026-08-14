@@ -1,0 +1,28 @@
+{
+    "id": "shroud_hearth_barrow_place",
+    "name": "Shroud Hearth Barrow (place)",
+    "content_type": "dungeon",
+    "summary": "Shroud Hearth Barrow is an ancient Nordic tomb in the western Rift, just northeast of Ivarstead, containing draugr. The tomb consists of two zones, Shroud Hearth Catacombs and Shroud Hearth Temple. A skyshard can be found in the eastern chamber of the catacombs. Jakalor occupies the main temple chamber. Centipedes and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Shroud Hearth Barrow also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shroud_Hearth_Barrow_(place)",
+        "page_title": "Online:Shroud Hearth Barrow (place)",
+        "revision_id": 3598177,
+        "retrieved_at": "2026-08-12T21:33:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "id": "loth_na_caverns",
+    "name": "Loth'Na Caverns",
+    "content_type": "dungeon",
+    "summary": "Loth'Na Caverns is a glade in Upper Craglorn containing the Scaled Court along with their allied lamias and giant snakes. The Argonian Visskar can be found at the top of the hill, and must be killed to clear the delve. The entrance to Skyreach Temple can also be found within. Snakes can be found in numbers within. The interior of the delve consists of a valley with a central hill. Cross the stream from the entrance and take a right to crest the hill and reach Visskar, the boss of the delve. The skyshard can be found by instead taking a left at the stream; it can be found hidden behind some boulders. The Pledge of Obedience for the quest The Gray Passage can be reached from the top of the hill, as can the Bridge Triggers you need to activate to reach Skyreach Temple during the quest Dawn of the Exalted Viper.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve.",
+        "Despite being almost an entirely exterior section, save for the entrance, mounts cannot be used here.",
+        "Loth'Na Caverns also appeared in Shadowkey."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Loth%27Na_Caverns",
+        "page_title": "Online:Loth'Na Caverns",
+        "revision_id": 3268239,
+        "retrieved_at": "2026-08-12T21:27:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

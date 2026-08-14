@@ -1,0 +1,37 @@
+{
+    "id": "black_gem_foundry",
+    "name": "Black Gem Foundry",
+    "content_type": "dungeon",
+    "summary": "Black Gem Foundry is a mining facility and group dungeon in Coldharbour accessed from southern Solstice. It is included in the Feast of Shadows DLC alongside Naj-Caldeesh. The entrance is located northwest of the Shell-Tide Village Wayshrine. A number of passive creatures such as daedrats, scuttlers, snakes, and white torchbugs are found in numbers within. Daedric Titans and gristlewings may also be seen flying around.",
+    "location": "",
+    "boss_ids": [
+        "quarrymaster_saldezaar",
+        "black_gem_monstrosity",
+        "high_soulbinder_vykand"
+    ],
+    "achievements": [
+        {
+            "id": "feast_of_shadows_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Black_Gem_Foundry",
+        "page_title": "Online:Black Gem Foundry",
+        "revision_id": 3466533,
+        "retrieved_at": "2026-08-12T21:14:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

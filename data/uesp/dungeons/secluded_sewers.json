@@ -1,0 +1,20 @@
+{
+    "id": "secluded_sewers",
+    "name": "Secluded Sewers",
+    "content_type": "dungeon",
+    "summary": "Secluded Sewers is a sewer network that serves as a heist location. You'll be taken here by Fa'ren-dar during the related quest. It can be occupied by multiple factions, including the Magnar Pack, the Stonetalon Clan, and the Stormfists.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Thieves Guild note, Missing: Gordonkha the Shark and Lazy Murshez, mentions the related heist."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Secluded_Sewers",
+        "page_title": "Online:Secluded Sewers",
+        "revision_id": 3594408,
+        "retrieved_at": "2026-08-12T21:32:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "atak_s_first_root",
+    "name": "Atak's First Root",
+    "content_type": "dungeon",
+    "summary": "Atak's First Root is a ruined temple found beneath Xor-Hist in eastern Solstice. The entrance to the temple is found beneath the Hist tree in the center of the settlement, though there is an exit that leads out on to the cliffs to the east of Xor-Hist. It was constructed by the earliest Argonian inhabitants of the island, whose current-day descendants call the \"Builders\", and was repository of knowledge, though there were tales of a special vault found further within. Over the centuries, the Hist's roots' continued growth into the temple below caused the chambers to become unstable, leading to those above abandoning it. During the related quest, Mani-Kai and Xica-Ilan will accompany you into the ruin. Beetles, bright moon lunar moths, lizards, rats, spiders and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Atak%27s_First_Root",
+        "page_title": "Online:Atak's First Root",
+        "revision_id": 3598030,
+        "retrieved_at": "2026-08-12T21:13:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

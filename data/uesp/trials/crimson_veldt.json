@@ -1,0 +1,18 @@
+{
+    "id": "crimson_veldt",
+    "name": "Crimson Veldt",
+    "content_type": "trial",
+    "summary": "Redirect to:",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Crimson_Veldt",
+        "page_title": "Online:Crimson Veldt",
+        "revision_id": 3577210,
+        "retrieved_at": "2026-08-12T05:32:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

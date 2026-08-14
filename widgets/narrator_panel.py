@@ -62,8 +62,8 @@ class NarratorPanel(QWidget):
             ("Healers", "Healers"),
             ("Tanks", "Tanks"),
             ("DPS", "DPS"),
-            ("🤣 Funny Moments", "FunnyMoments"),
-            ("📖 Progression", "Progression"),
+            ("Funny Moments", "FunnyMoments"),
+            ("Progression", "Progression"),
         ]
 
         columns = 2

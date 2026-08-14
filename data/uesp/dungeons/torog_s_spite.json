@@ -1,0 +1,29 @@
+{
+    "id": "torog_s_spite",
+    "name": "Torog's Spite",
+    "content_type": "dungeon",
+    "summary": "Torog's Spite is an old iron mine in northwestern Bangkorai, northwest of Evermore, containing infighting Agluk Clan and Morkul Clan raiders. Its Breton miners were driven out long ago by Orcish invaders from Wrothgar. A Letter from Historian Maaga‎‎ can be read to begin the quest associated with this delve. Deeper into the mine Borzugh's Letter and Thorzhul's Letter can also be found.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The delve was inhabited by Orc raiders (Torog's Spite Archer; Torog's Spite Marauder; Torog's Spite Ravager; Torog's Spite Savage) prior to Patch 1.4.5, having been replaced by Orc clans.",
+        "It is named after Torug gro-Igron."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Torog%27s_Spite",
+        "page_title": "Online:Torog's Spite",
+        "revision_id": 3598260,
+        "retrieved_at": "2026-08-12T21:36:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

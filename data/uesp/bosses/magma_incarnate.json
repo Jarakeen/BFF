@@ -1,0 +1,278 @@
+{
+    "id": "magma_incarnate",
+    "name": "Magma Incarnate",
+    "content_id": "the_dread_cellar",
+    "content_name": "The Dread Cellar",
+    "location": "The Dread Cellar - Antecedent Cataclyst",
+    "species": "Ruinach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,125,765",
+        "veteran": "15,567,056",
+        "hardmode": "14,010,348"
+    },
+    "abilities": [
+        {
+            "name": "Slice",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Blade Toss",
+            "description": "A double-hitting basic ranged attack dealing moderate physical damage each."
+        },
+        {
+            "name": "Frenzy",
+            "description": "The Magma Incarnate delivers two initial swings, dealing moderate physical damage each, and ends with a stronger cross swipe with all of its blades, dealing very high physical damage. The last strike can be blocked."
+        },
+        {
+            "name": "Inferno",
+            "description": "The Magma Incarnate infuses two of its blades, making them levitate in the air briefly, before slamming them down, conjuring two flaming tornadoes that then spin around for a duration, indicated by red circles, dealing continuous high flame damage each."
+        },
+        {
+            "name": "Unstable Blitz",
+            "description": "The Magma Incarnate plants its blades into the ground and looks at targets, indicated by a deep tracking red rectangle. He then rakes the blades out, shooting a powerful flaming projectile from them which travels across the floor rapidly. The impact deal very high flame damage, and it applies a flame damage over time effect afterward. Dodge roll after roughly 3 seconds of the rectangle tracking to avoid it. The area where the Magma Incarnate is standing during this ability is also shrouded in a magma pool, indicated by a red circle, which deals continuous high flame damage if stood into."
+        },
+        {
+            "name": "Unstable Pulse",
+            "description": "The large machine in the center of the arena overloads, sending out a pulse of dark red energy, indicated by a massive growing red circle that covers half of the arena, dealing massive magical damage."
+        },
+        {
+            "name": "Consume",
+            "description": "Upon reaching 65% and 35% health, the Magma Incarnate covers itself in dark red energy and becomes invulnerable, while releasing crimson shockwaves that each deal very high magical damage. At the same time, Lucilla Caprenia calls out from the northern side of the arena, and opens up a portal that leads to the Agonymium Stone that is protecting the boss. Head inside to destroy it, but the stone will be guarded by enemies and hazards, which vary depending on which room the party is led into. Regardless of the room however, a Scorion Collector will appear inside to feed on the stone. If the stone isn't destroyed in time, when returning to the boss, the empowered Scorion Collector will follow along, making the fight more difficult."
+        },
+        {
+            "name": "Summon",
+            "description": "Scamps will pour into the arena during the fight to assist the boss."
+        },
+        {
+            "name": "Eternal Flames",
+            "description": "On Hard Mode, additional tornadoes, similar to \"Inferno\", will constantly rotate around the arena while all side by side and leaving only a small gap to navigate through. Getting hit by it deals continuous very high flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Martus Tullius",
+            "line": "The Daedra are pouring their energy into that machine!",
+            "trigger": "",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "Lucilla Caprenia",
+            "line": "There are more of them coming!",
+            "trigger": "",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "Martus Tullius",
+            "line": "Over there as well! Lucilla and I will hold them back. Stop that thing!",
+            "trigger": "",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "Magma Incarnate",
+            "line": "Let this world be shattered for the glory of Mehrunes Dagon!",
+            "trigger": "",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "",
+            "line": "I was born to topple nations, not crush insects.",
+            "trigger": "During combat",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "Why have you offered these pathetic mortals to squander my power on?",
+            "trigger": "During combat",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "In Dagon's name, they are broken!",
+            "trigger": "During combat",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "Prepare to march! I wish to trample upon the worms of this realm.",
+            "trigger": "During combat",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "The legions of Lord Dagon will overwhelm you!",
+            "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "Come, you servants of Mehrunes Dagon! Fight!",
+            "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "Dance in this destruction, children of the Deadlands!",
+            "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+            "ability": "Unstable Blitz"
+        },
+        {
+            "speaker": "",
+            "line": "This is but a taste of the scorching Deadlands.",
+            "trigger": "During combat while (?)",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "",
+            "line": "Quench the earth's hunger with your bones!",
+            "trigger": "During combat while (?)",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "",
+            "line": "The stone bleeds Lord Dagon's fire!",
+            "trigger": "During combat while (?)",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "",
+            "line": "Come, earth and fire! Obey!",
+            "trigger": "During combat while (?)",
+            "ability": "Consume"
+        },
+        {
+            "speaker": "",
+            "line": "I will cast you into the earth's fiery maw!",
+            "trigger": "During combat while (?)",
+            "ability": "Consume"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "Martus Tullius",
+                "line": "The Daedra are pouring their energy into that machine!",
+                "trigger": "",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "Lucilla Caprenia",
+                "line": "There are more of them coming!",
+                "trigger": "",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "Martus Tullius",
+                "line": "Over there as well! Lucilla and I will hold them back. Stop that thing!",
+                "trigger": "",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "Magma Incarnate",
+                "line": "Let this world be shattered for the glory of Mehrunes Dagon!",
+                "trigger": "",
+                "ability": "Consume"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "",
+                "line": "I was born to topple nations, not crush insects.",
+                "trigger": "During combat",
+                "ability": "Unstable Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "Why have you offered these pathetic mortals to squander my power on?",
+                "trigger": "During combat",
+                "ability": "Unstable Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "In Dagon's name, they are broken!",
+                "trigger": "During combat",
+                "ability": "Unstable Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "Prepare to march! I wish to trample upon the worms of this realm.",
+                "trigger": "During combat",
+                "ability": "Unstable Blitz"
+            }
+        ],
+        "During combat after summoning scamps[verification needed — see talk page]": [
+            {
+                "speaker": "",
+                "line": "The legions of Lord Dagon will overwhelm you!",
+                "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+                "ability": "Unstable Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "Come, you servants of Mehrunes Dagon! Fight!",
+                "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+                "ability": "Unstable Blitz"
+            },
+            {
+                "speaker": "",
+                "line": "Dance in this destruction, children of the Deadlands!",
+                "trigger": "During combat after summoning scamps[verification needed — see talk page]",
+                "ability": "Unstable Blitz"
+            }
+        ],
+        "During combat while (?)": [
+            {
+                "speaker": "",
+                "line": "This is but a taste of the scorching Deadlands.",
+                "trigger": "During combat while (?)",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "",
+                "line": "Quench the earth's hunger with your bones!",
+                "trigger": "During combat while (?)",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "",
+                "line": "The stone bleeds Lord Dagon's fire!",
+                "trigger": "During combat while (?)",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "",
+                "line": "Come, earth and fire! Obey!",
+                "trigger": "During combat while (?)",
+                "ability": "Consume"
+            },
+            {
+                "speaker": "",
+                "line": "I will cast you into the earth's fiery maw!",
+                "trigger": "During combat while (?)",
+                "ability": "Consume"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Quaking Dread: Assist a contingent of Imperial Battlemages sent to investigate Daedric activity within an abandoned prison.",
+        "Pledge: The Dread Cellar: Enter The Dread Cellar and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Magma Incarnate (set). The Magma Incarnate is a Ruinach that can be found in the Dread Cellar, acting as the final boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Magma_Incarnate",
+        "page_title": "Online:Magma Incarnate",
+        "revision_id": 3507830,
+        "retrieved_at": "2026-08-12T21:20:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

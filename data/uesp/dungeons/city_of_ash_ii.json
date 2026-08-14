@@ -1,0 +1,36 @@
+{
+    "id": "city_of_ash_ii",
+    "name": "City of Ash II",
+    "content_type": "dungeon",
+    "summary": "The City of Ash II is a group dungeon found in Greenshade. The storyline continues from the events of City of Ash I. In this version, Fingaenion intends to travel to the Deadlands to rescue his wife Gilraen from Mehrunes Dagon, and he needs your help. You can learn about its location from Mindil the Untested in Marbruk, Abzag the Monster in Shornhelm, or Roaring Ramavel in Stormhold. Centipedes and scorpions are found in numbers inside. Hazards include bottomless pits and lava pools.",
+    "location": "",
+    "boss_ids": [
+        "horvantud_the_fire_maw",
+        "daedroth",
+        "ash_titan_city_of_ash_ii",
+        "daedric_titan",
+        "valkyn_skoria_person"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal City of Ash was designed for levels 28–31, and Veteran City of Ash was designed for Veteran Ranks 1-4. Until the Veteran Rank increase in Update 7, Veteran City of Ash did not scale like the other dungeons.",
+        "Prior to Update 12, City of Ash I was only available in Normal mode, and City of Ash II was only available in Veteran mode. These were named City of Ash and Veteran City of Ash respectively.",
+        "The line you must read from the Frigid Tome in order to activate Hard Mode is a quote from the Commentaries on the Mysterium Xarxes."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:City_of_Ash_II",
+        "page_title": "Online:City of Ash II",
+        "revision_id": 3567054,
+        "retrieved_at": "2026-08-12T21:17:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

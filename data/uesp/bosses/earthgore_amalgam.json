@@ -1,0 +1,66 @@
+{
+    "id": "earthgore_amalgam",
+    "name": "Earthgore Amalgam",
+    "content_id": "bloodroot_forge",
+    "content_name": "Bloodroot Forge",
+    "location": "Bloodroot Forge",
+    "species": "Iron Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,104,982",
+        "veteran": "7,697,993",
+        "hardmode": "8,852,692"
+    },
+    "abilities": [
+        {
+            "name": "Bludgeon",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Anvil Cracker",
+            "description": "A charge heavy melee attack that deals very high physical damage. This has to be blocked by the tank or dodged if you are not."
+        },
+        {
+            "name": "Groundshaker",
+            "description": "At 80% health and below, the boss will stomp dealing high physical damage over time around itself. It will also cause additional Falling Debris around all players and the arena as indicated by red circles dealing high physical damage and knockdown. Players can choose to use the Stonefire crucible synergy to stun the boss while it is channeling this attack."
+        },
+        {
+            "name": "Falling Debris",
+            "description": "Throughout the fight, rocks will fall from the ceiling dealing high physical damage and knockdown as indicated by red circles. The frequency and amount of falling rocks will increase when Groundshaker is cast so be prepared to constantly move."
+        },
+        {
+            "name": "Drown in Flame",
+            "description": "The boss shoots out a lava ball that forms a lava pool at random locations around the arena. This deals high flame damage over time to players near the pool. This can be removed by using the Flameslake Cauldron synergy."
+        },
+        {
+            "name": "Summon Clones",
+            "description": "At 75% and 50% health respectively, the main boss sacrifices some of its health to summon a medium/small sized clone of itself with that much health. Do note that the health bar at the top represents the total health of all the clones. All clones have the same attacks the main boss has, and players should focus the small clone then medium clone, then original boss in that order. This is because the smaller clones have less health and the longer the clones are alive the more lava pools will appear, which will eventually cover the entire arena if the boss is not finished off fast enough."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "On hard mode, the synergies are disabled and thus players must kill the boss and its clones before lava covers the entire arena."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood for Blood: Neutralize an ancient forge and put an end to the evil plans of the Dreadhorn clan.",
+        "Pledge: Bloodroot Forge: Prove you are truly Undaunted by clearing Bloodroot Forge."
+    ],
+    "summary": "This article is about the creature. For the item set, see Earthgore. Earthgore Amalgam is a massive iron atronach, and the final boss of Bloodroot Forge. It is formed into the same arena as Gheric Bullblood upon his death.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Earthgore_Amalgam",
+        "page_title": "Online:Earthgore Amalgam",
+        "revision_id": 3487450,
+        "retrieved_at": "2026-08-12T21:15:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

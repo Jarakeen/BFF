@@ -1,0 +1,65 @@
+{
+    "id": "sentinel_of_rkugamz",
+    "name": "Sentinel of Rkugamz",
+    "content_id": "darkshade_caverns_i",
+    "content_name": "Darkshade Caverns I",
+    "location": "Darkshade Caverns I",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "4,992,448",
+        "hardmode": "6,240,560"
+    },
+    "abilities": [
+        {
+            "name": "Hammer Strike",
+            "description": "The boss strikes you with its hammer arm."
+        },
+        {
+            "name": "Smash",
+            "description": "A basic melee attack that does moderate physical damage. It has the ability to hit all enemies in front of the boss as indicated by a red cone, and thus the tank may want to face the boss away from the party to reduce the chance of them getting hit. If taunted, the boss will be forced to use this attack on the tank only. Occurs during the green phase."
+        },
+        {
+            "name": "Decapitating Swing",
+            "description": "A charged up swing that does very high physical damage. Getting hit will also knock the player back. Blocking will reduce the damage taken and prevent the knock back. If taunted, the boss will be forced to use this attack on the tank only. Occurs during the green phase."
+        },
+        {
+            "name": "Steel Cyclone",
+            "description": "The centurion turns red in color and spins around continuously, while chasing a random player. This attack does high physical damage over time to any players near the boss, thus the player being chased should kite the boss around to prevent damage."
+        },
+        {
+            "name": "Barrage",
+            "description": "The centurion turns blue in color and fires bolts of electricity. These will land on the ground as indicated by the red circles doing moderate shock damage to all players within. Players should move to avoid this. Occurs during the blue phase."
+        },
+        {
+            "name": "Summon Centurion Spider",
+            "description": "The centurion turns green and summons a few Centurion Spiders. These spiders emit a healing aura as indicated by the green circles. If the boss stands in these green circles, it will be substantially healed. The party should either kite it away from these spiders or kill them."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Mine All Mine: Investigate a disturbance in Deshaan's largest kwama mine.",
+        "Pledge: Darkshade Caverns I: Explore Darkshade Caverns I and return Undaunted.",
+        "Darkshade Caverns Pledge: Explore Darkshade Caverns and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "This article is about the creature. For the item set, see Sentinel of Rkugamz (set). The Sentinel of Rkugamz is a Dwarven centurion found in Darkshade Caverns I. It serves as the third and final boss, and it must be defeated to complete the dungeon. It has a chance to drop the Imperial Arm-Cleaver, the Imperial Warhammer, head pieces from the Sentinel of Rkugamz set (Veteran mode only), and the Antiquity lead for Dwarven Articulated Paws.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sentinel_of_Rkugamz",
+        "page_title": "Online:Sentinel of Rkugamz",
+        "revision_id": 3321363,
+        "retrieved_at": "2026-08-12T21:19:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

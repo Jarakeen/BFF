@@ -1,0 +1,28 @@
+{
+    "id": "ruins_of_kardala",
+    "name": "Ruins of Kardala",
+    "content_type": "dungeon",
+    "summary": "The Ruins of Kardala are an ancient Yokudan tomb in western Lower Craglorn, inhabited by Anka-Ra warriors. In the depths of the ruins lies the Apex Stone of the Celestial Warrior. Sandroaches are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "There are three optional summoned bosses, Ahmat the Forgotten, Mazar the Vengeful, and Rajdara the Restless One, each with an individual tomb location. To summon them, you need a Spirit Stone which can drop from slain Yokudan Spirits."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ruins_of_Kardala",
+        "page_title": "Online:Ruins of Kardala",
+        "revision_id": 3208309,
+        "retrieved_at": "2026-08-12T21:31:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

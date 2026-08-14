@@ -1,0 +1,26 @@
+{
+    "id": "tor_hame_khard",
+    "name": "Tor-Hame-Khard",
+    "content_type": "dungeon",
+    "summary": "Tor-Hame-Khard is a delve found southwest of Shimmerene, containing Sagacians and Yaghra. The Sagacians, a group of nefarious researchers who, according to Justiciar Tanorian, are \"truly no better than bandits\", using any means to obtain their ends. Justiciar Avanaire fled here after attacking the Dominion squad she was traveling with and robbing the abyssal pearl they were carrying to Lillandril. Centipedes, rats, and spiders are found in numbers within. In the northernmost chamber, a chest can be found at the top of the stairs, which lie in the northern portion of the room.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tor-Hame-Khard",
+        "page_title": "Online:Tor-Hame-Khard",
+        "revision_id": 3450042,
+        "retrieved_at": "2026-08-12T21:36:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "id": "cradle_of_shadows",
+    "name": "Cradle of Shadows",
+    "content_type": "dungeon",
+    "summary": "The Cradle of Shadows is a group dungeon in Shadowfen. It's part of the Shadows of the Hist dungeon pack DLC, along with Ruins of Mazzatun. The entrance can be found near Stillrise Village, southwest of Stormhold. Its dungeon sets are Gossamer, Hand of Mephala, and Widowmaker. The Cradle of Shadows is an old Imperial fort that has been converted into the lair of the mysterious Silken Ring, a band of assassins who have defected from the Morag Tong, the Shadowscales and the Dark Brotherhood. They worship the Daedric Prince, Mephala. At first, the Silken Ring didn't appear to be a threat to the other assassin organizations, but now its members have taken to targeting former associates and killing their former employers' most reliable informants. They are led by ex-Morag Tong operative Dranos Velador and a strange figure known as the Lady of Lace. A small contingent of Shadowscales, led by Tsatva-Lan and Geel-Ma, have recently entered the fortress with the intention of destroying the Silken Ring. Tsatva-Lan learned that the members of the Ring have tapped into a source of immeasurable power, leading him to bring many of his cohorts along with him in raiding Mephala's nest. Tsatva-Lan and his group haven't returned. His former student, Hides-the-Ashes, has come to investigate. She believes that Tsatva-Lan has been abducted by the Silken Ring. Her fears are justified when she arrives to find the fort's entryway filled with dead Shadowscales, and Tsatva-Lan is nowhere to be found.",
+    "location": "",
+    "boss_ids": [
+        "khephidaen",
+        "dranos_velador",
+        "dark_elf",
+        "silken_ring",
+        "mephala",
+        "velidreth",
+        "hoarvor_daedra"
+    ],
+    "achievements": [
+        {
+            "id": "shadows_of_the_hist_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Marrow Fiends used to be found in the Catacombs around Velidreth's Lair, but they were removed from the game after Patch 3.1.5.",
+        "From the Journal of Dranos Velador, Field Captain of the Silken Ring talks about the Cradle of Shadows."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cradle_of_Shadows",
+        "page_title": "Online:Cradle of Shadows",
+        "revision_id": 3568501,
+        "retrieved_at": "2026-08-12T21:17:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

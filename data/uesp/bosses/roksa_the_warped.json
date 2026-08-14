@@ -1,0 +1,75 @@
+{
+    "id": "roksa_the_warped",
+    "name": "Roksa the Warped",
+    "content_id": "bal_sunnar",
+    "content_name": "Bal Sunnar",
+    "location": "Bal Sunnar, Excavation Chamber",
+    "species": "Nix-Ox",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,788,968",
+        "veteran": "5,164,479",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Pincer Slam",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Vicious Bite",
+            "description": "Roksa the Warped rears back before lunging forward to bite you, dealing massive physical damage. This attack can be blocked."
+        },
+        {
+            "name": "Otherworldly Volley",
+            "description": "Roksa the Warped jumps up, causing three magical projectiles to be flung from the portal above its head down at you, indicated by circular AoEs, dealing high magical damage. The explosions leave fire fields that linger for an extended time, which deal continuous moderate flame damage."
+        },
+        {
+            "name": "Frenzy",
+            "description": "Roksa the Warped starts shaking and spinning in circle around its position while spewing green flames all over, forming several lingering fire fields all around itself, indicated by circular AoEs, dealing high flame damage on impact followed by moderate continuous flame damage."
+        },
+        {
+            "name": "Darklight Howl",
+            "description": "Roksa the Warped howls as corrupted energy appears around her. A Darklight Orb is summoned at the opposite end of the arena and begins sucking your health away, dealing high continuous magical damage until it's destroyed."
+        },
+        {
+            "name": "Darkness Leap",
+            "description": "At 85%/65%/45% health, Roksa the Warped leaps across the arena to any of the opposite ends. The arena becomes shrouded in darkness, except where Roksa the Warped is as well as a small haven formed by Saresea. Standing in the darkness deals very high continuous magical damage."
+        },
+        {
+            "name": "Portal Rush",
+            "description": "At 70%/40% health, Roksa the Warped becomes invulnerable to damage as it scurries over to the dark portal in the air in the center of the arena, then jumps into it and disappear. In its absence, Nix-Oxen and Larval Nix-Oxen appear. They must all be killed in time before Roksa the Warped fires her Annihilation Beam ability, otherwise you won't be shielded by Saresea to avoid the one-hit kill."
+        },
+        {
+            "name": "Annihilation Beam",
+            "description": "After a set duration away from Portal Rush, Roksa the Warped reappears on a platform outside of the arena and fires a beam of intense green magic at you. If you are not shielded by Saresea, you will be one-shotted by this ability. After this ability is blocked, Roksa the Warped leaps back into the arena to resume the fight."
+        },
+        {
+            "name": "Wraith in the Dark",
+            "description": "When the arena is shrouded in darkness, a wraith will appear and attack you before disappearing. To avoid it, stand in Saresea's light."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unstuck From Time: Investigate a temporal disturbance at the remote Telvanni settlement of Bal Sunnar."
+    ],
+    "summary": "This article is about the enemy. For the set, see Roksa the Warped (set). Roksa the Warped is a Primitive Nix-Ox that you will face within the Excavation Chamber in Bal Sunnar. It is Matriarch Lladi Telvanni's favored pet, pulled from the distant past and seemingly warped by the power of the temporal knot. It acts as the third boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Roksa_the_Warped",
+        "page_title": "Online:Roksa the Warped",
+        "revision_id": 3454703,
+        "retrieved_at": "2026-08-12T21:13:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

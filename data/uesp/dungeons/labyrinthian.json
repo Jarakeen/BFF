@@ -1,0 +1,28 @@
+{
+    "id": "labyrinthian",
+    "name": "Labyrinthian",
+    "content_type": "dungeon",
+    "summary": "Labyrinthian is an extensive Nordic ruin complex found in the mountains of Hjaalmarch Hold, southeast of Morthal. Originally known as Bromjunaar, these ruins once served of the capital of the Dragon Cult, and Arch-Mage Shalidor is responsible for creating the famed Labyrinth here from which the ruins derive their name from. Labyrinthian now serves as the prison of the ancient dragon priest, Morokei. Its bosses have a chance to drop the Glacial Metal Rivets antiquity lead for the Snow Treaders. Fragments for the Stone Husk target dummy drop from enemies in the dungeon. One of the instruments needed for An Instrumental Triumph—the Sky-Talker—can be found inside the barrow containing the skyshard.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "greymoor_achievements",
+            "name": "Achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Labyrinthian previously appeared in Arena and Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Labyrinthian",
+        "page_title": "Online:Labyrinthian",
+        "revision_id": 3548098,
+        "retrieved_at": "2026-08-12T21:27:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

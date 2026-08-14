@@ -1,0 +1,266 @@
+{
+    "id": "anthelmir",
+    "name": "Anthelmir",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "Oathsworn Pit",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": "5,413,504"
+    },
+    "abilities": [
+        {
+            "name": "Devastating Flare",
+            "description": "A basic ranged attack dealing moderate flame damage."
+        },
+        {
+            "name": "Blazing Strike",
+            "description": "Basic melee attack dealing moderate-high flame damage"
+        },
+        {
+            "name": "Scorching Hammer",
+            "description": "Charged melee attack dealing very high flame damage."
+        },
+        {
+            "name": "Heat Blast",
+            "description": "Anthelmir slams her staff on the ground, causing a massive explosion around her, indicated by a very large red circle. The initial blast deals very high flame damage and flames linger on for a while after, dealing continuous low flame damage. While Anthelmir is in the lingering flames, she gains a ward that makes her invulnerable in the form of a damage shield (Blast Furnace)."
+        },
+        {
+            "name": "Blasted Shards",
+            "description": "While in her ward, she performs this ability. She points her staff forward, blasting targets with repeated fireballs, dealing moderate flame damage each."
+        },
+        {
+            "name": "Combustion",
+            "description": "Anthelmir teleports from her current position, causing a detonation at both her starting and next positions, indicated by red circles, dealing moderate flame damage. She will often teleport near barrels to detonate them."
+        },
+        {
+            "name": "Kindlepitch Barrel",
+            "description": "Kindlepitch barrels are scattered around the arena, which explode if fire from enemies makes contact with them. The resulting explosion deals immediate high flame damage, indicated by a red circle around them, and causes flames to linger for the rest of the fight, dealing continuous low flame damage."
+        },
+        {
+            "name": "Construct Transformation",
+            "description": "When the construct reaches 70% health, both it and Anthelmir rush to the center of the arena and the construct plants one of its hands into the ground, causing the arena to shake. Shortly after, the head of a Malacath statue falls on top of the construct, causing the construct to fall over, landing on Anthelmir and killing her instantly. Afterward, the construct gets up, fortifies the statue head with vines, and gains new abilities."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Anthelmir",
+            "line": "You cut me for the last time. Crush her!",
+            "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "",
+            "line": "<Anthelmir's construct throws Axeborn Khurga against the wall.>",
+            "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "King Bazrag / Chief Bazrag",
+            "line": "Khurga!",
+            "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "King Bazrag / Chief Bazrag",
+            "line": "You'll pay for that.",
+            "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "We beat Khurga, we'll beat you.",
+            "trigger": "When combat begins",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Die in the Lodge of the Axe!",
+            "trigger": "During combat",
+            "ability": "Kindlepitch Barrel"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "You're going to fight me for this Orc?",
+            "trigger": "During combat",
+            "ability": "Kindlepitch Barrel"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Show them your real power, construct!",
+            "trigger": "When Anthelmir calls forth her construct",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Together we scour the pit of weakness.",
+            "trigger": "When Anthelmir calls forth her construct",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Construct! To me!",
+            "trigger": "When Anthelmir calls forth her construct",
+            "ability": "Construct Transformation"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Flames, just for you.",
+            "trigger": "When she starts dropping flame aoes",
+            "ability": "Heat Blast"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "All of you will burn!",
+            "trigger": "When she starts dropping flame aoes",
+            "ability": "Heat Blast"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Cremation ruins meat, but it's fun!",
+            "trigger": "When she starts dropping flame aoes",
+            "ability": "Heat Blast"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "Have a taste of my fire.",
+            "trigger": "When she starts dropping flame aoes",
+            "ability": "Heat Blast"
+        },
+        {
+            "speaker": "Anthelmir",
+            "line": "I should tell Aradros the Orc's dead.",
+            "trigger": "If she defeats the party",
+            "ability": "Heat Blast"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga": [
+            {
+                "speaker": "Anthelmir",
+                "line": "You cut me for the last time. Crush her!",
+                "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+                "ability": "Construct Transformation"
+            },
+            {
+                "speaker": "",
+                "line": "<Anthelmir's construct throws Axeborn Khurga against the wall.>",
+                "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+                "ability": "Construct Transformation"
+            },
+            {
+                "speaker": "King Bazrag / Chief Bazrag",
+                "line": "Khurga!",
+                "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+                "ability": "Construct Transformation"
+            },
+            {
+                "speaker": "King Bazrag / Chief Bazrag",
+                "line": "You'll pay for that.",
+                "trigger": "When you reach Anthelmir and her construct, Bazrag will be enraged that Anthelmir has mortally wounded Axeborn Khurga",
+                "ability": "Construct Transformation"
+            }
+        ],
+        "When combat begins": [
+            {
+                "speaker": "Anthelmir",
+                "line": "We beat Khurga, we'll beat you.",
+                "trigger": "When combat begins",
+                "ability": "Construct Transformation"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Anthelmir",
+                "line": "Die in the Lodge of the Axe!",
+                "trigger": "During combat",
+                "ability": "Kindlepitch Barrel"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "You're going to fight me for this Orc?",
+                "trigger": "During combat",
+                "ability": "Kindlepitch Barrel"
+            }
+        ],
+        "When Anthelmir calls forth her construct": [
+            {
+                "speaker": "Anthelmir",
+                "line": "Show them your real power, construct!",
+                "trigger": "When Anthelmir calls forth her construct",
+                "ability": "Construct Transformation"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "Together we scour the pit of weakness.",
+                "trigger": "When Anthelmir calls forth her construct",
+                "ability": "Construct Transformation"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "Construct! To me!",
+                "trigger": "When Anthelmir calls forth her construct",
+                "ability": "Construct Transformation"
+            }
+        ],
+        "When she starts dropping flame aoes": [
+            {
+                "speaker": "Anthelmir",
+                "line": "Flames, just for you.",
+                "trigger": "When she starts dropping flame aoes",
+                "ability": "Heat Blast"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "All of you will burn!",
+                "trigger": "When she starts dropping flame aoes",
+                "ability": "Heat Blast"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "Cremation ruins meat, but it's fun!",
+                "trigger": "When she starts dropping flame aoes",
+                "ability": "Heat Blast"
+            },
+            {
+                "speaker": "Anthelmir",
+                "line": "Have a taste of my fire.",
+                "trigger": "When she starts dropping flame aoes",
+                "ability": "Heat Blast"
+            }
+        ],
+        "If she defeats the party": [
+            {
+                "speaker": "Anthelmir",
+                "line": "I should tell Aradros the Orc's dead.",
+                "trigger": "If she defeats the party",
+                "ability": "Heat Blast"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Victory Through Strife: Repel the Recollection from the Oathsworn Pit.",
+        "Pledge: Oathsworn Pit: Explore Oathsworn Pit and return Undaunted."
+    ],
+    "summary": "Anthelmir is a Wood Elf member of the Recollection that serves as the second boss of Oathsworn Pit, along with her Construct. Maerolor is her boyfriend.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Anthelmir",
+        "page_title": "Online:Anthelmir",
+        "revision_id": 3534593,
+        "retrieved_at": "2026-08-12T21:30:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

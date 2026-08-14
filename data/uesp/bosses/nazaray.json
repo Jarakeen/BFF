@@ -1,0 +1,78 @@
+{
+    "id": "nazaray",
+    "name": "Nazaray",
+    "content_id": "shipwright_s_regret",
+    "content_name": "Shipwright's Regret",
+    "location": "Shipwright's Regret — Reclaimed Logging Camp",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,413,503",
+        "hardmode": "11,368,356"
+    },
+    "abilities": [
+        {
+            "name": "Staff Strike",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Spinning Slam",
+            "description": "Nazaray twirls her staff in hands before slamming down on you hard with it, dealing massive physical damage. This attack can be blocked."
+        },
+        {
+            "name": "Locust Rain",
+            "description": "Nazaray beckons to the sky as large poison clusters begin to fall all over the arena, indicated by growing AoEs, dealing high poison damage each."
+        },
+        {
+            "name": "Untamed Kindred",
+            "description": "Nazaray casts a spell that produces trails of red magic across the floor, culminating in the summoning of three Kindred Spirits at each opposite ends of the arena. They will follow by performing attacks that cover most of the arena with conical AoEs, dealing very high magical damage until they are killed."
+        },
+        {
+            "name": "Combust",
+            "description": "Upon reaching 60% health, Nazaray briefly becomes engulfed with dark energy, causing large pools of corrupted magic to be applied on the arena floor as she moves, as well as smaller magical bursts to shoot out to the sides, indicated by large static and small moving AoEs respectively, dealing high magical damage each. This effect lasts until she is slain."
+        },
+        {
+            "name": "Summon Wasps",
+            "description": "Nazaray periodically summons Giant Body Snatcher Wasps to assist her."
+        },
+        {
+            "name": "Summon Lurchers",
+            "description": "Nazaray periodically summons Lurchers to assist her."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Nazaray is not a creature like most spriggans but rather an NPC, and uses the Sylvan Spriggan model."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Wright of Passage: Help Za'ji retrieve plans to upgrade his ship from a haunted shipyard.",
+        "Pledge: Shipwright's Regret: Enter Shipwright's Regret and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Nazaray (set). Nazaray is a spriggan that serves as the second boss of Shipwright's Regret, found at the Reclaimed Logging Camp. During the fight, two different add monsters will spawn: the Giant Body Snatcher Wasp and the Kindred Spirit. It is also the namesake of the Nazaray set and the basis of a trophy, bust, and style; however, it does not drop any of them, as they are instead obtained from killing the final boss Captain Numirril.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nazaray",
+        "page_title": "Online:Nazaray",
+        "revision_id": 3396447,
+        "retrieved_at": "2026-08-12T21:33:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

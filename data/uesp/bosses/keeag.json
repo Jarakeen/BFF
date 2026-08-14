@@ -1,0 +1,93 @@
+{
+    "id": "keeag",
+    "name": "Keeag",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "Harvester",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Nova",
+            "description": "Basic ranged attack dealing low flame damage."
+        },
+        {
+            "name": "Scathing Evisceration",
+            "description": "If you are close to it, the Keeag unleashes a 5 step melee attack, each dealing moderate flame damage. Despite having yellow sparks, blocking this attack does not stagger it."
+        },
+        {
+            "name": "Deadfire Heart/Deadstar Blast/Deadstar Burst",
+            "description": "Keeag continuously launches flame balls at you, dealing first low flame damage (Deadfire Heart) then moderate-high flame damage in a large area where they land (Deadfire Burst). When landed, it spawns an other flame ball that launches at you, dealing moderate-high flame damage in a large area where it lands (Deadfire Blast)."
+        },
+        {
+            "name": "Creeping Manifold",
+            "description": "Keeag creates a large pillar of flame in front of itself and links it to you. The pillar of flame continuously shoots flame projectiles that travel on the ground in your direction that continuously spawns two other flame projectiles on their sides. All projectiles deal moderate flame damage."
+        },
+        {
+            "name": "Volatile Shell",
+            "description": "At 75% and 25% Health, Keeag disappears from the area and conjures two Volatile Shells that must be destroyed for Keeag to reappear."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Keeag",
+            "line": "You mortals never seem to learn.",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Keeag",
+            "line": "No one can match my power!",
+            "trigger": "During combat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "During combat": [
+            {
+                "speaker": "Keeag",
+                "line": "You mortals never seem to learn.",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Keeag",
+                "line": "No one can match my power!",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Keeag is a Harvester who can found in the westernmost central room. She serves as one of the champions of the Gorne public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Keeag",
+        "page_title": "Online:Keeag",
+        "revision_id": 3542805,
+        "retrieved_at": "2026-08-12T21:24:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

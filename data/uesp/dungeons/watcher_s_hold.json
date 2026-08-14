@@ -1,0 +1,26 @@
+{
+    "id": "watcher_s_hold",
+    "name": "Watcher's Hold",
+    "content_type": "dungeon",
+    "summary": "Watcher's Hold is a ruined fort located east of Friendship Gate, containing Pale Watch bandits and wildlife. It serves as the historical headquarters of the knightly order, who were posted here during the time of the first Orsinium by King Maxevian. Since then however, they have gone rogue and turned to banditry.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Watcher%27s_Hold",
+        "page_title": "Online:Watcher's Hold",
+        "revision_id": 3533656,
+        "retrieved_at": "2026-08-12T21:38:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

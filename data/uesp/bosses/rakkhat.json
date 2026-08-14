@@ -1,0 +1,99 @@
+{
+    "id": "rakkhat",
+    "name": "Rakkhat",
+    "content_id": "maw_of_lorkhaj",
+    "content_name": "Maw of Lorkhaj",
+    "location": "The High Lunarium, Maw of Lorkhaj",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Void Slash",
+            "description": "Basic melee attack dealing extreme physical damage."
+        },
+        {
+            "name": "Crushing Void",
+            "description": "Charged melee attack dealing massive physical damage, knocking down and stunning. This can be blocked to stagger Rakkhat instead."
+        },
+        {
+            "name": "Threshing Wings",
+            "description": "Rakkhat teleports to his target and strikes them with its claw, dealing high physical damage to all targets hit in the area, knocking back and stunning the main target while snaring nearby targets. This can be blocked to stagger Rakkhat instead."
+        },
+        {
+            "name": "Dark Affliction",
+            "description": "Rakkhat (?) the target, dealing massive physical damage then continuous direct moderate magic damage that reduces your healing taken."
+        },
+        {
+            "name": "Annihilation Sphere",
+            "description": "An AoE appears underneath a player and after a while, big orb will appear and explode on the spot. Player standing on the AoE should step out of it. [verification needed]"
+        },
+        {
+            "name": "Lunar Smash",
+            "description": "Rakkhat jumps in the air then teleports over the current lunar platform to smash it when landing, dealing high magic damage to all players while dealing extreme magic damage to the tank. All players or nearby ones ? Why tank takes more ?"
+        },
+        {
+            "name": "Searing Shadows",
+            "description": "A slow moving orb appears from the platform in the middle and starts moving towards the closest player. The orb deals damage to anyone standing too close to it and the player being targeted by it should kite it slowly away from the group.[verification needed]"
+        },
+        {
+            "name": "Shadow Barrage",
+            "description": "Rakkhat joins his hands to repidly shoots void balls to his target, each one dealing massive magic damage. Standing in a void ball's way hits you instead."
+        },
+        {
+            "name": "Void Blast",
+            "description": "[verification needed]"
+        },
+        {
+            "name": "Void Bomb",
+            "description": "Rakkhat places a growing AoE on one player. Once the AoE is fully grown, it will explode with heavy damage and stunning players in the AoE, while also shooting smaller orbs to every direction around the main target. The small orbs travel far and deal moderate damage. Main target will always be safe from the scattering orbs and should take the explosion away from group and preferably into a corner to minimize the amount of orbs hitting the group.(?)"
+        },
+        {
+            "name": "Sum Dro Hulk",
+            "description": "A Dro-m'Athra Hulk is periodically summoned to fight for Rakkhat."
+        },
+        {
+            "name": "Wrath of the Void",
+            "description": "[verification needed]"
+        },
+        {
+            "name": "Void Sphere",
+            "description": "During the fight, shadowy images of ritualists will appear in the center of the room. Some players then need to pass through the gate to the back of the room, gaining the \"Breath of Lorkhaj\" effect and defeat a total of six Void Callers (who spawn on circular mats that are embroidered with moons and adorned with pillows) are also making motions as though casting a spell. The runners need to activate the Eyes of Jode synergy to see the Void Callers. The dancing Bent Cats present within the Void only serve as a distraction and should be ignored. While the shadowy ritualists are present, the lunar images on the floor will begin to darken, and the ritualists will eventually sink into the ground, launching void spheres dealing high magic damage to all players Is it really projectiles ? I don't remember them but it makes sense per the logs. If the players in the void fail to kill the Void Callers in time, the ritualists will disappear, and Rakkhat will cast \"Consumed by the Void\""
+        },
+        {
+            "name": "Breath of Lorkhaj",
+            "description": "Effect gained for 5 minutes ? when passing through the gate to the back of the room that reduces your healing taken. Gaining \"Breath of Lorkahj\" while already under it will one-shot you."
+        },
+        {
+            "name": "Consumed by the Void",
+            "description": "Deals 100% Max Health to all players in oblivion damage."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Rakkhat is voiced by Christopher Smith (IMDb).[1]"
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Maw: Stop the dro-m'Athra from flooding into Tamriel."
+    ],
+    "achievements": [],
+    "summary": "Rakkhat, The Fang of Lorkhaj, is a powerful dro-m'Athra found within the Maw of Lorkhaj. He emerges after you confront Kulan-dro in the High Lunarium. He takes the form of a large Grievous Twilight with glowing blue stripes and serves as the trial's final boss. Upon his defeat, his loot will appear in a reward chest near the wall in the back of the room. If you fail to get the quest from Adara'hai at the start of the trial, your loot will include an Ancient Lunar Talisman, which you can activate from your inventory to begin the quest. This exists as a failsafe to ensure you can get your weekly coffer for completing the trial, even if you forget to talk to Adara'hai or accept a quest share from one of your groupmates. The Rakkhat's Voidmantle Mythic Item reveals a Fang of Lorkhaj is a type of dro-m'Athra champion or warlord, of which only one can exist at a time. The Darkheart Leather Cop which is part of the Mythic Item is obtainable from him.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rakkhat",
+        "page_title": "Online:Rakkhat",
+        "revision_id": 3569140,
+        "retrieved_at": "2026-08-12T05:33:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

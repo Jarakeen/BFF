@@ -1,0 +1,18 @@
+{
+    "id": "the_scholarium",
+    "name": "The Scholarium",
+    "content_type": "dungeon",
+    "summary": "The Scholarium is a great library enshrined deep beneath Eyevea. It is home to the Scribing Altar. You will enter through the Scholarium Outer Ruins, which is accessed via the ancient library of Sunnamere. The Wing of the Crow can only be accessed during the aptly named quest, which is granted after completing all of the other quests affiliated with the Scholarium.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Scholarium",
+        "page_title": "Online:The Scholarium",
+        "revision_id": 3550418,
+        "retrieved_at": "2026-08-12T21:32:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "id": "dragon_priest",
+    "name": "Dragon Priest",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Watcher Armok, Watcher Garalan and Watcher Shavmar are all dressed like dragon priests, although they are actually presumably undead Nedes.",
+        "Dragon Priests originally wore generic robes along with their distinct mask. This was replaced by the current metallic armor model. Players can also wear the outfit if they own the Dragon Priest Costume. Zaan the Scalecaller wears a unique outfit, which can similarly be worn by players with the Renegade Dragon Priest costume or the Zaan Monster Style. Players can also obtain the Frostbane Dragon Priest costume. Dragon Priests from the Order of the New Moon wear the New Moon Dragon Cult Garb costume."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Dragon Priests are powerful undead. While most are of Nordic ancestry, any individual can be chosen by a Dragon to become a Dragon Priest. They were originally members of the Dragon Cult, and have retained much of their power through the eternal worship of their draugr servants.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dragon_Priest",
+        "page_title": "Online:Dragon Priest",
+        "revision_id": 3028133,
+        "retrieved_at": "2026-08-12T21:32:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

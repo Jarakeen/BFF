@@ -1,0 +1,26 @@
+{
+    "id": "at_himah_family_estate",
+    "name": "At-Himah Family Estate",
+    "content_type": "dungeon",
+    "summary": "The At-Himah Family Estate is an estate found on the southern approach into Kvatch. The building has been taken over by the Order of the Hour as Grand Sermonizer Fithia's headquarters, with Order soldiers patrolling the grounds and outbuildings. They are hostile to any intruders, however it does not count as trespassing to be on the property. A goat pen is located behind the house with Gaea Numida and a stable to the north with a horse and a Gray Yokudan Charger. Although the grounds can be visited at any time, the house itself is only accessible during the related quest and has four interior zones: an Entrance Hall, an Interrogation Hall, the Grand Sermonizer's Study, and Escape Tunnels that lead to an Ayleid ruin with an exit to the west of the estate.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dark_brotherhood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:At-Himah_Family_Estate",
+        "page_title": "Online:At-Himah Family Estate",
+        "revision_id": 3549767,
+        "retrieved_at": "2026-08-12T21:13:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}
