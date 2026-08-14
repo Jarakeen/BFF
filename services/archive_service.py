@@ -69,6 +69,31 @@ class ArchiveService:
         path.write_text("\n".join(lines), encoding="utf-8")
         return path
 
+    def write_existing(
+        self,
+        archive_no: str,
+        lines: list[str],
+    ) -> Path:
+        """
+        Rewrite an existing archive without creating a new
+        archive number.
+        """
+
+        filename = archive_no.replace("-", "_") + ".md"
+        path = self.archive_folder / filename
+
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Archive does not exist: {archive_no}"
+            )
+
+        path.write_text(
+            "\n".join(lines),
+            encoding="utf-8",
+        )
+
+        return path
+
     def file_form(self, prefix: str, lines_builder) -> tuple[str, Path]:
         """Assign the next number for prefix, build markdown via lines_builder(report_id, number),
         write it to the archive folder, and return (report_id, archive_path)."""
