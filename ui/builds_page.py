@@ -247,14 +247,17 @@ class BuildsPage(FoundryPage):
         editor = BuildEditor(
             race_choices=self.reference.list_race_names(),
             set_choices=self.reference.list_gear_set_names(),
-            skill_choices=self.reference.list_skill_names(),
-            cp_choices=self.reference.list_champion_point_names(),
+            skill_choices=self.reference.list_skills(),
+            cp_choices=self.reference.list_champion_points(),
+            food_choices=self.reference.list_food_names(),
+            potion_choices=self.reference.list_potion_names(),
         )
 
-        editor.nameChanged.connect(self._rebuild_tabs)
+        editor.nameChanged.connect(
+            self._rebuild_tabs
+        )
 
         return editor
-
     # --------------------------------------------------
     # Tabs
     # --------------------------------------------------

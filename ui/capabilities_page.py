@@ -42,7 +42,7 @@ from ui.foundry_page import FoundryPage
 from widgets.capability_editor import CapabilityEditor
 
 from models.capability_model import CapabilityRoster, CapabilityProfile
-
+from widgets.build_dashboard import BuildDashboard
 from services.capability_service import CapabilityService
 from services.esologs_client import EsoLogsClient, EsoLogsApiError
 from services.eso_database import EsoDatabase
@@ -260,7 +260,8 @@ class CapabilitiesPage(FoundryPage):
 
             self.editors.append(editor)
 
-            self.stack.addWidget(editor)
+            dashboard = BuildDashboard(editor)
+            self.stack.addWidget(dashboard)
 
         self._rebuild_tabs()
 
@@ -347,7 +348,8 @@ class CapabilitiesPage(FoundryPage):
 
         self.editors.append(editor)
 
-        self.stack.addWidget(editor)
+        dashboard = BuildDashboard(editor)
+        self.stack.addWidget(dashboard)
 
         self.stack.setCurrentWidget(editor)
 
