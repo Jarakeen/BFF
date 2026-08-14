@@ -36,7 +36,7 @@ Thumbs.db
 dist/
 build/
 
-/old_pages
+
 data/
 settings.json
 CONSOLE.md
@@ -55,3 +55,4 @@ Importers
 /docs
 /tests
 /archives
+randomTODOs.md
