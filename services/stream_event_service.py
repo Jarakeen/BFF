@@ -50,7 +50,11 @@ class StreamEventService:
         self.events_path.write_text(json.dumps(payload, ensure_ascii=False, indent=4), encoding="utf-8")
 
     def load_session(self) -> dict:
-        defaults = {"TotalPulls": 0, "CurrentBoss": "", "BossPulls": 0, "BossWipes": 0}
+        defaults = { "TotalPulls": 0,
+    "CurrentBoss": "",
+    "BossPulls": 0,
+    "BossWipes": 0,
+    "Events": [],}
         if not self.session_path.exists():
             return defaults
         try:
