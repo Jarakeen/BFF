@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -127,6 +128,33 @@ class EsoLogsClient:
     # Report / fights
     # --------------------------------------------------
 
+    @staticmethod
+    def normalize_report_code(report_code: str) -> str:
+        """Accept either a raw report code or an ESO Logs report URL."""
+
+        value = str(report_code or "").strip()
+
+        if not value:
+            return ""
+
+        parsed = urlparse(value)
+
+        if parsed.scheme and parsed.netloc:
+            parts = [part for part in parsed.path.split("/") if part]
+
+            try:
+                index = next(
+                    i for i, part in enumerate(parts)
+                    if part.casefold() == "reports"
+                )
+            except StopIteration:
+                return value
+
+            if index + 1 < len(parts):
+                return parts[index + 1].strip()
+
+        return value.rstrip("/").split("/")[-1].strip()
+
     def get_fights(self, report_code: str) -> list[dict]:
         """
         Return every fight in a report: id, name, kill,
@@ -134,6 +162,11 @@ class EsoLogsClient:
         timestamps (ms, report-relative) used to scope the
         buff/debuff table query.
         """
+
+        code = self.normalize_report_code(report_code)
+
+        if not code:
+            raise EsoLogsApiError("Enter an ESO Logs report code or report URL.")
 
         query = """
         query ReportFights($code: String!) {
@@ -155,21 +188,22 @@ class EsoLogsClient:
         }
         """
 
-        data = self._query(query, {"code": report_code})
+        data = self._query(query, {"code": code})
 
         report = (data.get("reportData") or {}).get("report")
 
         if report is None:
 
             raise EsoLogsApiError(
-                f"Report '{report_code}' was not found (or isn't public)."
+                f"Report '{code}' was not found (or isn't public)."
             )
 
         return report.get("fights") or []
 
     def get_fight(self, report_code: str, fight_id: int) -> dict:
 
-        fights = self.get_fights(report_code)
+        code = self.normalize_report_code(report_code)
+        fights = self.get_fights(code)
 
         for fight in fights:
 
@@ -177,7 +211,7 @@ class EsoLogsClient:
                 return fight
 
         raise EsoLogsApiError(
-            f"Fight {fight_id} was not found in report '{report_code}'."
+            f"Fight {fight_id} was not found in report '{code}'."
         )
 
     # --------------------------------------------------
@@ -205,6 +239,11 @@ class EsoLogsClient:
           landed on the boss.)
         """
 
+        code = self.normalize_report_code(report_code)
+
+        if not code:
+            raise EsoLogsApiError("Enter an ESO Logs report code or report URL.")
+
         query = """
         query AuraTable(
           $code: String!
@@ -231,7 +270,7 @@ class EsoLogsClient:
         """
 
         variables = {
-            "code": report_code,
+            "code": code,
             "fightIDs": [int(fight_id)],
             "startTime": float(start_time),
             "endTime": float(end_time),
@@ -246,9 +285,19 @@ class EsoLogsClient:
 
         table = report.get("table") or {}
 
-        # The `table` field is a raw JSON scalar in the v2
-        # API -- shape is {"data": {"auras": [...], ...}} for
-        # Buffs/Debuffs tables.
+        # The `table` field is a JSON scalar in the v2 API.
+        # Depending on the HTTP/GraphQL stack it may arrive as
+        # an already-decoded dict or as a JSON string.
+        if isinstance(table, str):
+            try:
+                import json
+
+                table = json.loads(table)
+            except json.JSONDecodeError as exc:
+                raise EsoLogsApiError(
+                    "ESO Logs returned an unreadable aura table payload."
+                ) from exc
+
         inner = table.get("data") if isinstance(table, dict) else None
 
         auras = (inner or {}).get("auras") if isinstance(inner, dict) else None
