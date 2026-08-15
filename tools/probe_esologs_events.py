@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
+from services.settings_service import SettingsService
 
 
 MASTER_QUERY = """
@@ -158,8 +159,11 @@ def main() -> int:
         required=True,
         help="Fight ID to inspect. Repeat for multiple fights.",
     )
-    parser.add_argument("--client-id", required=True)
-    parser.add_argument("--client-secret", required=True)
+    parser.add_argument(
+        "--settings",
+        default="settings.json",
+        help="BFF settings path. Defaults to the same settings.json used by the Capabilities page.",
+    )
     parser.add_argument(
         "--out",
         default="archives/esologs_probe.json",
@@ -170,7 +174,11 @@ def main() -> int:
     args = parser.parse_args()
 
     code = EsoLogsClient.normalize_report_code(args.report_code)
-    client = EsoLogsClient(args.client_id, args.client_secret)
+    settings = SettingsService(Path(args.settings)).load()
+    client = EsoLogsClient(
+        client_id=settings.get("EsoLogsClientId", ""),
+        client_secret=settings.get("EsoLogsClientSecret", ""),
+    )
 
     try:
         fights = client.get_fights(code)
