@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -13,46 +14,65 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
     """Import previously captured ESO Logs probe JSON without network access."""
 
     def __init__(self, connection: sqlite3.Connection):
-        # The combat importer expects a client, but raw imports never use it.
         super().__init__(connection, client=None)  # type: ignore[arg-type]
         self.manifest = EsoLogsImporter(connection, client=None)  # type: ignore[arg-type]
 
     @staticmethod
     def _load(path: Path) -> dict[str, Any]:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError(f"{path.name}: top-level JSON value must be an object")
+        return payload
 
-    def _import_fight_raw(
-        self,
-        *,
-        report_code: str,
-        fight: dict[str, Any],
-        source_path: Path,
-        gap_threshold_ms: float,
-    ) -> dict[str, int]:
-        fight_id = int(fight["metadata"]["id"])
-        metadata = fight["metadata"]
+    @staticmethod
+    def _fight_items(fights: Any) -> list[tuple[str, dict[str, Any]]]:
+        """Normalize probe exports where fights may be a dict or a list."""
+        if isinstance(fights, dict):
+            return [(str(key), value) for key, value in fights.items() if isinstance(value, dict)]
+        if isinstance(fights, list):
+            items: list[tuple[str, dict[str, Any]]] = []
+            for index, value in enumerate(fights):
+                if not isinstance(value, dict):
+                    continue
+                metadata = value.get("metadata") or {}
+                fight_id = metadata.get("id", value.get("id", index))
+                items.append((str(fight_id), value))
+            return items
+        return []
+
+    @staticmethod
+    def _metadata(fight: dict[str, Any]) -> dict[str, Any]:
+        metadata = fight.get("metadata")
+        return metadata if isinstance(metadata, dict) else fight
+
+    @staticmethod
+    def _timestamp_text(path: Path) -> str:
+        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+
+    def _import_fight_raw(self, *, report_code: str, fight: dict[str, Any], source_path: Path, gap_threshold_ms: float) -> dict[str, int]:
+        metadata = self._metadata(fight)
+        if metadata.get("id") is None:
+            raise ValueError(f"{source_path.name}: fight is missing metadata.id")
+
+        fight_id = int(metadata["id"])
         events = fight.get("events") or []
+        if not isinstance(events, list):
+            raise ValueError(f"{source_path.name}: fight {fight_id} events must be a list")
         player_details = fight.get("player_details") or {}
+        if not isinstance(player_details, dict):
+            player_details = {}
 
-        # Ensure the report/fight provenance tables exist and preserve the
-        # original probe payload as the source record.
         self.connection.execute(
             """
             INSERT INTO log_report (report_code, title, source_url, fetched_at, raw_json)
             VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(report_code) DO UPDATE SET
-                title=excluded.title,
-                source_url=excluded.source_url,
-                fetched_at=excluded.fetched_at,
-                raw_json=excluded.raw_json
+                title=excluded.title, source_url=excluded.source_url,
+                fetched_at=excluded.fetched_at, raw_json=excluded.raw_json
             """,
-            (
-                report_code,
-                None,
-                f"https://www.esologs.com/reports/{report_code}",
-                source_path.stat().st_mtime_ns,
-                json.dumps({"source_file": str(source_path), "fight": metadata}, ensure_ascii=False),
-            ),
+            (report_code, None, f"https://www.esologs.com/reports/{report_code}",
+             self._timestamp_text(source_path),
+             json.dumps({"source_file": str(source_path), "fight": metadata}, ensure_ascii=False)),
         )
         self.connection.execute(
             """
@@ -61,24 +81,19 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                 start_time, end_time, encounter_id, raw_json
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (
-                report_code,
-                fight_id,
-                metadata.get("name"),
-                int(bool(metadata.get("kill"))) if metadata.get("kill") is not None else None,
-                metadata.get("difficulty"),
-                metadata.get("bossPercentage"),
-                metadata.get("startTime"),
-                metadata.get("endTime"),
-                metadata.get("encounterID"),
-                json.dumps(metadata, ensure_ascii=False, sort_keys=True),
-            ),
+            (report_code, fight_id, metadata.get("name"),
+             int(bool(metadata.get("kill"))) if metadata.get("kill") is not None else None,
+             metadata.get("difficulty"), metadata.get("bossPercentage"),
+             metadata.get("startTime"), metadata.get("endTime"), metadata.get("encounterID"),
+             json.dumps(metadata, ensure_ascii=False, sort_keys=True)),
         )
 
         self.connection.execute("DELETE FROM log_actor WHERE report_code=? AND fight_id=?", (report_code, fight_id))
         actor_count = 0
         for role_key, role_name in (("healers", "healer"), ("tanks", "tank"), ("dps", "dps")):
             for actor in player_details.get(role_key) or []:
+                if not isinstance(actor, dict):
+                    continue
                 actor_id = int(actor.get("id", -1))
                 if actor_id < 0:
                     continue
@@ -89,16 +104,17 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                         actor_type, role, anonymous, raw_json
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (
-                        report_code, fight_id, actor_id, actor.get("guid"), actor.get("name"),
-                        actor.get("displayName"), actor.get("type"), role_name,
-                        int(bool(actor.get("anonymous"))), json.dumps(actor, ensure_ascii=False, sort_keys=True),
-                    ),
+                    (report_code, fight_id, actor_id, actor.get("guid"), actor.get("name"),
+                     actor.get("displayName"), actor.get("type"), role_name,
+                     int(bool(actor.get("anonymous"))), json.dumps(actor, ensure_ascii=False, sort_keys=True)),
                 )
                 actor_count += 1
 
         self.connection.execute("DELETE FROM log_event WHERE report_code=? AND fight_id=?", (report_code, fight_id))
+        valid_events = 0
         for index, event in enumerate(events):
+            if not isinstance(event, dict):
+                continue
             self.connection.execute(
                 """
                 INSERT INTO log_event (
@@ -110,27 +126,22 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                     waste, overheal, absorbed, stack, raw_json
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (
-                    report_code, fight_id, index, float(event.get("timestamp", 0)), event.get("type", "unknown"),
-                    event.get("sourceID"),
-                    None if event.get("sourceIsFriendly") is None else int(bool(event.get("sourceIsFriendly"))),
-                    event.get("targetID"), event.get("targetInstance"),
-                    None if event.get("targetIsFriendly") is None else int(bool(event.get("targetIsFriendly"))),
-                    event.get("abilityGameID"), event.get("extraAbilityGameID"), event.get("amount"),
-                    event.get("hitType"), event.get("tick"), event.get("castTrackID"), event.get("resourceChange"),
-                    event.get("resourceChangeType"), event.get("otherResourceChange"), event.get("maxResourceAmount"),
-                    event.get("waste"), event.get("overheal"), event.get("absorbed"), event.get("stack"),
-                    json.dumps(event, ensure_ascii=False, sort_keys=True),
-                ),
+                (report_code, fight_id, index, float(event.get("timestamp", 0)), event.get("type", "unknown"),
+                 event.get("sourceID"),
+                 None if event.get("sourceIsFriendly") is None else int(bool(event.get("sourceIsFriendly"))),
+                 event.get("targetID"), event.get("targetInstance"),
+                 None if event.get("targetIsFriendly") is None else int(bool(event.get("targetIsFriendly"))),
+                 event.get("abilityGameID"), event.get("extraAbilityGameID"), event.get("amount"),
+                 event.get("hitType"), event.get("tick"), event.get("castTrackID"), event.get("resourceChange"),
+                 event.get("resourceChangeType"), event.get("otherResourceChange"), event.get("maxResourceAmount"),
+                 event.get("waste"), event.get("overheal"), event.get("absorbed"), event.get("stack"),
+                 json.dumps(event, ensure_ascii=False, sort_keys=True)),
             )
+            valid_events += 1
 
-        windows = self._rebuild_observed_windows(
-            report_code,
-            metadata,
-            gap_threshold_ms=gap_threshold_ms,
-        )
+        windows = self._rebuild_observed_windows(report_code, metadata, gap_threshold_ms=gap_threshold_ms)
         self.connection.commit()
-        return {"actors": actor_count, "events": len(events), "observed_windows": windows}
+        return {"actors": actor_count, "events": valid_events, "observed_windows": windows}
 
     def import_directory(self, raw_dir: Path, gap_threshold_ms: float = 3000.0) -> dict[str, int]:
         files = sorted(raw_dir.glob("*.json"))
@@ -145,19 +156,16 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
             report_code = str(payload.get("report_code") or "").strip()
             if not report_code:
                 continue
-            fights = payload.get("fights") or {}
+
+            fight_items = self._fight_items(payload.get("fights"))
             imported_from_file = 0
-            for fight_key, fight in fights.items():
-                fight_id = int(fight.get("metadata", {}).get("id", fight_key))
+            for fight_key, fight in fight_items:
+                metadata = self._metadata(fight)
+                fight_id = int(metadata.get("id", fight_key))
                 key = (report_code, fight_id)
                 if key in seen:
                     continue
-                result = self._import_fight_raw(
-                    report_code=report_code,
-                    fight=fight,
-                    source_path=path,
-                    gap_threshold_ms=gap_threshold_ms,
-                )
+                result = self._import_fight_raw(report_code=report_code, fight=fight, source_path=path, gap_threshold_ms=gap_threshold_ms)
                 seen.add(key)
                 imported_from_file += 1
                 totals["fights"] += 1
@@ -167,18 +175,11 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
 
             if imported_from_file:
                 totals["files"] += 1
-                self.manifest._manifest_finish(
-                    self.manifest._manifest_start(
-                        export_name=path.name,
-                        export_type="raw_probe_json",
-                        report_code=report_code,
-                        request={"source_file": str(path)},
-                        destination_tables=[
-                            "log_report", "log_fight", "log_actor", "log_event", "log_observed_target", "log_observed_damage_window"
-                        ],
-                    ),
-                    status="imported",
-                    record_count=sum(1 for _ in fights),
+                manifest_id = self.manifest._manifest_start(
+                    export_name=path.name, export_type="raw_probe_json", report_code=report_code,
+                    request={"source_file": str(path)},
+                    destination_tables=["log_report", "log_fight", "log_actor", "log_event", "log_observed_target", "log_observed_damage_window"],
                 )
+                self.manifest._manifest_finish(manifest_id, status="imported", record_count=imported_from_file)
 
         return totals
