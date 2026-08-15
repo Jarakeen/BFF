@@ -64,16 +64,12 @@ data/tmp/
 # ============================================================
 # Scratch / temporary files
 # ============================================================
-
-/randomTODOs.md
 /debug.py
 /wall_debug.html
 /old_pages
 settings.*
 *.png
 *.svg
-/Console_TODO.md
-/Claude TODO.md
 /docs
 /repo_diff.txt
 

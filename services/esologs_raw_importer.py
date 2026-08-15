@@ -18,11 +18,8 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         self.manifest = EsoLogsImporter(connection, client=None)  # type: ignore[arg-type]
 
     @staticmethod
-    def _load(path: Path) -> dict[str, Any]:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise ValueError(f"{path.name}: top-level JSON value must be an object")
-        return payload
+    def _load(path: Path) -> Any:
+        return json.loads(path.read_text(encoding="utf-8"))
 
     @staticmethod
     def _fight_items(fights: Any) -> list[tuple[str, dict[str, Any]]]:
