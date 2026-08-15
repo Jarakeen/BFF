@@ -38,7 +38,9 @@ class EventEditDialog(QDialog):
     def __init__(self, event: Event, parent=None):
         super().__init__(parent)
 
-        self.event = event
+        # Do not use ``self.event`` here: QDialog already has an event()
+        # method, and shadowing it prevents Qt from opening the dialog.
+        self.timeline_event = event
 
         self.setWindowTitle("Edit Event")
         self.resize(460, 300)
@@ -108,20 +110,20 @@ class EventEditDialog(QDialog):
     def apply(self):
         """Write edited values back to the Event."""
 
-        self.event.timestamp = (
+        self.timeline_event.timestamp = (
             self.timestamp.dateTime().toPython()
         )
 
-        self.event.event = (
+        self.timeline_event.event = (
             self.event_label.toPlainText().strip()
         )
 
-        self.event.notes = (
+        self.timeline_event.notes = (
             self.notes.toPlainText().strip()
         )
 
         if self.percent is not None:
-            self.event.payload["percent"] = (
+            self.timeline_event.payload["percent"] = (
                 self.percent.value()
             )
 
