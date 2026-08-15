@@ -2,7 +2,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# When this file is run directly (`python tools/probe_esologs_events.py`),
+# Python puts `tools/` on sys.path rather than the repository root. Add the
+# repo root explicitly so sibling packages such as `services` are importable.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
 
