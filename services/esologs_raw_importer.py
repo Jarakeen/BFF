@@ -91,7 +91,14 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         events = fight.get("events") or []
         if not isinstance(events, list):
             raise ValueError(f"{source_path.name}: fight {fight_id} events must be a list")
+
+        # ESO Logs probe shape:
+        # player_details -> data -> playerDetails -> {healers, tanks, dps}
         player_details = fight.get("player_details") or {}
+        if isinstance(player_details, dict):
+            player_details = player_details.get("data") or player_details
+            if isinstance(player_details, dict):
+                player_details = player_details.get("playerDetails") or player_details
 
         self.connection.execute(
             """
