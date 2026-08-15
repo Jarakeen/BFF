@@ -18,10 +18,15 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         self.manifest = EsoLogsImporter(connection, client=None)  # type: ignore[arg-type]
 
     @staticmethod
-    def _load(path: Path) -> dict[str, Any]:
+    def _load(path: Path) -> dict[str, Any] | None:
+        """Load an ESO Logs probe export; return None for unrelated raw JSON."""
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
-            raise ValueError(f"{path.name}: top-level JSON value must be an object")
+            return None
+        # data/raw also contains other project JSON exports. Only probe exports
+        # with a report_code are inputs for this importer.
+        if not str(payload.get("report_code") or "").strip():
+            return None
         return payload
 
     @staticmethod
@@ -150,13 +155,14 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
 
         totals = {"files": 0, "fights": 0, "actors": 0, "events": 0, "observed_windows": 0}
         seen: set[tuple[str, int]] = set()
+        skipped = 0
 
         for path in files:
             payload = self._load(path)
-            report_code = str(payload.get("report_code") or "").strip()
-            if not report_code:
+            if payload is None:
+                skipped += 1
                 continue
-
+            report_code = str(payload.get("report_code") or "").strip()
             fight_items = self._fight_items(payload.get("fights"))
             imported_from_file = 0
             for fight_key, fight in fight_items:
@@ -182,4 +188,6 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                 )
                 self.manifest._manifest_finish(manifest_id, status="imported", record_count=imported_from_file)
 
+        if skipped:
+            print(f"Skipped {skipped} unrelated JSON files in {raw_dir}.")
         return totals
