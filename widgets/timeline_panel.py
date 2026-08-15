@@ -219,6 +219,14 @@ class TimelinePanel(QWidget):
     # Editing
     # --------------------------------------------------
 
+    def edit_selected_event(self) -> bool:
+        """Edit the currently selected event, if there is one."""
+        item = self.timeline.currentItem()
+        if item is None:
+            return False
+        self._edit_item(item)
+        return True
+
     def _edit_item(self, item: QListWidgetItem):
 
         event = item.data(

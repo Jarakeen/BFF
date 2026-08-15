@@ -12,6 +12,7 @@
 #
 # ==================================================
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QMessageBox,
 )
 
 from ui.components.foundry_header import FoundryHeader
@@ -254,6 +256,12 @@ class LiveOperationsPage(FoundryPage):
             "Archive current timeline",
         )
 
+        self.edit_timeline_button = self.status.add_action(
+            "Edit",
+            self.edit_timeline,
+            "Edit the selected timeline event",
+        )
+
         self._set_status_icon(
             self.start_run_button,
             "live-operations",
@@ -472,6 +480,20 @@ class LiveOperationsPage(FoundryPage):
         This does NOT affect OBS stream state.
         """
 
+        confirm = QMessageBox.question(
+            self,
+            "Start New Run?",
+            "This will clear the current Live Operations session,\n"
+            "including the timeline and current run information.\n\n"
+            "This cannot be undone.",
+            QMessageBox.StandardButton.Cancel
+            | QMessageBox.StandardButton.Yes,
+            QMessageBox.StandardButton.Cancel,
+        )
+
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
         self.expedition.new()
 
         self.timeline.clear()
@@ -488,6 +510,14 @@ class LiveOperationsPage(FoundryPage):
             "RUNNING"
         )
 
+    def edit_timeline(self):
+        """Open the existing editor for the selected timeline event."""
+
+        if not self.timeline.edit_selected_event():
+            self.status.warning(
+                "Select a timeline event to edit."
+            )
+
 
     def archive_run(self):
         """
@@ -498,14 +528,15 @@ class LiveOperationsPage(FoundryPage):
         """
 
         events = self.expedition.expedition.Events
+        broadcast = self._load_current_broadcast()
 
-        if not events:
+        if not events and not broadcast:
             self.status.warning(
-                "Nothing to archive yet."
+                "Nothing to archive yet. Save a Broadcast, Field Note, or timeline event first."
             )
             return
 
-        lines = self._build_archive_lines()
+        lines = self._build_archive_lines(broadcast)
 
         try:
 
@@ -553,9 +584,13 @@ class LiveOperationsPage(FoundryPage):
                 f"Archive failed: {exc}"
             )    
 
-    def _build_archive_lines(self) -> list[str]:
+    def _build_archive_lines(
+        self,
+        broadcast: dict | None = None,
+    ) -> list[str]:
         """
-        Build the current expedition timeline as Markdown.
+        Build one end-of-session archive from Live Operations,
+        Broadcast, and Field Notes data.
         """
 
         boss = self._current_boss()
@@ -570,9 +605,17 @@ class LiveOperationsPage(FoundryPage):
             "",
             f"**Boss:** {boss}",
             "",
+        ]
+
+        self._add_broadcast_archive_lines(
+            lines,
+            broadcast or {},
+        )
+
+        lines.extend([
             "## Timeline",
             "",
-        ]
+        ])
 
         for event in events:
 
@@ -602,6 +645,108 @@ class LiveOperationsPage(FoundryPage):
                 )
 
         return lines
+
+    def _load_current_broadcast(self) -> dict:
+        """Read the OBS snapshot without changing its established format."""
+
+        path = Path(self.settings["CurrentBroadcastPath"])
+
+        if not path.exists():
+            return {}
+
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+        return data if isinstance(data, dict) else {}
+
+    def _add_broadcast_archive_lines(
+        self,
+        lines: list[str],
+        broadcast: dict,
+    ) -> None:
+        """Append the saved Broadcast and Field Notes snapshot to an archive."""
+
+        broadcast_fields = (
+            ("Title", "Title"),
+            ("Notification", "Notification"),
+            ("Team", "Team"),
+            ("Expedition", "Expedition"),
+            ("Location", "Location"),
+            ("Objective", "Objective"),
+            ("Focus", "Focus"),
+            ("Difficulty", "Difficulty"),
+            ("Mood", "Mood"),
+            ("Weather", "Weather"),
+            ("Coffee", "Coffee"),
+            ("CoffeeLevel", "Coffee Level"),
+            ("Engineering", "Engineering"),
+            ("Incidents", "Incidents"),
+        )
+
+        saved_broadcast = [
+            (label, str(broadcast[key]).strip())
+            for key, label in broadcast_fields
+            if str(broadcast.get(key, "")).strip()
+        ]
+
+        if saved_broadcast:
+            lines.extend(["## Broadcast", ""])
+            lines.extend(
+                f"- **{label}:** {value}"
+                for label, value in saved_broadcast
+            )
+            lines.append("")
+
+        field_notes_present = any(
+            key in broadcast
+            for key in (
+                "Assignment",
+                "Observation",
+                "Context",
+                "NextSteps",
+                "RandomNotes",
+                "Status",
+            )
+        )
+
+        if not field_notes_present:
+            return
+
+        lines.extend(["## Field Notes", ""])
+
+        assignment = str(broadcast.get("Assignment", "")).strip()
+        if assignment:
+            lines.extend([f"**Assignment:** {assignment}", ""])
+
+        status = broadcast.get("Status", {})
+        if isinstance(status, dict):
+            selected_statuses = [
+                label
+                for key, label in (
+                    ("Observe", "Observe"),
+                    ("Document", "Document"),
+                    ("Learn", "Learn"),
+                    ("ShareTheLesson", "Share the Lesson"),
+                )
+                if status.get(key)
+            ]
+            if selected_statuses:
+                lines.extend([
+                    f"**Status:** {', '.join(selected_statuses)}",
+                    "",
+                ])
+
+        for key, heading in (
+            ("Observation", "Observation"),
+            ("Context", "Context"),
+            ("NextSteps", "Next Steps"),
+            ("RandomNotes", "Random Notes"),
+        ):
+            value = str(broadcast.get(key, "")).strip()
+            if value:
+                lines.extend([f"### {heading}", "", value, ""])
 
 
 
@@ -770,6 +915,7 @@ class LiveOperationsPage(FoundryPage):
         )
 
         self._refresh_session()
+        self.dirty = True
 
 
 
