@@ -176,13 +176,18 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         if not files:
             raise FileNotFoundError(f"No JSON files found in {raw_dir}")
 
-        totals = {"files": 0, "fights": 0, "actors": 0, "events": 0, "observed_windows": 0}
+        totals = {"files": 0, "fights": 0, "actors": 0, "events": 0, "observed_windows": 0, "skipped": 0}
         seen: set[tuple[str, int]] = set()
 
         for path in files:
             payload = self._load(path)
+            if not isinstance(payload, dict):
+                totals["skipped"] += 1
+                continue
+
             report_code = str(payload.get("report_code") or "").strip()
             if not report_code:
+                totals["skipped"] += 1
                 continue
 
             fight_items = self._fight_items(payload.get("fights"))
