@@ -16,23 +16,6 @@ from services.esologs_client import EsoLogsApiError, EsoLogsClient
 from services.settings_service import SettingsService
 
 
-MASTER_QUERY = """
-query ProbeMaster($code: String!) {
-  reportData {
-    report(code: $code) {
-      code
-      title
-      revision
-      masterData(translate: true) {
-        actors
-        abilities
-        gameVersion
-      }
-    }
-  }
-}
-"""
-
 PLAYER_QUERY = """
 query ProbePlayers(
   $code: String!
@@ -146,8 +129,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Read-only ESO Logs discovery probe. Fetches fight metadata, "
-            "master data, player/gear details, and raw event streams. "
-            "Nothing is written to the BFF database."
+            "player/gear details, and raw event streams. Nothing is written "
+            "to the BFF database."
         )
     )
     parser.add_argument("report_code", help="ESO Logs report code or report URL")
@@ -162,7 +145,7 @@ def main() -> int:
     parser.add_argument(
         "--settings",
         default="settings.json",
-        help="BFF settings path. Defaults to the same settings.json used by the Capabilities page.",
+        help="BFF settings path. The ESO Logs secret is loaded from the OS keyring.",
     )
     parser.add_argument(
         "--out",
@@ -190,15 +173,9 @@ def main() -> int:
                 f"Fight(s) not found in report {code}: {', '.join(map(str, missing))}"
             )
 
-        master_data = gql(client, MASTER_QUERY, {"code": code})
-        master_report = (master_data.get("reportData") or {}).get("report") or {}
-
         output = {
             "report_code": code,
-            "report_title": master_report.get("title"),
-            "revision": master_report.get("revision"),
             "fights": {},
-            "master_data": master_report.get("masterData") or {},
         }
 
         for fight_id in args.fights:
