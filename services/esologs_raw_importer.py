@@ -18,15 +18,10 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         self.manifest = EsoLogsImporter(connection, client=None)  # type: ignore[arg-type]
 
     @staticmethod
-    def _load(path: Path) -> dict[str, Any] | None:
-        """Load an ESO Logs probe export; return None for unrelated raw JSON."""
+    def _load(path: Path) -> dict[str, Any]:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
-            return None
-        # data/raw also contains other project JSON exports. Only probe exports
-        # with a report_code are inputs for this importer.
-        if not str(payload.get("report_code") or "").strip():
-            return None
+            raise ValueError(f"{path.name}: top-level JSON value must be an object")
         return payload
 
     @staticmethod
@@ -54,6 +49,42 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
     def _timestamp_text(path: Path) -> str:
         return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
 
+    @staticmethod
+    def _normalize_player_details(player_details: Any) -> list[tuple[str, dict[str, Any]]]:
+        """Normalize ESO Logs playerDetails from grouped or flat/list shapes."""
+        normalized: list[tuple[str, dict[str, Any]]] = []
+        if isinstance(player_details, dict):
+            for role_key, role_name in (("healers", "healer"), ("tanks", "tank"), ("dps", "dps")):
+                actors = player_details.get(role_key) or []
+                if isinstance(actors, dict):
+                    actors = list(actors.values())
+                if not isinstance(actors, list):
+                    continue
+                for actor in actors:
+                    if isinstance(actor, dict):
+                        normalized.append((role_name, actor))
+            return normalized
+
+        if isinstance(player_details, list):
+            for actor in player_details:
+                if not isinstance(actor, dict):
+                    continue
+                raw_role = actor.get("role") or actor.get("roleName") or actor.get("specRole")
+                if isinstance(raw_role, str):
+                    role = raw_role.lower()
+                    if role in {"healer", "healing", "healers"}:
+                        role = "healer"
+                    elif role in {"tank", "tanks"}:
+                        role = "tank"
+                    elif role in {"dps", "damage", "dd"}:
+                        role = "dps"
+                    else:
+                        role = raw_role
+                else:
+                    role = "unknown"
+                normalized.append((role, actor))
+        return normalized
+
     def _import_fight_raw(self, *, report_code: str, fight: dict[str, Any], source_path: Path, gap_threshold_ms: float) -> dict[str, int]:
         metadata = self._metadata(fight)
         if metadata.get("id") is None:
@@ -64,8 +95,6 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
         if not isinstance(events, list):
             raise ValueError(f"{source_path.name}: fight {fight_id} events must be a list")
         player_details = fight.get("player_details") or {}
-        if not isinstance(player_details, dict):
-            player_details = {}
 
         self.connection.execute(
             """
@@ -95,25 +124,22 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
 
         self.connection.execute("DELETE FROM log_actor WHERE report_code=? AND fight_id=?", (report_code, fight_id))
         actor_count = 0
-        for role_key, role_name in (("healers", "healer"), ("tanks", "tank"), ("dps", "dps")):
-            for actor in player_details.get(role_key) or []:
-                if not isinstance(actor, dict):
-                    continue
-                actor_id = int(actor.get("id", -1))
-                if actor_id < 0:
-                    continue
-                self.connection.execute(
-                    """
-                    INSERT OR REPLACE INTO log_actor (
-                        report_code, fight_id, actor_id, guid, name, display_name,
-                        actor_type, role, anonymous, raw_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (report_code, fight_id, actor_id, actor.get("guid"), actor.get("name"),
-                     actor.get("displayName"), actor.get("type"), role_name,
-                     int(bool(actor.get("anonymous"))), json.dumps(actor, ensure_ascii=False, sort_keys=True)),
-                )
-                actor_count += 1
+        for role_name, actor in self._normalize_player_details(player_details):
+            actor_id = int(actor.get("id", -1))
+            if actor_id < 0:
+                continue
+            self.connection.execute(
+                """
+                INSERT OR REPLACE INTO log_actor (
+                    report_code, fight_id, actor_id, guid, name, display_name,
+                    actor_type, role, anonymous, raw_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (report_code, fight_id, actor_id, actor.get("guid"), actor.get("name"),
+                 actor.get("displayName"), actor.get("type"), role_name,
+                 int(bool(actor.get("anonymous"))), json.dumps(actor, ensure_ascii=False, sort_keys=True)),
+            )
+            actor_count += 1
 
         self.connection.execute("DELETE FROM log_event WHERE report_code=? AND fight_id=?", (report_code, fight_id))
         valid_events = 0
@@ -155,14 +181,13 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
 
         totals = {"files": 0, "fights": 0, "actors": 0, "events": 0, "observed_windows": 0}
         seen: set[tuple[str, int]] = set()
-        skipped = 0
 
         for path in files:
             payload = self._load(path)
-            if payload is None:
-                skipped += 1
-                continue
             report_code = str(payload.get("report_code") or "").strip()
+            if not report_code:
+                continue
+
             fight_items = self._fight_items(payload.get("fights"))
             imported_from_file = 0
             for fight_key, fight in fight_items:
@@ -188,6 +213,4 @@ class EsoLogsRawImporter(EsoLogsCombatImporter):
                 )
                 self.manifest._manifest_finish(manifest_id, status="imported", record_count=imported_from_file)
 
-        if skipped:
-            print(f"Skipped {skipped} unrelated JSON files in {raw_dir}.")
         return totals
