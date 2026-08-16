@@ -1,5 +1,7 @@
-import sqlite3
+import sqlite3 
+import pathlib
 from services.settings_service import SettingsService
+from services.esologs_client import EsoLogsClient
 settings = SettingsService(Path("settings.json")).load()
 
 client = EsoLogsClient(

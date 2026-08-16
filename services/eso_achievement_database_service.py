@@ -148,6 +148,44 @@ class EsoAchievementDatabaseService:
         ]
 
     # --------------------------------------------------
+    # Points / Progress Summaries
+    # --------------------------------------------------
+
+    def all_achievement_points(self) -> list[dict]:
+        """
+        Return the id, points, and top-level category for
+        every achievement in the database.
+
+        Used by AchievementStatsService to total up points
+        and counts (overall, or per top-level category)
+        without needing a fresh query for every stat box.
+        """
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                a.id,
+                a.points,
+                c.category_name
+
+            FROM achievement a
+
+            LEFT JOIN achievement_category c
+                ON c.category_index = a.category_index
+                AND c.subcategory_index = a.subcategory_index
+            """
+        ).fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "points": row["points"] or 0,
+                "category": row["category_name"] or "",
+            }
+            for row in rows
+        ]
+
+    # --------------------------------------------------
     # Search
     # --------------------------------------------------
 
