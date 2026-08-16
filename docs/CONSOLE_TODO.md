@@ -1,104 +1,91 @@
 # 🛠️ TODO: Build the ESO Rules Engine (The Console)
 
-Study only the existing DataMinerService.
-
-Do not redesign the project.
-
-Implement a helper function named parse_effects(description: str).
-
-Requirements:
-
-- Detect every occurrence of "Major <Effect>" and "Minor <Effect>" in the description.
-- Return a list of unique effect names.
-- Preserve the original capitalization.
-- Ignore duplicates.
-- Return an empty list if no effects are found.
-
-Do not modify any other files.
+"baseAbilityId" = ability id
 
 
-✅ Finish mine_sets()
-✅ Finish mine_potions()
-✅ Finish mine_class_passives()
-✅ Finish mine_weapon_passives()
-✅ Finish mine_champion_points()
-✅ Finish mine_mechanics()
-✅ Finish mine_encounters()
+# skills
+https://esolog.uesp.net/exportJson.php?table=playerSkills
+skills.json /class_passives.json                    playerSkills
+"cooldown" - cooldown
+"duration" = time (in ms)
+"maxRange" = range
+"radius" = radius
+"target" = type
+"isPassive" = if 1 then Passive Class skill, if 0 then Class Skill
 
+# gear_sets.json                                      setSummary or minedSets
+all gear sets = esolog.uesp.net/exportJson.php?table=minedItemSummary&type=2
+"setName"  = armor set name
+"setBonusCount5" = bonus5AbilityId
+"abilityCooldown" - ability cooldown 
+"armorType" = armor weight (1=light, 2=medium, 3=heavy)
 
-Study only the existing mine_skills() function.
-
-Do not redesign the architecture.
-
-Modify the builder so each exported skill includes:
-
-- id
-- name
-- effects {ex. buff: Major Heroism },
-- description
-- target
-- time
-- abilityCooldown
-- range
-- radius
-- skillCoef 
+buff.json / debuffs.json /       buffSummary
+champion_points.json                                esolog.uesp.net/exportJson.php?table=cp2Skills
+foods.json / potions.json                           minedItemSummary (4,7,12)
+encounters.json                       playerData
 
 
 
-Add to the parsers package.
+# status_effects.json
+import json
+import urllib.request
 
-Implement:
+# Target the master buff table
+url = "https://uesp.net"
 
-parse_description()
-parse_target()
-parse_abilityCooldown()
-parse_skillCoef()
+print("Downloading master UESP buff data...")
+try:
+    response = urllib.request.urlopen(url)
+    all_effects = json.loads(response.read().decode())
+    
+    buffs = []
+    debuffs = []
+    status_effects = []
+    
+    for effect in all_effects:
+        desc = effect.get("description", "").lower()
+        name = effect.get("name", "").lower()
+        
+        # Determine target file based on text triggers 
+        # (Customize these conditions to match your application's logic rules)
+        if "reduces" in desc or "decreases" in desc or "damage over time" in desc:
+            debuffs.append(effect)
+        elif name in ["chilled", "concussed", "burning", "poisoned", "hemorrhage"]:
+            status_effects.append(effect)
+        else:
+            buffs.append(effect)
+            
+    # Save into your separate local files
+    with open("buff.json", "w") as f:
+        json.dump(buffs, f, indent=4)
+    with open("debuffs.json", "w") as f:
+        json.dump(debuffs, f, indent=4)
+    with open("status_effects.json", "w") as f:
+        json.dump(status_effects, f, indent=4)
+        
+    print(f"Success! Saved {len(buffs)} buffs, {len(debuffs)} debuffs, and {len(status_effects)} status effects.")
 
-if type=2
-parse_armortype()
-parse_setBonusDesc5()
-
-Each parser should accept a tooltip description and return structured data.
-
-Do not modify any miners.
-Return production-ready code only.
-
-
-
-
-where effects comes from parse_effects().
-
-Do not change the JSON schema beyond adding the effects field.
-
-
-armor
- esolog.uesp.net/exportJson.php?table=minedItemSummary&type=2
-- armor (1=light, 2=medium, 3=heavy)
-- armor (setBonusDesc5 is where the buff will be found)
-
-
-Champion Points
-https://esolog.uesp.net/exportJson.php?table=cp2Disciplines
-
-
-Skills
-https://esoitem.uesp.net/skillReference.php
-
-Skill coefficients
-https://esoitem.uesp.net/viewSkillCoef.php
-
-food
-https://esolog.uesp.net/exportJson.php?table=minedItemSummary&type=4
-
-drink
-https://esolog.uesp.net/exportJson.php?table=minedItemSummary&type=12
-
-potions
-https://esolog.uesp.net/exportJson.php?table=minedItemSummary&type=7
+except Exception as e:
+    print(f"Error extracting data: {e}")
 
 
+# Damage types
+    "0": "None / Generic",
+    "1": "Physical Damage",
+    "2": "Magic Damage",
+    "3": "Flame Damage",
+    "4": "Frost Damage",
+    "5": "Shock Damage",
+    "6": "Poison Damage",
+    "7": "Disease Damage",
+    "8": "Bleed Damage",
+    "9": "Oblivion Damage"
 
 
+
+# TODO
+- [ ] class skills come in 3's bc they have a base and then you can either level to one branch of another. We need to flatten the skills for the purpose of identifying which skill and morph of that skill has the skill ability with the buff that we are cataloging.
 
 
 
@@ -269,7 +256,7 @@ This is what makes The Console unique.
 
 ## Database Structure
 
-/data/
+/game_data/eso/
 
 stats.json
 damage_types.json
