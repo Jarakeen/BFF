@@ -7,8 +7,7 @@
 # Purpose:
 # Achievement Desk.
 #
-# Prepare Achievement Runs, send them to OBS,
-# and archive completed runs.
+# Prepare and archive Achievement Runs.
 #
 # ==================================================
 
@@ -20,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QListWidget,
 )
 
 from ui.components.foundry_header import FoundryHeader
@@ -36,7 +36,6 @@ from widgets.achievement_stats import (
     AchievementPointsCard,
     AchievementRatioCard,
     CategoryProgressCard,
-    CustomStatCard,
     AchievementDetailsPanel,
 )
 
@@ -57,16 +56,25 @@ from services.achievement_stats_service import (
 class AchievementPage(QWidget):
     """
     Achievement Desk.
+
+    Layout:
+        Header
+        Achievement statistics row
+        Categories | Achievements | Achievement Details
+        Existing actions/status footer
+
+    The old Run Details and Run Notes widgets are kept
+    instantiated for compatibility with the existing
+    action/clear code, but their page containers are
+    intentionally commented out while the desk layout
+    is being rebuilt.
     """
 
     def __init__(self, parent=None):
-
         super().__init__(parent)
 
         self.build_services()
-
         self.build_ui()
-
         self.connect_signals()
 
     # --------------------------------------------------
@@ -74,7 +82,6 @@ class AchievementPage(QWidget):
     # --------------------------------------------------
 
     def build_services(self):
-
         self.settings = SettingsService(
             Path("settings.json")
         ).load()
@@ -93,11 +100,6 @@ class AchievementPage(QWidget):
             port=self.settings["ObsWebSocketPort"],
             password=self.settings["ObsWebSocketPassword"],
         )
-
-        #
-        # Achievement stats (read-only game database +
-        # local progress tracking).
-        #
 
         data_dir = Path(__file__).resolve().parents[1] / "data"
 
@@ -119,31 +121,20 @@ class AchievementPage(QWidget):
     # --------------------------------------------------
 
     def build_ui(self):
-
-        # --------------------------------------------------
-        # Header
-        # --------------------------------------------------
-
         self.header = FoundryHeader(
             title="Achievement Desk",
             subtitle="Prepare and archive Achievement Runs.",
             department="Operations",
         )
 
-        # --------------------------------------------------
-        # Widgets
-        # --------------------------------------------------
-
+        # Existing run widgets remain available to the
+        # action code, but are not displayed in the desk
+        # while the new layout is being built.
         self.details = RunDetails()
-
         self.achievements = AchievementList()
-
         self.notes = RunNotes()
-
         self.result = RunResult()
-
         self.actions = AchievementActions()
-
         self.status = FoundryStatusBar()
 
         # --------------------------------------------------
@@ -151,20 +142,24 @@ class AchievementPage(QWidget):
         # --------------------------------------------------
 
         self.points_stat = AchievementPointsCard()
-
         self.earned_stat = AchievementRatioCard()
-
         self.category_stat = CategoryProgressCard()
-
         self.dungeons_stat = AchievementRatioCard()
-
         self.trials_stat = AchievementRatioCard()
-
-        self.custom_stat = CustomStatCard()
+        self.pvp_stat = AchievementRatioCard()
 
         self.achievement_details = AchievementDetailsPanel(
             self.eso_data_service,
             self.achievement_progress_service,
+        )
+
+        # Category navigation for the main achievement
+        # workspace. The search box remains in the details
+        # panel and is not being removed.
+        self.category_list = QListWidget()
+        self.category_list.addItem("All Achievements")
+        self.category_list.addItems(
+            self.achievement_stats_service.top_categories()
         )
 
         # --------------------------------------------------
@@ -172,265 +167,104 @@ class AchievementPage(QWidget):
         # --------------------------------------------------
 
         layout = QVBoxLayout(self)
-
-        layout.setContentsMargins(
-            16,
-            12,
-            16,
-            12,
-        )
-
+        layout.setContentsMargins(16, 12, 16, 12)
         layout.setSpacing(12)
 
-        # --------------------------------------------------
-        # Header
-        # --------------------------------------------------
-
-        layout.addWidget(
-            self.header,
-            0,
-        )
+        layout.addWidget(self.header, 0)
 
         # --------------------------------------------------
         # Achievement Stats Row
         # --------------------------------------------------
 
         stats_widget = QWidget()
-
         stats_layout = QHBoxLayout(stats_widget)
-
-        stats_layout.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
-        )
-
+        stats_layout.setContentsMargins(0, 0, 0, 0)
         stats_layout.setSpacing(12)
 
-        points_card = FoundryCard(
-            "Achievement Points"
-        )
+        points_card = FoundryCard("Achievement Points")
+        points_card.addWidget(self.points_stat)
+        stats_layout.addWidget(points_card, 1)
 
-        points_card.addWidget(
-            self.points_stat
-        )
+        earned_card = FoundryCard("Earned")
+        earned_card.addWidget(self.earned_stat)
+        stats_layout.addWidget(earned_card, 1)
 
-        stats_layout.addWidget(
-            points_card
-        )
+        category_card = FoundryCard("Category Progress")
+        category_card.addWidget(self.category_stat)
+        stats_layout.addWidget(category_card, 1)
 
-        earned_card = FoundryCard(
-            "Earned"
-        )
+        dungeons_card = FoundryCard("Dungeons")
+        dungeons_card.addWidget(self.dungeons_stat)
+        stats_layout.addWidget(dungeons_card, 1)
 
-        earned_card.addWidget(
-            self.earned_stat
-        )
+        trials_card = FoundryCard("Trials")
+        trials_card.addWidget(self.trials_stat)
+        stats_layout.addWidget(trials_card, 1)
 
-        stats_layout.addWidget(
-            earned_card
-        )
+        pvp_card = FoundryCard("PvP")
+        pvp_card.addWidget(self.pvp_stat)
+        stats_layout.addWidget(pvp_card, 1)
 
-        category_card = FoundryCard(
-            "Category Progress"
-        )
-
-        category_card.addWidget(
-            self.category_stat
-        )
-
-        stats_layout.addWidget(
-            category_card
-        )
-
-        dungeons_card = FoundryCard(
-            "Dungeons"
-        )
-
-        dungeons_card.addWidget(
-            self.dungeons_stat
-        )
-
-        stats_layout.addWidget(
-            dungeons_card
-        )
-
-        trials_card = FoundryCard(
-            "Trials"
-        )
-
-        trials_card.addWidget(
-            self.trials_stat
-        )
-
-        stats_layout.addWidget(
-            trials_card
-        )
-
-        custom_card = FoundryCard(
-            "Custom"
-        )
-
-        custom_card.addWidget(
-            self.custom_stat
-        )
-
-        stats_layout.addWidget(
-            custom_card
-        )
-
-        layout.addWidget(
-            stats_widget,
-            0,
-        )
+        layout.addWidget(stats_widget, 0)
 
         # --------------------------------------------------
-        # Achievement Details
+        # Three-column Achievement Workspace
         # --------------------------------------------------
 
-        details_stats_card = FoundryCard(
-            "Achievement Details"
-        )
+        workspace = QWidget()
+        workspace_layout = QHBoxLayout(workspace)
+        workspace_layout.setContentsMargins(0, 0, 0, 0)
+        workspace_layout.setSpacing(12)
 
-        details_stats_card.addWidget(
-            self.achievement_details
-        )
+        categories_card = FoundryCard("Categories")
+        categories_card.addWidget(self.category_list)
+        workspace_layout.addWidget(categories_card, 1)
 
-        details_stats_card.setMinimumHeight(
-            160
-        )
+        achievements_card = FoundryCard("Achievements")
+        achievements_card.addWidget(self.achievements)
+        workspace_layout.addWidget(achievements_card, 3)
 
-        layout.addWidget(
-            details_stats_card,
-            0,
-        )
+        details_card = FoundryCard("Achievement Details")
+        details_card.addWidget(self.achievement_details)
+        workspace_layout.addWidget(details_card, 2)
 
-        # --------------------------------------------------
-        # Run Details
-        # --------------------------------------------------
-
-        details_card = FoundryCard(
-            "Run Details"
-        )
-
-        details_card.addWidget(
-            self.details
-        )
-
-        details_card.setMinimumHeight(
-            170
-        )
-
-        layout.addWidget(
-            details_card,
-            0,
-        )
+        layout.addWidget(workspace, 1)
 
         # --------------------------------------------------
-        # Achievements
+        # Old Run Details / Run Notes UI
         # --------------------------------------------------
-
-        achievements_card = FoundryCard(
-            "Achievements"
-        )
-
-        achievements_card.addWidget(
-            self.achievements
-        )
-
-        achievements_card.setMinimumHeight(
-            220
-        )
-
-        layout.addWidget(
-            achievements_card,
-            1,
-        )
-
-        # --------------------------------------------------
-        # Bottom Row
-        # --------------------------------------------------
-
-        bottom_widget = QWidget()
-
-        bottom_layout = QHBoxLayout(
-            bottom_widget
-        )
-
-        bottom_layout.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
-        )
-
-        bottom_layout.setSpacing(12)
+        # Intentionally commented out. Keep the widgets
+        # above alive because the existing action/clear
+        # code still references them.
+        #
+        # details_card = FoundryCard("Run Details")
+        # details_card.addWidget(self.details)
+        # details_card.setMinimumHeight(170)
+        # layout.addWidget(details_card, 0)
+        #
+        # bottom_widget = QWidget()
+        # bottom_layout = QHBoxLayout(bottom_widget)
+        # bottom_layout.setContentsMargins(0, 0, 0, 0)
+        # bottom_layout.setSpacing(12)
+        #
+        # notes_card = FoundryCard("Run Notes")
+        # notes_card.addWidget(self.notes)
+        # notes_card.setMinimumHeight(190)
+        #
+        # result_card = FoundryCard("Run Result")
+        # result_card.addWidget(self.result)
+        # result_card.setMinimumHeight(190)
+        #
+        # bottom_layout.addWidget(notes_card, 3)
+        # bottom_layout.addWidget(result_card, 2)
+        # layout.addWidget(bottom_widget, 1)
 
         # --------------------------------------------------
-        # Run Notes
+        # Existing Footer / Actions
         # --------------------------------------------------
 
-        notes_card = FoundryCard(
-            "Run Notes"
-        )
-
-        notes_card.addWidget(
-            self.notes
-        )
-
-        notes_card.setMinimumHeight(
-            190
-        )
-
-        # --------------------------------------------------
-        # Run Result
-        # --------------------------------------------------
-
-        result_card = FoundryCard(
-            "Run Result"
-        )
-
-        result_card.addWidget(
-            self.result
-        )
-
-        result_card.setMinimumHeight(
-            190
-        )
-
-        bottom_layout.addWidget(
-            notes_card,
-            3,
-        )
-
-        bottom_layout.addWidget(
-            result_card,
-            2,
-        )
-
-        layout.addWidget(
-            bottom_widget,
-            1,
-        )
-
-        # --------------------------------------------------
-        # Actions
-        # --------------------------------------------------
-
-        layout.addWidget(
-            self.actions,
-            0,
-        )
-
-        # --------------------------------------------------
-        # Status
-        # --------------------------------------------------
-
-        layout.addWidget(
-            self.status,
-            0,
-        )
+        layout.addWidget(self.actions, 0)
+        layout.addWidget(self.status, 0)
 
         self.status.info(
             "Ready to prepare an Achievement Run."
@@ -451,7 +285,6 @@ class AchievementPage(QWidget):
     # --------------------------------------------------
 
     def connect_signals(self):
-
         self.actions.prepareRequested.connect(
             self.prepare_run
         )
@@ -513,12 +346,21 @@ class AchievementPage(QWidget):
             trials["count_total"],
         )
 
+        pvp = self.achievement_stats_service.category(
+            "PvP"
+        )
+
+        self.pvp_stat.set_ratio(
+            pvp["count_earned"],
+            pvp["count_total"],
+        )
+
         self.update_category_stat()
 
     def update_category_stat(self):
         """
         Refresh the points earned / total for whichever
-        category is currently selected.
+        category is currently selected in the top stat.
         """
 
         category = self.category_stat.current_category()
@@ -540,7 +382,6 @@ class AchievementPage(QWidget):
     # --------------------------------------------------
 
     def prepare_run(self):
-
         number = (
             self.archive.peek_number("AR") + 1
         )
@@ -559,34 +400,23 @@ class AchievementPage(QWidget):
         )
 
     def send_to_obs(self):
-
-        #
         # OBS integration comes later.
-        #
-
         self.status.success(
             "Achievement Run sent to OBS."
         )
 
     def archive_run(self):
-
-        #
         # Archive implementation comes later.
-        #
-
         self.status.success(
             "Achievement Run archived."
         )
 
     def clear_run(self):
-
         self.details.clear()
-
         self.achievements.clear()
-
         self.notes.clear()
-
         self.result.clear()
+        self.achievement_details.clear()
 
         self.status.info(
             "Achievement Run cleared."
