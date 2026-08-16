@@ -1,34 +1,36 @@
-import requests
-from bs4 import BeautifulSoup
+import sqlite3
 
-url = "https://eso-hub.com/en/skills/weapon/destruction-staff/wall-of-elements"
+db = sqlite3.connect("data/eso.db")
+db.row_factory = sqlite3.Row
 
-response = requests.get(url, timeout=20)
+print("\n=== EFFECTS FOR POWERFUL ASSAULT ===")
 
-print("STATUS:", response.status_code)
-print("LENGTH:", len(response.text))
+rows = db.execute(
+    """
+    SELECT
+        e.id AS effect_id,
+        e.name AS effect_name,
+        e.category,
+        ev.id AS variant_id,
+        ev.type AS variant_type,
+        ev.description AS variant_description,
+        es.id AS source_id,
+        es.source_type,
+        es.source_name,
+        es.condition,
+        es.raw_text
+    FROM effect_source es
+    JOIN effect_variant ev
+        ON ev.id = es.effect_variant_id
+    JOIN effect e
+        ON e.id = ev.effect_id
+    WHERE lower(es.source_name) LIKE '%powerful assault%'
+       OR lower(es.raw_text) LIKE '%powerful assault%'
+    ORDER BY e.id, ev.id, es.id
+    """
+).fetchall()
 
-soup = BeautifulSoup(response.text, "html.parser")
+for row in rows:
+    print(dict(row))
 
-target = "Champion Points that buff Wall of Elements"
-
-hits = []
-
-for text_node in soup.find_all(string=True):
-    text = text_node.strip()
-
-    if target in text:
-        hits.append(text_node)
-
-print("HITS:", len(hits))
-
-for i, hit in enumerate(hits, 1):
-    print()
-    print("=" * 80)
-    print("MATCH", i)
-    print("=" * 80)
-
-    parent = hit.parent
-
-    if parent:
-        print(parent.parent.prettify()[:15000])
+db.close()
