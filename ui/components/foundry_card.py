@@ -269,3 +269,6 @@ class FoundryCard(QFrame):
             if item.widget():
 
                 item.widget().deleteLater()
+
+    
+    

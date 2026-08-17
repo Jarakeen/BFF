@@ -477,8 +477,50 @@ QToolTip {
     color: #d8d0c2;
     padding: 4px;
 }
-"""
 
+/* ----------------------------------------------------------
+   Foundry Cards
+   ---------------------------------------------------------- */
+
+QFrame[foundryCard="true"] {
+    background-color: #141714;
+    border: 2px solid #4a3b27;
+    border-radius: 7px;
+}
+
+QWidget[cardHeader="true"] {
+    background-color: #1c1915;
+    border-bottom: 2px solid #4a3b27;
+}
+
+QLabel[cardTitle="true"] {
+    background-color: transparent;
+    color: #d0aa70;
+    font-family: Georgia, "Times New Roman";
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QLabel[cardIcon="true"] {
+    background-color: transparent;
+    color: #c39a5c;
+}
+
+QFrame[achievementBrowserCard="true"] {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame[achievementBrowserCard="true"] QWidget[cardHeader="true"] {
+    min-height: 0px;
+    border: none;
+}
+
+QFrame[foundryCard="true"] QWidget[cardHeader="true"] {
+    min-height: 34px;
+    max-height: 34px;
+}
+"""
 
 def apply_foundry_theme(app: QApplication) -> None:
     """Apply the Black Feather Foundry global theme."""
