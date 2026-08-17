@@ -5,7 +5,7 @@
 # widgets/collection_browser.py
 #
 # Purpose:
-# Browse ESO collections.
+# Browse ESO Collections.
 #
 # ==================================================
 
@@ -31,11 +31,11 @@ class CollectionBrowser(QWidget):
     Browser for ESO Collections.
 
     Displays categories on the left and
-    achievements (or future collectibles)
-    on the right.
+    achievements on the right.
     """
 
-    achievementChanged = Signal(str, bool)
+    achievementChanged = Signal(int, bool)
+    achievementSelected = Signal(object)
 
     def __init__(
         self,
@@ -70,48 +70,77 @@ class CollectionBrowser(QWidget):
 
         self.tree = QTreeWidget()
 
+        # --------------------------------------------------
+        # Achievement list
+        #
+        # Keep only the achievement name and points.
+        # The description belongs in Achievement Details.
+        # --------------------------------------------------
+
         self.tree.setHeaderLabels(
             [
                 "Achievement",
                 "Points",
-                "Description",
             ]
         )
 
-        self.tree.setColumnWidth(0, 300)
-        self.tree.setColumnWidth(1, 70)
-        self.tree.setColumnWidth(2, 500)
+        self.tree.setColumnWidth(
+            0,
+            500,
+        )
 
-        #
-        # Progress
-        #
+        self.tree.setColumnWidth(
+            1,
+            80,
+        )
 
-        self.progress = QLabel()
-
+        
         #
         # Layout
         #
 
         left = QVBoxLayout()
 
-        left.addWidget(self.search)
-        left.addWidget(self.categories)
+        left.addWidget(
+            self.search
+        )
+
+        left.addWidget(
+            self.categories
+        )
 
         right = QVBoxLayout()
 
-        right.addWidget(self.tree)
-        right.addWidget(self.progress)
+        right.addWidget(
+            self.tree
+        )
+
+    
 
         content = QHBoxLayout()
 
-        content.addLayout(left, 1)
-        content.addLayout(right, 3)
+        content.addLayout(
+            left,
+            1,
+        )
+
+        content.addLayout(
+            right,
+            3,
+        )
 
         layout = QVBoxLayout(self)
 
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
-        layout.addLayout(content)
+        layout.addLayout(
+            content
+        )
 
         #
         # Signals
@@ -123,6 +152,10 @@ class CollectionBrowser(QWidget):
 
         self.categories.currentTextChanged.connect(
             self.category_changed
+        )
+
+        self.tree.itemClicked.connect(
+            self.item_selected
         )
 
     # --------------------------------------------------
@@ -146,12 +179,16 @@ class CollectionBrowser(QWidget):
 
         self.categories.clear()
 
-        for category in self.provider.top_categories():
-            self.categories.addItem(category)
+        if self.provider is None:
+            return
 
-        self.progress.setText(
-            f"{self.progress_service.completed_count()} completed"
-        )
+        for category in self.provider.top_categories():
+
+            self.categories.addItem(
+                category
+            )
+
+       
 
     def category_changed(
         self,
@@ -168,7 +205,10 @@ class CollectionBrowser(QWidget):
         ):
 
             parent = QTreeWidgetItem(
-                [subcategory]
+                [
+                    subcategory,
+                    "",
+                ]
             )
 
             self.tree.addTopLevelItem(
@@ -188,10 +228,6 @@ class CollectionBrowser(QWidget):
                                 "points",
                                 ""
                             )
-                        ),
-                        achievement.get(
-                            "desc",
-                            ""
                         ),
                     ]
                 )
@@ -224,11 +260,28 @@ class CollectionBrowser(QWidget):
                     child
                 )
 
-            parent.setExpanded(True)
+            parent.setExpanded(
+                True
+            )
+
+        #
+        # Connect only once.
+        #
+        # Reconnecting this signal every time a category
+        # changes can cause duplicate callbacks.
+        #
+
+        try:
+            self.tree.itemChanged.disconnect(
+                self.item_changed
+            )
+        except (TypeError, RuntimeError):
+            pass
 
         self.tree.itemChanged.connect(
             self.item_changed
         )
+
     # --------------------------------------------------
     # Search
     # --------------------------------------------------
@@ -316,6 +369,25 @@ class CollectionBrowser(QWidget):
             complete,
         )
 
-        self.progress.setText(
-            f"{self.provider.completed_count()} completed"
+
+    # --------------------------------------------------
+    # Selection
+    # --------------------------------------------------
+
+    def item_selected(
+        self,
+        item,
+        column,
+    ):
+
+        achievement_id = item.data(
+            0,
+            Qt.ItemDataRole.UserRole,
+        )
+
+        if achievement_id is None:
+            return
+
+        self.achievementSelected.emit(
+            achievement_id
         )

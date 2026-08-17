@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
 )
+
 from ui.foundry_theme import apply_foundry_theme
 from ui.components.foundry_sidebar import FoundrySidebar
 from services.eso_achievement_database_service import (
@@ -32,7 +33,7 @@ from ui.field_notes_page import FieldNotesPage
 from ui.stream_elements_page import LiveOperationsPage
 from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
-from ui.achievement_page import AchievementPage
+from ui.achievement_desk_page import AchievementPage
 from ui.collections_page import CollectionsPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
