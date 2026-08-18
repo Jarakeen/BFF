@@ -79,7 +79,7 @@ class UespImporter:
 
         try:
             page = self.client.get_page(title)
-            resolved_type = self.parser.detect_content_type(page, default=content_type)
+            resolved_type = content_type
             record_id = slugify(title)
             folder = self.store.folder_for(resolved_type)
 

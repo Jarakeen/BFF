@@ -281,7 +281,6 @@ class _PageHtmlParser(HTMLParser):
 
         if tag not in (
             "div",
-            "table",
             "span",
             "sup",
             "ul",
@@ -742,8 +741,149 @@ def _extract_linked_titles(blocks: list[dict]) -> list[tuple[str, str]]:
             )
 
     return refs
-    
 
+
+def _extract_group_size(infobox: dict[str, str]) -> int | None:
+    """Extract group size from a UESP content infobox."""
+    value = infobox.get("group size", "").strip()
+
+    if not value:
+        return None
+
+    match = re.search(r"\d+", value)
+
+    return int(match.group(0)) if match else None
+
+
+def _extract_content_sets(blocks: list[dict]) -> list[str]:
+    """Extract canonical set IDs from the Sets table."""
+
+    set_ids: list[str] = []
+
+    for block in blocks:
+        if block.get("type") != "tr":
+            continue
+
+        cells = block.get("cells", [])
+
+        # Header row
+        if not cells or cells[0].get("text", "").strip().casefold() == "set name":
+            continue
+
+        # The first cell is the Set Name column.
+        if not cells:
+            continue
+
+        for href, title in cells[0].get("links", []):
+            if not title:
+                continue
+
+            if not href.startswith("/wiki/Online:"):
+                continue
+
+            set_ids.append(slugify(title))
+            break
+
+    return list(dict.fromkeys(set_ids))
+
+
+def _extract_content_achievements(
+    blocks: list[dict],
+) -> list[UespAchievement]:
+    """Extract actual achievement rows from a UESP achievement table."""
+
+    achievements: list[UespAchievement] = []
+
+    for block in blocks:
+        if block.get("type") != "tr":
+            continue
+
+        cells = block.get("cells", [])
+
+        if not cells:
+            continue
+
+        # Find the first real achievement link in the row.
+        # UESP has used more than one table layout, so the
+        # achievement link is not assumed to be column 0.
+        achievement_index: int | None = None
+        achievement_title: str | None = None
+
+        for index, cell in enumerate(cells):
+            for href, title in cell.get("links", []):
+                if not title:
+                    continue
+
+                if not href.startswith("/wiki/Online:"):
+                    continue
+
+                # Ignore navigation/category links such as
+                # "Some Dungeon Achievements".
+                if title.casefold().endswith("_achievements"):
+                    continue
+
+                # Ignore generic table/header links.
+                if title.casefold() in {
+                    "achievement",
+                    "normal",
+                    "veteran",
+                    "hard mode",
+                    "hardmode",
+                }:
+                    continue
+
+                achievement_index = index
+                achievement_title = title
+                break
+
+            if achievement_title:
+                break
+
+        if achievement_title is None or achievement_index is None:
+            continue
+
+        # Remove the achievement cell and inspect the remaining
+        # cells for points and description.
+        remaining_cells = [
+            cell
+            for index, cell in enumerate(cells)
+            if index != achievement_index
+        ]
+
+        points: int | None = None
+        points_index: int | None = None
+
+        for index, cell in enumerate(remaining_cells):
+            text = cell.get("text", "").strip()
+
+            if re.fullmatch(r"\d+", text):
+                points = int(text)
+                points_index = index
+                break
+
+        description = ""
+
+        if points_index is not None:
+            # The description normally follows the points cell.
+            for cell in remaining_cells[points_index + 1:]:
+                text = cell.get("text", "").strip()
+
+                if text:
+                    description = text
+                    break
+
+        achievements.append(
+            UespAchievement(
+                id=slugify(achievement_title),
+                name=achievement_title,
+                description=description,
+                points=points,
+            )
+        )
+
+    return achievements
+
+   
 def _extract_difficulty_notes(paragraphs: list[str]) -> UespDifficultyNotes:
     notes = UespDifficultyNotes()
 
@@ -950,9 +1090,15 @@ class UespParser:
     def parse_content(self, page: UespPage, content_type: str) -> UespContent:
         parsed = parse_page_html(page.html)
 
-        achievement_refs = _extract_linked_titles(
-            _section(parsed.sections, ACHIEVEMENT_HEADINGS) or []
-        )
+        sets_blocks = _section(
+            parsed.sections,
+            {"sets"},
+        ) or []
+
+        achievement_blocks = _section(
+            parsed.sections,
+            ACHIEVEMENT_HEADINGS,
+        ) or []
 
         notes = _extract_list_text(
             _section(parsed.sections, NOTES_HEADINGS) or []
@@ -968,13 +1114,11 @@ class UespParser:
             content_type=content_type,
             summary=parsed.summary,
             location=parsed.infobox.get("location", ""),
-            achievements=[
-                UespAchievement(
-                    id=slugify(title),
-                    name=display_text,
-                )
-                for display_text, title in achievement_refs
-            ],
+            group_size=_extract_group_size(parsed.infobox),
+            set_ids=_extract_content_sets(sets_blocks),
+            achievements=_extract_content_achievements(
+                achievement_blocks
+            ),
             related_npcs=related_npcs,
             notes=notes,
             source=_source_for(page),
@@ -1134,7 +1278,10 @@ class UespParser:
             if lowered in generic_pages:
                 continue
 
-            if any(word in lowered for word in excluded_words):
+            if any(
+                re.search(rf"\b{re.escape(word)}\b", lowered)
+                for word in excluded_words
+            ):
                 continue
 
             filtered.append(title)

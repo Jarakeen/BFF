@@ -115,10 +115,21 @@ class UespContent:
     id: str
     name: str
     content_type: str
+
     summary: str = ""
     location: str = ""
+
+    group_size: int | None = None
+
     boss_ids: list[str] = field(default_factory=list)
+
     achievements: list[UespAchievement] = field(default_factory=list)
+
+    # Eventually:
+    set_ids: list[str] = field(default_factory=list)
+    reward_ids: list[str] = field(default_factory=list)
+
     related_npcs: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+
     source: UespSource | None = None

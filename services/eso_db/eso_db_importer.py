@@ -98,16 +98,17 @@ class EsoDbImporter:
 
         with self.connection:
             self.connection.execute(
-                """
+                            """
                 INSERT INTO content (
-                    id, name, content_type, summary, location,
+                    id, name, content_type, summary, location, group_size,
                     source_url, source_title, revision_id, retrieved_at, license
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     name=excluded.name,
                     content_type=excluded.content_type,
                     summary=excluded.summary,
                     location=excluded.location,
+                    group_size=excluded.group_size,
                     source_url=excluded.source_url,
                     source_title=excluded.source_title,
                     revision_id=excluded.revision_id,
@@ -120,6 +121,7 @@ class EsoDbImporter:
                     data.get("content_type", ""),
                     data.get("summary", ""),
                     data.get("location", ""),
+                    data.get("group_size"),
                     source.get("url", ""),
                     source.get("page_title", ""),
                     source.get("revision_id"),
@@ -140,14 +142,14 @@ class EsoDbImporter:
             )
 
             self._replace_child_rows(
-                "content_notes",
+                "content_sets",
                 "content_id",
                 record_id,
                 (
-                    (record_id, position, note)
-                    for position, note in enumerate(data.get("notes", []))
+                    (record_id, set_id, position)
+                    for position, set_id in enumerate(data.get("set_ids", []))
                 ),
-                columns=("content_id", "position", "note"),
+                columns=("content_id", "set_id", "position"),
             )
 
             self._replace_child_rows(

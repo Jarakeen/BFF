@@ -195,3 +195,136 @@ def test_parse_boss_health_separate_hardmode_paragraph():
     assert boss.health.normal == "22,721,708"
     assert boss.health.veteran == "116,430,960"
     assert boss.health.hardmode == "145,538,704"
+
+
+def test_parse_content_extracts_group_size_from_infobox():
+    html = """
+    <table class="infobox">
+        <tr>
+            <th>Group size</th>
+            <td>4</td>
+        </tr>
+    </table>
+    """
+
+    content = UespParser().parse_content(
+        _sample_page(html),
+        "dungeon",
+    )
+
+    assert content.group_size == 4
+
+
+def test_parse_content_extracts_set_links_from_sets_table():
+    html = """
+    <h2><span id="Sets">Sets</span></h2>
+
+    <table>
+        <tr>
+            <th>Set Name</th>
+            <th>Bonuses</th>
+            <th>Armor Weight</th>
+        </tr>
+
+        <tr>
+            <td>
+                <a href="/wiki/Online:Cinders_of_Anthelmir">
+                    Cinders of Anthelmir
+                </a>
+            </td>
+            <td></td>
+            <td>Light Armor</td>
+        </tr>
+    </table>
+    """
+
+    content = UespParser().parse_content(
+        _sample_page(html),
+        "dungeon",
+    )
+
+    assert content.set_ids == ["cinders_of_anthelmir"]
+
+
+def test_parse_content_extracts_real_achievements_not_navigation_links():
+    html = """
+    <h2><span id="Achievements">Achievements</span></h2>
+
+    <p>
+        There are 2 achievements associated with this Dungeon:
+        <a href="/wiki/Online:Some_Dungeon_Achievements">
+            achievements
+        </a>
+    </p>
+
+    <table>
+        <tr>
+            <th>Achievement</th>
+            <th>Points</th>
+            <th>Description</th>
+            <th>Reward</th>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td>
+                <a href="/wiki/Online:Some_Conqueror">
+                    Some Conqueror
+                </a>
+            </td>
+            <td>10</td>
+            <td>Defeat the bosses.</td>
+            <td>Title: Conqueror</td>
+        </tr>
+    </table>
+    """
+
+    content = UespParser().parse_content(
+        _sample_page(html),
+        "dungeon",
+    )
+
+    assert len(content.achievements) == 1
+    assert content.achievements[0].id == "some_conqueror"
+    assert content.achievements[0].name == "Some Conqueror"
+    assert content.achievements[0].points == 10
+    assert content.achievements[0].description == "Defeat the bosses."
+
+
+def test_parse_content_ignores_achievement_section_headers():
+    html = """
+    <h2><span id="Achievements">Achievements</span></h2>
+
+    <table>
+        <tr>
+            <th>Achievement</th>
+            <th>Points</th>
+            <th>Description</th>
+            <th>Reward</th>
+        </tr>
+
+        <tr>
+            <td colspan="4">Normal</td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td>
+                <a href="/wiki/Online:Normal_Clear">
+                    Normal Clear
+                </a>
+            </td>
+            <td>10</td>
+            <td>Complete the dungeon.</td>
+            <td></td>
+        </tr>
+    </table>
+    """
+
+    content = UespParser().parse_content(
+        _sample_page(html),
+        "dungeon",
+    )
+
+    assert len(content.achievements) == 1
+    assert content.achievements[0].id == "normal_clear"
