@@ -1,36 +1,19 @@
 # models/uesp_models.py
-"""
-Structured data models for the local UESP knowledge base
-(data/uesp/). These are intentionally separate from models/boss.py:
-that module describes the app's own archive-run format (numbers a
-streamer fills in while running a trial), while these describe facts
-*sourced from* UESP, each one traceable back to a specific wiki page,
-revision, and retrieval date.
-"""
+"""Structured source data models for the local UESP knowledge base."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 
-# --------------------------------------------------
-# Provenance
-# --------------------------------------------------
-
 @dataclass
 class UespSource:
-    """Where a record came from and when it was fetched."""
-
     url: str
     page_title: str
     revision_id: int | None = None
-    retrieved_at: str = ""  # ISO-8601 UTC timestamp
+    retrieved_at: str = ""
     license: str = "CC BY-SA 2.5 (UESP)"
 
-
-# --------------------------------------------------
-# Boss-level structures
-# --------------------------------------------------
 
 @dataclass
 class UespHealth:
@@ -43,17 +26,39 @@ class UespHealth:
 class UespAbility:
     name: str
     description: str = ""
+    damage_type: str | None = None
+
 
 @dataclass
 class UespMechanic:
+    """A source-described or conservatively inferred encounter mechanic.
+
+    ``interpretation_status`` distinguishes UESP/source facts from later
+    curated strategy annotations. This model intentionally stores the raw
+    ability description alongside the classification so the optimizer can
+    trace a conclusion back to source text.
+    """
+
     description: str
+    name: str = ""
     links: list[str] = field(default_factory=list)
+    mechanic_type: str | None = None
+    damage_type: str | None = None
+    target_count: int | None = None
+    requires_movement: bool | None = None
+    requires_positioning: bool | None = None
+    requires_cleanse: bool | None = None
+    persistent_hazard: bool | None = None
+    failure_is_fatal: bool | None = None
+    interruptible: bool | None = None
+    interrupt_note: str = ""
+    interpretation_status: str = "source"
 
 
 @dataclass
 class UespPhase:
     label: str
-    threshold: str = ""  # raw text as found, e.g. "70%"
+    threshold: str = ""
     description: str = ""
 
 
@@ -61,8 +66,8 @@ class UespPhase:
 class UespDialogueLine:
     speaker: str
     line: str
-    trigger: str = ""  # nearby context text, e.g. "At 70%:"
-    ability: str | None = None  # matched ability name when evidence is sufficient
+    trigger: str = ""
+    ability: str | None = None
 
 
 @dataclass
@@ -104,22 +109,16 @@ class UespBoss:
     summary: str = ""
     source: UespSource | None = None
 
-# --------------------------------------------------
-# Content-level structures (trial / dungeon / arena)
-# --------------------------------------------------
 
 @dataclass
 class UespContent:
-    id: str  # stable slug, e.g. "rockgrove"
+    id: str
     name: str
-    content_type: str  # "trial" | "dungeon" | "arena"
-
+    content_type: str
     summary: str = ""
     location: str = ""
-
     boss_ids: list[str] = field(default_factory=list)
     achievements: list[UespAchievement] = field(default_factory=list)
     related_npcs: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
-
     source: UespSource | None = None
