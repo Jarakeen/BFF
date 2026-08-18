@@ -34,14 +34,18 @@ def _boss_links(parser: EnrichedUespParser, page) -> list[str]:
     return result
 
 
+def _get_page(client: UespClient, title: str, refresh: bool):
+    return client.get_page(title, use_cache=not refresh)
+
+
 def import_content(*, client, store, parser, title: str, content_type: str, force: bool) -> None:
-    page = client.get_page(title)
+    page = _get_page(client, title, force)
     content = parser.parse_content(page, content_type)
     boss_titles = _boss_links(parser, page)
     boss_ids: list[str] = []
 
     for boss_title in boss_titles:
-        page = client.get_page(boss_title)
+        page = _get_page(client, boss_title, force)
         boss = parser.parse_boss(page, content_id=content.id, content_name=content.name)
         boss_ids.append(boss.id)
         revision = boss.source.revision_id if boss.source else 0
@@ -61,7 +65,7 @@ def import_content(*, client, store, parser, title: str, content_type: str, forc
 
 
 def import_boss(*, client, store, parser, title: str, force: bool) -> None:
-    page = client.get_page(title)
+    page = _get_page(client, title, force)
     boss = parser.parse_boss(page)
     revision = boss.source.revision_id if boss.source else 0
     if force or not store.is_up_to_date("bosses", boss.id, revision or 0):
@@ -77,7 +81,7 @@ def main() -> int:
     group.add_argument("--content")
     group.add_argument("--boss")
     ap.add_argument("--content-type", choices=("trial", "dungeon", "arena"), default="trial")
-    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--force", action="store_true", help="Re-fetch UESP pages and re-write structured records.")
     ap.add_argument("--rate-limit", type=float, default=2.0)
     ap.add_argument("--data-root", type=Path, default=Path("data/uesp"))
     args = ap.parse_args()
