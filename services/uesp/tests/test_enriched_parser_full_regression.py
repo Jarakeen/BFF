@@ -148,3 +148,50 @@ def test_parse_boss_related_information():
     boss = UespParser().parse_boss(_sample_page())
     assert boss.summary
     assert boss.source is not None
+
+def test_parse_boss_health_repeated_veteran_marker_identifies_hardmode():
+    html = """
+    <table class="infobox">
+        <tr>
+            <th>Health</th>
+            <td>
+                <a href="/wiki/File:ON-icon-Normal.png"></a>18,177,368
+                <br>
+                <a href="/wiki/Online:Veteran"></a>77,620,640
+                <br>
+                <a href="/wiki/Online:Veteran"></a>97,025,800 (Hardmode)
+            </td>
+        </tr>
+    </table>
+    """
+
+    boss = UespParser().parse_boss(_sample_page(html))
+
+    assert boss.health.normal == "18,177,368"
+    assert boss.health.veteran == "77,620,640"
+    assert boss.health.hardmode == "97,025,800 (Hardmode)"
+
+
+def test_parse_boss_health_separate_hardmode_paragraph():
+    html = """
+    <table class="infobox">
+        <tr>
+            <th>Health</th>
+            <td>
+                <a href="/wiki/File:ON-icon-Normal.png"></a>22,721,708
+                <br>
+                <a href="/wiki/Online:Veteran"></a>116,430,960
+            </td>
+        </tr>
+    </table>
+
+    <p>
+        <a href="/wiki/Online:Veteran"></a>145,538,704 (hard mode)
+    </p>
+    """
+
+    boss = UespParser().parse_boss(_sample_page(html))
+
+    assert boss.health.normal == "22,721,708"
+    assert boss.health.veteran == "116,430,960"
+    assert boss.health.hardmode == "145,538,704"

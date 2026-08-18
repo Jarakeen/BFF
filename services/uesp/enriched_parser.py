@@ -33,28 +33,8 @@ from services.uesp.phase_extractor import extract_phases
 class EnrichedUespParser(UespParser):
     """Expanded boss extraction without replacing the existing parser yet."""
 
-    @staticmethod
-    def _health_from_page(parsed) -> UespHealth:
-        for block in parsed.all_blocks:
-            if block.get("type") != "tr":
-                continue
-            cells = block.get("cells", [])
-            if len(cells) < 2:
-                continue
-            if cells[0].get("text", "").strip().lower() != "health":
-                continue
-            text = cells[1].get("text", "")
-            lines = [line.strip() for line in text.splitlines() if line.strip()]
-            numeric = [line for line in lines if re.search(r"\d", line)]
-            health = UespHealth()
-            if numeric:
-                health.normal = re.search(r"[\d,]+", numeric[0]).group(0)
-            if len(numeric) >= 2:
-                health.veteran = re.search(r"[\d,]+", numeric[1]).group(0)
-            if len(numeric) >= 3:
-                health.hardmode = numeric[2]
-            return health
-        return UespHealth()
+    def _health_from_page(self, parsed) -> UespHealth:
+        return UespParser._health_from_page(self, parsed)
 
     @staticmethod
     def _dialogue_from_blocks(blocks: list[dict]) -> list[UespDialogueLine]:

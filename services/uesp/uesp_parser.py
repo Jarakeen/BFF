@@ -399,46 +399,89 @@ _PHASE_PATTERN = re.compile(r"(?i)phase\s+(\d+)[^.]{0,200}?(\d{1,3})\s?%")
 
 def _extract_health(cell: dict) -> UespHealth:
     text = cell.get("text", "")
-
     health = UespHealth()
 
-    normal_parts = text.split(_HEALTH_NORMAL_MARKER)
-    if len(normal_parts) < 2:
+    # --------------------------------------------------
+    # Marker-based format
+    # --------------------------------------------------
+
+    if _HEALTH_NORMAL_MARKER in text:
+        normal_part = text.split(
+            _HEALTH_NORMAL_MARKER,
+            1,
+        )[1]
+
+        match = re.search(r"([\d,]+)", normal_part)
+
+        if match:
+            health.normal = match.group(1)
+
+        veteran_parts = normal_part.split(_HEALTH_VETERAN_MARKER)
+
+        veteran_values: list[str] = []
+
+        for part in veteran_parts[1:]:
+            match = re.search(
+                r"([\d,]+(?:\s*\([^)]*hard\s*mode[^)]*\))?)",
+                part,
+                re.IGNORECASE,
+            )
+
+            if match:
+                veteran_values.append(match.group(1).strip())
+
+        if veteran_values:
+            health.veteran = veteran_values[0]
+
+        if len(veteran_values) >= 2:
+            health.hardmode = veteran_values[1]
+
         return health
 
-    after_normal = normal_parts[1]
+    # --------------------------------------------------
+    # Plain line-based format
+    # --------------------------------------------------
 
-    veteran_parts = after_normal.split(_HEALTH_VETERAN_MARKER)
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+    ]
 
-    if len(veteran_parts) >= 1:
-        normal_match = re.search(
-            r"([\d,]+)",
-            veteran_parts[0],
-        )
+    if not lines:
+        return health
 
-        if normal_match:
-            health.normal = normal_match.group(1)
+    # Normal
+    normal_match = re.search(
+        r"^[\d,]+$",
+        lines[0],
+    )
 
-    if len(veteran_parts) >= 2:
+    if normal_match:
+        health.normal = normal_match.group(0)
+
+    # Veteran
+    if len(lines) >= 2:
         veteran_match = re.search(
-            r"([\d,]+)",
-            veteran_parts[1],
+            r"^[\d,]+$",
+            lines[1],
         )
 
         if veteran_match:
-            health.veteran = veteran_match.group(1)
+            health.veteran = veteran_match.group(0)
 
-    if len(veteran_parts) >= 3:
+    # Hard Mode
+    if len(lines) >= 3:
         hardmode_match = re.search(
-            r"([\d,]+)",
-            veteran_parts[2],
+            r"^[\d,]+(?:\s*\([^)]*hard\s*mode[^)]*\))?$",
+            lines[2],
+            re.IGNORECASE,
         )
 
         if hardmode_match:
-            health.hardmode = hardmode_match.group(1)
+            health.hardmode = hardmode_match.group(0)
 
     return health
-
 
 def _extract_abilities(blocks: list[dict]) -> list[UespAbility]:
     abilities: list[UespAbility] = []
@@ -937,6 +980,62 @@ class UespParser:
             source=_source_for(page),
         )
 
+
+    def _health_from_page(self, parsed: _ParsedPage) -> UespHealth:
+        """
+        Extract boss health from the infobox and separate hard-mode
+        health blocks.
+
+        UESP may represent Hard Mode health in either of two ways:
+
+        1. As a second Veteran-marked value in the infobox.
+        2. As a separate paragraph containing a Veteran marker,
+        the health value, and "(hard mode)".
+            """
+        health = _extract_health(
+            {
+                "text": parsed.infobox.get("health", "")
+            }
+        )
+
+        if health.hardmode:
+            return health
+
+        for block in parsed.all_blocks:
+            if block.get("type") not in {"p", "li"}:
+                continue
+
+            text = block.get("text", "")
+            if not text:
+                continue
+
+            if _HEALTH_VETERAN_MARKER not in text:
+                continue
+
+            if not re.search(
+                r"\bhard\s*mode\b|\bhardmode\b",
+                text,
+                re.IGNORECASE,
+            ):
+                continue
+
+            after_marker = text.split(
+                _HEALTH_VETERAN_MARKER,
+                1,
+            )[1]
+
+            match = re.search(
+                r"([0-9][0-9,]*)",
+                after_marker,
+            )
+
+            if match:
+                health.hardmode = match.group(1)
+                break
+
+        return health
+
+    
     def parse_achievement(self, page: UespPage) -> UespAchievement:
         parsed = parse_page_html(page.html)
         return UespAchievement(
