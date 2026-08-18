@@ -904,6 +904,39 @@ class UespParser:
             source=_source_for(page),
         )
 
+    def parse_content(self, page: UespPage, content_type: str) -> UespContent:
+        parsed = parse_page_html(page.html)
+
+        achievement_refs = _extract_linked_titles(
+            _section(parsed.sections, ACHIEVEMENT_HEADINGS) or []
+        )
+
+        notes = _extract_list_text(
+            _section(parsed.sections, NOTES_HEADINGS) or []
+        )
+
+        related_npcs = _extract_list_text(
+            _section(parsed.sections, NPC_HEADINGS) or []
+        )
+
+        return UespContent(
+            id=slugify(page.title),
+            name=_clean_title(page.title),
+            content_type=content_type,
+            summary=parsed.summary,
+            location=parsed.infobox.get("location", ""),
+            achievements=[
+                UespAchievement(
+                    id=slugify(title),
+                    name=display_text,
+                )
+                for display_text, title in achievement_refs
+            ],
+            related_npcs=related_npcs,
+            notes=notes,
+            source=_source_for(page),
+        )
+
     def parse_achievement(self, page: UespPage) -> UespAchievement:
         parsed = parse_page_html(page.html)
         return UespAchievement(

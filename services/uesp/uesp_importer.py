@@ -14,9 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from services.uesp.uesp_client import UespClient, UespClientError, UespPage
-from services.uesp.uesp_parser import UespParser, slugify
 from services.uesp.uesp_store import UespStore
-
+from services.uesp.enriched_parser import EnrichedUespParser
+from services.uesp.uesp_parser import slugify
 
 TRIAL_CATEGORY = "Online-Places-Trials"
 DUNGEON_CATEGORY = "Online-Places-Dungeons"
@@ -43,7 +43,7 @@ class UespImporter:
         self.store = store
         self.log_path = log_path
         self.force = force
-        self.parser = UespParser()
+        self.parser = EnrichedUespParser()
 
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
 

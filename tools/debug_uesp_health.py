@@ -1,10 +1,13 @@
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from services.uesp.uesp_client import UespClient
 from services.uesp.uesp_parser import parse_page_html
 
 
-ROOT = Path(__file__).resolve().parents[1]
 CACHE_DIR = ROOT / "data" / "uesp" / ".cache"
 
 BOSSES = [
@@ -23,7 +26,7 @@ for title in BOSSES:
     page = client.get_page(title)
     parsed = parse_page_html(page.html)
 
-    print("\nINFOBOX:")
+    print("\nINFOBOX HEALTH FIELDS:")
     for key, value in parsed.infobox.items():
         if "health" in key.lower():
             print(repr(key), "=>", repr(value))
@@ -32,13 +35,15 @@ for title in BOSSES:
     for key, value in parsed.infobox.items():
         print(repr(key), "=>", repr(value))
 
-    print("\nHEALTH/VETERAN-RELATED BLOCKS:")
+    print("\nHEALTH/VETERAN/HARDMODE BLOCKS:")
     for block in parsed.all_blocks:
         text = block.get("text", "")
+        lowered = text.lower()
+
         if (
-            "health" in text.lower()
-            or "veteran" in text.lower()
-            or "hardmode" in text.lower()
-            or "hard mode" in text.lower()
+            "health" in lowered
+            or "veteran" in lowered
+            or "hardmode" in lowered
+            or "hard mode" in lowered
         ):
             print(block)
