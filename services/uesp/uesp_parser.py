@@ -677,7 +677,8 @@ def _looks_like_content_title(title: str) -> bool:
 
 def _extract_linked_titles(blocks: list[dict]) -> list[tuple[str, str]]:
     """Return (display_text, wiki_title) pairs for every content-page
-    link found inside a set of blocks."""
+    link found inside a set of blocks.
+    """
 
     refs: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -685,15 +686,20 @@ def _extract_linked_titles(blocks: list[dict]) -> list[tuple[str, str]]:
     for block in blocks:
         for href, text in block.get("links", []):
             title = _title_from_href(href)
+
             if not title or not _looks_like_content_title(title):
                 continue
+
             if title in seen:
                 continue
+
             seen.add(title)
-            refs.append((text.strip() or title, title))
+            refs.append(
+                (text.strip() or title, title)
+            )
 
     return refs
-
+    
 
 def _extract_difficulty_notes(paragraphs: list[str]) -> UespDifficultyNotes:
     notes = UespDifficultyNotes()
@@ -845,14 +851,20 @@ class UespParser:
         # --------------------------------------------------
         # Difficulty notes
         # --------------------------------------------------
+        difficulty_texts = [
+            block["text"]
+            for block in parsed.all_blocks
+            if block.get("type") in {"p", "li"}
+            and block.get("text", "").strip()
+        ]
+
+        difficulty_notes = _extract_difficulty_notes(difficulty_texts)
 
         all_paragraphs = [
             b["text"]
             for b in parsed.all_blocks
-            if b["type"] == "p" and b["text"].strip()
+            if b["type"] in {"p", "li"} and b["text"].strip()
         ]
-
-        difficulty_notes = _extract_difficulty_notes(all_paragraphs)
 
         # --------------------------------------------------
         # Achievement references
@@ -870,59 +882,25 @@ class UespParser:
             location=infobox.get("location", ""),
             species=infobox.get("species", ""),
             reaction=infobox.get("reaction", ""),
-            health=_extract_health(
-                next(
-                    (
-                        block["cells"][1]
-                        for block in parsed.all_blocks
-                        if block.get("type") == "tr"
-                        and block.get("cells")
-                        and block["cells"][0].get("text", "").strip().lower() == "health"
-                        and len(block["cells"]) >= 2
-                    ),
-                    {"text": "", "links": []},
-                )
-            ),
+            health=self._health_from_page(parsed),
             abilities=abilities,
             mechanics=mechanics,
             phases=phases,
             dialogue=dialogue,
-            dialogue_by_trigger=dialogue_by_trigger,
+            dialogue_by_trigger=grouped,
             difficulty_notes=difficulty_notes,
-            strategy_notes=strategy_paragraphs,
+            strategy_notes=strategy_notes,
             notes=notes,
             related_npcs=related_npcs,
             related_quests=related_quests,
             achievements=[
-                UespAchievement(id=slugify(title), name=display_text)
+                UespAchievement(
+                    id=slugify(title),
+                    name=display_text,
+                )
                 for display_text, title in achievement_refs
             ],
             summary=parsed.summary,
-            source=_source_for(page),
-        )
-
-    def parse_content(self, page: UespPage, content_type: str) -> UespContent:
-
-        parsed = parse_page_html(page.html)
-
-        achievement_refs = _extract_linked_titles(
-            _section(parsed.sections, ACHIEVEMENT_HEADINGS) or []
-        )
-        notes = _extract_list_text(_section(parsed.sections, NOTES_HEADINGS) or [])
-        related_npcs = _extract_list_text(_section(parsed.sections, NPC_HEADINGS) or [])
-
-        return UespContent(
-            id=slugify(page.title),
-            name=_clean_title(page.title),
-            content_type=content_type,
-            summary=parsed.summary,
-            location=parsed.infobox.get("location", ""),
-            achievements=[
-                UespAchievement(id=slugify(title), name=display_text)
-                for display_text, title in achievement_refs
-            ],
-            related_npcs=related_npcs,
-            notes=notes,
             source=_source_for(page),
         )
 

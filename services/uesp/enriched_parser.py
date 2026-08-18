@@ -137,13 +137,23 @@ class EnrichedUespParser(UespParser):
         notes = _extract_list_text(_section(parsed.sections, NOTES_HEADINGS) or [])
         related_quests = _extract_list_text(_section(parsed.sections, QUEST_HEADINGS) or [])
         related_npcs = _extract_list_text(_section(parsed.sections, NPC_HEADINGS) or [])
-        all_paragraphs = [
-            block["text"] for block in parsed.all_blocks
-            if block.get("type") == "p" and block.get("text", "").strip()
-        ]
-        difficulty_notes = _extract_difficulty_notes(all_paragraphs)
-        achievement_refs = _extract_linked_titles(_section(parsed.sections, ACHIEVEMENT_HEADINGS) or [])
 
+        difficulty_text = [
+            block["text"]
+            for block in (
+                strategy_blocks
+                + (_section(parsed.sections, NOTES_HEADINGS) or [])
+            )
+            if block.get("type") in {"p", "li"}
+            and block.get("text", "").strip()
+        ]
+
+        difficulty_notes = _extract_difficulty_notes(difficulty_text)
+       
+
+        achievement_refs = _extract_linked_titles(
+            _section(parsed.sections, ACHIEVEMENT_HEADINGS) or []
+)
         return UespBoss(
             id=slugify(page.title),
             name=_clean_title(page.title),

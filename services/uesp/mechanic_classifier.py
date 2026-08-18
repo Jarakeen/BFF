@@ -142,12 +142,12 @@ def classify_mechanic(name: str, description: str) -> MechanicClassification:
         mechanic_type = "charge"
     elif meaningful_summon:
         mechanic_type = "summon"
+    elif area_attack:
+        mechanic_type = "area_attack"
     elif persistent_hazard:
         mechanic_type = "hazard"
     elif spread:
         mechanic_type = "spread"
-    elif target_count is not None and requires_positioning:
-        mechanic_type = "targeted_attack"
     elif requires_positioning:
         mechanic_type = "positioning"
     elif area_attack:
