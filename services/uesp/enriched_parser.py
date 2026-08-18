@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
-from models.uesp_models import UespBoss, UespDialogueLine, UespHealth, UespMechanic, UespPhase
+from models.uesp_models import UespAchievement, UespBoss, UespDialogueLine, UespHealth, UespMechanic, UespPhase
 from services.uesp.uesp_parser import (
     UespParser,
     parse_page_html,
@@ -11,14 +11,27 @@ from services.uesp.uesp_parser import (
     ABILITIES_HEADINGS,
     STRATEGY_HEADINGS,
     DIALOGUE_HEADINGS,
+    ACHIEVEMENT_HEADINGS,
+    NOTES_HEADINGS,
+    QUEST_HEADINGS,
+    NPC_HEADINGS,
+    MECHANICS_HEADINGS,
     _DIALOGUE_LINE,
+    _extract_abilities,
+    _extract_mechanics,
+    _extract_list_text,
+    _extract_linked_titles,
+    _extract_difficulty_notes,
+    _source_for,
+    _clean_title,
+    slugify,
 )
 from services.uesp.mechanic_classifier import classify_mechanic
 from services.uesp.phase_extractor import extract_phases
 
 
 class EnrichedUespParser(UespParser):
-    """Validate expanded encounter extraction without replacing UespParser."""
+    """Expanded boss extraction without replacing the existing parser yet."""
 
     @staticmethod
     def _health_from_page(parsed) -> UespHealth:
@@ -66,9 +79,9 @@ class EnrichedUespParser(UespParser):
         return result
 
     @staticmethod
-    def _inferred_mechanics(boss: UespBoss) -> list[UespMechanic]:
+    def _inferred_mechanics(abilities) -> list[UespMechanic]:
         result: list[UespMechanic] = []
-        for ability in boss.abilities:
+        for ability in abilities:
             classification = classify_mechanic(ability.name, ability.description)
             if classification.mechanic_type is None:
                 continue
@@ -92,12 +105,22 @@ class EnrichedUespParser(UespParser):
         return result
 
     def parse_boss(self, page, content_id: str = "", content_name: str = "") -> UespBoss:
-        boss = super().parse_boss(page, content_id=content_id, content_name=content_name)
         parsed = parse_page_html(page.html)
+        infobox = parsed.infobox
+
+        abilities_blocks = _section(parsed.sections, ABILITIES_HEADINGS) or []
+        abilities = _extract_abilities(abilities_blocks)
+
+        mechanics_blocks = _section(parsed.sections, MECHANICS_HEADINGS) or []
+        mechanics = _extract_mechanics(mechanics_blocks)
 
         strategy_blocks = _section(parsed.sections, STRATEGY_HEADINGS) or []
-        ability_blocks = _section(parsed.sections, ABILITIES_HEADINGS) or []
-        phase_facts = extract_phases(strategy_blocks + ability_blocks)
+        strategy_notes = [
+            block["text"] for block in strategy_blocks
+            if block.get("type") == "p" and block.get("text", "").strip()
+        ]
+
+        phase_facts = extract_phases(strategy_blocks + abilities_blocks)
         phases = [UespPhase(fact.label, fact.threshold, fact.description) for fact in phase_facts]
 
         dialogue_blocks = _section(parsed.sections, DIALOGUE_HEADINGS) or []
@@ -106,17 +129,44 @@ class EnrichedUespParser(UespParser):
         for line in dialogue:
             grouped.setdefault(line.trigger or "Unspecified", []).append(line)
 
-        mechanics = list(boss.mechanics)
         existing = {(mechanic.name, mechanic.description) for mechanic in mechanics}
-        for mechanic in self._inferred_mechanics(boss):
+        for mechanic in self._inferred_mechanics(abilities):
             if (mechanic.name, mechanic.description) not in existing:
                 mechanics.append(mechanic)
 
-        return replace(
-            boss,
+        notes = _extract_list_text(_section(parsed.sections, NOTES_HEADINGS) or [])
+        related_quests = _extract_list_text(_section(parsed.sections, QUEST_HEADINGS) or [])
+        related_npcs = _extract_list_text(_section(parsed.sections, NPC_HEADINGS) or [])
+        all_paragraphs = [
+            block["text"] for block in parsed.all_blocks
+            if block.get("type") == "p" and block.get("text", "").strip()
+        ]
+        difficulty_notes = _extract_difficulty_notes(all_paragraphs)
+        achievement_refs = _extract_linked_titles(_section(parsed.sections, ACHIEVEMENT_HEADINGS) or [])
+
+        return UespBoss(
+            id=slugify(page.title),
+            name=_clean_title(page.title),
+            content_id=content_id,
+            content_name=content_name,
+            location=infobox.get("location", ""),
+            species=infobox.get("species", ""),
+            reaction=infobox.get("reaction", ""),
             health=self._health_from_page(parsed),
+            abilities=abilities,
+            mechanics=mechanics,
             phases=phases,
             dialogue=dialogue,
             dialogue_by_trigger=grouped,
-            mechanics=mechanics,
+            difficulty_notes=difficulty_notes,
+            strategy_notes=strategy_notes,
+            notes=notes,
+            related_npcs=related_npcs,
+            related_quests=related_quests,
+            achievements=[
+                UespAchievement(id=slugify(title), name=display_text)
+                for display_text, title in achievement_refs
+            ],
+            summary=parsed.summary,
+            source=_source_for(page),
         )
