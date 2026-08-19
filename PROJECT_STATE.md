@@ -1,7 +1,7 @@
 # BFF Project State
 
 > **Purpose:** Persistent handoff for continuing BFF development across ChatGPT/Claude conversations.
-> **Last updated:** 2026-08-17
+> **Last updated:** 2026-08-19
 
 ---
 
@@ -9,18 +9,20 @@
 
 **Project:** Black Feather Foundry (BFF) / FoundryDock
 
-BFF is an ESO-focused streaming/analysis application. Current development includes ESO reference data, gear customization, encounter/trial data, and combat-log analysis.
+**Repository:** `Jarakeen/BFF`
 
-Repository:
+**Working project:** `BFF/40_Stream Studio/OBS/Scripts/FoundryDock/`
+
+BFF is an ESO-focused streaming/analysis application. Current development includes ESO reference data, gear customization, encounter/trial data, combat-log analysis, and a new Min/Max engine.
+
+**Current branch:** `integrate-uesp-into-wireframe`
+
+**Current GitHub HEAD:** `04abe262dc80079ca7ad5191bdfb5a83bc4e028a`
+
+Latest committed change:
 
 ```text
-Jarakeen/BFF
-```
-
-Working project:
-
-```text
-BFF/40_Stream Studio/OBS/Scripts/FoundryDock/
+04abe26 Build database-backed minmax effect resolution
 ```
 
 ---
@@ -33,36 +35,15 @@ BFF/40_Stream Studio/OBS/Scripts/FoundryDock/
 data/eso.db
 ```
 
-Current measured size:
+Current working production DB is approximately **1.06 GiB**. It contains reference/application data plus imported encounter data, gear customization data, and combat-log data.
 
-```text
-1,139,970,048 bytes
-~1.06 GiB
-```
-
-SQLite:
-
-```text
-page_size: 4096
-page_count: 278,313
-free_pages: 0
-```
-
-The database genuinely stores approximately 1.06 GiB of data. This is not primarily SQLite free-space bloat.
-
-### GitHub rule
-
-**DO NOT commit the current production database to GitHub.**
-
-The repository contains an older, force-added `data/eso.db` snapshot of approximately 37 MB. The current working production database is much larger and is not the same snapshot.
-
-The repository's `.gitignore` already ignores the `data/` directory.
+**DO NOT commit the current production database to GitHub.** The repository has an older tracked `data/eso.db` snapshot, but the current working database is a much larger and different snapshot. `data/` is ignored for normal development.
 
 ---
 
-# 3. GEAR CUSTOMIZATION DATA
+# 3. GEAR CUSTOMIZATION DATA: COMPLETE AND VALIDATED
 
-The following tables were successfully imported into the current production database.
+The following tables are now present in the current production database and were successfully migrated from the validated staging DB:
 
 | Table | Rows |
 |---|---:|
@@ -77,53 +58,334 @@ The following tables were successfully imported into the current production data
 | `weapon_enchantment_effect` | 20 |
 | `weapon_trait_effect` | 10 |
 
-### Indexes created
+Migration was performed with `tools/migrate_gear_customization.py` and completed successfully. It requires `data/eso.db.pre_gear_customization`, refuses to overwrite existing target tables, copies only the ten intended tables and their indexes, validates row counts, and commits only after successful validation.
+
+Backup:
 
 ```text
-idx_gear_trait_material_trait
-idx_gear_trait_material_type
-idx_armor_glyph_effect_glyph
-idx_armor_glyph_effect_type
-idx_jewelry_trait_effect_lookup
-idx_jewelry_trait_effect_trait
-idx_jewelry_glyph_effect_glyph
-idx_jewelry_glyph_effect_type
-idx_weapon_enchantment_effect_enchantment
-idx_weapon_enchantment_effect_type
-idx_weapon_trait_effect_trait
-idx_weapon_trait_effect_type
+data/eso.db.pre_gear_customization
 ```
 
-### Validation completed
+### Important finding: 850 jewelry trait rows are correct
+
+`jewelry_trait_effect` is **not duplicated**. Its rows model level/material/quality-dependent trait values.
+
+Trait totals:
 
 ```text
-Orphan jewelry trait effects: 0
-Orphan jewelry glyph effects: 0
-Orphan weapon enchantment effects: 0
-Orphan weapon trait effects: 0
-
-Duplicate jewelry traits: 0
-Duplicate jewelry glyphs: 0
-Duplicate weapon enchantments: 0
-Duplicate weapon trait effects: 0
-Duplicate jewelry glyph effects: 0
+Triune       420
+Harmony      265
+Protective   140
+Infused       15
+Bloodthirsty  5
+Swift         5
 ```
 
-The production migration ultimately completed successfully with all expected row counts.
+Schema:
 
-### Important architecture note
+```text
+trait_name
+ effect_type
+ item_type
+ quality
+ item_level
+ value
+ unit
+```
 
-The GitHub repository currently contains no importer/service/parser references to these ten gear-customization tables. They were added to the live production database by tooling outside the tracked repository.
+Examples:
 
-Do not assume the current repository can regenerate these tables.
+- `Triune`: 3 effects (`max_health`, `max_magicka`, `max_stamina`) × 140 combinations = 420.
+- `Harmony`: one effect with 265 level/material/quality combinations.
+- `Protective`: one effect with 140 combinations.
+- `Infused`: 3 item types × 5 qualities = 15.
+- `Bloodthirsty` and `Swift`: 5 jewelry qualities each.
+
+This level-scaled representation is intentional and useful to the Min/Max engine. Do not replace it with hard-coded constants.
+
+### Validation
+
+```text
+armor_glyph OK
+jewelry_glyph OK
+weapon_enchantment OK
+weapon_trait_effect OK
+jewelry_trait_effect OK
+
+57 passed
+```
+
+The Min/Max test suite currently passes **57 tests**.
 
 ---
 
-# 4. ESO LOG DATA
+# 4. MIN/MAX ENGINE: CURRENT STATE
 
-The large database size is primarily explained by combat-log data.
+The Min/Max engine lives under:
 
-Current production database contains:
+```text
+services/minmax/
+```
+
+Current components include:
+
+```text
+armor_glyph_repository.py
+build.py
+calculation.py
+candidate_requirements.py
+combat_effects.py
+effect_kinds.py
+effect_mapper.py
+effect_resolver.py
+effects.py
+enchantment_calculation.py
+glyph_repository.py
+group_effects.py
+group_evaluation.py
+group_evaluator.py
+role.py
+roster.py
+roster_constraints.py
+roster_solver.py
+roster_types.py
+rule_effects.py
+rule_repository.py
+stat_ids.py
+weapon_enchantment_repository.py
+```
+
+### Effect model
+
+`Effect` supports `ADD`, `ADD_PERCENT`, `MULTIPLY`, and `SET`, with `FLAT` or `PERCENT` units, plus stat/kind/source and combat/rule metadata.
+
+### Calculation
+
+`calculation.py` produces `StatBreakdown` objects containing `base`, `additive`, `multiplicative`, and `sources`, with final value:
+
+```text
+(base + additive) * multiplicative
+```
+
+### EffectResolver
+
+`effect_resolver.py` is committed in `04abe26` and converts direct ESO effect descriptions into structured `Effect` objects. It correctly distinguishes percentage from flat effects. The Brutality/Sorcery percentage parsing bug was caught by tests and fixed.
+
+### EffectRepository
+
+A database-backed `EffectRepository` adapter has been created locally to query `effect JOIN effect_variant` and pass descriptions directly to `EffectResolver`. It has 8 dedicated tests.
+
+**Important checkpoint note:** `effect_repository.py` and its dedicated test file are not yet visible on GitHub at the time of this update. They need to be included in the next local Git checkpoint/push.
+
+---
+
+# 5. CURRENT MIN/MAX ARCHITECTURE
+
+```text
+ESO DATABASE
+     │
+     ├── Effects / Effect Variants
+     ├── Gear Sets / Set Bonuses
+     ├── Jewelry Traits
+     ├── Armor Glyphs
+     ├── Jewelry Glyphs
+     ├── Weapon Enchantments
+     └── Weapon Trait Rules
+             │
+             ▼
+      Effect / Rule repositories
+             │
+             ▼
+        EffectResolver
+             │
+             ▼
+          Effect[]
+             │
+             ▼
+           Build
+             │
+             ▼
+        Calculation
+             │
+             ▼
+       StatBreakdown
+```
+
+The individual effect sources are working. The missing layer is the **gear/set orchestration layer**.
+
+---
+
+# 6. NEXT MIN/MAX MILESTONE: SET EFFECT REPOSITORY
+
+Do **not** jump directly into a giant `GearPiece`/optimizer implementation.
+
+Next:
+
+```text
+services/minmax/set_repository.py
+services/minmax/tests/test_set_repository.py
+```
+
+Responsibilities:
+
+1. Look up a set by ID/name.
+2. Retrieve `gear_set_bonus` rows.
+3. Return piece-count bonuses and descriptions.
+4. Resolve bonus descriptions through the existing `EffectResolver`.
+5. Return structured `Effect` objects.
+6. Return an empty result for an unknown set rather than fabricating data.
+
+Existing set schema:
+
+```text
+gear_set
+    id
+    name
+    category
+    max_equip_count
+
+gear_set_bonus
+    id
+    set_id
+    piece_count
+    description
+
+gear_set_item
+    set_id
+    item_id
+
+gear_set_piece
+    id
+    set_id
+    equip_type
+    armor_type
+    weapon_type
+```
+
+The set repository should reuse `EffectResolver`; do not duplicate description parsing.
+
+---
+
+# 7. NEXT AFTER SET REPOSITORY
+
+After set effects are tested:
+
+```text
+SetEffectRepository
+        │
+        ▼
+   GearContext
+        │
+        ▼
+ GearEffectResolver
+        │
+        ├── set bonuses
+        ├── gear trait
+        ├── glyph/enchantment
+        └── trait/enchantment rules
+        │
+        ▼
+      Effect[]
+        │
+        ▼
+       Build
+        │
+        ▼
+    Calculation
+```
+
+A future `GearContext` should carry runtime information needed to resolve level/quality-sensitive effects, conceptually including:
+
+```text
+item_id
+slot
+item_level
+quality
+trait
+enchantment_id / glyph_id
+set_id
+```
+
+Do not invent a competing item model until the source of actual item candidates is identified.
+
+The current DB has specialized item tables for glyphs/enchantments and set membership, but **does not have a generic `item` table containing every equipped item's level/quality/trait/etc.** Candidate-item generation is therefore a later layer and should not be conflated with effect calculation.
+
+---
+
+# 8. MIN/MAX ROADMAP
+
+Completed:
+
+```text
+✅ Effect model
+✅ Stat model
+✅ Calculation
+✅ EffectMapper
+✅ EffectResolver
+✅ Database EffectRepository work (local; checkpoint pending)
+✅ Armor glyph repository
+✅ Jewelry glyph repository
+✅ Weapon enchantment repository
+✅ Weapon trait/rule repository
+✅ Jewelry trait/rule data
+✅ Gear customization migration
+✅ 57 Min/Max tests passing
+```
+
+Next:
+
+```text
+👉 SetEffectRepository
+👉 Set repository tests
+👉 GearContext
+👉 GearEffectResolver
+👉 Integration test: actual gear → Effects → Build → Calculation
+👉 Candidate item source / generation
+👉 Build scoring / optimization
+👉 Group composition optimization
+```
+
+Immediate goal: make **actual gear produce explainable Effects**, not yet optimize builds.
+
+---
+
+# 9. GEAR DATA PROVENANCE
+
+Three raw gear-customization JSON files were recovered from Git history commit `9559a2e` after discovering they had been deleted during a later cleanup:
+
+```text
+data/raw/armor_glyph.json
+data/raw/jewelry_glyph.json
+data/raw/weapon_enchantments.json
+```
+
+They were originally UTF-16LE and were normalized to valid UTF-8 JSON for the current import pipeline.
+
+Verified test item IDs:
+
+```text
+armor_glyph:
+  26580 Glyph of Health
+  68343 Glyph of Prismatic Defense
+
+jewelry_glyph:
+  26581 Glyph of Health Recovery
+
+weapon_enchantments:
+  5365 Glyph of Frost
+  26845 Glyph of Crushing
+  43573 Glyph of Absorb Health
+```
+
+The staging DB contained all ten required gear-customization tables before migration.
+
+Do not fabricate missing data when a historical source can be recovered.
+
+---
+
+# 10. COMBAT LOG DATA
+
+Current production DB also contains detailed ESO Logs data from Sunspire over two nights:
 
 ```text
 log_report                         2 rows
@@ -136,140 +398,15 @@ log_observed_target               16 rows
 log_import_manifest                6 rows
 ```
 
-The `log_event` table contains **1,750,281 events**.
+`log_event.raw_json` is intentionally preserved.
 
-These events represent detailed play-by-play ESO Logs data from an actual trial team running **Sunspire over two nights**.
-
-This is intentional test/analysis data, not accidental database garbage.
+Eventually combat logs may belong in `data/eso_logs.db`, but **do not perform that split yet**. First identify provenance and external/local tooling that created or consumes the log tables.
 
 ---
 
-# 5. LOG_EVENT STRUCTURE
+# 11. DATABASE / REPOSITORY PROVENANCE RULES
 
-`log_event` contains:
-
-```text
-report_code
-fight_id
-event_index
-timestamp
-event_type
-source_id
-source_is_friendly
-target_id
-target_instance
-target_is_friendly
-ability_game_id
-extra_ability_game_id
-amount
-hit_type
-tick
-cast_track_id
-resource_change
-resource_change_type
-other_resource_change
-max_resource_amount
-waste
-overheal
-absorbed
-stack
-raw_json
-```
-
-Indexes:
-
-```text
-idx_log_event_ability
-idx_log_event_target
-idx_log_event_source
-idx_log_event_fight_time
-```
-
-plus the primary-key autoindex.
-
-## raw_json
-
-`log_event.raw_json` preserves the original combat event JSON.
-
-A sample event includes source/target resources, HP, Magicka, Stamina, Ultimate, Champion Points, positions, facing, ability IDs, timestamps, and other event metadata.
-
-**DO NOT delete or strip `raw_json` yet.**
-
-It may be important as a source-of-truth / forensic representation if the parser later needs fields that were not initially modeled.
-
----
-
-# 6. LOG DATABASE ARCHITECTURE
-
-Current working hypothesis:
-
-> Combat-log data probably belongs in a separate `data/eso_logs.db` eventually, while `data/eso.db` remains the stable ESO reference/application database.
-
-Conceptual split:
-
-```text
-eso.db
-├── ESO reference/static data
-├── abilities
-├── skills
-├── gear sets
-├── traits
-├── glyphs
-├── enchantments
-├── encounters
-├── achievements
-├── roster/team data
-└── gear customization
-
-eso_logs.db
-├── log_report
-├── log_fight
-├── log_actor
-├── log_event
-├── log_aura
-├── observed targets
-├── observed damage windows
-└── raw combat JSON
-```
-
-### DO NOT perform this split yet.
-
-The current GitHub repository contains no in-repo code that reads or writes the `log_*` tables.
-
-We do not yet know what external/local tooling created or consumes the combat-log data.
-
-Before moving anything:
-
-1. Identify provenance of the `log_*` tables.
-2. Find the external/local importer or script that created them.
-3. Determine whether that tooling assumes everything lives in `data/eso.db`.
-4. Identify relevant local/untracked/ignored files.
-5. Only then design the database split.
-
----
-
-# 7. CLAUDE REPOSITORY ASSESSMENT
-
-A read-only repository assessment found:
-
-- No in-repo log-import architecture.
-- No code reading/writing `log_event`, `log_report`, `log_fight`, `log_actor`, `log_aura`, etc.
-- No in-repo combat-log `raw_json` handling.
-- No in-repo references to the ten new gear-customization tables.
-- No migration system.
-- No SQL migration files.
-- Schema is created imperatively in Python, particularly through `services/eso_db/schema.py`.
-- No use of SQLite `ATTACH DATABASE`.
-- Database paths are independently derived at approximately 11 call sites.
-- `EsoDatabase`, `EsoAchievementDatabaseService`, and `EsoDbImporter` accept a database path, which is a useful existing pattern.
-- `services/roster_service.py` deliberately reuses the existing `EsoDatabase` connection instead of opening a second connection to the same SQLite file.
-- `.gitignore` already ignores `data/`.
-- `data/eso.db` is nevertheless tracked in Git because it was force-added in an older commit.
-- No Git LFS configuration exists.
-
-### Important interpretation
-
-The repository's code and live database are currently out of sync:
+The live database and GitHub code are not perfectly synchronized:
 
 ```text
 GitHub code/schema
@@ -277,208 +414,70 @@ GitHub code/schema
 Current working production database
 ```
 
-The live database contains data the repository does not currently know how to regenerate.
-
-Treat this as a **data provenance problem**, not merely a database-size problem.
+The current live DB contains imported data not necessarily reproducible from the tracked repository alone. Treat missing-data issues as provenance problems first. Do not casually alter production schema or assume a dataset can be regenerated.
 
 ---
 
-# 8. NEXT TASK: DATABASE PROVENANCE FORENSICS
+# 12. GITHUB / GIT CHECKPOINT POLICY
 
-Before any database architecture changes, investigate where the live-only data came from.
-
-Search the entire repository and accessible local project context for:
-
-```text
-log_event
-log_report
-log_fight
-log_actor
-log_aura
-log_observed_target
-log_observed_damage_window
-raw_json
-ESO Logs
-esologs
-report code
-combat log
-combat-log
-WCL
-Warcraft Logs
-ATTACH DATABASE
-Sunspire
-```
-
-Also investigate provenance of:
-
-```text
-gear_trait_material
-armor_glyph
-armor_glyph_effect
-jewelry_trait
-jewelry_trait_effect
-jewelry_glyph
-jewelry_glyph_effect
-weapon_enchantment
-weapon_enchantment_effect
-weapon_trait_effect
-```
-
-Look in:
-
-- Python
-- PowerShell
-- JSON
-- Markdown
-- notebooks
-- `dev/`
-- `tools/`
-- `importers/`
-- `parsers/`
-- `services/`
-- scripts outside the main package
-- Git history
-- ignored/untracked files where accessible
-
-## Do not modify files or databases during provenance investigation.
-
-The immediate goal is to identify the missing machinery that created the live database content.
-
----
-
-# 9. DATABASE PATH ARCHITECTURE
-
-The repository currently has no central database-path configuration.
-
-Different code paths independently construct paths such as:
-
-```text
-data/eso.db
-project_root / data / eso.db
-data_dir / eso.db
-module-level DB_PATH / DEFAULT_DB_PATH
-```
-
-A future cleanup should introduce a central path-resolution layer, for example:
-
-```text
-ESO_DB_PATH
-ESO_LOGS_DB_PATH
-```
-
-But this should be a separate, deliberate change.
-
-Do not combine path-resolution cleanup with an emergency database split.
-
----
-
-# 10. REGENERATION STATUS
-
-At present, assume both the live combat-log data and gear-customization data are **retain-only** until the missing importers/tooling are located.
-
-Do not assume either dataset can safely be regenerated.
-
-This is especially important for the combat logs because the repository contains no known importer capable of reconstructing the current 1.75 million-event dataset.
-
----
-
-# 11. GITHUB POLICY
-
-## Do not commit
+Never commit the current large production DB:
 
 ```text
 data/eso.db
 data/eso_logs.db
 ```
 
-Do not commit the current 1.06 GiB database.
+Commit Python source, repositories, parsers/importers, schema definitions, tests, reproducible migration/data-processing code, and `PROJECT_STATE.md`.
 
-The existing 37 MB `data/eso.db` snapshot in Git is an older exception and should not become the pattern.
+### Current checkpoint situation
 
-## Do commit
-
-- Python source
-- parsers
-- importers
-- services
-- schema definitions
-- migrations, once a migration system exists
-- reproducible data-processing code
-- small test fixtures when appropriate
-
-## Future test fixtures
-
-A small representative combat-log fixture may eventually be useful for automated tests.
-
-It could contain:
-
-- a small successful pull
-- a failed pull
-- representative players
-- damage events
-- healing
-- buffs/debuffs
-- mechanics
-- resource events
-
-Do not commit the full two-night Sunspire event stream merely to provide test data.
-
----
-
-# 12. CURRENT DO-NOT-DO LIST
-
-Until provenance is understood:
-
-- Do NOT move `log_*` tables.
-- Do NOT create `eso_logs.db` as a production replacement.
-- Do NOT delete combat logs.
-- Do NOT truncate `log_event`.
-- Do NOT remove `raw_json`.
-- Do NOT strip combat-log indexes just to reduce size.
-- Do NOT upload the 1.06 GiB database to GitHub.
-- Do NOT assume the current repository can regenerate the live-only data.
-- Do NOT modify production schema casually.
-- Do NOT combine unrelated architecture cleanups into the log-data investigation.
-
----
-
-# 13. BACKUP
-
-A production backup was created before the gear-customization migration:
+GitHub branch HEAD is:
 
 ```text
-data/eso.db.pre_gear_customization
+04abe26 Build database-backed minmax effect resolution
 ```
 
-Use backups before future database mutations.
+The next checkpoint should include the newly completed `effect_repository.py` work and its tests, plus this updated `PROJECT_STATE.md`, **without** committing the live database.
 
----
+Before checkpointing locally:
 
-# 14. RECENT MIGRATION TOOLING
+```powershell
+git status --short
+git diff --stat
+git diff --cached --stat
+python -m pytest services/minmax/tests -q
+```
 
-A migration script was created during the gear-customization migration:
+Expected current result:
 
 ```text
-tools/migrate_gear_customization.py
+57 passed
 ```
 
-It was corrected so it:
+Suggested focused commit message:
 
-- creates only the intended ten tables
-- copies validated data
-- creates only indexes belonging to those tables
-- validates row counts
-- commits after successful validation
-
-It should not be treated as a general migration framework.
+```text
+Checkpoint minmax gear effect data layer
+```
 
 ---
 
-# 15. PROJECT PRINCIPLE
+# 13. CURRENT DO-NOT-DO LIST
 
-The repository should eventually become the **reproducible source of truth for application/schema/code**, while large runtime/imported datasets remain external/local unless there is a deliberate reason to package a small fixture.
+- Do NOT commit the current production database.
+- Do NOT create `eso_logs.db` yet.
+- Do NOT delete or strip `log_event.raw_json`.
+- Do NOT replace level-scaled jewelry trait data with constants.
+- Do NOT duplicate effect parsing logic outside `EffectResolver`.
+- Do NOT invent a generic item model until the actual candidate-item source is understood.
+- Do NOT build the optimizer before the gear-to-effects pipeline is explainable and tested.
+- Do NOT combine unrelated database architecture cleanup with Min/Max work.
 
-Conceptually:
+---
+
+# 14. PROJECT PRINCIPLE
+
+The repository should become the reproducible source of truth for application/schema/code, while large runtime/imported datasets remain external/local unless deliberately packaged as small fixtures.
 
 ```text
 GitHub
@@ -488,6 +487,20 @@ Local data
   = production/reference DB + imported combat logs + runtime data
 ```
 
-The immediate goal is not to make the database smaller.
+For the Min/Max engine:
 
-The immediate goal is to make the relationship between **code, schema, imported data, and external tooling explicit and reproducible**.
+```text
+Database truth
+      ↓
+Structured Effects
+      ↓
+Build
+      ↓
+Explainable Calculation
+      ↓
+Candidate generation
+      ↓
+Optimization
+```
+
+**The engine should never optimize a number it cannot explain.**
