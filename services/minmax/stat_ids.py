@@ -23,4 +23,7 @@ class StatId(str, Enum):
     SPELL_CRITICAL = "spell_critical"
 
     CRITICAL_DAMAGE = "critical_damage"
+    CRITICAL_CHANCE = "critical_chance"
+    CRITICAL_RESISTANCE = "critical_resistance"
     HEALING_DONE = "healing_done"
+    HEALING_TAKEN = "healing_taken"
