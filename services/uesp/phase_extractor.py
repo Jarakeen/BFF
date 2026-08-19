@@ -25,13 +25,11 @@ _HEALTH_THRESHOLD = re.compile(
 
 
 def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
-    """Extract source-explicit phase facts.
+    """Extract phase facts explicitly supported by UESP prose.
 
     A bare health percentage never creates a phase. Explicit phase references
-    are merged. If a source sentence names a final-phase threshold and then
-    names the next phase in the same block, that threshold belongs to that
-    following phase. This matches UESP prose such as 'the final phase starts
-    when she hits 40%' followed by 'Phase 3 takes place...'.
+    are merged, and a final-phase threshold can be attached to the following
+    explicit phase reference when the source presents them together.
     """
     results: list[PhaseFact] = []
     index_by_label: dict[str, int] = {}
@@ -50,13 +48,10 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
             index_by_label[key] = len(results)
             results.append(PhaseFact(clean, threshold, description))
             return
-
         existing = results[existing_index]
         merged_threshold = existing.threshold or threshold
         merged_description = existing.description
-        if threshold and not existing.threshold and description:
-            merged_description = f"{existing.description} {description}".strip()
-        elif description and description != existing.description and threshold:
+        if description and description != existing.description:
             merged_description = f"{existing.description} {description}".strip()
         results[existing_index] = PhaseFact(existing.label, merged_threshold, merged_description)
 
@@ -91,32 +86,14 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
                 token = phase_match.group(1).upper()
                 current_label = f"Phase {token}"
                 threshold = ""
-
-                # Search for a threshold associated with this specific phase.
                 phase_text = text[phase_match.start():]
                 threshold_match = _PHASE_THRESHOLD.search(phase_text)
                 if threshold_match:
                     threshold = f"{threshold_match.group(1)}%"
-
-                # If this phase reference occurs after the explicit final-phase
-                # threshold in the same source block, it is the phase that
-                # inherits that threshold. Do not attach it to the earlier phase.
-                if (
-                    not threshold
-                    and final_match is not None
-                    and phase_match.start() > final_match.end()
-                ):
-                    threshold = pending_final_threshold or ""
-                    if threshold:
-                        pending_final_threshold = None
-
                 if not threshold and pending_final_threshold:
-                    # Only use a pending final threshold when this is the first
-                    # explicit phase reference after the threshold statement.
                     if final_match is None or phase_match.start() > final_match.end():
                         threshold = pending_final_threshold
                         pending_final_threshold = None
-
                 add(current_label, threshold, text)
                 threshold_window = not bool(threshold)
             continue
@@ -125,7 +102,6 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
             threshold_match = _HEALTH_THRESHOLD.search(text)
             if threshold_match:
                 add(current_label, f"{threshold_match.group(1)}%", text)
-
         threshold_window = False
 
     return results

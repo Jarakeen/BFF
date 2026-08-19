@@ -32,9 +32,6 @@ class MechanicStrategySpec:
     rationale: str = ""
 
 
-# First curated encounter: Oaxiltso in Rockgrove.
-# These are raid-strategy annotations, not claims that UESP itself prescribes
-# the strategy. The source ability descriptions still come from the parser.
 OAXILTSO_MECHANICS = (
     MechanicStrategySpec(
         name="Noxious Sludge",
@@ -51,11 +48,7 @@ OAXILTSO_MECHANICS = (
         strategy="Healers kite the spit.",
         recommended_role="Healer",
         priority="high",
-        rationale=(
-            "The UESP ability description says the two targets are prioritized "
-            "from those farthest from the corner pools. The established raid "
-            "strategy is for healers to kite the spit."
-        ),
+        rationale="The established raid strategy is for healers to kite the spit.",
     ),
     MechanicStrategySpec(
         name="Savage Blitz",
@@ -69,7 +62,7 @@ OAXILTSO_MECHANICS = (
         strategy="Interrupt the Blitz and avoid its path.",
         recommended_role="All",
         priority="high",
-        rationale="The charge is a major execution check and is the interruptible Oaxiltso attack.",
+        rationale="The charge is a major execution check and the interruptible Oaxiltso attack.",
     ),
     MechanicStrategySpec(
         name="Fiery Stomp",
@@ -88,10 +81,6 @@ OAXILTSO_MECHANICS = (
 )
 
 
-# Core curated mechanics for Flame-Herald Bahsei. The generic classifier may
-# discover additional candidates, but only mechanics we can describe with
-# confidence are promoted here. Portal details and some add/phase behavior are
-# intentionally left to inferred mechanics until they are verified.
 BAHSEI_MECHANICS = (
     MechanicStrategySpec(
         name="Bahsei's Salvo",
@@ -119,10 +108,7 @@ BAHSEI_MECHANICS = (
         strategy="Cursed players move away from the group and allow the curse to resolve without catching other players.",
         recommended_role="All",
         priority="critical",
-        rationale=(
-            "External Rockgrove guides describe two cursed players, an 8-second timer, "
-            "and directional AoEs that can spread the curse to other players."
-        ),
+        rationale="External encounter sources describe two cursed players and directional AoEs that can spread the curse.",
     ),
     MechanicStrategySpec(
         name="Cursed Ground",
@@ -133,11 +119,10 @@ BAHSEI_MECHANICS = (
         requires_positioning=True,
         persistent_hazard=True,
         interruptible=False,
-        interrupt_note="No interrupt assigned here.",
         strategy="Keep the ground hazards controlled and avoid placing them where they compromise the group's safe space.",
         recommended_role="All",
         priority="high",
-        rationale="Rockgrove encounter sources identify Cursed Ground as a recurring ground/chain hazard.",
+        rationale="Cursed Ground is a recurring ground/chain hazard.",
     ),
     MechanicStrategySpec(
         name="Sickle Strike",
@@ -147,11 +132,10 @@ BAHSEI_MECHANICS = (
         requires_movement=True,
         requires_positioning=True,
         interruptible=False,
-        interrupt_note="No interrupt assigned here.",
         strategy="Recognize the three outgoing AoEs and move through safe space without breaking the group formation unnecessarily.",
         recommended_role="All",
         priority="medium",
-        rationale="Rockgrove helper sources identify Sickle Strike as three outgoing AoEs from Bahsei.",
+        rationale="Sickle Strike is described as three outgoing AoEs from Bahsei.",
     ),
     MechanicStrategySpec(
         name="Behemoth Spawn",
@@ -160,11 +144,10 @@ BAHSEI_MECHANICS = (
         damage_type="flame",
         requires_positioning=True,
         interruptible=False,
-        interrupt_note="Not treated as an interrupt mechanic.",
-        strategy="Prioritize the Behemoth over boss damage and control its position so its attacks and death explosion do not disrupt the group.",
+        strategy="Prioritize the Behemoth over boss damage and control its position.",
         recommended_role="DD / Tank",
         priority="high",
-        rationale="Encounter guides identify Behemoths as a priority add introduced from the later portion of the fight.",
+        rationale="Behemoths are a priority add during the later portion of the fight.",
     ),
     MechanicStrategySpec(
         name="Specter Spawn",
@@ -172,11 +155,10 @@ BAHSEI_MECHANICS = (
         mechanic_type="add_spawn",
         requires_movement=True,
         interruptible=False,
-        interrupt_note="Not treated as an interrupt mechanic.",
-        strategy="Kill the Specters promptly while maintaining the group's positioning.",
+        strategy="Kill the Specters promptly while maintaining group positioning.",
         recommended_role="DD",
         priority="medium",
-        rationale="Encounter sources describe Specter/Fire Spirit pressure during the lower-health portion of Bahsei.",
+        rationale="Specters add pressure during the lower-health portion of Bahsei.",
     ),
 )
 

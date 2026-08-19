@@ -1,5 +1,5 @@
 # models/uesp_models.py
-"""Structured data models for the local UESP knowledge base."""
+"""Structured source data models for the local UESP knowledge base."""
 
 from __future__ import annotations
 
@@ -26,13 +26,33 @@ class UespHealth:
 class UespAbility:
     name: str
     description: str = ""
+    damage_type: str | None = None
 
 
 @dataclass
 class UespMechanic:
-    name: str
-    description: str = ""
+    """A source-described or conservatively inferred encounter mechanic.
+
+    ``interpretation_status`` distinguishes UESP/source facts from later
+    curated strategy annotations. This model intentionally stores the raw
+    ability description alongside the classification so the optimizer can
+    trace a conclusion back to source text.
+    """
+
+    description: str
+    name: str = ""
     links: list[str] = field(default_factory=list)
+    mechanic_type: str | None = None
+    damage_type: str | None = None
+    target_count: int | None = None
+    requires_movement: bool | None = None
+    requires_positioning: bool | None = None
+    requires_cleanse: bool | None = None
+    persistent_hazard: bool | None = None
+    failure_is_fatal: bool | None = None
+    interruptible: bool | None = None
+    interrupt_note: str = ""
+    interpretation_status: str = "source"
 
 
 @dataclass
@@ -95,10 +115,21 @@ class UespContent:
     id: str
     name: str
     content_type: str
+
     summary: str = ""
     location: str = ""
+
+    group_size: int | None = None
+
     boss_ids: list[str] = field(default_factory=list)
+
     achievements: list[UespAchievement] = field(default_factory=list)
+
+    # Eventually:
+    set_ids: list[str] = field(default_factory=list)
+    reward_ids: list[str] = field(default_factory=list)
+
     related_npcs: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+
     source: UespSource | None = None

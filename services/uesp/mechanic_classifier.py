@@ -14,11 +14,13 @@ MECHANIC_TYPES = {
     "attack",
     "area_attack",
     "targeted_attack",
+    "targeted_hazard",
     "hazard",
     "movement",
     "positioning",
     "cleanse",
     "interrupt",
+    "charge",
     "summon",
     "add_spawn",
     "phase_transition",
@@ -27,6 +29,7 @@ MECHANIC_TYPES = {
     "spread",
     "environment",
 }
+
 
 @dataclass
 class MechanicClassification:
@@ -58,268 +61,99 @@ def _has(text: str, pattern: str) -> bool:
 
 
 def _first_damage_type(text: str) -> Optional[str]:
-    """
-    Identify damage types when the description actually attributes
-    that damage to the ability or its affected targets.
-    """
-
+    """Identify damage types only when the prose attributes them to the attack."""
     patterns = [
-        (
-            "flame",
-            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
-            r"[^.]{0,100}\bflame damage\b",
-        ),
-        (
-            "frost",
-            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
-            r"[^.]{0,100}\bfrost damage\b",
-        ),
-        (
-            "poison",
-            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
-            r"[^.]{0,100}\bpoison damage\b",
-        ),
-        (
-            "poison",
-            r"\bpoisoned targets?\b[^.]{0,100}\bpoison damage\b",
-        ),
-        (
-            "poison",
-            r"\bpoisoned players?\b[^.]{0,100}\bpoison damage\b",
-        ),
-        (
-            "physical",
-            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
-            r"[^.]{0,100}\bphysical damage\b",
-        ),
-        (
-            "magic",
-            r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b"
-            r"[^.]{0,100}\bmagical damage\b",
-        ),
+        ("flame", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bflame damage\b"),
+        ("frost", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bfrost damage\b"),
+        ("shock", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bshock damage\b"),
+        ("poison", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bpoison damage\b"),
+        ("disease", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bdisease damage\b"),
+        ("physical", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bphysical damage\b"),
+        ("magic", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bmagical damage\b"),
+        ("bleed", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\bbleed(?: damage)?\b"),
+        ("oblivion", r"\b(?:dealing|deals|deal|inflicts|causing|causes)\b[^.]{0,100}\boblivion damage\b"),
     ]
-
     for damage_type, pattern in patterns:
         if re.search(pattern, text, re.IGNORECASE):
             return damage_type
-
     return None
 
 
 def classify_mechanic(name: str, description: str) -> MechanicClassification:
     text = f"{name} {description}".lower()
 
-    # ---------------------------------------------------------
-    # Target count
-    # ---------------------------------------------------------
-
-    target_count = None
-
     count_match = re.search(
         r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\b"
-        r"(?:\s+\w+){0,3}\s+"
-        r"(?:targets?|players?|party members?)\b",
+        r"(?:\s+\w+){0,3}\s+(?:targets?|players?|party members?)\b",
         text,
     )
-
+    target_count = None
     if count_match:
         token = count_match.group(1)
-        target_count = _COUNT_WORDS.get(
-            token,
-            int(token) if token.isdigit() else None,
-        )
+        target_count = _COUNT_WORDS.get(token, int(token) if token.isdigit() else None)
 
-    # ---------------------------------------------------------
-    # Explicit mechanics
-    # ---------------------------------------------------------
-
-    requires_cleanse = _has(
-        text,
-        r"\bcleanse\b|\bcleanses\b|\bcleanse the effect\b|\bpurge\b",
-    )
-
+    requires_cleanse = _has(text, r"\bcleanse\b|\bcleanses\b|\bpurge\b")
     persistent_hazard = _has(
         text,
-        r"\blingering\b"
-        r"|\bpersistent\b"
-        r"|\bdrop .*pools?\b"
-        r"|\bcracked earth\b"
-        r"|\barea .* remains\b"
-        r"|\bremains .* area\b",
+        r"\blingering\b|\bpersistent\b|\bdrop .*pools?\b|\bcracked earth\b|\barea .* remains\b|\bremains .* area\b",
     )
-
     requires_movement = _has(
         text,
-        r"\bdodge\b"
-        r"|\bdodged\b"
-        r"|\bwalk(?:ing)? into\b"
-        r"|\bmove out\b"
-        r"|\bmove away\b"
-        r"|\bavoid\b"
-        r"|\bpath\b"
-        r"|\brun through\b"
-        r"|\bmove through\b"
-        r"|\bmoving walls?\b"
-        r"|\bmoving walls? of\b",
+        r"\bdodge\b|\bdodged\b|\bwalk(?:ing)? into\b|\bmove out\b|\bmove away\b|\bavoid\b|\bpath\b|\brun through\b|\bmove through\b|\bmoving walls?\b",
     )
-
     requires_positioning = _has(
         text,
-        r"\bfarthest\b"
-        r"|\baway from\b"
-        r"|\bcorners?\b"
-        r"|\boutside\b"
-        r"|\bspread\b"
-        r"|\bstanding\b",
+        r"\bfarthest\b|\baway from\b|\bcorners?\b|\boutside\b|\bspread\b|\bstanding\b",
     )
-
-
     spread = _has(
-    text,
-        r"\bspread\b"
-        r"|\bswirls? away\b"
-        r"|\bnearby players?\b"
-        r"|\btransfers? the curse\b",
+        text,
+        r"\bspread\b|\bswirls? away\b|\bnearby players?\b|\btransfers? the curse\b",
     )
-    # ---------------------------------------------------------
-    # Interrupt
-    #
-    # Only trust explicit UESP wording.
-    # ---------------------------------------------------------
+    failure_is_fatal = _has(
+        text,
+        r"\bfatal\b|\bkills? (?:the|a|all) player|\bdie(?:s)?\b",
+    )
 
     interruptible = None
     interrupt_note = ""
-
-    if re.search(
-        r"\bcan be interrupted\b|\bcan be interruptible\b|\binterruptible\b",
-        text,
-        re.IGNORECASE,
-    ):
+    if _has(text, r"\bcan be interrupted\b|\bcan be interruptible\b|\binterruptible\b"):
         interruptible = True
-        interrupt_note = (
-            "UESP description indicates the ability can be interrupted."
-        )
-
-    # ---------------------------------------------------------
-    # Area attacks
-    # ---------------------------------------------------------
+        interrupt_note = "UESP description indicates the ability can be interrupted."
 
     area_attack = _has(
         text,
-        r"\barea\b"
-        r"|\baoe\b"
-        r"|\bexplod(?:e|es|ing|ed)\b"
-        r"|\btrails?\b"
-        r"|\bmeteors?\b"
-        r"|\bsalvo\b"
-        r"|\bblast\b"
-        r"|\bcircle\b"
-        r"|\btornadoes?\b"
-        r"|\bflaming walls?\b",
+        r"\barea\b|\baoe\b|\bexplod(?:e|es|ing|ed)\b|\btrails?\b|\bmeteors?\b|\bsalvo\b|\bblast\b|\bcircle\b|\btornadoes?\b|\bflaming walls?\b",
     )
-
-    # ---------------------------------------------------------
-    # Charges
-    # ---------------------------------------------------------
-
-    charge = _has(
+    charge = _has(text, r"\bcharges?\b|\bcharge forward\b")
+    summon = _has(text, r"\bsummon\b|\bsummons\b|\bspawn(?:s|ed)?\b|\bcalled forth\b")
+    meaningful_summon = summon and _has(
         text,
-        r"\bcharges?\b|\bcharge forward\b",
+        r"\bhealth thresholds?\b|\bat \d+% health\b|\b(?:if|when) .* reaches?\b|\bfrom the .* portal\b|\bfall from the sky\b|\bappears?\b|\benters? the fight\b|\benrage\b|\bempower\b|\bmust be\b|\bshould be\b|\bif .* absorbed\b|\bif .* allowed\b",
     )
-
-    # ---------------------------------------------------------
-    # Summons
-    #
-    # A summon is only useful as a mechanic when the description
-    # actually tells us something meaningful happens because of it.
-    #
-    # "Occasionally, Death Hoppers are summoned..."
-    # is technically a summon, but contains no actionable mechanic.
-    # ---------------------------------------------------------
-
-    summon = _has(
-        text,
-        r"\bsummon\b|\bsummons\b|\bspawn(?:s|ed)?\b|\bcalled forth\b",
-    )
-
-    meaningful_summon = summon and (
-        _has(
-            text,
-            r"\bhealth thresholds?\b"
-            r"|\bat \d+% health\b"
-            r"|\bfrom the .* portal\b"
-            r"|\bfall from the sky\b"
-            r"|\bappears?\b"
-            r"|\benters? the fight\b"
-            r"|\benrage\b"
-            r"|\bempower\b"
-            r"|\bmust be\b"
-            r"|\bshould be\b"
-            r"|\bif .* reaches\b"
-            r"|\bif .* absorbed\b"
-            r"|\bif .* allowed\b",
-        )
-    )
-
-    # ---------------------------------------------------------
-    # Mechanic type
-    #
-    # Order matters.
-    # ---------------------------------------------------------
 
     mechanic_type: Optional[str] = None
-
     if target_count is not None and persistent_hazard:
         mechanic_type = "targeted_hazard"
-
     elif requires_cleanse:
         mechanic_type = "cleanse"
-
     elif interruptible:
         mechanic_type = "interrupt"
-
     elif charge:
         mechanic_type = "charge"
-
     elif meaningful_summon:
         mechanic_type = "summon"
-
-    elif persistent_hazard:
-        mechanic_type = "hazard"
-
-    elif target_count is not None and requires_positioning:
-        mechanic_type = "targeted_attack"
-
-    elif requires_positioning:
-        mechanic_type = "positioning"
-
     elif area_attack:
         mechanic_type = "area_attack"
-
+    elif persistent_hazard:
+        mechanic_type = "hazard"
+    elif spread:
+        mechanic_type = "spread"
+    elif requires_positioning:
+        mechanic_type = "positioning"
+    elif area_attack:
+        mechanic_type = "area_attack"
     elif requires_movement:
         mechanic_type = "movement"
-
-    elif spread:
-        mechanic_type = "spread"    
-
-    # ---------------------------------------------------------
-    # Do not classify generic basic attacks as mechanics.
-    # ---------------------------------------------------------
-
-    if mechanic_type is None:
-        return MechanicClassification(
-            mechanic_type=None,
-            damage_type=None,
-            target_count=target_count,
-            requires_movement=requires_movement or None,
-            requires_positioning=requires_positioning or None,
-            requires_cleanse=requires_cleanse or None,
-            persistent_hazard=persistent_hazard or None,
-            failure_is_fatal=None,
-            interruptible=interruptible,
-            interrupt_note=interrupt_note,
-            interpretation_status="inferred",
-        )
 
     return MechanicClassification(
         mechanic_type=mechanic_type,
@@ -329,7 +163,7 @@ def classify_mechanic(name: str, description: str) -> MechanicClassification:
         requires_positioning=requires_positioning or None,
         requires_cleanse=requires_cleanse or None,
         persistent_hazard=persistent_hazard or None,
-        failure_is_fatal=None,
+        failure_is_fatal=failure_is_fatal or None,
         interruptible=interruptible,
         interrupt_note=interrupt_note,
         interpretation_status="inferred",
