@@ -1,21 +1,23 @@
 from dataclasses import dataclass, field
 
-from services.minmax.build import Build
-from services.minmax.effects import Effect, EffectOperation
-from services.minmax.stat_ids import StatId
-from services.minmax.effect_kinds import EffectKind
+from .build import Build
+from .calculation_context import CalculationContext
+from .effect_kinds import EffectKind
+from .effects import Effect, EffectOperation
+from .stat_ids import StatId
+
 
 @dataclass
 class StatBreakdown:
     base: float = 0.0
     additive: float = 0.0
-    multiplicative: float = 1.0
-
+    multiplicative: float = 0.0
+    final: float = 0.0
     sources: list[Effect] = field(default_factory=list)
 
     @property
-    def final(self) -> float:
-        return (self.base + self.additive) * self.multiplicative
+    def total(self) -> float:
+        return (self.base + self.additive) * (1 + self.multiplicative)
 
 
 @dataclass
@@ -28,25 +30,37 @@ class CalculationResult:
         if breakdown is None:
             return 0.0
 
-        return breakdown.final
+        return breakdown.total
 
 
 class StatEngine:
+    def calculate(
+        self,
+        build: Build,
+        context: CalculationContext | None = None,
+    ) -> CalculationResult:
+        if context is None:
+            context = CalculationContext()
 
-    def calculate(self, build: Build) -> CalculationResult:
         state: dict[StatId, StatBreakdown] = {}
 
+        # Base stats
         for stat_name, value in build.base_stats.items():
             stat = StatId(stat_name)
-
             state[stat] = StatBreakdown(
-                base=value
+                base=value,
             )
 
+        # Effects
         for effect in build.effects:
-
             if effect.kind != EffectKind.STAT:
                 continue
+
+            # Conditional effects are only active when their
+            # condition is satisfied by the calculation context.
+            if effect.condition is not None:
+                if not context.is_active(effect.condition):
+                    continue
 
             if effect.stat is None:
                 raise ValueError(
@@ -55,7 +69,7 @@ class StatEngine:
 
             breakdown = state.setdefault(
                 effect.stat,
-                StatBreakdown()
+                StatBreakdown(),
             )
 
             breakdown.sources.append(effect)
@@ -74,7 +88,7 @@ class StatEngine:
 
             else:
                 raise ValueError(
-                    f"Unsupported effect operation: "
-                    f"{effect.operation}"
+                    f"Unsupported effect operation: {effect.operation}"
                 )
+
         return CalculationResult(stats=state)
