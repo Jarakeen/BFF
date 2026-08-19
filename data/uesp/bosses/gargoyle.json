@@ -1,0 +1,90 @@
+{
+    "id": "gargoyle",
+    "name": "Gargoyle",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Gargoyle",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "119,538",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Double Swipe",
+            "description": "The gargoyle swipes its target twice with its claws, the first hit dealing moderate physical damage and the second hit 75% of that damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Heavy Strike/Lacerate",
+            "description": "The gargoyle winds up its arm before slamming it down on its target, dealing high physical damage and knocking them down. It also applies a \"Bleeding\" effect that lasts for 16 seconds which deals minor bleed damage over time. This can be blocked to stagger the gargoyle and to both prevent the crowd control and the bleeding.",
+            "damage_type": null
+        },
+        {
+            "name": "Quake",
+            "description": "The gargoyle slams its fists into the ground three times, causing tremors in a medium-sized AoE dealing moderate physical damage to all standing within range.",
+            "damage_type": null
+        },
+        {
+            "name": "Vampiric Touch",
+            "description": "The gargoyle stands upright and growls, activating a passive buff which heals it and its nearby allies every time it successfully strikes a target. There isn't any visual indication of when the buff starts or end on the gargoyle however.",
+            "damage_type": null
+        },
+        {
+            "name": "Petrify",
+            "description": "The gargoyle glares at its target, as indicated by a red cone, turning them to stone which stuns them or snares them if they're blocking, for a few seconds. This attack can be avoided by roll-dodging. The Gargoyle can only use this ability when it is in combat with at least two players.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The gargoyle slams its fists into the ground three times, causing tremors in a medium-sized AoE dealing moderate physical damage to all standing within range.",
+            "name": "Quake",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Assaulting the Citadel: Launch an attack on the Celestial Warrior's stronghold.",
+        "The Better of Two Evils: Choose to aid either Valeric's coven or Majorn's bloodfiends.",
+        "Castle of the Worm: Grant a request for asylum from a prisoner in the Castle of the Worm.",
+        "Favor for Lady Arabelle: Perform favors for Lady Arabelle Davaux and help out around Tamriel.",
+        "The Gates of Adamant: Defeat a Daedric terror and depart from Balfiera. (disabled since Update 46)",
+        "An Ill-Fated Venture: Recover Yokudan relics from an ancient tomb.",
+        "The Liberation of Northpoint: Free Northpoint from the control of House Montclair.",
+        "The Lightless Remnant: Strike down the traitor and restore peace to Rivenspire.",
+        "Puzzle of the Pass: Head to the Boralis mountains and find a way through the Shrouded Pass.",
+        "Tongues of Stone: Help an intrepid archaeologist recover her lost assistant."
+    ],
+    "summary": "The Doomcrag, East of Glademist Farm, Near HoonDing's Watch, Lost City of the Na-Totambu, Nairume's Prison, Northpoint, Qharroa Ruins, Sep's Spine, Shrine of the Black Maw, Tombs of the Na-Totambu, Vampire Hunt\nGrayhome\nMorkuldin Forge, Watcher's Hold\nAl-Danobia Tomb, No Shira Citadel\nThe Shadow Cleft\nGreymoor Keep\nNighthollow Keep\nSpire of the Crimson Coin\nWest Weald\nCalindvale Gardens Gargoyles are powerful living golems that often remain in stationary, statue-like, positions before revealing themselves for combat. Sandy gargoyles are often found in Hammerfell, though green-skinned gargoyles can also be encountered under the control of vampires. There are four gargoyles at every Anka-Ra Burial Site in Lower Craglorn. After three waves of enemies are defeated, two of the gargoyles awaken and walk slowly towards the Star-Gazer Priest. The gargoyles do not fight back, but they must be burned down to prevent them from reaching the Star-Gazer. If the gargoyles aren't killed in time, they'll unleash a powerful ground pound and kill the priest, failing the event.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gargoyle",
+        "page_title": "Online:Gargoyle",
+        "revision_id": 3590469,
+        "retrieved_at": "2026-08-18T19:29:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,173 @@
+{
+    "id": "lucent_citadel",
+    "name": "Lucent Citadel",
+    "content_type": "trial",
+    "summary": "Lucent Citadel is a ruined stronghold in the wastelands of Fargrave, accessible from West Weald. Lucent Citadel is a trial, although unlike other trials, the main objective is to obtain an unstable relic called the Arcane Knot and bring it back to the entrance. Hazards include arcane sentries and glass orbs. The trial and its rewards are associated with the Daedric Prince Ithelia (see note below).",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "count_ryelaz",
+        "zilyesset",
+        "cavot_agnan",
+        "orphic_shattered_shard",
+        "xoryn"
+    ],
+    "achievements": [
+        {
+            "id": "knot_worthy",
+            "name": "Knot Worthy",
+            "description": "Complete the listed achievements for Lucent Citadel.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "lucent_citadel_vanquisher",
+            "name": "Lucent Citadel Vanquisher",
+            "description": "Defeat Count Ryelaz, Zilyesset, Orphic Shattered Shard, and secure the knot in Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "lucent_citadel_conqueror",
+            "name": "Lucent Citadel Conqueror",
+            "description": "Defeat Count Ryelaz, Zilyesset, Orphic Shattered Shard, and secure the knot in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "retrieval_specialist",
+            "name": "Retrieval Specialist",
+            "description": "Defeat Count Ryelaz and Zilyesset, the Orphic Shattered Shard, and secure the arcane knot after raising the challenge banner in Veteran Lucent Citadel, in one run.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "expedited_excursion",
+            "name": "Expedited Excursion",
+            "description": "Defeat all enemies in addition to Count Ryelaz and Zilyesset, the Orphic Shattered Shard, and secure the arcane knot in Veteran Lucent Citadel within 30 minutes of entering. Your time begins when you enter Lucent Citadel.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "crystalline_survivors",
+            "name": "Crystalline Survivors",
+            "description": "Defeat all enemies in addition to Count Ryelaz and Zilyesset, the Orphic Stattered Shard, and secure the arcane knot without suffering a group member death in Veteran Lucent Citadel.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "arcane_stabilizer",
+            "name": "Arcane Stabilizer",
+            "description": "Defeat Count Ryelaz and Zilyesset, the Orphic Shattered Shard, and secure the arcane knot along with all the enemies within the citadel after raising the challenge banner for all of them, without suffering a group member death, within 30 minutes of entering in Veteran Lucent Citadel.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "lucent_dremora_slayer",
+            "name": "Lucent Dremora Slayer",
+            "description": "Defeat 200 Dremora in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "light_and_dark_slayer",
+            "name": "Light and Dark Slayer",
+            "description": "Defeat 200 Lightbringers and Darkcasters in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "annihilation_reflected",
+            "name": "Annihilation Reflected",
+            "description": "Defeat Count Ryelaz and Zilyesset when they are both casting Annihilation in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "light_mastery",
+            "name": "Light Mastery",
+            "description": "Defeat 50 enemies made vulnerable by the Brilliant Lusterbeam and Bleak Lusterbeam abilities during the encounter with Count Ryelaz and Zilyesset in Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "breaking_the_seal",
+            "name": "Breaking the Seal",
+            "description": "Defeat the Orphic Shattered Shard without any players dying to Fate Sealer in Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "shared_responsibilities",
+            "name": "Shared Responsibilities",
+            "description": "Defeat the Orphic Shattered Shard after each player has swapped a mirror in Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "tight_grip",
+            "name": "Tight Grip",
+            "description": "Secure the arcane knot having 6 different party members or less hold the knot while allowing no member to carry the knot twice in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "interplanar_cohesion",
+            "name": "Interplanar Cohesion",
+            "description": "Secure the arcane knot while always having at least 5 party members supporting the knot carrier at all times excluding the moment where the knot fractures in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "embrace_the_dark",
+            "name": "Embrace the Dark",
+            "description": "As a group, cleanse Darkness with any source of Radiance in Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "high_flier",
+            "name": "High Flier",
+            "description": "Travel from the bottom of the sunken ruins tower to the top without leaving the Ghost Light form and without using a sigil to replenish it in Veteran Lucent Citadel.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "shredded_shard",
+            "name": "Shredded Shard",
+            "description": "Defeat the Orphic Shattered Shard after raising the challenge banner in Veteran Lucent Citadel.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "mirrored_cooperation",
+            "name": "Mirrored Cooperation",
+            "description": "Defeat Count Ryelaz and Zilyesset after raising the challenge banner in Veteran Lucent Citadel.",
+            "points": 15,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "mora_scribe_s_thesis",
+        "perfected_mora_scribe_s_thesis",
+        "slivers_of_the_null_arca",
+        "perfected_slivers_of_the_null_arca",
+        "xoryn_s_masterpiece",
+        "perfected_xoryn_s_masterpiece",
+        "lucent_echoes",
+        "perfected_lucent_echoes"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "The Arcane Knot and the Lucent Citadel are associated with the Daedric Prince Ithelia. Hermaeus Mora wiped her existence from memory, which is why the Lucent Citadel and the Arcane Knot became a mystery. When she was freed, the defenders of the Lucent Citadel were reawakened.",
+        "The developers state in the 10-Year Anniversary Celebration Livestream (1:02:49-1:03:32) that the Lucent Guardian Horse, the Lucent Sentinel Style motif, and the Threads of Mirrormoor Face and Body Art are based on Ithelia."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lucent_Citadel",
+        "page_title": "Online:Lucent Citadel",
+        "revision_id": 3607528,
+        "retrieved_at": "2026-08-18T18:19:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

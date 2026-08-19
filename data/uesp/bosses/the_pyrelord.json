@@ -1,0 +1,397 @@
+{
+    "id": "the_pyrelord",
+    "name": "The Pyrelord",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "The Brimstone Den",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "979,479",
+        "veteran": "1,371,271",
+        "hardmode": "2,366,577"
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic attack where the Pyrelord strikes you with his greatsword, dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Fire Breath",
+            "description": "The Pyrelord breathes fire in front of himself, dealing moderate flame damage followed by flame damage over time. This doesn't have an AoE indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Flame Spout",
+            "description": "The Pyrelord holds his blade aloft and shrouds himself in a flaming aura. Three spouts of fire also appear on the outside of this aura that spin, which deal major flame damage if you get hit by them. Keep moving in a circle around the boss to prevent being hit by this ability, and don't stand too close to the boss (read: in his orange shield), or else you'll take major flame damage over time. This ability can cause the burning effect, which deals flame damage over time. While the aura is surrounding the boss, fire balls are shot out from the boss at targets, dealing moderate flame damage each.",
+            "damage_type": null
+        },
+        {
+            "name": "Superheat",
+            "description": "The Pyrelord plunges his blade into the platform, causing magma to rise over most of the arena. The initial blast deals major flame damage over time if you stand close to him. To keep yourself from burning to death, make sure you're close to the edge of the arena. The circular formation in the southwestern corner and the pit of coals to the west are safe spots where you can stand without burning. Alternatively, you can use the Brimstone Orb that appears to shield yourself.",
+            "damage_type": null
+        },
+        {
+            "name": "Ignite",
+            "description": "This damage comes from you standing in the lava after the boss uses Superheat. It deals low flame damage over time very rapidly.",
+            "damage_type": null
+        },
+        {
+            "name": "Eruption",
+            "description": "If the Pyrelord is allowed to ignite all 3 spouts of flame that spawn in the corners of the arena during the Superheat phase, he wreathes himself in fire, dealing major flame damage to you if you're close to him, while a volley of flaming orbs are sent out in all three directions of the arena in a waving pattern, dealing moderate flame damage each.",
+            "damage_type": null
+        },
+        {
+            "name": "Burning Slice",
+            "description": "Modified version of \"Quick Strike\", a basic melee attack dealing moderate flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Blazing Strike",
+            "description": "An ability gained when in the enhanced state from \"Eruption\". The Pyrelord delivers a powerful upswing attack with his flaming greatsword, dealing very high physical damage and knocking backward, as well as sending out three flaming swirls forward, indicated by small red circles, dealing moderate flame damage each. This can be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon",
+            "description": "At 70% health, the Pyrelord summons a Fire Colossus from a portal located in the lava near the arena. He summons another Fire Colossus when his health falls to 30%. They behave in the same way as the Brimstone Caretaker encountered shortly before this boss fight.",
+            "damage_type": null
+        },
+        {
+            "name": "Pyre",
+            "description": "The Pyrelord stands in front of a large mound of flaming embers before combat. If you stand in it, you'll take major flame damage over time from \"Brimstone Fire\".",
+            "damage_type": null
+        },
+        {
+            "name": "Brimstone Fire",
+            "description": "Damage dealt by standing in \"Pyre\".",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The Pyrelord breathes fire in front of himself, dealing moderate flame damage followed by flame damage over time. This doesn't have an AoE indicator.",
+            "name": "Fire Breath",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The Pyrelord holds his blade aloft and shrouds himself in a flaming aura. Three spouts of fire also appear on the outside of this aura that spin, which deal major flame damage if you get hit by them. Keep moving in a circle around the boss to prevent being hit by this ability, and don't stand too close to the boss (read: in his orange shield), or else you'll take major flame damage over time. This ability can cause the burning effect, which deals flame damage over time. While the aura is surrounding the boss, fire balls are shot out from the boss at targets, dealing moderate flame damage each.",
+            "name": "Flame Spout",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The Pyrelord plunges his blade into the platform, causing magma to rise over most of the arena. The initial blast deals major flame damage over time if you stand close to him. To keep yourself from burning to death, make sure you're close to the edge of the arena. The circular formation in the southwestern corner and the pit of coals to the west are safe spots where you can stand without burning. Alternatively, you can use the Brimstone Orb that appears to shield yourself.",
+            "name": "Superheat",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "This damage comes from you standing in the lava after the boss uses Superheat. It deals low flame damage over time very rapidly.",
+            "name": "Ignite",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "If the Pyrelord is allowed to ignite all 3 spouts of flame that spawn in the corners of the arena during the Superheat phase, he wreathes himself in fire, dealing major flame damage to you if you're close to him, while a volley of flaming orbs are sent out in all three directions of the arena in a waving pattern, dealing moderate flame damage each.",
+            "name": "Eruption",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "At 70% health, the Pyrelord summons a Fire Colossus from a portal located in the lava near the arena. He summons another Fire Colossus when his health falls to 30%. They behave in the same way as the Brimstone Caretaker encountered shortly before this boss fight.",
+            "name": "Summon",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Damage dealt by standing in \"Pyre\".",
+            "name": "Brimstone Fire",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"So, you wish to meet destruction?\"",
+            "trigger": "When you engage him in battle, he'll say:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"We shall battle for honor!\"",
+            "trigger": "When you engage him in battle, he'll say:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Come! Test your mettle!\"",
+            "trigger": "When you engage him in battle, he'll say:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Join me in glorious battle!\"",
+            "trigger": "Summoning a colossus:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The servants of Mehrunes Dagon await!\"",
+            "trigger": "Summoning a colossus:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Someone wishes to meet you!\"",
+            "trigger": "Summoning a colossus:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I shall blaze brighter than before!\"",
+            "trigger": "Self-buff:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"An inferno rises within!\"",
+            "trigger": "Self-buff:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I become one with the flame!\"",
+            "trigger": "Self-buff:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Can you take the heat?\"",
+            "trigger": "Submerging the platform in lava:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The forge never stops!\"",
+            "trigger": "Submerging the platform in lava:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You cannot escape!\"",
+            "trigger": "Submerging the platform in lava:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I shall not be extinguished!\"",
+            "trigger": "When he dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"My destruction pleases the Exalted!\"",
+            "trigger": "When he dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This death is only temporary!\"",
+            "trigger": "When he dies:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you engage him in battle, he'll say:": [
+            {
+                "speaker": "",
+                "line": "\"So, you wish to meet destruction?\"",
+                "trigger": "When you engage him in battle, he'll say:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"We shall battle for honor!\"",
+                "trigger": "When you engage him in battle, he'll say:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Come! Test your mettle!\"",
+                "trigger": "When you engage him in battle, he'll say:",
+                "ability": null
+            }
+        ],
+        "Summoning a colossus:": [
+            {
+                "speaker": "",
+                "line": "\"Join me in glorious battle!\"",
+                "trigger": "Summoning a colossus:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The servants of Mehrunes Dagon await!\"",
+                "trigger": "Summoning a colossus:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Someone wishes to meet you!\"",
+                "trigger": "Summoning a colossus:",
+                "ability": null
+            }
+        ],
+        "Self-buff:": [
+            {
+                "speaker": "",
+                "line": "\"I shall blaze brighter than before!\"",
+                "trigger": "Self-buff:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"An inferno rises within!\"",
+                "trigger": "Self-buff:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I become one with the flame!\"",
+                "trigger": "Self-buff:",
+                "ability": null
+            }
+        ],
+        "Submerging the platform in lava:": [
+            {
+                "speaker": "",
+                "line": "\"Can you take the heat?\"",
+                "trigger": "Submerging the platform in lava:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The forge never stops!\"",
+                "trigger": "Submerging the platform in lava:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You cannot escape!\"",
+                "trigger": "Submerging the platform in lava:",
+                "ability": null
+            }
+        ],
+        "When he dies:": [
+            {
+                "speaker": "",
+                "line": "\"I shall not be extinguished!\"",
+                "trigger": "When he dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"My destruction pleases the Exalted!\"",
+                "trigger": "When he dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This death is only temporary!\"",
+                "trigger": "When he dies:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Pyrelord is a Dremora warrior that serves as the final boss of the Brimstone Den.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Pyrelord",
+        "page_title": "Online:The Pyrelord",
+        "revision_id": 3543889,
+        "retrieved_at": "2026-08-19T03:21:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

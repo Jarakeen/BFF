@@ -1,0 +1,140 @@
+{
+    "id": "sunspire",
+    "name": "Sunspire",
+    "content_type": "trial",
+    "summary": "Sunspire is an ancient temple of Alkosh found in Northern Elsweyr. Omu-dar the traveling merchant travels between Sunspire and the Prowl's Edge Dragonscour. Sunspire has been overrun by dragons. Legend has it that this is the place where Alkosh shouted down Pelinal Whitestrake, leaving behind a timewound. Each boss in this trial will have a unique hardmode. A golden-scaled dragon, Nahviintaas, has come to the Spire and proclaims himself to be Alkosh. With him are two other dragons: Lokkestiiz, a white dragon, and Yolnahkriin, a red dragon. These two claim to be avatars of the two moons, Jone and Jode, respectively. You are tasked with ending the tyrannical reign of these false-gods. You must kill Lokkestiiz and Yolnahkriin in order to reach Nahviintaas. You can kill them in either order, and their deaths break the seal that blocks the way to the false-god of time. In order to engage Nahviintaas on hard mode, the other two bosses must first be fought in hard mode before him. Activating hard mode for Lokkestiz and Yolnahkriin will induce Nahviintaas into flying down from his place at the spire to aid them. Completing the trial on veteran will earn you a skin, and completion of a challenger-like achievement will earn you a Senche mount that wears the veteran skin. You will receive a Pristine Dragon Heartscale with your other rewards for completing this trial on Hard Mode.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "lokkestiiz",
+        "yolnahkriin",
+        "nahviintaas"
+    ],
+    "achievements": [
+        {
+            "id": "sunspire_style_master",
+            "name": "Sunspire Style Master",
+            "description": "Learn every chapter in the Sunspire style book, found in the Sunspire trial.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sunspire_dragonbreak",
+            "name": "Sunspire Dragonbreak",
+            "description": "Complete the listed achievements for Sunspire.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sunspire_completed",
+            "name": "Sunspire Completed",
+            "description": "Defeat Yolnahkriin, Lokkestiiz, and Nahviintaas in Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "sunspire_conqueror",
+            "name": "Sunspire Conqueror",
+            "description": "Defeat Yolnahkriin, Lokkestiiz, and Nahviintaas in Veteran Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "sunspire_vanquisher",
+            "name": "Sunspire Vanquisher",
+            "description": "Defeat Yolnahkriin, Lokkestiiz, and Nahviintaas after extinguishing all of their offering braziers in Veteran Sunspire.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sunspire_sprinter",
+            "name": "Sunspire Sprinter",
+            "description": "Defeat all enemies in addition to Yolnahkriin, Lokkestiiz, and Nahviintaas in Veteran Sunspire within 30 minutes of entering the corridor between the Sunspire Temple Vestibule and the Courtyard in Veteran Sunspire.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "godslayer_of_sunspire",
+            "name": "Godslayer of Sunspire",
+            "description": "Defeat Yolnahkriin, Lokkestiiz, and Nahviintaas along with all their hostile followers after extinguishing all their offering braziers, without suffering a group member death, within 30 minutes of entering the corridor between the Sunspire Temple Vestibule and the Courtyard in Veteran Sunspire.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "senche_raht_slayer",
+            "name": "Senche-raht Slayer",
+            "description": "Defeat 100 Alkosh's Roars, Jone's Gale-Claws, or Jode's Fire-Fangs in Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "dragonbound_demolisher",
+            "name": "Dragonbound Demolisher",
+            "description": "Defeat 200 of Alkosh's Fate, Will, Fury, or Ruin in Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "strike_when_the_iron_s_hot",
+            "name": "Strike When the Iron's Hot",
+            "description": "Defeat Yolnahkriin while destroying his Iron Servants only after they have enraged in Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "faster_than_lightning",
+            "name": "Faster Than Lightning",
+            "description": "Defeat Lokkestiiz without any group members being hit by Storm Breath in Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "keeping_in_sync",
+            "name": "Keeping In Sync",
+            "description": "Defeat Nahviintaas without a member of the group Time Shifting through a Time Breach more than once in Veteran Sunspire.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "stoking_the_fire",
+            "name": "Stoking the Fire",
+            "description": "Defeat Yolnahkriin after extinguishing his offering braziers in Veteran Sunspire.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "stormchaser",
+            "name": "Stormchaser",
+            "description": "Defeat Lokkestiiz after extinguishing his offering braziers in Veteran Sunspire.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "dragonsbane",
+            "name": "Dragonsbane",
+            "description": "Defeat all enemies in addition to Yolnahkriin, Lokkestiiz, and Nahviintaas without suffering a group member death in Veteran Sunspire.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "claw_of_yolnahkriin",
+        "perfected_claw_of_yolnahkriin",
+        "eye_of_nahviintaas",
+        "perfected_eye_of_nahviintaas",
+        "false_god_s_devotion",
+        "perfected_false_god_s_devotion",
+        "tooth_of_lokkestiiz",
+        "perfected_tooth_of_lokkestiiz"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sunspire",
+        "page_title": "Online:Sunspire",
+        "revision_id": 3548059,
+        "retrieved_at": "2026-08-18T18:27:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

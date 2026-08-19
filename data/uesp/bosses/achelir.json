@@ -1,0 +1,128 @@
+{
+    "id": "achelir",
+    "name": "Achelir",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Maelstrom Arena, Seht's Flywheel",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "94,052",
+        "veteran": "139,302",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flare",
+            "description": "A basic ranged attack that does minor flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Heat Wave",
+            "description": "The enemy releases fire along the ground in the direction it is facing. This attack does moderate flame damage to all players hit by it. This spell can be interrupted to set the enemy off balance or simply avoided.",
+            "damage_type": null
+        },
+        {
+            "name": "Fire Runes",
+            "description": "The enemy shoots two fireballs in the air which form two fire runes when they land. The runes do moderate flame damage over time to all enemies within the red circles and should be avoided. Players should be prepared to move as soon as the attack casts as one rune will always be cast on top of you.",
+            "damage_type": null
+        },
+        {
+            "name": "Ring of Fire",
+            "description": "Achelir summons a ring of fire around himself that lingers for a long duration, causing continuous moderate flame damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The enemy releases fire along the ground in the direction it is facing. This attack does moderate flame damage to all players hit by it. This spell can be interrupted to set the enemy off balance or simply avoided.",
+            "name": "Heat Wave",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Do you know who I am? Your death.\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Burn! Burn! Burn!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Grovel, and I'll kill you quickly!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Soon you'll be nothing but ashes and bone.\"",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"Do you know who I am? Your death.\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Burn! Burn! Burn!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Grovel, and I'll kill you quickly!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Soon you'll be nothing but ashes and bone.\"",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Achelir is a Redguard mage associated with the Scavengers serving as the mini-boss of the first wave of enemies in Stage 4: Seht's Flywheel in Maelstrom Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Achelir",
+        "page_title": "Online:Achelir",
+        "revision_id": 3341077,
+        "retrieved_at": "2026-08-19T03:21:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

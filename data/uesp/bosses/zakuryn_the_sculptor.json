@@ -1,0 +1,242 @@
+{
+    "id": "zakuryn_the_sculptor",
+    "name": "Zakuryn the Sculptor",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "The Wounding",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "290,216",
+        "veteran": "659,583",
+        "hardmode": "3"
+    },
+    "abilities": [
+        {
+            "name": "Daedric Bolt",
+            "description": "A basic ranged attack where Zakuryn the Sculptor tosses a magical bolt from his hand, dealing low frost damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Swell",
+            "description": "Zakuryn the Sculptor raises his staff and fires off ethereal skulls from it, hitting you in rapid succession. This ability can be interrupted.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Swarm",
+            "description": "Damage tick from \"Daedric Swell\", each dealing moderate magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Siphon",
+            "description": "Zakuryn the Sculptor channels a necromantic beam to you using his staff, draining your health and healing him in return. Each tick deals moderate magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Vanish",
+            "description": "Zakuryn the Sculptor's body slowly evaporates, and he teleports across the arena.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Banekin",
+            "description": "A dark pool of energy appears in the floor of the arena, which conjures a group of Banekin.",
+            "damage_type": null
+        },
+        {
+            "name": "Ward",
+            "description": "When Zakuryn the Sculptor reaches 40% health, he applies a magical shield over himself and becomes invulnerable. To remove this shield, his Flesh Abomination must be lured over to him and goaded into striking him, which will break the shield and stun him for a moment. A previous hint about this is that the abomination's strikes defeats the summoned banekin.",
+            "damage_type": null
+        },
+        {
+            "name": "Absorb",
+            "description": "Killing the abomination first causes its essence to be sent back to Zakuryn the Sculptor, which heals him for half of his starting health and enrages him.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Zakuryn the Sculptor raises his staff and fires off ethereal skulls from it, hitting you in rapid succession. This ability can be interrupted.",
+            "name": "Daedric Swell",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "A dark pool of energy appears in the floor of the arena, which conjures a group of Banekin.",
+            "name": "Summon Banekin",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Another wishes to test their mettle!\"",
+            "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Ah, a small one wishes to play.\"",
+            "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"So you come to battle the champion of Molag Bal?\"",
+            "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Protect me, Dread Lord!\"",
+            "trigger": "When Zakuryn calls for his damage shield, he invokes Molag Bal.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"No! Hit them, you buffoon!\"",
+            "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I should have left you as scraps!\"",
+            "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Not me, you clumsy oaf!\"",
+            "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I failed you, my Prince ….\"",
+            "trigger": "When he is defeated, he laments his defeat.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I shall return!\"",
+            "trigger": "When he is defeated, he laments his defeat.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"How am I bested … by a mortal?\"",
+            "trigger": "When he is defeated, he laments his defeat.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you engage Zakuryn in combat, he accepts your challenge.": [
+            {
+                "speaker": "",
+                "line": "\"Another wishes to test their mettle!\"",
+                "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Ah, a small one wishes to play.\"",
+                "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"So you come to battle the champion of Molag Bal?\"",
+                "trigger": "When you engage Zakuryn in combat, he accepts your challenge.",
+                "ability": null
+            }
+        ],
+        "When Zakuryn calls for his damage shield, he invokes Molag Bal.": [
+            {
+                "speaker": "",
+                "line": "\"Protect me, Dread Lord!\"",
+                "trigger": "When Zakuryn calls for his damage shield, he invokes Molag Bal.",
+                "ability": null
+            }
+        ],
+        "When the Abomination strikes its master with its mace arm, he chides it.": [
+            {
+                "speaker": "",
+                "line": "\"No! Hit them, you buffoon!\"",
+                "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I should have left you as scraps!\"",
+                "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Not me, you clumsy oaf!\"",
+                "trigger": "When the Abomination strikes its master with its mace arm, he chides it.",
+                "ability": null
+            }
+        ],
+        "When he is defeated, he laments his defeat.": [
+            {
+                "speaker": "",
+                "line": "\"I failed you, my Prince ….\"",
+                "trigger": "When he is defeated, he laments his defeat.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I shall return!\"",
+                "trigger": "When he is defeated, he laments his defeat.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"How am I bested … by a mortal?\"",
+                "trigger": "When he is defeated, he laments his defeat.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "Zakuryn the Sculptor is a Xivkyn necromancer serving as the first boss of The Wounding.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zakuryn_the_Sculptor",
+        "page_title": "Online:Zakuryn the Sculptor",
+        "revision_id": 3384051,
+        "retrieved_at": "2026-08-19T03:21:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

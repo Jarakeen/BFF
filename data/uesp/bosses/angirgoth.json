@@ -1,0 +1,113 @@
+{
+    "id": "angirgoth",
+    "name": "Angirgoth",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Rink of Frozen Blood, Maelstrom Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "106,591",
+        "veteran": "177,295",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Flurry",
+            "description": "Rapidly stabs the target with five consecutive attacks that each deal minor physical damage. The final hit deals moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Blood Craze",
+            "description": "The enemy slashes at you twice, doing moderate physical damage over time to the player. This attack also heals the enemy over ;time.",
+            "damage_type": null
+        },
+        {
+            "name": "Roll Dodge",
+            "description": "The enemy can perform a roll dodge to avoid incoming damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Transform",
+            "description": "The enemy transforms into a Werewolf at low health. You can kill the enemy quickly to avoid them fully transforming and healing. (Veteran-only)",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The enemy can perform a roll dodge to avoid incoming damage.",
+            "name": "Roll Dodge",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The enemy transforms into a Werewolf at low health. You can kill the enemy quickly to avoid them fully transforming and healing. (Veteran-only)",
+            "name": "Transform",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Angirgoth",
+            "line": "Hunted one! Now you die!",
+            "trigger": "She proclaims that you will be defeated when she arrives.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "She proclaims that you will be defeated when she arrives.": [
+            {
+                "speaker": "Angirgoth",
+                "line": "Hunted one! Now you die!",
+                "trigger": "She proclaims that you will be defeated when she arrives.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Angirgoth is a powerful Huntsman who serves as the mini-boss of the first wave of enemies during Stage 5: Rink of Frozen Blood. in the Maelstrom Arena. She dual-wields axes during combat. In Veteran, she can transform into a werewolf.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Angirgoth",
+        "page_title": "Online:Angirgoth",
+        "revision_id": 3341095,
+        "retrieved_at": "2026-08-19T03:21:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

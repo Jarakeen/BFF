@@ -1,0 +1,45 @@
+{
+    "id": "imperial",
+    "name": "Imperial",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Imperials are only playable for those with the Imperial Edition of the game.",
+        "They are not confined to any alliance until you choose one, which you cannot change again without an Alliance Change Token.",
+        "v",
+        "t",
+        "e",
+        "v",
+        "t",
+        "e"
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Also known as Cyrodiils, Cyrodilics, Cyro-Nordics and Imperial Cyrods, the well-educated and well-spoken Imperials are the natives of the civilized, cosmopolitan province of Cyrodiil. Imperials are also known for the discipline and training of their citizen armies, and their respect for the rule of law. Though physically less imposing than the other races, the Imperials have proven to be shrewd diplomats and traders. These traits, along with their remarkable skill and training as light infantry, historically enabled the Second Empire to conquer most of Tamriel. In the interregnum following the end of the Reman Dynasty and the Akaviri Potentate, the term 'Empire' has come to describe the modern state of Cyrodiil, though the Planemeld has shocked Imperial society to the core and left their fate in uncertainty. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Imperial",
+        "page_title": "Online:Imperial",
+        "revision_id": 3126641,
+        "retrieved_at": "2026-08-18T19:29:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

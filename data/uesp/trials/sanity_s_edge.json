@@ -1,0 +1,155 @@
+{
+    "id": "sanity_s_edge",
+    "name": "Sanity's Edge",
+    "content_type": "trial",
+    "summary": "Sanity's Edge is the dreamworld of Warlock Vanton. It is a trial and can be entered via Vanton's wizard tower on the Telvanni Peninsula, southwest of Alavelis. You will receive a Crystallized Memory with your other rewards for completing this trial on Hard Mode.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "exarchanic_yaseyla",
+        "archwizard_twelvane",
+        "chimera_sanity_s_edge",
+        "ansuul_the_tormentor"
+    ],
+    "achievements": [
+        {
+            "id": "sane_and_clearheaded",
+            "name": "Sane and Clearheaded",
+            "description": "Complete all the listed achievements for Sanity's Edge.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sanity_s_edge_vanquisher",
+            "name": "Sanity's Edge Vanquisher",
+            "description": "Defeat Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor in Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "sanity_s_edge_conqueror",
+            "name": "Sanity's Edge Conqueror",
+            "description": "Defeat Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "tenacious_dreamer",
+            "name": "Tenacious Dreamer",
+            "description": "Defeat Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor after raising the challenge banner in Veteran Sanity's Edge in one run.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sanity_s_edge_sprinter",
+            "name": "Sanity's Edge Sprinter",
+            "description": "Defeat all enemies in addition to Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor in Veteran Sanity's Edge within 30 minutes. Your time begins when you enter Vanton's Nightmare.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "lucid_dreaming",
+            "name": "Lucid Dreaming",
+            "description": "Defeat all enemies in addition to Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor without suffering a group member death in Veteran Sanity's Edge.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "master_of_the_mind",
+            "name": "Master of the Mind",
+            "description": "Defeat Exarchanic Yaseyla, Archwizard Twelvane, and Ansuul the Tormentor along with all their hostile followers after raising the challenge banner for each of them, without suffering a group member death, within 30 minutes of entering Vanton's Nightmare in Veteran Sanity's Edge.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "terror_slayer",
+            "name": "Terror Slayer",
+            "description": "Defeat 125 Disruptors, Voidmasters, Summoners, Butchers, and Enforcers in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "paranoxia_slayer",
+            "name": "Paranoxia Slayer",
+            "description": "Defeat 50 Paranoxia in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "positive_visualization",
+            "name": "Positive Visualization",
+            "description": "8 unique players must use Vanton's Clarity to kill Horrors while fighting Exarchanic Yaseyla in Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "astral_cycle",
+            "name": "Astral Cycle",
+            "description": "As a group, never fail to input the correct crystal control sequence during the encounter with Archwizard Twelvane in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "clinical_mortality",
+            "name": "Clinical Mortality",
+            "description": "Once the Chimera comes to life, it never returns to its statue form during the encounter with Archwizard Twelvane in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "voice_of_clarity",
+            "name": "Voice of Clarity",
+            "description": "Enter Vanton's Torment 7 times during the encounter with Ansuul the Tormentor in Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "fearless_sanity",
+            "name": "Fearless Sanity",
+            "description": "Complete each Torment with fewer than 4 players during the encounter with Ansuul the Tormentor in Veteran Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "group_therapy",
+            "name": "Group Therapy",
+            "description": "Have 11 players reach the end on a single maze run while fighting Ansuul the Tormentor in Sanity's Edge.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "mage_protector",
+            "name": "Mage Protector",
+            "description": "Defeat Exarchanic Yaseyla after raising the challenge banner in Veteran Sanity's Edge.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "dream_destroyer",
+            "name": "Dream Destroyer",
+            "description": "Defeat Archwizard Twelvane after raising the challenge banner in Veteran Sanity's Edge.",
+            "points": 15,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "peace_and_serenity",
+        "perfected_peace_and_serenity",
+        "ansuul_s_torment",
+        "perfected_ansuul_s_torment",
+        "transformative_hope",
+        "perfected_transformative_hope",
+        "test_of_resolve",
+        "perfected_test_of_resolve"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanity%27s_Edge",
+        "page_title": "Online:Sanity's Edge",
+        "revision_id": 3608289,
+        "retrieved_at": "2026-08-18T18:55:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

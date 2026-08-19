@@ -1,0 +1,124 @@
+{
+    "id": "maw_of_lorkhaj",
+    "name": "Maw of Lorkhaj",
+    "content_type": "trial",
+    "summary": "The Maw of Lorkhaj is a desecrated Khajiiti temple in Reaper's March. It was known as the \"Temple of Seven Riddles\" prior to its occupation by the Dro-m'Athra. Just outside the entrance to the temple is a small hub with two merchants, crafting stations and a cooking fire. There are also some members of the Twilight Cantors nearby, and a few monks that have been afflicted by the Bent Dance. Adara'hai can be found in front of the entrance to the temple; she will request your help in dealing with the invading dro'm-Athra. You will receive The Rid-Thar's Moon Pearls along with your other rewards after defeating the Fang of Lorkhaj with Hard Mode engaged.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "zhaj_hassa_the_forgotten",
+        "dro_m_athra",
+        "s_kinrai",
+        "vashai",
+        "rakkhat",
+        "grievous_twilight"
+    ],
+    "achievements": [
+        {
+            "id": "moons_champion",
+            "name": "Maw of Lorkhaj: Moons' Champion",
+            "description": "Complete all achievements related to defeating Rakkhat, Fang of Lorkhaj in Veteran Maw of Lorkhaj.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "maw_of_lorkhaj_conqueror",
+            "name": "Maw of Lorkhaj Conqueror",
+            "description": "Defeat Rakkhat, Fang of Lorkhaj and his legions of dro-m'Athra in Veteran Maw of Lorkhaj.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "maw_of_lorkhaj_difficult_mode",
+            "name": "Maw of Lorkhaj Difficult Mode",
+            "description": "Defeat Rakkhat after empowering him at the lunar shrines in Veteran Maw of Lorkhaj.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "fang_focused",
+            "name": "Maw of Lorkhaj: Fang Focused",
+            "description": "Defeat Rakkhat in Veteran Maw of Lorkhaj, with at least three dro-m'Athra Dreadstalkers still alive.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "void_avoided",
+            "name": "Maw of Lorkhaj: Void Avoided",
+            "description": "Defeat Rakkhat in Veteran Maw of Lorkhaj, with a maximum of two players ever being afflicted by the Breath of Lorkhaj.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "two_moons_dance",
+            "name": "Maw of Lorkhaj: Two-Moons Dance",
+            "description": "In Veteran Maw of Lorkhaj, force Rakkhat into his final phase within two lunar cycles, then defeat him.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "maw_of_lorkhaj_completed",
+            "name": "Maw of Lorkhaj Completed",
+            "description": "Drive the dro-m'Athra back to the void and close the Maw of Lorkhaj in Normal Mode.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "shadow_slayer",
+            "name": "Maw of Lorkhaj: Shadow Slayer",
+            "description": "Defeat 25 Void Callers in the Maw of Lorkhaj.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "stainless_souls",
+            "name": "Maw of Lorkhaj: Stainless Souls",
+            "description": "Defeat Rakkhat without anyone dying while afflicted by the Breath of Lorkhaj.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "spotless_triumph",
+            "name": "Maw of Lorkhaj: Spotless Triumph",
+            "description": "Complete Veteran Maw of Lorkhaj without suffering a group member death.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "unchained_ambush",
+            "name": "Maw of Lorkhaj: Unchained Ambush",
+            "description": "Use both chain switches within ten seconds in Veteran Maw of Lorkhaj, then defeat the dro-m'Athra invaders.",
+            "points": 5,
+            "source": null
+        },
+        {
+            "id": "maw_of_lorkhaj",
+            "name": "Time Trial: Maw of Lorkhaj",
+            "description": "Complete Veteran Maw of Lorkhaj within a time limit of 40 minutes. Your trial begins when you cross the threshold of the Temple of Seven Riddles.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "moondancer",
+        "twilight_remedy",
+        "roar_of_alkosh",
+        "lunar_bastion"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "This trial is commonly abbreviated as \"MoL\".",
+        "To celebrate the Thieves Guild DLC's one year anniversary, Defiled Whisker drops were temporarily doubled as part of the Thieves Guild Anniversary Event.",
+        "The reward chests for defeating bosses here have a chance to contain Defiled Whiskers.",
+        "Even though this trial is in an Alliance Zone region, access to the Thieves Guild DLC is required to run it.",
+        "You will receive The Rid-Thar's Moon Pearls for defeating Rakkhat with hard mode active."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maw_of_Lorkhaj",
+        "page_title": "Online:Maw of Lorkhaj",
+        "revision_id": 3511731,
+        "retrieved_at": "2026-08-18T18:54:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

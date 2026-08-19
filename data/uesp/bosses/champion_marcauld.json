@@ -1,0 +1,282 @@
+{
+    "id": "champion_marcauld",
+    "name": "Champion Marcauld",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "787,300",
+        "veteran": "4,253,807",
+        "hardmode": "2,784,310"
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Silver Shards",
+            "description": "Marcauld fires his crossbow at you, dealing high physical damage and knocking you down.",
+            "damage_type": null
+        },
+        {
+            "name": "Flawless Dawnbreaker",
+            "description": "Marcauld performs a magical slam like the Dawnguard ability, indicated by a wide cone AoE in front of him, dealing very high magical damage and damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Ring of Preservation",
+            "description": "Marcaud raises his hand to the sky before tossing an orb of magic on the floor, creating a bright AoE around the landing location, giving a large damage reduction in Normal mode and massively healing Champion Marcauld in Veteran Mode.",
+            "damage_type": null
+        },
+        {
+            "name": "Blessed Weapon",
+            "description": "Marcauld raises his sword to the sky, blessing it with holy magic, boosting his outgoing damage for a duration.",
+            "damage_type": null
+        },
+        {
+            "name": "Block",
+            "description": "Marcauld can block incoming melee attacks, reducing the damage received.",
+            "damage_type": null
+        },
+        {
+            "name": "Power Bash",
+            "description": "A heavy shield bash that does moderate damage and stuns if it hits the player. This attack can be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Expert Hunter",
+            "description": "Champion Marcauld casts an Expert Hunter-like ability which deals bonus damage to others abilities.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Marcauld performs a magical slam like the Dawnguard ability, indicated by a wide cone AoE in front of him, dealing very high magical damage and damage over time.",
+            "name": "Flawless Dawnbreaker",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Marcaud raises his hand to the sky before tossing an orb of magic on the floor, creating a bright AoE around the landing location, giving a large damage reduction in Normal mode and massively healing Champion Marcauld in Veteran Mode.",
+            "name": "Ring of Preservation",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"You don't plan to compete in this challenge, do you?\nI say this with the best intentions—leave now. I hate to see the weak get stomped upon. And that's my good deed for the day.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Do yourself a favor and save on the healer's fees. Abandon your dreams of competing in the Arena. I'd hate to see that rugged face receive any additional damage.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Run along, pup. This is no place for the likes of you.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"If you insist on going through with this foolishness, may I give you a word of advice?\nBest to put your affairs in order before you get beaten to a bloody pulp.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Who are you?",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The Arena Champion, at your service. In case you haven't heard of me, which means you really need to get out more, I'm the current champion.\nI dare say I'm the Fighters Guild's greatest champion, in fact.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The Fighters Guild isn't here. Not officially. But we were growing bored with all the Daedric drama. So here we are, ready to make everyone respect and fear the Guild again.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Why is the Fighters Guild here?",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Of course I'm the champion!\nLook around. Do you see anyone who would even stand a chance against me? Ha! We'll crush everyone under our boots! Including you, if you dare to compete against us.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "[Intimidate]I'll dare. And I'll beat you, too.",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Really? That's something I need to see.\nHead up the hall and enter the Arena. Then we can settle this the old-fashioned way. Just remember, I warned you.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You're the champion?",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I'm the champion. There's no way you can hope to best me. What more do you even need to know?\nJust give up while you still can.\"",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "What can you tell me about this arena?",
+            "trigger": "You can speak to him at the entrance.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "You can speak to him at the entrance.": [
+            {
+                "speaker": "",
+                "line": "\"You don't plan to compete in this challenge, do you?\nI say this with the best intentions—leave now. I hate to see the weak get stomped upon. And that's my good deed for the day.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Do yourself a favor and save on the healer's fees. Abandon your dreams of competing in the Arena. I'd hate to see that rugged face receive any additional damage.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Run along, pup. This is no place for the likes of you.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"If you insist on going through with this foolishness, may I give you a word of advice?\nBest to put your affairs in order before you get beaten to a bloody pulp.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Who are you?",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The Arena Champion, at your service. In case you haven't heard of me, which means you really need to get out more, I'm the current champion.\nI dare say I'm the Fighters Guild's greatest champion, in fact.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The Fighters Guild isn't here. Not officially. But we were growing bored with all the Daedric drama. So here we are, ready to make everyone respect and fear the Guild again.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Why is the Fighters Guild here?",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Of course I'm the champion!\nLook around. Do you see anyone who would even stand a chance against me? Ha! We'll crush everyone under our boots! Including you, if you dare to compete against us.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "[Intimidate]I'll dare. And I'll beat you, too.",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Really? That's something I need to see.\nHead up the hall and enter the Arena. Then we can settle this the old-fashioned way. Just remember, I warned you.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You're the champion?",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I'm the champion. There's no way you can hope to best me. What more do you even need to know?\nJust give up while you still can.\"",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "What can you tell me about this arena?",
+                "trigger": "You can speak to him at the entrance.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Champion Marcauld is a Breton member of the Fighters Guild and the final boss of the first round of the Dragonstar Arena. He is present at the entrance before you start your trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Champion_Marcauld",
+        "page_title": "Online:Champion Marcauld",
+        "revision_id": 3521302,
+        "retrieved_at": "2026-08-19T03:20:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

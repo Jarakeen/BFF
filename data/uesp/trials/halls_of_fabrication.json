@@ -1,0 +1,166 @@
+{
+    "id": "halls_of_fabrication",
+    "name": "Halls of Fabrication",
+    "content_type": "trial",
+    "summary": "The Halls of Fabrication are a part of Sotha Sil's Clockwork City. The Halls are an enormous processing facility that produces and iterates the designs for Sotha Sil's machines and reprocesses their material. At one point their functions included the refactoring of material from Dwemer machines, but Sotha Sil suspended this practice at some point in the past. The facility is governed by its central intelligence, the Assembly General, which continues to process and redesign the Clockwork machines alone. A portal to the facility opened in Nirn within Abanabi Cave, spewing out fabricants which decimated the local wildlife, and threatened Divayth Fyr's expansion of Tel Fyr. You will receive a Divaricated Tone Fork for defeating the Assembly General with hard mode activated.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "hunter_killer_positrox",
+        "hunter_killer_negatrix",
+        "verminous_fabricant",
+        "pinnacle_factotum",
+        "factotum",
+        "archcustodian",
+        "dwarven_spider",
+        "reactor",
+        "reclaimer",
+        "reducer",
+        "assembly_general",
+        "dwarven_colossus"
+    ],
+    "achievements": [
+        {
+            "id": "refabricated_style_master",
+            "name": "Refabricated Style Master",
+            "description": "Learn every chapter in the Refabricated style book, found in the Halls of Fabrication Trial.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "dynamo",
+            "name": "Dynamo",
+            "description": "Complete each of the following achievements related to defeating the Assembly General:",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "halls_of_fabrication_completed",
+            "name": "Halls of Fabrication Completed",
+            "description": "Defeat the Assembly General and assist Divayth Fyr in stopping the flood of animunculi coming from the Halls of Fabrication.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "halls_of_fabrication_conqueror",
+            "name": "Halls of Fabrication Conqueror",
+            "description": "Defeat the Assembly General in Veteran Halls of Fabrication.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "halls_of_fabrication",
+            "name": "Time Trial: Halls of Fabrication",
+            "description": "Complete Veteran Halls of Fabrication within a time limit of 40 minutes. Your trial begins when you enter Abanabi Cave beneath Tel Fyr.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "well_oiled_machine",
+            "name": "Well-Oiled Machine",
+            "description": "Complete Veteran Halls of Fabrication without suffering a group member death.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "halls_of_fabrication_vanquisher",
+            "name": "Halls of Fabrication Vanquisher",
+            "description": "Defeat the Assembly General after empowering it by resetting the circuit breaker in Veteran Halls of Fabrication.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "environmentally_conscious",
+            "name": "Environmentally Conscious",
+            "description": "Defeat the Assembly General in Veteran Halls of Fabrication without any group member dying to traps and hazards.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "terminal_terminator",
+            "name": "Terminal Terminator",
+            "description": "Defeat the Assembly General in Veteran Halls of Fabrication without letting any Terminals complete their activation sequence.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "accept_no_substitute",
+            "name": "Accept No Substitute",
+            "description": "Defeat 5 of each of the Tactical Facsimiles that the Assembly General creates, on any difficulty.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "scholar_of_seht_s_mysteries",
+            "name": "Scholar of Seht's Mysteries",
+            "description": "Discover all the notes scattered throughout the Halls of Fabrication.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "refabricant_slayer",
+            "name": "Refabricant Slayer",
+            "description": "Defeat 100 Calefactors, Capacitors, or Dissectors in the Veteran Halls of Fabrication.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "power_house",
+            "name": "Power House",
+            "description": "Defeat the Pinnacle Factotum without ever using energy from the generator to break a Refabricated Sphere's shield, in Veteran Halls of Fabrication.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "planned_obsolescence",
+            "name": "Planned Obsolescence",
+            "description": "Defeat the Refabrication Committee in Veteran Halls of Fabrication without ever allowing the Reclaimer to overcharge a Ruined Factotum.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "kill_process",
+            "name": "Kill Process",
+            "description": "Defeat one Hunter-Killer Fabricant while the other still has at least half of its health remaining, before defeating the remaining Fabricant in Veteran Halls of Fabrication.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "arc_custodian",
+            "name": "Arc-Custodian",
+            "description": "In Veteran Halls of Fabrication, defeat the Archcustodian using six or fewer Shock Pylons without ever missing an opportunity to disable it with one.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "stress_tested",
+            "name": "Stress Tested",
+            "description": "Complete Veteran Halls of Fabrication after resetting the circuit breaker and empowering the Assembly General, all without suffering a group member death.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "like_clockwork",
+            "name": "Like Clockwork",
+            "description": "Complete Veteran Halls of Fabrication after resetting the circuit breaker and empowering the Assembly General, all within 40 minutes of entering Abanabi Cave and without suffering a group member death.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "automated_defense",
+        "inventor_s_guard",
+        "master_architect",
+        "war_machine"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Halls_of_Fabrication",
+        "page_title": "Online:Halls of Fabrication",
+        "revision_id": 3548781,
+        "retrieved_at": "2026-08-18T18:53:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,83 @@
+{
+    "id": "flame_knight",
+    "name": "Flame Knight",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Igneous Cistern, Maelstrom Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "137,943",
+        "veteran": "227,952",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Sundering Cleave",
+            "description": "The Flame Knight cleaves you with her sword, dealing moderate physical damage, snaring you and placing a debuff on you that increases your damage taken for a duration.",
+            "damage_type": null
+        },
+        {
+            "name": "Chain Pull",
+            "description": "The Flame Knight pulls you to her with a fiery chain.",
+            "damage_type": null
+        },
+        {
+            "name": "Fire Breath",
+            "description": "The Flame Knight breathes fire on you, dealing high flame damage. Unlike the knight class version of this attack, it is faster and has no indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Searing Fireball",
+            "description": "The Flame Knight throws a fireball at you that erupts in a \"+\" pattern of flame trails, dealing high flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Standard of Might",
+            "description": "The Flame Knight drops a banner at her location, dealing continuous moderate flame damage and continuously granting her a small amount of damage shield while she inside.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The Flame Knight throws a fireball at you that erupts in a \"+\" pattern of flame trails, dealing high flame damage.",
+            "name": "Searing Fireball",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The item Flame Knight's Helmet appears in Blades."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "The Flame Knight is a xivilai who serves as the mini-boss of the third wave of enemies during Stage 8: Igneous Cistern in Maelstrom Arena. When she arrives, one of the Warding Stones in the arena will close and shield her, making her invulnerable. It must be smashed again in order to deal damage to her. Unlike the Infernal Destroyers and Valkyn Tephra, the Flame Knight doesn't become stunned for a duration after the stone is broken.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flame_Knight",
+        "page_title": "Online:Flame Knight",
+        "revision_id": 3341161,
+        "retrieved_at": "2026-08-19T03:21:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

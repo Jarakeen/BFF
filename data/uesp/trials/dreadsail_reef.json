@@ -1,0 +1,143 @@
+{
+    "id": "dreadsail_reef",
+    "name": "Dreadsail Reef",
+    "content_type": "trial",
+    "summary": "Dreadsail Reef is a reef off the coast of High Isle that serves as a major base for the Dreadsails, a group of Maormer pirates. You will receive a Fragment of the Fleet Queen's Anchor along with your other rewards after defeating the Fleet Queen with Hard Mode engaged. Hermit Crabs are found in numbers within.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "swashbuckler_supreme",
+            "name": "Swashbuckler Supreme",
+            "description": "Complete the listed achievements in Dreadsail Reef.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "dreadsail_reef_vanquisher",
+            "name": "Dreadsail Reef Vanquisher",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria in Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "dreadsail_reef_conqueror",
+            "name": "Dreadsail Reef Conqueror",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "master_marine",
+            "name": "Master Marine",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria, after raising the challenge banner in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef in one run without gaining the benefits of any Prismatic Resonances.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "tip_of_the_harpoon",
+            "name": "Tip of the Harpoon",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria along with all their hostile followers, within 30 minutes of entering Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "unsinkable",
+            "name": "Unsinkable",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria along with all their hostile followers, without suffering a group member death in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "fleet_queen_s_foil",
+            "name": "Fleet Queen's Foil",
+            "description": "Defeat Lylanar and Turlassil, the Reef Guardian, and Tideborn Taleria, along with all their hostile followers, after raising the challenge banner for each of them and without gaining the benefits of any Prismatic Resonances, without suffering a group member death, and within 30 minutes of entering Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "dreadsail_slayer",
+            "name": "Dreadsail Slayer",
+            "description": "Defeat 300 Dreadsail pirates in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "ornaug_slayer",
+            "name": "Ornaug Slayer",
+            "description": "Defeat 50 Ornaugs in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "deliberate_disobedience",
+            "name": "Deliberate Disobedience",
+            "description": "Defeat thirty Frost Hounds that have been unaffected by the Destructive Ember and thirty Flame Hounds that have been unaffected by the Piercing Hailstone in Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "once_into_the_depths",
+            "name": "Once into the Depths",
+            "description": "Defeat the Reef Guardian without any group member descending into the reef rapids more than once during the battle in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "full_tour",
+            "name": "Full Tour",
+            "description": "Defeat the Dreadsail Venom Evoker, Dreadsail Sea Boiler, and Dreadsail Tidal Mage within 10 seconds of each other after raising the challenge banner in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "synchronized_slaying",
+            "name": "Synchronized Slaying",
+            "description": "Defeat Bow Breaker and Sail Ripper within 15 seconds of each other in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "inhospitable",
+            "name": "Inhospitable",
+            "description": "Assist Ardahan with his research in Dreadsail Reef.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "peak_pit_fighter_performance",
+            "name": "Peak Pit-Fighter Performance",
+            "description": "Defeat Lylanar and Turlassil after raising the challenge banner in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "reef_wrecker",
+            "name": "Reef Wrecker",
+            "description": "Defeat the Reef Guardian after raising the challenge banner and without gaining the benefits of any Prismatic Resonances in Veteran\u0000HEALTH_VETERAN\u0000 Dreadsail Reef.",
+            "points": 15,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "coral_riptide",
+        "perfected_coral_riptide",
+        "pearlescent_ward",
+        "perfected_pearlescent_ward",
+        "pillager_s_profit",
+        "perfected_pillager_s_profit",
+        "whorl_of_the_depths",
+        "perfected_whorl_of_the_depths"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dreadsail_Reef",
+        "page_title": "Online:Dreadsail Reef",
+        "revision_id": 3501022,
+        "retrieved_at": "2026-08-18T18:53:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

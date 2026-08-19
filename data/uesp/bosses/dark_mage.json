@@ -1,0 +1,158 @@
+{
+    "id": "dark_mage",
+    "name": "Dark Mage",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 7: The Circle of Rituals",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "854,623",
+        "veteran": "3,444,134",
+        "hardmode": "1,944,923"
+    },
+    "abilities": [
+        {
+            "name": "Entropic Flare",
+            "description": "A basic ranged attack that does minor magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Void",
+            "description": "Dark Mage summons a purple orb from the sky that explodes when it hits the ground splitting into three projectiles dealing moderate magic damage. This skill then sends out magic AoEs across the floor called Void Bursts. This attack can be interrupted to set the enemy off balance or simply avoided.",
+            "damage_type": null
+        },
+        {
+            "name": "Void Burst",
+            "description": "These AoEs are released after Void lands, the smaller AoEs deal minor magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Shattering Prison",
+            "description": "Dark Mage casts exactly the Shattering Spines skill, which stuns targets in the area and deals damage when the stun ends.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Minefield",
+            "description": "Dark Mage casts a cluster of crystals around itself in five spots, damaging you and holding you in place if you step into them. You must dodge to escape once trapped.",
+            "damage_type": null
+        },
+        {
+            "name": "Crystal blast",
+            "description": "Dark Mage casts a Crystal Shard-like ability which deals magic damage and stuns you. You can interrupt the casting.",
+            "damage_type": null
+        },
+        {
+            "name": "Dark Deal",
+            "description": "Dark Mage lifts up into the air and channels an ability that steals life from weaker enemies nearby to quickly heal herself. This attack must be interrupted to stop the heal.",
+            "damage_type": null
+        },
+        {
+            "name": "Suppression Field",
+            "description": "Dark Mage channels a spell for a short duration before casting, creating a large purple bubble around itself that negates players inside, preventing the use of abilities costing Health, Magicka, Ultimate or have no cost at all, as well as dealing high continuous magical damage while inside. This can be interrupted.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Dark Mage summons a purple orb from the sky that explodes when it hits the ground splitting into three projectiles dealing moderate magic damage. This skill then sends out magic AoEs across the floor called Void Bursts. This attack can be interrupted to set the enemy off balance or simply avoided.",
+            "name": "Void",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Dark Mage casts exactly the Shattering Spines skill, which stuns targets in the area and deals damage when the stun ends.",
+            "name": "Shattering Prison",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Dark Mage casts a cluster of crystals around itself in five spots, damaging you and holding you in place if you step into them. You must dodge to escape once trapped.",
+            "name": "Daedric Minefield",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Dark Mage casts a Crystal Shard-like ability which deals magic damage and stuns you. You can interrupt the casting.",
+            "name": "Crystal blast",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Dark Mage channels a spell for a short duration before casting, creating a large purple bubble around itself that negates players inside, preventing the use of abilities costing Health, Magicka, Ultimate or have no cost at all, as well as dealing high continuous magical damage while inside. This can be interrupted.",
+            "name": "Suppression Field",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Dark Mage is the leader of the Bloodwraith alongside the Shadow Knight. She is fought at the end of Round 7: The Circle of Rituals in the Dragonstar Arena. During Round 10: The Champion's Arena, Hiath will summon her when he reaches 50% health.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dark_Mage",
+        "page_title": "Online:Dark Mage",
+        "revision_id": 3174477,
+        "retrieved_at": "2026-08-19T03:20:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

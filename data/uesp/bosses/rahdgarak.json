@@ -1,0 +1,336 @@
+{
+    "id": "rahdgarak",
+    "name": "Rahdgarak",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "Hunter's Grotto",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,305,972",
+        "veteran": "2,743,858",
+        "hardmode": "3,155,437"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack with its cleaver, dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Bolt",
+            "description": "When you're ten meters or more away from the Rahdgarak, it fires a bolt of fire from the palm of its hand, dealing moderate flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Sweep",
+            "description": "Rahdgarak performs a raking swipe with its cleaver, sending out a shockwave forward, dealing moderate physical damage. This doesn't have an AoE indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Clobber",
+            "description": "Rahdgarak performs a powerful overhead strike with its cleaver, dealing major physical damage and knocking down. This can be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Ram",
+            "description": "Rahdgarak charges towards you like a raging bull, indicated by a red circle around it, dealing high physical damage and knocking you away.",
+            "damage_type": null
+        },
+        {
+            "name": "Leap",
+            "description": "Occasionally throughout the fight, Rahdgarak will run off and jump over to another platform. It must be followed using grapple points. It will also perform this to chase after you when changing platforms. If you are nearby its landing zone, you are dealt moderate physical damage and knocked down, and this doesn't have an AoE indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Reach's Blessing",
+            "description": "Rahdgarak becomes infused with energy, rendering it invulnerable while on its current platform. If it glows blue, two Moonlight Phantoms are summoned, and if orange, two Luminous Apparitions instead. Grappling to a platform with a color opposing the buff's coloration removes the invulnerability.",
+            "damage_type": null
+        },
+        {
+            "name": "Bombardment",
+            "description": "When Rahdgarak reaches around 55-60% health health, Reach Channelers, one on each of the platform, begin shelling the platforms with fiery orbs, dealing high flame damage each. They can be interrupted to stop this. If allowed to perform this ability for 50 seconds, the channelers become invulnerable and cover their platform in flames, dealing massive flame damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "When you're ten meters or more away from the Rahdgarak, it fires a bolt of fire from the palm of its hand, dealing moderate flame damage.",
+            "name": "Bolt",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Rahdgarak performs a raking swipe with its cleaver, sending out a shockwave forward, dealing moderate physical damage. This doesn't have an AoE indicator.",
+            "name": "Sweep",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Rahdgarak charges towards you like a raging bull, indicated by a red circle around it, dealing high physical damage and knocking you away.",
+            "name": "Ram",
+            "links": [],
+            "mechanic_type": "charge",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Occasionally throughout the fight, Rahdgarak will run off and jump over to another platform. It must be followed using grapple points. It will also perform this to chase after you when changing platforms. If you are nearby its landing zone, you are dealt moderate physical damage and knocked down, and this doesn't have an AoE indicator.",
+            "name": "Leap",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "When Rahdgarak reaches around 55-60% health health, Reach Channelers, one on each of the platform, begin shelling the platforms with fiery orbs, dealing high flame damage each. They can be interrupted to stop this. If allowed to perform this ability for 50 seconds, the channelers become invulnerable and cover their platform in flames, dealing massive flame damage.",
+            "name": "Bombardment",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Sharp Warning Minotaur Growl challenging player]",
+            "trigger": "Rahdgarak's grunts and moos were subtitled on the PTS. The subtitles were removed with Patch 6.2.4. Before you grapple up to his platform, he kneels as he waits for your arrival. When you arrive, he stands up and acknowledges your presence.",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Aggressive grunt that acknowledges the player and initiates combat]",
+            "trigger": "Combat begins:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[begrudgingly impressed grunt]",
+            "trigger": "General combat vocalizations:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Long string of Minotaur grunts and moos]",
+            "trigger": "General combat vocalizations:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Short minotaur order with tone of challenge]",
+            "trigger": "General combat vocalizations:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[frustrated grunt]",
+            "trigger": "General combat vocalizations:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[sharp moo of anger]",
+            "trigger": "General combat vocalizations:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Minotaur growls long and low then increasing in volume as he charges up]",
+            "trigger": "Preparing to charge:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[a taunting moo]",
+            "trigger": "When he is attacked while invulnerable:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Short Minotaur roar ordering others to start fighting]",
+            "trigger": "When his health reaches 65%:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Minotaur triumphantly roars in victory!]",
+            "trigger": "If you die:",
+            "ability": null
+        },
+        {
+            "speaker": "Rahdgarak",
+            "line": "[Pained minotaur keening moo]",
+            "trigger": "When Rahdgarak dies:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Rahdgarak's grunts and moos were subtitled on the PTS. The subtitles were removed with Patch 6.2.4. Before you grapple up to his platform, he kneels as he waits for your arrival. When you arrive, he stands up and acknowledges your presence.": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Sharp Warning Minotaur Growl challenging player]",
+                "trigger": "Rahdgarak's grunts and moos were subtitled on the PTS. The subtitles were removed with Patch 6.2.4. Before you grapple up to his platform, he kneels as he waits for your arrival. When you arrive, he stands up and acknowledges your presence.",
+                "ability": null
+            }
+        ],
+        "Combat begins:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Aggressive grunt that acknowledges the player and initiates combat]",
+                "trigger": "Combat begins:",
+                "ability": null
+            }
+        ],
+        "General combat vocalizations:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[begrudgingly impressed grunt]",
+                "trigger": "General combat vocalizations:",
+                "ability": null
+            },
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Long string of Minotaur grunts and moos]",
+                "trigger": "General combat vocalizations:",
+                "ability": null
+            },
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Short minotaur order with tone of challenge]",
+                "trigger": "General combat vocalizations:",
+                "ability": null
+            },
+            {
+                "speaker": "Rahdgarak",
+                "line": "[frustrated grunt]",
+                "trigger": "General combat vocalizations:",
+                "ability": null
+            },
+            {
+                "speaker": "Rahdgarak",
+                "line": "[sharp moo of anger]",
+                "trigger": "General combat vocalizations:",
+                "ability": null
+            }
+        ],
+        "Preparing to charge:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Minotaur growls long and low then increasing in volume as he charges up]",
+                "trigger": "Preparing to charge:",
+                "ability": null
+            }
+        ],
+        "When he is attacked while invulnerable:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[a taunting moo]",
+                "trigger": "When he is attacked while invulnerable:",
+                "ability": null
+            }
+        ],
+        "When his health reaches 65%:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Short Minotaur roar ordering others to start fighting]",
+                "trigger": "When his health reaches 65%:",
+                "ability": null
+            }
+        ],
+        "If you die:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Minotaur triumphantly roars in victory!]",
+                "trigger": "If you die:",
+                "ability": null
+            }
+        ],
+        "When Rahdgarak dies:": [
+            {
+                "speaker": "Rahdgarak",
+                "line": "[Pained minotaur keening moo]",
+                "trigger": "When Rahdgarak dies:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "markarth_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [
+        "The arena is composed of four platforms: there are two pale blue ones and two red ones. There are grapple points on each platform, and a Reach Channeler (the blue ghosts) sits on the inner corner of each platform. Occasionally, the boss will jump to another platform, prompting you to follow. He can throw fireballs at you if you're not within melee range. If you jump to another platform, he will follow you. If you're in his way when he lands, you will be knocked down by the impact.",
+        "Occasionally, Rahdgarak will be surrounded by a wreath of orange energy or a shroud of blue mist (depending on which color platform you're on), and he will become invulnerable. On blue platforms, he summons two Moonlight Phantoms (which are dark grey), and on red platforms, he summons two Luminous Apparitions (which are bright yellow). He will remain invulnerable so long as he is on a platform whose color matches the energy he's empowered with. Grapple to an orange platform if he's empowered by frosty blue, and grapple to a blue platform if he's empowered by angry flames. Standing on a platform that is of the opposite color Rahdgarak is being empowered by removes his state of invulnerability.",
+        "The archers are very weak. Their most basic attack is to fire arrows at you, and they will use Arrow Stab in melee range. The archers will throw out elemental AoEs. Grey archers throw vials that leave a frosty mist on the ground. The yellow archers are arbalests: they'll shoot flaming arrows into the sky, which fall to the ground to create AoEs. You don't need to worry about the archers on normal, much less so if Hunter's Grotto isn't the third arena you decide to do that day. For the most part, you can ignore them, though it is quick and easy to burn them down. A ranged heavy attack will do the trick on normal.",
+        "Once Rahdgarak reaches 65% health, the Reach Channelers will stand up and begin performing a ritual. They start sending flames towards the platform they're facing (the flames from each channeler are sent diagonally, so the ones on blue platforms will send flaming AoEs to each other's platforms and vice versa). After 50 seconds of successful channeling, the mages will erect wards around themselves and set the platform across from them ablaze. Standing in this raging fire does immense damage to you. Make sure you grapple to a platform that isn't on fire.",
+        "So how do you prevent the platforms from burning? If left to channel their spells, the spirits will set the entire arena ablaze. You simply need to interrupt the Reach Channelers by using bash. The Channelers will cast their spell for 50 seconds. This gives you enough time to grapple to each platform and interrupt each Channeler. After they're all interrupted, simply keep damaging the boss. Rinse and repeat every time they stand up and begin firing flames across the room from the tips of their staves. If you have the Empowered Grapple buff, simply grappling to the mages will interrupt them, allowing you to conserve stamina or magicka by not having to interrupt them with an ability or by bashing."
+    ],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "Rahdgarak is a minotaur who acts as the final boss of the Hunter's Grotto in Vateshran Hollows.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rahdgarak",
+        "page_title": "Online:Rahdgarak",
+        "revision_id": 3223813,
+        "retrieved_at": "2026-08-19T03:21:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

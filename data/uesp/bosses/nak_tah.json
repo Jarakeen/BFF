@@ -1,0 +1,105 @@
+{
+    "id": "nak_tah",
+    "name": "Nak'tah",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 3: The Marsh",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "618,865",
+        "veteran": "2,633,749",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Coiled Lash",
+            "description": "A basic ranged attack that does minor magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Aura of Protection",
+            "description": "The enemy summons an Aura of Protection totem that gives nearby allies increased resistance to damage. The totem can be destroyed in five hits from any source or one heavy attack. Destroying the totem will stun all enemies nearby.",
+            "damage_type": null
+        },
+        {
+            "name": "Thundering Presence",
+            "description": "Nak'Tah casts Thundering Presence on itself, gaining armor while dealing damage over time to nearby players.",
+            "damage_type": null
+        },
+        {
+            "name": "Lightning Flood",
+            "description": "Nak'Tah casts a Lightning Flood-like ability which deals Shock damage over time in the area.",
+            "damage_type": null
+        },
+        {
+            "name": "Streak",
+            "description": "Nak'Tah dashes forwards, dealing Shock damage and stunning targets in his wake.",
+            "damage_type": null
+        },
+        {
+            "name": "Pöwer Overload heavy attack",
+            "description": "Nak'tah sprays lightning in a large and wide cone in front of him, causing very high Shock damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Nak'Tah casts Thundering Presence on itself, gaining armor while dealing damage over time to nearby players.",
+            "name": "Thundering Presence",
+            "links": [],
+            "mechanic_type": "spread",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Nak'Tah casts a Lightning Flood-like ability which deals Shock damage over time in the area.",
+            "name": "Lightning Flood",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "shock",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Nak'tah is a Reachman member of the Dragonclaw Clan competing at the Dragonstar Arena. He is fought at the end of Round 3: The Marsh alongside Shilia.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nak%27tah",
+        "page_title": "Online:Nak'tah",
+        "revision_id": 3196780,
+        "retrieved_at": "2026-08-19T03:20:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,125 @@
+{
+    "id": "asylum_sanctorium",
+    "name": "Asylum Sanctorium",
+    "content_type": "trial",
+    "summary": "The Asylum Sanctorium is a mini trial found within the Reactor District in the Brass Fortress. You will receive a Radiance Resonator with your other rewards after defeating Saint Olms with hard mode engaged.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "saint_olms_the_just",
+        "saint_felms_the_bold",
+        "saint_llothis_the_pious"
+    ],
+    "achievements": [
+        {
+            "id": "asylum_sanctorium_redeemer",
+            "name": "Asylum Sanctorium Redeemer",
+            "description": "Complete the listed achievements for Asylum Sanctorium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "asylum_sanctorium_conqueror",
+            "name": "Asylum Sanctorium Conqueror",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold in Veteran Asylum Sanctorium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "asylum_sanctorium_vanquisher",
+            "name": "Asylum Sanctorium Vanquisher",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold in the same fight in Veteran Asylum Sanctorium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "righteous_condemnation",
+            "name": "Righteous Condemnation",
+            "description": "Defeat Saint Olms the Just and Saint Llothis the Pious in the same battle in Veteran Asylum Sanctorium.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "perfect_purification",
+            "name": "Perfect Purification",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold in the same battle without suffering a group member death within 15 minutes of entering the Sanctuary Atrium in Veteran Asylum Sanctorium.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "asylum_sanctorium_completed",
+            "name": "Asylum Sanctorium Completed",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold in Asylum Sanctorium.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "asylum_sanctorium_contender",
+            "name": "Asylum Sanctorium Contender",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold in the same fight in Asylum Sanctorium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sanctified",
+            "name": "Sanctified",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold without suffering a group member death in Veteran Asylum Sanctorium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "swift_mercy",
+            "name": "Swift Mercy",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold within a time limit of 15 minutes in Veteran Asylum Sanctorium. Timer starts when players enter the Sanctuary Atrium.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "beatific_beatdown",
+            "name": "Beatific Beatdown",
+            "description": "Defeat Saint Olms the Just, Saint Llothis the Pious, and Saint Felms the Bold at the same time without allowing Saint Felms or Saint Llothis to enrage during the fight.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "imperfect_attendance",
+            "name": "Imperfect Attendance",
+            "description": "Defeat Saint Llothis the Pious without dismantling his Imperfect Attendants in Veteran Asylum Sanctorium.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "placid_projections",
+            "name": "Placid Projections",
+            "description": "Defeat Saint Felms the Bold without allowing either of his Pneuma Projections to enrage in Veteran Asylum Sanctorium.",
+            "points": 15,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "chaotic_whirlwind",
+        "perfected_chaotic_whirlwind",
+        "concentrated_force",
+        "perfected_concentrated_force",
+        "defensive_position",
+        "perfected_defensive_position",
+        "disciplined_slash",
+        "perfected_disciplined_slash",
+        "piercing_spray",
+        "perfected_piercing_spray",
+        "timeless_blessing",
+        "perfected_timeless_blessing"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "You will receive a Radiance Resonator for completing the trial on Hard Mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Asylum_Sanctorium",
+        "page_title": "Online:Asylum Sanctorium",
+        "revision_id": 3517364,
+        "retrieved_at": "2026-08-18T18:52:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

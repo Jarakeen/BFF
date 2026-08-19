@@ -1,0 +1,165 @@
+{
+    "id": "kyne_s_aegis",
+    "name": "Kyne's Aegis",
+    "content_type": "trial",
+    "summary": "Kyne's Aegis is a bastion in the Sea of Ghosts, located on an island off the coast north of Solitude. Its original purpose was to be a bulwark against northern invasions which approached the coast via the easiest channel. Thane Ogvar was given ownership over the fort and over time, it morphed into a northern fishing village in addition to a fort. The island's gold veins have led to the Thane establishing a mining operation. Until recently, the fort has remained peaceful with only the occasional northern squall cropping up to cause concern. The transformation of the island to a fishing and mining spot has led to the slow decline of the fort. Rabbits, rats and squirrels are found in numbers within. Hazards include slaughterfish. A short time ago, tremendously large longships appeared to the north. Before a proper defense could be mustered, these ships crashed into the island, disgorging Sea Giants and Half-Giants onto the island, led by the powerful Vampire lord Falgravn. These creatures of myth quickly overwhelmed the northern island and have begun the assault of the fort proper. With the island threatened, the Thane has sent for assistance from anyone that can reach the island. A copy of Convergence of Maestros, Volume 2 can be found near the boat that takes you to the trial. You will receive a Defiled Oathstone with your other rewards after defeating Falgravn with hard mode engaged.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "yandir_the_butcher",
+        "captain_vrol",
+        "lord_falgravn"
+    ],
+    "achievements": [
+        {
+            "id": "sea_giant_style_master",
+            "name": "Sea Giant Style Master",
+            "description": "Learn every chapter in the Sea Giant style book, occasionally found as rewards for completing the Kyne's Aegis Trial.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "kyne_s_deliverance",
+            "name": "Kyne's Deliverance",
+            "description": "Complete the listed achievements for Kyne's Aegis.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "kyne_s_aegis_vanquisher",
+            "name": "Kyne's Aegis Vanquisher",
+            "description": "Defeat Yandir the Butcher, Captain Vrol, and Lord Falgravn in Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "kyne_s_aegis_conqueror",
+            "name": "Kyne's Aegis Conqueror",
+            "description": "Defeat Yandir the Butcher, Captain Vrol, and Lord Falgravn in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "kyne_s_aegis_sprinter",
+            "name": "Kyne's Aegis Sprinter",
+            "description": "Defeat all enemies in addition to Yandir the Butcher, Captain Vrol, and Lord Falgravn in Veteran Kyne's Aegis within 35 minutes of entering Kyne's Perch village.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "savior_of_the_bastion",
+            "name": "Savior of the Bastion",
+            "description": "Defeat Yandir the Butcher, Captain Vrol, and Lord Falgravn after raising the challenge banner in Veteran Kyne's Aegis, in one run.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "stainless_siege_breaker",
+            "name": "Stainless Siege-breaker",
+            "description": "Defeat Yandir the Butcher, Captain Vrol, and Lord Falgravn along with all their hostile followers after raising the challenge banner for all of them, without suffering a group member death, within 35 minutes of entering Kyne's Perch village in Veteran Kyne's Aegis.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "half_giant_slayer",
+            "name": "Half-Giant Slayer",
+            "description": "Defeat 100 half-giants in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "vampire_slayer",
+            "name": "Vampire Slayer",
+            "description": "Defeat 175 vampires and harrowfiends in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "bile_breaker",
+            "name": "Bile Breaker",
+            "description": "Defeat Yandir the Butcher without any player spreading Chaurus Bile to another player in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "singular_siegecraft",
+            "name": "Singular Siegecraft",
+            "description": "Defeat Captain Vrol while only repairing one of the two available ballistae in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "deepest_gratitude",
+            "name": "Deepest Gratitude",
+            "description": "Successfully rescue all prisoners held captive by Lord Falgravn in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "lightning_leaper",
+            "name": "Lightning Leaper",
+            "description": "Defeat Yandir the Butcher, Captain Vrol, and Lord Falgravn in Veteran Kyne's Aegis without ever being struck by Lightning Bolt.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "stone_hearted_slayer",
+            "name": "Stone-hearted Slayer",
+            "description": "Allow all eight prisoners to die before defeating Lord Falgravn in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "spare_the_servants",
+            "name": "Spare the Servants",
+            "description": "Defeat Lord Falgravn while Lieutenant Njordal is alive in Veteran Kyne's Aegis.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "down_with_the_ship",
+            "name": "Down with the Ship",
+            "description": "Defeat Captain Vrol after raising the challenge banner in Veteran Kyne's Aegis.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "meatgrinder",
+            "name": "Meatgrinder",
+            "description": "Defeat Yandir the Butcher after raising the challenge banner in Veteran Kyne's Aegis.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "perfect_storm",
+            "name": "Perfect Storm",
+            "description": "Defeat all enemies in addition to Yandir the Butcher, Captain Vrol, and Lord Falgravn without suffering a group member death in Veteran Kyne's Aegis.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "kyne_s_wind",
+        "perfected_kyne_s_wind",
+        "roaring_opportunist",
+        "perfected_roaring_opportunist",
+        "vrol_s_command",
+        "perfected_vrol_s_command",
+        "yandir_s_might",
+        "perfected_yandir_s_might"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "This trial is commonly abbreviated as \"KA\".",
+        "This unmarked island appears a second time in ESO in the Western Skyrim zone, west of Northern Watch Ritual Site, in the same location as it was in Skyrim.",
+        "Kyne's Aegis exists in Skyrim, but as an unmarked island with two gold ore veins, as confirmed during the ESO Live announcement stream. It has no ruins, except for a skeleton clutching a flagpole at the peak of the island. The trial was based on this island (its gold mining history inspired by the ore veins) and it was retroactively named Kyne's Aegis."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kyne%27s_Aegis",
+        "page_title": "Online:Kyne's Aegis",
+        "revision_id": 3608441,
+        "retrieved_at": "2026-08-18T18:54:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

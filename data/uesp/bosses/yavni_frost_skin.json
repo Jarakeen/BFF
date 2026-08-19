@@ -1,0 +1,57 @@
+{
+    "id": "yavni_frost_skin",
+    "name": "Yavni Frost-Skin",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, The Frozen Ring",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "599,921",
+        "veteran": "2,917,384",
+        "hardmode": "2,333,907"
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Wrecking Blow",
+            "description": "A melee attack that deals moderate physical damage and knocks you back if it connects. This attack can be blocked to knock the enemy off balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Brawler",
+            "description": "Yavni Frost-Skin swings their weapon around, dealing minor physical damage to all enemies in front of them and gaining a shield. This attack has no red cone indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Rally",
+            "description": "Yavni Frost-Skin casts a Raly-like ability, making them lift their weapon upwards, granting themselves increased damage done instantly and more over time. When the effect ends, it heals Yavni Frost-Skin",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Yavni Frost-Skin is a Nord who can be found in the Frozen Ring of the Dragonstar Arena. He wields a greatsword.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yavni_Frost-Skin",
+        "page_title": "Online:Yavni Frost-Skin",
+        "revision_id": 3427603,
+        "retrieved_at": "2026-08-19T03:20:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

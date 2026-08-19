@@ -1,0 +1,66 @@
+{
+    "id": "the_control_guardian",
+    "name": "The Control Guardian",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Maelstrom Arena, Seht's Flywheel",
+    "species": "Dwarven Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "348,259",
+        "veteran": "731,695",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Overcharged Bolt",
+            "description": "In this mode, the Control Guardian slowly walks around the arena and continuously shoots you with lightning bolts, dealing high shock damage. You can avoid these by sticking close to the construct and within the green circular AoE under it, preventing it from reaching you with its bolts.",
+            "damage_type": null
+        },
+        {
+            "name": "Flame Release",
+            "description": "To counter you using this strategy, every once in a while, the Control Guardian stops and begins to release bursts of flame from underneath itself, dealing very high flame damage. After a while, it will resume its Overcharged Bolt mode, and alternate between these two attacks for the rest of the fight.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "In this mode, the Control Guardian slowly walks around the arena and continuously shoots you with lightning bolts, dealing high shock damage. You can avoid these by sticking close to the construct and within the green circular AoE under it, preventing it from reaching you with its bolts.",
+            "name": "Overcharged Bolt",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "shock",
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "The Control Guardian is a giant dwarven spider that serves as the final boss of Stage 4: Seht's Flywheel in Maelstrom Arena. During combat, Scavenger Thunder-Smiths will appear as back up to the boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Control_Guardian",
+        "page_title": "Online:The Control Guardian",
+        "revision_id": 3175479,
+        "retrieved_at": "2026-08-19T03:21:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,520 @@
+{
+    "id": "hiath_the_battlemaster",
+    "name": "Hiath the Battlemaster",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Round 10: The Champion's Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "6,114,800",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Blood Craze",
+            "description": "Hiath slashes at you twice, doing moderate physical damage over time to the player. This attack also heals the enemy over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Agony",
+            "description": "Hiath stuns the player for a short time. Taking damage from any source will break the stun, but the player may choose to break free from it instead. After the stun ends, this spell also does moderate magical damage over time to the player. This spell can be interrupted to set the enemy off balance. Blocking will prevent the stun.",
+            "damage_type": null
+        },
+        {
+            "name": "Roll Dodge",
+            "description": "Hiath can perform a roll dodge to avoid incoming damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Assassinate",
+            "description": "Hiath strikes at the player's back for moderate physical damage. This attack can only be performed if the enemy is behind the player, and Assassins will often leap to get behind the player. Ensure your character is facing the enemy at all times to prevent this.",
+            "damage_type": null
+        },
+        {
+            "name": "Rapid Strikes",
+            "description": "Hiath casts Rapid Strikes, hitting a player multiple times and dealing multiple instances of physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Throw Dagger",
+            "description": "Hiath backs away from the player and throws a dagger at the player. This attack causes snare and bleeding if it connects. This attack can be interrupted to set the enemy off balance. The dagger can be blocked to prevent the snare and bleed and reduce the damage done.",
+            "damage_type": null
+        },
+        {
+            "name": "Steel Tornado",
+            "description": "Hiath spins around, doing moderate physical damage to all players as indicated by a red circle. Blocking will reduce the damage taken.",
+            "damage_type": null
+        },
+        {
+            "name": "Siphon Life",
+            "description": "Hiath pulls life energy from a target, dealing Magic damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Power Extraction",
+            "description": "Hiath casts a Power Extraction-like ability, dealing damage around him and increasing his damage done.",
+            "damage_type": null
+        },
+        {
+            "name": "Shadow Strike",
+            "description": "Hiath briefly becomes invisible (like a nightblade) before reappearing sharpening his swords together (like an assassin). From here, the following attack depends on your positioning. If you are close to him, he quickly hits you with one of his swords, dealing high physical damage and knocking you down. This can be blocked. If farther away, he performs a teleport strike that tracks your location instead, dealing high physical damage. This attack cannot be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Marked for Death",
+            "description": "Hiath casts a ball of fire at you. Upon making contact, it dissolves into flames beneath you that track your movement for a duration, dealing high continuous flame damage that cannot be avoided. When the effect ends, a ground area of flame is spawned under the targets and in Veteran Mode, a Summoned Flames spawn.",
+            "damage_type": null
+        },
+        {
+            "name": "Invisibility",
+            "description": "Hiath briefly becomes invisible, before reappearing close to you. This attack occurs more often when standing further away from him.",
+            "damage_type": null
+        },
+        {
+            "name": "Purifying Light",
+            "description": "Hiath casts a Purifying Light-like ability to a player, making you store damage taken that reapply after a few seconds. You can Break Free to purge yourself from this effect.",
+            "damage_type": null
+        },
+        {
+            "name": "Searing Light",
+            "description": "Hiath casts Searing Light on itself, making nearby players have 50% chance to miss their attacks, which are dealt damage and put Off Balance if they miss. [verification needed — This is cast according to logs but we need confirmation it works as described in-game.]",
+            "damage_type": null
+        },
+        {
+            "name": "Solar Disturbance",
+            "description": "Hiath channels the spell for a short duration before casting a Solar Disturbance-like skill from the sky at your location, dealing very high magical damage, followed by high continuous magical damage and reducing targets damage done. This can be interrupted.",
+            "damage_type": null
+        },
+        {
+            "name": "Crystal blast",
+            "description": "Hiath casts a Crystal Shard-like ability which deals magic damage and stuns you. You can interrupt the casting.",
+            "damage_type": null
+        },
+        {
+            "name": "Ember Explosion",
+            "description": "Hiath causes a Flame damage explosion in a area.",
+            "damage_type": null
+        },
+        {
+            "name": "Backstabber",
+            "description": "Hiath the Battlemaster has a passive ability that causes him to deal 20% more damage when attacking the target's back.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Hiath stuns the player for a short time. Taking damage from any source will break the stun, but the player may choose to break free from it instead. After the stun ends, this spell also does moderate magical damage over time to the player. This spell can be interrupted to set the enemy off balance. Blocking will prevent the stun.",
+            "name": "Agony",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath can perform a roll dodge to avoid incoming damage.",
+            "name": "Roll Dodge",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath backs away from the player and throws a dagger at the player. This attack causes snare and bleeding if it connects. This attack can be interrupted to set the enemy off balance. The dagger can be blocked to prevent the snare and bleed and reduce the damage done.",
+            "name": "Throw Dagger",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath spins around, doing moderate physical damage to all players as indicated by a red circle. Blocking will reduce the damage taken.",
+            "name": "Steel Tornado",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath casts a ball of fire at you. Upon making contact, it dissolves into flames beneath you that track your movement for a duration, dealing high continuous flame damage that cannot be avoided. When the effect ends, a ground area of flame is spawned under the targets and in Veteran Mode, a Summoned Flames spawn.",
+            "name": "Marked for Death",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath briefly becomes invisible, before reappearing close to you. This attack occurs more often when standing further away from him.",
+            "name": "Invisibility",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath casts a Purifying Light-like ability to a player, making you store damage taken that reapply after a few seconds. You can Break Free to purge yourself from this effect.",
+            "name": "Purifying Light",
+            "links": [],
+            "mechanic_type": "cleanse",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": true,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath casts Searing Light on itself, making nearby players have 50% chance to miss their attacks, which are dealt damage and put Off Balance if they miss. [verification needed — This is cast according to logs but we need confirmation it works as described in-game.]",
+            "name": "Searing Light",
+            "links": [],
+            "mechanic_type": "spread",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath channels the spell for a short duration before casting a Solar Disturbance-like skill from the sky at your location, dealing very high magical damage, followed by high continuous magical damage and reducing targets damage done. This can be interrupted.",
+            "name": "Solar Disturbance",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath casts a Crystal Shard-like ability which deals magic damage and stuns you. You can interrupt the casting.",
+            "name": "Crystal blast",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Hiath causes a Flame damage explosion in a area.",
+            "name": "Ember Explosion",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"I'm not sure you're worthy to compete in this arena. You have a certain air of … futility … about you.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "What is this place?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I see you make a habit of walking blindly into strange and dangerous places. That must make your life very interesting.\nBut where are my manners? Welcome to the Dragonstar Arena! Only the strongest of the strong try their hands at our games.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"It works perfectly. Thanks for asking.\nOh, but you want details. You talk to the Gatemaster up the hall to begin. Then you do your best to turn your enemy into a bloody mess before he does the same to you. That's my favorite part.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "How does the Arena work?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Quite simply, you survive. And your opponent doesn't. Of course, if that happens, my master will take an interest and want to see more.\nYou stand on the brink of a remarkable journey. Are you really willing to take the first step?\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "What do you mean by \"journey\" and \"first step?\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Talk to the Gatekeeper. Survive, and see for yourself.\nOnly those who prove themselves worthy can learn the secrets of the Arena.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "How do I win?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Hopefully your allies aren't as bad at the games as you and they can help you get back into the fight.\nIf all of you fall? Well, we call that 'death.' We toss your corpses out back for the guar. Hungry little buggers, you know.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "What happens if I'm defeated?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The Fighters Guild team does a wonderful job of not losing. Must be all the practice they get with the fighting and everything.\nTheir champion has been holding his own so far in the competition. I expect good things from him and his team.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Champion?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Each participating team has a champion. Sometimes more than one. First, you must overcome the initial waves of combat. If you make it far enough, you'll get to face the champions.\nAnd I hesitate to mention any of our other little surprises.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Surprises?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Really? You have to ask? If I told you, it wouldn't be a surprise, now would it?\nI'm done with this conversation. Talk to the Gatekeeper and enter the Arena. The sooner you get killed, the sooner I can forget all about this meaningless exchange.\"",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Anyone competing that I should be aware of?",
+            "trigger": "He can be found in the Gladiator's Assembly:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He can be found in the Gladiator's Assembly:": [
+            {
+                "speaker": "",
+                "line": "\"I'm not sure you're worthy to compete in this arena. You have a certain air of … futility … about you.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "What is this place?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I see you make a habit of walking blindly into strange and dangerous places. That must make your life very interesting.\nBut where are my manners? Welcome to the Dragonstar Arena! Only the strongest of the strong try their hands at our games.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"It works perfectly. Thanks for asking.\nOh, but you want details. You talk to the Gatemaster up the hall to begin. Then you do your best to turn your enemy into a bloody mess before he does the same to you. That's my favorite part.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "How does the Arena work?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Quite simply, you survive. And your opponent doesn't. Of course, if that happens, my master will take an interest and want to see more.\nYou stand on the brink of a remarkable journey. Are you really willing to take the first step?\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "What do you mean by \"journey\" and \"first step?\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Talk to the Gatekeeper. Survive, and see for yourself.\nOnly those who prove themselves worthy can learn the secrets of the Arena.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "How do I win?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Hopefully your allies aren't as bad at the games as you and they can help you get back into the fight.\nIf all of you fall? Well, we call that 'death.' We toss your corpses out back for the guar. Hungry little buggers, you know.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "What happens if I'm defeated?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The Fighters Guild team does a wonderful job of not losing. Must be all the practice they get with the fighting and everything.\nTheir champion has been holding his own so far in the competition. I expect good things from him and his team.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Champion?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Each participating team has a champion. Sometimes more than one. First, you must overcome the initial waves of combat. If you make it far enough, you'll get to face the champions.\nAnd I hesitate to mention any of our other little surprises.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Surprises?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Really? You have to ask? If I told you, it wouldn't be a surprise, now would it?\nI'm done with this conversation. Talk to the Gatekeeper and enter the Arena. The sooner you get killed, the sooner I can forget all about this meaningless exchange.\"",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Anyone competing that I should be aware of?",
+                "trigger": "He can be found in the Gladiator's Assembly:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is voiced by Gideon Emery.",
+        "His health scales on the number of player in the group. With two players in normal mode, Hiath has ~1,180,000 health."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Hiath the Battlemaster is a Dark Elf follower of Boethiah and the current champion of the Dragonstar Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hiath_the_Battlemaster",
+        "page_title": "Online:Hiath the Battlemaster",
+        "revision_id": 3574984,
+        "retrieved_at": "2026-08-19T03:20:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

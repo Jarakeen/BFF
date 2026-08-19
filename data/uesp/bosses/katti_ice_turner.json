@@ -1,0 +1,94 @@
+{
+    "id": "katti_ice_turner",
+    "name": "Katti Ice-Turner",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, The Frozen Ring",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "559,926",
+        "veteran": "2,431,153",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Arrow",
+            "description": "A basic ranged attack that does minor frost damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Frost Clench",
+            "description": "A ranged attack that does minor frost damage and immobilizes you.",
+            "damage_type": null
+        },
+        {
+            "name": "Ice Barrier",
+            "description": "The enemy summons an Ice Barrier that absorbs projectiles fired at it until destroyed. The wall deals damage over time to targets nearby. The caster cannot be pulled if the wall stands between them and the enemy. The player should move so that there is a clear line of sight between themselves and the enemy.",
+            "damage_type": null
+        },
+        {
+            "name": "Unstable Wall of Frost",
+            "description": "Katt Ice-Turner creates a rectangular zone in from of her which deals continuous frost damage and snares targets inside.",
+            "damage_type": null
+        },
+        {
+            "name": "Winter's Reach",
+            "description": "The enemy unleashes an icy whirlwind in the direction it is facing. This whirlwind does moderate frost damage and roots all players that it hits. The root effect passes through block, but it can be escaped by roll dodging.",
+            "damage_type": null
+        },
+        {
+            "name": "Crushing Shock",
+            "description": "Katti Ice-Turner casts a Crushing Shock-like ability, dealing Flame, Frost and Shock damage. It has a 40% chance of applying each of the Burning, Chilled and Concussed status effects. If it hits a casting target, it interrupts them and puts them Off-Balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Icy Pulsar",
+            "description": "Katti Ice-Turner casts an ice area of effect around themselves, dealing Frost Damage and has a 40% chance of applying Chilled. Also reduces your Maximum Health by 10% for 30 seconds if you get hit.",
+            "damage_type": null
+        },
+        {
+            "name": "Elemental Susceptibility",
+            "description": "Katti Ice-Turner casts an Elemental Susceptibility-like ability, reducing the defenses against Shock, Flame and Frost damage as well as increasing the chances of getting Status Effects of the target.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Katti Ice-Turner casts an ice area of effect around themselves, dealing Frost Damage and has a 40% chance of applying Chilled. Also reduces your Maximum Health by 10% for 30 seconds if you get hit.",
+            "name": "Icy Pulsar",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Katti Ice-Turner is a Nord Sovngarde warrior encountered in the Frozen Ring of the Dragonstar Arena. She uses a frost staff and can use an ability to freeze competitors in place.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Katti_Ice-Turner",
+        "page_title": "Online:Katti Ice-Turner",
+        "revision_id": 3196634,
+        "retrieved_at": "2026-08-19T03:20:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,435 @@
+{
+    "id": "shade_of_the_grove",
+    "name": "Shade of the Grove",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"You will not harm this beast without my blessing.\"",
+            "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This beast stays under my protection, hunter. Only the grove's blessing can breach its defenses.\"",
+            "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You require my blessing before harming this creature.\"",
+            "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Very cunning, fledgling. But do you have the strength for more?\"",
+            "trigger": "After killing the Blessed Spriggan and Bristleback Gatekeeper:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You wish to challenge the Hunter's Grove? Very well—begin!\"",
+            "trigger": "Engaging her in combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Do not wilt from this challenge, hunter.\"",
+            "trigger": "Engaging her in combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You face the full might of the hunt!\"",
+            "trigger": "Engaging her in combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Are you predator or prey, hunter?\"",
+            "trigger": "Engaging her in combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I embody life! I cannot be defeated!\"",
+            "trigger": "When she changes forms:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This shell brings your death!\"",
+            "trigger": "When she changes forms:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This new host serves me better!\"",
+            "trigger": "When she changes forms:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"My allies surround me, where are yours?\"",
+            "trigger": "Summoning animals:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I call on the grove to aid me!\"",
+            "trigger": "Summoning animals:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Creatures of the hunt! To my aid!\"",
+            "trigger": "Summoning animals:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The forest looms strong around you, fledgling hunter!\"",
+            "trigger": "Releasing one of the lurchers:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Nature turns against you, little hunter!\"",
+            "trigger": "Releasing one of the lurchers:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Attendants! Drain this mortal of my gift!\"",
+            "trigger": "Ordering her spriggans to steal your blessing:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Tear the strength to fight from this mortal!\"",
+            "trigger": "Ordering her spriggans to steal your blessing:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This mortal has my blessing, remove it!\"",
+            "trigger": "Ordering her spriggans to steal your blessing:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your simple attacks mean nothing against me!\"",
+            "trigger": "When you are stripped of the Blessing of the Grove:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"My defense is eternal!\"",
+            "trigger": "When you are stripped of the Blessing of the Grove:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your efforts fail without the blessing!\"",
+            "trigger": "When you are stripped of the Blessing of the Grove:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You have already lost.\"",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You show too much weakness for the hunt.\"",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Undisciplined! Ill-restrained!\"",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Death only continues the great cycle.\"",
+            "trigger": "When her lurchers are killed:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your broken flesh fuels the forest, nourishes it.\"",
+            "trigger": "Player dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your bones shall fall to dust.\"",
+            "trigger": "Player dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"All life must die.\"",
+            "trigger": "Player dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You lacked the will, fledgling.\"",
+            "trigger": "Player dies:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"The forest grows strong from your corpse.\"",
+            "trigger": "Player dies:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "If you attempt to harm the Bristleback Gatekeeper:": [
+            {
+                "speaker": "",
+                "line": "\"You will not harm this beast without my blessing.\"",
+                "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This beast stays under my protection, hunter. Only the grove's blessing can breach its defenses.\"",
+                "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You require my blessing before harming this creature.\"",
+                "trigger": "If you attempt to harm the Bristleback Gatekeeper:",
+                "ability": null
+            }
+        ],
+        "After killing the Blessed Spriggan and Bristleback Gatekeeper:": [
+            {
+                "speaker": "",
+                "line": "\"Very cunning, fledgling. But do you have the strength for more?\"",
+                "trigger": "After killing the Blessed Spriggan and Bristleback Gatekeeper:",
+                "ability": null
+            }
+        ],
+        "Engaging her in combat:": [
+            {
+                "speaker": "",
+                "line": "\"You wish to challenge the Hunter's Grove? Very well—begin!\"",
+                "trigger": "Engaging her in combat:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Do not wilt from this challenge, hunter.\"",
+                "trigger": "Engaging her in combat:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You face the full might of the hunt!\"",
+                "trigger": "Engaging her in combat:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Are you predator or prey, hunter?\"",
+                "trigger": "Engaging her in combat:",
+                "ability": null
+            }
+        ],
+        "When she changes forms:": [
+            {
+                "speaker": "",
+                "line": "\"I embody life! I cannot be defeated!\"",
+                "trigger": "When she changes forms:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This shell brings your death!\"",
+                "trigger": "When she changes forms:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This new host serves me better!\"",
+                "trigger": "When she changes forms:",
+                "ability": null
+            }
+        ],
+        "Summoning animals:": [
+            {
+                "speaker": "",
+                "line": "\"My allies surround me, where are yours?\"",
+                "trigger": "Summoning animals:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I call on the grove to aid me!\"",
+                "trigger": "Summoning animals:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Creatures of the hunt! To my aid!\"",
+                "trigger": "Summoning animals:",
+                "ability": null
+            }
+        ],
+        "Releasing one of the lurchers:": [
+            {
+                "speaker": "",
+                "line": "\"The forest looms strong around you, fledgling hunter!\"",
+                "trigger": "Releasing one of the lurchers:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Nature turns against you, little hunter!\"",
+                "trigger": "Releasing one of the lurchers:",
+                "ability": null
+            }
+        ],
+        "Ordering her spriggans to steal your blessing:": [
+            {
+                "speaker": "",
+                "line": "\"Attendants! Drain this mortal of my gift!\"",
+                "trigger": "Ordering her spriggans to steal your blessing:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Tear the strength to fight from this mortal!\"",
+                "trigger": "Ordering her spriggans to steal your blessing:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This mortal has my blessing, remove it!\"",
+                "trigger": "Ordering her spriggans to steal your blessing:",
+                "ability": null
+            }
+        ],
+        "When you are stripped of the Blessing of the Grove:": [
+            {
+                "speaker": "",
+                "line": "\"Your simple attacks mean nothing against me!\"",
+                "trigger": "When you are stripped of the Blessing of the Grove:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"My defense is eternal!\"",
+                "trigger": "When you are stripped of the Blessing of the Grove:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Your efforts fail without the blessing!\"",
+                "trigger": "When you are stripped of the Blessing of the Grove:",
+                "ability": null
+            }
+        ],
+        "(?)": [
+            {
+                "speaker": "",
+                "line": "\"You have already lost.\"",
+                "trigger": "(?)",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You show too much weakness for the hunt.\"",
+                "trigger": "(?)",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Undisciplined! Ill-restrained!\"",
+                "trigger": "(?)",
+                "ability": null
+            }
+        ],
+        "When her lurchers are killed:": [
+            {
+                "speaker": "",
+                "line": "\"Death only continues the great cycle.\"",
+                "trigger": "When her lurchers are killed:",
+                "ability": null
+            }
+        ],
+        "Player dies:": [
+            {
+                "speaker": "",
+                "line": "\"Your broken flesh fuels the forest, nourishes it.\"",
+                "trigger": "Player dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Your bones shall fall to dust.\"",
+                "trigger": "Player dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"All life must die.\"",
+                "trigger": "Player dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You lacked the will, fledgling.\"",
+                "trigger": "Player dies:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"The forest grows strong from your corpse.\"",
+                "trigger": "Player dies:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage.",
+        "Veteran Vateshran's Rites\u0000HEALTH_VETERAN\u0000: Face the challenges of the Vateshran Hollows."
+    ],
+    "summary": "The Shade of the Grove is the first champion of Hircine found in Vateshran Hollows, where it can be found blessing the various creatures found within, making them invulnerable. It does not however have a physical form, but the creatures it blesses can be seen with a yellow outline. She serves as the first boss battle, where she takes control of three Lurchers, Marbana, Rofsuta, and Saagranth. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shade_of_the_Grove",
+        "page_title": "Online:Shade of the Grove",
+        "revision_id": 2792801,
+        "retrieved_at": "2026-08-19T03:21:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

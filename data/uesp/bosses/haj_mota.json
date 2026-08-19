@@ -1,0 +1,42 @@
+{
+    "id": "haj_mota",
+    "name": "Haj Mota",
+    "content_id": "ruins_of_mazzatun",
+    "content_name": "Ruins of Mazzatun",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Haj Mota",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "108,669",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The haj mota in the Blackwood Borderlands are smaller in size compared to most.",
+        "The haj mota on High Isle and Solstice bear the appearance of the coral haj mota variant."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "A Proper Blessing: Gather ingredients for an Argonian ritual.",
+        "The Rising Winds: Reunite the Winds and drive the Sharp-Eyes from Stonewastes."
+    ],
+    "summary": "Norg-Tzel, Sword's Rest Isle\nHew's Bane\nBlackwood Borderlands\nSouth Guard Ruins, Southern Elsweyr\nNchuthnkarst\nBlackwood\nThe Firepot, High Isle\nNorth of Glimmertarn Wayshrine, East of Llanshara\nLake near Aldwilne Citadel, Deetra Grotto, Near Shell-Tide Village, Tainted Leel, Western shore of Western Solstice Haj Mota are large shelled creatures predominantly found in both arid and lush regions of Tamriel.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Haj_Mota",
+        "page_title": "Online:Haj Mota",
+        "revision_id": 3587234,
+        "retrieved_at": "2026-08-18T19:29:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

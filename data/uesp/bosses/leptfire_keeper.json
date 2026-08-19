@@ -1,0 +1,97 @@
+{
+    "id": "leptfire_keeper",
+    "name": "Leptfire Keeper",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "Hunter's Grotto",
+    "species": "Nix-Ox",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "835,826",
+        "veteran": "3",
+        "hardmode": "2,216,192"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic double-hitting melee attack dealing low physical damage each.",
+            "damage_type": null
+        },
+        {
+            "name": "Shriek",
+            "description": "The Leptfire Keeper screams and breathes fire at you, indicated by a red cone, dealing moderate flame damage and causing you to stagger.",
+            "damage_type": null
+        },
+        {
+            "name": "Spitfire",
+            "description": "The Leptfire Keeper spits three flaming orbs at you, indicated by small red circle, dealing initial moderate flame damage followed by continuous low flame damage. The flames linger long enough that multiple application of this can be active at once.",
+            "damage_type": null
+        },
+        {
+            "name": "Fire Spray",
+            "description": "The Leptfire Keeper spins around in a circle and spews fire from its mouth all around, creating several pools of lingering flames, indicated by red circles, dealing continuous moderate flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Leap",
+            "description": "Throughout the fight, the Leptfire Keeper will jump over to a different platform. You must use the grapple points to chase after it. It will use \"Spitfire\" when it is on a faraway platform while you are still at the one it lept from, or while making your way to the boss.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The Leptfire Keeper spits three flaming orbs at you, indicated by small red circle, dealing initial moderate flame damage followed by continuous low flame damage. The flames linger long enough that multiple application of this can be active at once.",
+            "name": "Spitfire",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The Leptfire Keeper spins around in a circle and spews fire from its mouth all around, creating several pools of lingering flames, indicated by red circles, dealing continuous moderate flame damage.",
+            "name": "Fire Spray",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": true,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "The Leptfire Keeper is a Firemoth Nix-Ox that serves as the secret boss of the Hunter's Grotto. It can only be reached by defeating the Magma Queen in The Brimstone Den first, which grants the ability to use Brimstone Orbs to cross lava safely, and in turn will spawn them in the Hunter's Grotto to reach the boss. Defeating the Leptfire Keeper grants you Empowered Grapple, which makes the Grappling Hook grant you a temporary speed bonus (known as Hunting Speed) when you use it.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Leptfire_Keeper",
+        "page_title": "Online:Leptfire Keeper",
+        "revision_id": 3224088,
+        "retrieved_at": "2026-08-19T03:21:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

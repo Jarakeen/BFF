@@ -1,0 +1,109 @@
+{
+    "id": "wamasu",
+    "name": "Wamasu",
+    "content_id": "arx_corinium",
+    "content_name": "Arx Corinium",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Wamasu",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "119,538",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "A basic melee attack dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Sweep",
+            "description": "The wamasu swings its tail in front of itself, indicated by a red cone, dealing moderate physical damage as well as knocking down all targets.",
+            "damage_type": null
+        },
+        {
+            "name": "Charge",
+            "description": "The wamasu charges forward, indicated by a red rectangle, dealing high physical damage as well as knocking down all targets.",
+            "damage_type": null
+        },
+        {
+            "name": "Repulsion Shock",
+            "description": "The wamasu breathes out lightning in front of itself, as indicated by a red cone, dealing continuous moderate-high shock damage to all targets.",
+            "damage_type": null
+        },
+        {
+            "name": "Static",
+            "description": "When reaching 50% health, the wamasu begins to shake and charges itself with electricity to temporarily buff its damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The wamasu charges forward, indicated by a red rectangle, dealing high physical damage as well as knocking down all targets.",
+            "name": "Charge",
+            "links": [],
+            "mechanic_type": "charge",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "When reaching 50% health, the wamasu begins to shake and charges itself with electricity to temporarily buff its damage.",
+            "name": "Static",
+            "links": [],
+            "mechanic_type": "charge",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "There are several wamasu pets: the Deadlands Wamasu, Amberdust Wamasu Hatchling and Wamasu Hatchling.",
+        "A Wamasu is seen caged in The Feral Gallery."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Clarity: Cure Ja-Reet of his mysterious silence.",
+        "Cold-Blooded Revenge: Seek vengeance for the lone survivor of a Dominion massacre.",
+        "Force of Nature: Help three nereid sisters reclaim an abandoned Imperial fort.",
+        "Give and Take in Shadowfen: Recover stolen relics from Atanaz Ruins.",
+        "Guardian of Y'ffelon: Go to Y'ffelon and stop the Firesong Circle.",
+        "Pledge: Arx Corinium: Prove you are truly Undaunted by clearing Arx Corinium.",
+        "Recovered Relics: Defeat a chimera and gather druidic relics.",
+        "Shrines on Shaky Ground: Defeat a chimera and restore Stonelore shrines.",
+        "Three-Pronged Approach: Defeat a chimera and gather chimera components.",
+        "Unsafe Haven: Reclaim Haven from pirates."
+    ],
+    "summary": "The Gray Mire, The Hunting Grounds, Leafwater, Mushroom Cave, Sunken Lair, Venomous Fens\nDeepmire, Murkmire, Tsofeer Cavern\nNchuthnkarst\nBlackwood Bog, Gloomire, Doomvault Porcixid, Vunalk\nGrove of the Chimera\nTelvanni Peninsula\nDawnwood Wamasu are dangerous reptiles native to Black Marsh. They are predominantly found in Shadowfen, Blackwood, and Murkmire, but some have been sighted in Upper Craglorn as well as Grahtwood. Wamasu lay eggs to reproduce. These eggs emit lightning as the embryo fertilizes and grows. Once the lightning is gone, the egg is ready to hatch.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wamasu",
+        "page_title": "Online:Wamasu",
+        "revision_id": 3567012,
+        "retrieved_at": "2026-08-18T19:29:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

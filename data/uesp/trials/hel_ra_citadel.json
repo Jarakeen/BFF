@@ -1,0 +1,72 @@
+{
+    "id": "hel_ra_citadel",
+    "name": "Hel Ra Citadel",
+    "content_type": "trial",
+    "summary": "Hel Ra Citadel is an ancient Yokudan fortress in southwestern Craglorn. It has been taken over by The Warrior and his Anka-Ra armies, having been corrupted by The Serpent. Hel Ra Citadel Hard Mode can be triggered by entering the Veteran version of the trial and destroying the statues in the room before the Warrior's chamber. Completing a full run of Veteran Hel Ra Citadel will reward 12 Undaunted Plunder worth 12000 gold total (2 from Ra Kotu, 2 from Yokeda Kai or Yokeda Rok'dun, and 8 from The Warrior). You will receive a Star-Studded Champion's Baldric for defeating The Warrior with hard mode active.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "ra_kotu",
+        "air_atronach",
+        "yokeda_kai",
+        "yokeda_rok_dun",
+        "the_warrior_celestial",
+        "celestial"
+    ],
+    "achievements": [
+        {
+            "id": "hel_ra_citadel_completed",
+            "name": "Hel Ra Citadel Completed",
+            "description": "Defeat the Celestial Warrior, freeing him from the Serpent's Control.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "hel_ra_citadel",
+            "name": "Time Trial: Hel Ra Citadel",
+            "description": "Complete Veteran Hel Ra Citadel within a time limit of 33 minutes.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "hel_ra_citadel_conqueror",
+            "name": "Hel Ra Citadel Conqueror",
+            "description": "Defeat the Celestial Warrior in Veteran Hel Ra Citadel.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "hel_ra_citadel_difficult_mode",
+            "name": "Hel Ra Citadel Difficult Mode",
+            "description": "Defeat the Celestial Warrior after enraging him through the destruction of his statue army.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "the_war_horn",
+            "name": "Hel Ra Citadel: The War Horn",
+            "description": "Sound the war horn at Hel Ra Citadel and defeat the ancient warriors who answer.",
+            "points": 5,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "berserking_warrior",
+        "destructive_mage",
+        "eternal_warrior",
+        "poisonous_serpent"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "This trial scales to the Champion Points of the group leader, to a maximum of 160.",
+        "Hel Ra Citadel originally scaled to \u0000HEALTH_VETERAN\u000012 and had no Normal mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hel_Ra_Citadel",
+        "page_title": "Online:Hel Ra Citadel",
+        "revision_id": 3205407,
+        "retrieved_at": "2026-08-18T18:54:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}
