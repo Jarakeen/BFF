@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from .effect_kinds import EffectKind
 from .effects import EffectUnit
 
 
@@ -16,3 +15,5 @@ class CombatEffect:
 
     duration_value: float | None = None
     duration_unit: str | None = None
+
+    scaling_type: str | None = None

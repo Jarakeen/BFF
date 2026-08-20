@@ -155,3 +155,23 @@ def test_weapon_effect_preserves_metadata():
     assert effect.target == "target"
     assert effect.duration_value == 5
     assert effect.duration_unit == "seconds"
+
+def test_build_weapon_can_resolve_minimum_enchantment_value():
+    build = Build()
+
+    build.add_weapon(
+        enchantment_item_id=FROST_ENCHANTMENT_ID,
+    )
+
+    effects = service().resolve_effects(
+        build,
+        use_max_value=False,
+    )
+
+    assert len(effects) == 1
+
+    effect = effects[0]
+
+    assert effect.effect_type == "damage"
+    assert effect.value == 107
+    assert effect.damage_type == "frost"    

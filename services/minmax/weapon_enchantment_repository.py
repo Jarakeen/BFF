@@ -30,7 +30,8 @@ class WeaponEnchantmentRepository:
                     e.value_max,
                     e.unit,
                     e.duration_value,
-                    e.duration_unit
+                    e.duration_unit,
+                    e.scaling_type
                 FROM weapon_enchantment w
                 JOIN weapon_enchantment_effect e
                     ON e.enchantment_item_id = w.item_id
@@ -42,17 +43,19 @@ class WeaponEnchantmentRepository:
 
         effects: list[CombatEffect] = []
 
-        for (
-            enchantment_name,
-            effect_type,
-            damage_type,
-            target,
-            value_min,
-            value_max,
-            unit,
-            duration_value,
-            duration_unit,
-        ) in rows:
+        for row in rows:
+            (
+                enchantment_name,
+                effect_type,
+                damage_type,
+                target,
+                value_min,
+                value_max,
+                unit,
+                duration_value,
+                duration_unit,
+                scaling_type,
+            ) = row
 
             value = value_max if use_max_value else value_min
 
@@ -72,6 +75,7 @@ class WeaponEnchantmentRepository:
                     target=target,
                     duration_value=duration_value,
                     duration_unit=duration_unit,
+                    scaling_type=scaling_type,
                 )
             )
 

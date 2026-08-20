@@ -67,4 +67,11 @@ def test_absorb_health_has_two_effects():
 
     assert restore.value == 861
     assert restore.damage_type is None
-    
+
+def test_weapon_enchantment_preserves_scaling_type():
+    repository = WeaponEnchantmentRepository(DB_PATH)
+
+    effects = repository.get_effects(5365)
+
+    assert len(effects) == 1
+    assert effects[0].scaling_type is None    
