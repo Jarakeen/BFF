@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 
 from .build import Build
+from .build_effect_service import BuildEffectService
 from .calculation_context import CalculationContext
-from .effect_kinds import EffectKind
-from .effects import Effect, EffectOperation
+from .effects import Effect, EffectOperation, EffectKind
 from .stat_ids import StatId
 
 
@@ -34,6 +34,12 @@ class CalculationResult:
 
 
 class StatEngine:
+    def __init__(
+        self,
+        build_effect_service: BuildEffectService | None = None,
+    ):
+        self.build_effect_service = build_effect_service
+
     def calculate(
         self,
         build: Build,
@@ -52,7 +58,12 @@ class StatEngine:
             )
 
         # Effects
-        for effect in build.effects:
+        if self.build_effect_service is None:
+            effects = build.effects
+        else:
+            effects = self.build_effect_service.resolve_effects(build)
+
+        for effect in effects:
             if effect.kind != EffectKind.STAT:
                 continue
 
