@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Iterable
 
 from .build_gear import BuildGearSet
+from .build_glyph import BuildArmorGlyph
 from .effects import Effect
 
 
@@ -12,6 +13,7 @@ class Build:
     base_stats: dict[str, float] = field(default_factory=dict)
     race_id: int | None = None
     gear_sets: list[BuildGearSet] = field(default_factory=list)
+    armor_glyphs: list[BuildArmorGlyph] = field(default_factory=list)
     effects: list[Effect] = field(default_factory=list)
 
     def add_effect(self, effect: Effect) -> None:
@@ -30,3 +32,8 @@ class Build:
 
     def set_race(self, race_id: int) -> None:
         self.race_id = race_id
+
+    def add_armor_glyph(self, item_id: int) -> None:
+        self.armor_glyphs.append(
+            BuildArmorGlyph(item_id=item_id)
+        )
