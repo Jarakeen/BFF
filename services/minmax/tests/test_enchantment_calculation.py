@@ -50,3 +50,20 @@ def test_multiple_percent_modifiers_stack_additively():
     )
 
     assert result.final_value == 1400
+
+def test_cooldown_reduction_does_not_modify_effect_value():
+    cooldown = RuleEffect(
+        rule_type="enchantment_cooldown_reduction",
+        value=50,
+        source="Jade",
+        unit=EffectUnit.PERCENT,
+        target_system="weapon_enchantment",
+    )
+
+    result = calculate_enchantment_effect(
+        base_value=1000,
+        rules=[cooldown],
+    )
+
+    assert result.final_value == 1000
+    assert result.modifiers == []    

@@ -3,6 +3,7 @@ from typing import Iterable
 
 from .build_gear import BuildGearSet
 from .build_glyph import BuildArmorGlyph
+from .build_weapon import BuildWeapon
 from .effects import Effect
 
 
@@ -10,10 +11,12 @@ from .effects import Effect
 class Build:
     name: str = "Unnamed Build"
 
-    base_stats: dict[str, float] = field(default_factory=dict)
     race_id: int | None = None
+
+    base_stats: dict[str, float] = field(default_factory=dict)
     gear_sets: list[BuildGearSet] = field(default_factory=list)
     armor_glyphs: list[BuildArmorGlyph] = field(default_factory=list)
+    weapons: list[BuildWeapon] = field(default_factory=list)
     effects: list[Effect] = field(default_factory=list)
 
     def add_effect(self, effect: Effect) -> None:
@@ -36,4 +39,19 @@ class Build:
     def add_armor_glyph(self, item_id: int) -> None:
         self.armor_glyphs.append(
             BuildArmorGlyph(item_id=item_id)
+        )
+
+    def add_weapon(
+        self,
+        *,
+        enchantment_item_id: int | None = None,
+        trait: str | None = None,
+        quality: str | None = None,
+    ) -> None:
+        self.weapons.append(
+            BuildWeapon(
+                enchantment_item_id=enchantment_item_id,
+                trait=trait,
+                quality=quality,
+            )
         )

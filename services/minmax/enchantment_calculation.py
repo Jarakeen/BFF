@@ -28,6 +28,12 @@ def calculate_enchantment_effect(
     modifiers: list[ModifierContribution] = []
 
     for rule in rules:
+        if rule.rule_type not in {
+            "enchantment_effect",
+            "weapon_enchantment_effect",
+        }:
+            continue
+
         if rule.unit != EffectUnit.PERCENT:
             continue
 

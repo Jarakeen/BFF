@@ -53,6 +53,7 @@ class RuleRepository:
             quality=quality,
         )
 
+        
     def get_weapon_trait_rules(
         self,
         trait_name: str,
@@ -101,3 +102,14 @@ class RuleRepository:
             )
 
         return effects
+
+    def get_weapon_enchantment_rules(
+        self,
+        trait_name: str,
+    ) -> list[RuleEffect]:
+
+        return [
+            effect
+            for effect in self.get_weapon_trait_rules(trait_name)
+            if effect.rule_type == "weapon_enchantment_effect"
+        ]

@@ -38,3 +38,12 @@ def test_infused_legendary_jewelry():
     )
 
     assert effect.value == 60
+
+def test_potent_nirncrux_does_not_return_as_enchantment_rule():
+    repository = RuleRepository(DB_PATH)
+
+    effects = repository.get_weapon_enchantment_rules(
+        "Potent Nirncrux"
+    )
+
+    assert effects == []        
