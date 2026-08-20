@@ -1025,3 +1025,471 @@ gear_set -> GearSetRepository -> set bonus resolution -> Effect -> Build -> Calc
 Before implementing that layer, inspect representative real gear_set_bonus.description values and determine how much can reuse the existing EffectResolver. Do not duplicate effect parsing logic unnecessarily.
 
 Also document that the local data/eso.db is the working merged database but is intentionally not committed to Git.
+
+# 18. CURRENT MIN/MAX ENGINE STATE
+
+**Status: ACTIVE DEVELOPMENT — DATABASE-BACKED GEAR SET CALCULATION IS WORKING**
+
+The Min/Max engine has progressed from an isolated calculation layer to a real database-backed gear-set calculation path.
+
+### Current branch
+
+```text
+integrate-uesp-into-wireframe
+
+75bdd00  Integrate gear sets into minmax build model
+4c8013f  Add conditional calculation context
+7ad5640  Add Phase 1 gear set effect resolution
+bcbedb3  Document current minmax and database state
+
+The current local branch is one commit ahead of:
+origin/integrate-uesp-into-wireframe
+
+Current Min/Max test status
+107 passed
+
+The full configured Min/Max test suite is currently green.
+
+# 19. COMPLETED MIN/MAX MILESTONES
+
+Database-backed EffectResolver
+
+Existing:
+
+services/minmax/effect_resolver.py
+
+The resolver converts supported ESO effect descriptions into Effect objects.
+
+It deliberately does not guess at unsupported mechanics.
+
+Gear-set data access
+
+Existing:
+
+services/minmax/gear_sets.py
+services/minmax/gear_set_repository.py
+
+The repository reads:
+
+gear_set
+gear_set_bonus
+
+from the real local data/eso.db.
+
+No duplicate gear-set importer was created.
+
+Gear-set effect resolution
+
+Existing:
+
+services/minmax/gear_set_effect_resolver.py
+
+Phase 1 resolution supports static stat bonuses and selected conditional effects.
+
+Unsupported proc/triggered mechanics are intentionally left unresolved rather than guessed.
+
+Conditional calculation context
+
+Existing:
+
+services/minmax/calculation_context.py
+
+Conditional effects can be represented and evaluated through calculation context.
+
+Archer's Mind provides the current conditional-effect test case.
+
+Gear-set effect service
+
+Existing:
+
+services/minmax/gear_set_effect_service.py
+
+The service connects:
+
+GearSetRepository
+        ↓
+active piece-count bonuses
+        ↓
+GearSetEffectResolver
+        ↓
+Effect[]
+
+Only bonuses whose piece count is less than or equal to the equipped piece count are activated.
+
+For example:
+
+5-piece set
+    ↓
+2-piece bonus  → active
+3-piece bonus  → active
+4-piece bonus  → active
+5-piece bonus  → active
+
+Unsupported 5-piece proc effects are not fabricated into static effects.
+
+Build gear representation
+
+Existing:
+
+services/minmax/build_gear.py
+
+Build now supports equipped gear sets:
+
+BuildGearSet
+├── set_id
+└── piece_count
+
+Build now contains:
+
+Build
+├── name
+├── base_stats
+├── gear_sets
+└── effects
+
+The build model records equipment without making Build responsible for parsing ESO tooltip mechanics.
+
+Database → Build → StatEngine integration
+
+The first complete database-backed calculation path is working:
+
+data/eso.db
+    ↓
+GearSetRepository
+    ↓
+GearSetEffectService
+    ↓
+GearSetEffectResolver
+    ↓
+Effect[]
+    ↓
+Build
+    ↓
+StatEngine
+    ↓
+CalculationResult
+
+Verified against real database data using Akaviri Dragonguard.
+
+The calculation preserves effect sources so individual stat contributions can be explained.
+
+Example:
+
+Maximum Health
+    Base:                10,000
+    Akaviri Dragonguard: +1,206
+    --------------------------------
+    Total:               11,206
+
+# 20. CURRENT MIN/MAX ARCHITECTURE
+
+The current foundation is intentionally layered:
+
+DATABASE
+    ↓
+GearSetRepository
+    ↓
+GearSetEffectService
+    ↓
+GearSetEffectResolver
+    ↓
+Effect
+    ↓
+Build
+    ↓
+StatEngine
+    ↓
+CalculationResult
+    ↓
+StatBreakdown
+
+Responsibilities remain separated:
+
+Repository
+    = database access
+
+
+Resolver
+    = tooltip/effect interpretation
+
+
+Service
+    = active set-bonus orchestration
+
+
+Build
+    = canonical build state
+
+
+StatEngine
+    = deterministic stat calculation
+
+Do not move database access into StatEngine.
+
+Do not make Build parse ESO descriptions.
+
+Do not duplicate effect parsing logic between gear sets and the general EffectResolver without a demonstrated need.
+
+# NEXT DEVELOPMENT STATE
+
+The next milestone is:
+
+Build-level effect orchestration
+
+Currently a caller can explicitly do:
+
+build.add_gear_set(set_id, piece_count)
+
+but the gear set must still be resolved into effects by an external caller.
+
+The next step is to make the build calculation pipeline automatically resolve:
+
+Build.gear_sets
+        ↓
+GearSetEffectService
+        ↓
+Build.effects
+        ↓
+StatEngine
+
+The goal is for the build itself to become the complete calculation input.
+
+Conceptually:
+
+Build
+├── base stats
+├── equipped gear sets
+└── explicit effects
+        ↓
+Build Effect Orchestration
+        ↓
+resolved Effects
+        ↓
+StatEngine
+        ↓
+final stats + breakdown
+
+This should be implemented as a small orchestration layer.
+
+Do not put SQLite access directly into StatEngine.
+
+# MIN/MAX ROADMAP
+
+After build-level gear orchestration is working:
+
+Phase 1 — Deterministic character stat resolution
+
+Connect:
+
+Build
+    ↓
+base stats
+    ↓
+race
+    ↓
+class/passives
+    ↓
+gear
+    ↓
+traits
+    ↓
+enchantments
+    ↓
+sets
+    ↓
+Champion Points
+    ↓
+mundus
+    ↓
+food
+    ↓
+final character stats
+
+The result must remain inspectable.
+
+A final stat should be explainable as a collection of contributions rather than only producing a number.
+
+Phase 2 — Racial effects
+
+Add:
+
+Race
+    ↓
+racial passives
+    ↓
+Effects
+
+Racial bonuses are not yet connected to the current Build → StatEngine pipeline.
+
+The StatEngine can consume racial effects once they are represented as Effect objects, but the database/application orchestration for race is not yet implemented.
+
+Phase 3 — Gear customization
+
+Connect the existing live database tables for:
+
+traits
+glyphs
+enchantments
+weapon traits
+armor traits
+jewelry traits
+
+These should feed the same Effect pipeline rather than creating a separate stat calculation system.
+
+Phase 4 — Skills and passives
+
+Connect skill/passive data into the same effect/modifier system.
+
+Phase 5 — Champion Points
+
+Connect CP allocations and their resulting modifiers.
+
+Phase 6 — Mundus, food, potions and other temporary character configuration
+
+These should also resolve into the same calculation pipeline.
+
+Phase 7 — Complex/proc mechanics
+
+Only after deterministic static stat resolution is trustworthy should the engine expand support for mechanics such as:
+
+Briarheart
+Trial by Fire
+Night Terror
+Knight Slayer
+Spectre's Eye
+Whitestrake's Retribution
+Shared Pain
+
+These require richer conditional, triggered, scaling, or target-aware mechanics and should not be forced through the simple static stat resolver.
+
+Phase 8 — Min/Max optimization
+
+Once stat resolution is trustworthy:
+
+Build constraints
+        ↓
+candidate builds
+        ↓
+StatEngine
+        ↓
+scored results
+        ↓
+optimal configuration
+Phase 9 — Encounter-aware optimization
+
+Use the completed UESP encounter data to introduce practical encounter constraints:
+
+movement
+target uptime
+mechanic requirements
+survivability
+sustain
+required defenses
+
+The eventual goal is not merely:
+
+highest theoretical DPS
+
+but:
+
+highest practical performance for this encounter
+Phase 10 — UI build calculator
+
+Finally connect the deterministic build/stat engine to the application UI.
+
+# 23. CURRENT DEVELOPMENT PRINCIPLES
+
+The Min/Max engine should follow these principles:
+
+Real database data first.
+Deterministic calculations.
+Effects are the common currency of stat modification.
+Unsupported mechanics must be explicit rather than guessed.
+Every important final stat should be explainable through its sources.
+Repositories access data; resolvers interpret data; services orchestrate; StatEngine calculates.
+Do not commit the production database.
+Keep each architectural layer independently testable.
+Do not broaden the resolver merely because one new tooltip is complicated.
+Preserve green checkpoints before moving to the next layer.
+
+# 24. RECOVERY CHECKPOINT
+
+Current safe Min/Max checkpoint:
+
+75bdd00  Integrate gear sets into minmax build model
+
+Current test baseline:
+
+107 passed
+
+Current branch:
+
+integrate-uesp-into-wireframe
+
+Before continuing Min/Max development:
+
+git status
+git branch --show-current
+git log -5 --oneline --decorate
+python -m pytest services/minmax/tests -q
+
+Expected:
+
+integrate-uesp-into-wireframe
+
+and:
+
+107 passed
+
+Do not reset or revert the Min/Max work to the older UESP-only checkpoints.
+
+# 25. NEW CHAT HANDOFF
+
+If this project is continued in another conversation, the important current state is:
+
+UESP encounter pipeline
+    = COMPLETE
+
+
+Gear customization database migration
+    = COMPLETE locally
+
+
+Gear-set repository
+    = COMPLETE
+
+
+Phase 1 gear-set effect resolver
+    = COMPLETE
+
+
+Conditional calculation context
+    = COMPLETE
+
+
+Gear-set effect service
+    = COMPLETE
+
+
+Build equipped-gear representation
+    = COMPLETE
+
+
+Database-backed gear-set calculation
+    = COMPLETE
+
+
+107 Min/Max tests
+    = PASSING
+
+
+NEXT:
+Build-level effect orchestration
+
+The immediate goal is now to make:
+
+build.add_gear_set(set_id, piece_count)
+
+part of the normal build-calculation pipeline so that a caller does not have to manually resolve gear-set effects before invoking StatEngine.
+
+Do not reopen completed UESP encounter work unless a new application requirement exposes a real data/parsing defect.
