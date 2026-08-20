@@ -10,6 +10,7 @@ class Build:
     name: str = "Unnamed Build"
 
     base_stats: dict[str, float] = field(default_factory=dict)
+    race_id: int | None = None
     gear_sets: list[BuildGearSet] = field(default_factory=list)
     effects: list[Effect] = field(default_factory=list)
 
@@ -26,3 +27,6 @@ class Build:
                 piece_count=piece_count,
             )
         )
+
+    def set_race(self, race_id: int) -> None:
+        self.race_id = race_id
