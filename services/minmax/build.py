@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Iterable
 
+from .build_gear import BuildGearSet
 from .effects import Effect
 
 
@@ -9,6 +10,7 @@ class Build:
     name: str = "Unnamed Build"
 
     base_stats: dict[str, float] = field(default_factory=dict)
+    gear_sets: list[BuildGearSet] = field(default_factory=list)
     effects: list[Effect] = field(default_factory=list)
 
     def add_effect(self, effect: Effect) -> None:
@@ -16,3 +18,11 @@ class Build:
 
     def add_effects(self, effects: Iterable[Effect]) -> None:
         self.effects.extend(effects)
+
+    def add_gear_set(self, set_id: int, piece_count: int) -> None:
+        self.gear_sets.append(
+            BuildGearSet(
+                set_id=set_id,
+                piece_count=piece_count,
+            )
+        )

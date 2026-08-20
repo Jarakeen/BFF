@@ -118,7 +118,7 @@ def test_rejects_ability_specific_bonus():
     assert effects == []
 
 
-def test_rejects_conditional_bonus():
+def test_resolves_archers_mind_conditional_bonus():
     effects = GearSetEffectResolver().resolve(
         bonus(
             "(5 items) Increases your Critical Damage and Healing by 8%. "
@@ -126,7 +126,41 @@ def test_rejects_conditional_bonus():
             "when you are Sneaking or Invisible."
         )
     )
-    assert effects == []
+
+    assert [
+        (
+            effect.stat,
+            effect.operation,
+            effect.value,
+            effect.condition,
+        )
+        for effect in effects
+    ] == [
+        (
+            StatId.CRITICAL_DAMAGE,
+            EffectOperation.ADD_PERCENT,
+            8.0,
+            None,
+        ),
+        (
+            StatId.HEALING_DONE,
+            EffectOperation.ADD_PERCENT,
+            8.0,
+            None,
+        ),
+        (
+            StatId.CRITICAL_DAMAGE,
+            EffectOperation.ADD_PERCENT,
+            16.0,
+            "sneaking_or_invisible",
+        ),
+        (
+            StatId.HEALING_DONE,
+            EffectOperation.ADD_PERCENT,
+            16.0,
+            "sneaking_or_invisible",
+        ),
+    ]
 
 
 def test_rejects_tradeoff_bonus():

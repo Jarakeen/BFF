@@ -96,7 +96,15 @@ class GearSetEffectResolver:
                     operation=EffectOperation.ADD_PERCENT,
                     unit=EffectUnit.PERCENT,
                 )]
-
+        # Conditional percentage effects.
+        # Phase 2B initially handles the explicit
+        # "Sneaking or Invisible" Archer's Mind pattern.
+        conditional = self._resolve_conditional_percentage(
+            text,
+            source_text,
+        )
+        if conditional:
+            return conditional
         # Unconditional percentage stat increases. Phase 1 only accepts a
         # single clause and therefore deliberately rejects anything with a
         # qualifier, second sentence, or trade-off.
@@ -121,7 +129,60 @@ class GearSetEffectResolver:
                 )]
 
         return []
+    
+    def _resolve_conditional_percentage(
+        self,
+        text: str,
+        source: str,
+    ) -> list[Effect]:
+        match = re.fullmatch(
+            r"Increases your Critical Damage and Healing by "
+            r"(?P<base>\d+(?:\.\d+)?)%\.\s*"
+            r"Increases your Critical Damage and Healing by an additional "
+            r"(?P<conditional>\d+(?:\.\d+)?)%\s+"
+            r"when you are Sneaking or Invisible\.",
+            text,
+            re.IGNORECASE,
+        )
 
+        if not match:
+            return []
+
+        base = float(match.group("base"))
+        conditional = float(match.group("conditional"))
+
+        return [
+            self._effect(
+                StatId.CRITICAL_DAMAGE,
+                base,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+            ),
+            self._effect(
+                StatId.HEALING_DONE,
+                base,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+            ),
+            self._effect(
+                StatId.CRITICAL_DAMAGE,
+                conditional,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+                condition="sneaking_or_invisible",
+            ),
+            self._effect(
+                StatId.HEALING_DONE,
+                conditional,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+                condition="sneaking_or_invisible",
+            ),
+        ]
     def _resolve_combined(
         self,
         text: str,
@@ -189,6 +250,7 @@ class GearSetEffectResolver:
         *,
         operation: EffectOperation = EffectOperation.ADD,
         unit: EffectUnit = EffectUnit.FLAT,
+        condition: str | None = None,
     ) -> Effect:
         return Effect(
             operation=operation,
@@ -197,4 +259,5 @@ class GearSetEffectResolver:
             stat=stat,
             kind=EffectKind.STAT,
             unit=unit,
+            condition=condition,
         )
