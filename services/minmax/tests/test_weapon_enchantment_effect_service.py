@@ -117,3 +117,35 @@ def test_jade_modifies_weapon_enchantment():
     assert effects[0].value == pytest.approx(2787.4)    
 
 
+def test_jade_returns_all_applicable_rules():
+
+    service_instance = service()
+
+    rules = service_instance.get_applicable_rules(
+        weapon_trait="Jade",
+    )
+
+    assert len(rules) == 2
+
+    assert {
+        rule.rule_type
+        for rule in rules
+    } == {
+        "weapon_enchantment_effect",
+        "enchantment_cooldown_reduction",
+    }
+
+
+def test_infused_returns_enchantment_rule():
+
+    service_instance = service()
+
+    rules = service_instance.get_applicable_rules(
+        weapon_trait="Infused",
+        weapon_quality="Legendary",
+    )
+
+    assert len(rules) == 1
+
+    assert rules[0].rule_type == "enchantment_effect"
+    assert rules[0].value == 30
