@@ -5,8 +5,10 @@ from .enchantment_calculation import calculate_enchantment_effect
 from .rule_effects import RuleEffect
 from .rule_repository import RuleRepository
 from .weapon_enchantment_repository import WeaponEnchantmentRepository
-from .combat_cooldown_rules import CooldownRuleResult
-from .weapon_enchantment_effect_service import calculate_cooldown_from_rules
+from .combat_cooldown_rules import (
+    CooldownRuleResult,
+    calculate_cooldown_from_rules,
+)
 
 class WeaponEnchantmentEffectService:
     """Resolve weapon enchantments with applicable trait rules."""
