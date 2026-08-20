@@ -17,3 +17,4 @@ class CombatEffect:
     duration_unit: str | None = None
 
     scaling_type: str | None = None
+    condition: str | None = None
