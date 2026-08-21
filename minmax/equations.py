@@ -147,6 +147,8 @@ CP.DotDamageDone + Skill.DotDamageDone + Set.DotDamageDone
 DirectDamageDone =
 CP.DirectDamageDone + Skill.DirectDamageDone + Set.DirectDamageDone
 
+CP.DamageDone = champion point bonus damage that can be in effect Exploiter for example adds 10%
+
 SingleTargetDamageDone =
 Skill.SingleTargetDamageDone + CP.SingleTargetDamageDone
 
