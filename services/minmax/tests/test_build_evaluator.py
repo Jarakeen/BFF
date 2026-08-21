@@ -3,14 +3,12 @@ from pathlib import Path
 from services.minmax.build import Build
 from services.minmax.build_evaluation import BuildEvaluation
 from services.minmax.build_evaluator import BuildEvaluator
-from services.minmax.effect_kinds import EffectKind
 from services.minmax.effects import (
     Effect,
     EffectOperation,
 )
-from services.minmax.evaluation_context import EvaluationContext
-from services.minmax.stat_ids import StatId
 from services.minmax.rule_repository import RuleRepository
+from services.minmax.stat_ids import StatId
 from services.minmax.weapon_enchantment_effect_service import (
     WeaponEnchantmentEffectService,
 )
@@ -32,73 +30,18 @@ def test_empty_build_evaluates():
 def test_base_stats_are_evaluated():
     build = Build(
         base_stats={
-            "weapon_damage": 1000,
+            StatId.WEAPON_DAMAGE.value: 1000,
         }
     )
 
     result = BuildEvaluator().evaluate(build)
 
     assert result.stats.value(
-        "weapon_damage"
+        StatId.WEAPON_DAMAGE
     ) == 1000
 
 
-def test_non_combat_effect_is_not_added_to_combat_results():
-    build = Build()
-
-    build.add_effect(
-        Effect(
-            operation=EffectOperation.ADD,
-            value=500,
-            source="Weapon Damage",
-        )
-    )
-
-    result = BuildEvaluator().evaluate(build)
-
-    assert result.combat_effects == ()
-    assert result.combat_contributions == ()
-
-
-
-
-
-def test_non_combat_effect_is_not_added_to_combat_results():
-    build = Build(
-        base_stats={
-            "weapon_damage": 1000,
-        }
-    )
-
-    build.add_effect(
-        Effect(
-            operation=EffectOperation.ADD,
-            value=500,
-            source="Weapon Damage",
-            stat="weapon_damage",
-        )
-    )
-
-    result = BuildEvaluator().evaluate(build)
-
-    assert result.combat_effects == ()
-    assert result.combat_contributions == ()
-
-    result = BuildEvaluator().evaluate(
-        build,
-        context=__import__(
-            "services.minmax.evaluation_context",
-            fromlist=["EvaluationContext"],
-        ).EvaluationContext(
-            fight_duration=20,
-        ),
-    )
-
-    assert len(result.combat_effects) == 1
-    assert result.combat_effects[0].uptime == 0.25
-    assert result.total_damage_contribution == 250
-
-def test_non_combat_effect_is_not_added_to_combat_results():
+def test_stat_effect_is_evaluated():
     build = Build(
         base_stats={
             StatId.WEAPON_DAMAGE.value: 1000,
@@ -116,8 +59,35 @@ def test_non_combat_effect_is_not_added_to_combat_results():
 
     result = BuildEvaluator().evaluate(build)
 
+    assert result.stats.value(
+        StatId.WEAPON_DAMAGE
+    ) == 1500
+
+
+def test_stat_effect_is_not_added_to_combat_results():
+    build = Build(
+        base_stats={
+            StatId.WEAPON_DAMAGE.value: 1000,
+        }
+    )
+
+    build.add_effect(
+        Effect(
+            operation=EffectOperation.ADD,
+            value=500,
+            source="Weapon Damage",
+            stat=StatId.WEAPON_DAMAGE,
+        )
+    )
+
+    result = BuildEvaluator().evaluate(build)
+
+    assert result.stats.value(
+        StatId.WEAPON_DAMAGE
+    ) == 1500
+
     assert result.combat_effects == ()
-    assert result.combat_contributions == ()    
+    assert result.combat_contributions == ()
 
 
 DB_PATH = Path("data/eso.db")
@@ -128,7 +98,10 @@ def test_weapon_enchantment_is_evaluated():
     enchantment_repository = WeaponEnchantmentRepository(
         DB_PATH
     )
-    rule_repository = RuleRepository(DB_PATH)
+
+    rule_repository = RuleRepository(
+        DB_PATH
+    )
 
     weapon_service = WeaponEnchantmentEffectService(
         enchantment_repository=enchantment_repository,
@@ -163,4 +136,4 @@ def test_weapon_enchantment_is_evaluated():
     assert contribution.effective_value == 2534
     assert contribution.uptime == 1.0
 
-    assert result.total_damage_contribution == 2534    
+    assert result.total_damage_contribution == 2534
