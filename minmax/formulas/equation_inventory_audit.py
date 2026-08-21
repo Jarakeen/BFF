@@ -8,6 +8,7 @@ This is intentionally an inventory check. It does not rewrite formulas,
 infer missing equations, or correct anomalies in the UESP source.
 """
 from __future__ import annotations
+
 import ast
 import re
 from collections import Counter
@@ -38,27 +39,39 @@ ALIASES = {
     "PhysicalResist": "calculate_physical_resistance",
     "SpellPenetration": "calculate_spell_penetration",
     "PhysicalPenetration": "calculate_physical_penetration",
+    "CritResist": "calculate_crit_resist",
+    "FrostResist": "calculate_frost_resist",
+    "FlameResist": "calculate_flame_resist",
+    "ShockResist": "calculate_shock_resist",
+    "PoisonResist": "calculate_poison_resist",
+    "DiseaseResist": "calculate_disease_resist",
     "EffectiveSpellPower": "calculate_effective_spell_power",
     "EffectiveWeaponPower": "calculate_effective_weapon_power",
     "EffectivePower": "calculate_effective_power",
     "StatusFlameSpellDamage": "calculate_status_spell_damage",
     "Bloodthirsty": "calculate_bloodthirsty",
 }
+
+# Source lines that are explanatory aliases/placeholders rather than standalone
+# formulas requiring their own Python function.
 SOURCE_ALIASES = {"X", "Overcharged", "Sundered", "Disease", "Poison"}
+
 
 def canonical(name: str) -> str:
     return re.sub(r"_", "", name).lower()
 
-def equations():
-    result = []
+
+def equations() -> list[tuple[str, int]]:
+    result: list[tuple[str, int]] = []
     for line_no, line in enumerate(SOURCE.read_text(encoding="utf-8").splitlines(), 1):
         match = re.match(r"^([A-Za-z][A-Za-z0-9_]*)\s*=", line)
         if match:
             result.append((match.group(1), line_no))
     return result
 
-def functions():
-    result = {}
+
+def functions() -> dict[str, str]:
+    result: dict[str, str] = {}
     for path in ROOT.glob("*.py"):
         if path.name == Path(__file__).name:
             continue
@@ -68,18 +81,20 @@ def functions():
                 result[node.name] = path.name
     return result
 
+
 def expected(equation: str) -> str:
     if equation in ALIASES:
         return ALIASES[equation]
     return "calculate_" + re.sub(r"(?<!^)(?=[A-Z])", "_", equation).lower()
+
 
 def main() -> int:
     source_equations = equations()
     funcs = functions()
     canonical_funcs = {canonical(name): name for name in funcs}
     duplicates = Counter(name for name, _ in source_equations)
-    missing = []
-    seen = set()
+    missing: list[tuple[str, int, str]] = []
+    seen: set[str] = set()
 
     for name, line in source_equations:
         if name in SOURCE_ALIASES:
@@ -91,9 +106,12 @@ def main() -> int:
             missing.append((name, line, target))
             seen.add(name)
 
+    accounted_for = len(set(name for name, _ in source_equations) - set(SOURCE_ALIASES)) - len(missing)
+
     print(f"Source equation occurrences : {len(source_equations)}")
     print(f"Unique equation names       : {len(duplicates)}")
     print(f"Formula functions found     : {len(funcs)}")
+    print(f"Unique equations accounted  : {accounted_for}")
     print(f"Unique equations missing    : {len(missing)}")
     print()
     print("SOURCE DUPLICATES")
@@ -101,6 +119,11 @@ def main() -> int:
         if count > 1:
             lines = [str(line) for n, line in source_equations if n == name]
             print(f"  {name}: {count} occurrences (lines {', '.join(lines)})")
+    print()
+    print("SOURCE ALIASES / PLACEHOLDERS")
+    for name in sorted(SOURCE_ALIASES):
+        if any(source_name == name for source_name, _ in source_equations):
+            print(f"  {name}")
     print()
     print("MISSING")
     if missing:
@@ -111,6 +134,7 @@ def main() -> int:
     print("\nSTATUS: COMPLETE INVENTORY")
     print("Source duplicates and explicit aliases remain visible above.")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
