@@ -10,7 +10,7 @@ comments) rather than by calling the function under test.
 
 import pytest
 
-from minmax.formulas.effective_power import (
+from old_pages.old_effective_power import (
     calculate_effective_power,
     calculate_effective_spell_power,
     calculate_effective_weapon_power,

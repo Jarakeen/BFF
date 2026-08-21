@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.combat_costs import (
+from old_pages.old_combat_costs import (
     calculate_bash_cost,
     calculate_bash_damage,
     calculate_block_cost,

@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.item_effects import (
+from old_pages.old_item_effects import (
     calculate_bloodthirsty_spell_damage,
     calculate_bloodthirsty_weapon_damage,
     calculate_potion_cooldown,

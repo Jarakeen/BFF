@@ -1,7 +1,7 @@
 import math
 import pytest
 
-from minmax.formulas.light_attack_scaling import (
+from old_pages.old_light_attack_scaling import (
     calculate_la_flame_spell_damage,
     calculate_la_shock_weapon_damage,
     calculate_la_frost_spell_damage,

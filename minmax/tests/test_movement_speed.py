@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.movement_speed import (
+from old_pages.old_movement_speed import (
     calculate_block_speed,
     calculate_mount_walk_speed,
     calculate_sneak_speed,

@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.item_traits import (
+from old_pages.old_item_traits import (
     calculate_bloodthirsty,
     calculate_divines,
     calculate_sturdy,

@@ -1,5 +1,5 @@
 import pytest
-from minmax.formulas.damage_done import (
+from old_pages.old_damage_done import (
     calculate_aoe_damage_done,
     calculate_bleed_damage_done,
     calculate_bow_damage_done,

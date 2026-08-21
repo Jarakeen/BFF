@@ -219,3 +219,44 @@ def calculate_la_physical_weapon_damage(
         )
         * (1 + buff_weapon_damage + skill_weapon_damage)
     )
+
+def calculate_bloodthirsty_spell_damage(
+    *,
+    target_percent_health: float,
+    item_bloodthirsty: float = 0.0,
+) -> float:
+    """
+    UESP:
+
+    BloodthirstySpellDamage =
+        (1 - min(0.9, Target.PercentHealth) / 0.9)
+        * Item.Bloodthirsty
+    """
+    return (
+        1
+        - min(0.9, target_percent_health) / 0.9
+    ) * item_bloodthirsty
+
+
+def calculate_bloodthirsty_weapon_damage(
+    *,
+    target_percent_health: float,
+    item_bloodthirsty: float = 0.0,
+) -> float:
+    """
+    UESP:
+
+    BloodthirstyWeaponDamage =
+        (1 - min(0.9, Target.PercentHealth) / 0.9)
+        * Item.Bloodthirsty
+    """
+    return (
+        1
+        - min(0.9, target_percent_health) / 0.9
+    ) * item_bloodthirsty
+
+
+
+
+
+

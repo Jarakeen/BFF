@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.healing import (
+from old_pages.old_healing import (
     calculate_aoe_healing_done,
     calculate_dot_healing_done,
     calculate_health_restore,

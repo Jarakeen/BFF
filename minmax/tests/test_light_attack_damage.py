@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.light_attack_damage import (
+from old_pages.old_light_attack_damage import (
     calculate_la_flame_staff,
     calculate_la_frost_staff,
     calculate_la_shock_staff,

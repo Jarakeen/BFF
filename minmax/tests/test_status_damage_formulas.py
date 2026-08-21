@@ -1,7 +1,7 @@
 from math import floor
 import pytest
 from minmax.formulas.math_utils import fround
-from minmax.formulas.status_damage import (
+from old_pages.old_status_damage import (
     calculate_burning_damage,
     calculate_chilled_damage,
     calculate_concussion_damage,

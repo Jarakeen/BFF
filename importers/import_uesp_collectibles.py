@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 DB_PATH = ROOT / "data" / "eso.db"
-SOURCE_PATH = ROOT / "data" / "raw" / "uesp_collectibles.json"
+SOURCE_PATH = ROOT / "data" / "processed" / "uesp_collectibles.json"
 
 
 # ============================================================

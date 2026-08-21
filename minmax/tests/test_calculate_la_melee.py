@@ -1,6 +1,6 @@
 import pytest
 
-from minmax.formulas.calculate_la_melee import calculate_la_melee
+from old_pages.old_calculate_la_melee import calculate_la_melee
 
 
 def test_calculate_la_melee():

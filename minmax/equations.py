@@ -54,14 +54,14 @@ Item.SpellPenetration + Set.SpellPenetration + Skill.SpellPenetration + CP.Spell
 PhysicalPenetration =
 Item.PhysicalPenetration + Set.PhysicalPenetration + Skill.PhysicalPenetration + CP.PhysicalPenetration + Buff.PhysicalPenetration + Mundus.PhysicalPenetration
 
-EffectiveSpellPower =
-(round(Magicka/10.5) + SpellDamage)*(1 + SpellCrit*AttackSpellCritDamage)*(1 + CP.MagicDamageDone)*(1 - AttackSpellMitigation)*(1 + Target.DamageTaken)*(1 + DamageDone)
+# EffectiveSpellPower =
+# (round(Magicka/10.5) + SpellDamage)*(1 + SpellCrit*AttackSpellCritDamage)*(1 + CP.MagicDamageDone)*(1 - AttackSpellMitigation)*(1 + Target.DamageTaken)*(1 + DamageDone)
 
-EffectiveWeaponPower =
-(round(Stamina/10.5) + WeaponDamage)*(1 + WeaponCrit*AttackWeaponCritDamage)*(1 + CP.PhysicalDamageDone)*(1 - AttackPhysicalMitigation)*(1 + Target.DamageTaken)*(1 + DamageDone)
+# EffectiveWeaponPower =
+# (round(Stamina/10.5) + WeaponDamage)*(1 + WeaponCrit*AttackWeaponCritDamage)*(1 + CP.PhysicalDamageDone)*(1 - AttackPhysicalMitigation)*(1 + Target.DamageTaken)*(1 + DamageDone)
 
-EffectivePower =
-(round(max(Magicka, Stamina)/10.5) + max(SpellDamage, WeaponDamage))*(1 + max(SpellCrit, WeaponCrit)*max(AttackSpellCritDamage, AttackWeaponCritDamage))*(1 + max(CP.MagicDamageDone, CP.PhysicalDamageDone))*(1 - max(AttackSpellMitigation, AttackPhysicalMitigation))*(1 + Target.DamageTaken)*(1 + DamageDone)
+# EffectivePower =
+# (round(max(Magicka, Stamina)/10.5) + max(SpellDamage, WeaponDamage))*(1 + max(SpellCrit, WeaponCrit)*max(AttackSpellCritDamage, AttackWeaponCritDamage))*(1 + max(CP.MagicDamageDone, CP.PhysicalDamageDone))*(1 - max(AttackSpellMitigation, AttackPhysicalMitigation))*(1 + Target.DamageTaken)*(1 + DamageDone)
 
 FrostResist =
 Item.FrostResist + Skill.FrostResist
