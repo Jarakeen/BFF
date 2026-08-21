@@ -23,12 +23,30 @@ class BuildCombatEffects:
         )
 
     @property
+    def damage_modifiers(self) -> tuple[CombatEffect, ...]:
+        return tuple(
+            effect
+            for effect in self.effects
+            if classify_combat_effect(effect)
+            == CombatEffectCategory.DAMAGE_MODIFIER
+        )
+
+    @property
     def healing(self) -> tuple[CombatEffect, ...]:
         return tuple(
             effect
             for effect in self.effects
             if classify_combat_effect(effect)
             == CombatEffectCategory.HEALING
+        )
+
+    @property
+    def healing_modifiers(self) -> tuple[CombatEffect, ...]:
+        return tuple(
+            effect
+            for effect in self.effects
+            if classify_combat_effect(effect)
+            == CombatEffectCategory.HEALING_MODIFIER
         )
 
     @property

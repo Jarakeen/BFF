@@ -223,9 +223,6 @@ def calculate_health_restore(
         + set_health_restore
     )
 
-from __future__ import annotations
-
-
 def calculate_dot_damage_done(
     *,
     cp_dot_damage_done: float = 0.0,

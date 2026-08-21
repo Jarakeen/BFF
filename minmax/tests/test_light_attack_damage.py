@@ -1,11 +1,11 @@
 import pytest
 
-from old_pages.old_light_attack_damage import (
+from minmax.formulas.resolved_modifiers import (
+    calculate_damage_done, 
     calculate_la_flame_staff,
     calculate_la_frost_staff,
-    calculate_la_shock_staff,
+    calculate_la_shock_staff
 )
-
 
 def test_calculate_la_flame_staff():
     result = calculate_la_flame_staff(

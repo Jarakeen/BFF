@@ -1,4 +1,5 @@
 import math
+import pytest
 
 from minmax.formulas.additional_formulas import (
     calculate_crit_resist,
@@ -68,9 +69,14 @@ def test_heavy_attack_additions():
 
 def test_mitigation_additions():
     # The duplicate Set.DirectDamageTaken term is intentionally preserved from UESP.
-    assert math.isclose(calculate_direct_damage_taken(set_direct_damage_taken=0.1), 1.2)
-    assert calculate_magic_damage_taken(cp_magic_damage_taken=0.1) == 0.1
-    assert calculate_damage_taken() == -0.15
+    assert math.isclose(
+        calculate_direct_damage_taken(set_direct_damage_taken=0.1),
+        1.2,
+    )
+    assert calculate_magic_damage_taken(
+        cp_magic_damage_taken=0.1
+    ) == pytest.approx(0.1)
+    assert calculate_damage_taken() == pytest.approx(-0.15)
     assert math.isclose(
         calculate_attack_spell_crit_damage(spell_crit_damage=0.5, target_crit_resist=250),
         0.465,

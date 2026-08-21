@@ -1,7 +1,6 @@
 import pytest
 
-from minmax.formulas.damage_done import calculate_damage_done
-from minmax.formulas.light_attack_damage import calculate_la_flame_staff
+from minmax.formulas.resolved_modifiers import calculate_damage_done, calculate_la_flame_staff
 
 
 def test_damage_done_is_its_own_bucket():

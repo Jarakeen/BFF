@@ -1,23 +1,21 @@
 import pytest
-from old_pages.old_damage_done import (
-    calculate_aoe_damage_done,
-    calculate_bleed_damage_done,
-    calculate_bow_damage_done,
-    calculate_damage_done,
-    calculate_disease_damage_done,
+from minmax.formulas.resolved_modifiers import ( 
+    calculate_damage_done, 
+    calculate_dot_damage_done, 
     calculate_direct_damage_done,
-    calculate_dot_damage_done,
+    calculate_single_target_damage_done,
+    calculate_aoe_damage_done,
+    calculate_magic_damage_done,
+    calculate_physical_damage_done,
+    calculate_shock_damage_done,
     calculate_flame_damage_done,
     calculate_frost_damage_done,
-    calculate_magic_damage_done,
-    calculate_pet_damage_done,
-    calculate_physical_damage_done,
     calculate_poison_damage_done,
-    calculate_shock_damage_done,
-    calculate_single_target_damage_done,
+    calculate_disease_damage_done,
+    calculate_bow_damage_done,
+    calculate_bleed_damage_done,
+    calculate_pet_damage_done  
 )
-
-
 def test_calculate_dot_damage_done():
     assert calculate_dot_damage_done(
     cp_dot_damage_done=0.10,
