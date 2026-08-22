@@ -1,8 +1,25 @@
+from pathlib import Path
+
+from minmax.build import Build
+from minmax.rule_repository import RuleRepository
+from minmax.weapon_enchantment_effect_service import (
+    WeaponEnchantmentEffectService,
+)
+from minmax.weapon_enchantment_repository import (
+    WeaponEnchantmentRepository,
+)
 from minmax.build_evaluation import BuildEvaluation
 from minmax.calculation import CalculationResult
 from minmax.combat_calculation import CombatEffectResult
 from minmax.combat_contribution import CombatContribution
+from minmax.build_evaluator import BuildEvaluator
+DB_PATH = Path("data/eso.db")
 
+def weapon_enchantment_service():
+    return WeaponEnchantmentEffectService(
+        enchantment_repository=WeaponEnchantmentRepository(DB_PATH),
+        rule_repository=RuleRepository(DB_PATH),
+    )
 
 def test_empty_build_evaluation():
     evaluation = BuildEvaluation(
@@ -92,3 +109,31 @@ def test_damage_and_healing_are_separated():
 
     assert evaluation.total_damage_contribution == 1000
     assert evaluation.total_healing_contribution == 500
+    
+def test_build_evaluation_resolves_weapon_enchantment():
+    build = Build(name="Frost Enchanted Staff")
+
+    build.add_weapon(
+        enchantment_item_id=5365,
+        trait="infused",
+        quality="legendary",
+    )
+
+    evaluator = BuildEvaluator(
+        weapon_enchantment_service=weapon_enchantment_service(),
+    )
+
+    result = evaluator.evaluate(build)
+
+    assert len(result.combat_effects) == 1
+    assert len(result.combat_contributions) == 1
+
+    effect = result.combat_effects[0]
+    contribution = result.combat_contributions[0]
+
+    assert effect.effect_type == "damage"
+    assert effect.damage_type == "frost"
+
+    assert contribution.effect_type == "damage"
+    assert contribution.effective_value > 0
+    assert contribution.source == "Glyph of Frost"    

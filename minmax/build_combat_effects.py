@@ -6,7 +6,6 @@ from .combat_effect_classifier import (
 )
 from .combat_effects import CombatEffect
 
-
 @dataclass(frozen=True)
 class BuildCombatEffects:
     """Resolved combat effects contributed by a build."""

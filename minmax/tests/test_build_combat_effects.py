@@ -114,16 +114,19 @@ def test_damage_modifiers_are_separated_from_damage():
                 effect_type="damage",
                 value=1000,
                 source="Damage",
+                unit=EffectUnit.FLAT,
             ),
             CombatEffect(
                 effect_type="flame_damage_done",
                 value=0.05,
                 source="Flame Modifier",
+                unit=EffectUnit.PERCENT,
             ),
             CombatEffect(
                 effect_type="direct_damage_done",
                 value=0.10,
                 source="Direct Modifier",
+                unit=EffectUnit.PERCENT,
             ),
         )
     )
@@ -139,7 +142,8 @@ def test_damage_modifiers_are_separated_from_damage():
         "flame_damage_done",
         "direct_damage_done",
     }
-    
+
+
 def test_healing_modifiers_are_separated_from_healing():
     effects = BuildCombatEffects(
         effects=(
@@ -147,11 +151,13 @@ def test_healing_modifiers_are_separated_from_healing():
                 effect_type="health_restore",
                 value=1000,
                 source="Healing",
+                unit=EffectUnit.FLAT,
             ),
             CombatEffect(
                 effect_type="healing_done",
                 value=0.10,
                 source="Healing Modifier",
+                unit=EffectUnit.PERCENT,
             ),
         )
     )
@@ -160,4 +166,4 @@ def test_healing_modifiers_are_separated_from_healing():
     assert effects.healing[0].effect_type == "health_restore"
 
     assert len(effects.healing_modifiers) == 1
-    assert effects.healing_modifiers[0].effect_type == "healing_done"        
+    assert effects.healing_modifiers[0].effect_type == "healing_done"
