@@ -137,6 +137,115 @@ def find_skill(
 # VALIDATOR
 # ============================================================
 
+# ============================================================
+# KNOWN PAGE SPOT CHECKS
+# ============================================================
+#
+# Structural sanity checks based on the ESO-Hub pages we inspected
+# while building the crawler. Exposed at module level (rather than as
+# a local literal inside run_spot_checks) so this authoritative,
+# human-verified data can be consumed directly by other code -
+# e.g. minmax.character_build tests that need a real, sourced fact
+# about a specific ability instead of a synthetic fixture.
+
+KNOWN_PAGE_SPOT_CHECKS: list[tuple[str, dict]] = [
+    (
+        "Aggressive Horn",
+        {
+            "buffs": ["Major Force"],
+            "status_effects": ["Overcharged"],
+        },
+    ),
+    (
+        "Caltrops",
+        {
+            "status_effects": ["Sundered"],
+        },
+    ),
+    (
+        "Pierce Armor",
+        {
+            "debuffs": [
+                "Major Breach",
+                "Minor Breach",
+            ],
+            "status_effects": ["Sundered"],
+            "modifying_sets": [
+                "Perfected Puncturing Remedy",
+                "Puncturing Remedy",
+            ],
+            "champion_points": 9,
+        },
+    ),
+    (
+        "Wall of Elements",
+        {
+            "status_effects": [
+                "Chilled",
+                "Overcharged",
+            ],
+        },
+    ),
+]
+
+
+
+# ============================================================
+# KNOWN PAGE SPOT CHECKS
+# ============================================================
+#
+# Structural sanity checks based on the ESO-Hub pages we inspected
+# while building the crawler. Extracted to a module-level constant
+# (rather than a local literal inside run_spot_checks) so this
+# authoritative, hand-verified data can be imported and reused by
+# other code - e.g. minmax/character_build tests that need a real,
+# non-synthetic source fact instead of a fabricated fixture.
+#
+# Display names here match ESO-Hub's own casing. Consumers that need
+# the project's snake_case effect identity (e.g. "major_force") are
+# responsible for that conversion - this constant preserves the
+# names exactly as ESO-Hub presents them.
+KNOWN_PAGE_SPOT_CHECKS: list[tuple[str, dict]] = [
+    (
+        "Aggressive Horn",
+        {
+            "buffs": ["Major Force"],
+            "status_effects": ["Overcharged"],
+        },
+    ),
+    (
+        "Caltrops",
+        {
+            "status_effects": ["Sundered"],
+        },
+    ),
+    (
+        "Pierce Armor",
+        {
+            "debuffs": [
+                "Major Breach",
+                "Minor Breach",
+            ],
+            "status_effects": ["Sundered"],
+            "modifying_sets": [
+                "Perfected Puncturing Remedy",
+                "Puncturing Remedy",
+            ],
+            "champion_points": 9,
+        },
+    ),
+    (
+        "Wall of Elements",
+        {
+            "status_effects": [
+                "Chilled",
+                "Overcharged",
+            ],
+        },
+    ),
+]
+
+
 class ESOHubSkillDataValidator:
 
     def __init__(
@@ -620,45 +729,7 @@ class ESOHubSkillDataValidator:
         # These are structural sanity checks based on the
         # ESO-Hub pages we inspected while building the crawler.
 
-        checks = [
-            (
-                "Aggressive Horn",
-                {
-                    "buffs": ["Major Force"],
-                    "status_effects": ["Overcharged"],
-                },
-            ),
-            (
-                "Caltrops",
-                {
-                    "status_effects": ["Sundered"],
-                },
-            ),
-            (
-                "Pierce Armor",
-                {
-                    "debuffs": [
-                        "Major Breach",
-                        "Minor Breach",
-                    ],
-                    "status_effects": ["Sundered"],
-                    "modifying_sets": [
-                        "Perfected Puncturing Remedy",
-                        "Puncturing Remedy",
-                    ],
-                    "champion_points": 9,
-                },
-            ),
-            (
-                "Wall of Elements",
-                {
-                    "status_effects": [
-                        "Chilled",
-                        "Overcharged",
-                    ],
-                },
-            ),
-        ]
+        checks = KNOWN_PAGE_SPOT_CHECKS
 
         for target, expected in checks:
 

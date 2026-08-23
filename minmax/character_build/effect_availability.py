@@ -47,8 +47,15 @@ def resolve_available_effects(
                     if bar_ok and effect.is_available_on(active_bar):
                         resolved.append(effect)
 
+                elif effect.layer == EffectLayer.ULTIMATE:
+                    # Ultimate-layer effects are only ever produced by an
+                    # actual cast, resolved separately in
+                    # resolve_ultimate_cast_effects - never picked up here,
+                    # even if the same ultimate is slotted on both bars.
+                    continue
+
                 else:
-                    # PASSIVE/PROC/ULTIMATE attached directly to a skill.
+                    # PASSIVE/PROC attached directly to a skill.
                     if effect.is_available_on(active_bar):
                         resolved.append(effect)
 

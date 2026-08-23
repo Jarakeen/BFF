@@ -44,6 +44,14 @@ class EffectRelationship:
     magnitude_delta: float | None = None
     condition: str | None = None
 
+    duration: float | None = None
+    """
+    For TRIGGERS: the initial duration of the newly-produced effect
+    (preserved separately from magnitude_delta, per the rule that an
+    effect's numeric attributes are never collapsed into one generic
+    value). Unused by other relationship types.
+    """
+
 
 def apply_relationships(
     effects: Iterable[EffectVariant],
@@ -128,6 +136,8 @@ def apply_relationships(
                         name=relationship.target_effect,
                         layer=EffectLayer.PROC,
                         source=relationship.source_effect,
+                        magnitude=relationship.magnitude_delta,
+                        duration=relationship.duration,
                         condition=relationship.condition,
                         trigger=relationship.source_effect,
                     )

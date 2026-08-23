@@ -1,3 +1,13 @@
+# Named ESO effect identities (major_force, major_slayer, etc.) appear
+# in several tests below purely as plausible generic-mechanics flavor -
+# they do not assert that any specific named skill/set actually
+# produces them in real ESO. Tests that previously asserted a specific
+# named relationship (e.g. "Aggressive Horn produces X", "Masters
+# Architect produces Y") without repository source data backing that
+# claim have been genericized to use fictional source names instead.
+# For relationships actually traced to repository/importer source data,
+# see test_character_build_real_data_integration.py.
+
 from pathlib import Path
 
 import pytest
@@ -165,14 +175,22 @@ def test_passive_effect_resolution():
 
 
 def test_proc_effect_resolution_retains_trigger_condition():
-    masters_ice_staff = Weapon(
+    """
+    Generic mechanics only: a fictional gear set's proc, gated on a
+    fictional condition string. No real ESO gear set/ultimate
+    relationship is asserted - this repository currently has no source
+    data establishing any specific set's ultimate-triggered proc (see
+    test_character_build_real_data_integration.py for what real data
+    is and is not available).
+    """
+    fictional_set_weapon = Weapon(
         weapon_type=WeaponType.FROST_STAFF,
-        set_id="masters_architect",
+        set_id="fictional_gear_set",
         effects=(
             EffectVariant(
-                name="major_slayer",
+                name="fictional_set_proc_buff",
                 layer=EffectLayer.PROC,
-                source="Masters Architect",
+                source="Fictional Gear Set",
                 target_type=SupportTargetType.GROUP,
                 category=SupportEffectCategory.BUFF,
                 condition="ultimate_cast_from_back_bar",
@@ -180,7 +198,7 @@ def test_proc_effect_resolution_retains_trigger_condition():
         ),
     )
     front = _valid_bar(BarId.FRONT, WeaponType.RESTORATION_STAFF, "restoration_staff")
-    back = Bar(bar_id=BarId.BACK, main_hand=masters_ice_staff, off_hand=None,
+    back = Bar(bar_id=BarId.BACK, main_hand=fictional_set_weapon, off_hand=None,
                slots=tuple(_filler(i, "destruction_staff") for i in range(5))
                + (SlottedSkill(skill_id="ult", skill_line_id="destruction_staff", is_ultimate=True),))
     build = CharacterBuild(
@@ -189,43 +207,44 @@ def test_proc_effect_resolution_retains_trigger_condition():
     )
 
     registry = _resolver().resolve(build, BarId.BACK)
-    slayer = [e for e in registry.all() if e.name == "major_slayer"]
+    proc_effects = [e for e in registry.all() if e.name == "fictional_set_proc_buff"]
 
-    assert len(slayer) == 1
-    assert slayer[0].conditions == ("ultimate_cast_from_back_bar",)
+    assert len(proc_effects) == 1
+    assert proc_effects[0].conditions == ("ultimate_cast_from_back_bar",)
 
 
 def test_ultimate_resolution_by_bar_context():
+    """Generic mechanics only - see module docstring."""
     ult_effects = (
         EffectVariant(
-            name="major_courage", layer=EffectLayer.ULTIMATE, source="Aggressive Horn",
+            name="fictional_group_buff", layer=EffectLayer.ULTIMATE, source="Fictional Ultimate Skill",
             target_type=SupportTargetType.GROUP, category=SupportEffectCategory.BUFF,
         ),
         EffectVariant(
-            name="major_slayer", layer=EffectLayer.ULTIMATE, source="Masters Architect",
+            name="fictional_set_proc_buff", layer=EffectLayer.ULTIMATE, source="Fictional Gear Set",
             target_type=SupportTargetType.GROUP, category=SupportEffectCategory.BUFF,
-            active_bar=BarId.BACK, trigger="cast_from_masters_bar",
+            active_bar=BarId.BACK, trigger="cast_from_fictional_set_bar",
         ),
     )
     front = Bar(bar_id=BarId.FRONT, main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF),
                 off_hand=None,
                 slots=tuple(_filler(i, "restoration_staff") for i in range(5))
-                + (SlottedSkill(skill_id="horn", skill_line_id="assault", is_ultimate=True, effects=ult_effects),))
+                + (SlottedSkill(skill_id="ult_skill", skill_line_id="assault", is_ultimate=True, effects=ult_effects),))
     back = Bar(bar_id=BarId.BACK, main_hand=Weapon(weapon_type=WeaponType.FROST_STAFF),
                off_hand=None,
                slots=tuple(_filler(i, "destruction_staff") for i in range(5))
-               + (SlottedSkill(skill_id="horn", skill_line_id="assault", is_ultimate=True, effects=ult_effects),))
+               + (SlottedSkill(skill_id="ult_skill", skill_line_id="assault", is_ultimate=True, effects=ult_effects),))
     build = CharacterBuild(
         name="Ultimate Test", character_class=CharacterClass.TEMPLAR, role=Role.HEALER,
         front_bar=front, back_bar=back,
     )
 
-    from_back = _resolver().resolve(build, BarId.BACK, ultimate_trigger="cast_from_masters_bar")
-    from_front = _resolver().resolve(build, BarId.FRONT, ultimate_trigger="cast_from_masters_bar")
+    from_back = _resolver().resolve(build, BarId.BACK, ultimate_trigger="cast_from_fictional_set_bar")
+    from_front = _resolver().resolve(build, BarId.FRONT, ultimate_trigger="cast_from_fictional_set_bar")
 
-    assert "major_slayer" in {e.name for e in from_back.all()}
-    assert "major_slayer" not in {e.name for e in from_front.all()}
-    assert "major_courage" in {e.name for e in from_front.all()}
+    assert "fictional_set_proc_buff" in {e.name for e in from_back.all()}
+    assert "fictional_set_proc_buff" not in {e.name for e in from_front.all()}
+    assert "fictional_group_buff" in {e.name for e in from_front.all()}
 
 
 # -- bar context ---------------------------------------------------------
@@ -259,16 +278,19 @@ def test_front_and_back_weapon_differences_only_active_bar_effects_appear():
 
 
 def test_bar_specific_set_effects_do_not_leak_to_other_bar():
-    """A support effect available only on the back bar must not be
-    represented as continuously active on the front bar."""
+    """
+    A support effect available only on the back bar must not be
+    represented as continuously active on the front bar. Fictional set
+    name/effect - generic mechanics only, see module docstring.
+    """
     back_set_effect = EffectVariant(
-        name="major_slayer", layer=EffectLayer.PROC, source="Masters Architect",
+        name="fictional_set_proc_buff", layer=EffectLayer.PROC, source="Fictional Gear Set",
         target_type=SupportTargetType.GROUP,
     )
     front = _valid_bar(BarId.FRONT, WeaponType.RESTORATION_STAFF, "restoration_staff")
     back = Bar(
         bar_id=BarId.BACK,
-        main_hand=Weapon(weapon_type=WeaponType.FROST_STAFF, set_id="masters_architect", effects=(back_set_effect,)),
+        main_hand=Weapon(weapon_type=WeaponType.FROST_STAFF, set_id="fictional_gear_set", effects=(back_set_effect,)),
         off_hand=None,
         slots=tuple(_filler(i, "destruction_staff") for i in range(5))
         + (SlottedSkill(skill_id="ult", skill_line_id="destruction_staff", is_ultimate=True),),
@@ -281,8 +303,8 @@ def test_bar_specific_set_effects_do_not_leak_to_other_bar():
     on_front = _resolver().resolve(build, BarId.FRONT)
     on_back = _resolver().resolve(build, BarId.BACK)
 
-    assert "major_slayer" not in {e.name for e in on_front.all()}
-    assert "major_slayer" in {e.name for e in on_back.all()}
+    assert "fictional_set_proc_buff" not in {e.name for e in on_front.all()}
+    assert "fictional_set_proc_buff" in {e.name for e in on_back.all()}
 
 
 # -- weapon enchantments (DB-backed) --------------------------------------
@@ -476,14 +498,21 @@ def test_group_contributing_vs_self_only_effects():
 
 
 def test_effect_relationships_apply_before_conversion():
+    """
+    Generic mechanics only: a fictional item extends a fictional buff's
+    duration. No real ESO item/relationship is asserted (a prior version
+    of this test named a real set here without any source data backing
+    it - see test_character_build_real_data_integration.py for the
+    real, repository-traced replacement of that claim).
+    """
     base = SlottedSkill(
-        skill_id="combat_prayer", skill_line_id="restoring_light", is_cast=True,
-        effects=(EffectVariant(name="minor_toughness", layer=EffectLayer.CAST, source="Combat Prayer",
+        skill_id="support_skill", skill_line_id="restoring_light", is_cast=True,
+        effects=(EffectVariant(name="tracked_group_buff", layer=EffectLayer.CAST, source="Fictional Support Skill",
                                 target_type=SupportTargetType.GROUP, duration=20.0),),
     )
     presence = ArmorPiece(
         slot=GearSlot.NECKLACE,
-        effects=(EffectVariant(name="jorvulds_guidance_equipped", layer=EffectLayer.PROC, source="Jorvulds Guidance"),),
+        effects=(EffectVariant(name="fictional_item_equipped", layer=EffectLayer.PROC, source="Fictional Item"),),
     )
     front = Bar(
         bar_id=BarId.FRONT, main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF), off_hand=None,
@@ -497,61 +526,26 @@ def test_effect_relationships_apply_before_conversion():
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.EXTENDS_DURATION,
-        source_effect="jorvulds_guidance_equipped",
-        target_effect="minor_toughness",
+        source_effect="fictional_item_equipped",
+        target_effect="tracked_group_buff",
         magnitude_delta=6.0,
     )
 
     registry = _resolver().resolve(build, BarId.FRONT, relationships=[relationship])
-    toughness = [e for e in registry.all() if e.name == "minor_toughness"][0]
+    buff = [e for e in registry.all() if e.name == "tracked_group_buff"][0]
 
-    assert toughness.duration == 26.0
+    assert buff.duration == 26.0
 
 
-def test_conditional_status_chain_preserves_source_trigger_and_condition():
-    frost_damage = EffectVariant(
-        name="frost_damage_applied", layer=EffectLayer.PROC, source="Frost Staff Heavy Attack",
-        target_type=SupportTargetType.ENEMY,
-    )
-    slot = SlottedSkill(skill_id="s", skill_line_id="destruction_staff", is_cast=True, effects=(frost_damage,))
-    front = _valid_bar(BarId.FRONT, WeaponType.RESTORATION_STAFF, "restoration_staff")
-    back = Bar(
-        bar_id=BarId.BACK, main_hand=Weapon(weapon_type=WeaponType.FROST_STAFF), off_hand=None,
-        slots=(slot,) + tuple(_filler(i, "destruction_staff") for i in range(4))
-        + (SlottedSkill(skill_id="ult", skill_line_id="destruction_staff", is_ultimate=True),),
-    )
-    build = CharacterBuild(
-        name="Status Chain", character_class=CharacterClass.WARDEN, role=Role.DD,
-        front_bar=front, back_bar=back,
-    )
-    frost_to_chilled = EffectRelationship(
-        relationship_type=EffectRelationshipType.TRIGGERS,
-        source_effect="frost_damage_applied",
-        target_effect="chilled_status",
-        condition="target_not_already_chilled",
-    )
-    chilled_to_brittle = EffectRelationship(
-        relationship_type=EffectRelationshipType.TRIGGERS,
-        source_effect="chilled_status",
-        target_effect="major_brittle",
-        condition="target_already_chilled",
-    )
-
-    registry = _resolver().resolve(
-        build, BarId.BACK, relationships=[frost_to_chilled, chilled_to_brittle]
-    )
-    by_name = {e.name: e for e in registry.all()}
-
-    assert "chilled_status" in by_name
-    assert by_name["chilled_status"].trigger is not None
-    assert by_name["chilled_status"].trigger.trigger == "frost_damage_applied"
-    assert by_name["chilled_status"].trigger.condition == "target_not_already_chilled"
-
-    # chilled_status only gets synthesized on this pass; brittle depends on
-    # chilled_status being present in the same resolved set it was applied to,
-    # which apply_relationships evaluates in relationship order.
-    assert "major_brittle" in by_name
-    assert by_name["major_brittle"].trigger.trigger == "chilled_status"
+# A prior version of this file included a synthetic
+# "frost damage -> chilled -> major_brittle" status-chain test. That
+# chain was never traced to any repository source data (the real
+# combat_effect_interaction records for Chilled use "Minor Maim" and
+# "Minor Brittle", not "major_brittle", and are conditioned on an Ice
+# Staff being the active weapon - not on an unconditional frost-damage
+# trigger). It has been removed and replaced by a real, repository-driven
+# equivalent: see
+# test_character_build_real_data_integration.py::test_status_chain_from_real_combat_effect_data
 
 
 # -- hard constraint enforcement --------------------------------------------

@@ -858,6 +858,31 @@ class AbilityCombatEffectImporter:
             }
         )
 
+        # ====================================================
+        # AGGRESSIVE HORN
+        #
+        # Real fact traced from validators/validate_eso_hub_skill_data.py
+        # (KNOWN_PAGE_SPOT_CHECKS): the ESO-Hub page for Aggressive Horn
+        # was hand-inspected and confirmed to list Major Force as a
+        # buff. No bar/ultimate-cast/target-scope detail is present in
+        # that source, so none is asserted here - only the grant itself.
+        # ====================================================
+
+        mappings.append(
+            {
+                "ability": "Aggressive Horn",
+                "effect": "Major Force",
+                "relationship": "Grants",
+                "weapon_type": None,
+                "condition": None,
+                "source": (
+                    "ESO-Hub spot check "
+                    "(validators/validate_eso_hub_skill_data.py)"
+                ),
+                "confidence": "explicit",
+            }
+        )
+
         return mappings
 
     # ========================================================

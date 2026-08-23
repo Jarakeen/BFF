@@ -6,44 +6,50 @@ from minmax.character_build.effect_relationship import (
     apply_relationships,
 )
 
+# These tests exercise the generic EffectRelationship engine mechanics
+# only (duration extension, triggering, chance modification, magnitude
+# modification). They use deliberately fictional source/effect names
+# precisely so they cannot be mistaken for verified ESO facts - for
+# that, see minmax/tests/test_character_build_real_data_integration.py,
+# which drives the same engine with real, traced repository data.
+
 
 def test_generic_duration_modification():
-    """
-    Mirrors the shape of Jorvuld's Guidance (extends a supported effect's
-    duration) without hard-coding Jorvuld's into the architecture.
-    """
     base = EffectVariant(
-        name="minor_toughness",
+        name="tracked_group_buff",
         layer=EffectLayer.CAST,
-        source="Combat Prayer",
+        source="Fictional Support Skill",
         duration=20.0,
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.EXTENDS_DURATION,
-        source_effect="jorvulds_guidance_equipped",
-        target_effect="minor_toughness",
+        source_effect="fictional_item_equipped",
+        target_effect="tracked_group_buff",
         magnitude_delta=6.0,
     )
     presence_marker = EffectVariant(
-        name="jorvulds_guidance_equipped",
+        name="fictional_item_equipped",
         layer=EffectLayer.PROC,
-        source="Jorvulds Guidance",
+        source="Fictional Item",
     )
 
     result = apply_relationships([base, presence_marker], [relationship])
     resolved = {effect.name: effect for effect in result}
 
-    assert resolved["minor_toughness"].duration == 26.0
+    assert resolved["tracked_group_buff"].duration == 26.0
 
 
 def test_relationship_does_not_apply_without_its_source_present():
     base = EffectVariant(
-        name="minor_toughness", layer=EffectLayer.CAST, source="Combat Prayer", duration=20.0
+        name="tracked_group_buff",
+        layer=EffectLayer.CAST,
+        source="Fictional Support Skill",
+        duration=20.0,
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.EXTENDS_DURATION,
-        source_effect="jorvulds_guidance_equipped",
-        target_effect="minor_toughness",
+        source_effect="fictional_item_equipped",
+        target_effect="tracked_group_buff",
         magnitude_delta=6.0,
     )
 
@@ -53,70 +59,75 @@ def test_relationship_does_not_apply_without_its_source_present():
 
 def test_generic_effect_trigger():
     """
-    Mirrors an Aggressive Horn-style trigger producing a support effect
-    that was not otherwise present, without hard-coding Aggressive Horn.
+    Exercises TRIGGERS producing a support effect that was not otherwise
+    present. Uses a fictional ultimate/effect pair - no real ESO
+    ultimate-to-set-proc relationship is asserted here or anywhere in
+    the generic engine (see the real-data integration tests for what
+    actually is traced from repository data).
     """
     ultimate_cast = EffectVariant(
-        name="aggressive_horn_cast", layer=EffectLayer.ULTIMATE, source="Aggressive Horn"
+        name="fictional_ultimate_cast",
+        layer=EffectLayer.ULTIMATE,
+        source="Fictional Ultimate Skill",
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.TRIGGERS,
-        source_effect="aggressive_horn_cast",
-        target_effect="major_slayer",
-        condition="masters_architect_back_bar",
+        source_effect="fictional_ultimate_cast",
+        target_effect="fictional_set_proc_buff",
+        condition="fictional_set_equipped_on_back_bar",
     )
 
     result = apply_relationships([ultimate_cast], [relationship])
     names = {effect.name for effect in result}
 
-    assert "major_slayer" in names
+    assert "fictional_set_proc_buff" in names
 
 
 def test_trigger_does_not_duplicate_an_existing_effect():
     ultimate_cast = EffectVariant(
-        name="aggressive_horn_cast", layer=EffectLayer.ULTIMATE, source="Aggressive Horn"
+        name="fictional_ultimate_cast",
+        layer=EffectLayer.ULTIMATE,
+        source="Fictional Ultimate Skill",
     )
     already_present = EffectVariant(
-        name="major_slayer", layer=EffectLayer.PROC, source="Some Other Source"
+        name="fictional_set_proc_buff", layer=EffectLayer.PROC, source="Some Other Source"
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.TRIGGERS,
-        source_effect="aggressive_horn_cast",
-        target_effect="major_slayer",
+        source_effect="fictional_ultimate_cast",
+        target_effect="fictional_set_proc_buff",
     )
 
     result = apply_relationships([ultimate_cast, already_present], [relationship])
-    slayer_instances = [effect for effect in result if effect.name == "major_slayer"]
+    matching_instances = [
+        effect for effect in result if effect.name == "fictional_set_proc_buff"
+    ]
 
-    assert len(slayer_instances) == 1
-    assert slayer_instances[0].source == "Some Other Source"
+    assert len(matching_instances) == 1
+    assert matching_instances[0].source == "Some Other Source"
 
 
 def test_generic_proc_chance_modification():
-    """
-    Mirrors a Serpent's Disdain-style status-duration/chance modifier
-    without hard-coding it into the architecture.
-    """
     base = EffectVariant(
-        name="poisoned_status",
+        name="fictional_status_effect",
         layer=EffectLayer.PROC,
-        source="Poison Injection",
+        source="Fictional Status Skill",
         chance=0.5,
     )
     presence_marker = EffectVariant(
-        name="serpents_disdain_equipped", layer=EffectLayer.PROC, source="Serpents Disdain"
+        name="fictional_item_equipped_b", layer=EffectLayer.PROC, source="Fictional Item B"
     )
     relationship = EffectRelationship(
         relationship_type=EffectRelationshipType.INCREASES_PROC_CHANCE,
-        source_effect="serpents_disdain_equipped",
-        target_effect="poisoned_status",
+        source_effect="fictional_item_equipped_b",
+        target_effect="fictional_status_effect",
         magnitude_delta=0.25,
     )
 
     result = apply_relationships([base, presence_marker], [relationship])
     resolved = {effect.name: effect for effect in result}
 
-    assert resolved["poisoned_status"].chance == 0.75
+    assert resolved["fictional_status_effect"].chance == 0.75
 
 
 def test_generic_effect_modification():
