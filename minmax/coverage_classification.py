@@ -125,6 +125,7 @@ class CoverageClassificationAnalyzer:
         redundant_providers: tuple[str, ...] = (),
         resilient_providers: tuple[str, ...] = (),
         conflicting_providers: tuple[str, ...] = (),
+        evidence_sufficient: bool = True,
     ) -> CoverageClassificationResult:
         """
         Classify one capability requirement from already-resolved evidence.
@@ -148,6 +149,20 @@ class CoverageClassificationAnalyzer:
                 explanation=(
                     f"{effect_name} has providers that belong to an "
                     "explicitly conflicting exclusivity group."
+                ),
+            )
+
+        if not evidence_sufficient:
+            return CoverageClassificationResult(
+                effect_name=effect_name,
+                classification=CoverageClassification.UNKNOWN,
+                required_provider_count=required_provider_count,
+                valid_provider_count=valid_provider_count,
+                providers=providers,
+                resilient_providers=resilient_providers,
+                explanation=(
+                    f"The available evidence is insufficient to safely "
+                    f"classify {effect_name}."
                 ),
             )
 

@@ -9,7 +9,7 @@ from .coverage_requirement import CoverageRequirement
 from .encounter_requirements import EncounterRequirementSet
 from .roster_coverage import RosterCoverageAnalyzer, RosterCapabilityProvider
 from .character_build.effect_relationship import ConditionContext
-from .roster_coverage import RosterCoverageAnalyzer, RosterCapabilityProvider
+
 
 @dataclass(frozen=True)
 class EncounterEvaluation:
@@ -124,6 +124,9 @@ class EncounterEvaluator:
             tuple[RosterCapabilityProvider, ...],
         ],
         condition_context: ConditionContext | None = None,
+        *,
+        resilient_providers_by_effect: dict[str, tuple[str, ...]] | None = None,
+        unknown_effects: frozenset[str] = frozenset(),
     ) -> EncounterEvaluation:
         """
         Evaluate one encounter requirement set against roster capabilities.
@@ -164,6 +167,8 @@ class EncounterEvaluator:
 
         classifications = coverage_analysis.classifications(
             conflicts,
+            resilient_providers_by_effect=resilient_providers_by_effect,
+            unknown_effects=unknown_effects,
         )
 
         return EncounterEvaluation(

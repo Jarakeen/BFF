@@ -40,6 +40,7 @@ class CoverageRecommendation:
 
     providers: tuple[str, ...] = ()
     redundant_providers: tuple[str, ...] = ()
+    resilient_providers: tuple[str, ...] = ()
     conflicting_providers: tuple[str, ...] = ()
 
     required_provider_count: int = 0
@@ -70,6 +71,9 @@ class CoverageRecommendationAnalyzer:
 
         if classification == CoverageClassification.REDUNDANT:
             return self._recommend_redundant(result)
+
+        if classification == CoverageClassification.RESILIENT:
+            return self._recommend_resilient(result)
 
         if classification == CoverageClassification.MISSING:
             return self._recommend_missing(result)
@@ -113,6 +117,24 @@ class CoverageRecommendationAnalyzer:
             explanation=(
                 f"{result.effect_name} is covered with additional "
                 "provider redundancy. No correction is required."
+            ),
+        )
+
+    @staticmethod
+    def _recommend_resilient(
+        result: CoverageClassificationResult,
+    ) -> CoverageRecommendation:
+        return CoverageRecommendation(
+            effect_name=result.effect_name,
+            action=RecommendationAction.NO_ACTION,
+            classification=result.classification,
+            providers=result.providers,
+            resilient_providers=result.resilient_providers,
+            required_provider_count=result.required_provider_count,
+            valid_provider_count=result.valid_provider_count,
+            explanation=(
+                f"{result.effect_name} is covered with independent "
+                "backup provider coverage. No correction is required."
             ),
         )
 

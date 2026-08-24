@@ -113,6 +113,9 @@ class CoverageAnalysis:
     def classifications(
         self,
         conflicts: CoverageConflictReport | None = None,
+        *,
+        resilient_providers_by_effect: dict[str, tuple[str, ...]] | None = None,
+        unknown_effects: frozenset[str] = frozenset(),
     ) -> tuple[CoverageClassificationResult, ...]:
         """
         Return the actionable classification for every coverage gap.
@@ -128,9 +131,14 @@ class CoverageAnalysis:
         """
         analyzer = CoverageClassificationAnalyzer()
         results: list[CoverageClassificationResult] = []
+        resilient_providers_by_effect = resilient_providers_by_effect or {}
 
         for gap in self.gaps:
             redundant_providers = self._redundant_providers(gap)
+            resilient_providers = resilient_providers_by_effect.get(
+                gap.requirement.effect_name,
+                (),
+            )
 
             conflicting_provider_names: set[str] = set()
 
@@ -167,7 +175,9 @@ class CoverageAnalysis:
                     providers=gap.providers,
                     satisfying_providers=gap.satisfying_providers,
                     redundant_providers=redundant_providers,
+                    resilient_providers=resilient_providers,
                     conflicting_providers=conflicting_providers,
+                    evidence_sufficient=gap.requirement.effect_name not in unknown_effects,
                 )
             )
 
