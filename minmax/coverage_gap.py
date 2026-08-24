@@ -2,9 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 
+from .coverage_classification import (
+    CoverageClassificationAnalyzer,
+    CoverageClassificationResult,
+)
 from .coverage_requirement import CoverageRequirement
 from .roster_coverage import CoverageProvider, CoverageReport
+from .support_stacking import StackingBehavior
+
+if TYPE_CHECKING:
+    from .coverage_conflict import (
+        ConflictType,
+        CoverageConflictReport,
+    )
 
 
 class CoverageStatus(str, Enum):
@@ -49,6 +61,13 @@ class CoverageGap:
 
     @property
     def redundant_provider_count(self) -> int:
+        """
+        Number of providers beyond the stated requirement.
+
+        This is a mechanical count only. Whether those providers are
+        actually redundant depends on the effect's stacking behavior and
+        is handled by the actionable classification layer.
+        """
         return max(
             0,
             self.valid_provider_count - self.required_provider_count,
@@ -89,6 +108,114 @@ class CoverageAnalysis:
             gap
             for gap in self.gaps
             if gap.status == CoverageStatus.COVERED
+        )
+
+    def classifications(
+        self,
+        conflicts: CoverageConflictReport | None = None,
+    ) -> tuple[CoverageClassificationResult, ...]:
+        """
+        Return the actionable classification for every coverage gap.
+
+        Coverage conflicts are interpreted conservatively:
+
+        - REDUNDANCY remains REDUNDANT.
+        - EXCLUSIVITY becomes CONFLICT.
+        - No conflict preserves the ordinary coverage classification.
+
+        Provider ordering follows the CoverageGap evidence rather than
+        the internal ordering of the conflict analyzer.
+        """
+        analyzer = CoverageClassificationAnalyzer()
+        results: list[CoverageClassificationResult] = []
+
+        for gap in self.gaps:
+            redundant_providers = self._redundant_providers(gap)
+
+            conflicting_provider_names: set[str] = set()
+
+            if conflicts is not None:
+                from .coverage_conflict import ConflictType
+
+                # Only EXCLUSIVITY is a mechanical conflict.
+                #
+                # REDUNDANCY is deliberately ignored here because it is
+                # already represented by the REDUNDANT classification.
+                for conflict in conflicts.exclusivities:
+                    conflict_provider_names = set(conflict.providers)
+
+                    gap_provider_names = {
+                        provider.character_name
+                        for provider in gap.provider_evidence
+                    }
+
+                    conflicting_provider_names.update(
+                        conflict_provider_names & gap_provider_names
+                    )
+
+            # Preserve canonical CoverageGap provider ordering.
+            conflicting_providers = tuple(
+                provider.character_name
+                for provider in gap.provider_evidence
+                if provider.character_name in conflicting_provider_names
+            )
+
+            results.append(
+                analyzer.classify(
+                    effect_name=gap.requirement.effect_name,
+                    required_provider_count=gap.required_provider_count,
+                    providers=gap.providers,
+                    satisfying_providers=gap.satisfying_providers,
+                    redundant_providers=redundant_providers,
+                    conflicting_providers=conflicting_providers,
+                )
+            )
+
+        return tuple(results)
+
+    def classification_for_effect(
+        self,
+        effect_name: str,
+        conflicts: CoverageConflictReport | None = None,
+    ) -> CoverageClassificationResult | None:
+        """Return the actionable classification for one effect."""
+        for classification in self.classifications(conflicts):
+            if classification.effect_name == effect_name:
+                return classification
+
+        return None
+
+    @staticmethod
+    def _redundant_providers(
+        gap: CoverageGap,
+    ) -> tuple[str, ...]:
+        """
+        Determine which satisfying providers are genuinely redundant under
+        the current requirement and effect stacking behavior.
+
+        STACKS effects are never automatically classified as redundant,
+        because multiple providers may contribute simultaneously.
+
+        UNIQUE and HIGHEST_ONLY effects can have providers beyond the
+        required count classified as redundant.
+        """
+        satisfying = gap.satisfying_provider_evidence
+
+        if not satisfying:
+            return ()
+
+        if any(
+            provider.effect.stacking == StackingBehavior.STACKS
+            for provider in satisfying
+        ):
+            return ()
+
+        if len(satisfying) <= gap.required_provider_count:
+            return ()
+
+        return tuple(
+            provider.character_name
+            for provider in satisfying[gap.required_provider_count:]
         )
 
 
