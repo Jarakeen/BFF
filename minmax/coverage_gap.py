@@ -277,6 +277,7 @@ class CoverageGapAnalyzer:
 
         return CoverageAnalysis(tuple(results))
 
+
     @staticmethod
     def _satisfies(
         provider: CoverageProvider,
@@ -298,6 +299,10 @@ class CoverageGapAnalyzer:
             if effect.range is None:
                 return False
             if effect.range < requirement.maximum_range:
+                return False
+
+        if requirement.minimum_uptime is not None:
+            if effect.uptime < requirement.minimum_uptime:
                 return False
 
         if requirement.required_roles:
