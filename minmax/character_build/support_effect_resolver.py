@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from ..gear_set_effect_variant_resolver import GearSetEffectVariantResolver
-from collections.abc import Iterable
 from collections import Counter
+from collections.abc import Iterable
+
 from ..build import Build as LegacyBuild
 from ..build_support_effect_service import BuildSupportEffectService
+from ..gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from ..role import Role
 from ..support_effect import SupportEffect
 from ..support_effect_category import SupportEffectCategory
@@ -20,7 +21,11 @@ from .effect_availability import (
 )
 from .effect_instance import EffectVariant
 from .effect_layer import BarId
-from .effect_relationship import EffectRelationship, apply_relationships
+from .effect_relationship import (
+    ConditionContext,
+    EffectRelationship,
+    apply_relationships,
+)
 from .passive_grant import PassiveGrant
 
 
@@ -34,9 +39,10 @@ def effect_variant_to_support_effect(
     every field SupportEffect can represent instead of collapsing it.
 
     An EffectVariant with no `target_type` set is treated as SELF, never
-    guessed to be group support - see requirement 7 (support vs personal).
+    guessed to be group support.
     """
     trigger: SupportEffectTrigger | None = None
+
     if effect.trigger is not None:
         trigger = SupportEffectTrigger(
             trigger=effect.trigger,
@@ -46,6 +52,7 @@ def effect_variant_to_support_effect(
         )
 
     conditions: tuple[str, ...] = ()
+
     if effect.condition is not None and trigger is None:
         # Only surface `condition` via SupportEffect.conditions when it
         # isn't already carried by a SupportEffectTrigger, to avoid
@@ -53,22 +60,23 @@ def effect_variant_to_support_effect(
         conditions = (effect.condition,)
 
     return SupportEffect(
-    source=effect.source,
-    name=effect.name,
-    category=effect.category or SupportEffectCategory.OTHER,
-    effect_type=effect.name,
-    target_type=effect.target_type or SupportTargetType.SELF,
-    magnitude=effect.magnitude or 0.0,
-    target_count=effect.target_count,
-    duration=effect.duration,
-    range=effect.range,
-    scaling=effect.scaling,
-    stacking=effect.stacking or StackingBehavior.UNIQUE,
-    exclusivity_group=effect.exclusivity_group,
-    conditions=conditions,
-    trigger=trigger,
-    role_relevance=role_relevance,
-)
+        source=effect.source,
+        name=effect.name,
+        category=effect.category or SupportEffectCategory.OTHER,
+        effect_type=effect.name,
+        target_type=effect.target_type or SupportTargetType.SELF,
+        magnitude=effect.magnitude or 0.0,
+        target_count=effect.target_count,
+        duration=effect.duration,
+        range=effect.range,
+        scaling=effect.scaling,
+        stacking=effect.stacking or StackingBehavior.UNIQUE,
+        exclusivity_group=effect.exclusivity_group,
+        conditions=conditions,
+        trigger=trigger,
+        role_relevance=role_relevance,
+    )
+
 
 def equipped_gear_set_counts(build: CharacterBuild) -> dict[str, int]:
     """Count all simultaneously equipped gear pieces by stable set identity."""
@@ -92,28 +100,45 @@ def resolve_effect_variants(
     *,
     passives: Iterable[PassiveGrant] = (),
     relationships: Iterable[EffectRelationship] = (),
+    condition_context: ConditionContext | None = None,
     ultimate_trigger: str | None = None,
 ) -> tuple[EffectVariant, ...]:
     """
     Resolve every EffectVariant `build` actually provides while
-    `active_bar` is active - cast/slotted/passive/proc effects, the
-    active bar's ultimate result, and any generic relationship
-    modifications/triggers layered on top.
+    `active_bar` is active.
+
+    This includes cast/slotted/passive/proc effects, the active bar's
+    ultimate result, and generic relationship modifications/triggers.
+
+    `condition_context` is threaded into relationship resolution so
+    conditional effects and REQUIRES relationships can be evaluated
+    before the resulting effects cross into capability resolution.
 
     Raises IllegalBuildError if `build` fails its own hard-constraint
-    validation - effect resolution must respect the character's actual
-    build constraints, not resolve effects for an impossible build.
+    validation.
     """
     violations = build.validate()
+
     if violations:
         raise IllegalBuildError(violations)
 
-    base_effects = resolve_available_effects(build, active_bar, passives)
-    ultimate_effects = resolve_ultimate_cast_effects(
-        build, active_bar, trigger=ultimate_trigger
+    base_effects = resolve_available_effects(
+        build,
+        active_bar,
+        passives,
     )
 
-    return apply_relationships(base_effects + ultimate_effects, relationships)
+    ultimate_effects = resolve_ultimate_cast_effects(
+        build,
+        active_bar,
+        trigger=ultimate_trigger,
+    )
+
+    return apply_relationships(
+        base_effects + ultimate_effects,
+        relationships,
+        context=condition_context,
+    )
 
 
 def _legacy_build_for_bar_weapons(bar: Bar | None) -> LegacyBuild:
@@ -173,6 +198,7 @@ class CharacterBuildSupportEffectResolver:
         *,
         passives: Iterable[PassiveGrant] = (),
         relationships: Iterable[EffectRelationship] = (),
+        condition_context: ConditionContext | None = None,
         ultimate_trigger: str | None = None,
         role_relevance: frozenset[Role] = frozenset(),
     ) -> SupportEffectRegistry:
@@ -183,6 +209,10 @@ class CharacterBuildSupportEffectResolver:
         Multiple providers of the same named effect are preserved as
         separate SupportEffect entries. This resolver never merges or
         sums them.
+
+        `condition_context` is optional and additive. When omitted,
+        relationship resolution preserves the existing unconditional
+        behavior.
         """
         effect_variants = list(
             resolve_effect_variants(
@@ -190,9 +220,18 @@ class CharacterBuildSupportEffectResolver:
                 active_bar,
                 passives=passives,
                 relationships=relationships,
+                condition_context=condition_context,
                 ultimate_trigger=ultimate_trigger,
             )
         )
+
+        # Ineligible EffectVariants remain preserved during relationship
+        # resolution as evidence, but must not become capabilities.
+        effect_variants = [
+            effect
+            for effect in effect_variants
+            if effect.eligible
+        ]
 
         # Resolve known gear-set effects from the actual equipped set
         # counts. These are derived effects and are deliberately not

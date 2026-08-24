@@ -8,7 +8,7 @@ from ..support_effect_registry import SupportEffectRegistry
 from .bar import Bar
 from .character_build import CharacterBuild
 from .effect_layer import BarId
-from .effect_relationship import EffectRelationship
+from .effect_relationship import ConditionContext, EffectRelationship
 from .passive_grant import PassiveGrant
 from .support_effect_resolver import CharacterBuildSupportEffectResolver
 
@@ -50,6 +50,7 @@ class CharacterCapabilityResolver:
         relationships: Iterable[EffectRelationship] = (),
         ultimate_trigger: str | None = None,
         role_relevance: frozenset[Role] = frozenset(),
+        condition_context: ConditionContext | None = None,
     ) -> SupportEffectRegistry:
         """
         Resolve the complete capability set available to `build` while
@@ -58,7 +59,11 @@ class CharacterCapabilityResolver:
         No capability is merged, evaluated, or scored here. The registry
         contains the effects the build can provide, with their original
         source, target, trigger, duration, range, scaling, and other
-        mechanical metadata intact.
+        mechanical metadata intact. `condition_context` (optional) is
+        forwarded to relationship/condition resolution; effects whose
+        conditions or REQUIRES prerequisites aren't met against it are
+        excluded from the returned registry rather than treated as
+        capabilities.
         """
         return self._resolver.resolve(
             build,
@@ -67,4 +72,5 @@ class CharacterCapabilityResolver:
             relationships=relationships,
             ultimate_trigger=ultimate_trigger,
             role_relevance=role_relevance,
+            condition_context=condition_context,
         )

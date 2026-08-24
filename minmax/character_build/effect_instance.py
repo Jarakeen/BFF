@@ -71,6 +71,22 @@ class EffectVariant:
     exclusivity_group: str | None = None
     """Named group this effect competes with (mirrors Major/Minor exclusivity)."""
 
+    eligible: bool = True
+    """
+    Whether this instance's own condition and any REQUIRES relationships
+    have actually been satisfied against a known condition context.
+
+    Defaults to True: an effect with nothing gating it, or resolved with
+    no condition context supplied at all, is eligible by default (this
+    preserves every existing call site that never evaluates conditions).
+    When a context IS supplied and a condition/prerequisite is not met,
+    this becomes False - the instance is kept, not discarded, so its
+    evidence (source, magnitude, condition, etc.) remains inspectable by
+    callers that want to know *why* something isn't contributing, rather
+    than only that it silently isn't there. See
+    `effect_relationship.apply_relationships`.
+    """
+
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("EffectVariant.name must be a non-empty identity.")

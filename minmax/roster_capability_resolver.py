@@ -7,6 +7,7 @@ from typing import Iterable
 from .character_build.capability_resolver import CharacterCapabilityResolver
 from .character_build.character_build import CharacterBuild
 from .character_build.effect_layer import BarId
+from .character_build.effect_relationship import ConditionContext, EffectRelationship
 from .role import Role
 from .support_effect import SupportEffect
 
@@ -57,11 +58,22 @@ class RosterCapabilityResolver:
         self,
         characters: Iterable[CharacterBuild],
         active_bars: dict[str, BarId],
+        *,
+        relationships: Iterable[EffectRelationship] = (),
+        condition_context: ConditionContext | None = None,
     ) -> dict[str, tuple[RosterCapabilityProvider, ...]]:
         """
         Resolve every character and index their capabilities by effect name.
 
         `active_bars` maps CharacterBuild.name -> currently active BarId.
+
+        `relationships` and `condition_context` (both optional, both
+        defaulting to "none supplied") are forwarded unchanged to each
+        character's CharacterCapabilityResolver, so roster-wide
+        relationship/condition data (e.g. an encounter fact) reaches the
+        same relationship-resolution boundary CharacterCapabilityResolver
+        already uses - this resolver still does not itself interpret any
+        relationship or condition.
 
         Every provider remains independently represented. Identical effects
         from multiple characters are never merged or summed.
@@ -82,6 +94,8 @@ class RosterCapabilityResolver:
             registry = self.character_capability_resolver.resolve(
                 character,
                 active_bar,
+                relationships=relationships,
+                condition_context=condition_context,
             )
 
             for effect in registry.all():
