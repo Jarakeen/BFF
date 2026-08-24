@@ -52,22 +52,22 @@ def effect_variant_to_support_effect(
         conditions = (effect.condition,)
 
     return SupportEffect(
-        source=effect.source,
-        name=effect.name,
-        category=effect.category or SupportEffectCategory.OTHER,
-        effect_type=effect.name,
-        target_type=effect.target_type or SupportTargetType.SELF,
-        magnitude=effect.magnitude or 0.0,
-        target_count=effect.target_count,
-        range=effect.range,
-        duration=effect.duration,
-        scaling=effect.scaling,
-        stacking=effect.stacking or StackingBehavior.UNIQUE,
-        exclusivity_group=effect.exclusivity_group,
-        conditions=conditions,
-        trigger=trigger,
-        role_relevance=role_relevance,
-    )
+    source=effect.source,
+    name=effect.name,
+    category=effect.category or SupportEffectCategory.OTHER,
+    effect_type=effect.name,
+    target_type=effect.target_type or SupportTargetType.SELF,
+    magnitude=effect.magnitude or 0.0,
+    target_count=effect.target_count,
+    duration=effect.duration,
+    range=effect.range,
+    scaling=effect.scaling,
+    stacking=effect.stacking or StackingBehavior.UNIQUE,
+    exclusivity_group=effect.exclusivity_group,
+    conditions=conditions,
+    trigger=trigger,
+    role_relevance=role_relevance,
+)
 
 
 def resolve_effect_variants(
