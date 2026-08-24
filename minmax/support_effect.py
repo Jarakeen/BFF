@@ -55,8 +55,18 @@ class SupportEffect:
     target_count: int | None = None
     """How many targets this effect can cover at once, if limited."""
 
+    range: float | None = None
+    """How far this effect reaches from its source, in meters, if limited."""
+
     duration: float | None = None
     """How long a single application lasts, in seconds. None means passive/permanent."""
+
+    scaling: str | None = None
+    """
+    Structural description of how this effect's magnitude/duration scale
+    with something else (e.g. "1 second per 10 Ultimate spent"), if any.
+    This is preserved as data only - nothing here evaluates the formula.
+    """
 
     uptime: float = 1.0
     """Expected fraction of an encounter this effect is active, from 0.0 to 1.0."""
