@@ -51,3 +51,10 @@ def test_invalid_requirement_values_are_rejected():
         pass
     else:
         raise AssertionError("Expected invalid uptime to raise ValueError")
+
+def test_major_courage_requires_one_provider():
+    requirement = CoverageRequirement(
+        effect_name="major_courage",
+    )
+
+    assert requirement.required_provider_count == 1

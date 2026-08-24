@@ -46,6 +46,8 @@ class CoverageRequirement:
     priority. The meaning of the scale belongs to the requirement source,
     not this model.
     """
+    required_provider_count: int = 1
+    
 
     def __post_init__(self) -> None:
         if not self.effect_name:
@@ -64,4 +66,9 @@ class CoverageRequirement:
         if self.maximum_range is not None and self.maximum_range < 0:
             raise ValueError(
                 "CoverageRequirement.maximum_range cannot be negative."
+            )
+        
+        if self.required_provider_count < 1:
+            raise ValueError(
+                "CoverageRequirement.required_provider_count must be at least 1."
             )
