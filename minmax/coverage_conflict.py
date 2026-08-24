@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from .coverage_gap import CoverageAnalysis
+from .support_stacking import StackingBehavior
 
 
 class ConflictType(str, Enum):
@@ -16,16 +17,22 @@ class ConflictType(str, Enum):
 @dataclass(frozen=True)
 class ProviderConflict:
     """
-    Describes a relationship between providers of the same capability.
+    Describes a relationship between providers.
 
-    REDUNDANCY means more valid providers exist than the requirement needs.
+    REDUNDANCY:
+        More valid providers exist than the requirement needs, and the
+        effect does not explicitly stack.
 
-    EXCLUSIVITY means multiple valid providers share an explicit
-    exclusivity group. This is reported as evidence only; the analyzer
-    does not decide which provider wins.
+    EXCLUSIVITY:
+        Providers of effects sharing an explicit exclusivity group may
+        compete with one another.
+
+    `effect_name` is None for an exclusivity conflict spanning multiple
+    effect identities. The exclusivity group identifies the actual
+    mechanical relationship.
     """
 
-    effect_name: str
+    effect_name: str | None
     conflict_type: ConflictType
     providers: tuple[str, ...]
     exclusivity_group: str | None = None
@@ -66,17 +73,20 @@ class CoverageConflictReport:
 
 class CoverageConflictAnalyzer:
     """
-    Analyze provider relationships already preserved by CoverageAnalysis.
+    Analyze provider relationships preserved by CoverageAnalysis.
 
     Redundancy is requirement-aware:
 
         valid providers > required providers
 
-    Therefore two Major Courage providers are redundant when one is
-    required, but two providers are not redundant when two are required.
+    but only when the effect does not explicitly stack.
 
-    This analyzer does not optimize the roster, remove providers, choose
-    winners, or invent stacking rules.
+    Exclusivity is analyzed across the complete coverage analysis because
+    two different effect identities can belong to the same explicit
+    exclusivity group.
+
+    This analyzer does not optimize the roster, choose winners, or invent
+    ESO mechanics that are not represented by SupportEffect metadata.
     """
 
     def analyze(
@@ -85,12 +95,21 @@ class CoverageConflictAnalyzer:
     ) -> CoverageConflictReport:
         conflicts: list[ProviderConflict] = []
 
+        # ---------------------------------------------------------------
+        # Per-effect redundancy
+        # ---------------------------------------------------------------
         for gap in coverage_analysis.gaps:
             valid_providers = gap.satisfying_provider_evidence
 
-            # Redundancy only exists when there are more valid providers
-            # than the requirement actually needs.
-            if len(valid_providers) > gap.required_provider_count:
+            if not valid_providers:
+                continue
+
+            stacking_behavior = valid_providers[0].effect.stacking
+
+            if (
+                len(valid_providers) > gap.required_provider_count
+                and stacking_behavior != StackingBehavior.STACKS
+            ):
                 redundant = valid_providers[gap.required_provider_count:]
 
                 conflicts.append(
@@ -104,11 +123,22 @@ class CoverageConflictAnalyzer:
                     )
                 )
 
-            # Exclusivity is only meaningful among providers that actually
-            # satisfy the requirement.
-            exclusivity_groups: dict[str, list[str]] = {}
+        # ---------------------------------------------------------------
+        # Cross-effect exclusivity
+        # ---------------------------------------------------------------
+        #
+        # Exclusivity is different from redundancy. It can exist between
+        # two different effect names when their explicit
+        # exclusivity_group is the same.
+        #
+        # Only satisfying providers participate. A provider that fails
+        # the encounter requirement should not create a conflict merely
+        # because its underlying effect happens to share a group.
+        #
+        exclusivity_groups: dict[str, list[str]] = {}
 
-            for provider in valid_providers:
+        for gap in coverage_analysis.gaps:
+            for provider in gap.satisfying_provider_evidence:
                 group = provider.effect.exclusivity_group
 
                 if group is None:
@@ -118,15 +148,19 @@ class CoverageConflictAnalyzer:
                     provider.character_name
                 )
 
-            for group, provider_names in exclusivity_groups.items():
-                if len(provider_names) > 1:
-                    conflicts.append(
-                        ProviderConflict(
-                            effect_name=gap.requirement.effect_name,
-                            conflict_type=ConflictType.EXCLUSIVITY,
-                            providers=tuple(provider_names),
-                            exclusivity_group=group,
-                        )
-                    )
+        for group, provider_names in exclusivity_groups.items():
+            unique_provider_names = tuple(dict.fromkeys(provider_names))
+
+            if len(unique_provider_names) <= 1:
+                continue
+
+            conflicts.append(
+                ProviderConflict(
+                    effect_name=None,
+                    conflict_type=ConflictType.EXCLUSIVITY,
+                    providers=unique_provider_names,
+                    exclusivity_group=group,
+                )
+            )
 
         return CoverageConflictReport(tuple(conflicts))

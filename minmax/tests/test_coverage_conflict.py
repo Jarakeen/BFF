@@ -16,6 +16,7 @@ from minmax.support_target_type import SupportTargetType
 def _effect(
     name: str,
     *,
+    stacking: StackingBehavior = StackingBehavior.UNIQUE,
     exclusivity_group: str | None = None,
 ) -> SupportEffect:
     return SupportEffect(
@@ -24,7 +25,7 @@ def _effect(
         category=SupportEffectCategory.BUFF,
         effect_type=name,
         target_type=SupportTargetType.GROUP,
-        stacking=StackingBehavior.UNIQUE,
+        stacking=stacking,
         exclusivity_group=exclusivity_group,
     )
 
@@ -82,8 +83,6 @@ def test_multiple_valid_providers_are_reported_as_redundancy():
 
     assert redundancy.effect_name == "major_courage"
     assert redundancy.conflict_type == ConflictType.REDUNDANCY
-
-    # One provider is required, so only the second provider is redundant.
     assert redundancy.providers == ("Healer Two",)
 
 
@@ -125,7 +124,7 @@ def test_same_exclusivity_group_is_reported():
 
     conflict = report.exclusivities[0]
 
-    assert conflict.effect_name == "major_courage"
+    assert conflict.effect_name is None
     assert conflict.conflict_type == ConflictType.EXCLUSIVITY
     assert conflict.providers == (
         "Healer One",
@@ -177,10 +176,23 @@ def test_gap_retains_full_provider_evidence():
 
     assert gap is not None
     assert gap.status == CoverageStatus.COVERED
+
+    # Public compatibility API remains name-based.
     assert gap.providers == ("Healer One",)
     assert gap.satisfying_providers == ("Healer One",)
-    assert gap.provider_evidence == (provider,)
-    assert gap.satisfying_provider_evidence == (provider,)
+
+    # Full mechanical evidence survives the coverage boundary.
+    assert len(gap.provider_evidence) == 1
+
+    evidence = gap.provider_evidence[0]
+
+    assert evidence.character_name == "Healer One"
+    assert evidence.role == Role.HEALER
+    assert evidence.effect == provider.effect
+    assert evidence.effect.exclusivity_group == "major_courage"
+
+    assert len(gap.satisfying_provider_evidence) == 1
+    assert gap.satisfying_provider_evidence[0] == evidence
 
 
 def test_conflict_report_can_filter_by_effect():
@@ -194,57 +206,8 @@ def test_conflict_report_can_filter_by_effect():
 
     assert len(report.for_effect("major_courage")) == 1
     assert report.for_effect("major_slayer") == ()
-    
-def test_gap_retains_full_provider_evidence():
-    provider = _provider(
-        "Healer One",
-        _effect(
-            "major_courage",
-            exclusivity_group="major_courage",
-        ),
-    )
-
-    analysis = _analysis(
-        "major_courage",
-        provider,
-    )
-
-    gap = analysis.for_effect("major_courage")
-
-    assert gap is not None
-    assert gap.status == CoverageStatus.COVERED
-
-    # Public compatibility API remains name-based.
-    assert gap.providers == ("Healer One",)
-    assert gap.satisfying_providers == ("Healer One",)
-
-    # Full mechanical evidence survives the coverage boundary.
-    assert len(gap.provider_evidence) == 1
-    evidence = gap.provider_evidence[0]
-
-    assert evidence.character_name == "Healer One"
-    assert evidence.role == Role.HEALER
-    assert evidence.effect == provider.effect
-    assert evidence.effect.exclusivity_group == "major_courage"
-
-    assert len(gap.satisfying_provider_evidence) == 1
-    assert gap.satisfying_provider_evidence[0] == evidence
 
 
-def test_two_required_providers_are_not_redundant():
-    analysis = _analysis(
-        "major_courage",
-        _provider("Healer One", _effect("major_courage")),
-        _provider("Healer Two", _effect("major_courage")),
-    )
-
-    # Re-run with a requirement needing two providers.
-    coverage = analysis
-
-    report = CoverageConflictAnalyzer().analyze(coverage)
-
-    assert report.redundancies == ()
-    
 def test_two_required_providers_are_not_redundant():
     coverage = RosterCoverageAnalyzer().analyze(
         {
@@ -267,4 +230,90 @@ def test_two_required_providers_are_not_redundant():
 
     report = CoverageConflictAnalyzer().analyze(analysis)
 
-    assert report.redundancies == ()    
+    assert report.redundancies == ()
+
+
+def test_stacking_effect_providers_are_not_automatically_redundant():
+    coverage = RosterCoverageAnalyzer().analyze(
+        {
+            "test_stack": (
+                _provider(
+                    "Healer One",
+                    _effect(
+                        "test_stack",
+                        stacking=StackingBehavior.STACKS,
+                    ),
+                ),
+                _provider(
+                    "Healer Two",
+                    _effect(
+                        "test_stack",
+                        stacking=StackingBehavior.STACKS,
+                    ),
+                ),
+            ),
+        }
+    )
+
+    analysis = CoverageGapAnalyzer().analyze(
+        coverage,
+        (
+            CoverageRequirement(
+                effect_name="test_stack",
+                required_provider_count=1,
+            ),
+        ),
+    )
+
+    report = CoverageConflictAnalyzer().analyze(analysis)
+
+    assert report.redundancies == ()
+
+
+def test_same_exclusivity_group_across_different_effects_is_reported():
+    coverage = RosterCoverageAnalyzer().analyze(
+        {
+            "effect_a": (
+                _provider(
+                    "Healer One",
+                    _effect(
+                        "effect_a",
+                        exclusivity_group="courage",
+                    ),
+                ),
+            ),
+            "effect_b": (
+                _provider(
+                    "Healer Two",
+                    _effect(
+                        "effect_b",
+                        exclusivity_group="courage",
+                    ),
+                ),
+            ),
+        }
+    )
+
+    analysis = CoverageGapAnalyzer().analyze(
+        coverage,
+        (
+            CoverageRequirement(effect_name="effect_a"),
+            CoverageRequirement(effect_name="effect_b"),
+        ),
+    )
+
+    report = CoverageConflictAnalyzer().analyze(analysis)
+
+    exclusivities = report.exclusivities
+
+    assert len(exclusivities) == 1
+
+    conflict = exclusivities[0]
+
+    assert conflict.effect_name is None
+    assert conflict.conflict_type == ConflictType.EXCLUSIVITY
+    assert conflict.exclusivity_group == "courage"
+    assert conflict.providers == (
+        "Healer One",
+        "Healer Two",
+    )
