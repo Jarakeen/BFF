@@ -24,6 +24,26 @@ Working project:
 BFF/40_Stream Studio/OBS/Scripts/FoundryDock/
 ```
 
+Encounter
+   ↓
+Mechanics
+   ↓
+Strategy
+   ↓
+Group composition
+   ↓
+Player identity / role
+   ↓
+Build
+   ↓
+Skills
+   ↓
+Support assignments
+   ↓
+Rotation / execution
+   ↓
+Expected outcome
+
 ---
 
 # 2. DATABASE STATE
@@ -50,6 +70,48 @@ free_pages: 0
 ```
 
 The database genuinely stores approximately 1.06 GiB of data. This is not primarily SQLite free-space bloat.
+
+Lokkestiiz is now our first encounter-analysis case
+
+We've deliberately chosen Lokkestiiz as the first encounter for the ESO Logs strategy/evidence work.
+
+We have:
+
+Our team
+
+Report:
+
+FPy6Tc9BzwQNbfVK
+
+Fights:
+
+6
+27
+41
+High-performing reference team
+
+Report:
+
+NVDXwL1BQryFTxYh
+
+Fights:
+
+6
+8
+12
+
+The second dataset is specifically being used as a best-of-the-best reference, rather than merely another random successful clear.
+
+That distinction matters. We're trying to learn:
+
+What does an elite execution actually do?
+
+and compare it against:
+
+What does our group actually do?
+
+rather than declaring the elite team's exact build to be universally correct.
+
 
 ### GitHub rule
 
@@ -118,6 +180,41 @@ The GitHub repository currently contains no importer/service/parser references t
 
 Do not assume the current repository can regenerate these tables.
 
+Raw ESO Logs data has now been acquired
+
+The elite report was successfully queried through the ESO Logs API.
+
+We created:
+
+data/raw/esologs_nvdx_lokkestiiz.json
+
+Containing:
+
+Fight 6   100,559 events
+Fight 8    73,841 events
+Fight 12  156,160 events
+
+Our earlier report data also exists in:
+
+data/raw/esologs_probe.json
+data/raw/esologs_night2.json
+
+The important architectural decision:
+
+Raw ESO Logs JSON is evidence and should remain separate from the normalized MinMax representation.
+
+We discovered that ESO Logs exposes a large amount of entity-level detail, including player equipment/skills and event data, but its representation is not the representation MinMax should adopt.
+
+For example, a single player can appear fragmented across equipment pieces, skills, and other entities.
+
+Therefore:
+
+ESO Logs schema
+      ≠
+MinMax domain model
+
+The parser should translate ESO Logs into our canonical domain representation, not force MinMax to behave like ESO Logs.
+
 ---
 
 # 4. ESO LOG DATA
@@ -142,6 +239,42 @@ The `log_event` table contains **1,750,281 events**.
 These events represent detailed play-by-play ESO Logs data from an actual trial team running **Sunspire over two nights**.
 
 This is intentional test/analysis data, not accidental database garbage.
+
+We now have a normalization layer
+
+We created normalized Lokkestiiz output under:
+
+data/normalized/lokkestiiz/
+
+Current examples:
+
+FPy6Tc9BzwQNbfVK_fight_6.json
+FPy6Tc9BzwQNbfVK_fight_27.json
+FPy6Tc9BzwQNbfVK_fight_41.json
+
+The normalized structure currently looks like:
+
+{
+    schema_version,
+    source,
+    fight,
+    players,
+    events,
+    summary
+}
+
+One important discovery:
+
+The current normalization of Fight 6 produced:
+
+players: []
+events: 131779
+
+This exposed an important problem with the first normalization approach: the raw ESO Logs combatant/entity representation does not automatically give us the player model we actually need.
+
+Do not treat the current normalized player representation as finished.
+
+The event stream itself is valuable and intact.
 
 ---
 
@@ -198,6 +331,38 @@ A sample event includes source/target resources, HP, Magicka, Stamina, Ultimate,
 
 It may be important as a source-of-truth / forensic representation if the parser later needs fields that were not initially modeled.
 
+ESO Logs gave us useful information even before strategy analysis
+
+The Lokkestiiz data demonstrated that the raw event stream contains useful fields including:
+
+timestamp
+event type
+source
+target
+ability
+damage
+healing
+resources
+HP
+Max HP
+Magicka
+Stamina
+Ultimate
+Champion Points
+position
+facing
+cast tracking
+
+Example events contain positional information:
+
+x
+y
+facing
+
+This is potentially extremely valuable for encounter analysis because our eventual system needs to understand positioning and movement, not merely DPS.
+
+The raw JSON should therefore remain preserved as the source of truth.
+
 ---
 
 # 6. LOG DATABASE ARCHITECTURE
@@ -247,6 +412,52 @@ Before moving anything:
 4. Identify relevant local/untracked/ignored files.
 5. Only then design the database split.
 
+Lokkestiiz strategy knowledge has now been explicitly captured
+
+We have also supplied human strategy knowledge that is not necessarily recoverable from logs alone.
+
+This is critical.
+
+MinMax cannot learn the entire strategy merely by looking at event streams.
+
+For Lokkestiiz, we've established among other things:
+
+Positioning
+
+All three Sunspire dragons are effectively fixed in place.
+
+They do not get repositioned by the tanks.
+
+The meaningful positioning variable is:
+
+dragon facing direction
+
+The group generally positions around the dragon's right-side knuckle on Lokkestiiz and Yolnahkriin, while Nahviintaas uses the opposite side.
+
+The dragons' physical posture also means the group does not get conventional flanking bonuses.
+
+Group positioning
+
+For the Lokkestiiz Storm Fury / "ice laser" phase:
+
+players use assigned positions
+the group forms a controlled stack/house
+DDs stay as close together as practical without overlapping dangerous effects
+healers are assigned responsibility for the stack
+healers must sustain the group through the mechanic
+some groups use a more diamond-shaped arrangement when operating with one healer
+Frozen Tomb / Icy Winds
+
+The human strategy information establishes that these mechanics require:
+
+assigned players
+rotation
+timing
+healing responsibility
+avoidance of re-entry/debuff violations
+
+The exact implementation should eventually be represented as mechanic requirements, rather than simply text instructions.
+
 ---
 
 # 7. CLAUDE REPOSITORY ASSESSMENT
@@ -282,6 +493,118 @@ The live database contains data the repository does not currently know how to re
 
 Treat this as a **data provenance problem**, not merely a database-size problem.
 
+We have identified a major distinction: Safe vs Score-Pushing
+
+This needs to become an explicit concept in MinMax.
+
+We aren't looking for one universal "best build."
+
+We need:
+
+Lokkestiiz
+├── SAFE
+│   ├── more survivability
+│   ├── more forgiving mechanics
+│   ├── lower execution complexity
+│   └── reliable clear
+│
+└── SCORE-PUSHING
+    ├── maximum practical damage
+    ├── tighter support coordination
+    ├── higher execution demands
+    ├── optimized uptime
+    └── faster phase transitions
+
+This should eventually become part of the optimization objective, not merely a UI toggle.
+
+For Nahviintaas, we've established that our team uses a portal skip strategy to reduce DD exposure to portal mechanics.
+
+This illustrates another important architectural requirement:
+
+The optimizer needs to understand that:
+
+same encounter
++
+different strategy
+=
+different build requirements
+
+A build optimized for a conventional Nahviintaas portal cycle may not be optimal for a portal-skip strategy.
+
+That is exactly the kind of encounter-specific reasoning the project goal requires.
+
+Tanking strategy has to be represented separately from raw boss mechanics
+
+The current knowledge also establishes that strategy cannot simply say:
+
+"Frost Breath occurs."
+
+It needs to eventually represent:
+
+Mechanic:
+    Frost Breath
+
+Role:
+    Main Tank
+
+Requirement:
+    survive channel
+
+Possible responses:
+    block
+    dodge
+    mitigation
+    healing support
+
+Strategy preference:
+    blocking is more reliable during normal execution
+
+Failure consequence:
+    tank death / potential wipe
+
+This is a decision model, not a mechanic encyclopedia.
+
+That distinction should be preserved as we design the encounter layer.
+
+The ESO Logs comparison should be evidence, not the strategy source
+
+This is probably the most important architectural conclusion from the last few days.
+
+We should not do:
+
+Elite log
+   ↓
+copy everything elite players did
+   ↓
+MinMax recommendation
+
+Instead:
+
+ESO mechanics knowledge
+        +
+human strategy knowledge
+        +
+elite execution evidence
+        +
+our group's execution evidence
+        ↓
+Encounter Model
+        ↓
+Requirements
+        ↓
+Candidate solutions
+        ↓
+MinMax recommendation
+
+ESO Logs can tell us:
+
+What happened?
+
+They cannot independently tell us:
+
+What should have happened?
+
+That distinction needs to be written into the architecture.
 ---
 
 # 8. NEXT TASK: DATABASE PROVENANCE FORENSICS
@@ -371,6 +694,54 @@ But this should be a separate, deliberate change.
 
 Do not combine path-resolution cleanup with an emergency database split.
 
+Proposed new architecture
+
+I would add this to the roadmap:
+
+STATIC ESO DATA
+    │
+    ├── Skills
+    ├── Sets
+    ├── Passives
+    ├── CP
+    ├── Gear
+    └── Characters
+             │
+             ▼
+       BUILD MODEL
+             │
+             ▼
+       STAT / EFFECT ENGINE
+             │
+             ▼
+       CANDIDATE BUILDS
+             │
+             │
+ENCOUNTER DATA ───────────────┐
+    │                         │
+    ├── Mechanics             │
+    ├── Phases                │
+    ├── Requirements          │
+    ├── Positioning           │
+    ├── Strategy variants     │
+    └── Failure consequences  │
+                              ▼
+                       ENCOUNTER SOLVER
+                              ▲
+                              │
+ESO LOG EVIDENCE ─────────────┘
+    │
+    ├── observed execution
+    ├── timing
+    ├── damage
+    ├── healing
+    ├── buffs/debuffs
+    ├── deaths
+    ├── positioning
+    └── player behavior
+
+That is the architecture I think we should be aiming at.
+
 ---
 
 # 10. REGENERATION STATUS
@@ -380,6 +751,54 @@ At present, assume both the live combat-log data and gear-customization data are
 Do not assume either dataset can safely be regenerated.
 
 This is especially important for the combat logs because the repository contains no known importer capable of reconstructing the current 1.75 million-event dataset.
+
+
+New immediate roadmap
+
+I'd update the old roadmap from:
+
+Build-level effect orchestration → stat resolver → optimizer
+
+to this slightly expanded path:
+
+A. Finish current MinMax foundation
+Build-level effect orchestration
+gear customization
+race
+skills/passives
+CP
+mundus/food/potions
+deterministic stat resolution
+B. Build encounter evidence pipeline
+raw ESO Logs preservation
+normalized encounter events
+canonical player representation
+fight comparison
+phase timing extraction
+mechanic-event identification
+C. Build encounter model
+mechanics
+phases
+role requirements
+positioning requirements
+survival requirements
+damage requirements
+support requirements
+strategy variants
+D. Build strategy model
+Encounter
+├── Safe
+└── Score-Pushing
+
+with potentially additional strategy variants later.
+
+E. Connect encounter → build optimization
+
+Then MinMax can finally answer:
+
+"Given these twelve people, these locked classes/roles, this encounter, and this strategy, what should everyone run?"
+
+That is much closer to the actual product.
 
 ---
 
@@ -406,6 +825,21 @@ The existing 37 MB `data/eso.db` snapshot in Git is an older exception and shoul
 - migrations, once a migration system exists
 - reproducible data-processing code
 - small test fixtures when appropriate
+
+What I would NOT put into the Project State yet
+
+I would not claim that:
+
+the ESO Logs parser is complete
+the Lokkestiiz encounter model is complete
+the elite-vs-team analysis is complete
+the normalized player model is complete
+the optimizer can currently make encounter-specific recommendations
+the raw logs have already yielded definitive build conclusions
+
+We have evidence and infrastructure, not conclusions yet.
+
+And that distinction will save us from future Claude conversations confidently building an entire cathedral on top of one malformed JSON field. 🫠
 
 ## Future test fixtures
 
@@ -1494,3 +1928,311 @@ build.add_gear_set(set_id, piece_count)
 part of the normal build-calculation pipeline so that a caller does not have to manually resolve gear-set effects before invoking StatEngine.
 
 Do not reopen completed UESP encounter work unless a new application requirement exposes a real data/parsing defect.
+
+
+# 26. ESO LOGS / ENCOUNTER ANALYSIS PIPELINE
+
+## Status
+
+ACTIVE DEVELOPMENT — FIRST ENCOUNTER: LOKKESTIIZ
+
+The project has expanded from deterministic character/build calculation toward
+the full encounter-aware Min/Max goal.
+
+The long-term goal remains:
+
+Given a specific ESO trial encounter, a specific group, and their locked
+character identities, determine the best encounter-specific builds, skills,
+support assignments, and rotations to maximize the chance of success, with
+Safe and Score-Pushing strategies.
+
+## Lokkestiiz Evidence Dataset
+
+Two ESO Logs reports are currently being used for the first encounter study.
+
+Our team:
+
+Report:
+FPy6Tc9BzwQNbfVK
+
+Fights:
+6
+27
+41
+
+High-performing reference team:
+
+Report:
+NVDXwL1BQryFTxYh
+
+Fights:
+6
+8
+12
+
+The reference report represents a best-of-the-best comparison dataset.
+
+Raw elite fight data:
+
+data/raw/esologs_nvdx_lokkestiiz.json
+
+Event counts:
+
+Fight 6: 100,559
+Fight 8: 73,841
+Fight 12: 156,160
+
+Existing raw Lokkestiiz data also includes:
+
+data/raw/esologs_probe.json
+data/raw/esologs_night2.json
+
+## ESO Logs Architecture Principle
+
+ESO Logs is an evidence source, not the Min/Max domain model.
+
+Do not reproduce the ESO Logs entity structure inside MinMax.
+
+Raw ESO Logs should remain preserved as source-of-truth evidence.
+
+The normalization layer should translate ESO Logs into the project's canonical
+combat/encounter representation.
+
+Conceptually:
+
+ESO Logs
+    ↓
+Raw evidence
+    ↓
+Normalization
+    ↓
+Canonical encounter events
+    ↓
+Encounter analysis
+    ↓
+Encounter model
+
+## Normalized Data
+
+Current normalized Lokkestiiz data exists under:
+
+data/normalized/lokkestiiz/
+
+Current files include:
+
+FPy6Tc9BzwQNbfVK_fight_6.json
+FPy6Tc9BzwQNbfVK_fight_27.json
+FPy6Tc9BzwQNbfVK_fight_41.json
+
+The normalized schema currently contains:
+
+schema_version
+source
+fight
+players
+events
+summary
+
+The current player normalization is NOT considered complete.
+
+A raw fight can contain extensive event/entity information without directly
+mapping to the canonical player model required by MinMax.
+
+Do not force MinMax to match the ESO Logs representation.
+
+## Useful ESO Logs Evidence
+
+Raw events can provide information including:
+
+timestamp
+event type
+source/target
+ability IDs
+damage
+healing
+resources
+HP
+Magicka
+Stamina
+Ultimate
+Champion Points
+position
+facing
+cast tracking
+
+Position and facing data may eventually support encounter positioning and
+movement analysis.
+
+raw_json must remain preserved.
+
+## Lokkestiiz Strategy Knowledge
+
+Human-provided strategy knowledge is being combined with ESO Logs evidence.
+
+Important known strategy concepts include:
+
+- Dragons are effectively stationary.
+- Tank positioning primarily controls dragon facing.
+- Lokkestiiz and Yolnahkriin generally use the right-side group position.
+- Nahviintaas generally uses the opposite side.
+- The dragons' physical posture means conventional flanking assumptions should
+  not be applied.
+- Storm Fury / ice-laser execution uses assigned player positions.
+- DDs remain tightly grouped while avoiding dangerous overlaps.
+- Healers are assigned stack-healing responsibility.
+- One-healer and two-healer execution patterns may differ.
+- Frozen Tomb / Icy Winds require deliberate player rotations.
+- Nahviintaas can use a portal-skip strategy to reduce portal exposure for DDs.
+
+These are strategy inputs, not claims that the ESO Logs parser can independently
+derive the correct strategy.
+
+## Safe vs Score-Pushing
+
+Encounter optimization must support at least two strategy objectives:
+
+SAFE
+- prioritize clear reliability
+- prioritize survivability
+- reduce execution complexity
+- favor forgiving assignments
+
+SCORE-PUSHING
+- maximize practical damage
+- optimize uptime
+- exploit controlled encounter windows
+- accept greater execution requirements where justified
+
+There is not necessarily one universally optimal build for an encounter.
+
+The same encounter may produce different optimal builds depending on the
+selected strategy.
+
+## Evidence Principle
+
+ESO Logs answers:
+
+"What happened?"
+
+The encounter/strategy model must answer:
+
+"What should happen?"
+
+Therefore recommendations must not simply copy elite-log behavior.
+
+The intended evidence pipeline is:
+
+ESO mechanics/reference data
+    +
+human strategy knowledge
+    +
+elite execution evidence
+    +
+our team's execution evidence
+    ↓
+Encounter Model
+    ↓
+Requirements
+    ↓
+Candidate Builds / Assignments
+    ↓
+Min/Max Recommendation
+
+## New Encounter-Aware Architecture
+
+Static ESO data:
+    skills
+    sets
+    passives
+    CP
+    gear
+    characters
+
+        ↓
+
+Build Model
+        ↓
+Stat / Effect Engine
+        ↓
+Candidate Builds
+
+Encounter Model:
+    mechanics
+    phases
+    role requirements
+    positioning
+    survival requirements
+    damage requirements
+    support requirements
+    strategy variants
+
+        ↓
+
+Encounter Solver
+
+ESO Logs Evidence feeds the Encounter Solver through observed execution data.
+
+## Immediate Encounter Work
+
+The next ESO Logs milestone is NOT another raw-log parser.
+
+Build a comparison/evidence tool that compares:
+
+Our team:
+FPy6Tc9BzwQNbfVK fights 6/27/41
+
+Reference team:
+NVDXwL1BQryFTxYh fights 6/8/12
+
+The comparison should eventually expose:
+
+- fight duration
+- composition
+- phase timings
+- deaths
+- damage
+- healing
+- major buff/debuff uptime
+- ultimate usage
+- mechanic execution
+- positioning where reliably derivable
+
+Do not interpret differences as build problems automatically.
+
+Separate:
+
+- build effects
+- strategy effects
+- execution effects
+- player-performance effects
+
+before using them as optimization inputs.
+
+## Encounter-Aware Min/Max Roadmap
+
+1. ~~Finish build-level effect orchestration.~~
+2. Complete deterministic character stat resolution.
+3. Establish canonical ESO Logs event/player normalization.
+4. Build encounter evidence/comparison tooling.
+5. Define the Lokkestiiz encounter model.
+6. Define Safe and Score-Pushing strategy models.
+7. Connect encounter requirements to candidate builds.
+8. Add support assignment optimization.
+9. Add rotation/timeline optimization.
+10. Generalize the encounter framework beyond Lokkestiiz.
+
+## Important Constraint
+
+Do not let ESO Logs schema become the application's domain model.
+
+Do not infer strategy solely from elite logs.
+
+Do not hard-code one team's strategy as universally optimal.
+
+The system must preserve the distinction between:
+
+observed behavior
+known mechanics
+strategy choice
+optimization objective
+recommended solution
