@@ -14,6 +14,7 @@ class CoverageClassification(str, Enum):
 
     COVERED = "covered"
     REDUNDANT = "redundant"
+    RESILIENT = "resilient"
     INSUFFICIENT = "insufficient"
     MISSING = "missing"
     CONFLICT = "conflict"
@@ -38,6 +39,7 @@ class CoverageClassificationResult:
 
     providers: tuple[str, ...] = ()
     redundant_providers: tuple[str, ...] = ()
+    resilient_providers: tuple[str, ...] = ()
     conflicting_providers: tuple[str, ...] = ()
 
     explanation: str = ""
@@ -60,6 +62,7 @@ class CoverageClassificationResult:
         return self.classification in {
             CoverageClassification.COVERED,
             CoverageClassification.REDUNDANT,
+            CoverageClassification.RESILIENT,
         }
 
 
@@ -107,6 +110,9 @@ class CoverageClassificationAnalyzer:
     This layer does not invent encounter requirements, resolve ESO
     mechanics, or recommend specific roster changes. It interprets the
     already-resolved evidence conservatively.
+
+    Resilience is supplied as explicit evidence by the caller. This class
+    does not infer resilience from provider count alone.
     """
 
     def classify(
@@ -117,6 +123,7 @@ class CoverageClassificationAnalyzer:
         providers: tuple[str, ...],
         satisfying_providers: tuple[str, ...],
         redundant_providers: tuple[str, ...] = (),
+        resilient_providers: tuple[str, ...] = (),
         conflicting_providers: tuple[str, ...] = (),
     ) -> CoverageClassificationResult:
         """
@@ -180,6 +187,21 @@ class CoverageClassificationAnalyzer:
                     f"{effect_name} requires "
                     f"{required_provider_count} valid provider(s), "
                     f"but only {valid_provider_count} qualify."
+                ),
+            )
+
+        if resilient_providers:
+            return CoverageClassificationResult(
+                effect_name=effect_name,
+                classification=CoverageClassification.RESILIENT,
+                required_provider_count=required_provider_count,
+                valid_provider_count=valid_provider_count,
+                providers=providers,
+                resilient_providers=resilient_providers,
+                explanation=(
+                    f"{effect_name} is satisfied, with "
+                    f"{len(resilient_providers)} additional provider(s) "
+                    "providing independent backup coverage."
                 ),
             )
 
