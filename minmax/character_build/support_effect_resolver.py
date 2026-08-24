@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from ..gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from collections.abc import Iterable
-
+from collections import Counter
 from ..build import Build as LegacyBuild
 from ..build_support_effect_service import BuildSupportEffectService
 from ..role import Role
@@ -69,6 +70,21 @@ def effect_variant_to_support_effect(
     role_relevance=role_relevance,
 )
 
+def equipped_gear_set_counts(build: CharacterBuild) -> dict[str, int]:
+    """Count all simultaneously equipped gear pieces by stable set identity."""
+    counts: Counter[str] = Counter()
+
+    for piece in build.all_armor_pieces():
+        if piece.set_id is not None:
+            counts[piece.set_id] += 1
+
+    for bar in build.bars():
+        for weapon in (bar.main_hand, bar.off_hand):
+            if weapon is not None and weapon.set_id is not None:
+                counts[weapon.set_id] += 1
+
+    return dict(counts)
+
 
 def resolve_effect_variants(
     build: CharacterBuild,
@@ -128,42 +144,27 @@ def _legacy_build_for_bar_weapons(bar: Bar | None) -> LegacyBuild:
 class CharacterBuildSupportEffectResolver:
     """
     Resolves a legal CharacterBuild into the full SupportEffectRegistry of
-    effects it can actually provide at a given moment (a specific active
-    bar).
+    effects it can actually provide at a given moment.
 
-    This is a bridge, not a new source of truth: character-build-native
-    effects (cast/slotted/passive/proc/ultimate, already attached directly
-    to skills/weapons/gear/CP as EffectVariants) are resolved by
-    effect_availability.py; DB-backed weapon-enchantment effects are
-    resolved by reusing the existing BuildSupportEffectService pipeline
-    unchanged. Nothing here re-implements either.
+    Character-build-native effects are resolved by effect_availability.py.
+    DB-backed weapon enchantments reuse the existing
+    BuildSupportEffectService. Known gear-set effects are resolved from
+    equipped set-piece counts through GearSetEffectVariantResolver.
 
-    Currently bridged DB-backed sources
-    ------------------------------------
-    - Weapon enchantments, via an injected BuildSupportEffectService,
-      scoped to the currently active bar's weapons only.
-
-    Not yet bridged (architecture ready, no source data/service to
-    connect to)
-    ------------------------------------------------------------------
-    - Gear sets: the existing GearSetEffectResolver only produces
-      generic self-stat Effects with no target information (documented
-      on BuildSupportEffectService itself), so a set's group-relevant
-      bonus (e.g. Major Courage) cannot yet be told apart from an
-      ordinary personal stat bonus via the database. CharacterBuild's own
-      ArmorPiece.effects can still carry hand-authored EffectVariants for
-      sets whose group effect is already known.
-    - Armor glyphs, race, Champion Points, mythic items: no repository or
-      service in this codebase resolves these into target-aware combat
-      effects yet. CharacterBuild.champion_points / .mythic /.armor can
-      still carry EffectVariants directly for anything already known.
+    This class is a bridge, not a new source of truth.
     """
 
     def __init__(
         self,
         weapon_enchantment_support_service: BuildSupportEffectService | None = None,
+        gear_set_effect_variant_resolver: GearSetEffectVariantResolver | None = None,
     ) -> None:
-        self.weapon_enchantment_support_service = weapon_enchantment_support_service
+        self.weapon_enchantment_support_service = (
+            weapon_enchantment_support_service
+        )
+        self.gear_set_effect_variant_resolver = (
+            gear_set_effect_variant_resolver
+        )
 
     def resolve(
         self,
@@ -177,40 +178,64 @@ class CharacterBuildSupportEffectResolver:
     ) -> SupportEffectRegistry:
         """
         Resolve `build` into a SupportEffectRegistry containing every
-        effect it provides while `active_bar` is active - SELF, ALLY,
-        GROUP, and ENEMY effects alike. This resolver does not decide
-        what "counts" as group support; use SupportCoverage/
-        SupportEffectRegistry on the returned registry for that (e.g.
-        `.contributing_to_group()`).
+        effect it provides while `active_bar` is active.
 
-        Multiple providers of the same named effect (e.g. two sources of
-        "major_force") are preserved as separate SupportEffect entries -
-        this never merges them or sums their magnitudes.
+        Multiple providers of the same named effect are preserved as
+        separate SupportEffect entries. This resolver never merges or
+        sums them.
         """
-        effect_variants = resolve_effect_variants(
-            build,
-            active_bar,
-            passives=passives,
-            relationships=relationships,
-            ultimate_trigger=ultimate_trigger,
+        effect_variants = list(
+            resolve_effect_variants(
+                build,
+                active_bar,
+                passives=passives,
+                relationships=relationships,
+                ultimate_trigger=ultimate_trigger,
+            )
         )
 
+        # Resolve known gear-set effects from the actual equipped set
+        # counts. These are derived effects and are deliberately not
+        # written back onto ArmorPiece.effects.
+        if self.gear_set_effect_variant_resolver is not None:
+            for set_id, piece_count in equipped_gear_set_counts(build).items():
+                try:
+                    numeric_set_id = int(set_id)
+                except (TypeError, ValueError):
+                    continue
+
+                effect_variants.extend(
+                    self.gear_set_effect_variant_resolver.resolve(
+                        numeric_set_id,
+                        piece_count,
+                    )
+                )
+
         registry = SupportEffectRegistry()
+
         for effect in effect_variants:
             registry.add(
                 effect_variant_to_support_effect(
-                    effect, role_relevance=role_relevance
+                    effect,
+                    role_relevance=role_relevance,
                 )
             )
 
         if self.weapon_enchantment_support_service is not None:
             active_bar_obj = (
-                build.front_bar if active_bar == BarId.FRONT else build.back_bar
+                build.front_bar
+                if active_bar == BarId.FRONT
+                else build.back_bar
             )
+
             legacy_build = _legacy_build_for_bar_weapons(active_bar_obj)
-            enchantment_registry = self.weapon_enchantment_support_service.resolve(
-                legacy_build
+
+            enchantment_registry = (
+                self.weapon_enchantment_support_service.resolve(
+                    legacy_build
+                )
             )
+
             for support_effect in enchantment_registry.all():
                 registry.add(support_effect)
 
