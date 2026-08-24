@@ -1,5 +1,6 @@
 # BFF Project State
-
+# MAIN GOAL -- KEEP HERE #
+# ** Given a specific ESO trial encounter, a specific group, and their locked character identities, determine the best encounter-specific builds, skills, support assignments, and rotations to maximize the chance of success, with Safe and Score-Pushing strategies. ** #
 > **Purpose:** Persistent handoff for continuing BFF development across ChatGPT/Claude conversations.
 > **Last updated:** 2026-08-19
 
