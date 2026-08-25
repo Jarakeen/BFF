@@ -51,9 +51,9 @@ class CustomRosterLabWidget(QWidget):
         ))
         root.addWidget(intro)
 
-        mode_card = FoundryCard("Test Mode")
+        mode_card = FoundryCard("Evidence Source")
         mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("MODE"))
+        mode_row.addWidget(QLabel("SOURCE"))
         self.mode_combo = QComboBox()
         self.mode_combo.addItems(["Evidence", "Build-backed"])
         self.mode_combo.currentTextChanged.connect(self._switch_mode)
@@ -82,18 +82,24 @@ class CustomRosterLabWidget(QWidget):
         root.addWidget(roster)
 
         evaluation = FoundryCard("Encounter Evaluation")
-        action_row = QHBoxLayout()
+        action_host = QWidget()
+        action_row = QHBoxLayout(action_host)
+        action_row.setContentsMargins(14, 14, 14, 14)
         evaluate_button = QPushButton("EVALUATE ROSTER")
         self.state_label = QLabel("READY • No evaluation yet")
         action_row.addWidget(evaluate_button)
         action_row.addWidget(self.state_label)
         action_row.addStretch(1)
-        evaluation.addLayout(action_row)
+        evaluation.addWidget(action_host)
         self.results_table = QTableWidget(0, 5)
-        self.results_table.setHorizontalHeaderLabels(["Requirement", "Result", "Valid", "Required", "Explanation"])
+        self.results_table.setHorizontalHeaderLabels([
+            "Requirement", "Result", "Valid", "Required", "Explanation"
+        ])
         self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.results_table.horizontalHeader().setStretchLastSection(True)
         self.results_table.setMinimumHeight(260)
+        self.results_table.setFrameShape(QTableWidget.NoFrame)
+        self.results_table.setLineWidth(0)
         evaluation.addWidget(self.results_table)
         root.addWidget(evaluation)
         root.addStretch(1)
@@ -106,6 +112,7 @@ class CustomRosterLabWidget(QWidget):
             item = self.editor_layout.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                widget.setParent(None)
                 widget.deleteLater()
 
     def _build_evidence_editor(self):
@@ -168,7 +175,7 @@ class CustomRosterLabWidget(QWidget):
         for set_id, name in self.build_lab.available_gear_sets():
             self.gear_combo.addItem(name, set_id)
         self.gear_pieces = QSpinBox()
-        self.gear_pieces.setRange(0, 10)
+        self.gear_pieces.setRange(1, 10)
         self.gear_pieces.setValue(5)
         self.bar_combo = QComboBox()
         self.bar_combo.addItems([bar.value.title() for bar in BarId])
@@ -185,12 +192,27 @@ class CustomRosterLabWidget(QWidget):
         gear_row.addWidget(self.gear_combo, 2)
         gear_row.addWidget(QLabel("PIECES"))
         gear_row.addWidget(self.gear_pieces)
+        add_set_button = QPushButton("ADD SET")
+        gear_row.addWidget(add_set_button)
         gear_row.addWidget(QLabel("ACTIVE BAR"))
         gear_row.addWidget(self.bar_combo)
         editor.addLayout(gear_row)
 
+        self.gear_assignment_list = QListWidget()
+        self.gear_assignment_list.setMaximumHeight(110)
+        editor.addWidget(QLabel("EQUIPPED SETS"))
+        editor.addWidget(self.gear_assignment_list)
+
+        assignment_buttons = QHBoxLayout()
+        remove_set_button = QPushButton("REMOVE SELECTED SET")
+        clear_sets_button = QPushButton("CLEAR SETS")
+        assignment_buttons.addWidget(remove_set_button)
+        assignment_buttons.addWidget(clear_sets_button)
+        assignment_buttons.addStretch(1)
+        editor.addLayout(assignment_buttons)
+
         note = QLabel(
-            "Build-backed evaluation now runs resolved capabilities through the same Phase 4 evaluator. Unsupported gear effects, skills, CP, glyphs, and potions are reported rather than invented."
+            "A mock build can use multiple simultaneous set bonuses, such as 5 + 5 armor/jewelry pieces. The resolver counts the actual equipped pieces before evaluating known effects."
         )
         note.setWordWrap(True)
         editor.addWidget(note)
@@ -204,6 +226,9 @@ class CustomRosterLabWidget(QWidget):
         editor.addLayout(buttons)
         add_button.clicked.connect(self._add_build_player)
         clear_button.clicked.connect(self._clear)
+        add_set_button.clicked.connect(self._add_set_assignment)
+        remove_set_button.clicked.connect(self._remove_set_assignment)
+        clear_sets_button.clicked.connect(self._clear_set_assignments)
         self.editor_layout.addWidget(editor)
 
     def _switch_mode(self, mode: str):
@@ -238,18 +263,50 @@ class CustomRosterLabWidget(QWidget):
         self._reset_capabilities()
         self._refresh_roster()
 
-    def _add_build_player(self):
+    def _add_set_assignment(self):
         if self.gear_combo.currentIndex() < 0:
             return
+        set_id = int(self.gear_combo.currentData())
+        pieces = self.gear_pieces.value()
+        current_total = sum(
+            int(self.gear_assignment_list.item(index).data(Qt.UserRole + 1))
+            for index in range(self.gear_assignment_list.count())
+        )
+        if current_total + pieces > self.build_lab.MAX_ARMOR_SLOTS:
+            self.state_label.setText(
+                f"ATTENTION • {self.build_lab.MAX_ARMOR_SLOTS} armor/jewelry slots maximum"
+            )
+            return
+        item = QListWidgetItem(
+            f"{self.gear_combo.currentText()} • {pieces} piece(s)"
+        )
+        item.setData(Qt.UserRole, set_id)
+        item.setData(Qt.UserRole + 1, pieces)
+        self.gear_assignment_list.addItem(item)
+
+    def _remove_set_assignment(self):
+        row = self.gear_assignment_list.currentRow()
+        if row >= 0:
+            self.gear_assignment_list.takeItem(row)
+
+    def _clear_set_assignments(self):
+        self.gear_assignment_list.clear()
+
+    def _add_build_player(self):
+        assignments = []
+        for index in range(self.gear_assignment_list.count()):
+            item = self.gear_assignment_list.item(index)
+            assignments.append((int(item.data(Qt.UserRole)), int(item.data(Qt.UserRole + 1))))
+
         player = self.build_lab.add_player(
             self.build_name_edit.text(),
             Role(self.build_role_combo.currentText().casefold()),
             CharacterClass(self.class_combo.currentText().casefold()),
-            self.gear_combo.currentData(),
-            self.gear_pieces.value(),
-            BarId(self.bar_combo.currentText().casefold()),
+            gear_sets=tuple(assignments),
+            active_bar=BarId(self.bar_combo.currentText().casefold()),
         )
         self.build_name_edit.clear()
+        self._clear_set_assignments()
         self._refresh_roster()
         if player.validation_errors:
             self.state_label.setText("ATTENTION • Build validation failed")
@@ -273,6 +330,8 @@ class CustomRosterLabWidget(QWidget):
         self.build_lab.clear()
         self.results_table.setRowCount(0)
         self.state_label.setText("READY • Roster cleared")
+        if hasattr(self, "gear_assignment_list"):
+            self._clear_set_assignments()
         self._refresh_roster()
 
     def _refresh_roster(self):
@@ -283,8 +342,14 @@ class CustomRosterLabWidget(QWidget):
             self.roster_table.setItem(row, 0, QTableWidgetItem(player.name))
             self.roster_table.setItem(row, 1, QTableWidgetItem(player.role.value.upper()))
             if build_mode:
-                source = f"{player.gear_set_name} ({player.gear_pieces}p)" if player.gear_set_name else "No gear"
-                resolved = ", ".join(player.resolved_effects) or "; ".join(player.unsupported_sources) or "No resolved support effects"
+                source = ", ".join(
+                    f"{name} ({pieces}p)"
+                    for _, name, pieces in player.gear_sets
+                    if name
+                ) or "No gear"
+                resolved = ", ".join(player.resolved_effects)
+                if not resolved:
+                    resolved = "; ".join(player.unsupported_sources) or "No resolved support effects"
                 uptime = "Build"
             else:
                 source = "Manual evidence"
@@ -296,22 +361,17 @@ class CustomRosterLabWidget(QWidget):
             self.roster_table.setItem(row, 5, QTableWidgetItem(""))
 
     def _evaluate(self):
-        if self.mode_combo.currentText() == "Build-backed":
-            evaluation = self.build_lab.evaluate()
-            self.results_table.setRowCount(len(evaluation.classifications))
-            for row, result in enumerate(evaluation.classifications):
-                self.results_table.setItem(row, 0, QTableWidgetItem(result.effect_name))
-                self.results_table.setItem(row, 1, QTableWidgetItem(result.classification.value.upper()))
-                self.results_table.setItem(row, 2, QTableWidgetItem(str(result.valid_provider_count)))
-                self.results_table.setItem(row, 3, QTableWidgetItem(str(result.required_provider_count)))
-                self.results_table.setItem(row, 4, QTableWidgetItem(result.explanation))
-            if evaluation.is_fully_covered:
-                self.state_label.setText("READY • Fully covered")
-            else:
-                self.state_label.setText(f"ATTENTION • {len(evaluation.problems)} problem(s)")
+        try:
+            evaluation = (
+                self.build_lab.evaluate()
+                if self.mode_combo.currentText() == "Build-backed"
+                else self.lab.evaluate()
+            )
+        except Exception as exc:
+            self.results_table.setRowCount(0)
+            self.state_label.setText(f"ERROR • {exc}")
             return
 
-        evaluation = self.lab.evaluate()
         self.results_table.setRowCount(len(evaluation.classifications))
         for row, result in enumerate(evaluation.classifications):
             self.results_table.setItem(row, 0, QTableWidgetItem(result.effect_name))
