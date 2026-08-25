@@ -5,40 +5,94 @@ from pathlib import Path
 
 from .character_build.effect_instance import EffectVariant
 from .character_build.effect_layer import EffectLayer
+from .character_class import CLASS_SKILL_LINES, CharacterClass
 from .support_effect_category import SupportEffectCategory
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 class SkillEffectRepository:
-    """Resolve imported player abilities into linked effect variants.
-
-    This is deliberately a read-only bridge over the existing
-    ability -> ability_effect_link -> effect_variant -> effect tables.
-    It does not invent skill effects when the database has no linkage.
-    """
+    """Resolve imported player abilities into linked effect variants."""
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
 
-    def available_skills(self, limit: int | None = 5000) -> tuple[tuple[int, str], ...]:
+    def available_skills(
+        self,
+        character_class: CharacterClass | str | None = None,
+        limit: int | None = 5000,
+    ) -> tuple[tuple[int, str], ...]:
+        """Return selectable combat skills for one class, with ranks collapsed.
+
+        The picker intentionally exposes only the character's three class
+        skill lines. Passive, crafted, non-player, and effect-only records
+        are excluded. One row is retained per base ability + morph so rank
+        records do not appear as duplicate skills.
+        """
         if not self.database_path.exists():
             return ()
+
+        selected_lines: frozenset[str] = frozenset()
+        selected_class = ""
+        if character_class is not None:
+            if isinstance(character_class, CharacterClass):
+                selected_class = character_class.value
+            else:
+                selected_class = str(character_class).strip().casefold()
+            try:
+                selected_class = CharacterClass(selected_class).value
+                selected_lines = CLASS_SKILL_LINES[CharacterClass(selected_class)]
+            except ValueError:
+                return ()
+
+        if not selected_lines:
+            return ()
+
         with sqlite3.connect(self.database_path) as db:
-            sql = """
-                SELECT ability_id, name
+            rows = db.execute(
+                """
+                SELECT
+                    ability_id,
+                    name,
+                    class_type,
+                    skill_line,
+                    base_ability_id,
+                    rank,
+                    morph,
+                    is_passive,
+                    is_player,
+                    is_crafted
                 FROM ability
                 WHERE name IS NOT NULL
                   AND TRIM(name) <> ''
                   AND COALESCE(is_player, 0) = 1
-                ORDER BY name COLLATE NOCASE, ability_id
-            """
-            if limit is not None:
-                sql += " LIMIT ?"
-                rows = db.execute(sql, (limit,)).fetchall()
-            else:
-                rows = db.execute(sql).fetchall()
-        return tuple((int(row[0]), str(row[1])) for row in rows)
+                  AND COALESCE(is_passive, 0) = 0
+                  AND COALESCE(is_crafted, 0) = 0
+                ORDER BY name COLLATE NOCASE, rank, ability_id
+                """
+            ).fetchall()
+
+        selected: dict[tuple[int, int], tuple[int, str, int]] = {}
+        for row in rows:
+            ability_id, name, class_type, skill_line, base_id, rank, morph, *_ = row
+            if str(class_type or "").strip().casefold() != selected_class:
+                continue
+            normalized_line = str(skill_line or "").strip().casefold().replace(" ", "_")
+            if normalized_line not in selected_lines:
+                continue
+
+            base_key = int(base_id or ability_id)
+            morph_key = int(morph or 0)
+            key = (base_key, morph_key)
+            rank_value = int(rank or 0)
+            existing = selected.get(key)
+            if existing is None or rank_value < existing[2]:
+                selected[key] = (int(ability_id), str(name).strip(), rank_value)
+
+        values = sorted(selected.values(), key=lambda value: (value[1].casefold(), value[0]))
+        if limit is not None:
+            values = values[:limit]
+        return tuple((ability_id, name) for ability_id, name, _rank in values)
 
     def resolve(self, ability_id: int) -> tuple[EffectVariant, ...]:
         if not self.database_path.exists():
