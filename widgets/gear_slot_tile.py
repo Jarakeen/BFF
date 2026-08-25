@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
+    QCompleter,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -15,6 +16,20 @@ from PySide6.QtWidgets import (
 )
 
 from services.eso_gear_icons import gear_icon_path
+
+
+def _configure_search(combo: QComboBox) -> None:
+    """Enable case-insensitive substring search without free-form insertion."""
+    combo.setEditable(True)
+    combo.setInsertPolicy(QComboBox.NoInsert)
+    combo.setDuplicatesEnabled(False)
+
+    completer = QCompleter(combo.model(), combo)
+    completer.setCaseSensitivity(Qt.CaseInsensitive)
+    completer.setFilterMode(Qt.MatchContains)
+    completer.setCompletionMode(QCompleter.PopupCompletion)
+    combo.setCompleter(completer)
+    combo.lineEdit().setClearButtonEnabled(True)
 
 
 class GearSlotTile(QWidget):
@@ -73,10 +88,6 @@ class GearSlotTile(QWidget):
         self._apply_icon()
         self.refresh()
 
-    # --------------------------------------------------
-    # Display
-    # --------------------------------------------------
-
     def _apply_icon(self):
         path = gear_icon_path(self.slot.lower())
 
@@ -115,10 +126,6 @@ class GearSlotTile(QWidget):
             self._set_name.setText("Empty")
             self._set_name.setToolTip("Empty equipment slot")
 
-    # --------------------------------------------------
-    # Interaction
-    # --------------------------------------------------
-
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self._open_editor()
@@ -132,10 +139,6 @@ class GearSlotTile(QWidget):
 
         layout = QVBoxLayout(dialog)
 
-        # --------------------------------------------------
-        # Set
-        # --------------------------------------------------
-
         set_combo = QComboBox()
         set_combo.setEditable(True)
         set_combo.addItem("")
@@ -148,13 +151,9 @@ class GearSlotTile(QWidget):
         set_combo.setCurrentText(
             self.editor.set_combo.currentText()
         )
-
-        # --------------------------------------------------
-        # Trait
-        # --------------------------------------------------
+        _configure_search(set_combo)
 
         trait_combo = QComboBox()
-
         for i in range(self.editor.trait_combo.count()):
             trait_combo.addItem(
                 self.editor.trait_combo.itemText(i)
@@ -163,10 +162,7 @@ class GearSlotTile(QWidget):
         trait_combo.setCurrentText(
             self.editor.trait_combo.currentText()
         )
-
-        # --------------------------------------------------
-        # Enchantment
-        # --------------------------------------------------
+        _configure_search(trait_combo)
 
         enchant_combo = QComboBox()
         enchant_combo.setEditable(True)
@@ -180,23 +176,14 @@ class GearSlotTile(QWidget):
         enchant_combo.setCurrentText(
             self.editor.enchant_combo.currentText()
         )
-
-        # --------------------------------------------------
-        # Form
-        # --------------------------------------------------
+        _configure_search(enchant_combo)
 
         form = QFormLayout()
-
         form.addRow("Set", set_combo)
         form.addRow("Trait", trait_combo)
         form.addRow("Enchant", enchant_combo)
 
-        # --------------------------------------------------
-        # Armor weight
-        # --------------------------------------------------
-
         weight_combo = None
-
         if getattr(self.editor, "armor", False):
             weight_combo = QComboBox()
 
@@ -208,14 +195,10 @@ class GearSlotTile(QWidget):
             weight_combo.setCurrentText(
                 self.editor.weight_combo.currentText()
             )
-
+            _configure_search(weight_combo)
             form.addRow("Weight", weight_combo)
 
         layout.addLayout(form)
-
-        # --------------------------------------------------
-        # Buttons
-        # --------------------------------------------------
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok
@@ -224,22 +207,15 @@ class GearSlotTile(QWidget):
 
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
-
         layout.addWidget(buttons)
-
-        # --------------------------------------------------
-        # Save changes back to GearSlotRow
-        # --------------------------------------------------
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.editor.set_combo.setCurrentText(
                 set_combo.currentText().strip()
             )
-
             self.editor.trait_combo.setCurrentText(
                 trait_combo.currentText()
             )
-
             self.editor.enchant_combo.setCurrentText(
                 enchant_combo.currentText().strip()
             )
