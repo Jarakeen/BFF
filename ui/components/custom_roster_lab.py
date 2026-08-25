@@ -47,7 +47,7 @@ class CustomRosterLabWidget(QWidget):
             "Test disposable rosters through the real Phase 4 EncounterEvaluator."
         ))
         intro.addWidget(QLabel(
-            "Evidence mode injects known capabilities. Build mode resolves supported build ingredients and reports anything the current model cannot prove."
+            "Evidence mode injects known capabilities. Build mode resolves supported build ingredients into the same evaluator path and reports anything the current model cannot prove."
         ))
         root.addWidget(intro)
 
@@ -190,7 +190,7 @@ class CustomRosterLabWidget(QWidget):
         editor.addLayout(gear_row)
 
         note = QLabel(
-            "Current build-backed coverage is intentionally conservative: gear-set mappings that are not canonically registered are shown as unsupported rather than guessed. Skills, CP, glyphs, and potions remain visible future inputs until their resolver paths are connected."
+            "Build-backed evaluation now runs resolved capabilities through the same Phase 4 evaluator. Unsupported gear effects, skills, CP, glyphs, and potions are reported rather than invented."
         )
         note.setWordWrap(True)
         editor.addWidget(note)
@@ -211,6 +211,7 @@ class CustomRosterLabWidget(QWidget):
             self._build_build_editor()
         else:
             self._build_evidence_editor()
+        self.results_table.setRowCount(0)
         self._refresh_roster()
 
     def _selected_capabilities(self) -> list[str]:
@@ -296,10 +297,18 @@ class CustomRosterLabWidget(QWidget):
 
     def _evaluate(self):
         if self.mode_combo.currentText() == "Build-backed":
-            self.state_label.setText(
-                "BUILD MODE • Resolution preview complete; encounter evaluation remains evidence-driven until the build capability bridge is expanded."
-            )
-            self.results_table.setRowCount(0)
+            evaluation = self.build_lab.evaluate()
+            self.results_table.setRowCount(len(evaluation.classifications))
+            for row, result in enumerate(evaluation.classifications):
+                self.results_table.setItem(row, 0, QTableWidgetItem(result.effect_name))
+                self.results_table.setItem(row, 1, QTableWidgetItem(result.classification.value.upper()))
+                self.results_table.setItem(row, 2, QTableWidgetItem(str(result.valid_provider_count)))
+                self.results_table.setItem(row, 3, QTableWidgetItem(str(result.required_provider_count)))
+                self.results_table.setItem(row, 4, QTableWidgetItem(result.explanation))
+            if evaluation.is_fully_covered:
+                self.state_label.setText("READY • Fully covered")
+            else:
+                self.state_label.setText(f"ATTENTION • {len(evaluation.problems)} problem(s)")
             return
 
         evaluation = self.lab.evaluate()
