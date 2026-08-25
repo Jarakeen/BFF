@@ -75,8 +75,12 @@ class BuildBackedRosterLab:
                 ).fetchall()
         return tuple((int(row[0]), str(row[1])) for row in rows)
 
-    def available_skills(self, limit: int | None = 5000) -> tuple[tuple[int, str], ...]:
-        return self._skill_repository.available_skills(limit)
+    def available_skills(
+        self,
+        character_class: CharacterClass | str,
+        limit: int | None = 5000,
+    ) -> tuple[tuple[int, str], ...]:
+        return self._skill_repository.available_skills(character_class, limit)
 
     def add_player(
         self,
