@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -232,7 +233,7 @@ class OptimizationPage(FoundryPage):
         )
         custom_widget = CustomRosterLabWidget()
 
-        # Each mode gets its own scroll viewport.  The old implementation put
+        # Each mode gets its own scroll viewport. The old implementation put
         # both large surfaces directly in a QStackedWidget, so the stack used
         # the largest child for its size hint and pushed the useful Custom
         # Roster controls far below the visible Test Lab area.
