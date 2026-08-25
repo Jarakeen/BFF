@@ -52,12 +52,13 @@ def main() -> int:
     #
 
     from ui.theme import ThemeManager
-    from ui.main_window import MainWindow
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
 
     # Install the shared skill/gear picker behavior before
-    # any BuildEditor instances are constructed.
+    # importing pages that may construct BuildEditor widgets.
     install_searchable_selectors()
+
+    from ui.main_window import MainWindow
 
     #
     # Theme
