@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .character_build.effect_instance import EffectVariant
 from .character_build.effect_layer import EffectLayer
-from .character_class import CLASS_SKILL_LINES, CharacterClass
+from .character_build.character_class import CLASS_SKILL_LINES, CharacterClass
 from .support_effect_category import SupportEffectCategory
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
@@ -29,24 +29,19 @@ class SkillEffectRepository:
         are excluded. One row is retained per base ability + morph so rank
         records do not appear as duplicate skills.
         """
-        if not self.database_path.exists():
+        if not self.database_path.exists() or character_class is None:
             return ()
 
-        selected_lines: frozenset[str] = frozenset()
-        selected_class = ""
-        if character_class is not None:
-            if isinstance(character_class, CharacterClass):
-                selected_class = character_class.value
-            else:
-                selected_class = str(character_class).strip().casefold()
+        if isinstance(character_class, CharacterClass):
+            selected_class = character_class
+        else:
             try:
-                selected_class = CharacterClass(selected_class).value
-                selected_lines = CLASS_SKILL_LINES[CharacterClass(selected_class)]
+                selected_class = CharacterClass(str(character_class).strip().casefold())
             except ValueError:
                 return ()
 
-        if not selected_lines:
-            return ()
+        selected_lines = CLASS_SKILL_LINES[selected_class]
+        selected_class_name = selected_class.value
 
         with sqlite3.connect(self.database_path) as db:
             rows = db.execute(
@@ -75,7 +70,7 @@ class SkillEffectRepository:
         selected: dict[tuple[int, int], tuple[int, str, int]] = {}
         for row in rows:
             ability_id, name, class_type, skill_line, base_id, rank, morph, *_ = row
-            if str(class_type or "").strip().casefold() != selected_class:
+            if str(class_type or "").strip().casefold() != selected_class_name:
                 continue
             normalized_line = str(skill_line or "").strip().casefold().replace(" ", "_")
             if normalized_line not in selected_lines:
