@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .character_build.bar import Bar
+from .character_build.capability_resolver import CharacterCapabilityResolver
 from .character_build.character_build import CharacterBuild
 from .character_build.character_class import CharacterClass
 from .character_build.effect_layer import BarId
@@ -31,6 +32,7 @@ class BuildBackedPlayer:
     gear_set_id: int | None = None
     gear_set_name: str = ""
     gear_pieces: int = 0
+    gear_sets: tuple[tuple[int, str, int], ...] = ()
     active_bar: BarId = BarId.FRONT
     resolved_effects: tuple[str, ...] = ()
     validation_errors: tuple[str, ...] = ()
@@ -40,10 +42,17 @@ class BuildBackedPlayer:
 class BuildBackedRosterLab:
     """Disposable bridge from real build ingredients to Phase 4 evidence."""
 
+    MAX_ARMOR_SLOTS = len(tuple(GearSlot))
+
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
         self.players: list[BuildBackedPlayer] = []
         self._builds: list[CharacterBuild | None] = []
+        repository = GearSetRepository(self.database_path)
+        self._gear_resolver = GearSetEffectVariantResolver(repository)
+        self._character_resolver = CharacterCapabilityResolver(
+            gear_set_effect_variant_resolver=self._gear_resolver,
+        )
 
     def available_gear_sets(self, limit: int | None = None) -> tuple[tuple[int, str], ...]:
         """Return every gear set in the database unless a caller explicitly limits it."""
@@ -70,79 +79,138 @@ class BuildBackedRosterLab:
         gear_set_id: int | None = None,
         gear_pieces: int = 0,
         active_bar: BarId = BarId.FRONT,
+        gear_sets: tuple[tuple[int, int], ...] | None = None,
     ) -> BuildBackedPlayer:
-        gear_set_name = ""
-        resolved_effects: tuple[str, ...] = ()
-        validation_errors: tuple[str, ...] = ()
-        unsupported_sources: tuple[str, ...] = ()
-        resolved_build: CharacterBuild | None = None
+        """
+        Add a disposable build-backed player.
 
-        if gear_set_id is not None and gear_pieces > 0:
-            repository = GearSetRepository(self.database_path)
-            gear_set = repository.get_set_by_id(gear_set_id)
+        `gear_sets` is a tuple of `(set_id, piece_count)` assignments. The
+        legacy single-set arguments remain supported for existing tests and
+        callers. Armor/jewelry slots are allocated across all assignments,
+        so a realistic 5+5 setup is representable.
+        """
+        if gear_sets is None:
+            gear_sets = (
+                ((gear_set_id, gear_pieces),)
+                if gear_set_id is not None and gear_pieces > 0
+                else ()
+            )
+
+        normalized_assignments = tuple(
+            (int(set_id), max(0, int(piece_count)))
+            for set_id, piece_count in gear_sets
+            if int(piece_count) > 0
+        )
+
+        total_pieces = sum(piece_count for _, piece_count in normalized_assignments)
+        if total_pieces > self.MAX_ARMOR_SLOTS:
+            validation_errors = (
+                f"Mock build has {total_pieces} armor/jewelry set pieces; "
+                f"only {self.MAX_ARMOR_SLOTS} slots are available.",
+            )
+            player = BuildBackedPlayer(
+                name=name.strip() or f"Mock {role.value.title()}",
+                role=role,
+                character_class=character_class,
+                active_bar=active_bar,
+                gear_sets=tuple((set_id, "", pieces) for set_id, pieces in normalized_assignments),
+                validation_errors=validation_errors,
+            )
+            self.players.append(player)
+            self._builds.append(None)
+            return player
+
+        repository = GearSetRepository(self.database_path)
+        resolved_set_metadata: list[tuple[int, str, int]] = []
+        armor_pieces: list[ArmorPiece] = []
+        slot_sequence = tuple(GearSlot)
+        slot_index = 0
+        unsupported_sources: list[str] = []
+
+        for set_id, piece_count in normalized_assignments:
+            gear_set = repository.get_set_by_id(set_id)
             if gear_set is None:
-                validation_errors = (f"Unknown gear set id {gear_set_id}.",)
-            else:
-                gear_set_name = gear_set.name
-                slots = tuple(GearSlot)
-                pieces = tuple(
-                    ArmorPiece(
-                        slot=slot,
-                        category=GearPieceCategory.SET_PIECE,
-                        set_id=str(gear_set_id),
-                    )
-                    for slot in slots[: min(gear_pieces, len(slots))]
-                )
-                filler_slots = tuple(
-                    SlottedSkill(
-                        skill_id=f"test_filler_{index}",
-                        skill_line_id="restoration_staff",
-                        is_ultimate=(index == 5),
-                    )
-                    for index in range(6)
-                )
-                bar = Bar(
-                    bar_id=active_bar,
-                    main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF),
-                    off_hand=None,
-                    slots=filler_slots,
-                )
-                build = CharacterBuild(
-                    name=name.strip() or f"Mock {role.value.title()}",
-                    character_class=character_class,
-                    role=role,
-                    armor=pieces,
-                    front_bar=bar if active_bar == BarId.FRONT else None,
-                    back_bar=bar if active_bar == BarId.BACK else None,
-                )
-                validation_errors = build.validate()
-                if not validation_errors:
-                    resolver = CharacterBuildSupportEffectResolver(
-                        gear_set_effect_variant_resolver=GearSetEffectVariantResolver(repository)
-                    )
-                    registry = resolver.resolve(build, active_bar=active_bar)
-                    effects = registry.all()
-                    resolved_effects = tuple(effect.name for effect in effects)
-                    resolved_build = build
-                    if not effects:
-                        unsupported_sources = (
-                            f"{gear_set_name}: no registered support-effect mapping for the equipped bonus tiers.",
-                        )
+                unsupported_sources.append(f"Unknown gear set id {set_id}.")
+                resolved_set_metadata.append((set_id, f"Unknown set {set_id}", piece_count))
+                slot_index += piece_count
+                continue
 
-        player = BuildBackedPlayer(
+            resolved_set_metadata.append((set_id, gear_set.name, piece_count))
+
+            # The gear resolver is intentionally authoritative about which
+            # bonus tiers are known. The UI reports an unsupported set rather
+            # than inventing an effect for it.
+            if not self._gear_resolver.resolve(set_id, piece_count):
+                unsupported_sources.append(
+                    f"{gear_set.name}: no registered support-effect mapping for the equipped bonus tiers."
+                )
+
+            for _ in range(piece_count):
+                if slot_index >= len(slot_sequence):
+                    break
+                armor_pieces.append(
+                    ArmorPiece(
+                        slot=slot_sequence[slot_index],
+                        category=GearPieceCategory.SET_PIECE,
+                        set_id=str(set_id),
+                    )
+                )
+                slot_index += 1
+
+        filler_slots = tuple(
+            SlottedSkill(
+                skill_id=f"test_filler_{index}",
+                skill_line_id="restoration_staff",
+                is_ultimate=(index == 5),
+            )
+            for index in range(6)
+        )
+        bar = Bar(
+            bar_id=active_bar,
+            main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF),
+            off_hand=None,
+            slots=filler_slots,
+        )
+
+        resolved_build = CharacterBuild(
             name=name.strip() or f"Mock {role.value.title()}",
+            character_class=character_class,
+            role=role,
+            armor=tuple(armor_pieces),
+            front_bar=bar if active_bar == BarId.FRONT else None,
+            back_bar=bar if active_bar == BarId.BACK else None,
+        )
+
+        validation_errors = tuple(resolved_build.validate())
+        resolved_effects: tuple[str, ...] = ()
+
+        if not validation_errors:
+            registry = self._character_resolver.resolve(
+                resolved_build,
+                active_bar=active_bar,
+            )
+            resolved_effects = tuple(effect.name for effect in registry.all())
+            if not resolved_effects and normalized_assignments and not unsupported_sources:
+                unsupported_sources.append(
+                    "No support effects were resolved from the selected build ingredients."
+                )
+
+        first_set = resolved_set_metadata[0] if resolved_set_metadata else (None, "", 0)
+        player = BuildBackedPlayer(
+            name=resolved_build.name,
             role=role,
             character_class=character_class,
-            gear_set_id=gear_set_id,
-            gear_set_name=gear_set_name,
-            gear_pieces=max(0, int(gear_pieces)),
+            gear_set_id=first_set[0],
+            gear_set_name=first_set[1],
+            gear_pieces=first_set[2],
+            gear_sets=tuple(resolved_set_metadata),
             active_bar=active_bar,
             resolved_effects=resolved_effects,
             validation_errors=validation_errors,
-            unsupported_sources=unsupported_sources,
+            unsupported_sources=tuple(unsupported_sources),
         )
         self.players.append(player)
-        self._builds.append(resolved_build)
+        self._builds.append(resolved_build if not validation_errors else None)
         return player
 
     def remove_player(self, index: int) -> None:
@@ -160,7 +228,9 @@ class BuildBackedRosterLab:
             build.name: (BarId.FRONT if build.front_bar is not None else BarId.BACK)
             for build in characters
         }
-        return RosterCapabilityResolver().resolve(characters, active_bars)
+        return RosterCapabilityResolver(
+            character_capability_resolver=self._character_resolver,
+        ).resolve(characters, active_bars)
 
     def evaluate(
         self,
