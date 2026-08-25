@@ -20,6 +20,7 @@ from .gear_set_repository import GearSetRepository
 from .mock_roster_lab import MockRosterLab
 from .role import Role
 from .roster_capability_resolver import RosterCapabilityResolver
+from .skill_effect_repository import SkillEffectRepository
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
@@ -33,6 +34,7 @@ class BuildBackedPlayer:
     gear_set_name: str = ""
     gear_pieces: int = 0
     gear_sets: tuple[tuple[int, str, int], ...] = ()
+    skills: tuple[tuple[int, str], ...] = ()
     active_bar: BarId = BarId.FRONT
     resolved_effects: tuple[str, ...] = ()
     validation_errors: tuple[str, ...] = ()
@@ -43,6 +45,7 @@ class BuildBackedRosterLab:
     """Disposable bridge from real build ingredients to Phase 4 evidence."""
 
     MAX_ARMOR_SLOTS = len(tuple(GearSlot))
+    MAX_SKILL_SLOTS = 6
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
@@ -50,6 +53,7 @@ class BuildBackedRosterLab:
         self._builds: list[CharacterBuild | None] = []
         repository = GearSetRepository(self.database_path)
         self._gear_resolver = GearSetEffectVariantResolver(repository)
+        self._skill_repository = SkillEffectRepository(self.database_path)
         self._character_resolver = CharacterCapabilityResolver(
             gear_set_effect_variant_resolver=self._gear_resolver,
         )
@@ -71,6 +75,9 @@ class BuildBackedRosterLab:
                 ).fetchall()
         return tuple((int(row[0]), str(row[1])) for row in rows)
 
+    def available_skills(self, limit: int | None = 5000) -> tuple[tuple[int, str], ...]:
+        return self._skill_repository.available_skills(limit)
+
     def add_player(
         self,
         name: str,
@@ -80,15 +87,9 @@ class BuildBackedRosterLab:
         gear_pieces: int = 0,
         active_bar: BarId = BarId.FRONT,
         gear_sets: tuple[tuple[int, int], ...] | None = None,
+        skill_ids: tuple[int, ...] = (),
     ) -> BuildBackedPlayer:
-        """
-        Add a disposable build-backed player.
-
-        `gear_sets` is a tuple of `(set_id, piece_count)` assignments. The
-        legacy single-set arguments remain supported for existing tests and
-        callers. Armor/jewelry slots are allocated across all assignments,
-        so a realistic 5+5 setup is representable.
-        """
+        """Add a disposable build-backed player with optional real skill effects."""
         if gear_sets is None:
             gear_sets = (
                 ((gear_set_id, gear_pieces),)
@@ -101,20 +102,30 @@ class BuildBackedRosterLab:
             for set_id, piece_count in gear_sets
             if int(piece_count) > 0
         )
+        normalized_skills = tuple(dict.fromkeys(int(skill_id) for skill_id in skill_ids))
 
         total_pieces = sum(piece_count for _, piece_count in normalized_assignments)
+        validation_errors: list[str] = []
         if total_pieces > self.MAX_ARMOR_SLOTS:
-            validation_errors = (
+            validation_errors.append(
                 f"Mock build has {total_pieces} armor/jewelry set pieces; "
-                f"only {self.MAX_ARMOR_SLOTS} slots are available.",
+                f"only {self.MAX_ARMOR_SLOTS} slots are available."
             )
+        if len(normalized_skills) > self.MAX_SKILL_SLOTS:
+            validation_errors.append(
+                f"Mock build has {len(normalized_skills)} skills; "
+                f"only {self.MAX_SKILL_SLOTS} active-bar slots are available."
+            )
+
+        if validation_errors:
             player = BuildBackedPlayer(
                 name=name.strip() or f"Mock {role.value.title()}",
                 role=role,
                 character_class=character_class,
                 active_bar=active_bar,
                 gear_sets=tuple((set_id, "", pieces) for set_id, pieces in normalized_assignments),
-                validation_errors=validation_errors,
+                skills=tuple((skill_id, "") for skill_id in normalized_skills),
+                validation_errors=tuple(validation_errors),
             )
             self.players.append(player)
             self._builds.append(None)
@@ -122,6 +133,7 @@ class BuildBackedRosterLab:
 
         repository = GearSetRepository(self.database_path)
         resolved_set_metadata: list[tuple[int, str, int]] = []
+        resolved_skill_metadata: list[tuple[int, str]] = []
         armor_pieces: list[ArmorPiece] = []
         slot_sequence = tuple(GearSlot)
         slot_index = 0
@@ -130,16 +142,12 @@ class BuildBackedRosterLab:
         for set_id, piece_count in normalized_assignments:
             gear_set = repository.get_set_by_id(set_id)
             if gear_set is None:
-                unsupported_sources.append(f"Unknown gear set id {set_id}.")
+                validation_errors.append(f"Unknown gear set id {set_id}.")
                 resolved_set_metadata.append((set_id, f"Unknown set {set_id}", piece_count))
                 slot_index += piece_count
                 continue
 
             resolved_set_metadata.append((set_id, gear_set.name, piece_count))
-
-            # The gear resolver is intentionally authoritative about which
-            # bonus tiers are known. The UI reports an unsupported set rather
-            # than inventing an effect for it.
             if not self._gear_resolver.resolve(set_id, piece_count):
                 unsupported_sources.append(
                     f"{gear_set.name}: no registered support-effect mapping for the equipped bonus tiers."
@@ -157,19 +165,48 @@ class BuildBackedRosterLab:
                 )
                 slot_index += 1
 
-        filler_slots = tuple(
-            SlottedSkill(
-                skill_id=f"test_filler_{index}",
-                skill_line_id="restoration_staff",
-                is_ultimate=(index == 5),
+        skill_slots: list[SlottedSkill] = []
+        for skill_id in normalized_skills:
+            rows = self._skill_repository.resolve(skill_id)
+            skill_name = ""
+            if self.database_path.exists():
+                import sqlite3
+                with sqlite3.connect(self.database_path) as db:
+                    row = db.execute(
+                        "SELECT name FROM ability WHERE ability_id = ?",
+                        (skill_id,),
+                    ).fetchone()
+                skill_name = str(row[0]) if row else ""
+            resolved_skill_metadata.append((skill_id, skill_name or f"Unknown skill {skill_id}"))
+            if not rows:
+                unsupported_sources.append(
+                    f"{skill_name or f'Ability {skill_id}'}: no linked support-effect mapping."
+                )
+            skill_slots.append(
+                SlottedSkill(
+                    skill_id=str(skill_id),
+                    skill_line_id="database_ability",
+                    is_cast=True,
+                    requires_active_bar=True,
+                    effects=rows,
+                )
             )
-            for index in range(6)
-        )
+
+        while len(skill_slots) < self.MAX_SKILL_SLOTS:
+            index = len(skill_slots)
+            skill_slots.append(
+                SlottedSkill(
+                    skill_id=f"test_filler_{index}",
+                    skill_line_id="restoration_staff",
+                    is_ultimate=(index == 5),
+                )
+            )
+
         bar = Bar(
             bar_id=active_bar,
             main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF),
             off_hand=None,
-            slots=filler_slots,
+            slots=tuple(skill_slots),
         )
 
         resolved_build = CharacterBuild(
@@ -181,19 +218,14 @@ class BuildBackedRosterLab:
             back_bar=bar if active_bar == BarId.BACK else None,
         )
 
-        validation_errors = tuple(resolved_build.validate())
+        validation_errors.extend(resolved_build.validate())
         resolved_effects: tuple[str, ...] = ()
 
         if not validation_errors:
-            registry = self._character_resolver.resolve(
-                resolved_build,
-                active_bar=active_bar,
-            )
+            registry = self._character_resolver.resolve(resolved_build, active_bar=active_bar)
             resolved_effects = tuple(effect.name for effect in registry.all())
-            if not resolved_effects and normalized_assignments and not unsupported_sources:
-                unsupported_sources.append(
-                    "No support effects were resolved from the selected build ingredients."
-                )
+            if not resolved_effects and (normalized_assignments or normalized_skills) and not unsupported_sources:
+                unsupported_sources.append("No support effects were resolved from the selected build ingredients.")
 
         first_set = resolved_set_metadata[0] if resolved_set_metadata else (None, "", 0)
         player = BuildBackedPlayer(
@@ -204,9 +236,10 @@ class BuildBackedRosterLab:
             gear_set_name=first_set[1],
             gear_pieces=first_set[2],
             gear_sets=tuple(resolved_set_metadata),
+            skills=tuple(resolved_skill_metadata),
             active_bar=active_bar,
             resolved_effects=resolved_effects,
-            validation_errors=validation_errors,
+            validation_errors=tuple(validation_errors),
             unsupported_sources=tuple(unsupported_sources),
         )
         self.players.append(player)
