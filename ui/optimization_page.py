@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -182,11 +181,18 @@ class OptimizationPage(FoundryPage):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         scroll.setWidget(widget)
         return scroll
 
     def _render_test_lab(self):
+        # The entire Test Lab is one scrollable workspace. Keeping the banner,
+        # mode controls, and mode content in the same viewport prevents the
+        # stacked child from being squeezed to zero height by the outer page.
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(10)
+
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel(
             "Build a disposable roster, evaluate it, and deliberately try to break the MinMax assumptions."
@@ -194,7 +200,7 @@ class OptimizationPage(FoundryPage):
         banner.addWidget(QLabel(
             "Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."
         ))
-        self.layout.addWidget(banner)
+        page_layout.addWidget(banner)
 
         mode_card = FoundryCard("Test Mode")
         mode_row = QHBoxLayout()
@@ -223,7 +229,7 @@ class OptimizationPage(FoundryPage):
         top_row.setSpacing(10)
         top_row.addWidget(mode_card, 1)
         top_row.addWidget(scenario_card, 1)
-        self.layout.addLayout(top_row)
+        page_layout.addLayout(top_row)
 
         preset_panel = self._build_preset_lab(
             scenario_combo,
@@ -233,23 +239,11 @@ class OptimizationPage(FoundryPage):
         )
         custom_widget = CustomRosterLabWidget()
 
-        # Each mode gets its own scroll viewport. The old implementation put
-        # both large surfaces directly in a QStackedWidget, so the stack used
-        # the largest child for its size hint and pushed the useful Custom
-        # Roster controls far below the visible Test Lab area.
         stack = QStackedWidget()
-        stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        stack.addWidget(self._scroll_page(preset_panel))
-        stack.addWidget(self._scroll_page(custom_widget))
-        stack.currentChanged.connect(
-            lambda index: self.status.info(
-                "SIMULATION ONLY — custom roster is disposable."
-                if index == 1
-                else "SIMULATION ONLY — preset mock roster data is disposable."
-            )
-        )
-        mode_combo.currentIndexChanged.connect(stack.setCurrentIndex)
-        self.layout.addWidget(stack, 1)
+        stack.addWidget(preset_panel)
+        stack.addWidget(custom_widget)
+        stack.setMinimumHeight(520)
+        page_layout.addWidget(stack)
 
         def update_mode(index: int):
             is_preset = index == 0
@@ -262,9 +256,21 @@ class OptimizationPage(FoundryPage):
                 scenario_description.setText(
                     "Custom Roster • disposable evidence/build sandbox. Use the roster editor below to add players, gear, and skills."
                 )
+            stack.setCurrentIndex(index)
+            stack.updateGeometry()
+            page.adjustSize()
 
-        mode_combo.currentIndexChanged.connect(update_mode)
-        update_mode(0)
+        mode_combo.activated.connect(update_mode)
+        stack.currentChanged.connect(
+            lambda index: self.status.info(
+                "SIMULATION ONLY — custom roster is disposable."
+                if index == 1
+                else "SIMULATION ONLY — preset mock roster data is disposable."
+            )
+        )
+        update_mode(mode_combo.currentIndex())
+
+        self.layout.addWidget(self._scroll_page(page), 1)
 
     def _build_preset_lab(
         self,
