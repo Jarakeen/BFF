@@ -21,12 +21,50 @@ def make_db(path):
                 piece_count INTEGER NOT NULL,
                 description TEXT
             );
+            CREATE TABLE ability (
+                ability_id INTEGER PRIMARY KEY,
+                name TEXT,
+                target TEXT,
+                is_player INTEGER DEFAULT 1
+            );
+            CREATE TABLE effect (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL
+            );
+            CREATE TABLE effect_variant (
+                id INTEGER PRIMARY KEY,
+                effect_id INTEGER NOT NULL,
+                type TEXT,
+                description TEXT
+            );
+            CREATE TABLE effect_source (
+                id INTEGER PRIMARY KEY,
+                effect_variant_id INTEGER NOT NULL,
+                source_type TEXT NOT NULL,
+                source_name TEXT NOT NULL,
+                condition TEXT
+            );
+            CREATE TABLE ability_effect_link (
+                id INTEGER PRIMARY KEY,
+                effect_source_id INTEGER NOT NULL,
+                effect_variant_id INTEGER NOT NULL,
+                ability_id INTEGER NOT NULL,
+                condition TEXT,
+                match_method TEXT NOT NULL,
+                confidence REAL NOT NULL
+            );
             INSERT INTO gear_set VALUES (332, 'Master Architect', 'standard', 5);
             INSERT INTO gear_set_bonus VALUES
                 (1490, 332, 2, '(2 items) Adds Maximum Magicka'),
                 (1491, 332, 3, '(3 items) Gain Minor Slayer'),
                 (1492, 332, 4, '(4 items) Adds Weapon and Spell Damage'),
                 (1493, 332, 5, '(5 items) Major Slayer');
+            INSERT INTO ability VALUES (101, 'Test Courage', 'Group', 1);
+            INSERT INTO effect VALUES (201, 'major_courage', 'buff');
+            INSERT INTO effect_variant VALUES (301, 201, 'Major', 'test');
+            INSERT INTO effect_source VALUES (401, 301, 'Abilities', 'Test Courage', NULL);
+            INSERT INTO ability_effect_link VALUES (501, 401, 301, 101, NULL, 'exact_name', 1.0);
             """
         )
 
@@ -101,3 +139,20 @@ def test_build_backed_roster_can_be_evaluated_even_when_requirements_are_missing
 
     assert len(evaluation.classifications) == 6
     assert any(result.effect_name == 'major_force' for result in evaluation.problems)
+
+
+def test_build_backed_player_can_resolve_linked_skill_effect(tmp_path):
+    db = tmp_path / 'test.db'
+    make_db(db)
+    lab = BuildBackedRosterLab(db)
+
+    player = lab.add_player(
+        'Healer 01',
+        Role.HEALER,
+        CharacterClass.WARDEN,
+        skill_ids=(101,),
+    )
+
+    assert player.validation_errors == ()
+    assert player.skills == ((101, 'Test Courage'),)
+    assert 'major_courage' in player.resolved_effects
