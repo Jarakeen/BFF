@@ -4,8 +4,19 @@ from collections import Counter
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
+from minmax.coverage_classification import CoverageClassification
+from minmax.mock_roster_lab import MockRosterLab
 from models.build_model import BuildRoster
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
@@ -20,9 +31,9 @@ class OptimizationPage(FoundryPage):
     """
     Optimization Desk.
 
-    This is intentionally independent of ESO Logs. It uses the saved Builds
-    roster as planning evidence and provides the surface where the MinMax
-    encounter evaluator can be connected next.
+    The planning views remain independent of ESO Logs. The Test Lab is a
+    disposable Phase 5 simulation surface that feeds mock capability
+    evidence directly into the Phase 4 EncounterEvaluator.
     """
 
     def __init__(self, parent=None):
@@ -33,6 +44,7 @@ class OptimizationPage(FoundryPage):
         self.reference = ReferenceDataService(self.database)
         self.build_service = BuildService(self.data_dir / "builds.json")
         self.roster = BuildRoster()
+        self.mock_lab = MockRosterLab()
 
         self._build_ui()
         self.refresh()
@@ -51,7 +63,7 @@ class OptimizationPage(FoundryPage):
         self.header.add_context_widget(self._context_field("TRIAL", self.trial_combo))
 
         self.view_combo = QComboBox()
-        self.view_combo.addItems(["Coverage", "Suggestions", "Assignments"])
+        self.view_combo.addItems(["Coverage", "Suggestions", "Assignments", "Test Lab"])
         self.view_combo.currentTextChanged.connect(self.refresh)
         self.header.add_context_widget(self._context_field("VIEW", self.view_combo))
 
@@ -107,12 +119,17 @@ class OptimizationPage(FoundryPage):
             self._render_suggestions()
         elif view == "Assignments":
             self._render_assignments()
+        elif view == "Test Lab":
+            self._render_test_lab()
         else:
             self._render_coverage()
 
-        self.status.info(
-            f"Planning from {len(self.roster.Members)} saved build(s). ESO Logs are not used on this page."
-        )
+        if view == "Test Lab":
+            self.status.info("SIMULATION ONLY — mock roster data is not saved to your real roster.")
+        else:
+            self.status.info(
+                f"Planning from {len(self.roster.Members)} saved build(s). ESO Logs are not used on this page."
+            )
 
     def _render_coverage(self):
         intro = FoundryCard("Group Coverage")
@@ -149,12 +166,94 @@ class OptimizationPage(FoundryPage):
 
         note = FoundryCard("MinMax Evaluation")
         note.addWidget(QLabel(
-            "Phase 4 encounter evaluation is the next mechanical connection: requirements → coverage → gaps/conflicts → classification."
+            "Phase 4 encounter evaluation is now available through the Test Lab as a safe simulation surface."
         ))
         note.addWidget(QLabel(
-            "This page is deliberately ready for that engine without pulling combat-log data into Builds."
+            "Production Builds and ESO Logs remain outside the simulation path."
         ))
         self.layout.addWidget(note)
+        self.layout.addStretch(1)
+
+    def _render_test_lab(self):
+        banner = FoundryCard("SIMULATION • Encounter Test Lab")
+        banner.addWidget(QLabel(
+            "This page creates disposable mock roster evidence and sends it through the real Phase 4 EncounterEvaluator."
+        ))
+        banner.addWidget(QLabel(
+            "Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."
+        ))
+        self.layout.addWidget(banner)
+
+        controls = FoundryCard("Mock Roster")
+        row = QHBoxLayout()
+        scenario_combo = QComboBox()
+        scenarios = self.mock_lab.scenarios()
+        scenario_combo.addItems([scenario.name for scenario in scenarios])
+        evaluate_button = QPushButton("Evaluate")
+        row.addWidget(QLabel("SCENARIO"))
+        row.addWidget(scenario_combo, 1)
+        row.addWidget(evaluate_button)
+        controls.addLayout(row)
+
+        description = QLabel()
+        description.setWordWrap(True)
+        controls.addWidget(description)
+        self.layout.addWidget(controls)
+
+        roster_card = FoundryCard("Mock Roster Members")
+        roster_table = QTableWidget(0, 3)
+        roster_table.setHorizontalHeaderLabels(["Player", "Role", "Capabilities"])
+        roster_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        roster_table.horizontalHeader().setStretchLastSection(True)
+        roster_card.addWidget(roster_table)
+        self.layout.addWidget(roster_card)
+
+        results_card = FoundryCard("Encounter Evaluation")
+        results_table = QTableWidget(0, 5)
+        results_table.setHorizontalHeaderLabels(
+            ["Requirement", "Result", "Valid", "Required", "Explanation"]
+        )
+        results_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        results_table.horizontalHeader().setStretchLastSection(True)
+        results_card.addWidget(results_table)
+        self.layout.addWidget(results_card)
+
+        def run_evaluation():
+            scenario = scenarios[scenario_combo.currentIndex()]
+            description.setText(scenario.description)
+            roster_table.setRowCount(len(scenario.players))
+
+            for row_index, player in enumerate(scenario.players):
+                roster_table.setItem(row_index, 0, QTableWidgetItem(player.name))
+                roster_table.setItem(row_index, 1, QTableWidgetItem(player.role.value.upper()))
+                roster_table.setItem(
+                    row_index,
+                    2,
+                    QTableWidgetItem(", ".join(player.capabilities) or "None"),
+                )
+
+            evaluation = self.mock_lab.evaluate(scenario)
+            results_table.setRowCount(len(evaluation.classifications))
+
+            for row_index, result in enumerate(evaluation.classifications):
+                results_table.setItem(row_index, 0, QTableWidgetItem(result.effect_name))
+                results_table.setItem(
+                    row_index,
+                    1,
+                    QTableWidgetItem(result.classification.value.upper()),
+                )
+                results_table.setItem(row_index, 2, QTableWidgetItem(str(result.valid_provider_count)))
+                results_table.setItem(row_index, 3, QTableWidgetItem(str(result.required_provider_count)))
+                results_table.setItem(row_index, 4, QTableWidgetItem(result.explanation))
+
+            problems = len(evaluation.problems)
+            state = "READY" if evaluation.is_fully_covered else f"{problems} PROBLEM(S)"
+            self.status.info(f"SIMULATION: {scenario.name} • {state}")
+
+        scenario_combo.currentIndexChanged.connect(run_evaluation)
+        evaluate_button.clicked.connect(run_evaluation)
+        run_evaluation()
+
         self.layout.addStretch(1)
 
     def _render_suggestions(self):
