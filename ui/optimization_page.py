@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minmax.coverage_classification import CoverageClassification
 from minmax.mock_roster_lab import MockRosterLab
 from models.build_model import BuildRoster
 from services.build_service import BuildService
@@ -203,7 +202,7 @@ class OptimizationPage(FoundryPage):
         roster_card = FoundryCard("Mock Roster Members")
         roster_table = QTableWidget(0, 3)
         roster_table.setHorizontalHeaderLabels(["Player", "Role", "Capabilities"])
-        roster_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        roster_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         roster_table.horizontalHeader().setStretchLastSection(True)
         roster_card.addWidget(roster_table)
         self.layout.addWidget(roster_card)
@@ -213,7 +212,7 @@ class OptimizationPage(FoundryPage):
         results_table.setHorizontalHeaderLabels(
             ["Requirement", "Result", "Valid", "Required", "Explanation"]
         )
-        results_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         results_table.horizontalHeader().setStretchLastSection(True)
         results_card.addWidget(results_table)
         self.layout.addWidget(results_card)
@@ -237,11 +236,7 @@ class OptimizationPage(FoundryPage):
 
             for row_index, result in enumerate(evaluation.classifications):
                 results_table.setItem(row_index, 0, QTableWidgetItem(result.effect_name))
-                results_table.setItem(
-                    row_index,
-                    1,
-                    QTableWidgetItem(result.classification.value.upper()),
-                )
+                results_table.setItem(row_index, 1, QTableWidgetItem(result.classification.value.upper()))
                 results_table.setItem(row_index, 2, QTableWidgetItem(str(result.valid_provider_count)))
                 results_table.setItem(row_index, 3, QTableWidgetItem(str(result.required_provider_count)))
                 results_table.setItem(row_index, 4, QTableWidgetItem(result.explanation))
