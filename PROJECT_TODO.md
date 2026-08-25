@@ -23,12 +23,44 @@
 - [X] Verify the resolved `CurrentBroadcastPath` before changing paths or Lua.
 - [ ] a better save/button format so I know that I'm saving work to an archive
   
+## Dashboard Page
+- [ ] ??
+
+## Raid Page
+- [ ] ??
+
+## Builds Page
+- [ ] fix the team roster table so its not floating in that card 
+- [ ]
+
+## Capabilities Page
+- [ ]
 
 ## Boss Page 
 - [ ] set it up like the Boss mock up page
 
+## Assignments Page 
+- [ ]
+
+## Optimization Page 
+- [ ] fix table in Encounter Eval card so its not floating in the middle
+- [ ] wire in rosters and players so I dont have to manually enter each time
+- [ ] allow for more than 2 5-pc sets
+- [ ] skill pulldown menu, why 4 of each skill? fix that
+- [ ] only class skills
+
+# Progression Page
+- [ ]
+
 ## Reference page
 - [ ] set is up like a mech reference page/boss page I want it to be am encyclopedia for mechs and named attacks
+
+
+## Settings Page
+- [ ] change the layout to match the settings wireframe in Docs
+- [ ] add a way to disable pages or parts of the app
+
+
 
 ## Data and Optimizer Roadmap
 
