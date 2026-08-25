@@ -58,7 +58,10 @@ class GearSlotTile(QWidget):
         self.label = label
         self.editor = editor
 
-        self.setFixedSize(92, 92)
+        # Match the visual footprint of the Champion Point slots so
+        # longer ESO set names have room to display instead of being
+        # clipped at the tile edges.
+        self.setFixedSize(135, 92)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self._icon = QLabel()
@@ -70,7 +73,10 @@ class GearSlotTile(QWidget):
 
         self._set_name = QLabel()
         self._set_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._set_name.setWordWrap(False)
+        self._set_name.setWordWrap(True)
+        self._set_name.setTextFormat(Qt.TextFormat.PlainText)
+        self._set_name.setMinimumHeight(28)
+        self._set_name.setToolTip("")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
