@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -172,6 +174,17 @@ class OptimizationPage(FoundryPage):
         self.layout.addWidget(note)
         self.layout.addStretch(1)
 
+    @staticmethod
+    def _scroll_page(widget: QWidget) -> QScrollArea:
+        """Put a large test surface in its own scroll viewport."""
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        scroll.setWidget(widget)
+        return scroll
+
     def _render_test_lab(self):
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel(
@@ -219,9 +232,14 @@ class OptimizationPage(FoundryPage):
         )
         custom_widget = CustomRosterLabWidget()
 
+        # Each mode gets its own scroll viewport.  The old implementation put
+        # both large surfaces directly in a QStackedWidget, so the stack used
+        # the largest child for its size hint and pushed the useful Custom
+        # Roster controls far below the visible Test Lab area.
         stack = QStackedWidget()
-        stack.addWidget(preset_panel)
-        stack.addWidget(custom_widget)
+        stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        stack.addWidget(self._scroll_page(preset_panel))
+        stack.addWidget(self._scroll_page(custom_widget))
         stack.currentChanged.connect(
             lambda index: self.status.info(
                 "SIMULATION ONLY — custom roster is disposable."
@@ -241,7 +259,7 @@ class OptimizationPage(FoundryPage):
                 scenario_description.setText(scenarios[scenario_combo.currentIndex()].description)
             else:
                 scenario_description.setText(
-                    "Custom Roster • disposable evidence/build sandbox. Evaluate from the roster editor below."
+                    "Custom Roster • disposable evidence/build sandbox. Use the roster editor below to add players, gear, and skills."
                 )
 
         mode_combo.currentIndexChanged.connect(update_mode)
