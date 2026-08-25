@@ -44,6 +44,30 @@ Rotation / execution
    ↓
 Expected outcome
 
+PHASE 1 — Data Foundation
+
+Status: 🟢 Largely complete
+
+We needed reliable ESO data before the reasoning engine could be trusted.
+
+Done
+ESO abilities
+effects
+effect variants
+effect sources
+ability/effect relationships
+gear
+glyphs
+traits
+combat effects
+boss/encounter data
+UESP boss mechanics
+encounter phases/notes
+database schema
+normalized data infrastructure
+
+We now have a real data/eso.db, not a collection of hopeful JSON files held together with prayer.
+
 ---
 
 # 2. DATABASE STATE
@@ -120,6 +144,45 @@ rather than declaring the elite team's exact build to be universally correct.
 The repository contains an older, force-added `data/eso.db` snapshot of approximately 37 MB. The current working production database is much larger and is not the same snapshot.
 
 The repository's `.gitignore` already ignores the `data/` directory.
+
+PHASE 2 — Character → Capability Resolution
+
+Status: 🟢 Complete
+
+The engine can reason from a character's build toward what they can actually provide.
+
+CharacterBuild
+      ↓
+Effects
+      ↓
+Relationships
+      ↓
+Conditions
+      ↓
+Proc eligibility
+      ↓
+Support Effects
+      ↓
+Capabilities
+Completed
+effect instances
+effect variants
+conditional eligibility
+REQUIRES
+TRIGGERS
+relationship closure
+stacking behavior
+provider resolution
+capability resolution
+roster capability resolution
+
+We specifically finished the conditions, procs, and relationships sprint.
+
+The full suite is currently:
+
+890 passed.
+
+That is a very different beast from where we started.
 
 ---
 
@@ -210,10 +273,50 @@ For example, a single player can appear fragmented across equipment pieces, skil
 Therefore:
 
 ESO Logs schema
-      ≠
+      �
 MinMax domain model
 
 The parser should translate ESO Logs into our canonical domain representation, not force MinMax to behave like ESO Logs.
+
+PHASE 3 — Roster Coverage
+
+Status: 🟢 Complete
+
+Now we can ask:
+
+Who provides what?
+
+We built:
+
+RosterCapabilityResolver
+RosterCoverageAnalyzer
+coverage requirements
+coverage gaps
+conflict detection
+classification
+recommendation intents
+
+The pipeline is now:
+
+Character Builds
+       ↓
+Roster Capabilities
+       ↓
+Coverage
+       ↓
+Requirements
+       ↓
+Gaps
+       ↓
+Conflicts
+       ↓
+Classification
+       ↓
+Recommendation Intent
+
+And we deliberately kept recommendation intent separate from actual optimization.
+
+That's important.
 
 ---
 
@@ -485,7 +588,7 @@ The repository's code and live database are currently out of sync:
 
 ```text
 GitHub code/schema
-        ≠
+        �
 Current working production database
 ```
 
@@ -839,7 +942,7 @@ the raw logs have already yielded definitive build conclusions
 
 We have evidence and infrastructure, not conclusions yet.
 
-And that distinction will save us from future Claude conversations confidently building an entire cathedral on top of one malformed JSON field. 🫠
+And that distinction will save us from future Claude conversations confidently building an entire cathedral on top of one malformed JSON field. �
 
 ## Future test fixtures
 
@@ -2236,3 +2339,418 @@ known mechanics
 strategy choice
 optimization objective
 recommended solution
+
+# **The classifications I want** #
+COVERED
+    One or more valid providers satisfy the requirement.
+
+REDUNDANT
+    Requirement is satisfied, and additional providers are unnecessary
+    under the effect's stacking/requirement rules.
+
+RESILIENT
+    Multiple providers exist, but the extra coverage is useful as backup
+    rather than mechanically required.
+
+INSUFFICIENT
+    Providers exist, but they don't satisfy the requirement.
+
+MISSING
+    No provider can satisfy the requirement.
+
+CONFLICT
+    Providers have an explicit mechanical exclusivity conflict.
+
+UNKNOWN
+    The data isn't sufficient to safely classify the situation.
+
+
+
+PHASE 4 — Encounter Evaluation
+
+Status: 🟢 First version complete
+
+This was the big milestone we just crossed.
+
+We added:
+
+EncounterRequirementSet
+        ↓
+EncounterEvaluator
+        ↓
+CoverageAnalysis
+        ↓
+ConflictAnalysis
+        ↓
+Classification
+
+We also fixed enforcement of:
+
+minimum_uptime
+
+So a provider with 10% uptime can't magically satisfy a requirement demanding 80%.
+
+Tiny detail.
+
+Potentially catastrophic if we got it wrong.
+
+Current test state
+test_encounter_evaluation.py    13 passed
+test_coverage_gap.py            11 passed
+FULL SUITE                      890 passed
+
+So the encounter evaluation framework exists.
+
+🔶 PHASE 5 — Encounter Mechanics → Requirements
+
+Status: 🟡 NEXT
+
+This is where we are now.
+
+We discovered something important while investigating boss ability mapping:
+
+UESP's encounter data gives us mechanics, but those mechanics frequently aren't player abilities.
+
+For example:
+
+Meteor Shower
+Timeshift
+Focused Fire
+Aerial Onslaught
+Molten Meteor
+
+These are legitimate encounter mechanics even though they don't exist as matching rows in ability or combat_effect.
+
+The raw UESP data preserves the actual mechanic descriptions. For example, Nahviintaas's data explicitly records Timeshift and Meteor Shower, including their timing and behavior.
+
+Yolnahkriin similarly gives us Focused Fire and Aerial Blast with their mechanical descriptions.
+
+Therefore:
+
+We do NOT make ability mapping a prerequisite for encounter reasoning.
+
+Instead:
+
+UESP Boss
+   ↓
+Encounter Mechanic
+   ↓
+Structured Mechanic Facts
+   ↓
+Encounter Requirement
+   ↓
+Encounter Evaluation
+
+Optional ESO ability/effect mappings can enrich that later.
+
+What we need to build next
+
+A structured representation of things like:
+
+Meteor Shower
+├── trigger: 30% HP
+├── targets: entire group
+├── behavior: spread
+├── persistent_hazard: true
+└── HM_overlap: true
+
+and:
+
+Focused Fire
+├── target: player
+├── behavior: group stack
+├── damage_distribution: shared
+└── failure_severity: high
+
+without destroying the original UESP description.
+
+Source evidence stays source evidence.
+
+🟡 PHASE 6 — Real Encounter Requirement Sets
+
+Once mechanics have structured semantics, we need to populate actual requirements for encounters.
+
+For example:
+
+Sunspire
+ ├── Yolnahkriin
+ │    ├── Focused Fire
+ │    ├── Aerial Blast
+ │    └── ...
+ │
+ ├── Lokkestiiz
+ │    ├── Aerial Onslaught
+ │    ├── Glacial Fist
+ │    └── ...
+ │
+ └── Nahviintaas
+      ├── Timeshift
+      ├── Meteor Shower
+      └── ...
+
+Then:
+
+EncounterRequirementSet
+
+becomes something that is actually populated from encounter knowledge, rather than hand-authored abstract examples.
+
+🟡 PHASE 7 — Real ESO DB → MinMax Integration
+
+This is where the beautiful little pieces finally stop living in isolation.
+
+We connect:
+
+data/eso.db
+      ↓
+repositories/importers
+      ↓
+CharacterBuild
+      ↓
+RosterCapabilityResolver
+      ↓
+EncounterEvaluator
+
+And test it against real database records, not just synthetic fixtures.
+
+This is also where the existing DB-backed failures we encountered need to be systematically cleaned up.
+
+🟠 PHASE 8 — Optimization / Assignment
+
+This is where MinMax becomes MinMax rather than an unusually sophisticated spreadsheet.
+
+Given:
+
+12 characters
++
+encounter requirements
++
+available capabilities
++
+stacking rules
++
+conditions
++
+conflicts
+
+we determine:
+
+who should provide which capability
+which provider is best
+which coverage is redundant
+which requirements are competing
+what assignments are feasible
+where the roster is fundamentally deficient
+
+And importantly:
+
+we don't optimize before the evaluation layer is trustworthy.
+
+Otherwise we get an extremely efficient answer to the wrong question. Humanity has invented entire industries for doing that.
+
+🔴 PHASE 9 — Build Optimization
+
+Then we move from:
+
+"Can the roster cover it?"
+
+to:
+
+"What builds/sets/skills should these characters use to cover it?"
+
+This is where the existing pieces around:
+
+gear
+glyphs
+traits
+effects
+stats
+candidates
+group constraints
+solver infrastructure
+
+become extremely valuable.
+
+The earlier services/minmax work already contains pieces aimed at build/group evaluation and roster constraints, so we're adapting existing machinery rather than throwing it away.
+
+🔴 PHASE 10 — Explanation Engine
+
+This is the part I particularly want us to preserve.
+
+MinMax shouldn't just say:
+
+❌ Insufficient Major Force
+
+It should eventually be able to say something like:
+
+Major Force: INSUFFICIENT
+
+Requirement: 2 valid providers
+Available: 1
+Provider: Character A
+Coverage: 62% uptime
+Required: 80%
+
+Why: Character B's source is conditional and its prerequisite is not satisfied.
+
+Recommendation: Replace/modify one source to provide a second qualifying instance.
+
+That's the difference between a calculator and a tool you can actually trust.
+
+🏆 PHASE 11 — The BIG GOAL
+
+Finally:
+
+SELECT ENCOUNTER
+       ↓
+LOAD REAL MECHANICS
+       ↓
+DERIVE REQUIREMENTS
+       ↓
+LOAD 12 BUILDS
+       ↓
+RESOLVE EFFECTS
+       ↓
+RESOLVE CONDITIONS / PROCS
+       ↓
+RESOLVE CAPABILITIES
+       ↓
+EVALUATE COVERAGE
+       ↓
+IDENTIFY CONFLICTS
+       ↓
+FIND GAPS
+       ↓
+OPTIMIZE ASSIGNMENTS
+       ↓
+OPTIMIZE BUILDS
+       ↓
+EXPLAIN THE RESULT
+
+That is the system we're building.
+
+📌 PROJECT_STATE.md Update
+
+I'd put this into PROJECT_STATE.md as the current roadmap/status section:
+
+## MinMax Roadmap Status
+
+### Big Goal
+
+Build an encounter-aware ESO roster analysis and optimization engine that can take
+real character builds and a specific encounter, resolve the capabilities supplied
+by the roster, evaluate those capabilities against encounter requirements, identify
+gaps/conflicts/redundancy, determine feasible provider assignments, and eventually
+recommend build/gear changes with explainable reasoning.
+
+### Current Architecture
+
+Character Build
+    ↓
+Effect / Variant Resolution
+    ↓
+Conditions / REQUIRES / TRIGGERS / Stacking
+    ↓
+Support Effects
+    ↓
+Character Capabilities
+    ↓
+Roster Capabilities
+    ↓
+Encounter Requirements
+    ↓
+Coverage / Gaps / Conflicts
+    ↓
+Classification
+    ↓
+Encounter Evaluation
+    ↓
+Optimization / Assignment
+    ↓
+Build Optimization
+    ↓
+Explanation
+
+### Completed
+
+- ESO database foundation and imported source data
+- Ability/effect/effect-variant architecture
+- Effect relationship resolution
+- Conditional eligibility
+- REQUIRES relationships
+- TRIGGERS closure and proc chains
+- Stacking-aware duplicate handling
+- Character capability resolution
+- Roster capability resolution
+- Coverage requirement models
+- Coverage gap analysis
+- Coverage conflict analysis
+- Actionable coverage classification
+- Coverage recommendation intents
+- Encounter requirement sets
+- Encounter evaluation layer
+- Minimum uptime enforcement
+- UESP boss and encounter-mechanic import
+- Encounter mechanic source evidence preservation
+
+### Current Test Baseline
+
+Full pytest suite: 890 passed.
+
+Encounter evaluation:
+- test_encounter_evaluation.py: 13 passed
+- test_coverage_gap.py: 11 passed
+
+### Current Phase
+
+Phase 5 — Encounter Mechanics → Requirements
+
+The encounter importer successfully preserves uniquely named UESP encounter
+mechanics such as Meteor Shower, Timeshift, Focused Fire, Aerial Onslaught,
+and Molten Meteor.
+
+These mechanics frequently have no exact representation in the player
+ability/combat-effect tables. They must therefore remain first-class encounter
+mechanics rather than being forced into ability mappings.
+
+### Next Work
+
+1. Define structured encounter-mechanic facts while preserving original source text.
+2. Derive encounter requirements from those structured mechanic facts.
+3. Populate real encounter requirement sets from imported UESP mechanics.
+4. Integrate real ESO database-backed character capabilities with encounter evaluation.
+5. Establish real end-to-end trial evaluation tests.
+6. Build provider assignment / roster feasibility optimization.
+7. Connect optimization to build, gear, and effect candidates.
+8. Build explainable recommendations.
+
+### Architectural Principles
+
+- Source evidence must remain distinct from derived interpretation.
+- Encounter mechanics are first-class entities and do not require an ESO ability ID.
+- Ability/combat-effect mappings are optional enrichment, not prerequisites for
+  encounter evaluation.
+- Do not infer a mechanical relationship solely from similar names.
+- Preserve unknown/unmapped states rather than manufacturing confidence.
+- Coverage analysis determines whether requirements are satisfied.
+- Recommendation intents do not themselves perform optimization.
+- Optimization remains a later layer.
+- Existing behavior and public APIs should remain backward-compatible where practical.
+
+### Current Branch
+
+integrate-uesp-into-wireframe
+Where we actually are
+
+I'd put a big mental marker here:
+
+We are no longer building the foundation. We're starting to build the brain.
+
+The next genuinely important milestone isn't another repository or another importer.
+
+It's this:
+
+Take one real trial, turn its actual mechanics into structured requirements, run an actual roster against them, and get a defensible answer.
+
+Once we can do that for Sunspire, we've crossed a pretty significant line. Then we repeat it across the other trials rather than inventing architecture in the abstract. 🖤
+
+And yes, there are still Lego bricks on the floor. But at least we're finally building the castle.
