@@ -12,6 +12,8 @@
 - [X] Run an end-of-session check: save a Broadcast, save Field Notes,
       archive the Live Operations session, and confirm OBS plus the combined
       archive output.
+- [ ] redo the layout like the live operation wireframe in the Docs folder
+- [ ] make the new/save/archive/edit buttons much much larger
 
 ## Broadcast and Field Notes
 
@@ -19,6 +21,14 @@
 - [X] Do not rewrite the OBS Lua integration unless a real test shows it is
       broken.
 - [X] Verify the resolved `CurrentBroadcastPath` before changing paths or Lua.
+- [ ] a better save/button format so I know that I'm saving work to an archive
+  
+
+## Boss Page 
+- [ ] set it up like the Boss mock up page
+
+## Reference page
+- [ ] set is up like a mech reference page/boss page I want it to be am encyclopedia for mechs and named attacks
 
 ## Data and Optimizer Roadmap
 

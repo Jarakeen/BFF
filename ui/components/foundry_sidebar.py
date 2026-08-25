@@ -55,8 +55,8 @@ NAV_SECTIONS = [
             ("Field Notes", "field_office"),
             ("Live Operations", "live_operations"),
             ("Archive", "archive"),
-            ("Incident Reports", "incident"),
-            ("Achievement Desk", "achievement"),
+            # ("Incident Reports", "incident"),
+            # ("Achievement Desk", "achievement"),
             
         ],
     },
