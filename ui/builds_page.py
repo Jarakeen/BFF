@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
-    QPushButton,
+    QScrollArea,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -38,34 +38,21 @@ from widgets.build_editor import BuildEditor
 
 
 class BuildsPage(FoundryPage):
-    """
-    Builds Desk presentation layer.
-
-    The main surface is deliberately a raid-facing summary rather than
-    the old form/card editor. Editing still uses the existing BuildEditor
-    so the data model and persistence remain unchanged.
-    """
+    """Builds Desk presentation layer."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self.data_dir = Path(__file__).resolve().parents[1] / "data"
         self.database = EsoDatabase(self.data_dir / "eso.db")
         self.reference = ReferenceDataService(self.database)
         self.roster_service = RosterService(self.database)
         self.build_service = BuildService(self.data_dir / "builds.json")
         self.settings_service = SettingsService(Path("settings.json"))
-
         self.roster = BuildRoster()
         self.roster_members: list[RosterMember] = []
         self.selected_index = 0
-
         self._build_ui()
         self._load()
-
-    # --------------------------------------------------
-    # UI
-    # --------------------------------------------------
 
     def _build_ui(self):
         self.header = FoundryHeader(
@@ -91,15 +78,12 @@ class BuildsPage(FoundryPage):
         action_layout = QHBoxLayout(actions)
         action_layout.setContentsMargins(0, 0, 0, 0)
         action_layout.addStretch()
-
         self.edit_button = FoundryButton("Edit Build", role=ButtonRole.SECONDARY)
         self.save_button = FoundryButton("Save Builds", role=ButtonRole.SUCCESS)
         self.export_button = FoundryButton("Export Builds", role=ButtonRole.SECONDARY)
-
         self.edit_button.clicked.connect(self._edit_selected)
         self.save_button.clicked.connect(self._save)
         self.export_button.clicked.connect(self._export_csv)
-
         action_layout.addWidget(self.edit_button)
         action_layout.addWidget(self.save_button)
         action_layout.addWidget(self.export_button)
@@ -107,7 +91,6 @@ class BuildsPage(FoundryPage):
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setChildrenCollapsible(False)
-
         self.roster_list = QListWidget()
         self.roster_list.setMinimumWidth(230)
         self.roster_list.setMaximumWidth(320)
@@ -120,7 +103,6 @@ class BuildsPage(FoundryPage):
         self.detail_layout.setSpacing(10)
         self.splitter.addWidget(self.detail)
         self.splitter.setStretchFactor(1, 1)
-
         self.add_workspace(self.splitter)
 
         self.status = FoundryStatusBar()
@@ -143,21 +125,15 @@ class BuildsPage(FoundryPage):
         card.addWidget(self.roster_list)
         return card
 
-    # --------------------------------------------------
-    # Data
-    # --------------------------------------------------
-
     def _list_trials(self) -> list[str]:
         try:
-            rows = self.database.execute(
-                """
+            rows = self.database.execute("""
                 SELECT DISTINCT content_name
                 FROM bosses
                 WHERE content_name IS NOT NULL
                   AND TRIM(content_name) != ''
                 ORDER BY content_name COLLATE NOCASE
-                """
-            ).fetchall()
+            """).fetchall()
             trials = [row["content_name"] for row in rows]
             return trials or ["Current Raid"]
         except Exception:
@@ -169,12 +145,10 @@ class BuildsPage(FoundryPage):
         except Exception as exc:
             self.roster = BuildRoster()
             self.status.error(f"Failed to load builds: {exc}")
-
         try:
             self.roster_members = self.roster_service.list_members()
         except Exception:
             self.roster_members = []
-
         self._refresh_roster()
         self.status.info(f"{len(self.roster.Members)} build(s) loaded.")
 
@@ -182,7 +156,6 @@ class BuildsPage(FoundryPage):
         current = self.selected_index
         self.roster_list.blockSignals(True)
         self.roster_list.clear()
-
         for index, build in enumerate(self.roster.Members):
             role, status = self._role_for(build)
             name = build.Name.strip() or build.Gamertag.strip() or f"Member {index + 1}"
@@ -191,11 +164,9 @@ class BuildsPage(FoundryPage):
             item.setData(Qt.ItemDataRole.UserRole, index)
             item.setToolTip(f"{build.EsoClass or 'Class not set'} • {status}")
             self.roster_list.addItem(item)
-
         if self.roster_list.count():
             row = min(max(current, 0), self.roster_list.count() - 1)
             self.roster_list.setCurrentRow(row)
-
         self.roster_list.blockSignals(False)
         self._select_member(self.roster_list.currentRow())
 
@@ -208,10 +179,6 @@ class BuildsPage(FoundryPage):
             }:
                 return member.PrimaryRole, member.Status
         return "", "Active"
-
-    # --------------------------------------------------
-    # Detail
-    # --------------------------------------------------
 
     def _select_member(self, row: int):
         if row < 0 or row >= len(self.roster.Members):
@@ -230,11 +197,9 @@ class BuildsPage(FoundryPage):
         self._clear_detail()
         if not self.roster.Members:
             return
-
         build = self.roster.Members[self.selected_index]
         role, _ = self._role_for(build)
         name = build.Name.strip() or build.Gamertag.strip() or "Unnamed Member"
-
         self.detail_layout.addWidget(self._identity_header(name, role, build))
 
         top = QHBoxLayout()
@@ -253,7 +218,6 @@ class BuildsPage(FoundryPage):
         lower.addWidget(self._skills_card(build), 1)
         lower.addWidget(self._notes_card(build), 1)
         self.detail_layout.addLayout(lower)
-
         self.detail_layout.addWidget(self._alternates_card(build))
         self.detail_layout.addStretch(1)
 
@@ -262,22 +226,18 @@ class BuildsPage(FoundryPage):
         frame.setProperty("foundryCard", True)
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(16, 12, 16, 12)
-
         badge = QLabel("◆")
         badge.setProperty("cardIcon", True)
         layout.addWidget(badge)
-
         text = QVBoxLayout()
         title = QLabel(name.upper())
         title.setProperty("pageTitle", True)
         text.addWidget(title)
-
         parts = [p for p in [role, build.EsoClass, build.Race] if p]
         subtitle = QLabel("  •  ".join(parts) or "Build not configured")
         subtitle.setProperty("pageSubtitle", True)
         text.addWidget(subtitle)
         layout.addLayout(text, 1)
-
         cp = QLabel(f"CP {self._cp_total(build)}")
         cp.setProperty("cardBadge", True)
         layout.addWidget(cp)
@@ -292,7 +252,6 @@ class BuildsPage(FoundryPage):
         table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
         table.setMinimumHeight(330)
         table.horizontalHeader().setStretchLastSection(True)
-
         rows: list[tuple[str, object]] = []
         for slot, value in build.Armor.items():
             rows.append((slot, value))
@@ -303,7 +262,6 @@ class BuildsPage(FoundryPage):
             ("Main Hand", build.FrontBarWeapon),
             ("Off Hand", build.BackBarWeapon),
         ])
-
         for slot, value in rows:
             if hasattr(value, "Set"):
                 set_name, trait, enchant = value.Set, value.Trait, value.Enchant
@@ -316,7 +274,6 @@ class BuildsPage(FoundryPage):
             status = "✓ Complete" if set_name and trait else ("⚠ Partial" if set_name else "Missing")
             for col, text in enumerate([slot, set_name or "—", trait or "—", enchant or "—", status]):
                 table.setItem(row, col, QTableWidgetItem(str(text)))
-
         card.addWidget(table)
         return card
 
@@ -333,28 +290,23 @@ class BuildsPage(FoundryPage):
     def _status_rows(self, build: PlayerBuild) -> list[tuple[str, str]]:
         gear_total = 12
         gear_complete = sum(1 for slot in self._all_gear(build) if self._gear_filled(slot))
-        trait_total = gear_total
         traits = sum(1 for slot in self._all_gear(build) if self._gear_trait(slot))
-        skill_total = 12
         skills = sum(1 for skill in (build.FrontBarSkills + build.BackBarSkills) if str(skill).strip())
         cp = len([entry for entry in build.ChampionPoints if entry.Name.strip()])
-        readiness = round(((gear_complete / gear_total) + (traits / trait_total) + (skills / skill_total) + (1 if cp else 0)) / 4 * 100)
+        readiness = round(((gear_complete / gear_total) + (traits / gear_total) + (skills / 12) + (1 if cp else 0)) / 4 * 100)
         return [
             ("Readiness", f"{readiness}%"),
             ("Gear Complete", f"{gear_complete}/{gear_total}"),
-            ("Traits", f"{traits}/{trait_total}"),
+            ("Traits", f"{traits}/{gear_total}"),
             ("Champion Points", "Configured" if cp else "Missing"),
-            ("Skills", f"{skills}/{skill_total}"),
+            ("Skills", f"{skills}/12"),
         ]
 
     def _set_bonus_card(self, build: PlayerBuild) -> QWidget:
         card = FoundryCard("Set Bonuses")
         counts = Counter()
         for slot in self._all_gear(build):
-            if hasattr(slot, "Set"):
-                name = slot.Set.strip()
-            else:
-                name = str(slot.get("Set", "")).strip()
+            name = slot.Set.strip() if hasattr(slot, "Set") else str(slot.get("Set", "")).strip()
             if name:
                 counts[name] += 1
         if not counts:
@@ -409,10 +361,6 @@ class BuildsPage(FoundryPage):
             card.addWidget(QLabel(f"{name}{notes}"))
         return card
 
-    # --------------------------------------------------
-    # Helpers
-    # --------------------------------------------------
-
     @staticmethod
     def _all_gear(build: PlayerBuild) -> list:
         return list(build.Armor.values()) + [
@@ -445,10 +393,6 @@ class BuildsPage(FoundryPage):
                 continue
         return str(total) if total else "—"
 
-    # --------------------------------------------------
-    # Editing / persistence
-    # --------------------------------------------------
-
     def _editor(self) -> BuildEditor:
         return BuildEditor(
             race_choices=self.reference.list_race_names(),
@@ -462,6 +406,7 @@ class BuildsPage(FoundryPage):
     def _edit_selected(self):
         if not self.roster.Members:
             return
+
         build = self.roster.Members[self.selected_index]
         editor = self._editor()
         editor.load(build)
@@ -469,8 +414,19 @@ class BuildsPage(FoundryPage):
         dialog = QDialog(self)
         dialog.setWindowTitle(f"Edit Build — {build.Name or 'Unnamed Member'}")
         dialog.resize(1200, 850)
+
         layout = QVBoxLayout(dialog)
-        layout.addWidget(editor)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
+
+        scroll = QScrollArea(dialog)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.setWidget(editor)
+        layout.addWidget(scroll, 1)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
             | QDialogButtonBox.StandardButton.Cancel
