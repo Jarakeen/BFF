@@ -47,7 +47,7 @@ class CustomRosterLabWidget(QWidget):
             "Test disposable rosters through the real Phase 4 EncounterEvaluator."
         ))
         intro.addWidget(QLabel(
-            "Evidence mode injects known capabilities. Build mode resolves supported build ingredients into the same evaluator path and reports anything the current model cannot prove."
+            "Evidence mode injects known capabilities. Build mode resolves supported gear and linked skill effects into the same evaluator path and reports anything the current model cannot prove."
         ))
         root.addWidget(intro)
 
@@ -171,12 +171,6 @@ class CustomRosterLabWidget(QWidget):
         self.build_role_combo.addItems([role.value.title() for role in Role])
         self.class_combo = QComboBox()
         self.class_combo.addItems([character_class.value.title() for character_class in CharacterClass])
-        self.gear_combo = QComboBox()
-        for set_id, name in self.build_lab.available_gear_sets():
-            self.gear_combo.addItem(name, set_id)
-        self.gear_pieces = QSpinBox()
-        self.gear_pieces.setRange(1, 10)
-        self.gear_pieces.setValue(5)
         self.bar_combo = QComboBox()
         self.bar_combo.addItems([bar.value.title() for bar in BarId])
         row.addWidget(QLabel("PLAYER"))
@@ -185,17 +179,23 @@ class CustomRosterLabWidget(QWidget):
         row.addWidget(self.build_role_combo)
         row.addWidget(QLabel("CLASS"))
         row.addWidget(self.class_combo)
+        row.addWidget(QLabel("ACTIVE BAR"))
+        row.addWidget(self.bar_combo)
         editor.addLayout(row)
 
         gear_row = QHBoxLayout()
+        self.gear_combo = QComboBox()
+        for set_id, name in self.build_lab.available_gear_sets():
+            self.gear_combo.addItem(name, set_id)
+        self.gear_pieces = QSpinBox()
+        self.gear_pieces.setRange(1, 10)
+        self.gear_pieces.setValue(5)
         gear_row.addWidget(QLabel("GEAR SET"))
         gear_row.addWidget(self.gear_combo, 2)
         gear_row.addWidget(QLabel("PIECES"))
         gear_row.addWidget(self.gear_pieces)
         add_set_button = QPushButton("ADD SET")
         gear_row.addWidget(add_set_button)
-        gear_row.addWidget(QLabel("ACTIVE BAR"))
-        gear_row.addWidget(self.bar_combo)
         editor.addLayout(gear_row)
 
         self.gear_assignment_list = QListWidget()
@@ -211,8 +211,34 @@ class CustomRosterLabWidget(QWidget):
         assignment_buttons.addStretch(1)
         editor.addLayout(assignment_buttons)
 
+        skill_row = QHBoxLayout()
+        self.skill_combo = QComboBox()
+        self.skill_combo.setEditable(True)
+        self.skill_combo.setInsertPolicy(QComboBox.NoInsert)
+        self.skill_combo.setPlaceholderText("Search / select an imported skill")
+        for skill_id, name in self.build_lab.available_skills():
+            self.skill_combo.addItem(name, skill_id)
+        add_skill_button = QPushButton("ADD SKILL")
+        skill_row.addWidget(QLabel("SKILL"))
+        skill_row.addWidget(self.skill_combo, 2)
+        skill_row.addWidget(add_skill_button)
+        editor.addLayout(skill_row)
+
+        self.skill_assignment_list = QListWidget()
+        self.skill_assignment_list.setMaximumHeight(120)
+        editor.addWidget(QLabel("ACTIVE BAR SKILLS • 6 SLOT MAX"))
+        editor.addWidget(self.skill_assignment_list)
+
+        skill_buttons = QHBoxLayout()
+        remove_skill_button = QPushButton("REMOVE SELECTED SKILL")
+        clear_skills_button = QPushButton("CLEAR SKILLS")
+        skill_buttons.addWidget(remove_skill_button)
+        skill_buttons.addWidget(clear_skills_button)
+        skill_buttons.addStretch(1)
+        editor.addLayout(skill_buttons)
+
         note = QLabel(
-            "A mock build can use multiple simultaneous set bonuses, such as 5 + 5 armor/jewelry pieces. The resolver counts the actual equipped pieces before evaluating known effects."
+            "Skills are resolved from the imported ability → effect linkage. Missing linkage is reported as unsupported instead of inventing a capability."
         )
         note.setWordWrap(True)
         editor.addWidget(note)
@@ -229,6 +255,9 @@ class CustomRosterLabWidget(QWidget):
         add_set_button.clicked.connect(self._add_set_assignment)
         remove_set_button.clicked.connect(self._remove_set_assignment)
         clear_sets_button.clicked.connect(self._clear_set_assignments)
+        add_skill_button.clicked.connect(self._add_skill_assignment)
+        remove_skill_button.clicked.connect(self._remove_skill_assignment)
+        clear_skills_button.clicked.connect(self._clear_skill_assignments)
         self.editor_layout.addWidget(editor)
 
     def _switch_mode(self, mode: str):
@@ -292,11 +321,44 @@ class CustomRosterLabWidget(QWidget):
     def _clear_set_assignments(self):
         self.gear_assignment_list.clear()
 
+    def _add_skill_assignment(self):
+        if self.skill_combo.currentIndex() < 0:
+            return
+        skill_id = self.skill_combo.currentData()
+        if skill_id is None:
+            return
+        existing = {
+            int(self.skill_assignment_list.item(index).data(Qt.UserRole))
+            for index in range(self.skill_assignment_list.count())
+        }
+        if int(skill_id) in existing:
+            return
+        if self.skill_assignment_list.count() >= self.build_lab.MAX_SKILL_SLOTS:
+            self.state_label.setText("ATTENTION • 6 active-bar skill slots maximum")
+            return
+        item = QListWidgetItem(self.skill_combo.currentText())
+        item.setData(Qt.UserRole, int(skill_id))
+        self.skill_assignment_list.addItem(item)
+
+    def _remove_skill_assignment(self):
+        row = self.skill_assignment_list.currentRow()
+        if row >= 0:
+            self.skill_assignment_list.takeItem(row)
+
+    def _clear_skill_assignments(self):
+        if hasattr(self, "skill_assignment_list"):
+            self.skill_assignment_list.clear()
+
     def _add_build_player(self):
         assignments = []
         for index in range(self.gear_assignment_list.count()):
             item = self.gear_assignment_list.item(index)
             assignments.append((int(item.data(Qt.UserRole)), int(item.data(Qt.UserRole + 1))))
+
+        skill_ids = tuple(
+            int(self.skill_assignment_list.item(index).data(Qt.UserRole))
+            for index in range(self.skill_assignment_list.count())
+        )
 
         player = self.build_lab.add_player(
             self.build_name_edit.text(),
@@ -304,9 +366,11 @@ class CustomRosterLabWidget(QWidget):
             CharacterClass(self.class_combo.currentText().casefold()),
             gear_sets=tuple(assignments),
             active_bar=BarId(self.bar_combo.currentText().casefold()),
+            skill_ids=skill_ids,
         )
         self.build_name_edit.clear()
         self._clear_set_assignments()
+        self._clear_skill_assignments()
         self._refresh_roster()
         if player.validation_errors:
             self.state_label.setText("ATTENTION • Build validation failed")
@@ -332,6 +396,7 @@ class CustomRosterLabWidget(QWidget):
         self.state_label.setText("READY • Roster cleared")
         if hasattr(self, "gear_assignment_list"):
             self._clear_set_assignments()
+        self._clear_skill_assignments()
         self._refresh_roster()
 
     def _refresh_roster(self):
@@ -342,11 +407,15 @@ class CustomRosterLabWidget(QWidget):
             self.roster_table.setItem(row, 0, QTableWidgetItem(player.name))
             self.roster_table.setItem(row, 1, QTableWidgetItem(player.role.value.upper()))
             if build_mode:
-                source = ", ".join(
+                gear_source = ", ".join(
                     f"{name} ({pieces}p)"
                     for _, name, pieces in player.gear_sets
                     if name
                 ) or "No gear"
+                skill_source = ", ".join(name for _, name in player.skills if name)
+                source = gear_source
+                if skill_source:
+                    source += f" | Skills: {skill_source}"
                 resolved = ", ".join(player.resolved_effects)
                 if not resolved:
                     resolved = "; ".join(player.unsupported_sources) or "No resolved support effects"
