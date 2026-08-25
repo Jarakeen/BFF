@@ -11,6 +11,7 @@ def make_db(path):
             ability_id INTEGER PRIMARY KEY,
             name TEXT,
             target TEXT,
+            duration REAL,
             is_player INTEGER DEFAULT 1
         );
         CREATE TABLE effect (
@@ -40,7 +41,7 @@ def make_db(path):
             match_method TEXT NOT NULL,
             confidence REAL NOT NULL
         );
-        INSERT INTO ability VALUES (101, 'Test Courage', 'Group', 1);
+        INSERT INTO ability VALUES (101, 'Test Courage', 'Group', 12000.0, 1);
         INSERT INTO effect VALUES (201, 'major_courage', 'buff');
         INSERT INTO effect_variant VALUES (301, 201, 'Major', 'test');
         INSERT INTO effect_source VALUES (401, 301, 'Abilities', 'Test Courage', NULL);
@@ -64,6 +65,7 @@ def test_skill_repository_resolves_linked_effect(tmp_path):
     assert effects[0].layer.value == 'cast'
     assert effects[0].category.value == 'buff'
     assert effects[0].target_type.value == 'group'
+    assert effects[0].duration == 12000.0
 
 
 def test_skill_repository_does_not_invent_missing_linkage(tmp_path):
