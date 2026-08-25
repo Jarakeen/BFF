@@ -83,19 +83,20 @@ class OptimizationPage(FoundryPage):
         return box
 
     def _list_trials(self) -> list[str]:
+        """Return actual trial content only, not dungeons or arenas."""
         try:
             rows = self.database.execute(
                 """
-                SELECT DISTINCT content_name
-                FROM bosses
-                WHERE content_name IS NOT NULL
-                  AND TRIM(content_name) != ''
-                ORDER BY content_name COLLATE NOCASE
+                SELECT name
+                FROM content
+                WHERE content_type = 'trial'
+                  AND TRIM(name) != ''
+                ORDER BY name COLLATE NOCASE
                 """
             ).fetchall()
-            return [row["content_name"] for row in rows] or ["Current Raid"]
+            return [row["name"] for row in rows] or ["Current Trial"]
         except Exception:
-            return ["Current Raid"]
+            return ["Current Trial"]
 
     def refresh(self, *_args):
         try:
@@ -186,11 +187,39 @@ class OptimizationPage(FoundryPage):
         mode_combo.addItems(["Preset Scenarios", "Custom Roster"])
         mode_row.addWidget(mode_combo, 1)
         mode_card.addLayout(mode_row)
-        self.layout.addWidget(mode_card)
+
+        scenario_card = FoundryCard("Roster / Scenario")
+        scenario_row = QHBoxLayout()
+        scenario_label = QLabel("SCENARIO")
+        scenario_combo = QComboBox()
+        scenarios = self.mock_lab.scenarios()
+        scenario_combo.addItems([scenario.name for scenario in scenarios])
+        evaluate_button = QPushButton("Evaluate")
+        scenario_row.addWidget(scenario_label)
+        scenario_row.addWidget(scenario_combo, 1)
+        scenario_row.addWidget(evaluate_button)
+        scenario_card.addLayout(scenario_row)
+        scenario_description = QLabel()
+        scenario_description.setWordWrap(True)
+        scenario_card.addWidget(scenario_description)
+
+        top_row = QHBoxLayout()
+        top_row.setSpacing(10)
+        top_row.addWidget(mode_card, 1)
+        top_row.addWidget(scenario_card, 1)
+        self.layout.addLayout(top_row)
+
+        preset_panel = self._build_preset_lab(
+            scenario_combo,
+            scenarios,
+            scenario_description,
+            evaluate_button,
+        )
+        custom_widget = CustomRosterLabWidget()
 
         stack = QStackedWidget()
-        stack.addWidget(self._build_preset_lab())
-        stack.addWidget(CustomRosterLabWidget())
+        stack.addWidget(preset_panel)
+        stack.addWidget(custom_widget)
         stack.currentChanged.connect(
             lambda index: self.status.info(
                 "SIMULATION ONLY — custom roster is disposable."
@@ -201,27 +230,26 @@ class OptimizationPage(FoundryPage):
         mode_combo.currentIndexChanged.connect(stack.setCurrentIndex)
         self.layout.addWidget(stack, 1)
 
-    def _build_preset_lab(self) -> QWidget:
+        def update_mode(index: int):
+            is_preset = index == 0
+            scenario_card.setVisible(is_preset)
+            if is_preset:
+                scenario_description.setText(scenarios[scenario_combo.currentIndex()].description)
+
+        mode_combo.currentIndexChanged.connect(update_mode)
+        update_mode(0)
+
+    def _build_preset_lab(
+        self,
+        scenario_combo: QComboBox,
+        scenarios,
+        description: QLabel,
+        evaluate_button: QPushButton,
+    ) -> QWidget:
         panel = QWidget()
         panel_layout = QVBoxLayout(panel)
         panel_layout.setContentsMargins(0, 0, 0, 0)
         panel_layout.setSpacing(10)
-
-        controls = FoundryCard("Mock Roster")
-        row = QHBoxLayout()
-        scenario_combo = QComboBox()
-        scenarios = self.mock_lab.scenarios()
-        scenario_combo.addItems([scenario.name for scenario in scenarios])
-        evaluate_button = QPushButton("Evaluate")
-        row.addWidget(QLabel("SCENARIO"))
-        row.addWidget(scenario_combo, 1)
-        row.addWidget(evaluate_button)
-        controls.addLayout(row)
-
-        description = QLabel()
-        description.setWordWrap(True)
-        controls.addWidget(description)
-        panel_layout.addWidget(controls)
 
         roster_card = FoundryCard("Mock Roster Members")
         roster_table = QTableWidget(0, 3)
