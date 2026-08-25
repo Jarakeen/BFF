@@ -107,8 +107,10 @@ class OptimizationPage(FoundryPage):
 
         while self.layout.count():
             item = self.layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
 
         view = self.view_combo.currentText()
         if view == "Suggestions":
@@ -232,9 +234,15 @@ class OptimizationPage(FoundryPage):
 
         def update_mode(index: int):
             is_preset = index == 0
-            scenario_card.setVisible(is_preset)
+            scenario_label.setText("SCENARIO" if is_preset else "ROSTER")
+            scenario_combo.setVisible(is_preset)
+            evaluate_button.setVisible(is_preset)
             if is_preset:
                 scenario_description.setText(scenarios[scenario_combo.currentIndex()].description)
+            else:
+                scenario_description.setText(
+                    "Custom Roster • disposable evidence/build sandbox. Evaluate from the roster editor below."
+                )
 
         mode_combo.currentIndexChanged.connect(update_mode)
         update_mode(0)
