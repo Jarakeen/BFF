@@ -11,19 +11,23 @@ PLUM = "#3F1D33"
 OLIVE = "#3F391D"
 PARCHMENT = "#E5D99E"
 
-MUTED_TEXT = "#A7ADA3"
-DIM_TEXT = "#7F8D89"
-GRID = "#2A3D3D"
+MUTED_TEXT = PARCHMENT
+DIM_TEXT = "#C9C080"
+GRID = OLIVE
 
 
 PALETTE_OVERRIDE = f"""
 /* ==========================================================
-   BLACK FEATHER FOUNDRY - Teal / Plum Palette
+   BLACK FEATHER FOUNDRY - Teal / Plum / Olive Palette
    ========================================================== */
+
+/* ----------------------------------------------------------
+   Global surfaces
+   ---------------------------------------------------------- */
 
 QWidget {{
     background-color: {DEEP_TEAL};
-    color: {MUTED_TEXT};
+    color: {PARCHMENT};
 }}
 
 QMainWindow,
@@ -34,7 +38,17 @@ QScrollArea > QWidget > QWidget {{
 
 #sidebar {{
     background-color: {DEEP_TEAL};
-    border-right: 1px solid {TEAL};
+    border-right: 1px solid {OLIVE};
+}}
+
+/* ----------------------------------------------------------
+   Typography
+   ---------------------------------------------------------- */
+
+QLabel,
+QCheckBox,
+QRadioButton {{
+    color: {PARCHMENT};
 }}
 
 #brandMark,
@@ -42,50 +56,52 @@ QScrollArea > QWidget > QWidget {{
 #pageSubtitle,
 QLabel[section="true"],
 QLabel[cardIcon="true"],
-QLabel[cardTitle="true"] {{
-    color: {PARCHMENT};
-}}
-
+QLabel[cardTitle="true"],
 #brandTitle,
 #pageTitle {{
     color: {PARCHMENT};
 }}
 
-#reminder,
-QGroupBox,
-QTabWidget::pane {{
-    background-color: {PLUM};
-    border-color: {TEAL};
-}}
-
 #statusLabel {{
     background-color: {DEEP_TEAL};
-    border-top-color: {TEAL};
+    border-top-color: {OLIVE};
     color: {DIM_TEXT};
 }}
 
-QPushButton[nav="true"] {{
-    color: {MUTED_TEXT};
+/* ----------------------------------------------------------
+   Cards
+   ---------------------------------------------------------- */
+
+QGroupBox,
+QFrame[foundryCard="true"] {{
+    background-color: {DEEP_TEAL};
+    border-color: {OLIVE};
 }}
 
-QPushButton[nav="true"]:hover {{
-    background-color: {TEAL};
-    border-color: {PARCHMENT};
+QGroupBox::title {{
+    background-color: {DEEP_TEAL};
     color: {PARCHMENT};
 }}
 
-QPushButton[nav="true"]:checked {{
-    background-color: {PLUM};
-    border-color: {PARCHMENT};
-    color: {PARCHMENT};
+QWidget[cardHeader="true"] {{
+    background-color: {DEEP_WINE};
+    border-bottom-color: {OLIVE};
 }}
+
+QWidget[cardBody="true"] {{
+    background-color: {DEEP_TEAL};
+}}
+
+/* ----------------------------------------------------------
+   Inputs / form controls
+   ---------------------------------------------------------- */
 
 QLineEdit,
 QTextEdit,
 QPlainTextEdit,
 QComboBox {{
-    background-color: {DEEP_WINE};
-    border-color: {TEAL};
+    background-color: {TEAL};
+    border-color: {OLIVE};
     color: {PARCHMENT};
 }}
 
@@ -94,126 +110,152 @@ QTextEdit:hover,
 QPlainTextEdit:hover,
 QComboBox:hover,
 QComboBox:focus {{
-    border-color: {PARCHMENT};
+    background-color: {TEAL};
+    border-color: {PLUM};
 }}
 
 QLineEdit:focus,
 QTextEdit:focus,
 QPlainTextEdit:focus {{
-    background-color: {PLUM};
-    border-color: {PARCHMENT};
+    background-color: {TEAL};
+    border-color: {PLUM};
 }}
 
 QComboBox QAbstractItemView {{
-    background-color: {DEEP_WINE};
-    border-color: {TEAL};
+    background-color: {TEAL};
+    border-color: {OLIVE};
     color: {PARCHMENT};
-    selection-background-color: {TEAL};
+    selection-background-color: {PLUM};
     selection-color: {PARCHMENT};
 }}
 
-QPushButton {{
+/* ----------------------------------------------------------
+   Navigation / buttons / effects
+   ---------------------------------------------------------- */
+
+QPushButton[nav="true"] {{
+    color: {PARCHMENT};
+    border-color: transparent;
+}}
+
+QPushButton[nav="true"]:hover,
+QPushButton[nav="true"]:checked {{
     background-color: {PLUM};
-    border-color: {TEAL};
+    border-color: {OLIVE};
+    color: {PARCHMENT};
+}}
+
+QPushButton {{
+    background-color: {TEAL};
+    border-color: {OLIVE};
     color: {PARCHMENT};
 }}
 
 QPushButton:hover {{
-    background-color: {TEAL};
-    border-color: {PARCHMENT};
+    background-color: {PLUM};
+    border-color: {OLIVE};
     color: {PARCHMENT};
 }}
 
 QPushButton:pressed,
 QPushButton[primary="true"] {{
-    background-color: {DEEP_WINE};
-    border-color: {PARCHMENT};
+    background-color: {PLUM};
+    border-color: {OLIVE};
     color: {PARCHMENT};
+}}
+
+QTabWidget::pane {{
+    background-color: {DEEP_TEAL};
+    border-color: {OLIVE};
 }}
 
 QTabBar::tab {{
     background-color: {DEEP_TEAL};
-    border-color: {TEAL};
+    border-color: {OLIVE};
     color: {DIM_TEXT};
 }}
 
 QTabBar::tab:hover,
 QTabBar::tab:selected {{
     background-color: {PLUM};
-    border-color: {PARCHMENT};
+    border-color: {OLIVE};
     color: {PARCHMENT};
 }}
+
+/* ----------------------------------------------------------
+   Tables / lists
+   ---------------------------------------------------------- */
 
 QTableWidget,
 QTableView,
 QListWidget,
 QTreeWidget {{
-    background-color: {DEEP_WINE};
-    alternate-background-color: {PLUM};
-    border-color: {TEAL};
-    color: {MUTED_TEXT};
-    gridline-color: {GRID};
-    selection-background-color: {TEAL};
+    background-color: {TEAL};
+    alternate-background-color: {TEAL};
+    border-color: {OLIVE};
+    color: {PARCHMENT};
+    gridline-color: {OLIVE};
+    selection-background-color: {PLUM};
     selection-color: {PARCHMENT};
 }}
 
 QHeaderView::section {{
     background-color: {TEAL};
-    border-right-color: {DEEP_TEAL};
-    border-bottom-color: {DEEP_TEAL};
+    border-right-color: {OLIVE};
+    border-bottom-color: {OLIVE};
     color: {PARCHMENT};
 }}
 
+QListWidget::item:hover,
 QListWidget::item:selected {{
-    background-color: {TEAL};
+    background-color: {PLUM};
     color: {PARCHMENT};
 }}
 
-QProgressBar {{
-    background-color: {DEEP_WINE};
-    border-color: {TEAL};
-    color: {PARCHMENT};
-}}
-
-QProgressBar::chunk {{
-    background-color: {OLIVE};
-}}
-
-QToolTip {{
-    background-color: {DEEP_WINE};
-    border-color: {TEAL};
-    color: {PARCHMENT};
-}}
-
-QFrame[foundryCard="true"] {{
-    background-color: {TEAL};
-    border-color: {PLUM};
-}}
-
-QWidget[cardHeader="true"] {{
-    background-color: {DEEP_TEAL};
-    border-bottom-color: {PLUM};
-}}
-
-QWidget[cardBody="true"] {{
-    background-color: {TEAL};
-}}
+/* ----------------------------------------------------------
+   Flush table cards
+   ---------------------------------------------------------- */
 
 QFrame[foundryCard="true"][tableCard="true"] {{
-    background-color: {TEAL};
-    border-color: {PLUM};
+    background-color: {DEEP_TEAL};
+    border-color: {OLIVE};
 }}
 
 QFrame[foundryCard="true"][tableCard="true"] QWidget[tableCardBody="true"] {{
-    background-color: {DEEP_WINE};
+    background-color: {TEAL};
 }}
 
 QFrame[foundryCard="true"][tableCard="true"] QTableWidget,
 QFrame[foundryCard="true"][tableCard="true"] QTableView {{
+    background-color: {TEAL};
     border: none;
-    border-top: 1px solid {PLUM};
+    border-top: 1px solid {OLIVE};
     border-radius: 0px;
 }}
+
+/* ----------------------------------------------------------
+   Progress / tooltips
+   ---------------------------------------------------------- */
+
+QProgressBar {{
+    background-color: {TEAL};
+    border-color: {OLIVE};
+    color: {PARCHMENT};
+}}
+
+QProgressBar::chunk {{
+    background-color: {PLUM};
+}}
+
+QToolTip {{
+    background-color: {DEEP_WINE};
+    border-color: {OLIVE};
+    color: {PARCHMENT};
+}}
+
+/* ----------------------------------------------------------
+   Scrollbars
+   ---------------------------------------------------------- */
 
 QScrollBar:vertical {{
     background: {DEEP_TEAL};
@@ -221,13 +263,18 @@ QScrollBar:vertical {{
 }}
 
 QScrollBar::handle:vertical {{
-    background: {PLUM};
+    background: {TEAL};
     min-height: 28px;
     border-radius: 4px;
 }}
 
 QScrollBar::handle:vertical:hover {{
-    background: {TEAL};
+    background: {PLUM};
+}}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {{
+    height: 0px;
 }}
 
 QScrollBar:horizontal {{
@@ -236,9 +283,18 @@ QScrollBar:horizontal {{
 }}
 
 QScrollBar::handle:horizontal {{
-    background: {PLUM};
+    background: {TEAL};
     min-width: 28px;
     border-radius: 4px;
+}}
+
+QScrollBar::handle:horizontal:hover {{
+    background: {PLUM};
+}}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {{
+    width: 0px;
 }}
 """
 
