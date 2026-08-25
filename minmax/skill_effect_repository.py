@@ -63,7 +63,7 @@ class SkillEffectRepository:
                   AND COALESCE(is_player, 0) = 1
                   AND COALESCE(is_passive, 0) = 0
                   AND COALESCE(is_crafted, 0) = 0
-                ORDER BY name COLLATE NOCASE, rank, ability_id
+                ORDER BY base_ability_id, morph, rank, ability_id
                 """
             ).fetchall()
 
@@ -84,10 +84,10 @@ class SkillEffectRepository:
             if existing is None or rank_value < existing[2]:
                 selected[key] = (int(ability_id), str(name).strip(), rank_value)
 
-        values = sorted(selected.values(), key=lambda value: (value[1].casefold(), value[0]))
+        values = sorted(selected.items(), key=lambda item: (item[0][0], item[0][1], item[1][2], item[1][0]))
         if limit is not None:
             values = values[:limit]
-        return tuple((ability_id, name) for ability_id, name, _rank in values)
+        return tuple((value[0], value[1]) for _key, value in values)
 
     def resolve(self, ability_id: int) -> tuple[EffectVariant, ...]:
         if not self.database_path.exists():
