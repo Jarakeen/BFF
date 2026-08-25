@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QCompleter,
     QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
@@ -36,6 +37,19 @@ class CustomRosterLabWidget(QWidget):
         self.build_lab = BuildBackedRosterLab()
         self._build_ui()
         self._refresh_roster()
+
+    @staticmethod
+    def _configure_searchable_combo(combo: QComboBox):
+        """Make an editable combo search by any substring, case-insensitively."""
+        combo.setEditable(True)
+        combo.setInsertPolicy(QComboBox.NoInsert)
+        combo.setDuplicatesEnabled(False)
+        combo.setCompleter(QCompleter(combo.model(), combo))
+        completer = combo.completer()
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
+        completer.setCompletionMode(QCompleter.PopupCompletion)
+        combo.lineEdit().setClearButtonEnabled(True)
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -171,6 +185,7 @@ class CustomRosterLabWidget(QWidget):
         self.build_role_combo.addItems([role.value.title() for role in Role])
         self.class_combo = QComboBox()
         self.class_combo.addItems([character_class.value.title() for character_class in CharacterClass])
+        self.class_combo.currentTextChanged.connect(self._refresh_build_skill_choices)
         self.bar_combo = QComboBox()
         self.bar_combo.addItems([bar.value.title() for bar in BarId])
         row.addWidget(QLabel("PLAYER"))
@@ -185,8 +200,9 @@ class CustomRosterLabWidget(QWidget):
 
         gear_row = QHBoxLayout()
         self.gear_combo = QComboBox()
-        for set_id, name in self.build_lab.available_gear_sets():
-            self.gear_combo.addItem(name, set_id)
+        self._configure_searchable_combo(self.gear_combo)
+        self.gear_combo.setPlaceholderText("Search gear sets")
+        self._populate_gear_choices()
         self.gear_pieces = QSpinBox()
         self.gear_pieces.setRange(1, 10)
         self.gear_pieces.setValue(5)
@@ -213,11 +229,9 @@ class CustomRosterLabWidget(QWidget):
 
         skill_row = QHBoxLayout()
         self.skill_combo = QComboBox()
-        self.skill_combo.setEditable(True)
-        self.skill_combo.setInsertPolicy(QComboBox.NoInsert)
-        self.skill_combo.setPlaceholderText("Search / select an imported skill")
-        for skill_id, name in self.build_lab.available_skills():
-            self.skill_combo.addItem(name, skill_id)
+        self._configure_searchable_combo(self.skill_combo)
+        self.skill_combo.setPlaceholderText("Search skills")
+        self._populate_skill_choices()
         add_skill_button = QPushButton("ADD SKILL")
         skill_row.addWidget(QLabel("SKILL"))
         skill_row.addWidget(self.skill_combo, 2)
@@ -238,7 +252,7 @@ class CustomRosterLabWidget(QWidget):
         editor.addLayout(skill_buttons)
 
         note = QLabel(
-            "Skills are resolved from the imported ability → effect linkage. Missing linkage is reported as unsupported instead of inventing a capability."
+            "Skills are resolved from the imported ability → effect linkage. Search matches any part of the skill or gear name. Missing linkage is reported as unsupported instead of inventing a capability."
         )
         note.setWordWrap(True)
         editor.addWidget(note)
@@ -259,6 +273,38 @@ class CustomRosterLabWidget(QWidget):
         remove_skill_button.clicked.connect(self._remove_skill_assignment)
         clear_skills_button.clicked.connect(self._clear_skill_assignments)
         self.editor_layout.addWidget(editor)
+
+    def _populate_gear_choices(self):
+        current_id = self.gear_combo.currentData() if hasattr(self, "gear_combo") else None
+        self.gear_combo.blockSignals(True)
+        self.gear_combo.clear()
+        for set_id, name in self.build_lab.available_gear_sets():
+            self.gear_combo.addItem(name, set_id)
+        if current_id is not None:
+            index = self.gear_combo.findData(current_id)
+            if index >= 0:
+                self.gear_combo.setCurrentIndex(index)
+        self.gear_combo.blockSignals(False)
+
+    def _populate_skill_choices(self):
+        current_id = self.skill_combo.currentData() if hasattr(self, "skill_combo") else None
+        self.skill_combo.blockSignals(True)
+        self.skill_combo.clear()
+        try:
+            selected_class = CharacterClass(self.class_combo.currentText().casefold())
+        except ValueError:
+            selected_class = CharacterClass.WARDEN
+        for skill_id, name in self.build_lab.available_skills(selected_class):
+            self.skill_combo.addItem(name, skill_id)
+        if current_id is not None:
+            index = self.skill_combo.findData(current_id)
+            if index >= 0:
+                self.skill_combo.setCurrentIndex(index)
+        self.skill_combo.blockSignals(False)
+
+    def _refresh_build_skill_choices(self, _class_name: str):
+        if hasattr(self, "skill_combo"):
+            self._populate_skill_choices()
 
     def _switch_mode(self, mode: str):
         if mode == "Build-backed":
@@ -398,57 +444,3 @@ class CustomRosterLabWidget(QWidget):
             self._clear_set_assignments()
         self._clear_skill_assignments()
         self._refresh_roster()
-
-    def _refresh_roster(self):
-        build_mode = self.mode_combo.currentText() == "Build-backed"
-        players = self.build_lab.players if build_mode else self.lab.players
-        self.roster_table.setRowCount(len(players))
-        for row, player in enumerate(players):
-            self.roster_table.setItem(row, 0, QTableWidgetItem(player.name))
-            self.roster_table.setItem(row, 1, QTableWidgetItem(player.role.value.upper()))
-            if build_mode:
-                gear_source = ", ".join(
-                    f"{name} ({pieces}p)"
-                    for _, name, pieces in player.gear_sets
-                    if name
-                ) or "No gear"
-                skill_source = ", ".join(name for _, name in player.skills if name)
-                source = gear_source
-                if skill_source:
-                    source += f" | Skills: {skill_source}"
-                resolved = ", ".join(player.resolved_effects)
-                if not resolved:
-                    resolved = "; ".join(player.unsupported_sources) or "No resolved support effects"
-                uptime = "Build"
-            else:
-                source = "Manual evidence"
-                resolved = ", ".join(player.capabilities) or "None"
-                uptime = f"{player.uptime:.0%}"
-            self.roster_table.setItem(row, 2, QTableWidgetItem(source))
-            self.roster_table.setItem(row, 3, QTableWidgetItem(uptime))
-            self.roster_table.setItem(row, 4, QTableWidgetItem(resolved))
-            self.roster_table.setItem(row, 5, QTableWidgetItem(""))
-
-    def _evaluate(self):
-        try:
-            evaluation = (
-                self.build_lab.evaluate()
-                if self.mode_combo.currentText() == "Build-backed"
-                else self.lab.evaluate()
-            )
-        except Exception as exc:
-            self.results_table.setRowCount(0)
-            self.state_label.setText(f"ERROR • {exc}")
-            return
-
-        self.results_table.setRowCount(len(evaluation.classifications))
-        for row, result in enumerate(evaluation.classifications):
-            self.results_table.setItem(row, 0, QTableWidgetItem(result.effect_name))
-            self.results_table.setItem(row, 1, QTableWidgetItem(result.classification.value.upper()))
-            self.results_table.setItem(row, 2, QTableWidgetItem(str(result.valid_provider_count)))
-            self.results_table.setItem(row, 3, QTableWidgetItem(str(result.required_provider_count)))
-            self.results_table.setItem(row, 4, QTableWidgetItem(result.explanation))
-        if evaluation.is_fully_covered:
-            self.state_label.setText("READY • Fully covered")
-        else:
-            self.state_label.setText(f"ATTENTION • {len(evaluation.problems)} problem(s)")
