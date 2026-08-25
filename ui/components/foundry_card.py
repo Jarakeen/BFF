@@ -16,11 +16,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QFrame,
-    QVBoxLayout,
     QHBoxLayout,
     QLayout,
     QTableWidget,
     QTableView,
+    QVBoxLayout,
 )
 
 from ui.theme.fonts import Fonts
@@ -122,12 +122,15 @@ class FoundryCard(QFrame):
     def addWidget(self, widget: QWidget):
         # Tables are structural content in the Foundry UI. When a table is
         # the first body widget, let it meet the card frame rather than
-        # floating inside a second padded rectangle.
+        # floating inside a second padded rectangle. The table itself loses
+        # its outer frame so the card border becomes the visual frame.
         if (
             self.body_layout.count() == 0
             and isinstance(widget, (QTableWidget, QTableView))
         ):
             self.make_table_card()
+            widget.setFrameShape(QFrame.NoFrame)
+            widget.setLineWidth(0)
 
         self.body_layout.addWidget(widget)
 
