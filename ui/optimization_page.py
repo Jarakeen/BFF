@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -20,6 +21,7 @@ from models.build_model import BuildRoster
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
+from ui.components.custom_roster_lab import CustomRosterLabWidget
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -27,13 +29,7 @@ from ui.foundry_page import FoundryPage
 
 
 class OptimizationPage(FoundryPage):
-    """
-    Optimization Desk.
-
-    The planning views remain independent of ESO Logs. The Test Lab is a
-    disposable Phase 5 simulation surface that feeds mock capability
-    evidence directly into the Phase 4 EncounterEvaluator.
-    """
+    """Optimization Desk with disposable Phase 5 testing surfaces."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -176,12 +172,40 @@ class OptimizationPage(FoundryPage):
     def _render_test_lab(self):
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel(
-            "This page creates disposable mock roster evidence and sends it through the real Phase 4 EncounterEvaluator."
+            "Build a disposable roster, evaluate it, and deliberately try to break the MinMax assumptions."
         ))
         banner.addWidget(QLabel(
             "Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."
         ))
         self.layout.addWidget(banner)
+
+        mode_card = FoundryCard("Test Mode")
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel("MODE"))
+        mode_combo = QComboBox()
+        mode_combo.addItems(["Preset Scenarios", "Custom Roster"])
+        mode_row.addWidget(mode_combo, 1)
+        mode_card.addLayout(mode_row)
+        self.layout.addWidget(mode_card)
+
+        stack = QStackedWidget()
+        stack.addWidget(self._build_preset_lab())
+        stack.addWidget(CustomRosterLabWidget())
+        stack.currentChanged.connect(
+            lambda index: self.status.info(
+                "SIMULATION ONLY — custom roster is disposable."
+                if index == 1
+                else "SIMULATION ONLY — preset mock roster data is disposable."
+            )
+        )
+        mode_combo.currentIndexChanged.connect(stack.setCurrentIndex)
+        self.layout.addWidget(stack, 1)
+
+    def _build_preset_lab(self) -> QWidget:
+        panel = QWidget()
+        panel_layout = QVBoxLayout(panel)
+        panel_layout.setContentsMargins(0, 0, 0, 0)
+        panel_layout.setSpacing(10)
 
         controls = FoundryCard("Mock Roster")
         row = QHBoxLayout()
@@ -197,7 +221,7 @@ class OptimizationPage(FoundryPage):
         description = QLabel()
         description.setWordWrap(True)
         controls.addWidget(description)
-        self.layout.addWidget(controls)
+        panel_layout.addWidget(controls)
 
         roster_card = FoundryCard("Mock Roster Members")
         roster_table = QTableWidget(0, 3)
@@ -205,7 +229,7 @@ class OptimizationPage(FoundryPage):
         roster_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         roster_table.horizontalHeader().setStretchLastSection(True)
         roster_card.addWidget(roster_table)
-        self.layout.addWidget(roster_card)
+        panel_layout.addWidget(roster_card)
 
         results_card = FoundryCard("Encounter Evaluation")
         results_table = QTableWidget(0, 5)
@@ -215,7 +239,7 @@ class OptimizationPage(FoundryPage):
         results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         results_table.horizontalHeader().setStretchLastSection(True)
         results_card.addWidget(results_table)
-        self.layout.addWidget(results_card)
+        panel_layout.addWidget(results_card)
 
         def run_evaluation():
             scenario = scenarios[scenario_combo.currentIndex()]
@@ -249,7 +273,8 @@ class OptimizationPage(FoundryPage):
         evaluate_button.clicked.connect(run_evaluation)
         run_evaluation()
 
-        self.layout.addStretch(1)
+        panel_layout.addStretch(1)
+        return panel
 
     def _render_suggestions(self):
         card = FoundryCard("Comp Engine Suggestions")
