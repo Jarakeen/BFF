@@ -12,10 +12,13 @@ from .character_build.slotted_skill import SlottedSkill
 from .character_build.support_effect_resolver import CharacterBuildSupportEffectResolver
 from .character_build.weapon import Weapon
 from .character_build.weapon_type import WeaponType
+from .encounter_evaluation import EncounterEvaluation, EncounterEvaluator
+from .encounter_requirements import EncounterRequirementSet
 from .gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from .gear_set_repository import GearSetRepository
+from .mock_roster_lab import MockRosterLab
 from .role import Role
-
+from .roster_capability_resolver import RosterCapabilityResolver
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
@@ -35,25 +38,20 @@ class BuildBackedPlayer:
 
 
 class BuildBackedRosterLab:
-    """Disposable bridge from real build ingredients to proven capabilities.
-
-    Unknown gear-set bonuses are reported as unsupported, never guessed.
-    This is intentionally additive to the manual Evidence Lab.
-    """
+    """Disposable bridge from real build ingredients to Phase 4 evidence."""
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
         self.players: list[BuildBackedPlayer] = []
+        self._builds: list[CharacterBuild | None] = []
 
     def available_gear_sets(self, limit: int = 500) -> tuple[tuple[int, str], ...]:
         if not self.database_path.exists():
             return ()
         import sqlite3
-
         with sqlite3.connect(self.database_path) as db:
             rows = db.execute(
-                "SELECT id, name FROM gear_set ORDER BY name LIMIT ?",
-                (limit,),
+                "SELECT id, name FROM gear_set ORDER BY name LIMIT ?", (limit,)
             ).fetchall()
         return tuple((int(row[0]), str(row[1])) for row in rows)
 
@@ -70,6 +68,7 @@ class BuildBackedRosterLab:
         resolved_effects: tuple[str, ...] = ()
         validation_errors: tuple[str, ...] = ()
         unsupported_sources: tuple[str, ...] = ()
+        resolved_build: CharacterBuild | None = None
 
         if gear_set_id is not None and gear_pieces > 0:
             repository = GearSetRepository(self.database_path)
@@ -87,7 +86,6 @@ class BuildBackedRosterLab:
                     )
                     for slot in slots[: min(gear_pieces, len(slots))]
                 )
-
                 filler_slots = tuple(
                     SlottedSkill(
                         skill_id=f"test_filler_{index}",
@@ -111,7 +109,6 @@ class BuildBackedRosterLab:
                     back_bar=bar if active_bar == BarId.BACK else None,
                 )
                 validation_errors = build.validate()
-
                 if not validation_errors:
                     resolver = CharacterBuildSupportEffectResolver(
                         gear_set_effect_variant_resolver=GearSetEffectVariantResolver(repository)
@@ -119,6 +116,7 @@ class BuildBackedRosterLab:
                     registry = resolver.resolve(build, active_bar=active_bar)
                     effects = registry.all()
                     resolved_effects = tuple(effect.name for effect in effects)
+                    resolved_build = build
                     if not effects:
                         unsupported_sources = (
                             f"{gear_set_name}: no registered support-effect mapping for the equipped bonus tiers.",
@@ -137,10 +135,32 @@ class BuildBackedRosterLab:
             unsupported_sources=unsupported_sources,
         )
         self.players.append(player)
+        self._builds.append(resolved_build)
         return player
 
     def remove_player(self, index: int) -> None:
         del self.players[index]
+        del self._builds[index]
 
     def clear(self) -> None:
         self.players.clear()
+        self._builds.clear()
+
+    def capabilities(self):
+        """Resolve valid mock builds into roster-level capability evidence."""
+        characters = [build for build in self._builds if build is not None]
+        active_bars = {
+            build.name: (BarId.FRONT if build.front_bar is not None else BarId.BACK)
+            for build in characters
+        }
+        return RosterCapabilityResolver().resolve(characters, active_bars)
+
+    def evaluate(
+        self,
+        requirement_set: EncounterRequirementSet | None = None,
+        evaluator: EncounterEvaluator | None = None,
+    ) -> EncounterEvaluation:
+        """Evaluate resolved build evidence through the real Phase 4 engine."""
+        requirement_set = requirement_set or MockRosterLab.requirement_set()
+        evaluator = evaluator or EncounterEvaluator()
+        return evaluator.evaluate(requirement_set, self.capabilities())
