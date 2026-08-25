@@ -70,3 +70,34 @@ def test_unknown_set_is_reported_without_guessing(tmp_path):
 
     assert player.resolved_effects == ()
     assert player.validation_errors
+
+
+def test_build_backed_capabilities_reach_roster_layer(tmp_path):
+    db = tmp_path / 'test.db'
+    make_db(db)
+    lab = BuildBackedRosterLab(db)
+
+    lab.add_player(
+        'Healer 01', Role.HEALER, CharacterClass.WARDEN, 332, 5
+    )
+
+    capabilities = lab.capabilities()
+
+    assert 'major_slayer' in capabilities
+    assert len(capabilities['major_slayer']) == 1
+    assert capabilities['major_slayer'][0].character_name == 'Healer 01'
+
+
+def test_build_backed_roster_can_be_evaluated_even_when_requirements_are_missing(tmp_path):
+    db = tmp_path / 'test.db'
+    make_db(db)
+    lab = BuildBackedRosterLab(db)
+
+    lab.add_player(
+        'Healer 01', Role.HEALER, CharacterClass.WARDEN, 332, 5
+    )
+
+    evaluation = lab.evaluate()
+
+    assert len(evaluation.classifications) == 6
+    assert any(result.effect_name == 'major_force' for result in evaluation.problems)
