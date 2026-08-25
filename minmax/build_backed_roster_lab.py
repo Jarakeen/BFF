@@ -45,14 +45,21 @@ class BuildBackedRosterLab:
         self.players: list[BuildBackedPlayer] = []
         self._builds: list[CharacterBuild | None] = []
 
-    def available_gear_sets(self, limit: int = 500) -> tuple[tuple[int, str], ...]:
+    def available_gear_sets(self, limit: int | None = None) -> tuple[tuple[int, str], ...]:
+        """Return every gear set in the database unless a caller explicitly limits it."""
         if not self.database_path.exists():
             return ()
         import sqlite3
         with sqlite3.connect(self.database_path) as db:
-            rows = db.execute(
-                "SELECT id, name FROM gear_set ORDER BY name LIMIT ?", (limit,)
-            ).fetchall()
+            if limit is None:
+                rows = db.execute(
+                    "SELECT id, name FROM gear_set ORDER BY name COLLATE NOCASE"
+                ).fetchall()
+            else:
+                rows = db.execute(
+                    "SELECT id, name FROM gear_set ORDER BY name COLLATE NOCASE LIMIT ?",
+                    (limit,),
+                ).fetchall()
         return tuple((int(row[0]), str(row[1])) for row in rows)
 
     def add_player(
