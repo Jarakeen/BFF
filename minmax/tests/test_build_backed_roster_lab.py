@@ -25,6 +25,7 @@ def make_db(path):
                 ability_id INTEGER PRIMARY KEY,
                 name TEXT,
                 target TEXT,
+                duration REAL,
                 is_player INTEGER DEFAULT 1
             );
             CREATE TABLE effect (
@@ -60,7 +61,7 @@ def make_db(path):
                 (1491, 332, 3, '(3 items) Gain Minor Slayer'),
                 (1492, 332, 4, '(4 items) Adds Weapon and Spell Damage'),
                 (1493, 332, 5, '(5 items) Major Slayer');
-            INSERT INTO ability VALUES (101, 'Test Courage', 'Group', 1);
+            INSERT INTO ability VALUES (101, 'Test Courage', 'Group', 12000.0, 1);
             INSERT INTO effect VALUES (201, 'major_courage', 'buff');
             INSERT INTO effect_variant VALUES (301, 201, 'Major', 'test');
             INSERT INTO effect_source VALUES (401, 301, 'Abilities', 'Test Courage', NULL);
@@ -156,3 +157,40 @@ def test_build_backed_player_can_resolve_linked_skill_effect(tmp_path):
     assert player.validation_errors == ()
     assert player.skills == ((101, 'Test Courage'),)
     assert 'major_courage' in player.resolved_effects
+
+
+def test_spell_power_cure_resolves_major_courage_from_five_piece_set(tmp_path):
+    db = tmp_path / 'test.db'
+    with sqlite3.connect(db) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE gear_set (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                category TEXT,
+                max_equip_count INTEGER
+            );
+            CREATE TABLE gear_set_bonus (
+                id INTEGER PRIMARY KEY,
+                set_id INTEGER NOT NULL,
+                piece_count INTEGER NOT NULL,
+                description TEXT
+            );
+            INSERT INTO gear_set VALUES (185, 'Spell Power Cure', 'standard', 5);
+            INSERT INTO gear_set_bonus VALUES
+                (18505, 185, 5, '(5 items) When you overheal yourself or an ally, grant Major Courage.');
+            """
+        )
+
+    lab = BuildBackedRosterLab(db)
+    player = lab.add_player(
+        'Healer SPC',
+        Role.HEALER,
+        CharacterClass.WARDEN,
+        gear_set_id=185,
+        gear_pieces=5,
+    )
+
+    assert player.validation_errors == ()
+    assert 'major_courage' in player.resolved_effects
+    assert player.unsupported_sources == ()
