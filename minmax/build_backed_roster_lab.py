@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from .character_build.bar import Bar
@@ -35,20 +35,15 @@ class BuildBackedPlayer:
 
 
 class BuildBackedRosterLab:
-    """Disposable Phase 5B bridge from real build ingredients to capabilities.
+    """Disposable bridge from real build ingredients to proven capabilities.
 
-    This deliberately resolves only sources that the current CharacterBuild
-    pipeline can prove. Unknown gear-set bonuses are reported as unsupported,
-    never guessed into capabilities.
+    Unknown gear-set bonuses are reported as unsupported, never guessed.
+    This is intentionally additive to the manual Evidence Lab.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
         self.players: list[BuildBackedPlayer] = []
-
-    @staticmethod
-    def gear_slots() -> tuple[GearSlot, ...]:
-        return tuple(GearSlot)
 
     def available_gear_sets(self, limit: int = 500) -> tuple[tuple[int, str], ...]:
         if not self.database_path.exists():
@@ -83,32 +78,29 @@ class BuildBackedRosterLab:
                 validation_errors = (f"Unknown gear set id {gear_set_id}.",)
             else:
                 gear_set_name = gear_set.name
+                slots = tuple(GearSlot)
                 pieces = tuple(
                     ArmorPiece(
                         slot=slot,
                         category=GearPieceCategory.SET_PIECE,
                         set_id=str(gear_set_id),
                     )
-                    for slot in GearSlot
-                )[: min(gear_pieces, len(tuple(GearSlot)))]
-                slots = tuple(
+                    for slot in slots[: min(gear_pieces, len(slots))]
+                )
+
+                filler_slots = tuple(
                     SlottedSkill(
                         skill_id=f"test_filler_{index}",
-                        skill_line_id="destruction_staff",
+                        skill_line_id="restoration_staff",
                         is_ultimate=(index == 5),
                     )
                     for index in range(6)
                 )
-                weapon_type = (
-                    WeaponType.RESTORATION_STAFF
-                    if role == Role.HEALER
-                    else WeaponType.SWORD
-                )
                 bar = Bar(
                     bar_id=active_bar,
-                    main_hand=Weapon(weapon_type=weapon_type),
+                    main_hand=Weapon(weapon_type=WeaponType.RESTORATION_STAFF),
                     off_hand=None,
-                    slots=slots,
+                    slots=filler_slots,
                 )
                 build = CharacterBuild(
                     name=name.strip() or f"Mock {role.value.title()}",
@@ -119,6 +111,7 @@ class BuildBackedRosterLab:
                     back_bar=bar if active_bar == BarId.BACK else None,
                 )
                 validation_errors = build.validate()
+
                 if not validation_errors:
                     resolver = CharacterBuildSupportEffectResolver(
                         gear_set_effect_variant_resolver=GearSetEffectVariantResolver(repository)
