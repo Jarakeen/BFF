@@ -58,7 +58,7 @@ def _patch_builds_page() -> None:
         return BuildEditor(
             race_choices=self.reference.list_race_names(),
             set_choices=self.reference.list_gear_set_names(),
-            skill_choices=load_skill_choices(self.reference.database.path),
+            skill_choices=load_skill_choices(self.reference.database.database),
             cp_choices=[c for c in self.reference.list_champion_points() if isinstance(c, dict) and c.get("name")],
         )
 
