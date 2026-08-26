@@ -181,10 +181,8 @@ class SkillBarRow(QWidget):
                 continue
             if int(skill.get("is_passive") or 0) != 0:
                 continue
-
             line = str(skill.get("skill_line") or "").strip()
             owner = str(skill.get("class_type") or "").strip()
-
             if owner:
                 if owner == eso_class and line in class_lines.get(eso_class, set()):
                     filtered.append(skill)
@@ -196,7 +194,6 @@ class SkillBarRow(QWidget):
             key = str(skill.get("name", "")).strip().casefold()
             if key and key not in seen:
                 seen[key] = skill
-
         self.skill_choices = list(seen.values())
         self._rebuild()
 
@@ -207,13 +204,11 @@ class SkillBarRow(QWidget):
             [str(s.get("name", "")).strip() for s in structured]
             if structured else [str(s).strip() for s in self.skill_choices]
         )
-
         for i, combo in enumerate(self.fields):
             combo.blockSignals(True)
             combo.clear()
             combo.addItem("")
             wants_ultimate = i == 5
-
             if structured:
                 for skill in structured:
                     if (int(skill.get("base_mechanic") or 0) == 8) != wants_ultimate:
@@ -227,7 +222,6 @@ class SkillBarRow(QWidget):
             else:
                 for name in names:
                     combo.addItem(name)
-
             if current[i]:
                 index = combo.findText(current[i], Qt.MatchExactly)
                 combo.setCurrentIndex(index if index >= 0 else 0)
@@ -287,7 +281,6 @@ class CompactCPSlot(QWidget):
         self.combo.blockSignals(True)
         self.combo.clear()
         self.combo.addItem("")
-
         for cp in self.choices:
             if isinstance(cp, dict):
                 try:
@@ -298,7 +291,6 @@ class CompactCPSlot(QWidget):
                     self.combo.addItem(str(cp.get("name", "")), cp)
             else:
                 self.combo.addItem(str(cp))
-
         self.combo.setCurrentText(self.entry.Name)
         try:
             self.points.setValue(int(self.entry.Points or 0))
@@ -327,8 +319,6 @@ class CompactCPSlot(QWidget):
 
 class ChampionPointGrid(QWidget):
     changed = Signal()
-
-    # The order intentionally matches the requested UI: green, blue, red.
     DISCIPLINES = (
         (3, "THE THIEF", "#5DCC7A"),
         (1, "THE MAGE", "#4DA3FF"),
@@ -339,40 +329,32 @@ class ChampionPointGrid(QWidget):
         super().__init__(parent)
         self.cp_choices = cp_choices or []
         self.slots = []
-
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(4)
-
         for discipline_id, label, color in self.DISCIPLINES:
             row = QHBoxLayout()
             row.setSpacing(8)
-
             heading = QLabel(f"✧  {label}")
             heading.setFixedWidth(145)
             heading.setStyleSheet(f"color:{color}; font-weight:700;")
             row.addWidget(heading)
-
             for _ in range(4):
                 slot = CompactCPSlot(self.cp_choices, discipline_id)
                 slot.changed.connect(self.changed.emit)
                 self.slots.append(slot)
                 row.addWidget(slot, 1)
-
             outer.addLayout(row)
 
     def load_entries(self, entries):
         for slot in self.slots:
             slot.clear()
-
         for entry in entries or []:
             if not entry.Name.strip():
                 continue
-
             for slot in self.slots:
                 if slot.entry.Name:
                     continue
-
                 if any(
                     isinstance(cp, dict)
                     and str(cp.get("name", "")).strip() == entry.Name.strip()
@@ -389,7 +371,6 @@ class ChampionPointGrid(QWidget):
 
 class BossLoadoutCard(FoundryCard):
     removeRequested = Signal(object)
-
     def __init__(self, skill_choices, parent=None):
         super().__init__("Boss Alternate", parent=parent)
         self.boss_name = QLineEdit()
@@ -398,11 +379,9 @@ class BossLoadoutCard(FoundryCard):
         self.food = QLineEdit()
         self.potion = QLineEdit()
         self.notes = QLineEdit()
-
         remove = FoundryButton("Remove", role=ButtonRole.DANGER, compact=True)
         remove.clicked.connect(lambda: self.removeRequested.emit(self))
         self.set_header_action(remove)
-
         form = QFormLayout()
         form.addRow("Boss", self.boss_name)
         form.addRow("Front Bar", self.front_bar)
@@ -454,9 +433,17 @@ class BuildEditor(QWidget):
         self.image_path = ""
         self._notes = ""
         self._boss_cards = []
-
         self._hydrate_reference_data()
         self._build_ui()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        while parent is not None:
+            if isinstance(parent, QDialog):
+                parent.resize(max(parent.width(), 1500), max(parent.height(), 920))
+                break
+            parent = parent.parentWidget()
 
     def _hydrate_reference_data(self):
         db_path = Path(__file__).resolve().parents[1] / "data" / "eso.db"
@@ -505,7 +492,6 @@ class BuildEditor(QWidget):
         grid = QGridLayout()
         grid.setContentsMargins(8, 6, 8, 6)
         grid.setHorizontalSpacing(10)
-
         fields = [
             ("Character Name", self._line("Character name")),
             ("@Gamertag", self._line("@Gamertag")),
@@ -514,18 +500,12 @@ class BuildEditor(QWidget):
             ("Role", self._combo(["", "Tank", "Healer", "DD"])),
             ("Alliance", self._combo(["", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact"])),
         ]
-        (
-            self.name, self.gamertag, self.race,
-            self.eso_class, self.role, self.alliance,
-        ) = [widget for _, widget in fields]
-
+        self.name, self.gamertag, self.race, self.eso_class, self.role, self.alliance = [w for _, w in fields]
         self.name.textChanged.connect(self.nameChanged.emit)
         self.eso_class.currentTextChanged.connect(self._apply_class)
-
         for column, (label, widget) in enumerate(fields):
             grid.addWidget(QLabel(label), 0, column)
             grid.addWidget(widget, 1, column)
-
         card.addLayout(grid)
         return card
 
@@ -544,7 +524,6 @@ class BuildEditor(QWidget):
         grid.setContentsMargins(8, 5, 8, 5)
         grid.setHorizontalSpacing(6)
         grid.setVerticalSpacing(3)
-
         headers = [
             "", "Slot", "Set 1", "Set 2 (Monster/Backup)",
             "Quality", "Trait", "Enchantment", "Enchant Tier", "Level", "",
@@ -563,23 +542,19 @@ class BuildEditor(QWidget):
             ("Ring1", "Ring 1", False), ("Ring2", "Ring 2", False),
             ("main_hand", "Front Bar", False), ("off_hand", "Back Bar", False),
         ]
-
         for row, (slot, label, armor) in enumerate(specs, 1):
             grid.addWidget(self._gear_icon(slot), row, 0)
             slot_label = QLabel(label)
             slot_label.setMinimumWidth(78)
             grid.addWidget(slot_label, row, 1)
-
             if armor:
                 traits = ARMOR_TRAITS
             elif slot in {"Neck", "Ring1", "Ring2"}:
                 traits = JEWELRY_TRAITS
             else:
                 traits = WEAPON_TRAITS
-
             editor = GearSlotRow(self.set_choices, traits, armor=armor)
             self.gear_rows[slot] = editor
-
             widgets = [
                 editor.set_combo, editor.set2_combo, editor.quality_combo,
                 editor.trait_combo, editor.enchant_combo,
@@ -587,12 +562,10 @@ class BuildEditor(QWidget):
             ]
             for column, widget in enumerate(widgets, 2):
                 grid.addWidget(widget, row, column)
-
             remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True)
             remove.setFixedWidth(28)
             remove.clicked.connect(editor.clear)
             grid.addWidget(remove, row, 9)
-
         card.addLayout(grid)
         return card
 
@@ -607,14 +580,11 @@ class BuildEditor(QWidget):
         self.front_bar = SkillBarRow(self.skill_choices)
         self.back_bar = SkillBarRow(self.skill_choices)
         self._apply_class()
-
         form = QFormLayout()
         form.addRow("Front Bar", self.front_bar)
         form.addRow("Back Bar", self.back_bar)
-
         self.food = self._combo(self.food_choices, True)
         self.potion = self._combo(self.potion_choices, True)
-
         consumables = QHBoxLayout()
         consumables.addWidget(QLabel("Food"))
         consumables.addWidget(self.food, 1)
@@ -629,11 +599,9 @@ class BuildEditor(QWidget):
         body = QVBoxLayout()
         self.boss_container = QVBoxLayout()
         body.addLayout(self.boss_container)
-
         add_boss = FoundryButton("+ Add Boss Alternate", role=ButtonRole.SECONDARY, compact=True)
         add_boss.clicked.connect(self.add_boss_loadout)
         body.addWidget(add_boss, 0, Qt.AlignLeft)
-
         actions = QHBoxLayout()
         actions.addStretch()
         add_build = FoundryButton("+ Add New Build", role=ButtonRole.SECONDARY, compact=True)
@@ -677,30 +645,21 @@ class BuildEditor(QWidget):
     def _handle_add_build(self):
         page = self
         dialog = None
-
         while page is not None:
             if isinstance(page, QDialog):
                 dialog = page
-            if (
-                hasattr(page, "roster")
-                and hasattr(page, "_save")
-                and hasattr(page, "_refresh_roster")
-            ):
+            if hasattr(page, "roster") and hasattr(page, "_save") and hasattr(page, "_refresh_roster"):
                 break
             page = page.parentWidget()
-
         if page is None or not hasattr(page, "roster"):
             self.addBuildRequested.emit()
             return
-
         if len(page.roster.Members) >= 12:
             return
-
         page.roster.Members.append(PlayerBuild())
         page.selected_index = len(page.roster.Members) - 1
         page._save()
         page._refresh_roster()
-
         if dialog is not None:
             dialog.reject()
 
@@ -744,7 +703,6 @@ class BuildEditor(QWidget):
         self.role.setCurrentText(getattr(model, "Role", "") or "")
         self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
         self._apply_class()
-
         for slot, row in self.gear_rows.items():
             if slot in ARMOR_SLOTS:
                 row.load(GearSlot.from_dict(model.Armor.get(slot, {})))
@@ -757,13 +715,11 @@ class BuildEditor(QWidget):
                     "Ring2": model.Ring2,
                 }[slot]
                 row.load(value)
-
         self.cp_grid.load_entries(model.ChampionPoints)
         self.front_bar.load(model.FrontBarSkills)
         self.back_bar.load(model.BackBarSkills)
         self.food.setCurrentText(model.Food)
         self.potion.setCurrentText(model.Potion)
-
         for card in list(self._boss_cards):
             self._remove_boss_loadout(card)
         for loadout in model.BossLoadouts:
