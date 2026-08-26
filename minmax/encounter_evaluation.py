@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from .coverage_classification import CoverageClassificationResult
+from .coverage_classification import (
+    CoverageClassification,
+    CoverageClassificationResult,
+)
 from .coverage_conflict import CoverageConflictReport, CoverageConflictAnalyzer
 from .coverage_gap import CoverageAnalysis, CoverageGapAnalyzer
 from .coverage_recommendation import (
     CoverageRecommendation,
     CoverageRecommendationAnalyzer,
+    RecommendationAction,
 )
 from .coverage_requirement import CoverageRequirement
 from .encounter_requirements import EncounterRequirementSet
@@ -194,7 +198,7 @@ class EncounterEvaluator:
         )
 
         recommendations = tuple(
-            self.recommendation_analyzer.recommend(classification)
+            self._recommend_for_encounter(classification)
             for classification in classifications
         )
 
@@ -206,6 +210,49 @@ class EncounterEvaluator:
             conflicts=conflicts,
             recommendations=recommendations,
         )
+
+    def _recommend_for_encounter(
+        self,
+        classification: CoverageClassificationResult,
+    ) -> CoverageRecommendation:
+        """
+        Resolve recommendation intent in encounter context.
+
+        The standalone recommendation analyzer deliberately treats an
+        existing provider with insufficient evidence as an uptime
+        investigation. At the encounter-evaluation boundary, however, a
+        hard provider-count requirement is an explicit composition
+        constraint: if fewer valid providers exist than the encounter
+        requires, the encounter needs another qualifying provider source.
+
+        This keeps the generic recommendation analyzer conservative while
+        making the encounter result operationally faithful to its declared
+        provider-count requirement.
+        """
+        recommendation = self.recommendation_analyzer.recommend(classification)
+
+        if (
+            classification.classification == CoverageClassification.INSUFFICIENT
+            and classification.valid_provider_count > 0
+            and classification.valid_provider_count < classification.required_provider_count
+        ):
+            missing_count = (
+                classification.required_provider_count
+                - classification.valid_provider_count
+            )
+            recommendation = replace(
+                recommendation,
+                action=RecommendationAction.ADD_PROVIDER,
+                explanation=(
+                    f"{classification.effect_name} requires "
+                    f"{classification.required_provider_count} valid provider(s), "
+                    f"but only {classification.valid_provider_count} qualify. "
+                    f"At least {missing_count} additional qualifying provider "
+                    "source(s) are needed for this encounter requirement."
+                ),
+            )
+
+        return recommendation
 
     @staticmethod
     def _requirement_is_active(
