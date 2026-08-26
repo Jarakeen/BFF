@@ -68,9 +68,8 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     """Existing polished BuildEditor with explicit build/lycanthropy state."""
 
     def __init__(self, *args, **kwargs):
-        # BuildEditor constructs its bars in build_ui(), so install our class
-        # before super() rather than replacing already-created widgets later.
-        build_editor.SkillBarRow = EligibleSkillBarRow
+        # searchable_build_selectors installs the concrete SkillBarRow class
+        # before BuildEditor construction. Do not overwrite that installation.
         super().__init__(*args, **kwargs)
 
         self.build_name = QLineEdit()
@@ -112,13 +111,13 @@ class EligibleBuildEditor(build_editor.BuildEditor):
         vampire = self.vampire_checkbox.isChecked()
         werewolf = self.werewolf_checkbox.isChecked()
         for bar in (getattr(self, "front_bar", None), getattr(self, "back_bar", None)):
-            if isinstance(bar, EligibleSkillBarRow):
+            if hasattr(bar, "set_affiliation"):
                 bar.set_affiliation(vampire=vampire, werewolf=werewolf)
                 bar.set_class(self.eso_class.currentText().strip())
 
     def _on_class_changed(self, eso_class: str):
         for bar in (self.front_bar, self.back_bar):
-            if isinstance(bar, EligibleSkillBarRow):
+            if hasattr(bar, "set_class"):
                 bar.set_class(eso_class)
         for card in self._boss_cards:
             card.set_class(eso_class)
