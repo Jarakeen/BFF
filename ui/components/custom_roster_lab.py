@@ -306,6 +306,73 @@ class CustomRosterLabWidget(QWidget):
         if hasattr(self, "skill_combo"):
             self._populate_skill_choices()
 
+    def _refresh_roster(self):
+        """
+        Populate the Mock Roster table from whichever lab backs the
+        current mode. This (and _evaluate below) were referenced by
+        __init__/_switch_mode/the Evaluate button but never defined,
+        which crashed CustomRosterLabWidget() on construction --
+        the actual reason Custom Roster never appeared: the whole
+        Test Lab render aborted partway through before anything
+        was ever added to the page layout.
+        """
+        is_build = self.mode_combo.currentText() == "Build-backed"
+        players = self.build_lab.players if is_build else self.lab.players
+
+        self.roster_table.setRowCount(len(players))
+
+        for row, player in enumerate(players):
+            if is_build:
+                source = ", ".join(
+                    f"{name or f'Set {set_id}'} x{pieces}"
+                    for set_id, name, pieces in player.gear_sets
+                ) or "No gear set"
+                uptime = "-"
+                if player.validation_errors:
+                    resolved = "INVALID: " + "; ".join(player.validation_errors)
+                elif player.unsupported_sources:
+                    resolved = "Unsupported: " + "; ".join(player.unsupported_sources)
+                else:
+                    resolved = ", ".join(player.resolved_effects) or "No resolved effects"
+            else:
+                source = "Evidence"
+                uptime = f"{player.uptime:.2f}"
+                resolved = ", ".join(
+                    capability.replace("_", " ").title()
+                    for capability in player.capabilities
+                ) or "None"
+
+            self.roster_table.setItem(row, 0, QTableWidgetItem(player.name))
+            self.roster_table.setItem(row, 1, QTableWidgetItem(player.role.value.title()))
+            self.roster_table.setItem(row, 2, QTableWidgetItem(source))
+            self.roster_table.setItem(row, 3, QTableWidgetItem(uptime))
+            self.roster_table.setItem(row, 4, QTableWidgetItem(resolved))
+            self.roster_table.setItem(row, 5, QTableWidgetItem(""))
+
+    def _evaluate(self):
+        """Run the current mode's roster through the real Phase 4 evaluator."""
+        is_build = self.mode_combo.currentText() == "Build-backed"
+        lab = self.build_lab if is_build else self.lab
+
+        try:
+            evaluation = lab.evaluate()
+        except Exception as exc:
+            self.results_table.setRowCount(0)
+            self.state_label.setText(f"ERROR • {exc}")
+            return
+
+        self.results_table.setRowCount(len(evaluation.classifications))
+        for row, result in enumerate(evaluation.classifications):
+            self.results_table.setItem(row, 0, QTableWidgetItem(result.effect_name))
+            self.results_table.setItem(row, 1, QTableWidgetItem(result.classification.value.upper()))
+            self.results_table.setItem(row, 2, QTableWidgetItem(str(result.valid_provider_count)))
+            self.results_table.setItem(row, 3, QTableWidgetItem(str(result.required_provider_count)))
+            self.results_table.setItem(row, 4, QTableWidgetItem(result.explanation))
+
+        problems = len(evaluation.problems)
+        state = "READY" if evaluation.is_fully_covered else f"ATTENTION • {problems} problem(s)"
+        self.state_label.setText(state)
+
     def _switch_mode(self, mode: str):
         if mode == "Build-backed":
             self._build_build_editor()

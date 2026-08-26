@@ -3,14 +3,13 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -64,10 +63,11 @@ class OptimizationPage(FoundryPage):
         self.view_combo.currentTextChanged.connect(self.refresh)
         self.header.add_context_widget(self._context_field("VIEW", self.view_combo))
 
-        # FoundryPage already owns the scrollable workspace. Keep a local alias
-        # for the existing render methods rather than creating a second
-        # QWidget/QScrollArea layer inside the page.
-        self.layout = self.workspace_layout
+        self.workspace = QWidget()
+        self.layout = QVBoxLayout(self.workspace)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(10)
+        self.add_workspace(self.workspace)
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
@@ -99,6 +99,47 @@ class OptimizationPage(FoundryPage):
         except Exception:
             return ["Current Trial"]
 
+    @staticmethod
+    def _clear_layout(layout):
+        """
+        Empty a layout completely and recursively, regardless of
+        what each item actually is.
+
+        A plain "if item.widget(): delete it" cleanup silently
+        ignores two other kinds of QLayoutItem that this page
+        produces every refresh():
+
+        - nested layouts added via addLayout() (e.g. mode_row,
+          scenario_row, top_row) -- these have no widget() of
+          their own, so their contents and the QLayout object
+          itself were never released.
+        - spacer items from addStretch() -- no widget() either.
+
+        Repeated refresh() calls without this leaked one of each
+        per cycle, which is exactly the kind of thing that shows
+        up later as orphaned geometry once enough of them pile up
+        across Trial/View switches.
+        """
+        while layout.count():
+            item = layout.takeAt(0)
+
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+                continue
+
+            nested = item.layout()
+            if nested is not None:
+                OptimizationPage._clear_layout(nested)
+                nested.setParent(None)
+                nested.deleteLater()
+                continue
+
+            # QSpacerItem (addStretch/addSpacing): nothing owns it
+            # once takeAt() has removed it from the layout; letting
+            # `item` fall out of scope is enough to release it.
+
     def refresh(self, *_args):
         try:
             self.roster = self.build_service.load()
@@ -106,12 +147,7 @@ class OptimizationPage(FoundryPage):
             self.roster = BuildRoster()
             self.status.error(f"Failed to load builds: {exc}")
 
-        while self.layout.count():
-            item = self.layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.setParent(None)
-                widget.deleteLater()
+        self._clear_layout(self.layout)
 
         view = self.view_combo.currentText()
         if view == "Suggestions":
@@ -174,10 +210,22 @@ class OptimizationPage(FoundryPage):
         self.layout.addStretch(1)
 
     def _render_test_lab(self):
-        # FoundryPage already provides the page-level scroll viewport.
-        # Render the Test Lab directly into that workspace so the banner,
-        # controls, and custom roster are all part of one scrollable surface.
-        page_layout = self.layout
+        # FoundryPage already owns the page-level scrollable
+        # workspace (self.workspace_scroll). Wrapping this content
+        # in a second QScrollArea here created a nested-scroll-area
+        # sizing loop: the inner QScrollArea(widgetResizable=True)
+        # needs a bounded viewport height to lay out its child, but
+        # it sat inside an outer QScrollArea whose content is meant
+        # to size to its natural sizeHint -- neither side had a
+        # number to converge on. That's what produced the blank
+        # regions, squeezed/zero-height Custom Roster editor, and
+        # geometry corruption on repeated Trial/View switches.
+        # Adding content straight to the existing workspace layout
+        # lets the one real scroll area size everything normally.
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(10)
 
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel(
@@ -186,7 +234,6 @@ class OptimizationPage(FoundryPage):
         banner.addWidget(QLabel(
             "Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."
         ))
-        banner.setMaximumHeight(180)
         page_layout.addWidget(banner)
 
         mode_card = FoundryCard("Test Mode")
@@ -211,8 +258,6 @@ class OptimizationPage(FoundryPage):
         scenario_description = QLabel()
         scenario_description.setWordWrap(True)
         scenario_card.addWidget(scenario_description)
-        mode_card.setMaximumHeight(140)
-        scenario_card.setMaximumHeight(140)
 
         top_row = QHBoxLayout()
         top_row.setSpacing(10)
@@ -228,11 +273,25 @@ class OptimizationPage(FoundryPage):
         )
         custom_widget = CustomRosterLabWidget()
 
+        # Both stacked pages should be able to claim the space
+        # the stack is given -- Expanding/Preferred, no hard-coded
+        # floor -- so the stack's own size negotiates naturally
+        # with the single outer scroll area instead of being
+        # propped up by a magic-number minimum height.
+        preset_panel.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
+        custom_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
+
         stack = QStackedWidget()
+        stack.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
         stack.addWidget(preset_panel)
         stack.addWidget(custom_widget)
-        stack.setMinimumHeight(520)
-        page_layout.addWidget(stack)
+        page_layout.addWidget(stack, 1)
 
         def update_mode(index: int):
             is_preset = index == 0
@@ -246,7 +305,6 @@ class OptimizationPage(FoundryPage):
                     "Custom Roster • disposable evidence/build sandbox. Use the roster editor below to add players, gear, and skills."
                 )
             stack.setCurrentIndex(index)
-            stack.updateGeometry()
 
         mode_combo.activated.connect(update_mode)
         stack.currentChanged.connect(
@@ -257,6 +315,8 @@ class OptimizationPage(FoundryPage):
             )
         )
         update_mode(mode_combo.currentIndex())
+
+        self.layout.addWidget(page, 1)
 
     def _build_preset_lab(
         self,

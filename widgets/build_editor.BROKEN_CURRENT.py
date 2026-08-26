@@ -33,7 +33,7 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
-from widgets.build_editor import BuildEditor
+
 
 
 class BuildsPage(FoundryPage):

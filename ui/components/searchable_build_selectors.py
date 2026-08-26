@@ -5,7 +5,6 @@ from PySide6.QtWidgets import QComboBox, QCompleter
 
 from widgets import build_editor
 
-
 def _configure_search(combo: QComboBox) -> None:
     """Enable case-insensitive substring search without free-form insertion."""
     combo.setEditable(True)
