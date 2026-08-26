@@ -1,367 +1,450 @@
-# widgets/build_editor.py
-#
-# Editable character build for one raid team member:
-# identity, image, race/class, gear, CP, skill bars, food
-# and potion, plus a scrolling list of boss alternate
-# loadouts for the trial. Holds no persistence of its own
-# -- the page reads/writes `model` and calls load()/clear(),
-# same convention as widgets/roster_record.py.
-
 from __future__ import annotations
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
+
+from pathlib import Path
+
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
+    QFileDialog,
     QFormLayout,
     QGridLayout,
-    QLineEdit,
-    QTextEdit,
-    QComboBox,
+    QHBoxLayout,
     QLabel,
-    QFileDialog,
-    QFrame,
+    QLineEdit,
+    QComboBox,
+    QDialog,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
-from widgets.gear_slot_tile import GearSlotTile
-from ui.components.foundry_card import FoundryCard
+
 from ui.components.foundry_button import ButtonRole, FoundryButton
-from services.eso_icon_resolver import EsoIconResolver
+from ui.components.foundry_card import FoundryCard
 from models.build_model import (
-    PlayerBuild,
-    BossLoadout,
-    GearSlot,
-    ChampionPointEntry,
     ARMOR_SLOTS,
     ARMOR_TRAITS,
     WEAPON_TRAITS,
     JEWELRY_TRAITS,
+    BossLoadout,
+    ChampionPointEntry,
+    GearSlot,
+    PlayerBuild,
 )
 from models.roster_model import ESO_CLASSES
+from services.eso_icon_resolver import EsoIconResolver
+from services.eso_database import EsoDatabase
+from services.reference_data_service import ReferenceDataService
+from services.eso_gear_icons import gear_icon_path
+
+
+QUALITY_CHOICES = ["", "White", "Green", "Blue", "Purple", "Gold"]
+LEVEL_CHOICES = [
+    "", "Level 1", "Level 10", "Level 20", "Level 30", "Level 40",
+    "Level 50", "CP10", "CP30", "CP50", "CP70", "CP100", "CP150", "CP160",
+]
+ENCHANT_TIER_CHOICES = [
+    "", "Trifling", "Inferior", "Petty", "Slight", "Minor", "Lesser",
+    "Moderate", "Average", "Strong", "Major", "Greater", "Grand",
+    "Splendid", "Monumental", "Superb", "Truly Superb",
+]
+ENCHANT_CHOICES = [
+    "", "Max Magicka", "Max Health", "Max Stamina", "Prismatic Defense",
+    "Magicka Recovery", "Health Recovery", "Stamina Recovery",
+    "Weapon Damage", "Spell Damage", "Absorb Magicka", "Absorb Health",
+    "Absorb Stamina", "Poison", "Flame", "Frost", "Shock", "Crushing",
+    "Disease", "Bashing", "Decrease Physical Harm",
+]
 
 
 class GearSlotRow(QWidget):
-    """Reusable editor for one armor, weapon, or jewelry slot."""
+    """Dense one-line editor for one armor, weapon, or jewelry slot."""
 
-    def __init__(
-        self,
-        set_choices: list[str],
-        trait_choices: list[str],
-        *,
-        armor: bool = False,
-        parent=None,
-    ):
+    def __init__(self, set_choices, trait_choices, *, armor=False, parent=None):
         super().__init__(parent)
-
         self.armor = armor
 
-        # Set
-        self.set_combo = QComboBox()
-        self.set_combo.setEditable(True)
-        self.set_combo.addItem("")
-        self.set_combo.addItems(set_choices)
+        self.set_combo = self._combo(set_choices, editable=True)
+        self.set2_combo = self._combo(set_choices, editable=True)
+        self.quality_combo = self._combo(QUALITY_CHOICES)
+        self.trait_combo = self._combo(trait_choices)
+        self.enchant_combo = self._combo(ENCHANT_CHOICES, editable=True)
+        self.enchant_tier_combo = self._combo(ENCHANT_TIER_CHOICES)
+        self.level_combo = self._combo(LEVEL_CHOICES, editable=True)
+        self.weight_combo = self._combo(["", "Light", "Medium", "Heavy"])
+        self.weight_combo.setVisible(False)
 
-        # Trait
-        self.trait_combo = QComboBox()
-        self.trait_combo.addItem("")
-        self.trait_combo.addItems(trait_choices)
+        self.quality_combo.currentTextChanged.connect(self._style_quality)
+        self._style_quality(self.quality_combo.currentText())
 
-        # Enchantment
-        self.enchant_combo = QComboBox()
-        self.enchant_combo.setEditable(True)
-        self.enchant_combo.addItem("")
+    @staticmethod
+    def _combo(values, editable=False):
+        combo = QComboBox()
+        combo.setMinimumHeight(28)
+        combo.setEditable(editable)
+        combo.addItems(values)
+        combo.setInsertPolicy(QComboBox.NoInsert)
+        return combo
 
-        # Weight, armor only
-        self.weight_combo = QComboBox()
-
-        if self.armor:
-            self.weight_combo.addItems(
-                [
-                    "",
-                    "Light",
-                    "Medium",
-                    "Heavy",
-                ]
-            )
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
-
-        layout.addWidget(self.set_combo, 2)
-        layout.addWidget(self.trait_combo, 1)
-        layout.addWidget(self.enchant_combo, 1)
-
-        if self.armor:
-            layout.addWidget(self.weight_combo, 1)
+    def _style_quality(self, value):
+        colors = {
+            "White": "#d8d8d8",
+            "Green": "#5dce72",
+            "Blue": "#4da3ff",
+            "Purple": "#b56cff",
+            "Gold": "#e6b84f",
+        }
+        color = colors.get(value, "#6b6255")
+        self.quality_combo.setStyleSheet(f"QComboBox {{ border: 1px solid {color}; }}")
 
     @property
-    def value(self) -> GearSlot:
+    def value(self):
         return GearSlot(
             Set=self.set_combo.currentText().strip(),
+            Set2=self.set2_combo.currentText().strip(),
+            Quality=self.quality_combo.currentText().strip(),
             Trait=self.trait_combo.currentText().strip(),
             Enchant=self.enchant_combo.currentText().strip(),
-            Weight=(
-                self.weight_combo.currentText().strip()
-                if self.armor
-                else ""
-            ),
+            EnchantTier=self.enchant_tier_combo.currentText().strip(),
+            Level=self.level_combo.currentText().strip(),
+            Weight=self.weight_combo.currentText().strip(),
         )
 
-    def load(self, slot: GearSlot):
+    def load(self, slot):
         self.set_combo.setCurrentText(slot.Set or "")
+        self.set2_combo.setCurrentText(getattr(slot, "Set2", "") or "")
+        self.quality_combo.setCurrentText(getattr(slot, "Quality", "") or "")
         self.trait_combo.setCurrentText(slot.Trait or "")
         self.enchant_combo.setCurrentText(slot.Enchant or "")
-
-        if self.armor:
-            self.weight_combo.setCurrentText(slot.Weight or "")
+        self.enchant_tier_combo.setCurrentText(getattr(slot, "EnchantTier", "") or "")
+        self.level_combo.setCurrentText(getattr(slot, "Level", "") or "")
+        self.weight_combo.setCurrentText(getattr(slot, "Weight", "") or "")
 
     def clear(self):
-        self.set_combo.setCurrentText("")
-        self.trait_combo.setCurrentText("")
-        self.enchant_combo.setCurrentText("")
-
-        if self.armor:
-            self.weight_combo.setCurrentText("")
+        self.load(GearSlot())
 
 
 class SkillBarRow(QWidget):
-    """5 active skills + 1 ultimate, displayed as clickable ESO skill tiles."""
+    """Six compact skill selectors, using rich ESO skill records when available."""
 
-    def __init__(self, skill_choices: list[str], parent=None):
+    def __init__(self, skill_choices, parent=None):
         super().__init__(parent)
-
-        self.fields: list[QComboBox] = []
+        self.all_skill_choices = skill_choices or []
+        self.skill_choices = list(self.all_skill_choices)
+        self.fields = []
         self.icon_resolver = EsoIconResolver()
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        for i in range(6):
-            field = QComboBox()
+        for index in range(6):
+            combo = QComboBox()
+            combo.setEditable(True)
+            combo.setInsertPolicy(QComboBox.NoInsert)
+            combo.setMinimumHeight(38)
+            combo.setIconSize(QSize(26, 26))
+            combo.setToolTip("Ultimate" if index == 5 else f"Skill {index + 1}")
+            self.fields.append(combo)
+            layout.addWidget(combo, 1)
 
-            field.setEditable(True)
-            field.addItem("")
-            field.addItems(skill_choices)
+    @staticmethod
+    def _skill_dicts(skills):
+        return [s for s in skills if isinstance(s, dict) and str(s.get("name", "")).strip()]
 
-            if i == 5:
-                field.setToolTip("Ultimate")
-            else:
-                field.setToolTip(f"Skill {i + 1}")
-
-            # Make the control large enough to display an ESO icon.
-            field.setMinimumSize(72, 72)
-
-            # Keep the text field functional, but give the control
-            # a more compact skill-slot appearance.
-            field.setIconSize(QSize(56, 56))
-
-            self.fields.append(field)
-            layout.addWidget(field)
-
-            field.currentTextChanged.connect(
-                lambda text, combo=field: self._update_icon(combo, text)
-            )
-
-    def _update_icon(
-        self,
-        field: QComboBox,
-        skill_name: str,
-    ) -> None:
-        """Update the selected skill icon."""
-
-        skill_name = skill_name.strip()
-
-        # QComboBox does not support setIcon().
-        # Skill icons are handled by the compact skill tile UI,
-        # so there is nothing to clear or set on the combo itself.
-        if not skill_name:
+    def set_class(self, eso_class):
+        skills = self._skill_dicts(self.all_skill_choices)
+        if not skills:
+            self.skill_choices = list(self.all_skill_choices)
+            self._rebuild()
             return
 
-    
+        universal = {
+            "Two Handed", "One Hand and Shield", "Dual Wield", "Bow",
+            "Destruction Staff", "Restoration Staff", "Heavy Armor",
+            "Medium Armor", "Light Armor", "Fighters Guild", "Mages Guild",
+            "Psijic Order", "Soul Magic", "Undaunted", "Assault", "Support",
+            "Vampire", "Werewolf",
+        }
+        class_lines = {
+            "Dragonknight": {"Ardent Flame", "Draconic Power", "Earthen Heart"},
+            "Sorcerer": {"Dark Magic", "Daedric Summoning", "Storm Calling"},
+            "Nightblade": {"Assassination", "Shadow", "Siphoning"},
+            "Templar": {"Aedric Spear", "Dawn's Wrath", "Restoring Light"},
+            "Warden": {"Animal Companions", "Green Balance", "Winter's Embrace"},
+            "Necromancer": {"Bone Tyrant", "Grave Lord", "Living Death"},
+            "Arcanist": {"Herald of the Tome", "Soldier of Apocrypha", "Curative Runeforms"},
+        }
 
-        # For now, skill_choices contain names rather than full skill
-        # records. The resolver needs the ESO texture path, so this
-        # intentionally remains a safe no-op until we connect the
-        # existing skill data to the row.
-        #
-        # The next step will supply the actual texture path here.
-        return
+        filtered = []
+        for skill in skills:
+            if int(skill.get("is_player") or 0) != 1:
+                continue
+            if int(skill.get("is_passive") or 0) != 0:
+                continue
+
+            line = str(skill.get("skill_line") or "").strip()
+            owner = str(skill.get("class_type") or "").strip()
+
+            if owner:
+                if owner == eso_class and line in class_lines.get(eso_class, set()):
+                    filtered.append(skill)
+            elif line in universal:
+                filtered.append(skill)
+
+        seen = {}
+        for skill in filtered:
+            key = str(skill.get("name", "")).strip().casefold()
+            if key and key not in seen:
+                seen[key] = skill
+
+        self.skill_choices = list(seen.values())
+        self._rebuild()
+
+    def _rebuild(self):
+        current = [field.currentText().strip() for field in self.fields]
+        structured = self._skill_dicts(self.skill_choices)
+        names = (
+            [str(s.get("name", "")).strip() for s in structured]
+            if structured else [str(s).strip() for s in self.skill_choices]
+        )
+
+        for i, combo in enumerate(self.fields):
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItem("")
+            wants_ultimate = i == 5
+
+            if structured:
+                for skill in structured:
+                    if (int(skill.get("base_mechanic") or 0) == 8) != wants_ultimate:
+                        continue
+                    name = str(skill.get("name", "")).strip()
+                    combo.addItem(name, skill)
+                    texture = str(skill.get("texture") or "").strip()
+                    path = self.icon_resolver.resolve(texture)
+                    if path:
+                        combo.setItemIcon(combo.count() - 1, QIcon(str(path)))
+            else:
+                for name in names:
+                    combo.addItem(name)
+
+            if current[i]:
+                index = combo.findText(current[i], Qt.MatchExactly)
+                combo.setCurrentIndex(index if index >= 0 else 0)
+            combo.blockSignals(False)
 
     @property
-    def value(self) -> list[str]:
-        return [f.currentText().strip() for f in self.fields]
+    def value(self):
+        return [field.currentText().strip() for field in self.fields]
 
-    def load(self, skills: list[str]):
-        skills = list(skills) + [""] * 6
-
-        for field, value in zip(self.fields, skills[:6]):
-            field.setCurrentText(value)
+    def load(self, skills):
+        values = list(skills or []) + [""] * 6
+        for field, value in zip(self.fields, values[:6]):
+            index = field.findText(str(value or ""), Qt.MatchExactly)
+            field.setCurrentIndex(index if index >= 0 else 0)
 
     def clear(self):
         for field in self.fields:
-            field.setCurrentText("")
+            field.setCurrentIndex(0)
+
+
+class CompactCPSlot(QWidget):
+    changed = Signal()
+
+    def __init__(self, choices, discipline_id, entry=None, parent=None):
+        super().__init__(parent)
+        self.choices = choices
+        self.discipline_id = discipline_id
+        self.entry = entry or ChampionPointEntry()
+
+        self.combo = QComboBox()
+        self.combo.setEditable(True)
+        self.combo.setInsertPolicy(QComboBox.NoInsert)
+        self.points = QSpinBox()
+        self.points.setRange(0, 100)
+        self.points.setFixedWidth(54)
+
+        minus = FoundryButton("−", role=ButtonRole.GHOST, compact=True)
+        plus = FoundryButton("+", role=ButtonRole.GHOST, compact=True)
+        minus.setFixedWidth(28)
+        plus.setFixedWidth(28)
+
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(4)
+        row.addWidget(self.combo, 1)
+        row.addWidget(self.points)
+        row.addWidget(minus)
+        row.addWidget(plus)
+
+        minus.clicked.connect(lambda: self.points.setValue(max(0, self.points.value() - 1)))
+        plus.clicked.connect(lambda: self.points.setValue(min(100, self.points.value() + 1)))
+        self.combo.currentTextChanged.connect(lambda *_: self._sync())
+        self.points.valueChanged.connect(lambda *_: self._sync())
+        self._populate()
+
+    def _populate(self):
+        self.combo.blockSignals(True)
+        self.combo.clear()
+        self.combo.addItem("")
+
+        for cp in self.choices:
+            if isinstance(cp, dict):
+                try:
+                    matches = int(cp.get("discipline_id") or 0) == self.discipline_id
+                except (TypeError, ValueError):
+                    matches = False
+                if matches:
+                    self.combo.addItem(str(cp.get("name", "")), cp)
+            else:
+                self.combo.addItem(str(cp))
+
+        self.combo.setCurrentText(self.entry.Name)
+        try:
+            self.points.setValue(int(self.entry.Points or 0))
+        except (TypeError, ValueError):
+            self.points.setValue(0)
+        self.combo.blockSignals(False)
+
+    def _sync(self):
+        self.entry = ChampionPointEntry(
+            Name=self.combo.currentText().strip(),
+            Points=str(self.points.value()),
+        )
+        self.changed.emit()
+
+    def load(self, entry):
+        self.entry = entry
+        self._populate()
+
+    def clear(self):
+        self.load(ChampionPointEntry())
+
+    @property
+    def value(self):
+        return self.entry
+
+
+class ChampionPointGrid(QWidget):
+    changed = Signal()
+
+    # The order intentionally matches the requested UI: green, blue, red.
+    DISCIPLINES = (
+        (3, "THE THIEF", "#5DCC7A"),
+        (1, "THE MAGE", "#4DA3FF"),
+        (2, "THE WARRIOR", "#FF5C5C"),
+    )
+
+    def __init__(self, cp_choices, parent=None):
+        super().__init__(parent)
+        self.cp_choices = cp_choices or []
+        self.slots = []
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(4)
+
+        for discipline_id, label, color in self.DISCIPLINES:
+            row = QHBoxLayout()
+            row.setSpacing(8)
+
+            heading = QLabel(f"✧  {label}")
+            heading.setFixedWidth(145)
+            heading.setStyleSheet(f"color:{color}; font-weight:700;")
+            row.addWidget(heading)
+
+            for _ in range(4):
+                slot = CompactCPSlot(self.cp_choices, discipline_id)
+                slot.changed.connect(self.changed.emit)
+                self.slots.append(slot)
+                row.addWidget(slot, 1)
+
+            outer.addLayout(row)
+
+    def load_entries(self, entries):
+        for slot in self.slots:
+            slot.clear()
+
+        for entry in entries or []:
+            if not entry.Name.strip():
+                continue
+
+            for slot in self.slots:
+                if slot.entry.Name:
+                    continue
+
+                if any(
+                    isinstance(cp, dict)
+                    and str(cp.get("name", "")).strip() == entry.Name.strip()
+                    and int(cp.get("discipline_id") or 0) == slot.discipline_id
+                    for cp in self.cp_choices
+                ):
+                    slot.load(entry)
+                    break
+
+    @property
+    def value(self):
+        return [slot.value for slot in self.slots if slot.value.Name.strip()]
 
 
 class BossLoadoutCard(FoundryCard):
-    """One alternate loadout for a specific boss in the trial."""
-
     removeRequested = Signal(object)
 
-    def __init__(self, skill_choices: list[str], parent=None):
+    def __init__(self, skill_choices, parent=None):
         super().__init__("Boss Alternate", parent=parent)
-
         self.boss_name = QLineEdit()
-        self.boss_name.setPlaceholderText("Boss name")
-
         self.front_bar = SkillBarRow(skill_choices)
         self.back_bar = SkillBarRow(skill_choices)
-
         self.food = QLineEdit()
         self.potion = QLineEdit()
+        self.notes = QLineEdit()
 
-        self.notes = QTextEdit()
-        self.notes.setPlaceholderText("Positioning, timing, anything that changes for this pull...")
-        self.notes.setFixedHeight(60)
-
-        remove_button = FoundryButton(
-            "Remove Alternate",
-            role=ButtonRole.DANGER,
-            compact=True,
-        )
-
-        remove_button.clicked.connect(
-            lambda: self.removeRequested.emit(self)
-        )
-
-        self.set_header_action(remove_button)
+        remove = FoundryButton("Remove", role=ButtonRole.DANGER, compact=True)
+        remove.clicked.connect(lambda: self.removeRequested.emit(self))
+        self.set_header_action(remove)
 
         form = QFormLayout()
-
         form.addRow("Boss", self.boss_name)
         form.addRow("Front Bar", self.front_bar)
         form.addRow("Back Bar", self.back_bar)
-
-        consumables = QHBoxLayout()
-
-        consumables.addWidget(QLabel("Food"))
-        consumables.addWidget(self.food)
-        consumables.addWidget(QLabel("Potion"))
-        consumables.addWidget(self.potion)
-
-        form.addRow("Consumables", consumables)
+        form.addRow("Food", self.food)
+        form.addRow("Potion", self.potion)
         form.addRow("Notes", self.notes)
-
         self.addLayout(form)
 
-        self.boss_name.textChanged.connect(self._sync_title)
-
-    def _sync_title(self):
-
-        self.set_title(self.boss_name.text().strip() or "Boss Alternate")
+    def set_class(self, eso_class):
+        self.front_bar.set_class(eso_class)
+        self.back_bar.set_class(eso_class)
 
     @property
-    def value(self) -> BossLoadout:
-
+    def value(self):
         return BossLoadout(
             BossName=self.boss_name.text().strip(),
             FrontBarSkills=self.front_bar.value,
             BackBarSkills=self.back_bar.value,
             Food=self.food.text().strip(),
             Potion=self.potion.text().strip(),
-            Notes=self.notes.toPlainText().strip(),
+            Notes=self.notes.text().strip(),
         )
 
-    def load(self, loadout: BossLoadout):
-
+    def load(self, loadout):
         self.boss_name.setText(loadout.BossName)
         self.front_bar.load(loadout.FrontBarSkills)
         self.back_bar.load(loadout.BackBarSkills)
         self.food.setText(loadout.Food)
         self.potion.setText(loadout.Potion)
-        self.notes.setPlainText(loadout.Notes)
-
-        self._sync_title()
-
-
-class ChampionPointRow(QWidget):
-
-    removeRequested = Signal(object)
-
-    def __init__(self, cp_choices: list[str], parent=None):
-        super().__init__(parent)
-
-        self.name_combo = QComboBox()
-        self.name_combo.setEditable(True)
-        self.name_combo.addItem("")
-        self.name_combo.addItems(cp_choices)
-
-        self.points = QLineEdit()
-        self.points.setPlaceholderText("Points")
-        self.points.setFixedWidth(70)
-
-        remove_button = FoundryButton(
-            "✕",
-            role=ButtonRole.GHOST,
-            compact=True,
-        )
-
-        remove_button.setFixedWidth(28)
-
-        remove_button.clicked.connect(
-            lambda: self.removeRequested.emit(self)
-        )
-
-        layout = QHBoxLayout(self)
-
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        layout.addWidget(self.name_combo, 3)
-        layout.addWidget(self.points, 1)
-        layout.addWidget(remove_button)
-
-    @property
-    def value(self) -> ChampionPointEntry:
-
-        return ChampionPointEntry(
-            Name=self.name_combo.currentText().strip(),
-            Points=self.points.text().strip(),
-        )
-
-    def load(self, entry: ChampionPointEntry):
-
-        self.name_combo.setCurrentText(entry.Name)
-        self.points.setText(entry.Points)
+        self.notes.setText(loadout.Notes)
 
 
 class BuildEditor(QWidget):
-    """
-    Full editable build for one raid team member.
-
-    Meant to sit inside a QScrollArea (the page provides
-    that) -- this widget lays everything out vertically and
-    does not scroll itself.
-    """
-
     nameChanged = Signal(str)
     saveRequested = Signal()
     cancelRequested = Signal()
+    addBuildRequested = Signal()
 
-    def __init__(
-        self,
-        race_choices: list[str] | None = None,
-        set_choices: list[str] | None = None,
-        skill_choices: list[str] | None = None,
-        cp_choices: list[str] | None = None,
-        food_choices: list[str] | None = None,
-        potion_choices: list[str] | None = None,
-        parent=None,
-    ):
+    def __init__(self, race_choices=None, set_choices=None, skill_choices=None,
+                 cp_choices=None, food_choices=None, potion_choices=None, parent=None):
         super().__init__(parent)
-
         self.race_choices = race_choices or []
         self.set_choices = set_choices or []
         self.skill_choices = skill_choices or []
@@ -369,642 +452,334 @@ class BuildEditor(QWidget):
         self.food_choices = food_choices or []
         self.potion_choices = potion_choices or []
         self.image_path = ""
+        self._notes = ""
+        self._boss_cards = []
 
-        self._cp_rows: list[ChampionPointRow] = []
-        self._boss_cards: list[BossLoadoutCard] = []
+        self._hydrate_reference_data()
+        self._build_ui()
 
-        self.build_ui()
+    def _hydrate_reference_data(self):
+        db_path = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+        try:
+            db = EsoDatabase(db_path)
+            ref = ReferenceDataService(db)
+            if not self.skill_choices or all(isinstance(x, str) for x in self.skill_choices):
+                self.skill_choices = ref.list_skills()
+            if not self.cp_choices or all(isinstance(x, str) for x in self.cp_choices):
+                self.cp_choices = ref.list_champion_points()
+            if not self.food_choices:
+                self.food_choices = ref.list_food_names()
+            if not self.potion_choices:
+                self.potion_choices = ref.list_potion_names()
+        except Exception:
+            pass
 
-    # --------------------------------------------------
-    # UI
-    # --------------------------------------------------
-
-    def build_ui(self):
-
+    def _build_ui(self):
         root = QVBoxLayout(self)
-
         root.setContentsMargins(0, 0, 0, 0)
-
-        root.setSpacing(12)
-
+        root.setSpacing(8)
         root.addWidget(self._build_identity_card())
         root.addWidget(self._build_gear_card())
         root.addWidget(self._build_cp_card())
         root.addWidget(self._build_skills_card())
+        root.addWidget(self._build_boss_card())
 
-        self.boss_container = QVBoxLayout()
+    @staticmethod
+    def _line(placeholder=""):
+        widget = QLineEdit()
+        widget.setPlaceholderText(placeholder)
+        widget.setMinimumHeight(28)
+        return widget
 
-        self.boss_container.setSpacing(10)
+    @staticmethod
+    def _combo(values, editable=False):
+        widget = QComboBox()
+        widget.setEditable(editable)
+        widget.setInsertPolicy(QComboBox.NoInsert)
+        widget.addItems(values)
+        widget.setMinimumHeight(28)
+        return widget
 
-        boss_card = FoundryCard("Boss Alternates")
-
-        boss_card_body = QVBoxLayout()
-
-        boss_card_body.addLayout(self.boss_container)
-
-        button_row = QHBoxLayout()
-        button_row.setSpacing(8)
-
-        add_boss_button = FoundryButton(
-            "+ Add Boss Alternate",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        add_boss_button.clicked.connect(self.add_boss_loadout)
-        button_row.addWidget(add_boss_button)
-
-        button_row.addStretch(1)
-
-        cancel_button = FoundryButton(
-            "Cancel",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        save_button = FoundryButton(
-            "Save This Build",
-            role=ButtonRole.PRIMARY,
-            compact=True,
-        )
-
-        cancel_button.clicked.connect(self.cancelRequested.emit)
-        save_button.clicked.connect(self.saveRequested.emit)
-
-        button_row.addWidget(cancel_button)
-        button_row.addWidget(save_button)
-
-        boss_card_body.addLayout(button_row)
-
-        root.addWidget(boss_card)
-
-        root.addStretch()
-
-    def _build_identity_card(self) -> FoundryCard:
-
+    def _build_identity_card(self):
         card = FoundryCard("Identity")
-
-        self.name = QLineEdit()
-        self.name.setPlaceholderText("Character name")
-        self.name.textChanged.connect(self.nameChanged.emit)
-
-        self.gamertag = QLineEdit()
-        self.gamertag.setPlaceholderText("@Gamertag")
-
-        self.race = QComboBox()
-        self.race.setEditable(True)
-        self.race.addItem("")
-        self.race.addItems(self.race_choices)
-
-        self.eso_class = QComboBox()
-        self.eso_class.addItems(ESO_CLASSES)
-
-        self.notes = QTextEdit()
-        self.notes.setFixedHeight(50)
-        self.notes.setPlaceholderText("General notes about this build...")
-
-        self.image_label = QLabel("No image")
-        self.image_label.setFixedSize(96, 96)
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setFrameShape(QFrame.Shape.Box)
-        self.image_label.setScaledContents(True)
-
-        image_button = FoundryButton(
-            "Choose Image...",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        image_button.clicked.connect(self.choose_image)
-
-        clear_image_button = FoundryButton(
-            "Clear",
-            role=ButtonRole.GHOST,
-            compact=True,
-        )
-
-        clear_image_button.clicked.connect(self.clear_image)
-
-        image_buttons = QVBoxLayout()
-
-        image_buttons.addWidget(image_button)
-        image_buttons.addWidget(clear_image_button)
-        image_buttons.addStretch()
-
-        image_row = QHBoxLayout()
-
-        image_row.addWidget(self.image_label)
-        image_row.addLayout(image_buttons)
-        image_row.addStretch()
-
-        form = QFormLayout()
-
-        form.addRow("Name", self.name)
-        form.addRow("Gamertag", self.gamertag)
-        form.addRow("Race", self.race)
-        form.addRow("Class", self.eso_class)
-        form.addRow("Notes", self.notes)
-
-        content = QHBoxLayout()
-
-        content.addLayout(form, 2)
-        content.addLayout(image_row, 1)
-
-        card.addLayout(content)
-
-        return card
-
-    def _build_gear_card(self) -> FoundryCard:
-        card = FoundryCard("Gear")
-
         grid = QGridLayout()
-        grid.setContentsMargins(8, 8, 8, 8)
-        grid.setHorizontalSpacing(6)
-        grid.setVerticalSpacing(6)
+        grid.setContentsMargins(8, 6, 8, 6)
+        grid.setHorizontalSpacing(10)
 
-        self.armor_rows: dict[str, GearSlotRow] = {}
-        self.gear_tiles: dict[str, GearSlotTile] = {}
-
-        def add_armor_tile(
-            slot: str,
-            label: str,
-            row: int,
-            column: int,
-        ) -> None:
-            editor = GearSlotRow(
-                self.set_choices,
-                ARMOR_TRAITS,
-                armor=True,
-            )
-
-            self.armor_rows[slot] = editor
-
-            tile = GearSlotTile(
-                slot=slot,
-                label=label,
-                editor=editor,
-            )
-
-            self.gear_tiles[slot] = tile
-
-            grid.addWidget(
-                tile,
-                row,
-                column,
-                Qt.AlignmentFlag.AlignCenter,
-            )
-
-        # --------------------------------------------------
-        # Armor silhouette
-        # --------------------------------------------------
-
-        add_armor_tile(
-            "Head",
-            "Head",
-            0,
-            1,
-        )
-
-        add_armor_tile(
-            "Shoulders",
-            "Shoulders",
-            1,
-            0,
-        )
-
-        add_armor_tile(
-            "Chest",
-            "Chest",
-            1,
-            1,
-        )
-
-        add_armor_tile(
-            "Legs",
-            "Legs",
-            1,
-            2,
-        )
-
-        add_armor_tile(
-            "Hands",
-            "Hands",
-            2,
-            0,
-        )
-
-        add_armor_tile(
-            "Waist",
-            "Waist",
-            2,
-            1,
-        )
-
-        add_armor_tile(
-            "Feet",
-            "Feet",
-            2,
-            2,
-        )
-
-        # --------------------------------------------------
-        # Jewelry
-        # --------------------------------------------------
-
-        self.necklace = GearSlotRow(
-            self.set_choices,
-            JEWELRY_TRAITS,
-        )
-
-        self.ring1 = GearSlotRow(
-            self.set_choices,
-            JEWELRY_TRAITS,
-        )
-
-        self.ring2 = GearSlotRow(
-            self.set_choices,
-            JEWELRY_TRAITS,
-        )
-
-        jewelry = [
-            (
-                "Neck",
-                "Neck",
-                self.necklace,
-                3,
-                0,
-            ),
-            (
-                "Ring1",
-                "Ring 1",
-                self.ring1,
-                3,
-                1,
-            ),
-            (
-                "Ring2",
-                "Ring 2",
-                self.ring2,
-                3,
-                2,
-            ),
+        fields = [
+            ("Character Name", self._line("Character name")),
+            ("@Gamertag", self._line("@Gamertag")),
+            ("Race", self._combo(self.race_choices, True)),
+            ("Class", self._combo(ESO_CLASSES)),
+            ("Role", self._combo(["", "Tank", "Healer", "DD"])),
+            ("Alliance", self._combo(["", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact"])),
         ]
+        (
+            self.name, self.gamertag, self.race,
+            self.eso_class, self.role, self.alliance,
+        ) = [widget for _, widget in fields]
 
-        for slot, label, editor, row, column in jewelry:
-            tile = GearSlotTile(
-                slot=slot,
-                label=label,
-                editor=editor,
-            )
+        self.name.textChanged.connect(self.nameChanged.emit)
+        self.eso_class.currentTextChanged.connect(self._apply_class)
 
-            self.gear_tiles[slot] = tile
-
-            grid.addWidget(
-                tile,
-                row,
-                column,
-                Qt.AlignmentFlag.AlignCenter,
-            )
-
-        # --------------------------------------------------
-        # Weapons
-        # --------------------------------------------------
-
-        self.front_bar_weapon = GearSlotRow(
-            self.set_choices,
-            WEAPON_TRAITS,
-        )
-
-        self.back_bar_weapon = GearSlotRow(
-            self.set_choices,
-            WEAPON_TRAITS,
-        )
-
-        front_tile = GearSlotTile(
-            slot="main_hand",
-            label="Front Bar",
-            editor=self.front_bar_weapon,
-        )
-
-        back_tile = GearSlotTile(
-            slot="off_hand",
-            label="Back Bar",
-            editor=self.back_bar_weapon,
-        )
-
-        self.gear_tiles["main_hand"] = front_tile
-        self.gear_tiles["off_hand"] = back_tile
-
-        grid.addWidget(
-            front_tile,
-            4,
-            0,
-            1,
-            2,
-            Qt.AlignmentFlag.AlignCenter,
-        )
-
-        grid.addWidget(
-            back_tile,
-            4,
-            2,
-            1,
-            1,
-            Qt.AlignmentFlag.AlignCenter,
-        )
-
-        # --------------------------------------------------
-        # Keep the grid compact
-        # --------------------------------------------------
-
-        for column in range(3):
-            grid.setColumnStretch(column, 0)
+        for column, (label, widget) in enumerate(fields):
+            grid.addWidget(QLabel(label), 0, column)
+            grid.addWidget(widget, 1, column)
 
         card.addLayout(grid)
-
         return card
 
-    def _build_cp_card(self) -> FoundryCard:
+    def _gear_icon(self, slot):
+        path = gear_icon_path(slot.lower())
+        label = QLabel()
+        label.setFixedSize(22, 22)
+        label.setAlignment(Qt.AlignCenter)
+        if path and Path(path).exists():
+            label.setPixmap(QIcon(str(path)).pixmap(QSize(18, 18)))
+        return label
 
+    def _build_gear_card(self):
+        card = FoundryCard("Gear")
+        grid = QGridLayout()
+        grid.setContentsMargins(8, 5, 8, 5)
+        grid.setHorizontalSpacing(6)
+        grid.setVerticalSpacing(3)
+
+        headers = [
+            "", "Slot", "Set 1", "Set 2 (Monster/Backup)",
+            "Quality", "Trait", "Enchantment", "Enchant Tier", "Level", "",
+        ]
+        for column, text in enumerate(headers):
+            header = QLabel(text)
+            header.setStyleSheet("font-weight:700;")
+            grid.addWidget(header, 0, column)
+
+        self.gear_rows = {}
+        specs = [
+            ("Head", "Head", True), ("Shoulders", "Shoulders", True),
+            ("Chest", "Chest", True), ("Hands", "Hands", True),
+            ("Waist", "Waist", True), ("Legs", "Legs", True),
+            ("Feet", "Feet", True), ("Neck", "Neck", False),
+            ("Ring1", "Ring 1", False), ("Ring2", "Ring 2", False),
+            ("main_hand", "Front Bar", False), ("off_hand", "Back Bar", False),
+        ]
+
+        for row, (slot, label, armor) in enumerate(specs, 1):
+            grid.addWidget(self._gear_icon(slot), row, 0)
+            slot_label = QLabel(label)
+            slot_label.setMinimumWidth(78)
+            grid.addWidget(slot_label, row, 1)
+
+            if armor:
+                traits = ARMOR_TRAITS
+            elif slot in {"Neck", "Ring1", "Ring2"}:
+                traits = JEWELRY_TRAITS
+            else:
+                traits = WEAPON_TRAITS
+
+            editor = GearSlotRow(self.set_choices, traits, armor=armor)
+            self.gear_rows[slot] = editor
+
+            widgets = [
+                editor.set_combo, editor.set2_combo, editor.quality_combo,
+                editor.trait_combo, editor.enchant_combo,
+                editor.enchant_tier_combo, editor.level_combo,
+            ]
+            for column, widget in enumerate(widgets, 2):
+                grid.addWidget(widget, row, column)
+
+            remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True)
+            remove.setFixedWidth(28)
+            remove.clicked.connect(editor.clear)
+            grid.addWidget(remove, row, 9)
+
+        card.addLayout(grid)
+        return card
+
+    def _build_cp_card(self):
         card = FoundryCard("Champion Points")
-
-        self.cp_container = QVBoxLayout()
-
-        self.cp_container.setSpacing(4)
-
-        card.addLayout(self.cp_container)
-
-        add_cp_button = FoundryButton(
-            "+ Add CP Star",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        add_cp_button.clicked.connect(self.add_cp_row)
-
-        add_cp_row = QHBoxLayout()
-
-        add_cp_row.addWidget(add_cp_button)
-        add_cp_row.addStretch()
-
-        card.addLayout(add_cp_row)
-
+        self.cp_grid = ChampionPointGrid(self.cp_choices)
+        card.addWidget(self.cp_grid)
         return card
 
-    def _build_skills_card(self) -> FoundryCard:
-
+    def _build_skills_card(self):
         card = FoundryCard("Skills & Consumables")
-
         self.front_bar = SkillBarRow(self.skill_choices)
         self.back_bar = SkillBarRow(self.skill_choices)
-
-        self.food = QComboBox()
-        self.food.setEditable(True)
-
-        self.potion = QComboBox()
-        self.potion.setEditable(True)
+        self._apply_class()
 
         form = QFormLayout()
-
         form.addRow("Front Bar", self.front_bar)
         form.addRow("Back Bar", self.back_bar)
 
+        self.food = self._combo(self.food_choices, True)
+        self.potion = self._combo(self.potion_choices, True)
+
         consumables = QHBoxLayout()
-
         consumables.addWidget(QLabel("Food"))
-        consumables.addWidget(self.food)
+        consumables.addWidget(self.food, 1)
         consumables.addWidget(QLabel("Potion"))
-        consumables.addWidget(self.potion)
-
+        consumables.addWidget(self.potion, 1)
         form.addRow("Consumables", consumables)
-
         card.addLayout(form)
-
         return card
 
-    # --------------------------------------------------
-    # Image
-    # --------------------------------------------------
+    def _build_boss_card(self):
+        card = FoundryCard("Boss Alternates")
+        body = QVBoxLayout()
+        self.boss_container = QVBoxLayout()
+        body.addLayout(self.boss_container)
 
-    def choose_image(self):
+        add_boss = FoundryButton("+ Add Boss Alternate", role=ButtonRole.SECONDARY, compact=True)
+        add_boss.clicked.connect(self.add_boss_loadout)
+        body.addWidget(add_boss, 0, Qt.AlignLeft)
 
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            "Character Image",
-            "",
-            "Images (*.png *.jpg *.jpeg *.webp)",
-        )
+        actions = QHBoxLayout()
+        actions.addStretch()
+        add_build = FoundryButton("+ Add New Build", role=ButtonRole.SECONDARY, compact=True)
+        save = FoundryButton("Save This Build", role=ButtonRole.PRIMARY, compact=True)
+        cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY, compact=True)
+        add_build.clicked.connect(self._handle_add_build)
+        save.clicked.connect(self.saveRequested.emit)
+        cancel.clicked.connect(self.cancelRequested.emit)
+        actions.addWidget(add_build)
+        actions.addWidget(save)
+        actions.addWidget(cancel)
+        body.addLayout(actions)
+        card.addLayout(body)
+        return card
 
-        if filename:
-            self._load_image(filename)
-
-    def clear_image(self):
-
-        self.image_path = ""
-
-        self.image_label.setText("No image")
-        self.image_label.setPixmap(QPixmap())
-
-    def _load_image(self, path: str):
-
-        pixmap = QPixmap(path)
-
-        if pixmap.isNull():
+    def _apply_class(self, _class_name=None):
+        if not hasattr(self, "front_bar"):
             return
+        eso_class = self.eso_class.currentText().strip()
+        self.front_bar.set_class(eso_class)
+        self.back_bar.set_class(eso_class)
+        for card in self._boss_cards:
+            card.set_class(eso_class)
 
-        self.image_path = path
-
-        self.image_label.setPixmap(pixmap)
-        self.image_label.setText("")
-
-    # --------------------------------------------------
-    # Champion points
-    # --------------------------------------------------
-
-    def add_cp_row(self, entry: ChampionPointEntry | None = None) -> ChampionPointRow:
-
-        row = ChampionPointRow(self.cp_choices)
-
-        row.removeRequested.connect(self._remove_cp_row)
-
-        if entry is not None:
-            row.load(entry)
-
-        self._cp_rows.append(row)
-
-        self.cp_container.addWidget(row)
-
-        return row
-
-    def _remove_cp_row(self, row: ChampionPointRow):
-
-        if row in self._cp_rows:
-            self._cp_rows.remove(row)
-
-        row.setParent(None)
-        row.deleteLater()
-
-    # --------------------------------------------------
-    # Boss alternates
-    # --------------------------------------------------
-
-    def add_boss_loadout(self, loadout: BossLoadout | None = None) -> BossLoadoutCard:
-
+    def add_boss_loadout(self, loadout=None):
         card = BossLoadoutCard(self.skill_choices)
-
+        card.set_class(self.eso_class.currentText().strip())
         card.removeRequested.connect(self._remove_boss_loadout)
-
-        if loadout is not None:
+        if loadout:
             card.load(loadout)
-
         self._boss_cards.append(card)
-
         self.boss_container.addWidget(card)
-
         return card
 
-    def _remove_boss_loadout(self, card: BossLoadoutCard):
-
+    def _remove_boss_loadout(self, card):
         if card in self._boss_cards:
             self._boss_cards.remove(card)
-
         card.setParent(None)
         card.deleteLater()
 
-    # --------------------------------------------------
-    # Model
-    # --------------------------------------------------
+    def _handle_add_build(self):
+        page = self
+        dialog = None
+
+        while page is not None:
+            if isinstance(page, QDialog):
+                dialog = page
+            if (
+                hasattr(page, "roster")
+                and hasattr(page, "_save")
+                and hasattr(page, "_refresh_roster")
+            ):
+                break
+            page = page.parentWidget()
+
+        if page is None or not hasattr(page, "roster"):
+            self.addBuildRequested.emit()
+            return
+
+        if len(page.roster.Members) >= 12:
+            return
+
+        page.roster.Members.append(PlayerBuild())
+        page.selected_index = len(page.roster.Members) - 1
+        page._save()
+        page._refresh_roster()
+
+        if dialog is not None:
+            dialog.reject()
 
     @property
-    def model(self) -> PlayerBuild:
-
+    def model(self):
         armor = {
-             slot: row.value.to_dict()
-            for slot, row in self.armor_rows.items()
+            slot: row.value.to_dict()
+            for slot, row in self.gear_rows.items()
+            if slot in ARMOR_SLOTS
         }
-
         return PlayerBuild(
             Name=self.name.text().strip(),
             Gamertag=self.gamertag.text().strip(),
             ImagePath=self.image_path,
             Race=self.race.currentText().strip(),
-            EsoClass=self.eso_class.currentText(),
+            EsoClass=self.eso_class.currentText().strip(),
+            Role=self.role.currentText().strip(),
+            Alliance=self.alliance.currentText().strip(),
             Armor=armor,
-            FrontBarWeapon=self.front_bar_weapon.value,
-            BackBarWeapon=self.back_bar_weapon.value,
-            Necklace=self.necklace.value,
-            Ring1=self.ring1.value,
-            Ring2=self.ring2.value,
-            ChampionPoints=[row.value for row in self._cp_rows],
+            FrontBarWeapon=self.gear_rows["main_hand"].value,
+            BackBarWeapon=self.gear_rows["off_hand"].value,
+            Necklace=self.gear_rows["Neck"].value,
+            Ring1=self.gear_rows["Ring1"].value,
+            Ring2=self.gear_rows["Ring2"].value,
+            ChampionPoints=self.cp_grid.value,
             FrontBarSkills=self.front_bar.value,
             BackBarSkills=self.back_bar.value,
             Food=self.food.currentText().strip(),
             Potion=self.potion.currentText().strip(),
-            Notes=self.notes.toPlainText().strip(),
+            Notes=self._notes,
             BossLoadouts=[card.value for card in self._boss_cards],
         )
 
-    def load(self, model: PlayerBuild):
-
+    def load(self, model):
+        self.image_path = model.ImagePath
+        self._notes = model.Notes
         self.name.setText(model.Name)
         self.gamertag.setText(model.Gamertag)
         self.race.setCurrentText(model.Race)
         self.eso_class.setCurrentText(model.EsoClass)
-        self.notes.setPlainText(model.Notes)
+        self.role.setCurrentText(getattr(model, "Role", "") or "")
+        self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
+        self._apply_class()
 
-        if model.ImagePath:
-            self._load_image(model.ImagePath)
-        else:
-            self.clear_image()
+        for slot, row in self.gear_rows.items():
+            if slot in ARMOR_SLOTS:
+                row.load(GearSlot.from_dict(model.Armor.get(slot, {})))
+            else:
+                value = {
+                    "main_hand": model.FrontBarWeapon,
+                    "off_hand": model.BackBarWeapon,
+                    "Neck": model.Necklace,
+                    "Ring1": model.Ring1,
+                    "Ring2": model.Ring2,
+                }[slot]
+                row.load(value)
 
-        # --------------------------------------------------
-        # Armor
-        # --------------------------------------------------
-
-        for slot, row in self.armor_rows.items():
-
-            entry = model.Armor.get(slot, {})
-
-            row.load(
-                GearSlot(
-                    Set=entry.get("Set", ""),
-                    Trait=entry.get("Trait", ""),
-                    Enchant=entry.get("Enchant", ""),
-                    Weight=entry.get("Weight", ""),
-                )
-            )
-
-            # Refresh the compact tile after loading its editor.
-            tile = self.gear_tiles.get(slot)
-
-            if tile is not None:
-                tile.refresh()
-
-        # --------------------------------------------------
-        # Weapons / jewelry
-        # --------------------------------------------------
-
-        self.front_bar_weapon.load(model.FrontBarWeapon)
-        self.back_bar_weapon.load(model.BackBarWeapon)
-        self.necklace.load(model.Necklace)
-        self.ring1.load(model.Ring1)
-        self.ring2.load(model.Ring2)
-
-        # Refresh those tiles too.
-        for slot in (
-            "main_hand",
-            "off_hand",
-            "Neck",
-            "Ring1",
-            "Ring2",
-        ):
-            tile = self.gear_tiles.get(slot)
-
-            if tile is not None:
-                tile.refresh()
-
-        # --------------------------------------------------
-        # Champion Points
-        # --------------------------------------------------
-
-        self._clear_cp_rows()
-
-        for entry in model.ChampionPoints:
-            self.add_cp_row(entry)
-
-        # --------------------------------------------------
-        # Skills
-        # --------------------------------------------------
-
+        self.cp_grid.load_entries(model.ChampionPoints)
         self.front_bar.load(model.FrontBarSkills)
         self.back_bar.load(model.BackBarSkills)
-
-        # --------------------------------------------------
-        # Consumables
-        # --------------------------------------------------
-
         self.food.setCurrentText(model.Food)
         self.potion.setCurrentText(model.Potion)
 
-        # --------------------------------------------------
-        # Boss loadouts
-        # --------------------------------------------------
-
-        self._clear_boss_loadouts()
-
+        for card in list(self._boss_cards):
+            self._remove_boss_loadout(card)
         for loadout in model.BossLoadouts:
             self.add_boss_loadout(loadout)
 
+    def choose_image(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Character Image", "", "Images (*.png *.jpg *.jpeg *.webp)"
+        )
+        if filename:
+            pixmap = QPixmap(filename)
+            if not pixmap.isNull():
+                self.image_path = filename
+
+    def clear_image(self):
+        self.image_path = ""
+
     def clear(self):
-
         self.load(PlayerBuild())
-
-    def _clear_cp_rows(self):
-
-        for row in list(self._cp_rows):
-            self._remove_cp_row(row)
-
-    def _clear_boss_loadouts(self):
-
-        for card in list(self._boss_cards):
-            self._remove_boss_loadout(card)
