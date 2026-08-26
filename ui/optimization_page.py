@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import Counter
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -33,9 +32,6 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
 
-# These are deliberately the first raid-lead watch list rather than a claim
-# that these are every useful ESO effect. The underlying data model can grow
-# beyond this dashboard without changing the page structure.
 CORE_COVERAGE = (
     "Major Courage",
     "Major Berserk",
@@ -110,14 +106,7 @@ class CoverageBarChart(QFrame):
             painter.drawRoundedRect(fill, 5, 5)
 
             painter.setPen(QColor("#d7d1c4"))
-            painter.drawText(
-                left + width + 8,
-                y,
-                40,
-                row_h,
-                Qt.AlignmentFlag.AlignVCenter,
-                f"{pct}%",
-            )
+            painter.drawText(left + width + 8, y, 40, row_h, Qt.AlignmentFlag.AlignVCenter, f"{pct}%")
 
         painter.end()
 
@@ -150,9 +139,7 @@ class CoverageItem(QFrame):
         text.setProperty("coverageName", True)
         layout.addWidget(text, 1)
 
-        provider = QLabel(
-            f"{provider_count} provider" + ("" if provider_count == 1 else "s")
-        )
+        provider = QLabel(f"{provider_count} provider" + ("" if provider_count == 1 else "s"))
         provider.setProperty("coverageProvider", True)
         layout.addWidget(provider)
 
@@ -162,7 +149,6 @@ class OptimizationPage(FoundryPage):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self.data_dir = Path(__file__).resolve().parents[1] / "data"
         self.database = EsoDatabase(self.data_dir / "eso.db")
         self.reference = ReferenceDataService(self.database)
@@ -170,16 +156,11 @@ class OptimizationPage(FoundryPage):
         self.roster = BuildRoster()
         self.mock_lab = MockRosterLab()
         self._skill_index: dict[str, dict] | None = None
-
         self._build_ui()
         self.refresh()
 
     def _build_ui(self):
-        self.header = FoundryHeader(
-            title="Optimization",
-            subtitle="Turn build data into group-level decisions.",
-            department="Raid Operations",
-        )
+        self.header = FoundryHeader(title="Optimization", subtitle="Turn build data into group-level decisions.", department="Raid Operations")
         self.set_header(self.header)
 
         self.trial_combo = QComboBox()
@@ -214,13 +195,11 @@ class OptimizationPage(FoundryPage):
 
     def _list_trials(self) -> list[str]:
         try:
-            rows = self.database.execute(
-                """
+            rows = self.database.execute("""
                 SELECT name FROM content
                 WHERE content_type = 'trial' AND TRIM(name) != ''
                 ORDER BY name COLLATE NOCASE
-                """
-            ).fetchall()
+            """).fetchall()
             return [row["name"] for row in rows] or ["Current Trial"]
         except Exception:
             return ["Current Trial"]
@@ -249,7 +228,6 @@ class OptimizationPage(FoundryPage):
 
         self._clear_layout(self.layout)
         view = self.view_combo.currentText()
-
         if view == "Suggestions":
             self._render_suggestions()
         elif view == "Assignments":
@@ -262,13 +240,7 @@ class OptimizationPage(FoundryPage):
         if view == "Test Lab":
             self.status.info("SIMULATION ONLY — mock roster data is not saved to your real roster.")
         else:
-            self.status.info(
-                f"Planning from {len(self.roster.Members)} saved build(s). Coverage is roster-derived, not log uptime."
-            )
-
-    # ------------------------------------------------------------------
-    # Coverage command center
-    # ------------------------------------------------------------------
+            self.status.info(f"Planning from {len(self.roster.Members)} saved build(s). Coverage is roster-derived, not log uptime.")
 
     def _render_coverage(self):
         coverage, providers = self._resolve_core_coverage()
@@ -276,26 +248,14 @@ class OptimizationPage(FoundryPage):
         total = len(CORE_COVERAGE)
         score = round(covered_count / total * 100) if total else 0
         gaps = [name for name in CORE_COVERAGE if not coverage.get(name)]
-        overlaps = sorted(
-            ((name, len(providers.get(name, []))) for name in CORE_COVERAGE if len(providers.get(name, [])) > 1),
-            key=lambda item: item[1],
-            reverse=True,
-        )
+        overlaps = sorted(((name, len(providers.get(name, []))) for name in CORE_COVERAGE if len(providers.get(name, [])) > 1), key=lambda item: item[1], reverse=True)
 
         overview = FoundryCard("Group Coverage", "◈")
         overview.set_badge(f"{covered_count}/{total} COVERED")
-        overview.addWidget(QLabel(
-            "Raid-lead coverage from the current roster. A check means at least one equipped build is a potential provider; it does not claim encounter uptime."
-        ))
-
+        overview.addWidget(QLabel("Raid-lead coverage from the current roster. A check means at least one equipped build is a potential provider; it does not claim encounter uptime."))
         metrics = QHBoxLayout()
         metrics.setSpacing(10)
-        for label, value, detail in (
-            ("COVERAGE", f"{score}%", "core watch list"),
-            ("PROVIDERS", str(sum(len(v) for v in providers.values())), "resolved sources"),
-            ("GAPS", str(len(gaps)), "not represented"),
-            ("OVERLAP", str(len(overlaps)), "multiple providers"),
-        ):
+        for label, value, detail in (("COVERAGE", f"{score}%", "core watch list"), ("PROVIDERS", str(sum(len(v) for v in providers.values())), "resolved sources"), ("GAPS", str(len(gaps)), "not represented"), ("OVERLAP", str(len(overlaps)), "multiple providers")):
             metrics.addWidget(self._metric(label, value, detail), 1)
         overview.addLayout(metrics)
         self.layout.addWidget(overview)
@@ -310,23 +270,15 @@ class OptimizationPage(FoundryPage):
         for index, name in enumerate(CORE_COVERAGE):
             column = index // rows
             row = index % rows
-            grid.addWidget(
-                CoverageItem(name, coverage[name], len(providers.get(name, []))),
-                row,
-                column,
-            )
+            grid.addWidget(CoverageItem(name, coverage[name], len(providers.get(name, []))), row, column)
         coverage_card.addLayout(grid)
         self.layout.addWidget(coverage_card)
 
         lower = QHBoxLayout()
         lower.setSpacing(10)
-
         chart_card = FoundryCard("Coverage by Category", "▥")
-        chart_values = self._category_scores(coverage)
-        chart_card.addWidget(CoverageBarChart(chart_values))
-        chart_card.addWidget(QLabel(
-            "Category scores are a compact planning view of the 15-item watch list. They will become encounter-weighted once requirements are connected."
-        ))
+        chart_card.addWidget(CoverageBarChart(self._category_scores(coverage)))
+        chart_card.addWidget(QLabel("Category scores are a compact planning view of the 15-item watch list. They will become encounter-weighted once requirements are connected."))
         lower.addWidget(chart_card, 2)
 
         attention = FoundryCard("Raid Lead Attention", "!")
@@ -354,9 +306,7 @@ class OptimizationPage(FoundryPage):
         table.verticalHeader().setVisible(False)
         table.setMinimumHeight(220)
         for name in CORE_COVERAGE:
-            source_rows = providers.get(name, [])
-            if not source_rows:
-                source_rows = [("—", "Not represented")]
+            source_rows = providers.get(name, []) or [("—", "Not represented")]
             for provider_name, source in source_rows[:3]:
                 row = table.rowCount()
                 table.insertRow(row)
@@ -367,10 +317,7 @@ class OptimizationPage(FoundryPage):
         self.layout.addWidget(assignments)
 
         note = FoundryCard("What This Means", "i")
-        note.addWidget(QLabel(
-            "This desk currently answers: what does the roster appear capable of providing? "
-            "The next optimization layer will answer: which provider should carry each responsibility, and what changes improve total coverage?"
-        ))
+        note.addWidget(QLabel("This desk currently answers: what does the roster appear capable of providing? The next optimization layer will answer: which provider should carry each responsibility, and what changes improve total coverage?"))
         self.layout.addWidget(note)
         self.layout.addStretch(1)
 
@@ -419,10 +366,7 @@ class OptimizationPage(FoundryPage):
             "Defensive": ["Minor Resolve", "Minor Intellect"],
             "Offensive": ["Minor Force"],
         }
-        result = []
-        for label, names in groups.items():
-            result.append((label, round(sum(coverage.get(name, False) for name in names) / len(names) * 100)))
-        return result
+        return [(label, round(sum(coverage.get(name, False) for name in names) / len(names) * 100)) for label, names in groups.items()]
 
     def _resolve_core_coverage(self):
         coverage = {name: False for name in CORE_COVERAGE}
@@ -444,16 +388,18 @@ class OptimizationPage(FoundryPage):
                     if not record:
                         continue
                     searchable = f"{record.get('name', '')} {record.get('description', '')}"
-                    if any(self._matches_aliases(searchable, aliases) for aliases in [aliases]):
+                    if self._matches_aliases(searchable, aliases):
                         coverage[capability] = True
                         providers[capability].append((player, f"Skill: {record.get('name', skill_name)}"))
 
         for capability in providers:
             seen = set()
-            providers[capability] = [
-                row for row in providers[capability]
-                if not (row in seen or seen.add(row))
-            ]
+            unique = []
+            for row in providers[capability]:
+                if row not in seen:
+                    seen.add(row)
+                    unique.append(row)
+            providers[capability] = unique
         return coverage, providers
 
     @staticmethod
@@ -473,10 +419,6 @@ class OptimizationPage(FoundryPage):
                 pass
         return self._skill_index
 
-    # ------------------------------------------------------------------
-    # Secondary views
-    # ------------------------------------------------------------------
-
     def _render_suggestions(self):
         intro = FoundryCard("Comp Engine Suggestions", "◇")
         intro.addWidget(QLabel("Build hygiene and obvious roster gaps. These suggestions do not pretend to be encounter optimization yet."))
@@ -493,8 +435,7 @@ class OptimizationPage(FoundryPage):
             if skills < 12:
                 suggestions.append(("Skill coverage", f"{name}: {skills}/12 skill slots configured."))
         if not suggestions:
-            suggestions = [("No immediate build gaps", "The saved builds have basic equipment, CP, and skill data configured."),
-                           ("Next layer", "Use Coverage to inspect group capability before assigning responsibilities.")]
+            suggestions = [("No immediate build gaps", "The saved builds have basic equipment, CP, and skill data configured."), ("Next layer", "Use Coverage to inspect group capability before assigning responsibilities.")]
         for title, body in suggestions[:12]:
             card = FoundryCard(title)
             card.addWidget(QLabel(body))
@@ -509,16 +450,11 @@ class OptimizationPage(FoundryPage):
         self.layout.addWidget(card)
         self.layout.addStretch(1)
 
-    # ------------------------------------------------------------------
-    # Test Lab retained as the disposable simulation surface
-    # ------------------------------------------------------------------
-
     def _render_test_lab(self):
         page = QWidget()
         page_layout = QVBoxLayout(page)
         page_layout.setContentsMargins(0, 0, 0, 0)
         page_layout.setSpacing(10)
-
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel("Build a disposable roster, evaluate it, and deliberately try to break the MinMax assumptions."))
         banner.addWidget(QLabel("Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."))
@@ -557,7 +493,6 @@ class OptimizationPage(FoundryPage):
         custom_widget = CustomRosterLabWidget()
         preset_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         custom_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
         stack = QStackedWidget()
         stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         stack.addWidget(preset_panel)
@@ -570,18 +505,11 @@ class OptimizationPage(FoundryPage):
             scenario_card.setVisible(is_preset)
             scenario_combo.setVisible(is_preset)
             evaluate_button.setVisible(is_preset)
-            scenario_description.setText(
-                scenarios[scenario_combo.currentIndex()].description
-                if is_preset else
-                "Custom Roster • disposable evidence/build sandbox. Use the roster editor below to add players, gear, and skills."
-            )
+            scenario_description.setText(scenarios[scenario_combo.currentIndex()].description if is_preset else "Custom Roster • disposable evidence/build sandbox. Use the roster editor below to add players, gear, and skills.")
             stack.setCurrentIndex(index)
 
         mode_combo.currentIndexChanged.connect(update_mode)
-        stack.currentChanged.connect(lambda index: self.status.info(
-            "SIMULATION ONLY — custom roster is disposable." if index == 1
-            else "SIMULATION ONLY — preset mock roster data is disposable."
-        ))
+        stack.currentChanged.connect(lambda index: self.status.info("SIMULATION ONLY — custom roster is disposable." if index == 1 else "SIMULATION ONLY — preset mock roster data is disposable."))
         update_mode(mode_combo.currentIndex())
         self.layout.addWidget(page, 1)
 
@@ -615,7 +543,6 @@ class OptimizationPage(FoundryPage):
                 roster_table.setItem(row_index, 0, QTableWidgetItem(player.name))
                 roster_table.setItem(row_index, 1, QTableWidgetItem(player.role.value.upper()))
                 roster_table.setItem(row_index, 2, QTableWidgetItem(", ".join(player.capabilities) or "None"))
-
             evaluation = self.mock_lab.evaluate(scenario)
             results_table.setRowCount(len(evaluation.classifications))
             for row_index, result in enumerate(evaluation.classifications):
@@ -624,7 +551,6 @@ class OptimizationPage(FoundryPage):
                 results_table.setItem(row_index, 2, QTableWidgetItem(str(result.valid_provider_count)))
                 results_table.setItem(row_index, 3, QTableWidgetItem(str(result.required_provider_count)))
                 results_table.setItem(row_index, 4, QTableWidgetItem(result.explanation))
-
             problems = len(evaluation.problems)
             state = "READY" if evaluation.is_fully_covered else f"{problems} PROBLEM(S)"
             self.status.info(f"SIMULATION: {scenario.name} • {state}")
@@ -634,10 +560,6 @@ class OptimizationPage(FoundryPage):
         run_evaluation()
         panel_layout.addStretch(1)
         return panel
-
-    # ------------------------------------------------------------------
-    # Build helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _set_names(build) -> list[str]:
