@@ -17,28 +17,43 @@ class SkillEffectRepository:
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
 
-    def available_skills(
-        self,
-        character_class: object | None = None,
-        limit: int | None = 5000,
-    ) -> tuple[tuple[int, str], ...]:
+    @staticmethod
+    def _ability_columns(db: sqlite3.Connection) -> set[str]:
+        return {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
+
+    def available_skills(self, character_class: object | None = None, limit: int | None = 5000) -> tuple[tuple[int, str], ...]:
         """Return combat-bar abilities allowed for the selected class.
 
-        The picker is deliberately narrower than the full ability database:
-        passive, crafted and non-combat lines are excluded. Morphs remain
-        distinct because selection is keyed by base ability + morph rather
-        than display name.
+        Production has the full imported schema; small fixtures may omit
+        optional columns, so those columns receive neutral defaults here.
         """
         if not self.database_path.exists():
             return ()
 
         selected_class = getattr(character_class, "value", character_class)
         with sqlite3.connect(self.database_path) as db:
+            columns = self._ability_columns(db)
+            required = {"ability_id", "name", "class_type", "skill_line", "base_ability_id", "rank", "morph"}
+            if not required.issubset(columns):
+                return ()
+
+            optional = {
+                "base_mechanic": "0",
+                "is_passive": "0",
+                "is_player": "1",
+                "is_crafted": "0",
+            }
+            select_columns = [
+                "ability_id", "name", "class_type", "skill_line",
+                "base_ability_id", "rank", "morph",
+            ]
+            select_columns.extend(
+                column if column in columns else f"{default} AS {column}"
+                for column, default in optional.items()
+            )
             rows = db.execute(
-                """
-                SELECT ability_id, name, class_type, skill_line,
-                       base_ability_id, rank, morph, base_mechanic,
-                       is_passive, is_player, is_crafted
+                f"""
+                SELECT {', '.join(select_columns)}
                 FROM ability
                 WHERE name IS NOT NULL AND TRIM(name) <> ''
                 ORDER BY base_ability_id, morph, rank, ability_id
@@ -61,28 +76,19 @@ class SkillEffectRepository:
                 "is_player": is_player,
                 "is_crafted": is_crafted,
             }
-            # A normal active slot and the ultimate slot together define the
-            # complete six-slot choice universe.
             if not (
                 is_eligible(skill, character_class=selected_class, slot_index=0)
                 or is_eligible(skill, character_class=selected_class, slot_index=5)
             ):
                 continue
 
-            base_key = int(base_id or ability_id)
-            morph_key = int(morph or 0)
+            key = (int(base_id or ability_id), int(morph or 0))
             rank_value = int(rank or 0)
-            key = (base_key, morph_key)
             existing = selected.get(key)
-            # Lower rank is the base ability record; preserve one record per
-            # base/morph identity rather than collapsing morphs by name.
             if existing is None or rank_value < existing[2]:
                 selected[key] = (int(ability_id), str(name).strip(), rank_value)
 
-        values = sorted(
-            selected.values(),
-            key=lambda value: (value[1].casefold(), value[0]),
-        )
+        values = sorted(selected.values(), key=lambda value: (value[1].casefold(), value[0]))
         if limit is not None:
             values = values[:limit]
         return tuple((ability_id, name) for ability_id, name, _rank in values)
