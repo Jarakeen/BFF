@@ -4,9 +4,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QCompleter
 
 from widgets import build_editor
+from ui.components.eligible_build_editor import EligibleBuildEditor, EligibleSkillBarRow
+
 
 def _configure_search(combo: QComboBox) -> None:
-    """Enable case-insensitive substring search without free-form insertion."""
     combo.setEditable(True)
     combo.setInsertPolicy(QComboBox.NoInsert)
     combo.setDuplicatesEnabled(False)
@@ -20,20 +21,14 @@ def _configure_search(combo: QComboBox) -> None:
 
 class SearchableGearSlotRow(build_editor.GearSlotRow):
     """Gear slot editor whose selectable fields support substring search."""
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for combo in (
-            self.set_combo,
-            self.trait_combo,
-            self.enchant_combo,
-        ):
+        for combo in (self.set_combo, self.trait_combo, self.enchant_combo):
             _configure_search(combo)
 
 
-class SearchableSkillBarRow(build_editor.SkillBarRow):
-    """Skill bar editor with the same substring-search behavior in every slot."""
-
+class SearchableSkillBarRow(EligibleSkillBarRow):
+    """Eligible skill bar with substring search."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
@@ -41,6 +36,7 @@ class SearchableSkillBarRow(build_editor.SkillBarRow):
 
 
 def install() -> None:
-    """Install the shared selector behavior into the existing build editor."""
+    """Install shared selector behavior into the existing build editor."""
     build_editor.GearSlotRow = SearchableGearSlotRow
     build_editor.SkillBarRow = SearchableSkillBarRow
+    build_editor.BuildEditor = EligibleBuildEditor
