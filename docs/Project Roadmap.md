@@ -1,13 +1,13 @@
 # Project Roadmap
 
 **Project:** Black Feather Foundry  
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-26
 
 ---
 
 # Vision
 
-Build a reusable knowledge archive for The Elder Scrolls Online that powers the Composition Engine and future Foundry tools.
+Build a reusable knowledge archive for The Elder Scrolls Online that powers the Roster composition system and future Foundry tools.
 
 The project is organized into milestones rather than release dates.
 
@@ -118,31 +118,48 @@ Examples
 
 # Phase 5 — Composition Engine
 
-Build systems that consume the Archive.
+**Status: Complete**
 
-Examples
+**Goal:** Build systems that consume the Archive and produce an authoritative roster/encounter composition result.
 
-- Buff analysis
-- Build comparison
-- Coverage analysis
-- Recommendation engine
-- Conflict detection
-- Missing buff detection
+Completed capabilities:
+
+- [x] Character/build capability resolution
+- [x] Roster capability resolution
+- [x] Buff and debuff coverage analysis
+- [x] Missing capability detection
+- [x] Insufficient coverage detection
+- [x] Redundancy and resilience classification
+- [x] Provider conflict detection
+- [x] Encounter requirement activation by condition
+- [x] Encounter-level evaluation
+- [x] Typed recommendation intents
+- [x] Resolved-build capability comparison
+- [x] Production roster composition orchestration
+
+Phase 5 deliberately stops before choosing a specific replacement build or optimizing provider assignments. Those decisions consume the Phase 5 result and belong to later Roster/Optimization work.
 
 ---
 
 # Phase 6 — User Interface
 
-Replace development views with production tools.
+**Status: Current**
 
-Examples
+**Goal:** Replace development views with production tools that expose the completed composition engine clearly.
 
-- Archive browser
-- Relationship explorer
-- Validation dashboard
-- Builder dashboard
-- Search
-- Data inspection
+Planned areas:
+
+- [ ] Archive browser
+- [ ] Relationship explorer
+- [ ] Validation dashboard
+- [ ] Builder dashboard
+- [ ] Search
+- [ ] Data inspection
+- [ ] Production Roster/encounter workflows
+- [ ] Coverage dashboard
+- [ ] Assignment workspace
+- [ ] Optimization workspace
+- [ ] Performance/ESO Logs views
 
 ---
 
@@ -163,17 +180,16 @@ Ideas that are intentionally deferred.
 
 # Current Focus
 
-Current Priority
+> Build the production Roster workflows on top of the completed Composition Engine.
 
-> Build clean Archive Records before expanding features.
-
-Current Success Criteria
+Current success criteria for Phase 5 are satisfied when:
 
 - Builders produce canonical records.
 - Every entity has a permanent archive_no.
 - Relationships are clean and validated.
-- The Composition Engine consumes Archive data rather than raw source files.
-
+- The Composition Engine consumes resolved Archive data rather than raw source files.
+- A roster can be evaluated against encounter requirements.
+- Coverage gaps, conflicts, and recommendation intents are returned as typed data.
 
 ---
 
