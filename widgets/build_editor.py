@@ -347,6 +347,8 @@ class BuildEditor(QWidget):
     """
 
     nameChanged = Signal(str)
+    saveRequested = Signal()
+    cancelRequested = Signal()
 
     def __init__(
         self,
@@ -354,6 +356,8 @@ class BuildEditor(QWidget):
         set_choices: list[str] | None = None,
         skill_choices: list[str] | None = None,
         cp_choices: list[str] | None = None,
+        food_choices: list[str] | None = None,
+        potion_choices: list[str] | None = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -362,7 +366,8 @@ class BuildEditor(QWidget):
         self.set_choices = set_choices or []
         self.skill_choices = skill_choices or []
         self.cp_choices = cp_choices or []
-
+        self.food_choices = food_choices or []
+        self.potion_choices = potion_choices or []
         self.image_path = ""
 
         self._cp_rows: list[ChampionPointRow] = []
@@ -397,6 +402,9 @@ class BuildEditor(QWidget):
 
         boss_card_body.addLayout(self.boss_container)
 
+        button_row = QHBoxLayout()
+        button_row.setSpacing(8)
+
         add_boss_button = FoundryButton(
             "+ Add Boss Alternate",
             role=ButtonRole.SECONDARY,
@@ -404,10 +412,29 @@ class BuildEditor(QWidget):
         )
 
         add_boss_button.clicked.connect(self.add_boss_loadout)
+        button_row.addWidget(add_boss_button)
 
-        boss_card_body.addWidget(add_boss_button, 0, Qt.AlignmentFlag.AlignLeft)
+        button_row.addStretch(1)
 
-        boss_card.addLayout(boss_card_body)
+        cancel_button = FoundryButton(
+            "Cancel",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+
+        save_button = FoundryButton(
+            "Save This Build",
+            role=ButtonRole.PRIMARY,
+            compact=True,
+        )
+
+        cancel_button.clicked.connect(self.cancelRequested.emit)
+        save_button.clicked.connect(self.saveRequested.emit)
+
+        button_row.addWidget(cancel_button)
+        button_row.addWidget(save_button)
+
+        boss_card_body.addLayout(button_row)
 
         root.addWidget(boss_card)
 

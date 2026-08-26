@@ -393,13 +393,27 @@ class BuildsPage(FoundryPage):
         return str(total) if total else "—"
 
     def _editor(self) -> BuildEditor:
+        skills = self.reference.list_skills()
+
+        skill_choices = list(dict.fromkeys(
+            skill["name"]
+            for skill in skills
+            if isinstance(skill, dict) and skill.get("name")
+        ))
+
+        cp = self.reference.list_champion_points()
+
+        cp_choices = list(dict.fromkeys(
+            point["name"]
+            for point in cp
+            if isinstance(point, dict) and point.get("name")
+        ))
+
         return BuildEditor(
             race_choices=self.reference.list_race_names(),
             set_choices=self.reference.list_gear_set_names(),
-            skill_choices=self.reference.list_skills(),
-            cp_choices=self.reference.list_champion_points(),
-            food_choices=self.reference.list_food_names(),
-            potion_choices=self.reference.list_potion_names(),
+            skill_choices=skill_choices,
+            cp_choices=cp_choices,
         )
 
     def _edit_selected(self):
