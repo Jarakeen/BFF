@@ -178,17 +178,14 @@ class PlayerBuild:
         data = dict(data or {})
         armor = _empty_armor()
 
+        # Preserve the stored shape of populated armor entries. Older build
+        # files may not contain the newer fields. Injecting empty keys here
+        # would make a save/load round-trip mutate otherwise valid user data.
         for slot, value in (data.get("Armor") or {}).items():
             if slot in armor and isinstance(value, dict):
                 armor[slot] = {
-                    "Set": str(value.get("Set", "") or ""),
-                    "Set2": str(value.get("Set2", "") or ""),
-                    "Quality": str(value.get("Quality", "") or ""),
-                    "Trait": str(value.get("Trait", "") or ""),
-                    "Enchant": str(value.get("Enchant", "") or ""),
-                    "EnchantTier": str(value.get("EnchantTier", "") or ""),
-                    "Level": str(value.get("Level", "") or ""),
-                    "Weight": str(value.get("Weight", "") or ""),
+                    str(key): str(item or "")
+                    for key, item in value.items()
                 }
 
         return cls(
