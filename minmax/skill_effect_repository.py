@@ -22,12 +22,13 @@ class SkillEffectRepository:
         character_class: CharacterClass | str | None = None,
         limit: int | None = 5000,
     ) -> tuple[tuple[int, str], ...]:
-        """Return selectable combat skills for one class, with ranks collapsed.
+        """Return selectable active combat skills for a class.
 
-        The picker intentionally exposes only the character's three class
-        skill lines. Passive, crafted, non-player, and effect-only records
-        are excluded. One row is retained per base ability + morph so rank
-        records do not appear as duplicate skills.
+        Class skills are restricted to the selected character's three class
+        lines. Non-class player skills are also exposed, including weapon,
+        armor, guild, alliance, world and other universal combat lines. This
+        keeps the picker faithful to the database instead of silently
+        limiting the roster lab to class abilities.
         """
         if not self.database_path.exists() or character_class is None:
             return ()
@@ -70,11 +71,17 @@ class SkillEffectRepository:
         selected: dict[tuple[int, int], tuple[int, str, int]] = {}
         for row in rows:
             ability_id, name, class_type, skill_line, base_id, rank, morph, *_ = row
-            if str(class_type or "").strip().casefold() != selected_class_name:
-                continue
-            normalized_line = str(skill_line or "").strip().casefold().replace(" ", "_")
-            if normalized_line not in selected_lines:
-                continue
+            owner = str(class_type or "").strip().casefold()
+            line = str(skill_line or "").strip().casefold().replace(" ", "_")
+
+            # A non-empty class_type belongs to a specific class. Only the
+            # selected class may contribute those class-line abilities.
+            # Empty class_type denotes shared/universal combat lines.
+            if owner:
+                if owner != selected_class_name:
+                    continue
+                if line not in selected_lines:
+                    continue
 
             base_key = int(base_id or ability_id)
             morph_key = int(morph or 0)
@@ -84,7 +91,10 @@ class SkillEffectRepository:
             if existing is None or rank_value < existing[2]:
                 selected[key] = (int(ability_id), str(name).strip(), rank_value)
 
-        values = sorted(selected.items(), key=lambda item: (item[0][0], item[0][1], item[1][2], item[1][0]))
+        values = sorted(
+            selected.items(),
+            key=lambda item: (item[0][0], item[0][1], item[1][2], item[1][0]),
+        )
         if limit is not None:
             values = values[:limit]
         return tuple((value[0], value[1]) for _key, value in values)
