@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from typing import Iterable
 
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -12,16 +13,22 @@ DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dict]:
     """Load one representative rank for each base/morph skill choice.
 
-    The database keeps every rank and coefficient. The skill-bar UI does not
-    expose rank progression, so this returns one representative record for
-    each (base_ability_id, morph) pair while preserving the exact ability_id
-    used by the effect resolver. Morphs remain separate choices.
+    The database keeps every rank and coefficient. The skill-bar UI exposes
+    exactly one choice for morph 0 (base), morph 1, and morph 2. The selected
+    representative record keeps the real ability_id so downstream effect
+    resolution can use the exact ability/morph identity.
     """
     path = Path(database_path)
     if not path.exists():
         return []
 
     with sqlite3.connect(path) as db:
+        db.row_factory = sqlite3.Row
+        columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
+        required = {"ability_id", "skill_id", "rank", "morph"}
+        if not required.issubset(columns):
+            return []
+
         rows = db.execute(
             """
             SELECT
@@ -40,7 +47,7 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
                 s.is_crafted,
                 s.crafted_id,
                 sr.rank,
-                sr.morph,
+                COALESCE(sr.morph, 0) AS morph,
                 COALESCE(a.base_mechanic, 0) AS base_mechanic,
                 sr.cost,
                 sr.duration,
@@ -63,11 +70,6 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
                      COALESCE(sr.morph, 0)
             """
         ).fetchall()
-
-        columns = {str(column[1]) for column in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
-
-    if not {"morph", "ability_id"}.issubset(columns):
-        return []
 
     names = [
         "ability_id", "base_ability_id", "name", "index_name", "description",
