@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit
-
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
-
 
 ASSET_ROOT = Path(__file__).resolve().parents[2] / "assets" / "AbilityIcons" / "icons" / "128"
 
@@ -18,8 +15,6 @@ def _icon_for_skill(skill: dict) -> QIcon:
     if not texture:
         return QIcon()
     filename = Path(texture.replace("\\", "/")).name
-    if not filename:
-        return QIcon()
     local = ASSET_ROOT / Path(filename).with_suffix(".png")
     return QIcon(str(local)) if local.exists() else QIcon()
 
@@ -31,6 +26,7 @@ class EligibleSkillBarRow(build_editor.SkillBarRow):
         self.vampire = False
         self.werewolf = False
         self.transformed_form = None
+        self._selected_class = ""
         super().__init__(skill_choices, parent)
 
     def set_affiliation(self, *, vampire: bool = False, werewolf: bool = False):
@@ -44,32 +40,24 @@ class EligibleSkillBarRow(build_editor.SkillBarRow):
         self._rebuild_combos()
 
     def set_class(self, eso_class: str):
-        self.skill_choices = list(self.all_skill_choices)
-        self._rebuild_combos(eso_class)
+        self._selected_class = eso_class or ""
+        self._rebuild_combos()
 
-    def _rebuild_combos(self, eso_class: str | None = None):
+    def _rebuild_combos(self):
         current_values = [field.currentText().strip() for field in self.fields]
-        selected_class = eso_class if eso_class is not None else getattr(self, "_selected_class", "")
-        self._selected_class = selected_class or ""
-
         for i, (field, current) in enumerate(zip(self.fields, current_values)):
             field.blockSignals(True)
             field.clear()
             field.addItem("")
-            choices = filter_skill_choices(
-                self.all_skill_choices,
-                character_class=self._selected_class,
-                slot_index=i,
-                vampire=self.vampire,
-                werewolf=self.werewolf,
-                transformed_form=self.transformed_form,
-            )
+            choices = filter_skill_choices(self.all_skill_choices, character_class=self._selected_class, slot_index=i, vampire=self.vampire, werewolf=self.werewolf, transformed_form=self.transformed_form)
             for skill in choices:
                 name = str(skill.get("name", "") or "").strip()
                 if not name:
                     continue
                 field.addItem(name, skill)
-                field.setItemIcon(field.count() - 1, _icon_for_skill(skill))
+                icon = _icon_for_skill(skill)
+                if not icon.isNull():
+                    field.setItemIcon(field.count() - 1, icon)
             index = field.findText(current, Qt.MatchFlag.MatchExactly)
             field.setCurrentIndex(index if index >= 0 else 0)
             field.setIconSize(QSize(42, 42))
@@ -80,6 +68,9 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     """Existing polished BuildEditor with explicit build/lycanthropy state."""
 
     def __init__(self, *args, **kwargs):
+        # BuildEditor constructs its bars in build_ui(), so install our class
+        # before super() rather than replacing already-created widgets later.
+        build_editor.SkillBarRow = EligibleSkillBarRow
         super().__init__(*args, **kwargs)
 
         self.build_name = QLineEdit()
@@ -101,23 +92,7 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addStretch(1)
             identity_card.addLayout(row)
 
-        self._replace_skill_bars()
         self._sync_skill_state()
-
-    def _replace_skill_bars(self):
-        # The base editor has already created its bars. Replace the global
-        # class used by future boss cards and rebuild the two existing bars.
-        for attr in ("front_bar", "back_bar"):
-            old = getattr(self, attr, None)
-            if old is None:
-                continue
-            replacement = EligibleSkillBarRow(self.skill_choices)
-            parent_layout = old.parentWidget().layout() if old.parentWidget() else None
-            if parent_layout is not None:
-                parent_layout.replaceWidget(old, replacement)
-                old.deleteLater()
-            setattr(self, attr, replacement)
-        self._apply_skill_class_filter()
 
     def _on_vampire_toggled(self, checked: bool):
         if checked:
@@ -137,13 +112,13 @@ class EligibleBuildEditor(build_editor.BuildEditor):
         vampire = self.vampire_checkbox.isChecked()
         werewolf = self.werewolf_checkbox.isChecked()
         for bar in (getattr(self, "front_bar", None), getattr(self, "back_bar", None)):
-            if hasattr(bar, "set_affiliation"):
+            if isinstance(bar, EligibleSkillBarRow):
                 bar.set_affiliation(vampire=vampire, werewolf=werewolf)
                 bar.set_class(self.eso_class.currentText().strip())
 
     def _on_class_changed(self, eso_class: str):
         for bar in (self.front_bar, self.back_bar):
-            if hasattr(bar, "set_class"):
+            if isinstance(bar, EligibleSkillBarRow):
                 bar.set_class(eso_class)
         for card in self._boss_cards:
             card.set_class(eso_class)
