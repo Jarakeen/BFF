@@ -20,7 +20,6 @@ def _configure_search(combo: QComboBox) -> None:
 
 
 class SearchableGearSlotRow(build_editor.GearSlotRow):
-    """Gear slot editor whose selectable fields support substring search."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for combo in (self.set_combo, self.trait_combo, self.enchant_combo):
@@ -28,15 +27,31 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
 
 
 class SearchableSkillBarRow(EligibleSkillBarRow):
-    """Eligible skill bar with substring search."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             _configure_search(field)
 
 
+def _patch_builds_page() -> None:
+    """Make Builds pass structured ability records to the eligible picker."""
+    from ui.builds_page import BuildsPage
+    from widgets.build_editor import BuildEditor
+
+    def _editor(self):
+        return BuildEditor(
+            race_choices=self.reference.list_race_names(),
+            set_choices=self.reference.list_gear_set_names(),
+            skill_choices=[s for s in self.reference.list_skills() if isinstance(s, dict) and s.get("name")],
+            cp_choices=[c for c in self.reference.list_champion_points() if isinstance(c, dict) and c.get("name")],
+        )
+
+    BuildsPage._editor = _editor
+
+
 def install() -> None:
-    """Install shared selector behavior into the existing build editor."""
+    """Install shared selector behavior before pages construct BuildEditor."""
     build_editor.GearSlotRow = SearchableGearSlotRow
     build_editor.SkillBarRow = SearchableSkillBarRow
     build_editor.BuildEditor = EligibleBuildEditor
+    _patch_builds_page()
