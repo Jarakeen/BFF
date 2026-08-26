@@ -65,7 +65,7 @@ def test_covered_requirement_produces_no_action_intent():
     assert evaluation.actionable_recommendations == ()
 
 
-def test_insufficient_requirement_produces_follow_up_intent():
+def test_insufficient_requirement_produces_add_provider_intent():
     requirements = EncounterRequirementSet(
         encounter_id="test-encounter",
         encounter_name="Test Encounter",
@@ -89,5 +89,5 @@ def test_insufficient_requirement_produces_follow_up_intent():
     recommendation = evaluation.recommendation_for_effect("major_courage")
 
     assert recommendation is not None
-    assert recommendation.action == RecommendationAction.INCREASE_UPTIME
+    assert recommendation.action == RecommendationAction.ADD_PROVIDER
     assert recommendation.valid_provider_count == 1
