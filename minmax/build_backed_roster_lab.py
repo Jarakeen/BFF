@@ -111,17 +111,22 @@ class BuildBackedRosterLab:
                 armor_pieces.append(ArmorPiece(slot=slot_sequence[slot_index], category=GearPieceCategory.SET_PIECE, set_id=str(set_id)))
                 slot_index += 1
 
-        # Resolve every selected ability once so the lab can distinguish the
-        # fifth active slot from the sixth ultimate slot. An ultimate is never
-        # silently converted into an ordinary active skill or a filler slot.
+        # skill_ids is an ingredient list, not necessarily a complete six-slot
+        # bar. Preserve explicit ultimate classification when the database has
+        # it, but permit partial callers to omit an ultimate. The lab uses a
+        # dedicated test filler only to satisfy CharacterBuild's six-slot
+        # invariant; the UI picker itself never inserts a fake ability.
         selected_records: list[tuple[int, str, bool, tuple]] = []
         if normalized_skills and self.database_path.exists():
             import sqlite3
             with sqlite3.connect(self.database_path) as db:
+                columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
+                has_base_mechanic = "base_mechanic" in columns
+                select = "name, base_mechanic" if has_base_mechanic else "name"
                 for skill_id in normalized_skills:
-                    row = db.execute("SELECT name, base_mechanic FROM ability WHERE ability_id = ?", (skill_id,)).fetchone()
+                    row = db.execute(f"SELECT {select} FROM ability WHERE ability_id = ?", (skill_id,)).fetchone()
                     skill_name = str(row[0]) if row else ""
-                    is_ultimate = bool(row and int(row[1] or 0) == 8)
+                    is_ultimate = bool(has_base_mechanic and row and int(row[1] or 0) == 8)
                     effects = self._skill_repository.resolve(skill_id)
                     resolved_skill_metadata.append((skill_id, skill_name or f"Unknown skill {skill_id}"))
                     if not effects:
@@ -132,12 +137,14 @@ class BuildBackedRosterLab:
         ultimate_records = [record for record in selected_records if record[2]]
         if len(active_records) > self.MAX_ACTIVE_SKILLS:
             validation_errors.append(f"Mock build has {len(active_records)} active skills; only {self.MAX_ACTIVE_SKILLS} active slots are available.")
-        if len(ultimate_records) != 1:
+        # A six-slot selection is a complete bar and therefore must contain one
+        # ultimate. Fewer selected skills represent a partial ingredient list.
+        if len(normalized_skills) == self.MAX_SKILL_SLOTS and len(ultimate_records) != 1:
             validation_errors.append(f"{active_bar.value.title()} bar must have exactly one ultimate slot, found {len(ultimate_records)}.")
 
         ordered_records = active_records[: self.MAX_ACTIVE_SKILLS] + ultimate_records[:1]
         skill_slots: list[SlottedSkill] = []
-        for index, (skill_id, _skill_name, is_ultimate, effects) in enumerate(ordered_records):
+        for skill_id, _skill_name, is_ultimate, effects in ordered_records:
             skill_slots.append(SlottedSkill(skill_id=str(skill_id), skill_line_id="database_ability", is_cast=True, requires_active_bar=True, is_ultimate=is_ultimate, effects=effects))
 
         while len(skill_slots) < self.MAX_SKILL_SLOTS:
