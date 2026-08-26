@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
-from typing import Iterable
 
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -14,9 +13,9 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
     """Load one representative rank for each base/morph skill choice.
 
     The database keeps every rank and coefficient. The skill-bar UI does not
-    need to expose rank progression, so this returns the lowest-rank record
-    for each (base_ability_id, morph) pair while preserving the exact
-    ability_id used by the effect resolver.
+    expose rank progression, so this returns one representative record for
+    each (base_ability_id, morph) pair while preserving the exact ability_id
+    used by the effect resolver. Morphs remain separate choices.
     """
     path = Path(database_path)
     if not path.exists():
@@ -31,7 +30,7 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
                 COALESCE(NULLIF(sr.raw_name, ''), s.name) AS name,
                 s.index_name,
                 COALESCE(NULLIF(sr.raw_description, ''), s.description) AS description,
-                s.texture,
+                COALESCE(NULLIF(a.texture, ''), s.texture) AS texture,
                 s.class_type,
                 s.skill_line,
                 s.target,
@@ -65,12 +64,9 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
             """
         ).fetchall()
 
-        columns = [column[0] for column in db.execute("PRAGMA table_info(skill_rank)").fetchall()]
+        columns = {str(column[1]) for column in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
 
-    # The query above uses the current imported schema. Keep this explicit
-    # guard here so a stale/partial fixture fails closed rather than silently
-    # reverting to canonical skill names and losing morphs.
-    if not columns or "morph" not in columns or "ability_id" not in columns:
+    if not {"morph", "ability_id"}.issubset(columns):
         return []
 
     names = [
