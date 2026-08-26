@@ -596,24 +596,52 @@ class BuildEditor(QWidget):
 
     def _build_boss_card(self):
         card = FoundryCard("Boss Alternates")
+
         body = QVBoxLayout()
+
         self.boss_container = QVBoxLayout()
         body.addLayout(self.boss_container)
-        add_boss = FoundryButton("+ Add Boss Alternate", role=ButtonRole.SECONDARY, compact=True)
-        add_boss.clicked.connect(self.add_boss_loadout)
-        body.addWidget(add_boss, 0, Qt.AlignLeft)
+
         actions = QHBoxLayout()
-        actions.addStretch()
-        add_build = FoundryButton("+ Add New Build", role=ButtonRole.SECONDARY, compact=True)
-        save = FoundryButton("Save This Build", role=ButtonRole.PRIMARY, compact=True)
-        cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY, compact=True)
+        actions.setSpacing(8)
+
+        add_boss = FoundryButton(
+            "+ Add Boss Alternate",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+
+        add_build = FoundryButton(
+            "+ Add New Build",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+
+        save = FoundryButton(
+            "Save This Build",
+            role=ButtonRole.PRIMARY,
+            compact=True,
+        )
+
+        cancel = FoundryButton(
+            "Cancel",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+
+        add_boss.clicked.connect(self.add_boss_loadout)
         add_build.clicked.connect(self._handle_add_build)
         save.clicked.connect(self.saveRequested.emit)
         cancel.clicked.connect(self.cancelRequested.emit)
+
+        actions.addWidget(add_boss)
+        actions.addStretch()
         actions.addWidget(add_build)
         actions.addWidget(save)
         actions.addWidget(cancel)
+
         body.addLayout(actions)
+
         card.addLayout(body)
         return card
 

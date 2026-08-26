@@ -54,7 +54,7 @@ NAV_SECTIONS = [
         ],
     },
     {
-        "label": "Roster",
+        "label": "Raid Engine",
         "children": [
             ("Overview", "operations_console"),
             ("Encounters", "console:1"),
