@@ -64,11 +64,10 @@ class OptimizationPage(FoundryPage):
         self.view_combo.currentTextChanged.connect(self.refresh)
         self.header.add_context_widget(self._context_field("VIEW", self.view_combo))
 
-        self.workspace = QWidget()
-        self.layout = QVBoxLayout(self.workspace)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(10)
-        self.add_workspace(self.workspace)
+        # FoundryPage already owns the scrollable workspace. Keep a local alias
+        # for the existing render methods rather than creating a second
+        # QWidget/QScrollArea layer inside the page.
+        self.layout = self.workspace_layout
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
@@ -174,24 +173,11 @@ class OptimizationPage(FoundryPage):
         self.layout.addWidget(note)
         self.layout.addStretch(1)
 
-    @staticmethod
-    def _scroll_page(widget: QWidget) -> QScrollArea:
-        """Put a large test surface in its own scroll viewport."""
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidget(widget)
-        return scroll
-
     def _render_test_lab(self):
-        # The entire Test Lab is one scrollable workspace. Keeping the banner,
-        # mode controls, and mode content in the same viewport prevents the
-        # stacked child from being squeezed to zero height by the outer page.
-        page = QWidget()
-        page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(0, 0, 0, 0)
-        page_layout.setSpacing(10)
+        # FoundryPage already provides the page-level scroll viewport.
+        # Render the Test Lab directly into that workspace so the banner,
+        # controls, and custom roster are all part of one scrollable surface.
+        page_layout = self.layout
 
         banner = FoundryCard("SIMULATION • Encounter Test Lab")
         banner.addWidget(QLabel(
@@ -200,6 +186,7 @@ class OptimizationPage(FoundryPage):
         banner.addWidget(QLabel(
             "Nothing here changes Builds, roster assignments, ESO Logs data, or the production database."
         ))
+        banner.setMaximumHeight(180)
         page_layout.addWidget(banner)
 
         mode_card = FoundryCard("Test Mode")
@@ -224,6 +211,8 @@ class OptimizationPage(FoundryPage):
         scenario_description = QLabel()
         scenario_description.setWordWrap(True)
         scenario_card.addWidget(scenario_description)
+        mode_card.setMaximumHeight(140)
+        scenario_card.setMaximumHeight(140)
 
         top_row = QHBoxLayout()
         top_row.setSpacing(10)
@@ -258,7 +247,6 @@ class OptimizationPage(FoundryPage):
                 )
             stack.setCurrentIndex(index)
             stack.updateGeometry()
-            page.adjustSize()
 
         mode_combo.activated.connect(update_mode)
         stack.currentChanged.connect(
@@ -269,8 +257,6 @@ class OptimizationPage(FoundryPage):
             )
         )
         update_mode(mode_combo.currentIndex())
-
-        self.layout.addWidget(self._scroll_page(page), 1)
 
     def _build_preset_lab(
         self,
