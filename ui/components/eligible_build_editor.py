@@ -49,7 +49,14 @@ class EligibleSkillBarRow(build_editor.SkillBarRow):
             field.blockSignals(True)
             field.clear()
             field.addItem("")
-            choices = filter_skill_choices(self.all_skill_choices, character_class=self._selected_class, slot_index=i, vampire=self.vampire, werewolf=self.werewolf, transformed_form=self.transformed_form)
+            choices = filter_skill_choices(
+                self.all_skill_choices,
+                character_class=self._selected_class,
+                slot_index=i,
+                vampire=self.vampire,
+                werewolf=self.werewolf,
+                transformed_form=self.transformed_form,
+            )
             for skill in choices:
                 name = str(skill.get("name", "") or "").strip()
                 if not name:
@@ -68,8 +75,6 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     """Existing polished BuildEditor with explicit build/lycanthropy state."""
 
     def __init__(self, *args, **kwargs):
-        # searchable_build_selectors installs the concrete SkillBarRow class
-        # before BuildEditor construction. Do not overwrite that installation.
         super().__init__(*args, **kwargs)
 
         self.build_name = QLineEdit()
@@ -79,6 +84,8 @@ class EligibleBuildEditor(build_editor.BuildEditor):
         self.vampire_checkbox.toggled.connect(self._on_vampire_toggled)
         self.werewolf_checkbox.toggled.connect(self._on_werewolf_toggled)
 
+        # BuildEditor creates the Identity card first. Add the new state
+        # controls without changing the existing card layout or skill-bar UI.
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
             row = QHBoxLayout()
@@ -91,6 +98,7 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addStretch(1)
             identity_card.addLayout(row)
 
+        self.eso_class.currentTextChanged.connect(self._on_class_changed)
         self._sync_skill_state()
 
     def _on_vampire_toggled(self, checked: bool):
@@ -116,7 +124,7 @@ class EligibleBuildEditor(build_editor.BuildEditor):
                 bar.set_class(self.eso_class.currentText().strip())
 
     def _on_class_changed(self, eso_class: str):
-        for bar in (self.front_bar, self.back_bar):
+        for bar in (getattr(self, "front_bar", None), getattr(self, "back_bar", None)):
             if hasattr(bar, "set_class"):
                 bar.set_class(eso_class)
         for card in self._boss_cards:
