@@ -125,31 +125,23 @@ class CoverageRecommendationAnalyzer:
 
     @classmethod
     def _recommend_insufficient(cls, result):
-        missing_count = max(
-            0,
-            result.required_provider_count - result.valid_provider_count,
+        if result.valid_provider_count > 0:
+            return cls._base(
+                result,
+                RecommendationAction.INCREASE_UPTIME,
+                f"{result.effect_name} has existing provider coverage, "
+                "but it does not currently satisfy the requirement. "
+                "Investigate uptime and coverage conditions before adding "
+                "another provider.",
+            )
+
+        return cls._base(
+            result,
+            RecommendationAction.ADD_PROVIDER,
+            f"{result.effect_name} has providers, but none currently "
+            "qualify for the requirement. Another qualifying provider "
+            "source must be identified.",
         )
-
-        if missing_count:
-            explanation = (
-                f"{result.effect_name} requires "
-                f"{result.required_provider_count} valid provider(s), "
-                f"but only {result.valid_provider_count} qualify. "
-                f"At least {missing_count} additional qualifying provider "
-                "source(s) are needed."
-            )
-            action = RecommendationAction.ADD_PROVIDER
-        else:
-            # Defensive fallback for future classification rules. If a
-            # future analyzer marks a result insufficient without a provider
-            # count deficit, do not invent an optimization claim.
-            explanation = (
-                f"{result.effect_name} is insufficiently covered. "
-                "The supporting coverage conditions should be investigated."
-            )
-            action = RecommendationAction.VERIFY_DATA
-
-        return cls._base(result, action, explanation)
 
     @classmethod
     def _recommend_conflict(cls, result):
