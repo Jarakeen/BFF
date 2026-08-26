@@ -32,14 +32,8 @@ def _empty_bar() -> list[str]:
 def _empty_armor() -> dict[str, dict[str, str]]:
     return {
         slot: {
-            "Set": "",
-            "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": "",
+            "Set": "", "Set2": "", "Quality": "", "Trait": "",
+            "Enchant": "", "EnchantTier": "", "Level": "", "Weight": "",
         }
         for slot in ARMOR_SLOTS
     }
@@ -47,8 +41,6 @@ def _empty_armor() -> dict[str, dict[str, str]]:
 
 @dataclass
 class GearSlot:
-    """A single weapon, armor, or jewelry slot."""
-
     Set: str = ""
     Trait: str = ""
     Enchant: str = ""
@@ -78,8 +70,6 @@ class GearSlot:
 
 @dataclass
 class ChampionPointEntry:
-    """One slotted Champion Point star."""
-
     Name: str = ""
     Points: str = ""
 
@@ -97,8 +87,6 @@ class ChampionPointEntry:
 
 @dataclass
 class BossLoadout:
-    """An alternate loadout for one boss in the trial."""
-
     BossName: str = ""
     FrontBarSkills: list[str] = field(default_factory=_empty_bar)
     BackBarSkills: list[str] = field(default_factory=_empty_bar)
@@ -128,6 +116,7 @@ class PlayerBuild:
 
     Name: str = ""
     Gamertag: str = ""
+    BuildName: str = ""
     ImagePath: str = ""
     Race: str = ""
     EsoClass: str = ""
@@ -153,6 +142,7 @@ class PlayerBuild:
         return {
             "Name": self.Name,
             "Gamertag": self.Gamertag,
+            "BuildName": self.BuildName,
             "ImagePath": self.ImagePath,
             "Race": self.Race,
             "EsoClass": self.EsoClass,
@@ -177,10 +167,6 @@ class PlayerBuild:
     def from_dict(cls, data: dict | None) -> "PlayerBuild":
         data = dict(data or {})
         armor = _empty_armor()
-
-        # Preserve the stored shape of populated armor entries. Older build
-        # files may not contain the newer fields. Injecting empty keys here
-        # would make a save/load round-trip mutate otherwise valid user data.
         for slot, value in (data.get("Armor") or {}).items():
             if slot in armor and isinstance(value, dict):
                 armor[slot] = {
@@ -191,6 +177,7 @@ class PlayerBuild:
         return cls(
             Name=str(data.get("Name", "") or ""),
             Gamertag=str(data.get("Gamertag", "") or ""),
+            BuildName=str(data.get("BuildName", "") or ""),
             ImagePath=str(data.get("ImagePath", "") or ""),
             Race=str(data.get("Race", "") or ""),
             EsoClass=str(data.get("EsoClass", "") or ""),
@@ -202,19 +189,13 @@ class PlayerBuild:
             Necklace=GearSlot.from_dict(data.get("Necklace")),
             Ring1=GearSlot.from_dict(data.get("Ring1")),
             Ring2=GearSlot.from_dict(data.get("Ring2")),
-            ChampionPoints=[
-                ChampionPointEntry.from_dict(cp)
-                for cp in data.get("ChampionPoints", [])
-            ],
+            ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
             FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(),
             BackBarSkills=data.get("BackBarSkills") or _empty_bar(),
             Food=str(data.get("Food", "") or ""),
             Potion=str(data.get("Potion", "") or ""),
             Notes=str(data.get("Notes", "") or ""),
-            BossLoadouts=[
-                BossLoadout.from_dict(b)
-                for b in data.get("BossLoadouts", [])
-            ],
+            BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
         )
 
     def display_label(self, fallback: str) -> str:
@@ -233,8 +214,5 @@ class BuildRoster:
 
     @classmethod
     def from_dict(cls, data: dict | None) -> "BuildRoster":
-        members = [
-            PlayerBuild.from_dict(m)
-            for m in (data or {}).get("Members", [])
-        ]
+        members = [PlayerBuild.from_dict(m) for m in (data or {}).get("Members", [])]
         return cls(Members=members[: cls.MAX_MEMBERS] or [PlayerBuild()])
