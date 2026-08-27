@@ -61,6 +61,33 @@ def test_stacking_providers_are_not_called_redundant():
     assert not covered.redundant
 
 
+def test_same_set_tiers_are_not_called_redundant():
+    report = analyze_effect_coverage(
+        [
+            effect("set_effect", "Example Set (2)"),
+            effect("set_effect", "Example Set (5)"),
+        ]
+    )
+
+    covered = report.by_name("set_effect")
+    assert covered is not None
+    assert not covered.redundant
+    assert covered.source_names == ("Example Set (2)", "Example Set (5)")
+
+
+def test_different_target_scopes_are_not_called_redundant():
+    report = analyze_effect_coverage(
+        [
+            effect("shared_effect", "Self Skill", target=SupportTargetType.SELF),
+            effect("shared_effect", "Group Skill", target=SupportTargetType.GROUP),
+        ]
+    )
+
+    covered = report.by_name("shared_effect")
+    assert covered is not None
+    assert not covered.redundant
+
+
 def test_conditional_effect_is_reported_as_conditional():
     report = analyze_effect_coverage(
         [
