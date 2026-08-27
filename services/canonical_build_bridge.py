@@ -58,11 +58,31 @@ class CanonicalBuildBridge:
         )
 
     @staticmethod
-    def _roster_from_catalog(catalog: dict[str, Any]) -> BuildRoster:
+    def _has_meaningful_legacy_data(value: Any) -> bool:
+        """Return True when a legacy value contains real user data."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, dict):
+            return any(CanonicalBuildBridge._has_meaningful_legacy_data(v) for v in value.values())
+        if isinstance(value, (list, tuple, set)):
+            return any(CanonicalBuildBridge._has_meaningful_legacy_data(v) for v in value)
+        return True
+
+    @classmethod
+    def _is_valid_legacy_build(cls, legacy: Any) -> bool:
+        """Reject placeholder/empty legacy rows before reconstructing them."""
+        return isinstance(legacy, dict) and cls._has_meaningful_legacy_data(legacy)
+
+    @classmethod
+    def _roster_from_catalog(cls, catalog: dict[str, Any]) -> BuildRoster:
         members: list[PlayerBuild] = []
         for entry in catalog.get("builds", []):
-            legacy = entry.get("legacy")
-            if not isinstance(legacy, dict):
+            legacy = entry.get("legacy") if isinstance(entry, dict) else None
+            if not cls._is_valid_legacy_build(legacy):
                 continue
             members.append(PlayerBuild.from_dict(legacy))
         return BuildRoster(Members=members)
