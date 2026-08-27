@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+# Running a script directly from dev/ puts dev/ on sys.path, not the
+# repository root. Add the root explicitly so application packages such as
+# services/ and models/ resolve consistently with pytest and the main app.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from services.build_catalog_service import BuildCatalogService
 
