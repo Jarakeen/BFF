@@ -141,23 +141,19 @@ def analyze_effect_coverage(
         magnitudes = [provider.magnitude for provider in active]
         durations = [provider.duration for provider in active if provider.duration is not None]
         uptimes = [provider.uptime for provider in active]
-
-        # Multiple providers of the same logical effect are potential
-        # redundancy, but only when their stacking/exclusivity semantics say
-        # that the additional provider cannot combine meaningfully.
         redundant = _is_redundant(active)
         category = _dominant_category(active or evidence)
 
         reports.append(
             EffectCoverage(
-                name=_display_name(logical_name, evidence),
+                name=logical_name,
                 category=category,
                 covered=bool(active),
                 conditional=conditional,
                 redundant=redundant,
                 providers=evidence,
                 target_types=target_types,
-                max_magnitude=max(magnitudes) if magnitudes else None,
+                max_magnitude=_max_magnitude(active),
                 max_duration=max(durations) if durations else None,
                 max_uptime=max(uptimes) if uptimes else 0.0,
             )
@@ -168,15 +164,33 @@ def analyze_effect_coverage(
 
 
 def _is_redundant(providers: tuple[EffectEvidence, ...]) -> bool:
+    """Flag only clear potential redundancy, never mere duplicate naming."""
     if len(providers) < 2:
         return False
 
-    groups = {provider.exclusivity_group for provider in providers if provider.exclusivity_group}
-    if groups:
-        return True
+    # Different targets can both be useful. A self buff and group buff with
+    # the same logical identity are therefore not redundant.
+    by_target: dict[SupportTargetType, list[EffectEvidence]] = defaultdict(list)
+    for provider in providers:
+        by_target[provider.target_type].append(provider)
 
-    behaviors = {provider.stacking for provider in providers}
-    return behaviors != {StackingBehavior.STACKS}
+    for same_target in by_target.values():
+        if len(same_target) < 2:
+            continue
+        if any(provider.exclusivity_group for provider in same_target):
+            return True
+        if any(provider.stacking != StackingBehavior.STACKS for provider in same_target):
+            return True
+    return False
+
+
+def _max_magnitude(providers: tuple[EffectEvidence, ...]) -> float | None:
+    if not providers:
+        return None
+    units = {provider.unit for provider in providers}
+    if len(units) != 1:
+        return None
+    return max(provider.magnitude for provider in providers)
 
 
 def _dominant_category(providers: tuple[EffectEvidence, ...]) -> SupportEffectCategory:
@@ -189,11 +203,3 @@ def _dominant_category(providers: tuple[EffectEvidence, ...]) -> SupportEffectCa
         if any(provider.category == category for provider in providers):
             return category
     return SupportEffectCategory.OTHER
-
-
-def _display_name(logical_name: str, providers: tuple[EffectEvidence, ...]) -> str:
-    """Prefer a source's display spelling while keeping logical identity stable."""
-    for provider in providers:
-        if provider.name and provider.name != logical_name:
-            return provider.name
-    return logical_name
