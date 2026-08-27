@@ -32,14 +32,26 @@ class BuildCatalogService:
             or f"member-{index + 1}"
         )
 
-    @staticmethod
-    def _is_empty_member(build: PlayerBuild) -> bool:
+    @classmethod
+    def _has_meaningful_value(cls, value: Any) -> bool:
+        """Return whether a legacy field or nested structure contains data."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, dict):
+            return any(cls._has_meaningful_value(v) for v in value.values())
+        if isinstance(value, (list, tuple, set)):
+            return any(cls._has_meaningful_value(v) for v in value)
+        return True
+
+    @classmethod
+    def _is_empty_member(cls, build: PlayerBuild) -> bool:
         """Return True for the blank rows used by the legacy roster UI."""
-        return not any(
-            str(value).strip()
-            for key, value in build.to_dict().items()
-            if key not in {"Vampire", "Werewolf"}
-        )
+        data = build.to_dict()
+        return not cls._has_meaningful_value(data)
 
     @staticmethod
     def _normalize(data: Any) -> dict[str, Any]:
@@ -75,7 +87,11 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create one character record per stable identity and one build per row."""
+        """Create one character record per stable identity and one build per row.
+
+        Completely blank rows in the legacy Builds UI are placeholders and are
+        intentionally excluded from the canonical catalog.
+        """
         catalog = self._normalize(None)
         characters: dict[str, dict[str, Any]] = {}
 
