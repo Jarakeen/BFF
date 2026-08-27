@@ -25,6 +25,23 @@ def test_legacy_roster_migrates_to_one_character_per_identity(tmp_path: Path):
     assert sum(b["character_id"] == alice["character_id"] for b in alice_builds) == 2
 
 
+def test_blank_legacy_placeholder_is_not_migrated(tmp_path: Path):
+    roster = BuildRoster(
+        Members=[
+            PlayerBuild(Name="Magrat", Gamertag="Jarakeen", BuildName="DF Healer"),
+            PlayerBuild(),
+        ]
+    )
+
+    service = BuildCatalogService(tmp_path / "characters.json")
+    catalog = service.import_legacy_roster(roster)
+
+    assert len(catalog["characters"]) == 1
+    assert len(catalog["builds"]) == 1
+    assert catalog["characters"][0]["gamertag"] == "Jarakeen"
+    assert catalog["builds"][0]["name"] == "DF Healer"
+
+
 def test_catalog_round_trip_is_versioned(tmp_path: Path):
     service = BuildCatalogService(tmp_path / "characters.json")
     catalog = service.new_catalog()
