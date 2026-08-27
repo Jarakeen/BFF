@@ -6,6 +6,7 @@ from ..role import Role
 from .bar import Bar
 from .champion_points import ChampionPointAllocation
 from .character_class import CLASS_SKILL_LINES, CharacterClass, class_owns_skill_line
+from .class_configuration import ClassSkillLineConfiguration
 from .gear_piece import ArmorPiece, GearPieceCategory
 from .weapon_type import WeaponSkillLine
 
@@ -39,16 +40,18 @@ class IllegalBuildError(ValueError):
 @dataclass(frozen=True)
 class CharacterBuild:
     """
-    The mechanical representation of one real ESO character build: enough
-    to determine exactly what effects are actually available to it at a
-    specific moment (see effect_availability.py), and enough to validate
-    the hard constraints ESO itself enforces.
+    The mechanical representation of one real ESO character build.
 
     This is deliberately separate from the legacy `minmax.build.Build`
-    (used by the flat StatEngine pipeline) - that type is untouched by
-    this module. CharacterBuild models the full mechanical shape of a
-    build (bars, slots, weapon-line access, passive dependency); it does
-    not compute final stat totals itself.
+    (used by the flat StatEngine pipeline). CharacterBuild models the full
+    mechanical shape of a build: bars, slots, equipment, CP, class-line
+    configuration, and hard legality constraints. It does not compute final
+    stat totals itself.
+
+    `character_id`/`character_name` identify the persistent character this
+    configuration belongs to. The character's progression snapshot is kept
+    in `mastered_class_skill_lines` so legality can be evaluated without
+    making the calculation layer depend on a UI object.
     """
 
     name: str
@@ -56,9 +59,17 @@ class CharacterBuild:
     role: Role
     race_id: int | None = None
 
+    character_id: str | None = None
+    character_name: str | None = None
+    mastered_class_skill_lines: frozenset[str] = field(default_factory=frozenset)
+
     mythic: ArmorPiece | None = None
     armor: tuple[ArmorPiece, ...] = field(default_factory=tuple)
     champion_points: tuple[ChampionPointAllocation, ...] = field(default_factory=tuple)
+
+    class_skill_lines: ClassSkillLineConfiguration = field(
+        default_factory=ClassSkillLineConfiguration
+    )
 
     front_bar: Bar | None = None
     back_bar: Bar | None = None
@@ -72,6 +83,27 @@ class CharacterBuild:
             return self.armor
         return self.armor + (self.mythic,)
 
+    @property
+    def effective_class_skill_lines(self) -> tuple[str, ...]:
+        return self.class_skill_lines.effective_skill_lines(self.character_class)
+
+    @property
+    def is_subclassed(self) -> bool:
+        return not self.class_skill_lines.is_pure_class(self.character_class)
+
+    @property
+    def class_mastery_configuration_eligible(self) -> bool:
+        return self.class_skill_lines.configuration_allows_class_mastery(
+            self.character_class
+        )
+
+    @property
+    def class_mastery_available(self) -> bool:
+        return self.class_skill_lines.class_mastery_available(
+            self.character_class,
+            self.mastered_class_skill_lines,
+        )
+
     def validate(self) -> tuple[str, ...]:
         """
         Return every hard-constraint violation found in this build. An
@@ -83,8 +115,10 @@ class CharacterBuild:
 
         problems.extend(self._mythic_violations())
         problems.extend(self._bar_violations())
+        problems.extend(self.class_skill_lines.validate(self.character_class))
         problems.extend(self._class_ownership_violations())
         problems.extend(self._weapon_skill_line_violations())
+        problems.extend(self._class_mastery_progression_violations())
 
         return tuple(problems)
 
@@ -113,24 +147,46 @@ class CharacterBuild:
         return tuple(problems)
 
     def _class_ownership_violations(self) -> tuple[str, ...]:
-        """A pure class cannot arbitrarily select another class's passives."""
+        """Ensure slotted class skills belong to an equipped class line."""
         problems: list[str] = []
+        allowed_lines = set(self.effective_class_skill_lines)
+
         for bar in self.bars():
             for slot in bar.slots:
                 owning_class = _skill_line_owning_class(slot.skill_line_id)
                 if owning_class is None:
-                    continue  # Not a class line at all (weapon/guild/world/racial).
+                    continue  # Not a class line (weapon/guild/world/racial/etc.).
 
-                if not class_owns_skill_line(
-                    self.character_class, slot.skill_line_id
-                ):
+                if slot.skill_line_id not in allowed_lines:
                     problems.append(
-                        f"{bar.bar_id.value} bar slots skill "
-                        f"'{slot.skill_id}' from '{slot.skill_line_id}', which "
-                        f"belongs to {owning_class.value}, not "
-                        f"{self.character_class.value}."
+                        f"{bar.bar_id.value} bar slots skill '{slot.skill_id}' from "
+                        f"class skill line '{slot.skill_line_id}', but that line is "
+                        f"not equipped by this build."
                     )
+
+                # Keep the ownership explanation useful when a line is foreign.
+                if owning_class != self.character_class and slot.skill_line_id in allowed_lines:
+                    continue  # Valid subclass line.
+
+                if not class_owns_skill_line(self.character_class, slot.skill_line_id):
+                    if slot.skill_line_id not in allowed_lines:
+                        problems.append(
+                            f"{bar.bar_id.value} bar slots skill '{slot.skill_id}' from "
+                            f"'{slot.skill_line_id}', which belongs to {owning_class.value}, "
+                            f"not {self.character_class.value}."
+                        )
         return tuple(problems)
+
+    def _class_mastery_progression_violations(self) -> tuple[str, ...]:
+        selected = self.class_skill_lines.class_mastery.passive_ability_ids
+        if not selected:
+            return ()
+        if not self.class_mastery_available:
+            return (
+                "Class Mastery passives are selected, but the character has not "
+                "mastered all three native class skill lines or the build is subclassed.",
+            )
+        return ()
 
     def _weapon_skill_line_violations(self) -> tuple[str, ...]:
         """
@@ -154,7 +210,6 @@ class CharacterBuild:
                         f"{bar.bar_id.value} bar slots skill "
                         f"'{slot.skill_id}' from weapon skill line "
                         f"'{slot.skill_line_id}', but this bar's equipped "
-                        f"weapon(s) only make "
-                        f"'{available_line.value}' available."
+                        f"weapon(s) only make '{available_line.value}' available."
                     )
         return tuple(problems)
