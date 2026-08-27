@@ -10,6 +10,8 @@
 # ==================================================
 
 from __future__ import annotations
+
+import sys
 from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -51,7 +53,10 @@ class MainWindow(QMainWindow):
     def __init__(self, expedition=None):
         super().__init__()
 
-        data_dir = Path(__file__).resolve().parents[1] / "data"
+        if getattr(sys, "frozen", False):
+            data_dir = Path(sys.executable).resolve().parent / "data"
+        else:
+            data_dir = Path(__file__).resolve().parents[1] / "data"
 
         self.eso_data_service = EsoAchievementDatabaseService(
             data_dir / "eso.db"

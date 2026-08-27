@@ -1,0 +1,950 @@
+﻿from dataclasses import dataclass
+
+from ..support_effect_category import SupportEffectCategory
+from ..support_stacking import StackingBehavior
+from ..support_target_type import SupportTargetType
+from .effect_layer import BarId, EffectLayer
+
+
+@dataclass(frozen=True)
+class EffectVariant:
+    """
+    One concrete instance of a named effect.
+
+    `name` is the stable logical identity (e.g. "major_slayer",
+    "major_brittle", "weapon_spell_damage") - snake_case, and it is the
+    ONLY field that may be used to recognize "this is the same effect as
+    that one". Every other field is a numeric/contextual variant of that
+    identity and must never be used as a substitute for it. Two
+    EffectVariants with the same `name` but different `magnitude`,
+    `source`, or `active_bar` are still the same logical effect supplied
+    two different ways - callers compare on `name`, never on magnitude.
+
+    This generalizes the identity/magnitude split already used by
+    SupportEffect (name vs magnitude) to the rest of the character-build
+    model: cast/slotted/passive/proc/ultimate effects all share this same
+    shape instead of each inventing their own value-as-identity encoding.
+    """
+
+    name: str
+    """Stable snake_case logical identity. Never a number."""
+
+    layer: EffectLayer
+    """How this effect instance is produced."""
+
+    source: str
+    """What produces it: a skill, set, glyph, passive, or item name."""
+
+    magnitude: float | None = None
+    duration: float | None = None
+    chance: float | None = None
+    cooldown: float | None = None
+    target_count: int | None = None
+    range: float | None = None
+    scaling: str | None = None
+    condition: str | None = None
+    target: str | None = None
+
+    active_bar: BarId | None = None
+    """
+    Which bar this effect instance requires to be active, if any. None
+    means it does not depend on which bar is currently active.
+    """
+
+    trigger: str | None = None
+    """Named trigger this instance requires, if any (e.g. an ultimate cast)."""
+
+    target_type: SupportTargetType | None = None
+    """
+    Who this effect actually lands on: self/ally/group/enemy. None means
+    not yet classified - conversion to SupportEffect treats an
+    unclassified effect as SELF rather than guessing it contributes to
+    group support.
+    """
+
+    category: SupportEffectCategory | None = None
+    """Whether this is a buff/debuff/status/other, if known."""
+
+    stacking: StackingBehavior | None = None
+    """How repeated applications of this effect interact, if known."""
+
+    exclusivity_group: str | None = None
+    """Named group this effect competes with (mirrors Major/Minor exclusivity)."""
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError("EffectVariant.name must be a non-empty identity.")
+
+        if self.chance is not None and not 0.0 <= self.chance <= 1.0:
+            raise ValueError("EffectVariant.chance must be between 0 and 1.")
+
+    def is_available_on(self, active_bar: BarId) -> bool:
+        """Whether this instance's bar requirement is satisfied."""
+        return self.active_bar is None or self.active_bar == active_bar
+from __future__ import annotations
+
+from collections.abc import Iterable
+from dataclasses import dataclass, replace
+from enum import Enum
+
+from .effect_instance import EffectVariant
+
+
+class EffectRelationshipType(str, Enum):
+    """
+    The kinds of relationship one named effect can have to another.
+
+    This is deliberately generic - it is what lets Jorvuld's Guidance,
+    Serpent's Disdain, Aggressive Horn, and Master's Architect all be
+    expressed as data using the same handful of relationship types,
+    rather than each becoming its own hard-coded rule in the engine.
+    """
+
+    PROVIDES = "provides"
+    MODIFIES = "modifies"
+    TRIGGERS = "triggers"
+    REQUIRES = "requires"
+    EXTENDS_DURATION = "extends_duration"
+    INCREASES_PROC_CHANCE = "increases_proc_chance"
+
+
+@dataclass(frozen=True)
+class EffectRelationship:
+    """
+    A generic relationship between two named effect identities.
+
+    `source_effect` and `target_effect` are stable snake_case identities
+    (matching EffectVariant.name), never magnitudes. `magnitude_delta`
+    holds whatever numeric adjustment the relationship applies (an added
+    duration, a percentage-point chance increase, etc.) - the relationship
+    type says what that number means.
+    """
+
+    relationship_type: EffectRelationshipType
+    source_effect: str
+    target_effect: str
+
+    magnitude_delta: float | None = None
+    condition: str | None = None
+
+    duration: float | None = None
+    """
+    For TRIGGERS: the initial duration of the newly-produced effect
+    (preserved separately from magnitude_delta, per the rule that an
+    effect's numeric attributes are never collapsed into one generic
+    value). Unused by other relationship types.
+    """
+
+
+def apply_relationships(
+    effects: Iterable[EffectVariant],
+    relationships: Iterable[EffectRelationship],
+) -> tuple[EffectVariant, ...]:
+    """
+    Apply a set of generic effect relationships against an already-resolved
+    set of EffectVariant instances.
+
+    - MODIFIES / EXTENDS_DURATION / INCREASES_PROC_CHANCE: when the
+      relationship's `source_effect` is present among `effects`, adjust
+      every matching `target_effect` instance's duration/chance/magnitude
+      by `magnitude_delta`.
+    - TRIGGERS: when `source_effect` is present, and no instance of
+      `target_effect` already exists, synthesize one sourced from the
+      relationship (this is what lets Aggressive Horn "trigger" a support
+      effect that isn't otherwise on the bar).
+    - PROVIDES / REQUIRES: informational only here; a future evaluator
+      decides eligibility, this function does not filter effects out.
+
+    This is intentionally generic: no set/skill name is referenced by the
+    function itself, only by the relationship *data* a caller supplies.
+    """
+    resolved = list(effects)
+    present_names = {effect.name for effect in resolved}
+
+    for relationship in relationships:
+        if relationship.source_effect not in present_names:
+            continue
+
+        if relationship.relationship_type == EffectRelationshipType.EXTENDS_DURATION:
+            resolved = [
+                replace(
+                    effect,
+                    duration=(effect.duration or 0.0)
+                    + (relationship.magnitude_delta or 0.0),
+                )
+                if effect.name == relationship.target_effect
+                else effect
+                for effect in resolved
+            ]
+
+        elif (
+            relationship.relationship_type
+            == EffectRelationshipType.INCREASES_PROC_CHANCE
+        ):
+            resolved = [
+                replace(
+                    effect,
+                    chance=min(
+                        1.0,
+                        (effect.chance or 0.0)
+                        + (relationship.magnitude_delta or 0.0),
+                    ),
+                )
+                if effect.name == relationship.target_effect
+                else effect
+                for effect in resolved
+            ]
+
+        elif relationship.relationship_type == EffectRelationshipType.MODIFIES:
+            resolved = [
+                replace(
+                    effect,
+                    magnitude=(effect.magnitude or 0.0)
+                    + (relationship.magnitude_delta or 0.0),
+                )
+                if effect.name == relationship.target_effect
+                else effect
+                for effect in resolved
+            ]
+
+        elif relationship.relationship_type == EffectRelationshipType.TRIGGERS:
+            already_present = any(
+                effect.name == relationship.target_effect for effect in resolved
+            )
+            if not already_present:
+                from .effect_layer import EffectLayer
+
+                resolved.append(
+                    EffectVariant(
+                        name=relationship.target_effect,
+                        layer=EffectLayer.PROC,
+                        source=relationship.source_effect,
+                        magnitude=relationship.magnitude_delta,
+                        duration=relationship.duration,
+                        condition=relationship.condition,
+                        trigger=relationship.source_effect,
+                    )
+                )
+                present_names.add(relationship.target_effect)
+
+    return tuple(resolved)
+from __future__ import annotations
+
+from collections.abc import Iterable
+
+from .character_build import CharacterBuild
+from .effect_layer import BarId, EffectLayer
+from .effect_instance import EffectVariant
+from .passive_grant import PassiveGrant
+
+
+def resolve_available_effects(
+    build: CharacterBuild,
+    active_bar: BarId,
+    passives: Iterable[PassiveGrant] = (),
+) -> tuple[EffectVariant, ...]:
+    """
+    Determine exactly what effects are actually available to `build` while
+    `active_bar` is the currently active bar.
+
+    This is the answer to the goal stated for the whole model: given a
+    build and a moment (which bar is active), produce the concrete set of
+    EffectVariant instances in play - cast effects only from the active
+    bar's cast skills, slotted effects gated by whether they require bar
+    representation, gear/CP effects gated by their own bar requirement,
+    and passives gated by skill-line representation.
+
+    This does NOT resolve trigger-dependent ultimate results (see
+    `resolve_ultimate_cast_effects`) and does NOT apply effect
+    relationships (see `effect_relationship.apply_relationships`) -
+    callers compose those on top of this base set.
+    """
+    resolved: list[EffectVariant] = []
+
+    for bar in build.bars():
+        is_active_bar = bar.bar_id == active_bar
+
+        for slot in bar.slots:
+            for effect in slot.effects:
+                if effect.layer == EffectLayer.CAST:
+                    if is_active_bar and slot.is_cast and effect.is_available_on(
+                        active_bar
+                    ):
+                        resolved.append(effect)
+
+                elif effect.layer == EffectLayer.SLOTTED:
+                    bar_ok = is_active_bar if slot.requires_active_bar else True
+                    if bar_ok and effect.is_available_on(active_bar):
+                        resolved.append(effect)
+
+                elif effect.layer == EffectLayer.ULTIMATE:
+                    # Ultimate-layer effects are only ever produced by an
+                    # actual cast, resolved separately in
+                    # resolve_ultimate_cast_effects - never picked up here,
+                    # even if the same ultimate is slotted on both bars.
+                    continue
+
+                else:
+                    # PASSIVE/PROC attached directly to a skill.
+                    if effect.is_available_on(active_bar):
+                        resolved.append(effect)
+
+        if is_active_bar:
+            for weapon in (bar.main_hand, bar.off_hand):
+                if weapon is None:
+                    continue
+                for effect in weapon.effects:
+                    if effect.is_available_on(active_bar):
+                        resolved.append(effect)
+
+    for piece in build.all_armor_pieces():
+        for effect in piece.effects:
+            if effect.is_available_on(active_bar):
+                resolved.append(effect)
+
+    for allocation in build.champion_points:
+        for effect in allocation.effects:
+            if effect.is_available_on(active_bar):
+                resolved.append(effect)
+
+    for grant in passives:
+        if _skill_line_represented(build, grant, active_bar):
+            if grant.effect.is_available_on(active_bar):
+                resolved.append(grant.effect)
+
+    return tuple(resolved)
+
+
+def resolve_ultimate_cast_effects(
+    build: CharacterBuild,
+    cast_from_bar: BarId,
+    trigger: str | None = None,
+) -> tuple[EffectVariant, ...]:
+    """
+    Determine the effects produced by casting `build`'s ultimate from a
+    specific bar, optionally under a named trigger condition.
+
+    An ultimate's result depends on which bar it is cast from and what
+    gear context is active on that bar - this never treats "ultimate" as
+    a single static effect. Each candidate EffectVariant on the ultimate
+    slot is included only if its own `active_bar`/`trigger` requirements
+    match the cast context supplied here.
+    """
+    bar = next(
+        (candidate for candidate in build.bars() if candidate.bar_id == cast_from_bar),
+        None,
+    )
+    if bar is None:
+        return ()
+
+    ultimate_slot = bar.ultimate
+    if ultimate_slot is None:
+        return ()
+
+    resolved: list[EffectVariant] = []
+    for effect in ultimate_slot.effects:
+        if not effect.is_available_on(cast_from_bar):
+            continue
+        if effect.trigger is not None and effect.trigger != trigger:
+            continue
+        resolved.append(effect)
+
+    return tuple(resolved)
+
+
+def _skill_line_represented(
+    build: CharacterBuild,
+    grant: PassiveGrant,
+    active_bar: BarId,
+) -> bool:
+    for bar in build.bars():
+        for slot in bar.slots:
+            if slot.skill_line_id != grant.skill_line_id:
+                continue
+
+            if grant.requires_active_bar_representation:
+                if bar.bar_id == active_bar:
+                    return True
+            else:
+                return True
+
+    return False
+from __future__ import annotations
+
+from collections.abc import Iterable
+
+from ..build import Build as LegacyBuild
+from ..build_support_effect_service import BuildSupportEffectService
+from ..role import Role
+from ..support_effect import SupportEffect
+from ..support_effect_category import SupportEffectCategory
+from ..support_effect_registry import SupportEffectRegistry
+from ..support_effect_trigger import SupportEffectTrigger
+from ..support_stacking import StackingBehavior
+from ..support_target_type import SupportTargetType
+from .bar import Bar
+from .character_build import CharacterBuild, IllegalBuildError
+from .effect_availability import (
+    resolve_available_effects,
+    resolve_ultimate_cast_effects,
+)
+from .effect_instance import EffectVariant
+from .effect_layer import BarId
+from .effect_relationship import EffectRelationship, apply_relationships
+from .passive_grant import PassiveGrant
+
+
+def effect_variant_to_support_effect(
+    effect: EffectVariant,
+    *,
+    role_relevance: frozenset[Role] = frozenset(),
+) -> SupportEffect:
+    """
+    Convert one resolved EffectVariant into a SupportEffect, preserving
+    every field SupportEffect can represent instead of collapsing it.
+
+    An EffectVariant with no `target_type` set is treated as SELF, never
+    guessed to be group support - see requirement 7 (support vs personal).
+    """
+    trigger: SupportEffectTrigger | None = None
+    if effect.trigger is not None:
+        trigger = SupportEffectTrigger(
+            trigger=effect.trigger,
+            chance=effect.chance if effect.chance is not None else 1.0,
+            condition=effect.condition,
+            resulting_effect=effect.name,
+        )
+
+    conditions: tuple[str, ...] = ()
+    if effect.condition is not None and trigger is None:
+        # Only surface `condition` via SupportEffect.conditions when it
+        # isn't already carried by a SupportEffectTrigger, to avoid
+        # representing the same piece of data twice.
+        conditions = (effect.condition,)
+
+    return SupportEffect(
+        source=effect.source,
+        name=effect.name,
+        category=effect.category or SupportEffectCategory.OTHER,
+        effect_type=effect.name,
+        target_type=effect.target_type or SupportTargetType.SELF,
+        magnitude=effect.magnitude or 0.0,
+        target_count=effect.target_count,
+        duration=effect.duration,
+        stacking=effect.stacking or StackingBehavior.UNIQUE,
+        exclusivity_group=effect.exclusivity_group,
+        conditions=conditions,
+        trigger=trigger,
+        role_relevance=role_relevance,
+    )
+
+
+def resolve_effect_variants(
+    build: CharacterBuild,
+    active_bar: BarId,
+    *,
+    passives: Iterable[PassiveGrant] = (),
+    relationships: Iterable[EffectRelationship] = (),
+    ultimate_trigger: str | None = None,
+) -> tuple[EffectVariant, ...]:
+    """
+    Resolve every EffectVariant `build` actually provides while
+    `active_bar` is active - cast/slotted/passive/proc effects, the
+    active bar's ultimate result, and any generic relationship
+    modifications/triggers layered on top.
+
+    Raises IllegalBuildError if `build` fails its own hard-constraint
+    validation - effect resolution must respect the character's actual
+    build constraints, not resolve effects for an impossible build.
+    """
+    violations = build.validate()
+    if violations:
+        raise IllegalBuildError(violations)
+
+    base_effects = resolve_available_effects(build, active_bar, passives)
+    ultimate_effects = resolve_ultimate_cast_effects(
+        build, active_bar, trigger=ultimate_trigger
+    )
+
+    return apply_relationships(base_effects + ultimate_effects, relationships)
+
+
+def _legacy_build_for_bar_weapons(bar: Bar | None) -> LegacyBuild:
+    """
+    Build a throwaway legacy `minmax.build.Build` containing only the
+    given bar's enchanted weapons, so the existing DB-backed
+    BuildSupportEffectService pipeline can be reused as-is for weapon
+    enchantments, without modifying that legacy path at all.
+    """
+    legacy_build = LegacyBuild(name="character-build-bar-bridge")
+
+    if bar is None:
+        return legacy_build
+
+    for weapon in (bar.main_hand, bar.off_hand):
+        if weapon is None or weapon.enchantment_item_id is None:
+            continue
+
+        legacy_build.add_weapon(
+            enchantment_item_id=weapon.enchantment_item_id,
+            trait=weapon.trait,
+            quality=weapon.quality,
+        )
+
+    return legacy_build
+
+
+class CharacterBuildSupportEffectResolver:
+    """
+    Resolves a legal CharacterBuild into the full SupportEffectRegistry of
+    effects it can actually provide at a given moment (a specific active
+    bar).
+
+    This is a bridge, not a new source of truth: character-build-native
+    effects (cast/slotted/passive/proc/ultimate, already attached directly
+    to skills/weapons/gear/CP as EffectVariants) are resolved by
+    effect_availability.py; DB-backed weapon-enchantment effects are
+    resolved by reusing the existing BuildSupportEffectService pipeline
+    unchanged. Nothing here re-implements either.
+
+    Currently bridged DB-backed sources
+    ------------------------------------
+    - Weapon enchantments, via an injected BuildSupportEffectService,
+      scoped to the currently active bar's weapons only.
+
+    Not yet bridged (architecture ready, no source data/service to
+    connect to)
+    ------------------------------------------------------------------
+    - Gear sets: the existing GearSetEffectResolver only produces
+      generic self-stat Effects with no target information (documented
+      on BuildSupportEffectService itself), so a set's group-relevant
+      bonus (e.g. Major Courage) cannot yet be told apart from an
+      ordinary personal stat bonus via the database. CharacterBuild's own
+      ArmorPiece.effects can still carry hand-authored EffectVariants for
+      sets whose group effect is already known.
+    - Armor glyphs, race, Champion Points, mythic items: no repository or
+      service in this codebase resolves these into target-aware combat
+      effects yet. CharacterBuild.champion_points / .mythic /.armor can
+      still carry EffectVariants directly for anything already known.
+    """
+
+    def __init__(
+        self,
+        weapon_enchantment_support_service: BuildSupportEffectService | None = None,
+    ) -> None:
+        self.weapon_enchantment_support_service = weapon_enchantment_support_service
+
+    def resolve(
+        self,
+        build: CharacterBuild,
+        active_bar: BarId,
+        *,
+        passives: Iterable[PassiveGrant] = (),
+        relationships: Iterable[EffectRelationship] = (),
+        ultimate_trigger: str | None = None,
+        role_relevance: frozenset[Role] = frozenset(),
+    ) -> SupportEffectRegistry:
+        """
+        Resolve `build` into a SupportEffectRegistry containing every
+        effect it provides while `active_bar` is active - SELF, ALLY,
+        GROUP, and ENEMY effects alike. This resolver does not decide
+        what "counts" as group support; use SupportCoverage/
+        SupportEffectRegistry on the returned registry for that (e.g.
+        `.contributing_to_group()`).
+
+        Multiple providers of the same named effect (e.g. two sources of
+        "major_force") are preserved as separate SupportEffect entries -
+        this never merges them or sums their magnitudes.
+        """
+        effect_variants = resolve_effect_variants(
+            build,
+            active_bar,
+            passives=passives,
+            relationships=relationships,
+            ultimate_trigger=ultimate_trigger,
+        )
+
+        registry = SupportEffectRegistry()
+        for effect in effect_variants:
+            registry.add(
+                effect_variant_to_support_effect(
+                    effect, role_relevance=role_relevance
+                )
+            )
+
+        if self.weapon_enchantment_support_service is not None:
+            active_bar_obj = (
+                build.front_bar if active_bar == BarId.FRONT else build.back_bar
+            )
+            legacy_build = _legacy_build_for_bar_weapons(active_bar_obj)
+            enchantment_registry = self.weapon_enchantment_support_service.resolve(
+                legacy_build
+            )
+            for support_effect in enchantment_registry.all():
+                registry.add(support_effect)
+
+        return registry
+from __future__ import annotations
+
+import re
+
+from ..combat_effect_relationship_repository import CombatEffectInteractionRecord
+from .effect_relationship import EffectRelationship, EffectRelationshipType
+
+# Generic ESO-Wiki-wording -> EffectRelationshipType vocabulary. This maps
+# words the importer's raw_source data actually uses (see
+# importers/combat_effect_importer.py and importers/ability_combat_effect.py)
+# onto our relationship types. It is not specific to any named effect -
+# any interaction row using one of these words is mapped the same way.
+_INTERACTION_TYPE_MAP: dict[str, EffectRelationshipType] = {
+    "Applies": EffectRelationshipType.TRIGGERS,
+    "Grants": EffectRelationshipType.PROVIDES,
+    "Empowers": EffectRelationshipType.MODIFIES,
+    "Interacts": EffectRelationshipType.MODIFIES,
+}
+
+_NON_ALNUM = re.compile(r"[^a-z0-9]+")
+
+
+def to_effect_identity(display_name: str) -> str:
+    """
+    Convert an ESO-Hub/ESO-Wiki display name (e.g. "Major Brittle") into
+    this project's stable snake_case effect identity (e.g.
+    "major_brittle") - the same identity shape EffectVariant.name and
+    EffectRelationship use everywhere else. Purely mechanical: it knows
+    nothing about any specific effect name.
+    """
+    slug = _NON_ALNUM.sub("_", display_name.strip().lower()).strip("_")
+    return slug
+
+
+def interaction_record_to_relationship(
+    record: CombatEffectInteractionRecord,
+) -> EffectRelationship:
+    """
+    Convert one real CombatEffectInteractionRecord (source effect name ->
+    target effect name, from the `combat_effect_interaction` table) into
+    a generic EffectRelationship, preserving condition and magnitude.
+
+    This performs no lookup, invention, or classification beyond the
+    literal row content - it is a pure, generic shape conversion, reused
+    for every interaction row regardless of which named effects it
+    involves.
+    """
+    relationship_type = _INTERACTION_TYPE_MAP.get(
+        record.interaction_type, EffectRelationshipType.TRIGGERS
+    )
+
+    return EffectRelationship(
+        relationship_type=relationship_type,
+        source_effect=to_effect_identity(record.source_effect_name),
+        target_effect=to_effect_identity(record.target_name),
+        magnitude_delta=record.target_value,
+        duration=record.duration,
+        condition=record.condition,
+    )
+from enum import Enum
+
+
+class BarId(str, Enum):
+    """Which of the two weapon bars this refers to."""
+
+    FRONT = "front"
+    BACK = "back"
+
+
+class EffectLayer(str, Enum):
+    """
+    How an effect is produced, distinguishing mechanisms the ESO rules
+    treat very differently even when the resulting effect looks similar:
+
+    - CAST: only exists while the skill is actually cast/used.
+    - SLOTTED: exists purely from the skill occupying a bar slot, with no
+      cast required (e.g. a stat bonus from a slotted ability).
+    - PASSIVE: granted by a class/skill-line passive, contingent on the
+      skill line being owned and (sometimes) represented on the active bar.
+    - PROC: produced by a set/item/enchantment under a trigger condition.
+    - ULTIMATE: produced specifically by casting an ultimate ability.
+    """
+
+    CAST = "cast"
+    SLOTTED = "slotted"
+    PASSIVE = "passive"
+    PROC = "proc"
+    ULTIMATE = "ultimate"
+from __future__ import annotations
+
+import re
+
+from .effect_kinds import EffectKind
+from .effects import Effect, EffectOperation, EffectUnit
+from .gear_sets import GearSetBonus
+from .stat_ids import StatId
+
+
+class GearSetEffectResolver:
+    """Resolve unconditional, static gear-set bonuses into Effects.
+
+    Phase 1 intentionally handles only single-clause stat modifiers.
+    Triggered, conditional, proc, cooldown, scaling, and trade-off bonuses
+    return an empty list rather than being guessed at.
+    """
+
+    _COLOR_MARKUP = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+    _BONUS_PREFIX = re.compile(r"^\(\d+\s+items\)\s*", re.IGNORECASE)
+    _RANGE = r"(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)"
+    _NUMBER = r"(?P<value>\d+(?:\.\d+)?)"
+
+    _FLAT_STATS = {
+        "Maximum Health": StatId.MAX_HEALTH,
+        "Maximum Magicka": StatId.MAX_MAGICKA,
+        "Maximum Stamina": StatId.MAX_STAMINA,
+        "Health Recovery": StatId.HEALTH_RECOVERY,
+        "Magicka Recovery": StatId.MAGICKA_RECOVERY,
+        "Stamina Recovery": StatId.STAMINA_RECOVERY,
+        "Critical Chance": StatId.CRITICAL_CHANCE,
+        "Critical Resistance": StatId.CRITICAL_RESISTANCE,
+    }
+
+    def resolve(
+        self,
+        bonus: GearSetBonus,
+        *,
+        use_max_value: bool = True,
+        source: str | None = None,
+    ) -> list[Effect]:
+        description = bonus.description
+        if not description:
+            return []
+
+        text = self._clean_description(description)
+        if not text:
+            return []
+
+        source_text = source or f"Gear set bonus ({bonus.piece_count} items)"
+
+        # Combined flat stats.
+        combined = self._resolve_combined(text, source_text, use_max_value)
+        if combined:
+            return combined
+
+        # Single flat stat, range form.
+        for label, stat in self._FLAT_STATS.items():
+            match = re.fullmatch(
+                rf"Adds\s+{self._RANGE}\s+{re.escape(label)}",
+                text,
+                re.IGNORECASE,
+            )
+            if match:
+                value = self._selected_range_value(match, use_max_value)
+                return [self._effect(stat, value, source_text)]
+
+        # Single flat stat, scalar form.
+        for label, stat in self._FLAT_STATS.items():
+            match = re.fullmatch(
+                rf"Adds\s+{self._NUMBER}\s+{re.escape(label)}",
+                text,
+                re.IGNORECASE,
+            )
+            if match:
+                value = float(match.group("value"))
+                return [self._effect(stat, value, source_text)]
+
+        # Percent Healing Done / Healing Taken.
+        percent_patterns = (
+            (r"Adds\s+(?P<value>\d+(?:\.\d+)?)%\s+Healing Done", StatId.HEALING_DONE),
+            (r"Adds\s+(?P<value>\d+(?:\.\d+)?)%\s+Healing Taken", StatId.HEALING_TAKEN),
+            (
+                r"Increases your healing received by\s+(?P<value>\d+(?:\.\d+)?)%\.?",
+                StatId.HEALING_TAKEN,
+            ),
+        )
+        for pattern, stat in percent_patterns:
+            match = re.fullmatch(pattern, text, re.IGNORECASE)
+            if match:
+                value = float(match.group("value"))
+                return [self._effect(
+                    stat,
+                    value,
+                    source_text,
+                    operation=EffectOperation.ADD_PERCENT,
+                    unit=EffectUnit.PERCENT,
+                )]
+        # Conditional percentage effects.
+        # Phase 2B initially handles the explicit
+        # "Sneaking or Invisible" Archer's Mind pattern.
+        conditional = self._resolve_conditional_percentage(
+            text,
+            source_text,
+        )
+        if conditional:
+            return conditional
+        # Unconditional percentage stat increases. Phase 1 only accepts a
+        # single clause and therefore deliberately rejects anything with a
+        # qualifier, second sentence, or trade-off.
+        percent_stats = {
+            "Healing Done": StatId.HEALING_DONE,
+            "Healing Taken": StatId.HEALING_TAKEN,
+            "Critical Resistance": StatId.CRITICAL_RESISTANCE,
+        }
+        for label, stat in percent_stats.items():
+            match = re.fullmatch(
+                rf"Increases your\s+{re.escape(label)}\s+by\s+(?P<value>\d+(?:\.\d+)?)%",
+                text,
+                re.IGNORECASE,
+            )
+            if match:
+                return [self._effect(
+                    stat,
+                    float(match.group("value")),
+                    source_text,
+                    operation=EffectOperation.ADD_PERCENT,
+                    unit=EffectUnit.PERCENT,
+                )]
+
+        return []
+    
+    def _resolve_conditional_percentage(
+        self,
+        text: str,
+        source: str,
+    ) -> list[Effect]:
+        match = re.fullmatch(
+            r"Increases your Critical Damage and Healing by "
+            r"(?P<base>\d+(?:\.\d+)?)%\.\s*"
+            r"Increases your Critical Damage and Healing by an additional "
+            r"(?P<conditional>\d+(?:\.\d+)?)%\s+"
+            r"when you are Sneaking or Invisible\.",
+            text,
+            re.IGNORECASE,
+        )
+
+        if not match:
+            return []
+
+        base = float(match.group("base"))
+        conditional = float(match.group("conditional"))
+
+        return [
+            self._effect(
+                StatId.CRITICAL_DAMAGE,
+                base,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+            ),
+            self._effect(
+                StatId.HEALING_DONE,
+                base,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+            ),
+            self._effect(
+                StatId.CRITICAL_DAMAGE,
+                conditional,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+                condition="sneaking_or_invisible",
+            ),
+            self._effect(
+                StatId.HEALING_DONE,
+                conditional,
+                source,
+                operation=EffectOperation.ADD_PERCENT,
+                unit=EffectUnit.PERCENT,
+                condition="sneaking_or_invisible",
+            ),
+        ]
+    def _resolve_combined(
+        self,
+        text: str,
+        source: str,
+        use_max_value: bool,
+    ) -> list[Effect]:
+        combined = (
+            (
+                "Weapon and Spell Damage",
+                (StatId.WEAPON_DAMAGE, StatId.SPELL_DAMAGE),
+            ),
+            (
+                "Armor",
+                (StatId.PHYSICAL_RESISTANCE, StatId.SPELL_RESISTANCE),
+            ),
+            (
+                "Offensive Penetration",
+                (StatId.PHYSICAL_PENETRATION, StatId.SPELL_PENETRATION),
+            ),
+        )
+
+        for label, stats in combined:
+            match = re.fullmatch(
+                rf"Adds\s+{self._RANGE}\s+{re.escape(label)}",
+                text,
+                re.IGNORECASE,
+            )
+            if match:
+                value = self._selected_range_value(match, use_max_value)
+                return [
+                    self._effect(stat, value, source)
+                    for stat in stats
+                ]
+
+            match = re.fullmatch(
+                rf"Adds\s+{self._NUMBER}\s+{re.escape(label)}",
+                text,
+                re.IGNORECASE,
+            )
+            if match:
+                value = float(match.group("value"))
+                return [
+                    self._effect(stat, value, source)
+                    for stat in stats
+                ]
+
+        return []
+
+    @classmethod
+    def _clean_description(cls, description: str) -> str:
+        text = cls._COLOR_MARKUP.sub("", description).strip()
+        text = cls._BONUS_PREFIX.sub("", text).strip()
+        return text
+
+    @staticmethod
+    def _selected_range_value(match: re.Match[str], use_max_value: bool) -> float:
+        key = "max" if use_max_value else "min"
+        return float(match.group(key).replace(",", ""))
+
+    @staticmethod
+    def _effect(
+        stat: StatId,
+        value: float,
+        source: str,
+        *,
+        operation: EffectOperation = EffectOperation.ADD,
+        unit: EffectUnit = EffectUnit.FLAT,
+        condition: str | None = None,
+    ) -> Effect:
+        return Effect(
+            operation=operation,
+            value=value,
+            source=source,
+            stat=stat,
+            kind=EffectKind.STAT,
+            unit=unit,
+            condition=condition,
+        )
+from dataclasses import dataclass
+
+from .role import Role
+
+
+@dataclass(frozen=True)
+class GroupEffect:
+    source: str
+    effect_type: str
+    value: float
+    affected_roles: frozenset[Role]
+    affects_source: bool = True
+    uptime: float = 1.0

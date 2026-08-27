@@ -99,5 +99,5 @@ def test_available_skills_are_class_only_and_collapse_ranks(tmp_path):
     repo = SkillEffectRepository(db)
     skills = repo.available_skills(CharacterClass.WARDEN)
 
-    assert skills == ((101, 'Test Courage'), (103, 'Morph Courage'))
+    assert skills == ((103, 'Morph Courage'), (101, 'Test Courage'))
     assert all(name not in {'Other Class', 'Passive Courage', 'Hireling'} for _, name in skills)

@@ -1,86 +1,155 @@
 {
   "Members": [
     {
-      "Name": "Jarakeen",
-      "Gamertag": "Magrat",
+      "Name": "Magrat",
+      "Gamertag": "Jarakeen",
+      "BuildName": "DF Healer",
       "ImagePath": "C:/Users/nourg/Downloads/Avatar.png",
       "Race": "Breton",
       "EsoClass": "Warden",
+      "Role": "Healer",
+      "Alliance": "Daggerfall Covenant",
+      "Vampire": false,
+      "Werewolf": false,
       "Armor": {
         "Head": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Ozezan the Inferno",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Medium",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Splendid",
+          "Level": "CP160"
         },
         "Shoulders": {
           "Set": "Spaulder of Ruin",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
         },
         "Chest": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
-        },
-        "Legs": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Spell Power Cure",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
         },
         "Hands": {
           "Set": "Spell Power Cure",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
         },
         "Waist": {
           "Set": "Spell Power Cure",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
+        },
+        "Legs": {
+          "Set": "Spell Power Cure",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
         },
         "Feet": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Spell Power Cure",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160"
         }
       },
       "FrontBarWeapon": {
         "Set": "Master Architect",
         "Trait": "Powered",
-        "Enchant": "crusher",
-        "Weight": ""
+        "Enchant": "Crushing",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160"
       },
       "BackBarWeapon": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "weapon power",
-        "Weight": ""
+        "Enchant": "Weapon Damage",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160"
       },
       "Necklace": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "spell power",
-        "Weight": ""
+        "Enchant": "Spell Damage",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160"
       },
       "Ring1": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "spell power",
-        "Weight": ""
+        "Enchant": "Spell Damage",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160"
       },
       "Ring2": {
-        "Set": "",
-        "Trait": "",
-        "Enchant": "",
-        "Weight": ""
+        "Set": "Master Architect",
+        "Trait": "Infused",
+        "Enchant": "Spell Damage",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160"
       },
       "ChampionPoints": [
+        {
+          "Name": "Rationer",
+          "Points": "30"
+        },
+        {
+          "Name": "Breakfall",
+          "Points": "50"
+        },
+        {
+          "Name": "Liquid Efficiency",
+          "Points": "50"
+        },
+        {
+          "Name": "Fortune's Favor",
+          "Points": "50"
+        },
         {
           "Name": "Swift Renewal",
           "Points": "50"
@@ -107,47 +176,186 @@
         },
         {
           "Name": "Rejuvenation",
-          "Points": "50"
+          "Points": "56"
         },
         {
-          "Name": "Expert Evasion",
-          "Points": "50"
-        },
-        {
-          "Name": "Rationer",
-          "Points": "30"
-        },
-        {
-          "Name": "Breakfall",
-          "Points": "50"
-        },
-        {
-          "Name": "Liquid Efficiency",
-          "Points": "50"
-        },
-        {
-          "Name": "Professional Upkeep",
+          "Name": "Boundless Vitality",
           "Points": "50"
         }
       ],
       "FrontBarSkills": [
-        "Caltrops",
-        "Wall of Elements",
-        "Low Slash",
-        "Defensive Posture",
-        "Impulse",
-        "Secluded Grove"
+        "Healing Seed",
+        "Regeneration",
+        "Blessing of Protection",
+        "Grand Healing",
+        "Necrotic Orb",
+        "Feral Guardian"
       ],
       "BackBarSkills": [
-        "Pounce",
-        "Betty Netch",
-        "Bone Shield",
+        "Wall of Elements",
+        "Vigor",
+        "Weakness to Elements",
         "Frost Cloak",
-        "Circle of Protection",
+        "Blood Altar",
         "War Horn"
       ],
       "Food": "clockwork citrus",
       "Potion": "spell power",
+      "Notes": "",
+      "BossLoadouts": []
+    },
+    {
+      "Name": "",
+      "Gamertag": "",
+      "BuildName": "",
+      "ImagePath": "",
+      "Race": "",
+      "EsoClass": "",
+      "Role": "",
+      "Alliance": "",
+      "Vampire": false,
+      "Werewolf": false,
+      "Armor": {
+        "Head": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Shoulders": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Chest": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Hands": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Waist": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Legs": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Feet": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        }
+      },
+      "FrontBarWeapon": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": ""
+      },
+      "BackBarWeapon": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": ""
+      },
+      "Necklace": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": ""
+      },
+      "Ring1": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": ""
+      },
+      "Ring2": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": ""
+      },
+      "ChampionPoints": [],
+      "FrontBarSkills": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "BackBarSkills": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Food": "",
+      "Potion": "",
       "Notes": "",
       "BossLoadouts": []
     }

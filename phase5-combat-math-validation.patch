@@ -1,0 +1,901 @@
+diff --git a/minmax/skill_combat_damage.py b/minmax/skill_combat_damage.py
+new file mode 100644
+index 0000000..00a2889
+--- /dev/null
++++ b/minmax/skill_combat_damage.py
+@@ -0,0 +1,95 @@
++from __future__ import annotations
++
++from dataclasses import dataclass
++
++from .dd_damage import (
++    DDDamageEvent,
++    DDDamageResult,
++    calculate_dd_damage,
++)
++from .dd_mitigation import DDMitigationResult
++from .dd_stat_evaluation import DDStatEvaluation
++from .skill_damage import SkillDamageResult
++
++
++@dataclass(frozen=True)
++class SkillCombatDamageResult:
++    """
++    Final, explainable combat damage for one skill rank.
++
++    Carries the database-backed raw skill damage alongside the
++    fully resolved ``DDDamageResult`` so callers (and, eventually,
++    the Optimization UI) can explain a recommendation in terms of
++    each stage of the pipeline: raw skill damage -> expected damage
++    (crit) -> mitigated damage (penetration/resistance).
++    """
++
++    skill_rank_id: int
++    damage_type: str | None
++    raw_skill_damage: float
++    damage: DDDamageResult
++
++
++def calculate_skill_combat_damage(
++    skill_damage: SkillDamageResult,
++    stats: DDStatEvaluation,
++    *,
++    damage_type: str | None = None,
++    can_crit: bool = True,
++    mitigation: DDMitigationResult | None = None,
++) -> SkillCombatDamageResult:
++    """
++    Connect database-backed skill damage to the DD combat-math layer.
++
++    This is the missing link in the pipeline described by Phase 5:
++
++        skill/morph
++        -> database coefficient          (minmax.skill_coefficient)
++        -> character scaling stats
++        -> raw component value           (minmax.skill_damage)
++        -> applicable modifiers (crit)   (minmax.dd_damage)
++        -> target mitigation             (minmax.dd_mitigation)
++        -> final result
++
++    ``SkillDamageService.evaluate`` already scales every active
++    coefficient by the caller-supplied max-stat/power (see
++    ``evaluate_skill_coefficient``), so ``skill_damage.total_raw_damage``
++    is a fully-scaled value, not a base tooltip value awaiting a
++    scaling coefficient. It is therefore passed to ``DDDamageEvent``
++    as ``base_value`` with ``scaling_coefficient=0.0`` -- reusing
++    ``calculate_dd_damage``'s own offensive-power scaling here would
++    double-apply weapon/spell damage on top of what the database
++    coefficient already scaled.
++
++    ``damage_type`` still selects which offensive/penetration stat
++    pairing (weapon vs. spell) applies for crit-stat bookkeeping and
++    which penetration figure feeds ``mitigation``, via
++    ``minmax.dd_damage_profile``. Passing ``damage_type=None`` mirrors
++    ``dd_damage``'s own "combined offensive power" fallback and should
++    only be used when the skill's true damage type is not yet known.
++    """
++
++    if skill_damage.total_raw_damage < 0:
++        raise ValueError(
++            "Skill raw damage cannot be negative."
++        )
++
++    event = DDDamageEvent(
++        base_value=skill_damage.total_raw_damage,
++        scaling_coefficient=0.0,
++        damage_type=damage_type,
++        can_crit=can_crit,
++    )
++
++    damage = calculate_dd_damage(
++        event,
++        stats,
++        mitigation=mitigation,
++    )
++
++    return SkillCombatDamageResult(
++        skill_rank_id=skill_damage.skill_rank_id,
++        damage_type=damage_type,
++        raw_skill_damage=skill_damage.total_raw_damage,
++        damage=damage,
++    )
+diff --git a/minmax/tests/test_phase5_combat_math_validation.py b/minmax/tests/test_phase5_combat_math_validation.py
+new file mode 100644
+index 0000000..6cc7d15
+--- /dev/null
++++ b/minmax/tests/test_phase5_combat_math_validation.py
+@@ -0,0 +1,436 @@
++"""Phase 5 combat-math validation suite.
++
++This is a *validation* pass, not a new combat system. It exercises the
++existing, already-implemented pipeline end to end:
++
++    database skill/morph coefficient
++        -> SkillCoefficientService / SkillDamageService   (minmax.skill_damage)
++        -> SkillDamageResult
++        -> calculate_skill_combat_damage                  (minmax.skill_combat_damage)
++        -> DDStatEvaluation (crit chance/damage, effective penetration)
++        -> calculate_dd_damage                             (minmax.dd_damage)
++        -> calculate_dd_mitigation                         (minmax.dd_mitigation)
++        -> final SkillCombatDamageResult
++
++No new production module is introduced by this file. Where a requested
++scenario (Damage Done modifier, Damage Taken modifier) has no wired
++implementation yet, the test documents that fact rather than inventing
++behavior — see the "gap-pinning" tests at the bottom.
++"""
++
++import sqlite3
++
++import pytest
++
++from services.eso_database import EsoDatabase
++
++from minmax.calculation import CalculationResult, StatBreakdown
++from minmax.evaluation_context import EvaluationContext
++from minmax.dd_stat_evaluation import evaluate_dd_stats
++from minmax.dd_mitigation import calculate_dd_mitigation
++from minmax.dd_damage import DDDamageResult
++from minmax.skill_coefficient_service import SkillCoefficientService
++from minmax.skill_damage import SkillDamageService, SkillDamageResult
++from minmax.skill_combat_damage import (
++    SkillCombatDamageResult,
++    calculate_skill_combat_damage,
++)
++
++
++# ---------------------------------------------------------------------------
++# Shared helpers
++# ---------------------------------------------------------------------------
++
++
++def make_calculation(**values) -> CalculationResult:
++    """Build a CalculationResult the same way test_dd_stat_evaluation.py does."""
++    stats = {
++        key: StatBreakdown(base=value)
++        for key, value in values.items()
++    }
++    return CalculationResult(stats=stats)
++
++
++BASE_HERO_SKILL_ID = 4410
++MORPH_A_SKILL_ID = 4411
++MORPH_B_SKILL_ID = 4412
++
++
++def create_coefficient_database(path):
++    """
++    Seed a throwaway sqlite DB with three distinct skill_rank_ids sharing
++    the shape of a base skill + two morphs, each with different a/b/c
++    coefficients -- the way real ESO base-skill/morph rows differ in
++    the production eso.db.
++    """
++    connection = sqlite3.connect(path)
++
++    connection.execute(
++        """
++        CREATE TABLE skill_coefficient (
++            id INTEGER PRIMARY KEY AUTOINCREMENT,
++            skill_rank_id INTEGER NOT NULL,
++            coefficient_number INTEGER NOT NULL,
++            type TEXT,
++            a REAL,
++            b REAL,
++            c REAL,
++            r REAL,
++            avg REAL
++        )
++        """
++    )
++
++    connection.executemany(
++        """
++        INSERT INTO skill_coefficient (
++            skill_rank_id, coefficient_number, type, a, b, c, r, avg
++        )
++        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
++        """,
++        [
++            # Base skill: single coefficient component.
++            (BASE_HERO_SKILL_ID, 1, "8", 0.10, 1.50, 0.0, 1.0, None),
++            # Morph A: coefficients deliberately different from the base
++            # skill (higher scaling per weapon/spell damage).
++            (MORPH_A_SKILL_ID, 1, "8", 0.10, 2.00, 0.0, 1.0, None),
++            # Morph B: different again, and a disabled second component
++            # (type "-1") that must be excluded from the total, mirroring
++            # SkillDamageService's real filtering behavior.
++            (MORPH_B_SKILL_ID, 1, "8", 0.15, 1.50, 100.0, 1.0, None),
++            (MORPH_B_SKILL_ID, 2, "-1", -1.0, -1.0, -1.0, -1.0, None),
++        ],
++    )
++
++    connection.commit()
++    connection.close()
++
++
++@pytest.fixture
++def coefficient_service(tmp_path):
++    database_path = tmp_path / "eso.db"
++    create_coefficient_database(database_path)
++    database = EsoDatabase(database_path)
++    yield SkillCoefficientService(database)
++    database.close()
++
++
++@pytest.fixture
++def skill_damage_service(coefficient_service):
++    return SkillDamageService(coefficient_service)
++
++
++def resolve_skill_damage(
++    skill_damage_service,
++    skill_rank_id,
++    *,
++    max_stat=30000.0,
++    power=6000.0,
++) -> SkillDamageResult:
++    return skill_damage_service.evaluate(
++        skill_rank_id,
++        max_stat=max_stat,
++        power=power,
++    )
++
++
++# ---------------------------------------------------------------------------
++# Stage 1 (independent): coefficient resolution differs between morphs
++# ---------------------------------------------------------------------------
++
++
++def test_morph_coefficient_differs_from_base_skill(skill_damage_service):
++    """
++    A database-backed morph whose coefficient differs from its base skill
++    must resolve to a different total_raw_damage, even given identical
++    character stats. This proves coefficient resolution is genuinely
++    per-skill-rank-id, not a shared/cached formula.
++    """
++    base = resolve_skill_damage(skill_damage_service, BASE_HERO_SKILL_ID)
++    morph_a = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++    morph_b = resolve_skill_damage(skill_damage_service, MORPH_B_SKILL_ID)
++
++    expected_base = 0.10 * 30000 + 1.50 * 6000 + 0.0
++    expected_morph_a = 0.10 * 30000 + 2.00 * 6000 + 0.0
++    expected_morph_b = 0.15 * 30000 + 1.50 * 6000 + 100.0
++
++    assert base.total_raw_damage == pytest.approx(expected_base)
++    assert morph_a.total_raw_damage == pytest.approx(expected_morph_a)
++    assert morph_b.total_raw_damage == pytest.approx(expected_morph_b)
++
++    # The whole point of a morph: distinct output for the same inputs.
++    assert base.total_raw_damage != morph_a.total_raw_damage
++    assert morph_a.total_raw_damage != morph_b.total_raw_damage
++
++
++def test_morph_disabled_component_is_excluded(skill_damage_service):
++    """Morph B has a type '-1' (disabled) second component that must not
++    contribute to total_raw_damage."""
++    morph_b = resolve_skill_damage(skill_damage_service, MORPH_B_SKILL_ID)
++
++    assert len(morph_b.components) == 1
++    assert morph_b.components[0].coefficient_number == 1
++
++
++# ---------------------------------------------------------------------------
++# Full chain: database skill -> final mitigated damage
++# ---------------------------------------------------------------------------
++
++
++def test_full_chain_non_critical(skill_damage_service):
++    """
++    Analytical lower bound: critical_chance = 0 means the expected-damage
++    stage contributes nothing beyond the raw scaled skill damage. This is
++    the deterministic equivalent of "a hit that does not crit" for an
++    engine that computes expected values rather than rolling dice.
++    """
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        physical_penetration=0,
++        spell_penetration=0,
++        critical_chance=0,
++        critical_damage=125,
++    )
++    stats = evaluate_dd_stats(calculation, EvaluationContext())
++
++    result = calculate_skill_combat_damage(skill_damage, stats)
++
++    assert isinstance(result, SkillCombatDamageResult)
++    assert result.damage.critical_chance == 0.0
++    assert result.damage.expected_damage == pytest.approx(
++        skill_damage.total_raw_damage
++    )
++    assert result.damage.mitigated_damage == pytest.approx(
++        skill_damage.total_raw_damage
++    )
++
++
++def test_full_chain_critical(skill_damage_service):
++    """
++    Analytical upper bound: critical_chance = 100(%) means every point of
++    critical_damage is fully realized in expected_damage. This is the
++    deterministic equivalent of "a hit that always crits."
++    """
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        critical_chance=100,
++        critical_damage=50,
++    )
++    stats = evaluate_dd_stats(calculation, EvaluationContext())
++
++    result = calculate_skill_combat_damage(skill_damage, stats)
++
++    expected = skill_damage.total_raw_damage * 1.5
++    assert result.damage.expected_damage == pytest.approx(expected)
++
++
++def test_full_chain_zero_penetration(skill_damage_service):
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        physical_penetration=0,
++    )
++    stats = evaluate_dd_stats(
++        calculation,
++        EvaluationContext(target_resistance=18200),
++    )
++
++    mitigation = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=stats.effective_physical_penetration,
++    )
++
++    result = calculate_skill_combat_damage(
++        skill_damage,
++        stats,
++        damage_type="physical",
++        mitigation=mitigation,
++    )
++
++    assert stats.physical_overpenetration == 0.0
++    assert mitigation.mitigation_fraction == pytest.approx(0.364)
++    assert result.damage.mitigation_multiplier == pytest.approx(0.636)
++
++
++def test_full_chain_partial_penetration(skill_damage_service):
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        physical_penetration=9100,  # exactly half of 18200
++    )
++    stats = evaluate_dd_stats(
++        calculation,
++        EvaluationContext(target_resistance=18200),
++    )
++
++    mitigation = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=stats.effective_physical_penetration,
++    )
++
++    result = calculate_skill_combat_damage(
++        skill_damage,
++        stats,
++        damage_type="physical",
++        mitigation=mitigation,
++    )
++
++    assert stats.physical_overpenetration == 0.0
++    assert mitigation.remaining_resistance == pytest.approx(9100)
++    assert mitigation.mitigation_fraction == pytest.approx(0.182)
++    assert result.damage.mitigation_multiplier == pytest.approx(0.818)
++
++
++def test_full_chain_penetration_reaches_target_resistance(skill_damage_service):
++    """Penetration exactly equal to target resistance must fully remove
++    mitigation (multiplier == 1.0), with zero overpenetration reported --
++    this is the boundary between "capped" and "wasted" penetration."""
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        physical_penetration=18200,
++    )
++    stats = evaluate_dd_stats(
++        calculation,
++        EvaluationContext(target_resistance=18200),
++    )
++
++    mitigation = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=stats.effective_physical_penetration,
++    )
++
++    result = calculate_skill_combat_damage(
++        skill_damage,
++        stats,
++        damage_type="physical",
++        mitigation=mitigation,
++    )
++
++    assert stats.physical_overpenetration == 0.0
++    assert mitigation.remaining_resistance == 0.0
++    assert mitigation.mitigation_fraction == 0.0
++    assert result.damage.mitigation_multiplier == 1.0
++    assert result.damage.mitigated_damage == pytest.approx(
++        result.damage.expected_damage
++    )
++
++
++def test_full_chain_overpenetration(skill_damage_service):
++    """Penetration beyond target resistance must be reported as
++    overpenetration (wasted stat budget) and must not push the mitigation
++    multiplier above 1.0 (i.e. it cannot create bonus damage)."""
++    skill_damage = resolve_skill_damage(skill_damage_service, MORPH_A_SKILL_ID)
++
++    calculation = make_calculation(
++        weapon_damage=3000,
++        spell_damage=3000,
++        physical_penetration=20000,  # 1800 over an 18200 target
++    )
++    stats = evaluate_dd_stats(
++        calculation,
++        EvaluationContext(target_resistance=18200),
++    )
++
++    mitigation = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=stats.effective_physical_penetration,
++    )
++
++    result = calculate_skill_combat_damage(
++        skill_damage,
++        stats,
++        damage_type="physical",
++        mitigation=mitigation,
++    )
++
++    assert stats.physical_overpenetration == 1800.0
++    assert stats.effective_physical_penetration == 18200.0
++    assert mitigation.mitigation_fraction == 0.0
++    assert result.damage.mitigation_multiplier == 1.0
++
++
++# ---------------------------------------------------------------------------
++# Damage Done / Damage Taken modifiers
++#
++# These formulas exist in the UESP reference (equations.py: DamageDone,
++# MagicDamageDone, PhysicalDamageDone, DamageTaken, ...) and their pure
++# Python translations exist (minmax/formulas/resolved_modifiers.py,
++# minmax/formulas/mitigations.py) -- but neither DDStatEvaluation nor
++# calculate_dd_damage nor calculate_skill_combat_damage currently accepts
++# or applies them. There is no StatId.DAMAGE_DONE / StatId.DAMAGE_TAKEN,
++# and EvaluationContext has no damage-taken-style field for the target.
++#
++# Per this task's instruction not to refactor existing math without a
++# demonstrated defect, these tests document current behavior rather than
++# adding new plumbing:
++#   - the one lever that DOES currently exist for "more damage done"
++#     (raising weapon_damage/spell_damage pre-crit) does flow through
++#     correctly end to end;
++#   - there is no dedicated post-crit multiplicative Damage Done/Taken
++#     stage, and this is pinned explicitly so a future change to add one
++#     is a conscious, visible edit to this test.
++# ---------------------------------------------------------------------------
++
++
++def test_current_damage_done_lever_is_pre_crit_offensive_power(
++    skill_damage_service,
++):
++    """
++    The only currently-wired way to represent a flat "more damage done"
++    style bonus is to raise the offensive power stat (weapon_damage /
++    spell_damage) that feeds SkillDamageService's `power` argument, since
++    that is what SkillCoefficientResult scales by. This test proves that
++    lever works proportionally, as a baseline for comparison against a
++    real Damage Done stage once one exists.
++    """
++    baseline = skill_damage_service.evaluate(
++        MORPH_A_SKILL_ID,
++        max_stat=30000,
++        power=6000,
++    )
++    boosted = skill_damage_service.evaluate(
++        MORPH_A_SKILL_ID,
++        max_stat=30000,
++        power=6600,  # +10% offensive power, standing in for "+10% damage done"
++    )
++
++    stats = evaluate_dd_stats(
++        make_calculation(weapon_damage=6000, spell_damage=0),
++        EvaluationContext(),
++    )
++
++    baseline_result = calculate_skill_combat_damage(baseline, stats)
++    boosted_result = calculate_skill_combat_damage(boosted, stats)
++
++    assert boosted_result.damage.expected_damage > baseline_result.damage.expected_damage
++
++
++def test_damage_done_and_damage_taken_have_no_dedicated_stage():
++    """
++    Gap-pinning test: DDDamageResult and DDStatEvaluation currently expose
++    no Damage Done / Damage Taken fields, and EvaluationContext has no
++    target-side damage-taken field. If this ever changes, this test
++    should be updated deliberately -- it is not meant to pass silently
++    through an unrelated refactor.
++    """
++    damage_fields = set(DDDamageResult.__dataclass_fields__)
++    assert "damage_done" not in damage_fields
++    assert "damage_taken" not in damage_fields
++    assert "cp_magic_damage_done" not in damage_fields
++
++    context_fields = set(EvaluationContext.__dataclass_fields__)
++    assert "damage_taken" not in context_fields
++    assert "target_damage_taken" not in context_fields
+diff --git a/minmax/tests/test_phase5_external_reference_validation.py b/minmax/tests/test_phase5_external_reference_validation.py
+new file mode 100644
+index 0000000..7cc5fee
+--- /dev/null
++++ b/minmax/tests/test_phase5_external_reference_validation.py
+@@ -0,0 +1,202 @@
++"""External reference validation for the Phase 5 combat-math foundation.
++
++Per the task instructions, this uses the ESO reference material already
++supplied to this project -- ``minmax/equations.py``, which the codebase
++itself documents as "Source of truth" for the UESP formula translations
++in ``minmax/formulas/`` -- as a validation reference only.
++
++The functions below are independent, literal, minimal re-implementations
++of specific ``equations.py`` formula lines (transcribed directly from the
++comments/text in that file, not imported from any BFF module), used only
++to check BFF's *existing* ``dd_mitigation`` / ``dd_damage`` output under
++equivalent assumptions. Nothing here is imported by, or copied into,
++BFF's production code, and no third-party calculator's specific numeric
++outputs are hard-coded into BFF itself.
++
++Where BFF and the reference formula diverge, the divergence is asserted
++explicitly (not silently tolerated) and explained in the docstring, per
++the "identify -> document -> only change BFF if BFF is wrong" instruction.
++"""
++
++import pytest
++
++from minmax.dd_mitigation import calculate_dd_mitigation
++
++
++# ---------------------------------------------------------------------------
++# Reference formulas, transcribed directly from minmax/equations.py.
++#
++#   AttackPhysicalMitigation =
++#   (((min(33000, Target.PhysicalResist) + Target.PhysicalDebuff)
++#     * (1 - Skill2.PhysicalPenetration) - PhysicalPenetration)
++#    * (-1 / (Target.EffectiveLevel * 1000)) + 1)
++#   * (1 - Target.DefenseBonus) * (-1) + 1
++#
++#   AttackSpellCritDamage = SpellCritDamage - (Target.CritResist)*(0.035/250)
++# ---------------------------------------------------------------------------
++
++
++def reference_attack_physical_mitigation(
++    *,
++    target_physical_resist: float,
++    penetration: float,
++    target_physical_debuff: float = 0.0,
++    skill2_physical_penetration: float = 0.0,
++    target_effective_level: float = 50.0,
++    target_defense_bonus: float = 0.0,
++    resist_cap: float = 33000.0,
++) -> float:
++    net_resistance = (
++        (min(resist_cap, target_physical_resist) + target_physical_debuff)
++        * (1 - skill2_physical_penetration)
++        - penetration
++    )
++    term = net_resistance * (-1.0 / (target_effective_level * 1000.0)) + 1.0
++    return term * (1 - target_defense_bonus) * (-1.0) + 1.0
++
++
++def reference_attack_spell_crit_damage(
++    *,
++    spell_crit_damage: float,
++    target_crit_resist: float,
++) -> float:
++    return spell_crit_damage - target_crit_resist * (0.035 / 250.0)
++
++
++# ---------------------------------------------------------------------------
++# 1. Mitigation stage: BFF's calculate_dd_mitigation vs. the reference
++#    AttackPhysicalMitigation formula.
++#
++# equations.py fixes the standard endgame assumptions BFF's dd_mitigation
++# module also implicitly assumes: Target.EffectiveLevel = 50 (max-level
++# PvE content), Target.DefenseBonus = 0, no active penetration-resisting
++# Skill2 modifier, no flat physical debuff. Under those assumptions the
++# reference formula's damage multiplier is (1 - AttackPhysicalMitigation),
++# which should equal BFF's damage_multiplier exactly, because both reduce
++# to the same "remaining_resistance / 50000" fraction.
++# ---------------------------------------------------------------------------
++
++
++def test_mitigation_matches_reference_formula_at_zero_penetration():
++    reference_mitigation = reference_attack_physical_mitigation(
++        target_physical_resist=18200,
++        penetration=0,
++    )
++    reference_damage_multiplier = 1 - reference_mitigation
++
++    bff = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=0,
++    )
++
++    assert bff.damage_multiplier == pytest.approx(reference_damage_multiplier)
++
++
++def test_mitigation_matches_reference_formula_at_partial_penetration():
++    penetration = 9100
++
++    reference_mitigation = reference_attack_physical_mitigation(
++        target_physical_resist=18200,
++        penetration=penetration,
++    )
++    reference_damage_multiplier = 1 - reference_mitigation
++
++    bff = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=penetration,
++    )
++
++    assert bff.damage_multiplier == pytest.approx(reference_damage_multiplier)
++
++
++def test_mitigation_matches_reference_formula_at_full_penetration():
++    reference_mitigation = reference_attack_physical_mitigation(
++        target_physical_resist=18200,
++        penetration=18200,
++    )
++    reference_damage_multiplier = 1 - reference_mitigation
++
++    bff = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=18200,
++    )
++
++    assert bff.damage_multiplier == pytest.approx(reference_damage_multiplier)
++    assert bff.damage_multiplier == 1.0
++
++
++def test_mitigation_matches_reference_formula_at_overpenetration():
++    """
++    The reference formula, taken completely literally, would let net
++    resistance go negative and push the multiplier *above* 1.0 (bonus
++    damage from wasted penetration). BFF's dd_mitigation deliberately
++    clamps remaining_resistance at 0, so it does NOT reproduce that
++    literal over-penetration behavior -- this is BFF being more correct
++    than a literal transcription, not a defect, so this test documents
++    the intentional divergence rather than asserting equality.
++    """
++    penetration = 20000  # 1800 over target_physical_resist
++
++    reference_mitigation = reference_attack_physical_mitigation(
++        target_physical_resist=18200,
++        penetration=penetration,
++    )
++    reference_damage_multiplier = 1 - reference_mitigation
++
++    bff = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=penetration,
++    )
++
++    # Literal reference formula: over-penetration pushes the multiplier
++    # past 1.0 (1800 / 50000 = 0.036 of "bonus" damage).
++    assert reference_damage_multiplier == 1.036
++    # BFF: correctly caps at 1.0, no bonus damage from wasted stats.
++    assert bff.damage_multiplier == 1.0
++    assert bff.damage_multiplier != reference_damage_multiplier
++
++
++# ---------------------------------------------------------------------------
++# 2. Critical damage stage: BFF's DDStatEvaluation vs. the reference
++#    AttackSpellCritDamage formula.
++#
++# equations.py reduces the attacker's critical damage by the target's
++# critical resistance (AttackSpellCritDamage = SpellCritDamage -
++# Target.CritResist * 0.035/250). BFF's dd_stat_evaluation only caps
++# critical_damage at a flat ceiling (default 125%) and has no target
++# critical-resistance input anywhere in DDStatEvaluation or
++# calculate_dd_damage. This is a genuine, confirmed gap (see the audit
++# doc), not a rounding/assumption difference -- documented here rather
++# than silently worked around.
++# ---------------------------------------------------------------------------
++
++
++def test_bff_does_not_reduce_crit_damage_by_target_crit_resistance():
++    stated_crit_damage = 100.0  # e.g. 100% bonus crit damage on the sheet
++    target_crit_resist = 2000.0  # hypothetical target value, for shape only
++
++    reference_effective_crit_damage = reference_attack_spell_crit_damage(
++        spell_crit_damage=stated_crit_damage,
++        target_crit_resist=target_crit_resist,
++    )
++
++    # The reference formula reduces effective crit damage below the
++    # stated value whenever the target has any critical resistance.
++    assert reference_effective_crit_damage < stated_crit_damage
++
++    # BFF has no such input at all: DDStatEvaluation.critical_damage is
++    # the stated value, uncapped by target crit resistance (only capped
++    # by critical_damage_cap, a flat ceiling unrelated to the target).
++    # There is nothing to call here that takes a target_crit_resist
++    # argument -- that is the point being documented.
++    from minmax.dd_stat_evaluation import evaluate_dd_stats
++    from minmax.calculation import CalculationResult, StatBreakdown
++    from minmax.evaluation_context import EvaluationContext
++
++    calculation = CalculationResult(
++        stats={"critical_damage": StatBreakdown(base=stated_crit_damage)}
++    )
++    bff_stats = evaluate_dd_stats(calculation, EvaluationContext())
++
++    assert bff_stats.effective_critical_damage == stated_crit_damage
++    assert bff_stats.effective_critical_damage != reference_effective_crit_damage
+diff --git a/minmax/tests/test_skill_combat_damage.py b/minmax/tests/test_skill_combat_damage.py
+new file mode 100644
+index 0000000..0533922
+--- /dev/null
++++ b/minmax/tests/test_skill_combat_damage.py
+@@ -0,0 +1,144 @@
++from minmax.dd_mitigation import calculate_dd_mitigation
++from minmax.dd_stat_evaluation import DDStatEvaluation
++from minmax.skill_damage import SkillDamageResult
++from minmax.skill_combat_damage import (
++    SkillCombatDamageResult,
++    calculate_skill_combat_damage,
++)
++
++
++def make_stats(
++    *,
++    weapon_damage: float = 0.0,
++    spell_damage: float = 0.0,
++    physical_penetration: float = 0.0,
++    spell_penetration: float = 0.0,
++    critical_chance: float = 0.0,
++    critical_damage: float = 0.0,
++) -> DDStatEvaluation:
++    return DDStatEvaluation(
++        weapon_damage=weapon_damage,
++        spell_damage=spell_damage,
++        physical_penetration=physical_penetration,
++        spell_penetration=spell_penetration,
++        effective_physical_penetration=physical_penetration,
++        effective_spell_penetration=spell_penetration,
++        physical_overpenetration=0.0,
++        spell_overpenetration=0.0,
++        critical_chance=critical_chance,
++        effective_critical_chance=critical_chance,
++        critical_chance_excess=0.0,
++        critical_damage=critical_damage,
++        effective_critical_damage=critical_damage,
++        critical_damage_excess=0.0,
++    )
++
++
++def make_skill_damage(
++    total_raw_damage: float,
++    *,
++    skill_rank_id: int = 4410,
++) -> SkillDamageResult:
++    return SkillDamageResult(
++        skill_rank_id=skill_rank_id,
++        components=(),
++        total_raw_damage=total_raw_damage,
++    )
++
++
++def test_raw_skill_damage_is_not_rescaled_by_offensive_power():
++    result = calculate_skill_combat_damage(
++        make_skill_damage(5000),
++        make_stats(
++            weapon_damage=3000,
++            spell_damage=3000,
++        ),
++    )
++
++    assert isinstance(result, SkillCombatDamageResult)
++    assert result.raw_skill_damage == 5000
++    assert result.damage.scaled_damage == 5000
++    assert result.damage.expected_damage == 5000
++
++
++def test_damage_type_selects_penetration_and_offensive_stat():
++    result = calculate_skill_combat_damage(
++        make_skill_damage(1000),
++        make_stats(
++            weapon_damage=2000,
++            spell_damage=9000,
++            physical_penetration=12000,
++            spell_penetration=5000,
++        ),
++        damage_type="physical",
++    )
++
++    assert result.damage_type == "physical"
++    assert result.damage.offensive_stat == "weapon_damage"
++    assert result.damage.penetration_stat == "physical_penetration"
++    assert result.damage.penetration == 12000
++
++
++def test_critical_chance_and_damage_flow_through():
++    result = calculate_skill_combat_damage(
++        make_skill_damage(1000),
++        make_stats(
++            critical_chance=50,
++            critical_damage=100,
++        ),
++    )
++
++    assert result.damage.expected_damage == 1500
++
++
++def test_can_crit_false_ignores_crit_stats():
++    result = calculate_skill_combat_damage(
++        make_skill_damage(1000),
++        make_stats(
++            critical_chance=100,
++            critical_damage=125,
++        ),
++        can_crit=False,
++    )
++
++    assert result.damage.expected_damage == 1000
++    assert result.damage.critical_chance == 0.0
++
++
++def test_mitigation_reduces_final_damage():
++    mitigation = calculate_dd_mitigation(
++        target_resistance=18200,
++        penetration=0,
++    )
++
++    result = calculate_skill_combat_damage(
++        make_skill_damage(1000),
++        make_stats(),
++        mitigation=mitigation,
++    )
++
++    assert result.damage.mitigation_multiplier == 0.636
++    assert result.damage.mitigated_damage == 636
++
++
++def test_negative_raw_skill_damage_is_rejected():
++    try:
++        calculate_skill_combat_damage(
++            make_skill_damage(-1),
++            make_stats(),
++        )
++    except ValueError:
++        pass
++    else:
++        raise AssertionError(
++            "Negative raw skill damage should be rejected."
++        )
++
++
++def test_skill_rank_id_is_preserved_for_explainability():
++    result = calculate_skill_combat_damage(
++        make_skill_damage(1000, skill_rank_id=99123),
++        make_stats(),
++    )
++
++    assert result.skill_rank_id == 99123
