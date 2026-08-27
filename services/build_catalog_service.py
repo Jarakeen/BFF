@@ -32,28 +32,26 @@ class BuildCatalogService:
             or f"member-{index + 1}"
         )
 
-    @staticmethod
-    def _has_meaningful_value(value: Any) -> bool:
-        """Return whether a legacy field contains actual user data."""
+    @classmethod
+    def _has_meaningful_value(cls, value: Any) -> bool:
+        """Return whether a legacy field or nested structure contains data."""
         if value is None:
             return False
         if isinstance(value, str):
             return bool(value.strip())
         if isinstance(value, bool):
             return value
-        if isinstance(value, (list, tuple, set, dict)):
-            return bool(value)
+        if isinstance(value, dict):
+            return any(cls._has_meaningful_value(v) for v in value.values())
+        if isinstance(value, (list, tuple, set)):
+            return any(cls._has_meaningful_value(v) for v in value)
         return True
 
     @classmethod
     def _is_empty_member(cls, build: PlayerBuild) -> bool:
         """Return True for the blank rows used by the legacy roster UI."""
         data = build.to_dict()
-        return not any(
-            cls._has_meaningful_value(value)
-            for key, value in data.items()
-            if key not in {"Vampire", "Werewolf"}
-        ) and not build.Vampire and not build.Werewolf
+        return not cls._has_meaningful_value(data)
 
     @staticmethod
     def _normalize(data: Any) -> dict[str, Any]:
