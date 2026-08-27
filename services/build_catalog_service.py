@@ -33,13 +33,27 @@ class BuildCatalogService:
         )
 
     @staticmethod
-    def _is_empty_member(build: PlayerBuild) -> bool:
+    def _has_meaningful_value(value: Any) -> bool:
+        """Return whether a legacy field contains actual user data."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (list, tuple, set, dict)):
+            return bool(value)
+        return True
+
+    @classmethod
+    def _is_empty_member(cls, build: PlayerBuild) -> bool:
         """Return True for the blank rows used by the legacy roster UI."""
+        data = build.to_dict()
         return not any(
-            str(value).strip()
-            for key, value in build.to_dict().items()
+            cls._has_meaningful_value(value)
+            for key, value in data.items()
             if key not in {"Vampire", "Werewolf"}
-        )
+        ) and not build.Vampire and not build.Werewolf
 
     @staticmethod
     def _normalize(data: Any) -> dict[str, Any]:
@@ -75,7 +89,11 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create one character record per stable identity and one build per row."""
+        """Create one character record per stable identity and one build per row.
+
+        Completely blank rows in the legacy Builds UI are placeholders and are
+        intentionally excluded from the canonical catalog.
+        """
         catalog = self._normalize(None)
         characters: dict[str, dict[str, Any]] = {}
 
