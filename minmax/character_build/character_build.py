@@ -23,12 +23,7 @@ _WEAPON_SKILL_LINE_IDS = frozenset(line.value for line in WeaponSkillLine)
 
 
 class IllegalBuildError(ValueError):
-    """
-    Raised when something attempts to resolve effects for a CharacterBuild
-    that fails `validate()`. Effect resolution must respect the character's
-    actual build constraints, so it must never silently resolve effects
-    for a build ESO itself would not allow.
-    """
+    """Raised when an illegal CharacterBuild reaches effect resolution."""
 
     def __init__(self, violations: tuple[str, ...]):
         self.violations = violations
@@ -39,19 +34,12 @@ class IllegalBuildError(ValueError):
 
 @dataclass(frozen=True)
 class CharacterBuild:
-    """
-    The mechanical representation of one real ESO character build.
+    """Canonical mechanical configuration for one ESO character.
 
-    This is deliberately separate from the legacy `minmax.build.Build`
-    (used by the flat StatEngine pipeline). CharacterBuild models the full
-    mechanical shape of a build: bars, slots, equipment, CP, class-line
-    configuration, and hard legality constraints. It does not compute final
-    stat totals itself.
-
-    `character_id`/`character_name` identify the persistent character this
-    configuration belongs to. The character's progression snapshot is kept
-    in `mastered_class_skill_lines` so legality can be evaluated without
-    making the calculation layer depend on a UI object.
+    The build stores selections, not calculated results. Character identity
+    and progression are represented by `character_id`, `character_name`, and
+    the progression snapshot used for Class Mastery eligibility. Evaluation
+    services consume this object and produce calculated state separately.
     """
 
     name: str
@@ -62,6 +50,18 @@ class CharacterBuild:
     character_id: str | None = None
     character_name: str | None = None
     mastered_class_skill_lines: frozenset[str] = field(default_factory=frozenset)
+
+    # Persistent character state that affects build legality/effects.
+    vampire: bool = False
+    werewolf: bool = False
+
+    # Persistent build configuration selections. IDs are canonical BFF/ESO
+    # identities; repositories remain responsible for resolving their data.
+    mundus_id: str | None = None
+    food_id: str | None = None
+    drink_id: str | None = None
+    potion_id: str | None = None
+    poison_id: str | None = None
 
     mythic: ArmorPiece | None = None
     armor: tuple[ArmorPiece, ...] = field(default_factory=tuple)
@@ -88,6 +88,10 @@ class CharacterBuild:
         return self.class_skill_lines.effective_skill_lines(self.character_class)
 
     @property
+    def class_mastery(self):
+        return self.class_skill_lines.class_mastery
+
+    @property
     def is_subclassed(self) -> bool:
         return not self.class_skill_lines.is_pure_class(self.character_class)
 
@@ -105,15 +109,20 @@ class CharacterBuild:
         )
 
     def validate(self) -> tuple[str, ...]:
-        """
-        Return every hard-constraint violation found in this build. An
-        empty tuple means the build is mechanically legal. This never
-        raises - callers decide what to do with violations (reject,
-        warn, or simply report them).
+        """Return all known hard-constraint violations.
+
+        Empty tuple means the current configuration is mechanically legal.
+        An incomplete build is allowed while it is being constructed; this
+        validator rejects contradictions rather than requiring every slot to
+        be populated.
         """
         problems: list[str] = []
 
+        if self.vampire and self.werewolf:
+            problems.append("A character cannot be both Vampire and Werewolf.")
+
         problems.extend(self._mythic_violations())
+        problems.extend(self._armor_slot_violations())
         problems.extend(self._bar_violations())
         problems.extend(self.class_skill_lines.validate(self.character_class))
         problems.extend(self._class_ownership_violations())
@@ -140,6 +149,16 @@ class CharacterBuild:
             )
         return ()
 
+    def _armor_slot_violations(self) -> tuple[str, ...]:
+        seen: set[str] = set()
+        problems: list[str] = []
+        for piece in self.all_armor_pieces():
+            slot = piece.slot.value
+            if slot in seen:
+                problems.append(f"Gear slot '{slot}' is equipped more than once.")
+            seen.add(slot)
+        return tuple(problems)
+
     def _bar_violations(self) -> tuple[str, ...]:
         problems: list[str] = []
         for bar in self.bars():
@@ -163,22 +182,17 @@ class CharacterBuild:
                         f"class skill line '{slot.skill_line_id}', but that line is "
                         f"not equipped by this build."
                     )
-
-                # Keep the ownership explanation useful when a line is foreign.
-                if owning_class != self.character_class and slot.skill_line_id in allowed_lines:
-                    continue  # Valid subclass line.
-
-                if not class_owns_skill_line(self.character_class, slot.skill_line_id):
-                    if slot.skill_line_id not in allowed_lines:
+                    if owning_class != self.character_class:
                         problems.append(
                             f"{bar.bar_id.value} bar slots skill '{slot.skill_id}' from "
                             f"'{slot.skill_line_id}', which belongs to {owning_class.value}, "
                             f"not {self.character_class.value}."
                         )
+
         return tuple(problems)
 
     def _class_mastery_progression_violations(self) -> tuple[str, ...]:
-        selected = self.class_skill_lines.class_mastery.passive_ability_ids
+        selected = self.class_mastery.passive_ability_ids
         if not selected:
             return ()
         if not self.class_mastery_available:
@@ -189,11 +203,7 @@ class CharacterBuild:
         return ()
 
     def _weapon_skill_line_violations(self) -> tuple[str, ...]:
-        """
-        A slotted skill whose skill_line_id names a *weapon* skill line
-        must match the weapon skill line that bar's equipped weapon(s)
-        actually make available.
-        """
+        """Ensure weapon-line skills match the weapon equipped on that bar."""
         problems: list[str] = []
         for bar in self.bars():
             try:
