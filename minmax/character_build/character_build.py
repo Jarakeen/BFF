@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from ..role import Role
 from .bar import Bar
 from .champion_points import ChampionPointAllocation
-from .character_class import CLASS_SKILL_LINES, CharacterClass, class_owns_skill_line
-from .class_configuration import ClassSkillLineConfiguration
+from .character_class import CLASS_SKILL_LINES, CharacterClass
+from .class_configuration import ClassMasteryConfiguration, ClassSkillLineConfiguration
 from .gear_piece import ArmorPiece, GearPieceCategory
 from .weapon_type import WeaponSkillLine
 
@@ -88,7 +88,7 @@ class CharacterBuild:
         return self.class_skill_lines.effective_skill_lines(self.character_class)
 
     @property
-    def class_mastery(self):
+    def class_mastery(self) -> ClassMasteryConfiguration:
         return self.class_skill_lines.class_mastery
 
     @property
@@ -134,8 +134,6 @@ class CharacterBuild:
     def is_valid(self) -> bool:
         return len(self.validate()) == 0
 
-    # -- individual constraint checks -------------------------------------
-
     def _mythic_violations(self) -> tuple[str, ...]:
         mythic_pieces = [
             piece
@@ -174,7 +172,7 @@ class CharacterBuild:
             for slot in bar.slots:
                 owning_class = _skill_line_owning_class(slot.skill_line_id)
                 if owning_class is None:
-                    continue  # Not a class line (weapon/guild/world/racial/etc.).
+                    continue
 
                 if slot.skill_line_id not in allowed_lines:
                     problems.append(
@@ -209,7 +207,7 @@ class CharacterBuild:
             try:
                 available_line = bar.weapon_skill_line
             except ValueError:
-                continue  # Already reported by bar.violations().
+                continue
 
             for slot in bar.slots:
                 if slot.skill_line_id not in _WEAPON_SKILL_LINE_IDS:
