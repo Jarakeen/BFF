@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
-from typing import Iterable
 
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -11,13 +10,7 @@ DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dict]:
-    """Load one representative rank for each base/morph skill choice.
-
-    The database keeps every rank and coefficient. The skill-bar UI exposes
-    exactly one choice for morph 0 (base), morph 1, and morph 2. The selected
-    representative record keeps the real ability_id so downstream effect
-    resolution can use the exact ability/morph identity.
-    """
+    """Load one representative rank for each base/morph skill choice."""
     path = Path(database_path)
     if not path.exists():
         return []
@@ -37,7 +30,7 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
                 COALESCE(NULLIF(sr.raw_name, ''), s.name) AS name,
                 s.index_name,
                 COALESCE(NULLIF(sr.raw_description, ''), s.description) AS description,
-                COALESCE(NULLIF(a.texture, ''), s.texture) AS texture,
+                s.texture AS texture,
                 s.class_type,
                 s.skill_line,
                 s.target,
