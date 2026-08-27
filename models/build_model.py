@@ -167,6 +167,11 @@ class PlayerBuild:
     Gamertag: str = ""
     ImagePath: str = ""
 
+    # Stable human-facing name for this configuration. Character identity
+    # remains Name/Gamertag; multiple BuildName values may belong to one
+    # character in the canonical catalog.
+    BuildName: str = ""
+
     Race: str = ""
     EsoClass: str = ""
 
@@ -201,6 +206,7 @@ class PlayerBuild:
             "Name": self.Name,
             "Gamertag": self.Gamertag,
             "ImagePath": self.ImagePath,
+            "BuildName": self.BuildName,
             "Race": self.Race,
             "EsoClass": self.EsoClass,
             "Armor": self.Armor,
@@ -238,6 +244,7 @@ class PlayerBuild:
             Name=data.get("Name", ""),
             Gamertag=data.get("Gamertag", ""),
             ImagePath=data.get("ImagePath", ""),
+            BuildName=data.get("BuildName", ""),
             Race=data.get("Race", ""),
             EsoClass=data.get("EsoClass", ""),
             Armor=armor,
