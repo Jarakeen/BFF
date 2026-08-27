@@ -51,7 +51,7 @@ eso.db.pre_gear_customizationq
 /data/raw/
 data/cache/
 data/tmp/
-
+data/backup
 # Generated Python output
 /data/processed/
 # Local Foundry databases
