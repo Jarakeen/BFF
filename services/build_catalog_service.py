@@ -41,6 +41,10 @@ class BuildCatalogService:
             "builds": list(data.get("builds") or []),
         }
 
+    def new_catalog(self) -> dict[str, Any]:
+        """Return a new empty canonical catalog with the current schema version."""
+        return self._normalize(None)
+
     def load(self) -> dict[str, Any]:
         if not self.catalog_path.exists():
             return self._normalize(None)
