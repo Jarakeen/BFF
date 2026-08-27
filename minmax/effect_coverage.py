@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterable
@@ -138,7 +139,6 @@ def analyze_effect_coverage(
         active = tuple(provider for provider in evidence if provider.uptime > 0.0)
         conditional = any(provider.conditional for provider in active)
         target_types = tuple(dict.fromkeys(provider.target_type for provider in active))
-        magnitudes = [provider.magnitude for provider in active]
         durations = [provider.duration for provider in active if provider.duration is not None]
         uptimes = [provider.uptime for provider in active]
         redundant = _is_redundant(active)
@@ -165,23 +165,28 @@ def analyze_effect_coverage(
 
 def _is_redundant(providers: tuple[EffectEvidence, ...]) -> bool:
     """Flag only clear potential redundancy, never mere duplicate naming."""
-    if len(providers) < 2:
-        return False
-
-    # Different targets can both be useful. A self buff and group buff with
-    # the same logical identity are therefore not redundant.
     by_target: dict[SupportTargetType, list[EffectEvidence]] = defaultdict(list)
     for provider in providers:
         by_target[provider.target_type].append(provider)
 
     for same_target in by_target.values():
-        if len(same_target) < 2:
+        # The same set is represented once for each unlocked tier by the
+        # gear resolver (for example, Set Name (2) and Set Name (5)). Those
+        # are one provider, not two independent sources.
+        unique_sources = {_source_identity(provider.source) for provider in same_target}
+        if len(unique_sources) < 2:
             continue
+
         if any(provider.exclusivity_group for provider in same_target):
             return True
         if any(provider.stacking != StackingBehavior.STACKS for provider in same_target):
             return True
     return False
+
+
+def _source_identity(source: str) -> str:
+    """Normalize gear-tier source labels without changing displayed evidence."""
+    return re.sub(r"\s+\(\d+\)$", "", source).casefold()
 
 
 def _max_magnitude(providers: tuple[EffectEvidence, ...]) -> float | None:
