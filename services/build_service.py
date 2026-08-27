@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 from models.build_model import BuildRoster, PlayerBuild
+from services.canonical_build_bridge import CanonicalBuildBridge
 
 
 class BuildService:
@@ -22,6 +23,7 @@ class BuildService:
     def __init__(self, builds_path: Path):
 
         self.builds_path = Path(builds_path)
+        self.canonical = CanonicalBuildBridge(self.builds_path)
 
     # --------------------------------------------------
     # Persistence
@@ -29,31 +31,11 @@ class BuildService:
 
     def load(self) -> BuildRoster:
 
-        if not self.builds_path.exists():
-            return BuildRoster()
-
-        try:
-
-            data = json.loads(
-                self.builds_path.read_text(encoding="utf-8")
-            )
-
-        except (OSError, json.JSONDecodeError):
-            return BuildRoster()
-
-        return BuildRoster.from_dict(data)
+        return self.canonical.load()
 
     def save(self, roster: BuildRoster) -> None:
 
-        self.builds_path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        self.builds_path.write_text(
-            json.dumps(roster.to_dict(), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        self.canonical.save(roster)
 
     # --------------------------------------------------
     # CSV export
