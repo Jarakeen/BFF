@@ -33,6 +33,15 @@ class BuildCatalogService:
         )
 
     @staticmethod
+    def _is_empty_member(build: PlayerBuild) -> bool:
+        """Return True for the blank rows used by the legacy roster UI."""
+        return not any(
+            str(value).strip()
+            for key, value in build.to_dict().items()
+            if key not in {"Vampire", "Werewolf"}
+        )
+
+    @staticmethod
     def _normalize(data: Any) -> dict[str, Any]:
         data = data if isinstance(data, dict) else {}
         return {
@@ -71,6 +80,9 @@ class BuildCatalogService:
         characters: dict[str, dict[str, Any]] = {}
 
         for index, member in enumerate(roster.Members):
+            if self._is_empty_member(member):
+                continue
+
             identity = self._identity(member, index)
             character_id = self._stable_id("character", identity)
             build_id = self._stable_id(
@@ -104,15 +116,18 @@ class BuildCatalogService:
         catalog["characters"] = list(characters.values())
         return catalog
 
+    def import_legacy_file(self, legacy_path: Path) -> dict[str, Any]:
+        """Load a legacy builds.json file and convert it to the canonical catalog."""
+        roster = BuildRoster.from_dict(
+            json.loads(Path(legacy_path).read_text(encoding="utf-8"))
+        )
+        return self.import_legacy_roster(roster)
+
     def migrate_if_needed(self, legacy_path: Path) -> dict[str, Any]:
         current = self.load()
         if current["characters"] or current["builds"] or not Path(legacy_path).exists():
             return current
-        migrated = self.import_legacy_roster(
-            BuildRoster.from_dict(
-                json.loads(Path(legacy_path).read_text(encoding="utf-8"))
-            )
-        )
+        migrated = self.import_legacy_file(legacy_path)
         self.save(migrated)
         return migrated
 
