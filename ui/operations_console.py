@@ -5,8 +5,6 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
-    QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QVBoxLayout,
@@ -21,61 +19,9 @@ from services.expedition_service import ExpeditionService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.overview_key_stats_card import OverviewKeyStatsCard
 from ui.foundry_page import FoundryPage
 from ui.optimization_page import CORE_COVERAGE, EFFECT_ALIASES, CoverageItem
-
-
-class OverviewStatsCard(FoundryCard):
-    """Compact, inspectable calculator output for the selected build."""
-
-    STAT_ROWS = (
-        ("Max Health", "max_health", ""),
-        ("Max Magicka", "max_magicka", ""),
-        ("Max Stamina", "max_stamina", ""),
-        ("Health Recovery", "health_recovery", "/s"),
-        ("Magicka Recovery", "magicka_recovery", "/s"),
-        ("Stamina Recovery", "stamina_recovery", "/s"),
-    )
-
-    def __init__(self, parent=None):
-        super().__init__("Calculated Key Stats", "∑")
-        self.set_badge("2A BASE")
-        self.rows: dict[str, QLabel] = {}
-        self._build()
-
-    def _build(self):
-        grid = QGridLayout()
-        grid.setContentsMargins(6, 2, 6, 2)
-        grid.setHorizontalSpacing(18)
-        grid.setVerticalSpacing(3)
-
-        for row, (label, key, suffix) in enumerate(self.STAT_ROWS):
-            name = QLabel(label)
-            value = QLabel("—")
-            value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            value.setProperty("overviewStatValue", True)
-            grid.addWidget(name, row, 0)
-            grid.addWidget(value, row, 1)
-            if suffix:
-                unit = QLabel(suffix)
-                unit.setProperty("overviewStatUnit", True)
-                grid.addWidget(unit, row, 2)
-            self.rows[key] = value
-
-        self.addLayout(grid)
-
-        note = QLabel(
-            "Numbers are the current calculator output, not imported game values. "
-            "Gear, CP and effects will be layered in as 2C matures."
-        )
-        note.setWordWrap(True)
-        note.setProperty("overviewNote", True)
-        self.addWidget(note)
-
-    def update_state(self, state):
-        for key, label in self.rows.items():
-            value = getattr(state, key, None)
-            label.setText(f"{value:,}" if isinstance(value, int) else "—")
 
 
 class CoverageSummaryCard(FoundryCard):
@@ -110,20 +56,21 @@ class CoverageSummaryCard(FoundryCard):
 
     def _render(self, roster: BuildRoster):
         coverage, providers = self._resolve(roster)
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(14)
-        grid.setVerticalSpacing(2)
+        grid = QVBoxLayout()
         total = len(CORE_COVERAGE)
         columns = 3
         rows = (total + columns - 1) // columns
-        for index, name in enumerate(CORE_COVERAGE):
-            column = index // rows
-            row = index % rows
-            grid.addWidget(
-                CoverageItem(name, coverage[name], providers[name]),
-                row,
-                column,
-            )
+        # Use a compact horizontal row of columns so the card remains close to
+        # the supplied Overview reference at normal desktop widths.
+        for column in range(columns):
+            column_widget = QWidget()
+            column_layout = QVBoxLayout(column_widget)
+            column_layout.setContentsMargins(0, 0, 0, 0)
+            column_layout.setSpacing(2)
+            for row in range(column * rows, min((column + 1) * rows, total)):
+                name = CORE_COVERAGE[row]
+                column_layout.addWidget(CoverageItem(name, coverage[name], providers[name]))
+            grid.addWidget(column_widget)
         self.addLayout(grid)
         covered = sum(coverage.values())
         self.addWidget(QLabel(f"{covered}/{total} watch-list capabilities represented in saved builds."))
@@ -295,15 +242,14 @@ class OperationsConsole(FoundryPage):
         state = self.calculator.calculate(
             attributes=AttributeAllocation(health=0, magicka=64, stamina=0)
         )
-        stats = OverviewStatsCard()
-        stats.update_state(state)
+        stats = OverviewKeyStatsCard()
+        stats.set_base(state)
         self.layout.addWidget(stats)
 
         note = FoundryCard("Calculation Notes", "i")
         note.addWidget(QLabel(
-            "This overview intentionally shows the calculator's current 2A base output. "
-            "It is a comparison surface: when a value disagrees with ESO or another trusted source, "
-            "we can inspect the calculation trace rather than hiding the discrepancy."
+            "These values are calculator output, not imported ESO values. "
+            "Use this panel to compare Foundry's math against ESO and other references."
         ))
         self.layout.addWidget(note)
         self.layout.addStretch(1)
