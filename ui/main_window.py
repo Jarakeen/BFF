@@ -1,3 +1,4 @@
+
 # ==================================================
 # Black Feather Foundry
 #
@@ -10,7 +11,9 @@
 # ==================================================
 
 from __future__ import annotations
+
 from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -24,9 +27,11 @@ from PySide6.QtWidgets import (
 
 from ui.foundry_theme import apply_foundry_theme
 from ui.components.foundry_sidebar import FoundrySidebar
+
 from services.eso_achievement_database_service import (
     EsoAchievementDatabaseService,
 )
+from services.expedition_service import ExpeditionService
 
 from ui.broadcast_page import BroadcastPage
 from ui.field_notes_page import FieldNotesPage
@@ -35,13 +40,13 @@ from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
 from ui.achievement_desk_page import AchievementPage
 from ui.collections_page import CollectionsPage
+from ui.collectibles_page import CollectiblesPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from ui.optimization_page import OptimizationPage
-from services.expedition_service import ExpeditionService
 
 
 class MainWindow(QMainWindow):
@@ -57,8 +62,13 @@ class MainWindow(QMainWindow):
         )
 
         app = QApplication.instance()
+
         if app is not None:
             apply_foundry_theme(app)
+
+        #
+        # Shared active Expedition
+        #
 
         self.expedition_service = (
             expedition
@@ -66,8 +76,14 @@ class MainWindow(QMainWindow):
             else ExpeditionService()
         )
 
-        self.setWindowTitle("Black Feather Foundry Field Office")
-        self.resize(1700, 950)
+        self.setWindowTitle(
+            "Black Feather Foundry Field Office"
+        )
+
+        self.resize(
+            1700,
+            950,
+        )
 
         self.build_ui()
         self.connect_signals()
@@ -78,17 +94,48 @@ class MainWindow(QMainWindow):
 
     def build_ui(self):
         central = QWidget()
-        self.setCentralWidget(central)
 
-        layout = QHBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
+        self.setCentralWidget(
+            central
+        )
+
+        layout = QHBoxLayout(
+            central
+        )
+
+        layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
         layout.setSpacing(0)
 
         self.sidebar = FoundrySidebar()
-        layout.addWidget(self.sidebar)
+
+        layout.addWidget(
+            self.sidebar
+        )
+
+        #
+        # Pages
+        #
 
         self.stack = QStackedWidget()
-        layout.addWidget(self.stack, 1)
+
+        layout.addWidget(
+            self.stack,
+            1,
+        )
+
+        #
+        # Build Pages
+        #
+        # "collections" is the existing Achievements workspace.
+        # "collectibles" is the dedicated shared page used by
+        # every collectibles:<category> sidebar route.
+        #
 
         self.pages = {
             "broadcast": BroadcastPage(),
@@ -98,6 +145,7 @@ class MainWindow(QMainWindow):
             "incident": IncidentPage(),
             "achievement": AchievementPage(),
             "collections": CollectionsPage(),
+            "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(
                 expedition=self.expedition_service
@@ -111,35 +159,91 @@ class MainWindow(QMainWindow):
         self.page_containers = {}
 
         for name, page in self.pages.items():
-            container = self.wrap_page(page)
+            container = self.wrap_page(
+                page
+            )
+
             self.page_containers[name] = container
-            self.stack.addWidget(container)
+
+            self.stack.addWidget(
+                container
+            )
 
     # --------------------------------------------------
     # Signals
     # --------------------------------------------------
 
     def connect_signals(self):
-        self.sidebar.pageRequested.connect(self.show_page)
+        self.sidebar.pageRequested.connect(
+            self.show_page
+        )
 
     # --------------------------------------------------
     # Navigation
     # --------------------------------------------------
 
-    def show_page(self, page_name: str):
-        if page_name not in self.page_containers:
-            print(f"[FoundryDock] Unknown navigation page: {page_name}")
+    def show_page(
+        self,
+        page_name: str,
+    ):
+        #
+        # Collections sidebar children all share one page.
+        # The route suffix is the normalized sidebar category.
+        #
+
+        if page_name.startswith("collectibles:"):
+            category = page_name.split(":", 1)[1]
+
+            collectibles_page = self.pages[
+                "collectibles"
+            ]
+
+            collectibles_page.set_category(
+                category
+            )
+
+            self.stack.setCurrentWidget(
+                self.page_containers[
+                    "collectibles"
+                ]
+            )
+
             return
 
-        self.stack.setCurrentWidget(self.page_containers[page_name])
+        if page_name not in self.page_containers:
+            print(
+                f"[FoundryDock] Unknown navigation page: {page_name}"
+            )
+            return
 
-    def wrap_page(self, page):
+        self.stack.setCurrentWidget(
+            self.page_containers[
+                page_name
+            ]
+        )
+
+    # --------------------------------------------------
+    # Page Wrapper
+    # --------------------------------------------------
+
+    def wrap_page(
+        self,
+        page,
+    ):
         scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
+
+        scroll.setWidgetResizable(
+            True
+        )
+
+        scroll.setFrameShape(
+            QScrollArea.NoFrame
+        )
+
         scroll.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
+
         scroll.setVerticalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
@@ -149,5 +253,9 @@ class MainWindow(QMainWindow):
             QSizePolicy.Policy.Preferred,
         )
 
-        scroll.setWidget(page)
+        scroll.setWidget(
+            page
+        )
+
         return scroll
+
