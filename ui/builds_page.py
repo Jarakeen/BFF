@@ -60,10 +60,19 @@ class BuildsPage(FoundryPage):
         self.selected_index=row; self._refresh_detail()
     def _clear_detail(self):
         while self.detail_layout.count():
-            item=self.detail_layout.takeAt(0); widget=item.widget()
-            if widget is not None:widget.deleteLater()
+            item=self.detail_layout.takeAt(0)
+            widget=item.widget()
+            child_layout=item.layout()
+            if widget is not None:
+                widget.deleteLater()
+            elif child_layout is not None:
+                while child_layout.count():
+                    child=child_layout.takeAt(0)
+                    child_widget=child.widget()
+                    if child_widget is not None: child_widget.deleteLater()
+                child_layout.deleteLater()
     def _refresh_detail(self,*_):
-        self._clear_detail();
+        self._clear_detail()
         if not self.roster.Members:return
         build=self.roster.Members[self.selected_index]; role,_=self._role_for(build); name=build.Name.strip() or build.Gamertag.strip() or "Unnamed Member"; self.detail_layout.addWidget(self._identity_header(name,role,build)); top=QHBoxLayout(); top.setSpacing(10); top.addWidget(self._gear_card(build),3); right=QVBoxLayout(); right.setSpacing(10); right.addWidget(self._status_card(build)); right.addWidget(self._set_bonus_card(build)); top.addLayout(right,2); self.detail_layout.addLayout(top); lower=QHBoxLayout(); lower.setSpacing(10); lower.addWidget(self._cp_card(build),1); lower.addWidget(self._skills_card(build),1); lower.addWidget(self._notes_card(build),1); self.detail_layout.addLayout(lower); self.detail_layout.addWidget(self._alternates_card(build)); self.detail_layout.addStretch(1)
     def _identity_header(self,name,role,build):
@@ -122,10 +131,14 @@ class BuildsPage(FoundryPage):
         skills=[s for s in self.reference.list_skills() if isinstance(s,dict) and str(s.get("name","")).strip()]; cp=[p for p in self.reference.list_champion_points() if isinstance(p,dict) and str(p.get("name","")).strip()]; return BuildEditor(race_choices=self.reference.list_race_names(),set_choices=self.reference.list_gear_set_names(),skill_choices=skills,cp_choices=cp)
     def _edit_selected(self):
         if not self.roster.Members:return
-        build=self.roster.Members[self.selected_index]; editor=self._editor(); editor.load(build)
-        dialog=QDialog(self); dialog.setWindowTitle(f"Edit Build — {build.Name or 'Unnamed Member'}"); dialog.resize(1200,900); layout=QVBoxLayout(dialog); layout.setContentsMargins(8,8,8,8); layout.setSpacing(8); scroll=QScrollArea(dialog); scroll.setWidgetResizable(True); scroll.setFrameShape(QFrame.Shape.NoFrame); scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff); scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded); scroll.setWidget(editor); layout.addWidget(scroll,1); editor.saveRequested.connect(dialog.accept); editor.cancelRequested.connect(dialog.reject)
-        if dialog.exec()==QDialog.DialogCode.Accepted:
-            self.roster.Members[self.selected_index]=editor.model; self._save(); self._refresh_roster()
+        try:
+            build=self.roster.Members[self.selected_index]; editor=self._editor(); editor.load(build)
+            dialog=QDialog(self); dialog.setWindowTitle(f"Edit Build — {build.Name or 'Unnamed Member'}"); dialog.setMinimumSize(1200,760); dialog.resize(1500,920); layout=QVBoxLayout(dialog); layout.setContentsMargins(8,8,8,8); layout.setSpacing(8); scroll=QScrollArea(dialog); scroll.setWidgetResizable(True); scroll.setFrameShape(QFrame.Shape.NoFrame); scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff); scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded); scroll.setWidget(editor); layout.addWidget(scroll,1); editor.saveRequested.connect(dialog.accept); editor.cancelRequested.connect(dialog.reject)
+            result=dialog.exec()
+            if result==QDialog.DialogCode.Accepted:
+                self.roster.Members[self.selected_index]=editor.model; self._save(); self._refresh_roster()
+        except Exception as exc:
+            self.status.error(f"Edit Build failed: {exc}")
     def _save(self):
         abs_path=self.build_service.builds_path.resolve()
         try:self.build_service.save(self.roster)
