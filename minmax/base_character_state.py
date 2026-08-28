@@ -27,6 +27,14 @@ class CalculationStep:
     result: float
 
 
+@dataclass(frozen=True)
+class FlatContribution:
+    """Named flat contribution retained for the Overview calculation trace."""
+
+    label: str
+    value: float
+
+
 @dataclass
 class CalculationTrace:
     stat: StatId
@@ -42,8 +50,10 @@ class CalculationTrace:
 class ResourceInputs:
     """Explicit inputs to one primary resource/recovery calculation.
 
-    Contribution categories remain separate so the trace can explain the final
-    character-sheet number instead of merely producing it.
+    Aggregate fields remain for backwards compatibility while optional named
+    item/set contributions let the UI explain exactly which gear produced a
+    value. When named contributions are supplied their sum is represented by
+    the matching aggregate field but is traced only once.
     """
 
     attribute_points: int = 0
@@ -57,6 +67,8 @@ class ResourceInputs:
     skill_percent: float = 0.0
     buff_percent: float = 0.0
     other_percent: float = 0.0
+    item_contributions: tuple[FlatContribution, ...] = ()
+    set_contributions: tuple[FlatContribution, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -94,9 +106,26 @@ class BaseCharacterCalculator:
         current += attribute
         trace.add("attribute points", "add", attribute, current)
 
+        # Preserve exact gear provenance when available. The aggregate value is
+        # still kept on ResourceInputs for existing callers/tests, but it is not
+        # added a second time when named contributions describe that same total.
+        if inputs.item_contributions:
+            for contribution in inputs.item_contributions:
+                current += contribution.value
+                trace.add(contribution.label, "add", contribution.value, current)
+        elif inputs.item_flat:
+            current += inputs.item_flat
+            trace.add("item flat", "add", inputs.item_flat, current)
+
+        if inputs.set_contributions:
+            for contribution in inputs.set_contributions:
+                current += contribution.value
+                trace.add(contribution.label, "add", contribution.value, current)
+        elif inputs.set_flat:
+            current += inputs.set_flat
+            trace.add("set flat", "add", inputs.set_flat, current)
+
         for label, value in (
-            ("item flat", inputs.item_flat),
-            ("set flat", inputs.set_flat),
             ("food flat", inputs.food_flat),
             ("mundus flat", inputs.mundus_flat),
             ("skill flat", inputs.skill_flat),
@@ -118,58 +147,22 @@ class BaseCharacterCalculator:
         return trace
 
     def max_health(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.MAX_HEALTH,
-            base=BASE_MAX_HEALTH,
-            attribute_points=inputs.attribute_points,
-            attribute_value=HEALTH_PER_ATTRIBUTE,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.MAX_HEALTH, base=BASE_MAX_HEALTH, attribute_points=inputs.attribute_points, attribute_value=HEALTH_PER_ATTRIBUTE, inputs=inputs)
 
     def max_magicka(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.MAX_MAGICKA,
-            base=BASE_MAX_MAGICKA,
-            attribute_points=inputs.attribute_points,
-            attribute_value=MAGICKA_PER_ATTRIBUTE,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.MAX_MAGICKA, base=BASE_MAX_MAGICKA, attribute_points=inputs.attribute_points, attribute_value=MAGICKA_PER_ATTRIBUTE, inputs=inputs)
 
     def max_stamina(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.MAX_STAMINA,
-            base=BASE_MAX_STAMINA,
-            attribute_points=inputs.attribute_points,
-            attribute_value=STAMINA_PER_ATTRIBUTE,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.MAX_STAMINA, base=BASE_MAX_STAMINA, attribute_points=inputs.attribute_points, attribute_value=STAMINA_PER_ATTRIBUTE, inputs=inputs)
 
     def health_recovery(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.HEALTH_RECOVERY,
-            base=BASE_HEALTH_RECOVERY,
-            attribute_points=0,
-            attribute_value=0.0,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.HEALTH_RECOVERY, base=BASE_HEALTH_RECOVERY, attribute_points=0, attribute_value=0.0, inputs=inputs)
 
     def magicka_recovery(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.MAGICKA_RECOVERY,
-            base=BASE_MAGICKA_RECOVERY,
-            attribute_points=0,
-            attribute_value=0.0,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.MAGICKA_RECOVERY, base=BASE_MAGICKA_RECOVERY, attribute_points=0, attribute_value=0.0, inputs=inputs)
 
     def stamina_recovery(self, inputs: ResourceInputs = ResourceInputs()) -> CalculationTrace:
-        return self._calculate(
-            stat=StatId.STAMINA_RECOVERY,
-            base=BASE_STAMINA_RECOVERY,
-            attribute_points=0,
-            attribute_value=0.0,
-            inputs=inputs,
-        )
+        return self._calculate(stat=StatId.STAMINA_RECOVERY, base=BASE_STAMINA_RECOVERY, attribute_points=0, attribute_value=0.0, inputs=inputs)
 
     def calculate(
         self,
