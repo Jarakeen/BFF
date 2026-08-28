@@ -1,5 +1,13 @@
 $ErrorActionPreference = "Stop"
 
+# This produces a full local test build, including a copy of your
+# real eso.db, so you can run and sanity-check the packaged app
+# yourself before handing it off.
+#
+# If you're zipping up dist\BFF\ to send to someone else to test:
+# DELETE dist\BFF\data\eso.db from the copy you send first, and give
+# them FOR_YOUR_TESTER.md instead so they drop in their own.
+
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
 $DistRoot = Join-Path $ProjectRoot "dist"
 $BuildRoot = Join-Path $ProjectRoot "build"
@@ -43,13 +51,18 @@ Write-Host ""
 Write-Host "Database copied to:"
 Write-Host $TargetDatabase
 
-# Copy builds.json if it exists
-$SourceBuilds = Join-Path $ProjectRoot "data\builds.json"
+# Copy every top-level data file the app reads at runtime --
+# json/txt/md files only. Excludes eso.db (handled separately
+# above/below) and create_canonical_identity_schema.py (a dev-only
+# script, not something the running app imports), and never touches
+# the data\normalized\ or data\uesp\ subfolders.
+$SourceDataDir = Join-Path $ProjectRoot "data"
 
-if (Test-Path $SourceBuilds) {
-    Copy-Item $SourceBuilds $DataRoot -Force
-    Write-Host "builds.json copied."
-}
+Get-ChildItem -Path $SourceDataDir -File |
+    Where-Object { $_.Extension -notin ".py", ".db" } |
+    Copy-Item -Destination $DataRoot -Force
+
+Write-Host "Data files copied."
 
 # Verify the important files
 $BuiltExe = Join-Path $DistRoot "BFF.exe"
