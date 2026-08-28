@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from .base_character_state import BaseCharacterState
 from .character_progression import CharacterProgression
+
+if TYPE_CHECKING:
+    from .core_stat_calculator import CoreStatState
 
 
 class CombatEnvironment(str, Enum):
@@ -44,6 +48,7 @@ class BuildCalculationContext:
     build_id: str
     progression: CharacterProgression
     character_state: BaseCharacterState
+    core_state: CoreStatState | None = None
     environment: CombatEnvironment = CombatEnvironment.PVE
     target_type: str = "monster"
     target_resistance: float | None = None
