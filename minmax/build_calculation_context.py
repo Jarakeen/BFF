@@ -55,6 +55,10 @@ class BuildCalculationContext:
     target_count: int = 1
     fight_duration: float | None = None
     selected_skills: tuple[str, ...] = field(default_factory=tuple)
+    active_bar: str = "front"
+    gear_set_counts: tuple[tuple[str, int], ...] = field(default_factory=tuple)
+    gear_effects_applied: int = 0
+    unresolved_gear_effects: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if not self.character_id.strip():
@@ -65,6 +69,10 @@ class BuildCalculationContext:
             raise ValueError("target_count must be at least 1")
         if self.fight_duration is not None and self.fight_duration <= 0:
             raise ValueError("fight_duration must be positive when supplied")
+        if self.active_bar not in {"front", "back"}:
+            raise ValueError("active_bar must be 'front' or 'back'")
+        if self.gear_effects_applied < 0:
+            raise ValueError("gear_effects_applied cannot be negative")
 
     def resolve_scaling(self, rule: ScalingRule) -> int:
         return rule.resolve(self.character_state)
