@@ -5,7 +5,8 @@ from dataclasses import dataclass, replace
 
 from models.build_model import GearSlot, PlayerBuild
 
-from .base_character_state import ResourceInputs
+from .armor_glyph_repository import ArmorGlyphEffectRepository
+from .base_character_state import FlatContribution, ResourceInputs
 from .core_stat_calculator import CoreStatInputs
 from .derived_stats import DerivedStatInputs, StatContribution
 from .effects import Effect, EffectOperation, EffectUnit
@@ -44,6 +45,13 @@ RATIO_POINT_STATS = {
     StatId.HEALING_TAKEN,
 }
 
+ARMOR_ENCHANT_TO_GLYPH = {
+    "max health": "Glyph of Health",
+    "max magicka": "Glyph of Magicka",
+    "max stamina": "Glyph of Stamina",
+    "prismatic defense": "Glyph of Prismatic Defense",
+}
+
 
 @dataclass(frozen=True)
 class GearCalculationInputs:
@@ -60,20 +68,24 @@ class GearCalculationInputs:
 
 
 class GearStatInputResolver:
-    """Translate equipped, unconditional set bonuses into calculator inputs.
+    """Translate verified static gear effects into calculator inputs.
 
-    Phase 2F deliberately starts with static set bonuses. Traits, glyphs,
-    armor values, weapon base damage, procs and conditional effects remain
-    separate layers so their formulas can be verified rather than guessed.
+    Phase 2F currently understands unconditional set bonuses plus CP160,
+    Truly Superb armor resource glyphs. Other enchantment tiers/levels, armor
+    values, traits, weapon base damage, procs and conditional effects stay
+    unresolved until their rules are explicitly verified.
     """
 
-    # UESP's max-level critical formula uses EffectiveLevel 66 for CP160
-    # endgame characters: rating / (2 * 66 * (100 + 66)).
     MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
 
-    def __init__(self, repository: GearSetRepository):
+    def __init__(
+        self,
+        repository: GearSetRepository,
+        armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
+    ):
         self.repository = repository
         self.service = GearSetEffectService(repository)
+        self.armor_glyph_repository = armor_glyph_repository
 
     @classmethod
     def critical_rating_to_ratio(cls, rating: float) -> float:
@@ -87,8 +99,6 @@ class GearStatInputResolver:
     @classmethod
     def equipped_set_counts(cls, build: PlayerBuild, *, active_bar: str = "front") -> Counter[str]:
         counts: Counter[str] = Counter()
-
-        # Seven armor pieces and three jewelry pieces each contribute one item.
         for entry in build.Armor.values():
             name = str(entry.get("Set", "") or "").strip()
             if name:
@@ -97,22 +107,35 @@ class GearStatInputResolver:
             if slot.Set.strip():
                 counts[slot.Set.strip()] += 1
 
-        # Only the currently active weapon bar contributes set pieces. Set2 is
-        # the second weapon slot for dual wield / sword-and-board configurations.
         weapon = build.FrontBarWeapon if active_bar.casefold() == "front" else build.BackBarWeapon
         for name in cls._slot_names(weapon):
             counts[name] += 1
-
         return counts
 
     @staticmethod
     def _resource_add(inputs: ResourceInputs, effect: Effect) -> ResourceInputs:
         if effect.operation is EffectOperation.ADD:
-            return replace(inputs, set_flat=inputs.set_flat + float(effect.value))
+            amount = float(effect.value)
+            return replace(
+                inputs,
+                set_flat=inputs.set_flat + amount,
+                set_contributions=inputs.set_contributions + (FlatContribution(effect.source, amount),),
+            )
         if effect.operation is EffectOperation.ADD_PERCENT:
             value = float(effect.value) / 100.0 if effect.unit is EffectUnit.PERCENT else float(effect.value)
             return replace(inputs, other_percent=inputs.other_percent + value)
         return inputs
+
+    @staticmethod
+    def _resource_item_add(inputs: ResourceInputs, effect: Effect, *, source: str) -> ResourceInputs:
+        if effect.operation is not EffectOperation.ADD:
+            return inputs
+        amount = float(effect.value)
+        return replace(
+            inputs,
+            item_flat=inputs.item_flat + amount,
+            item_contributions=inputs.item_contributions + (FlatContribution(source, amount),),
+        )
 
     @staticmethod
     def _core_add(core: CoreStatInputs, stat: StatId, effect: Effect, *, value: float | None = None) -> CoreStatInputs:
@@ -127,15 +150,57 @@ class GearStatInputResolver:
             decimal = amount / 100.0 if effect.unit is EffectUnit.PERCENT else amount
             contribution = StatContribution(effect.source, decimal)
             if stat in RATIO_POINT_STATS:
-                updated = replace(
-                    current,
-                    additive_after_percent=current.additive_after_percent + (contribution,),
-                )
+                updated = replace(current, additive_after_percent=current.additive_after_percent + (contribution,))
             else:
                 updated = replace(current, percent=current.percent + (contribution,))
         else:
             return core
         return replace(core, **{field_name: updated})
+
+    def _apply_armor_glyphs(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
+        if self.armor_glyph_repository is None:
+            return result
+
+        unresolved = list(result.unresolved)
+        applied = result.applied_effect_count
+
+        for slot_name, entry in build.Armor.items():
+            enchant = str(entry.get("Enchant", "") or "").strip()
+            if not enchant:
+                continue
+
+            glyph_name = ARMOR_ENCHANT_TO_GLYPH.get(enchant.casefold())
+            if glyph_name is None:
+                unresolved.append(f"{slot_name} enchant not yet resolved: {enchant}")
+                continue
+
+            level = str(entry.get("Level", "") or "").strip()
+            tier = str(entry.get("EnchantTier", "") or "").strip()
+            if level.casefold() != "cp160" or tier.casefold() != "truly superb":
+                unresolved.append(
+                    f"{slot_name} {enchant}: needs verified level/tier scaling ({level or 'level unset'}, {tier or 'tier unset'})"
+                )
+                continue
+
+            effects = self.armor_glyph_repository.get_armor_glyph_effect_by_name(glyph_name, use_max_value=True)
+            if not effects:
+                unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
+                continue
+
+            for effect in effects:
+                stat = effect.stat
+                resource_field = RESOURCE_STATS.get(stat) if stat is not None else None
+                if not resource_field:
+                    unresolved.append(f"{slot_name} unsupported armor glyph effect: {stat.value if stat else 'unknown'}")
+                    continue
+                before = getattr(result, resource_field)
+                source = f"{slot_name}: {effect.source}"
+                after = self._resource_item_add(before, effect, source=source)
+                if after != before:
+                    result = replace(result, **{resource_field: after})
+                    applied += 1
+
+        return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
     def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
         result = GearCalculationInputs()
@@ -152,7 +217,6 @@ class GearStatInputResolver:
 
             effects = self.service.resolve_effects(gear_set.id, piece_count)
             for effect in effects:
-                # Character-sheet baseline uses unconditional effects only.
                 if effect.condition:
                     continue
                 stat = effect.stat
@@ -168,17 +232,12 @@ class GearStatInputResolver:
                         applied += 1
                     continue
 
-                # ESO gear-set "Critical Chance" is rating, not a percentage.
-                # Convert it once, then apply the ratio to both sheet crit stats.
                 if stat is StatId.CRITICAL_CHANCE and effect.operation is EffectOperation.ADD:
                     ratio = self.critical_rating_to_ratio(effect.value)
                     for target in (StatId.WEAPON_CRITICAL, StatId.SPELL_CRITICAL):
                         current: DerivedStatInputs = getattr(result.core, CORE_FIELDS[target])
                         contribution = StatContribution(f"{effect.source} (critical rating)", ratio)
-                        updated = replace(
-                            current,
-                            additive_after_percent=current.additive_after_percent + (contribution,),
-                        )
+                        updated = replace(current, additive_after_percent=current.additive_after_percent + (contribution,))
                         result = replace(result, core=replace(result.core, **{CORE_FIELDS[target]: updated}))
                     applied += 2
                     continue
@@ -192,4 +251,5 @@ class GearStatInputResolver:
 
                 unresolved.append(f"Unsupported static effect: {set_name}: {stat.value}")
 
-        return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
+        result = replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
+        return self._apply_armor_glyphs(result, build)
