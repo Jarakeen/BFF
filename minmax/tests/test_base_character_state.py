@@ -23,4 +23,54 @@ def test_level_50_baseline_resources_and_recovery():
 def test_attribute_points_use_health_122_and_magicka_stamina_111():
     calculator = BaseCharacterCalculator()
 
-    assert calculator.max_health(ResourceInputs(attribute_points=64)).final_value == 237? 
+    assert calculator.max_health(ResourceInputs(attribute_points=64)).final_value == 23808
+    assert calculator.max_magicka(ResourceInputs(attribute_points=64)).final_value == 19104
+    assert calculator.max_stamina(ResourceInputs(attribute_points=64)).final_value == 19104
+
+
+def test_flat_and_percentage_contributions_are_traced():
+    trace = BaseCharacterCalculator().max_magicka(
+        ResourceInputs(
+            attribute_points=64,
+            item_flat=100,
+            set_flat=200,
+            food_flat=300,
+            mundus_flat=400,
+            skill_flat=500,
+            other_flat=600,
+            skill_percent=0.05,
+            buff_percent=0.10,
+        )
+    )
+
+    # (12000 + 7104 + 2100) * 1.15 = 24204.6 -> 24205.
+    assert trace.final_value == 24205
+    assert [step.label for step in trace.steps] == [
+        "base",
+        "attribute points",
+        "item flat",
+        "set flat",
+        "food flat",
+        "mundus flat",
+        "skill flat",
+        "other flat",
+        "percentage modifiers",
+        "ESO rounding",
+    ]
+
+
+def test_eso_rounding_uses_ceiling():
+    assert BaseCharacterCalculator.eso_round(100.0) == 100
+    assert BaseCharacterCalculator.eso_round(100.0001) == 101
+    assert BaseCharacterCalculator.eso_round(100.9999) == 101
+
+
+def test_traces_are_keyed_by_stat_id():
+    state = BaseCharacterCalculator().calculate()
+
+    assert StatId.MAX_HEALTH in state.traces
+    assert StatId.MAX_MAGICKA in state.traces
+    assert StatId.MAX_STAMINA in state.traces
+    assert StatId.HEALTH_RECOVERY in state.traces
+    assert StatId.MAGICKA_RECOVERY in state.traces
+    assert StatId.STAMINA_RECOVERY in state.traces
