@@ -34,6 +34,7 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 from widgets.build_editor import BuildEditor
+from widgets.character_progression_card import CharacterProgressionCard
 
 
 class BuildsPage(FoundryPage):
@@ -394,23 +395,19 @@ class BuildsPage(FoundryPage):
 
     def _editor(self) -> BuildEditor:
         skills = self.reference.list_skills()
-
         skill_choices = [
             skill
             for skill in skills
             if isinstance(skill, dict)
             and str(skill.get("name", "")).strip()
         ]
-
         cp = self.reference.list_champion_points()
-
         cp_choices = [
             point
             for point in cp
             if isinstance(point, dict)
             and str(point.get("name", "")).strip()
         ]
-
         return BuildEditor(
             race_choices=self.reference.list_race_names(),
             set_choices=self.reference.list_gear_set_names(),
@@ -426,9 +423,19 @@ class BuildsPage(FoundryPage):
         editor = self._editor()
         editor.load(build)
 
+        progression = CharacterProgressionCard()
+        progression.set_values(
+            health=getattr(build, "AttributeHealth", 0),
+            magicka=getattr(build, "AttributeMagicka", 0),
+            stamina=getattr(build, "AttributeStamina", 0),
+            vampire=getattr(build, "Vampire", False),
+            werewolf=getattr(build, "Werewolf", False),
+        )
+        editor.layout().insertWidget(1, progression)
+
         dialog = QDialog(self)
         dialog.setWindowTitle(f"Edit Build — {build.Name or 'Unnamed Member'}")
-        dialog.resize(1200, 850)
+        dialog.resize(1200, 900)
 
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -442,72 +449,44 @@ class BuildsPage(FoundryPage):
         scroll.setWidget(editor)
         layout.addWidget(scroll, 1)
 
-        # Save This Build / Cancel live inside the editor itself (next
-        # to + Add Boss Alternate), not in a separate dialog button box
-        # that could scroll out of view on a tall editor.
         editor.saveRequested.connect(dialog.accept)
         editor.cancelRequested.connect(dialog.reject)
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.roster.Members[self.selected_index] = editor.model
+            model = editor.model
+            values = progression.values
+            model.AttributeHealth = int(values["health"])
+            model.AttributeMagicka = int(values["magicka"])
+            model.AttributeStamina = int(values["stamina"])
+            model.Vampire = bool(values["vampire"])
+            model.Werewolf = bool(values["werewolf"])
+            self.roster.Members[self.selected_index] = model
             self._save()
             self._refresh_roster()
 
     def _save(self):
-        """
-        Save, then immediately read the same file back through
-        the same BuildService and compare it against what's in
-        memory. "No exception" is not proof the data is on
-        disk -- this is. Success is only reported once the
-        round trip actually matches.
-        """
         abs_path = self.build_service.builds_path.resolve()
-
         try:
             self.build_service.save(self.roster)
         except Exception as exc:
-            self.status.error(
-                f"Save failed writing {abs_path}: {exc}"
-            )
+            self.status.error(f"Save failed writing {abs_path}: {exc}")
             return
-
         try:
             reloaded = self.build_service.load()
         except Exception as exc:
-            self.status.error(
-                f"Saved to {abs_path}, but re-reading it back "
-                f"failed: {exc}"
-            )
+            self.status.error(f"Saved to {abs_path}, but re-reading it back failed: {exc}")
             return
-
         if reloaded != self.roster:
             mismatch = self._describe_roster_mismatch(reloaded, self.roster)
-            self.status.error(
-                f"Save to {abs_path} did not verify: reloaded data "
-                f"does not match what was saved ({mismatch})."
-            )
+            self.status.error(f"Save to {abs_path} did not verify: reloaded data does not match what was saved ({mismatch}).")
             return
-
         self.status.success(f"Builds saved to {abs_path}.")
 
     @staticmethod
-    def _describe_roster_mismatch(
-        reloaded: BuildRoster, expected: BuildRoster
-    ) -> str:
-        """
-        Best-effort diagnostic string for a failed save/reload
-        round trip, so an error report is actionable instead of
-        just "it didn't match".
-        """
+    def _describe_roster_mismatch(reloaded: BuildRoster, expected: BuildRoster) -> str:
         if len(reloaded.Members) != len(expected.Members):
-            return (
-                f"expected {len(expected.Members)} member(s), "
-                f"found {len(reloaded.Members)} on reload"
-            )
-
-        for index, (got, want) in enumerate(
-            zip(reloaded.Members, expected.Members)
-        ):
+            return f"expected {len(expected.Members)} member(s), found {len(reloaded.Members)} on reload"
+        for index, (got, want) in enumerate(zip(reloaded.Members, expected.Members)):
             if got != want:
                 name = want.Name or want.Gamertag or f"member {index + 1}"
                 fields = [
@@ -516,7 +495,6 @@ class BuildsPage(FoundryPage):
                     if getattr(got, field) != getattr(want, field)
                 ]
                 return f"{name}: field(s) differ after reload: {', '.join(fields)}"
-
         return "mismatch detected"
 
     def _export_csv(self):
@@ -525,7 +503,6 @@ class BuildsPage(FoundryPage):
             folder = self.settings_service.load().get("BuildsExportFolder", "") or ""
         except Exception:
             pass
-
         filename, _ = QFileDialog.getSaveFileName(
             self,
             "Export Builds as CSV",
