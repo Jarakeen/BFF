@@ -45,6 +45,7 @@ def test_post_percentage_contributions_are_traced_separately():
         ),
     )
 
+    # Critical Damage is additive percentage contribution, not a multiplier.
     assert trace.final_value == 0.65
     assert abs(trace.raw_value - 0.65) < 1e-12
     assert [step[0] for step in trace.steps] == [
