@@ -110,7 +110,7 @@ class BaseCharacterCalculator:
             ("food flat", inputs.food_flat),
             ("mundus flat", inputs.mundus_flat),
             ("skill flat", inputs.skill_flat),
-            ("race", inputs.other_flat),
+            ("other flat", inputs.other_flat),
         ):
             if value:
                 current += value
