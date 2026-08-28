@@ -62,6 +62,7 @@ def test_flat_and_percentage_contributions_are_traced():
         "item flat",
         "set flat",
         "food flat",
+        "mundus flat",
         "skill flat",
         "other flat",
         "percentage modifiers",
