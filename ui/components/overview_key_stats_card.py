@@ -4,7 +4,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel
 
 from minmax.base_character_state import BaseCharacterState
-from minmax.core_stat_calculator import CoreStatState
+from minmax.character_progression import CharacterProgression
+from minmax.core_stat_calculator import CoreStatCalculator, CoreStatInputs, CoreStatState
 from minmax.stat_ids import StatId
 from ui.components.foundry_card import FoundryCard
 
@@ -77,10 +78,11 @@ class OverviewKeyStatsCard(FoundryCard):
             StatId.HEALING_DONE,
             StatId.HEALING_TAKEN,
         }:
-            return f"{float(value):.1f}%"
-        return f"{int(value):,}"
+            return f"{float(value) * 100:.1f}%"
+        return f"{int(round(value)):,}"
 
     def set_base(self, state: BaseCharacterState) -> None:
+        """Populate the card from the calculator and immediately run core baselines."""
         values = {
             StatId.MAX_HEALTH: state.max_health,
             StatId.MAX_MAGICKA: state.max_magicka,
@@ -93,8 +95,18 @@ class OverviewKeyStatsCard(FoundryCard):
             self._values[stat].setText(self._format(stat, value))
             self._states[stat].setText("2A base")
 
+        core = CoreStatCalculator().calculate(
+            character_progression=CharacterProgression(),
+            base_character=state,
+            inputs=CoreStatInputs(),
+        )
+        self._apply_derived(core)
+
     def set_core(self, state: CoreStatState) -> None:
         self.set_base(state.base_character)
+        self._apply_derived(state)
+
+    def _apply_derived(self, state: CoreStatState) -> None:
         for stat, value_label in self._values.items():
             if stat in {
                 StatId.MAX_HEALTH,
@@ -111,4 +123,4 @@ class OverviewKeyStatsCard(FoundryCard):
                 self._states[stat].setText("pending")
                 continue
             value_label.setText(self._format(stat, trace.final_value))
-            self._states[stat].setText("calculated")
+            self._states[stat].setText("2C core")
