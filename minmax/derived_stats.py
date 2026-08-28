@@ -42,16 +42,18 @@ class DerivedStatTrace:
 class DerivedStatCalculator:
     """Traceable first layer for derived combat stats.
 
-    ESO stores several stats as ratios internally. In particular, critical
-    chance and critical damage are represented here as 0.10 / 0.50 rather than
-    10 / 50. Integer-facing stats continue to use ESO's ceiling behavior.
-    This keeps the calculation layer numerically correct and lets the UI
-    format ratio stats as percentages without multiplying an already-rounded
-    value by 100.
+    ESO stores several stats as ratios internally. Critical chance and critical
+    damage are represented here as 0.10 / 0.50 rather than 10 / 50. Integer-
+    facing stats continue to use ESO's ceiling behavior. Keeping both the
+    generic and weapon/spell critical identifiers in this set prevents a 10%
+    baseline from becoming 100% merely because the UI asks for a specific
+    critical stat.
     """
 
     RATIO_STATS = frozenset(
         {
+            StatId.WEAPON_CRITICAL,
+            StatId.SPELL_CRITICAL,
             StatId.CRITICAL_CHANCE,
             StatId.CRITICAL_DAMAGE,
             StatId.HEALING_DONE,
@@ -64,10 +66,7 @@ class DerivedStatCalculator:
         return int(ceil(value))
 
     def _finalize(self, trace: DerivedStatTrace) -> DerivedStatTrace:
-        trace.raw_value = trace.raw_value
         if trace.stat in self.RATIO_STATS:
-            # Ratio stats must retain their fractional value. Applying ceil to
-            # 0.10 would turn 10% Critical Chance into 100% when formatted.
             trace.final_value = trace.raw_value
             trace.add("ESO ratio", "retain", trace.raw_value, trace.final_value)
         else:
@@ -124,10 +123,5 @@ class DerivedStatCalculator:
         base: float = 0.0,
         inputs: DerivedStatInputs = DerivedStatInputs(),
     ) -> DerivedStatTrace:
-        """Aggregate a stat whose ESO formula is supplied by the caller.
-
-        This is intentionally useful for resistance, penetration, critical,
-        and similar stats without pretending their version-sensitive formulas
-        are already verified.
-        """
+        """Aggregate a stat whose ESO formula is supplied by the caller."""
         return self._flat_percent(stat, base, inputs)
