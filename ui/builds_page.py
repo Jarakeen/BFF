@@ -395,19 +395,21 @@ class BuildsPage(FoundryPage):
     def _editor(self) -> BuildEditor:
         skills = self.reference.list_skills()
 
-        skill_choices = list(dict.fromkeys(
-            skill["name"]
+        skill_choices = [
+            skill
             for skill in skills
-            if isinstance(skill, dict) and skill.get("name")
-        ))
+            if isinstance(skill, dict)
+            and str(skill.get("name", "")).strip()
+        ]
 
         cp = self.reference.list_champion_points()
 
-        cp_choices = list(dict.fromkeys(
-            point["name"]
+        cp_choices = [
+            point
             for point in cp
-            if isinstance(point, dict) and point.get("name")
-        ))
+            if isinstance(point, dict)
+            and str(point.get("name", "")).strip()
+        ]
 
         return BuildEditor(
             race_choices=self.reference.list_race_names(),
