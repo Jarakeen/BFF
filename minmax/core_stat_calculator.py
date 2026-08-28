@@ -41,10 +41,10 @@ class CoreStatState:
 class CoreStatCalculator:
     """Aggregate foundational combat stats without inventing unresolved ESO rules."""
 
-    # Update-50/level-50 UESP baseline values from the project's equations:
-    # crit chance starts at 10%, crit damage at 50%, and crit resistance at
-    # 1320 before item/set/skill/CP/buff contributions are applied.
+    # Verified naked level-50 baselines used by the ESO character sheet.
     VERIFIED_BASES = {
+        StatId.WEAPON_CRITICAL: 0.10,
+        StatId.SPELL_CRITICAL: 0.10,
         StatId.CRITICAL_CHANCE: 0.10,
         StatId.CRITICAL_DAMAGE: 0.50,
         StatId.CRITICAL_RESISTANCE: 1320.0,
