@@ -13,6 +13,7 @@ from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.base_character_state import BaseCharacterCalculator
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
+from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
@@ -138,6 +139,7 @@ class OperationsConsole(FoundryPage):
         self.context_factory = BuildCalculationContextFactory(
             calculator=self.calculator,
             race_repository=RaceRepository(DEFAULT_DATABASE),
+            gear_set_repository=GearSetRepository(DEFAULT_DATABASE),
         )
         self._build_ui()
         self.refresh()
@@ -158,6 +160,12 @@ class OperationsConsole(FoundryPage):
         self.player_combo = QComboBox()
         self.player_combo.currentIndexChanged.connect(self.refresh_selected)
         self.header.add_context_widget(self._context_field("PLAYER", self.player_combo))
+
+        self.bar_combo = QComboBox()
+        self.bar_combo.addItem("Front Bar", "front")
+        self.bar_combo.addItem("Back Bar", "back")
+        self.bar_combo.currentIndexChanged.connect(self.refresh_selected)
+        self.header.add_context_widget(self._context_field("ACTIVE BAR", self.bar_combo))
 
         self.workspace = QWidget()
         self.layout = QVBoxLayout(self.workspace)
@@ -253,6 +261,7 @@ class OperationsConsole(FoundryPage):
         self.layout.addLayout(player_row)
 
         stats = OverviewKeyStatsCard()
+        context = None
         if build is None:
             stats.set_base(self.calculator.calculate(attributes=AttributeAllocation()))
         else:
@@ -263,6 +272,7 @@ class OperationsConsole(FoundryPage):
                     build_id=f"overview-build-{index}",
                     build=build,
                     progression=self._progression_for(build),
+                    active_bar=str(self.bar_combo.currentData() or "front"),
                 )
                 stats.set_context(context)
             except Exception as exc:
@@ -271,10 +281,30 @@ class OperationsConsole(FoundryPage):
         self.layout.addWidget(stats)
 
         note = FoundryCard("Calculation Notes", "i")
-        note.addWidget(QLabel(
+        note_text = (
             "These values are calculator output, not imported ESO values. "
             "Hover any Key Stats value to inspect Foundry's calculation trace."
-        ))
+        )
+        if context is not None:
+            set_text = ", ".join(f"{name} {count}pc" for name, count in context.gear_set_counts) or "no active sets"
+            note_text += (
+                f"\nPhase 2F active bar: {context.active_bar.title()} • {set_text} • "
+                f"{context.gear_effects_applied} static set effect(s) applied."
+            )
+            if context.unresolved_gear_effects:
+                note_text += (
+                    "\nNot yet applied: " + "; ".join(context.unresolved_gear_effects[:4])
+                )
+        note_label = QLabel(note_text)
+        note_label.setWordWrap(True)
+        note.addWidget(note_label)
         self.layout.addWidget(note)
         self.layout.addStretch(1)
-        self.status.info(f"Overview ready • {len(self.roster.Members)} saved build(s) • calculator output shown above.")
+
+        if context is not None:
+            self.status.info(
+                f"Overview ready • {len(self.roster.Members)} saved build(s) • "
+                f"2F applied {context.gear_effects_applied} static gear effect(s)."
+            )
+        else:
+            self.status.info(f"Overview ready • {len(self.roster.Members)} saved build(s) • calculator output shown above.")
