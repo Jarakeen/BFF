@@ -51,7 +51,13 @@ eso.db.pre_gear_customizationq
 /data/raw/
 data/cache/
 data/tmp/
-data/backup
+/data/backup_the_things/esologs_night2.json
+/data/backup_the_things/esologs_nvdx_lokkestiiz.json
+/data/backup_the_things/esologs_probe.json
+data/backup/*
+data/normalized/*large files*
+data/processed
+data/uesp
 # Generated Python output
 /data/processed/
 # Local Foundry databases
@@ -73,7 +79,7 @@ settings.*
 *.svg
 /docs
 /repo_diff.txt
-
+/dist
 # Application / crawler caches
 # UESP temporary cache
 data/uesp/.cache/
@@ -81,6 +87,9 @@ data/uesp/.cache/
 **/caches/
 **/*_cache/
 **/*_cache.*
+/docs
+/old_pages
+/packaging
 # ============================================================
 # Local launchers
 # ============================================================
