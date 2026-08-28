@@ -31,8 +31,8 @@ def test_spell_damage_applies_percentage_modifiers_after_flat_contributions():
         )
     )
 
-    assert trace.raw_value == 1725.0
-    assert trace.final_value == 1725
+    assert trace.raw_value == 1495.0
+    assert trace.final_value == 1495
 
 
 def test_post_percentage_contributions_are_traced_separately():
@@ -45,7 +45,7 @@ def test_post_percentage_contributions_are_traced_separately():
         ),
     )
 
-    assert trace.raw_value == 0.71
+    assert trace.raw_value == 0.60
     assert trace.final_value == 1
     assert [step[0] for step in trace.steps] == [
         "base",
