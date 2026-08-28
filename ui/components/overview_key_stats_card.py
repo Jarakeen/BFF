@@ -14,6 +14,11 @@ class OverviewKeyStatsCard(FoundryCard):
 
     ROWS = (
         (StatId.MAX_HEALTH, "Max Health", "base"),
+        (StatId.MAX_MAGICKA, "Max Magicka", "base"),
+        (StatId.MAX_STAMINA, "Max Stamina", "base"),
+        (StatId.HEALTH_RECOVERY, "Health Recovery", "base"),
+        (StatId.MAGICKA_RECOVERY, "Magicka Recovery", "base"),
+        (StatId.STAMINA_RECOVERY, "Stamina Recovery", "base"),
         (StatId.PHYSICAL_RESISTANCE, "Physical Resistance", "derived"),
         (StatId.SPELL_RESISTANCE, "Spell Resistance", "derived"),
         (StatId.CRITICAL_RESISTANCE, "Critical Resistance", "derived"),
@@ -78,6 +83,11 @@ class OverviewKeyStatsCard(FoundryCard):
     def set_base(self, state: BaseCharacterState) -> None:
         values = {
             StatId.MAX_HEALTH: state.max_health,
+            StatId.MAX_MAGICKA: state.max_magicka,
+            StatId.MAX_STAMINA: state.max_stamina,
+            StatId.HEALTH_RECOVERY: state.health_recovery,
+            StatId.MAGICKA_RECOVERY: state.magicka_recovery,
+            StatId.STAMINA_RECOVERY: state.stamina_recovery,
         }
         for stat, value in values.items():
             self._values[stat].setText(self._format(stat, value))
@@ -86,7 +96,14 @@ class OverviewKeyStatsCard(FoundryCard):
     def set_core(self, state: CoreStatState) -> None:
         self.set_base(state.base_character)
         for stat, value_label in self._values.items():
-            if stat is StatId.MAX_HEALTH:
+            if stat in {
+                StatId.MAX_HEALTH,
+                StatId.MAX_MAGICKA,
+                StatId.MAX_STAMINA,
+                StatId.HEALTH_RECOVERY,
+                StatId.MAGICKA_RECOVERY,
+                StatId.STAMINA_RECOVERY,
+            }:
                 continue
             trace = state.derived.get(stat)
             if trace is None:
