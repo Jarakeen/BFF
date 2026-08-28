@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from math import ceil
-from typing import Iterable
 
 from .stat_ids import StatId
 
