@@ -147,8 +147,7 @@ class BuildsPage(FoundryPage):
             item.setToolTip(f"{build.EsoClass or 'Class not set'} • {status}")
             self.roster_list.addItem(item)
         if self.roster_list.count():
-            row = min(max(current, 0), self.roster_list.count() - 1)
-            self.roster_list.setCurrentRow(row)
+            self.roster_list.setCurrentRow(min(max(current, 0), self.roster_list.count() - 1))
         self.roster_list.blockSignals(False)
         self._select_member(self.roster_list.currentRow())
 
@@ -168,8 +167,8 @@ class BuildsPage(FoundryPage):
     def _clear_detail(self):
         while self.detail_layout.count():
             item = self.detail_layout.takeAt(0)
-            child_layout = item.layout()
             widget = item.widget()
+            child_layout = item.layout()
             if widget is not None:
                 widget.deleteLater()
             elif child_layout is not None:
@@ -179,8 +178,8 @@ class BuildsPage(FoundryPage):
     def _clear_layout(layout):
         while layout.count():
             item = layout.takeAt(0)
-            child_layout = item.layout()
             widget = item.widget()
+            child_layout = item.layout()
             if widget is not None:
                 widget.deleteLater()
             elif child_layout is not None:
@@ -248,9 +247,7 @@ class BuildsPage(FoundryPage):
             if hasattr(value, "Set"):
                 set_name, trait, enchant = value.Set, value.Trait, value.Enchant
             else:
-                set_name = value.get("Set", "")
-                trait = value.get("Trait", "")
-                enchant = value.get("Enchant", "")
+                set_name, trait, enchant = value.get("Set", ""), value.get("Trait", ""), value.get("Enchant", "")
             row = table.rowCount()
             table.insertRow(row)
             status = "✓ Complete" if set_name and trait else ("⚠ Partial" if set_name else "Missing")
@@ -270,9 +267,10 @@ class BuildsPage(FoundryPage):
         return card
 
     def _status_rows(self, build: PlayerBuild) -> list[tuple[str, str]]:
+        gear = self._all_gear(build)
         gear_total = 12
-        gear_complete = sum(1 for slot in self._all_gear(build) if self._gear_filled(slot))
-        traits = sum(1 for slot in self._all_gear(build) if self._gear_trait(slot))
+        gear_complete = sum(1 for slot in gear if self._gear_filled(slot))
+        traits = sum(1 for slot in gear if self._gear_trait(slot))
         skills = sum(1 for skill in (build.FrontBarSkills + build.BackBarSkills) if str(skill).strip())
         cp = len([entry for entry in build.ChampionPoints if entry.Name.strip()])
         readiness = round(((gear_complete / gear_total) + (traits / gear_total) + (skills / 12) + (1 if cp else 0)) / 4 * 100)
@@ -374,7 +372,7 @@ class BuildsPage(FoundryPage):
         if not self.roster.Members:
             return
         build = self.roster.Members[self.selected_index]
-        dialog = QDialog(self.window())
+        dialog = QDialog(self)
         dialog.setWindowTitle(f"Edit Build — {build.Name or 'Unnamed Member'}")
         dialog.setMinimumSize(1200, 760)
         dialog.resize(1500, 920)
@@ -390,18 +388,10 @@ class BuildsPage(FoundryPage):
         editor = self._editor()
         scroll.setWidget(editor)
         layout.addWidget(scroll, 1)
+        editor.load(build)
         editor.saveRequested.connect(dialog.accept)
         editor.cancelRequested.connect(dialog.reject)
-        try:
-            editor.load(build)
-        except Exception as exc:
-            self.status.error(f"Unable to open build editor: {exc}")
-            dialog.deleteLater()
-            return
-        dialog.raise_()
-        dialog.activateWindow()
-        result = dialog.exec()
-        if result == QDialog.DialogCode.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             self.roster.Members[self.selected_index] = editor.model
             self._save()
             self._refresh_roster()
@@ -419,21 +409,9 @@ class BuildsPage(FoundryPage):
             self.status.error(f"Saved to {abs_path}, but re-reading it back failed: {exc}")
             return
         if reloaded != self.roster:
-            mismatch = self._describe_roster_mismatch(reloaded, self.roster)
-            self.status.error(f"Save to {abs_path} did not verify: reloaded data does not match what was saved ({mismatch}).")
+            self.status.error(f"Save to {abs_path} did not verify: reloaded data does not match what was saved.")
             return
         self.status.success(f"Builds saved to {abs_path}.")
-
-    @staticmethod
-    def _describe_roster_mismatch(reloaded: BuildRoster, expected: BuildRoster) -> str:
-        if len(reloaded.Members) != len(expected.Members):
-            return f"expected {len(expected.Members)} member(s), found {len(reloaded.Members)} on reload"
-        for index, (got, want) in enumerate(zip(reloaded.Members, expected.Members)):
-            if got != want:
-                name = want.Name or want.Gamertag or f"member {index + 1}"
-                fields = [field for field in want.__dataclass_fields__ if getattr(got, field) != getattr(want, field)]
-                return f"{name}: field(s) differ after reload: {', '.join(fields)}"
-        return "mismatch detected"
 
     def _export_csv(self):
         folder = ""
