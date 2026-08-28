@@ -1,5 +1,6 @@
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
+from minmax.effects import Effect, EffectOperation, EffectUnit
 from minmax.gear_sets import GearSet, GearSetBonus
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.stat_ids import StatId
@@ -23,6 +24,21 @@ class FakeGearSetRepository:
 
     def get_bonuses(self, set_id):
         return list(self.bonuses) if set_id == self.set.id else []
+
+
+class FakeArmorGlyphRepository:
+    def get_armor_glyph_effect_by_name(self, glyph_name, *, use_max_value=True):
+        if glyph_name == "Glyph of Magicka":
+            return [
+                Effect(
+                    operation=EffectOperation.ADD,
+                    value=868,
+                    source="Glyph of Magicka",
+                    stat=StatId.MAX_MAGICKA,
+                    unit=EffectUnit.FLAT,
+                )
+            ]
+        return []
 
 
 def _four_piece_build():
@@ -53,6 +69,7 @@ def test_static_set_bonuses_feed_resource_damage_and_critical_inputs():
     resolved = resolver.resolve(_four_piece_build(), active_bar="front")
 
     assert resolved.magicka.set_flat == 1096
+    assert resolved.magicka.set_contributions[0].label == "Test Set (2)"
     assert resolved.core.weapon_damage.flat[0].value == 129
     assert resolved.core.spell_damage.flat[0].value == 129
 
@@ -82,3 +99,50 @@ def test_context_factory_applies_static_gear_to_character_sheet_state():
     assert abs(context.core_state.derived[StatId.SPELL_CRITICAL].final_value - 0.12998357064622125) < 1e-12
     assert context.gear_effects_applied == 5
     assert context.gear_set_counts == (("Test Set", 4),)
+
+
+def test_cp160_truly_superb_armor_glyph_adds_item_resource_with_named_trace():
+    build = PlayerBuild(AttributeMagicka=64)
+    build.Armor["Chest"].update(
+        {
+            "Enchant": "Max Magicka",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+        }
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="glyph-build",
+        build=build,
+        progression=CharacterProgression(attributes=AttributeAllocation(magicka=64)),
+    )
+
+    assert context.character_state.max_magicka == 19972
+    trace = context.character_state.traces[StatId.MAX_MAGICKA]
+    assert any(step.label == "Chest: Glyph of Magicka" and step.value == 868 for step in trace.steps)
+    assert context.gear_effects_applied == 1
+
+
+def test_non_max_armor_glyph_is_left_unresolved_until_scaling_is_verified():
+    build = PlayerBuild()
+    build.Armor["Chest"].update(
+        {
+            "Enchant": "Max Magicka",
+            "EnchantTier": "Superb",
+            "Level": "CP150",
+        }
+    )
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert resolved.magicka.item_flat == 0
+    assert any("needs verified level/tier scaling" in entry for entry in resolved.unresolved)
