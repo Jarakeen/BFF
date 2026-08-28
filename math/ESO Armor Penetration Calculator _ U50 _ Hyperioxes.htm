@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+            
+    
+            
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+
+    
+    <link rel="preload" href="/fonts/rajdhani-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
+
+    <style>
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: optional;
+            src: url('/fonts/rajdhani-500.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 600;
+            font-display: optional;
+            src: url('/fonts/rajdhani-600.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            font-display: optional;
+            src: url('/fonts/rajdhani-700.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 200 700;
+            font-display: optional;
+            src: url('/fonts/oswald.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: normal;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: italic;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3-italic.woff2') format('woff2');
+        }
+    </style>
+
+    
+            <script data-cfasync="false">
+            window.nitroAds=window.nitroAds||{createAd:function(){return new Promise(e=>{window.nitroAds.queue.push(["createAd",arguments,e])})},addUserToken:function(){window.nitroAds.queue.push(["addUserToken",arguments])},queue:[]};
+            window.hyperioxesLoadNitroAds=window.hyperioxesLoadNitroAds||function(){if(window.hyperioxesNitroAdsLoaded)return;window.hyperioxesNitroAdsLoaded=true;var s=document.createElement('script');s.async=true;s.dataset.cfasync='false';s.src='https://s.nitropay.com/ads-2364.js';document.head.appendChild(s);};
+        </script>
+        <script>document.documentElement.classList.add('js');</script>
+
+
+        <style>
+        body { background: #1c1917; }
+        .hidden { display: none !important; }
+
+        /* ── Layout utilities ── */
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .flex-wrap { flex-wrap: wrap; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-w-\[1350px\] { max-width: 1350px; }
+        .gap-4 { gap: 16px; }
+        .gap-2 { gap: 8px; }
+
+        /* ── Listing cards ── */
+        .listing-inner { display: flex; height: 200px; overflow: hidden; }
+        .listing-img { width: 355px; flex-shrink: 0; overflow: hidden; }
+        .listing-body { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12px 16px; }
+        .listing-body-top { flex: 1; }
+        .listing-title { font-size: 24px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #fff; line-height: 1.2; max-height: 4rem; overflow: hidden; }
+        .listing-date { font-size: 12px; color: #888; margin-top: 4px; }
+        .listing-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+        .guide-tag { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; border-width: 1px; border-style: solid; background: none; }
+        .listing-featured { height: 280px; }
+        .listing-featured .listing-img { width: 500px; }
+        .listing-featured .listing-title { font-size: 32px; }
+
+        /* ── Listings grid ── */
+        #listings-container { display: flex; flex-wrap: wrap; }
+        #listings-container > .listing-item { width: 100%; padding: 16px; }
+
+        @media (max-width: 640px) {
+            .listing-inner { flex-direction: column; height: auto; }
+            .listing-img { width: 100%; aspect-ratio: 16/9; height: auto; }
+            .listing-body { padding: 10px 14px 14px; gap: 6px; }
+            .listing-title { font-size: 18px; max-height: none; }
+            .listing-tags { margin-top: 0; }
+        }
+
+        @media (min-width: 980px) {
+            .lg\:hidden { display: none !important; }
+            .lg\:flex { display: flex !important; }
+            .lg\:block { display: block !important; }
+            .hidden.lg\:block { display: block !important; opacity: 1 !important; visibility: visible !important; }
+            .hidden.lg\:flex { display: flex !important; opacity: 1 !important; visibility: visible !important; }
+            .lg\:w-\[1350px\] { width: 1350px; }
+            .lg\:w-1\/2 { width: 50%; }
+            .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .home-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            #listings-container > .listing-item { width: 50%; }
+        }
+
+        /* Guide page shell */
+        .guide-page-layout { box-sizing: border-box; max-width: 1350px; margin: 0 auto; padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start; }
+        .guide-page-layout--dom-ordered { display: grid; grid-template-columns: minmax(0, 1fr); }
+        .guide-page-layout--dom-ordered > .guide-sidebar { display: none !important; }
+        .guide-shell-inline-only { display: block; }
+        body { margin: 0; }
+        @media (min-width: 1024px) {
+            .guide-page-layout--dom-ordered {
+                max-width: 1026px;
+                grid-template-columns: 220px minmax(0, 750px);
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--header {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar:not(.guide-sidebar--right) {
+                display: block !important;
+                grid-column: 1;
+                grid-row: 1 / span 2;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                scrollbar-color: #4a4237 #161412;
+                scrollbar-gutter: stable;
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--body {
+                grid-column: 2;
+                grid-row: 2;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar--right { display: none !important; }
+            .guide-shell-inline-only,
+            .guide-top-toc-wrap,
+            .guide-top-toc { display: none; }
+        }
+        @media (min-width: 1280px) {
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar {
+                max-width: 1350px;
+                grid-template-columns: 220px minmax(0, 1fr) 220px;
+            }
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar > .guide-sidebar--right {
+                display: block !important;
+                grid-column: 3;
+                grid-row: 1 / span 2;
+            }
+        }
+
+        /* Sidebar listing cards */
+        .guide-sidebar { flex: 0 0 220px; width: 220px; }
+        .guide-sidebar--right { order: 3; }
+        .guide-sidebar-box {
+            background: #161412;
+            border: 1px solid #302b26;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .guide-sidebar-box--listings { background: transparent; border: none; padding: 0; }
+        .guide-sidebar-box--listings .guide-sidebar-title {
+            color: #7a756f;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 10px;
+        }
+        .guide-sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2a2520;
+        }
+        .sidebar-card {
+            display: block;
+            text-decoration: none;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #161412;
+            border: 1px solid #302b26;
+        }
+        .sidebar-card-img {
+            width: 100%;
+            display: block;
+            opacity: 0.7;
+        }
+        .sidebar-card-body {
+            padding: 8px 10px 10px;
+            background: linear-gradient(to bottom, #1e1a17, #141210);
+        }
+        .sidebar-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #d4d0cc;
+            line-height: 1.35;
+        }
+        .sidebar-card-subtitle {
+            font-size: 10px;
+            color: #7a756f;
+            margin-top: 2px;
+        }
+    </style>
+
+                                            <link rel="stylesheet" href="/build/app.15dccee1.css">
+            
+            <link rel="stylesheet" href="/build/penetration-calculator.c632aa98.css">
+                        <link rel="stylesheet" href="/build/tooltips.56105855.css">
+                <!-- Primary Meta Tags -->
+        <title>ESO Armor Penetration Calculator | U50 | Hyperioxes</title>
+    <meta name="title" content="ESO Armor Penetration Calculator | U50 | Hyperioxes"/>
+    <meta name="description"
+          content="Check your total armor penetration in ESO and see exactly how much DPS you're losing. Find out if you've hit the penetration cap for the type of content you're doing."/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:url" content="https://hyperioxes.com/eso/tools/penetration-calculator"/>
+    <meta property="og:title" content="ESO Armor Penetration Calculator | U50 | Hyperioxes"/>
+    <meta property="og:description"
+          content="Check your total armor penetration in ESO and see exactly how much DPS you're losing. Find out if you've hit the penetration cap for the type of content you're doing."/>
+    <meta property="og:image" content="https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/penetrationCalculator.jpg"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="675"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:site_name" content="Hyperioxes"/>
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image"/>
+    <meta property="twitter:url" content="https://hyperioxes.com/eso/tools/penetration-calculator"/>
+    <meta property="twitter:title" content="ESO Armor Penetration Calculator | U50 | Hyperioxes"/>
+    <meta property="twitter:description"
+          content="Check your total armor penetration in ESO and see exactly how much DPS you're losing. Find out if you've hit the penetration cap for the type of content you're doing."/>
+    <meta property="twitter:image" content="https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/penetrationCalculator.jpg"/>
+
+    <!-- Article -->
+    <link rel="canonical" href="https://hyperioxes.com/eso/tools/penetration-calculator"/>
+    <meta property="article:author" content="Hyperioxes"/>
+    <meta property="article:published_time" content="2024-07-25T07:32:45+00:00"/>
+    <meta property="article:modified_time" content="2026-07-29T00:00:00+00:00"/>
+    <meta property="article:section" content="ESO Tools"/>
+    <meta property="article:tag" content="ESO Penetration Calculator"/>
+    <meta property="article:tag" content="ESO Armor Penetration"/>
+    <meta property="article:tag" content="ESO DPS Guide"/>
+    <meta property="article:tag" content="Elder Scrolls Online"/>
+    <meta name="author" content="Hyperioxes"/>
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"WebApplication","name":"ESO Armor Penetration Calculator | U50 | Hyperioxes","url":"https://hyperioxes.com/eso/tools/penetration-calculator","description":"Check your total armor penetration in ESO and see exactly how much DPS you're losing. Find out if you've hit the penetration cap for the type of content you're doing.","applicationCategory":"GameApplication","operatingSystem":"Web","image":"https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/penetrationCalculator.jpg","author":{"@type":"Person","@id":"https://hyperioxes.com/#hyperioxes","name":"Hyperioxes","url":"https://hyperioxes.com","sameAs":["https://www.youtube.com/@Hyperioxes","https://www.twitch.tv/hyperioxes"]},"publisher":{"@type":"Organization","name":"Hyperioxes","logo":{"@type":"ImageObject","url":"https://hyperioxes.com/images/logo.webp"}},"datePublished":"2024-07-25T07:32:45+00:00","dateModified":"2026-07-29T00:00:00+00:00"}
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "What is the maximum penetration in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "There is no hard cap on penetration itself, but any penetration above the enemy's armor is wasted. Instanced dungeon and trial enemies have 18200 armor, overland enemies have 9100, and dragons have 13650. Arena enemies can vary and sometimes have different Physical and Spell Resistances. Players in PvP can have wildly different armor values depending on their build and buffs, so there is no single penetration target for PvP."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How does armor penetration work in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Enemies in ESO have armor that reduces the damage they take. Penetration ignores a flat amount of that armor. For instanced enemies, each point of armor provides roughly 0.0055% damage mitigation, so 18200 armor means about 36.4% damage reduction. If you have 18200 penetration, you ignore all of it and deal full damage."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How to get penetration up in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Penetration comes from group debuffs like Major Breach (5948) and Minor Breach (2974), the Crusher enchantment on your tank's weapon, champion points like Piercing, gear sets, weapon traits like Sharpened, light armor passives, and class abilities. In organized groups, the tank and healer provide a large chunk of your penetration through debuffs."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How is armor penetration calculated in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "All your penetration sources are added together into one total. That total is subtracted from the enemy's armor. The remaining armor determines how much damage reduction the enemy has. For instanced enemies, armor provides 1% damage mitigation per 500 armor, so 18200 armor is 36.4% mitigation. Any penetration over the enemy's total armor does nothing."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Is Monster Armor the same as Player Armor in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. Player Armor grants 1% damage mitigation per 660 Armor and caps at 33000. Monster Armor grants 1% damage mitigation per 500 armor and would technically cap at 25000. This means that without any penetration, instanced enemies have 36.4% damage mitigation, while a player with that same amount of armor would only have 27.6% damage mitigation."
+                    }
+                }
+            ]
+        }
+    </script>
+    
+</head>
+<body class="bg-stone-900 text-white" style="font-family: 'Rajdhani', sans-serif;" data-guide-screenshots="false">
+
+    
+
+
+
+
+<header style="background: #0e0c0a; border-bottom: 1px solid #eab308; position: relative;">
+        <div class="hx-header-desktop" style="max-width: 1350px; margin: 0 auto; padding: 0 16px; align-items: center; height: 64px;">
+
+        <a class="hx-header-brand-desktop" href="/" style="font-size: 22px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase; padding-right: 32px; margin-right: 8px; border-right: 1px solid #2a2520; white-space: nowrap; transition: color 0.2s;">
+            Hyperioxes
+        </a>
+
+        <nav style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+            <div data-nosnippet="" style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/tank" aria-haspopup="true">
+            <img src="/images/uiElements/tankIcon.webp" alt="Tank" width="18" height="18">
+            Tank
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tank/arcanist-build">
+                            <img src="/images/icons/ability_arcanist_008_b.webp" alt="Arcanist Tank" width="18" height="18">
+                            Arcanist Tank
+                        </a>
+                                                                                <a href="/eso/tank/dragonknight-build">
+                            <img src="/images/icons/ability_dragonknight_007_b_u49_new.webp" alt="Dragonknight Tank" width="18" height="18">
+                            Dragonknight Tank
+                        </a>
+                                                                                <a href="/eso/tank/necromancer-build">
+                            <img src="/images/icons/ability_necromancer_011_b.webp" alt="Necromancer Tank" width="18" height="18">
+                            Necromancer Tank
+                        </a>
+                                                                                <a href="/eso/tank/nightblade-build">
+                            <img src="/images/icons/ability_nightblade_004_b.webp" alt="Nightblade Tank" width="18" height="18">
+                            Nightblade Tank
+                        </a>
+                                                                                <a href="/eso/tank/sorcerer-build">
+                            <img src="/images/icons/ability_sorcerer_typhoon.webp" alt="Sorcerer Tank" width="18" height="18">
+                            Sorcerer Tank
+                        </a>
+                                                                                <a href="/eso/tank/templar-build">
+                            <img src="/images/icons/ability_templar_radiant_ward.webp" alt="Templar Tank" width="18" height="18">
+                            Templar Tank
+                        </a>
+                                                                                <a href="/eso/tank/warden-build">
+                            <img src="/images/icons/ability_warden_003_a.webp" alt="Warden Tank" width="18" height="18">
+                            Warden Tank
+                        </a>
+                                                                                <a href="/eso/tank/sets">
+                            <img src="/images/icons/gear_amenossea_hvy_head_a.webp" alt="Tank Sets" width="18" height="18">
+                            Tank Sets
+                        </a>
+                                                                                <a href="/eso/tank/beginner-guide">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Beginner Tank Guide" width="18" height="18">
+                            Beginner Tank Guide
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/healer" aria-haspopup="true">
+            <img src="/images/uiElements/healerIcon.webp" alt="Healer" width="18" height="18">
+            Healer
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/healer/dps-healer-build">
+                            <img src="/images/icons/ability_ava_echoing_vigor.webp" alt="DPS Healer" width="18" height="18">
+                            DPS Healer
+                        </a>
+                                                                                <a href="/eso/healer/dungeon-subclass-build">
+                            <img src="/images/icons/ability_restorationstaff_003_b.png" alt="Dungeon Subclass Healer" width="18" height="18">
+                            Dungeon Subclass Healer
+                        </a>
+                                                                                <a href="/eso/healer/templar-build">
+                            <img src="/images/icons/ability_templar_extended_ritual.webp" alt="Templar Healer" width="18" height="18">
+                            Templar Healer
+                        </a>
+                                                                                <a href="/eso/healer/sets">
+                            <img src="/images/icons/gear_seagiantlgt_helmet.webp" alt="Healer Sets" width="18" height="18">
+                            Healer Sets
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/solo">
+            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo" width="18" height="18">
+            Solo
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dps">
+            <img src="/images/uiElements/dpsIcon.webp" alt="DPS" width="18" height="18">
+            DPS
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dungeon" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_groupinstance_complete.png" alt="Dungeons" width="18" height="18">
+            Dungeons
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/dungeon/bedlam-veil">
+                            <img src="/images/icons/ON-icon-achievement-Martial_Gift.png" alt="Bedlam Veil" width="18" height="18">
+                            Bedlam Veil
+                        </a>
+                                                                                <a href="/eso/dungeon/exiled-redoubt">
+                            <img src="/images/icons/achievement_u45_dun1_flavore.png" alt="Exiled Redoubt" width="18" height="18">
+                            Exiled Redoubt
+                        </a>
+                                                                                <a href="/eso/dungeon/lep-seclusa">
+                            <img src="/images/icons/achievement_u45_dun2_bosses.png" alt="Lep Seclusa" width="18" height="18">
+                            Lep Seclusa
+                        </a>
+                                                                                <a href="/eso/dungeon/gossamer-crypt">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_green.png" alt="Gossamer Crypt" width="18" height="18">
+                            Gossamer Crypt
+                        </a>
+                                                                                <a href="/eso/dungeon/mournful-catacomb">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_purple.png" alt="Mournful Catacomb" width="18" height="18">
+                            Mournful Catacomb
+                        </a>
+                                                                                <a href="/eso/dungeon/timeless-wallow">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_blue.png" alt="Timeless Wallow" width="18" height="18">
+                            Timeless Wallow
+                        </a>
+                                                </div>
+            </div>
+
+                                                                                                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/trial" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_raiddungeon_complete.png" alt="Trials" width="18" height="18">
+            Trials
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/trial/opulent-ordeal">
+                            <img src="/images/icons/achievement_u49_trial_vet.png" alt="Opulent Ordeal" width="18" height="18">
+                            Opulent Ordeal
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tier-lists" aria-haspopup="true">
+            <img src="/images/uiElements/tierListIcon.webp" alt="Tier Lists" width="18" height="18">
+            Tier Lists
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tier-lists/solo">
+                            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo Class Tier List" width="18" height="18">
+                            Solo Class Tier List
+                        </a>
+                                                                                <a href="/eso/tier-lists/tank">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Tank Class Tier List" width="18" height="18">
+                            Tank Class Tier List
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tools" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_crafting_complete.png" alt="Tools" width="18" height="18">
+            Tools
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tools/penetration-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Breach.png" alt="Penetration Calculator" width="18" height="18">
+                            Penetration Calculator
+                        </a>
+                                                                                <a href="/eso/tools/crit-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Force.png" alt="Crit Calculator" width="18" height="18">
+                            Crit Calculator
+                        </a>
+                                                                                <a href="/eso/tools/ultimate-calculator">
+                            <img src="/images/icons/ON-icon-misc-Minor_Heroism.png" alt="Ultimate Calculator" width="18" height="18">
+                            Ultimate Calculator
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/news">
+            <img src="/images/uiElements/newsIcon.png" alt="News" width="18" height="18">
+            News
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/guides" aria-haspopup="true">
+            <img src="/images/uiElements/guidesIcon.webp" alt="Guides" width="18" height="18">
+            Guides
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/guides/dynamic-encounters">
+                            <img src="/images/guides/dynamic-encounters/dynamic-encounter-icon.png" alt="" width="18" height="18">
+                            Dynamic Encounters
+                        </a>
+                                                                                <a href="/eso/guides/favors">
+                            <img src="/images/guides/favors/favor-icon.png?v=2" alt="" width="18" height="18">
+                            Favors
+                        </a>
+                                                                                <a href="/eso/guides/subclassing">
+                            <img src="/images/guides/subclassing/subclassing-icon.png" alt="" width="18" height="18">
+                            Subclassing
+                        </a>
+                                                                                <a href="/eso/night-market/oddities-and-races">
+                            <img src="/images/icons/death_recap_earth_ranged2.png" alt="Night Market Oddities and Races" width="18" height="18">
+                            Night Market Oddities &amp; Races
+                        </a>
+                                                                                <a href="/eso/night-market/boons">
+                            <img src="/images/icons/ability_u49_buff_fire_aura.png" alt="Night Market Boons" width="18" height="18">
+                            Night Market Boons
+                        </a>
+                                                                                <a href="/eso/guides/status-effects">
+                            <img src="/images/icons/ability_mage_062.png" alt="Status Effects" width="18" height="18">
+                            Status Effects
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/leveling-guides" aria-haspopup="true">
+            <img src="/images/uiElements/mapIcon.webp" alt="Leveling" width="18" height="18">
+            Leveling
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/leveling-guides/blackrose-prison">
+                            <img src="/images/icons/achievement_blackrose_boss_5.webp" alt="Blackrose Prison" width="18" height="18">
+                            Blackrose Prison
+                        </a>
+                                                </div>
+            </div>
+
+                                                                        </div>
+        </nav>
+    </div>
+
+        <div class="hx-header-mobile" style="border-top: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; height: 56px; padding: 0 16px;">
+            <a href="/" style="font-size: 20px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase;">Hyperioxes</a>
+            <button id="mobile-button" type="button" aria-label="Toggle navigation menu" aria-controls="mobile-dropdown-content" aria-expanded="false" style="color: #888; background: none; border: none; cursor: pointer; padding: 4px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-dropdown-content" class="hidden" data-nosnippet="" style="border-top: 1px solid #2a2520;">
+                                        <a href="/eso/tank" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tank</a>
+
+                                                                                                                                                                                                                                                                                                                                                                                                        <a href="/eso/healer" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Healer</a>
+
+                                                                                                                                                                                                                    <a href="/eso/solo" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Solo</a>
+
+                                                                    <a href="/eso/dps" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">DPS</a>
+
+                                                                    <a href="/eso/dungeon" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dungeons</a>
+
+                                                                                                                                                                                                                                                                                                                <a href="/eso/trial" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Trials</a>
+
+                                                                                                        <a href="/eso/tier-lists" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tier Lists</a>
+
+                                                                                                                                            <a href="/eso/tools" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tools</a>
+
+                                                                                                                                                                                <a href="/eso/news" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">News</a>
+
+                                                                    <a href="/eso/guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Guides</a>
+
+                                                                <a href="/eso/guides/dynamic-encounters" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dynamic Encounters</a>
+
+                                                                                    <a href="/eso/guides/favors" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Favors</a>
+
+                                                                                    <a href="/eso/guides/subclassing" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Subclassing</a>
+
+                                                                                    <a href="/eso/night-market/oddities-and-races" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Oddities &amp; Races</a>
+
+                                                                                    <a href="/eso/night-market/boons" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Boons</a>
+
+                                                                                                                            <a href="/eso/leveling-guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none;">Leveling</a>
+
+                                                                            </div>
+</header>
+
+<style>
+    .hx-header-brand-desktop:hover,
+    .hx-header-brand-desktop:focus-visible {
+        color: #eab308 !important;
+    }
+    .hx-header-desktop { display: none; }
+    .hx-header-mobile { display: block; }
+
+    .nav-item { position: relative; display: flex; align-items: center; }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 18px;
+        height: 64px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color 0.2s;
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #eab308;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+        transform-origin: left;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible { color: #eab308; }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after { transform: scaleX(1); }
+
+    .nav-link:focus-visible,
+    .dropdown-menu a:focus-visible {
+        outline: 2px solid #eab308;
+        outline-offset: -2px;
+    }
+
+    .nav-link img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; opacity: 0.7; transition: opacity 0.2s; }
+    .nav-link:hover img { opacity: 1; }
+
+    .nav-link .chevron, .nav-link svg { color: #555; transition: color 0.2s, transform 0.2s; flex-shrink: 0; }
+    .nav-link:hover svg { color: #eab308; transform: rotate(180deg); }
+
+    .nav-divider { width: 1px; background: #2a2520; height: 24px; align-self: center; margin: 0 2px; flex-shrink: 0; }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #161412;
+        border: 1px solid #2a2520;
+        border-top: 2px solid #eab308;
+        min-width: 200px;
+        z-index: 100;
+        padding: 6px 0;
+    }
+
+    .nav-item:hover .dropdown-menu,
+    .nav-item:focus-within .dropdown-menu { display: block; }
+
+    .nav-item.dropdown-escape-closed .dropdown-menu { display: none; }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .dropdown-menu a:hover,
+    .dropdown-menu a:focus-visible { color: #eab308; background: #1c1814; }
+    .dropdown-menu img { width: 18px; height: 18px; border-radius: 3px; opacity: 0.6; }
+    .dropdown-menu a:hover img { opacity: 1; }
+
+    @media (min-width: 1280px) {
+        .hx-header-desktop { display: flex; }
+        .hx-header-mobile,
+        #mobile-dropdown-content { display: none !important; }
+    }
+
+    @media (min-width: 1280px) and (max-width: 1535px) {
+        .hx-header-desktop { padding: 0 10px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 20px !important;
+            letter-spacing: 0.14em !important;
+            padding-right: 18px !important;
+            margin-right: 4px !important;
+        }
+
+        .nav-link {
+            gap: 4px;
+            padding: 0 8px;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-link > img { display: none; }
+        .nav-divider { height: 20px; margin: 0 1px; }
+    }
+
+    @media (min-width: 1536px) {
+        .hx-header-desktop { max-width: 1600px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 21px !important;
+            letter-spacing: 0.15em !important;
+            padding-right: 22px !important;
+            margin-right: 6px !important;
+        }
+
+        .nav-link {
+            gap: 6px;
+            padding: 0 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-divider { margin: 0 1px; }
+    }
+</style>
+
+<main>    
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/buffs.b37e49e9.76a090e5c85f.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/enchants.1370fdbc.809fe8662ff3.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/gear.a2468ea7.54baf9475a4f.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/passives.624fa3d1.d03f1d046c10.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/skills.72062e5b.45c1218d488c.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/champion-points.f01a0f4f.bef92e15ced1.json"]}</script>
+    
+
+    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/mundus.5149592c.44e0e7fbfd94.json"]}</script>
+    
+
+    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/traits.54f8b82e.8b8473081afd.json"]}</script>
+    
+
+    
+
+
+
+
+            <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+                        {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://hyperioxes.com/"
+            },                        {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Tools",
+                "item": "https://hyperioxes.com/eso/tools"
+            }                        ,{
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Penetration Calculator",
+                "item": "https://hyperioxes.com/eso/tools/penetration-calculator"
+            }
+        ]
+    }
+    </script>
+
+    <nav class="site-breadcrumb" aria-label="Breadcrumb">
+        <ol class="site-breadcrumb__list">
+                            <li class="site-breadcrumb__item">
+                    <a href="/" class="hover-link">Home</a>
+                    <span class="site-breadcrumb__separator" aria-hidden="true">›</span>
+                </li>
+                            <li class="site-breadcrumb__item">
+                    <a href="/eso/tools" class="hover-link">Tools</a>
+                    <span class="site-breadcrumb__separator" aria-hidden="true">›</span>
+                </li>
+                        <li class="site-breadcrumb__item">
+                <span class="site-breadcrumb__current" aria-current="page">Penetration Calculator</span>
+            </li>
+        </ol>
+    </nav>
+
+
+    <div style="max-width: 1350px; margin: 8px auto 0; padding: 0 16px;">
+        <div style="height: 1px; background: linear-gradient(to right, #eab30844, transparent);"></div>
+    </div>
+
+    <div class="max-w-[1350px] mx-auto" style="padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start;">
+
+                <div class="hidden lg:block guide-sidebar guide-sidebar--right">
+                        <div class="guide-sidebar-box" style="margin-top:16px;">
+        <div class="guide-sidebar-title">Related Tools</div>
+        <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                            <li><a href="/eso/tools/crit-calculator" class="pc-link" style="font-size:14px;">Crit Calculator</a></li>
+                            <li><a href="/eso/tools/ultimate-calculator" class="pc-link" style="font-size:14px;">Ultimate Calculator</a></li>
+                    </ul>
+    </div>
+
+            <div class="guide-sidebar-box" style="margin-top:16px;">
+                <div class="guide-sidebar-title">Related Guides</div>
+                <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                    <li><a href="/eso/dps" class="pc-link" style="font-size:14px;">DPS Builds</a></li>
+                    <li><a href="/eso/tank" class="pc-link" style="font-size:14px;">Tank Builds</a></li>
+                    <li><a href="/eso/solo" class="pc-link" style="font-size:14px;">Solo Builds</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="pen-calc" style="flex: 1; min-width: 0; order: 2;">
+
+        <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #2a2520;">
+    <h1 style="font-size: 38px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #fff; line-height: 1.1; border-left: 4px solid #eab308; padding-left: 16px; margin-bottom: 16px;">
+        ESO Armor Penetration Calculator
+    </h1>
+    <div style="height: 1px; background: #2a2520; margin: 16px 0;"></div>
+    <div class="alert-verified">
+        Up to date for: Update 50 - 29th July 2026
+    </div>
+    <div class="alert-green">
+        Last changed: Update 49 - 25th March 2026
+    </div>
+
+    <p class="guide-text mt-4 mx-2">The ESO Penetration Calculator lets you check your total armor penetration against instanced, overland, and dragon enemies, and tells you exactly how much damage you're leaving on the table if you're not capped.</p>
+    <p class="guide-text mt-4 mx-2">Penetration is one of the most misunderstood stats in the game. A lot of players run Medium Armor in content where they don't have enough penetration and are losing out on a lot of DPS because of it.</p>
+    <p class="guide-text mt-4 mx-2">Select your group buffs, player sources, and enemy type and it'll show you where you're at.</p>
+</div>
+
+                <div id="pc-sticky-bar" class="pc-sticky-bar pc-mobile-only">
+            <div class="pc-sticky-inner">
+                <span class="pc-sticky-label">Penetration</span>
+                <span id="pc-sticky-val" class="pc-sticky-val">0 / 18200</span>
+                <span id="pc-sticky-pct" class="pc-sticky-pct">0%</span>
+            </div>
+            <div class="pc-sticky-track">
+                <div id="pc-sticky-fill" class="pc-sticky-fill" style="width:0"></div>
+            </div>
+        </div>
+
+        <div class="pc-layout">
+
+                        <div class="pc-main">
+
+
+                                <div class="pc-mobile-only">
+                    <div class="pc-section-label">Target Enemy</div>
+                    <div id="pc-enemy-mobile" class="pc-enemy-row">
+                        <div class="pc-enemy-card pc-active" data-enemy="instanced" role="button" tabindex="0">
+                            <div class="pc-active-bar pc-active-bar-top"></div>
+                            <div class="pc-enemy-inner">
+                                <span class="pc-enemy-name">Instanced</span>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Instanced&#x20;Content"
+            data-popup-body="Enemies&#x20;in&#x20;trials,&#x20;dungeons&#x20;and&#x20;arenas.&#x20;The&#x20;armor&#x20;of&#x20;enemies&#x20;in&#x20;arenas&#x20;can&#x20;vary.&#x20;Sometimes&#x20;they&#x20;even&#x20;have&#x20;different&#x20;Physical&#x20;and&#x20;Spell&#x20;Resistances">i</button>
+
+                                <span class="pc-enemy-armor">18200</span>
+                            </div>
+                        </div>
+                        <div class="pc-enemy-card" data-enemy="overland" role="button" tabindex="0">
+                            <div class="pc-active-bar pc-active-bar-top"></div>
+                            <div class="pc-enemy-inner">
+                                <span class="pc-enemy-name">Overland</span>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Regular&#x20;Overland"
+            data-popup-body="Standard&#x20;overland&#x20;enemies.">i</button>
+
+                                <span class="pc-enemy-armor">9100</span>
+                            </div>
+                        </div>
+                        <div class="pc-enemy-card" data-enemy="dragon" role="button" tabindex="0">
+                            <div class="pc-active-bar pc-active-bar-top"></div>
+                            <div class="pc-enemy-inner">
+                                <span class="pc-enemy-name">Dragon</span>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Overland&#x20;Dragons"
+            data-popup-body="Elsweyr&#x20;Dragons&#x20;have&#x20;higher&#x20;armor&#x20;than&#x20;regular&#x20;overland&#x20;enemies.">i</button>
+
+                                <span class="pc-enemy-armor">13650</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pc-ring-card">
+                        <div id="pc-ring-mobile"></div>
+                        <div class="pc-stats">
+                            <div class="pc-stat-row pc-stat-row-alt">
+                                <span class="pc-stat-label">Total penetration</span>
+                                <span class="pc-stat-val" id="pc-stat-total-m" style="color:#c8a84b">0</span>
+                            </div>
+                            <div class="pc-stat-row">
+                                <span class="pc-stat-label">Enemy armor</span>
+                                <span class="pc-stat-val" id="pc-stat-cap-m" style="color:#a0a0a0">18200</span>
+                            </div>
+                            <div class="pc-stat-row pc-stat-row-alt">
+                                <span class="pc-stat-label" id="pc-stat-gap-label-m">Missing</span>
+                                <span class="pc-stat-val" id="pc-stat-gap-val-m" style="color:#d9534f">0</span>
+                            </div>
+                            <div class="pc-stat-row">
+                                <span class="pc-stat-label">Gain at cap</span>
+                                <span class="pc-stat-val" id="pc-stat-gain-m" style="color:#606060"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                                <div class="pc-buff-grid">
+
+
+                                        <div class="pc-buff-col">
+                        <div class="pc-section-header">
+                            <span class="pc-section-title">Group</span>
+                            <span class="pc-section-total">+<span id="pc-group-total" class="pc-gold-bold">0</span></span>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="major_breach">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="major-breach" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fca5a5;" data-hx-tooltip-tone="debuff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Breach.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Major Breach</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val">5948</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="minor_breach">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="minor-breach" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fca5a5;" data-hx-tooltip-tone="debuff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Breach.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Minor Breach</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val">2974</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card" id="pc-crusher">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--enchant&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="enchant-weapon-crushing" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;f472b6;" data-hx-tooltip-tone="enchant"><img class="pc-icon" src="/images/icons/enchantment_weapon_reducearmor.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Crusher</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val" id="pc-crusher-val">0</span>
+                            </div>
+                            <div class="pc-crusher-opts pc-hidden">
+                                <div class="pc-type-btns" data-group="crusher-weapon">
+                                    <button class="pc-type-btn" data-val="1h">1-handed</button>
+                                    <button class="pc-type-btn pc-active" data-val="2h">2-handed</button>
+                                </div>
+                                <div class="pc-divider-v"></div>
+                                <button class="pc-toggle-btn pc-active" id="pc-crusher-infused"><img class="pc-toggle-btn-icon" src="/images/icons/crafting_enchantment_base_jade_r2.webp" alt="Infused weapon trait icon - ESO" width="16" height="16">Infused</button>
+                                <button class="pc-toggle-btn" id="pc-crusher-torug"><img class="pc-toggle-btn-icon" src="/images/icons/gear_breton_light_head_d.webp" alt="Torug's Pact gear set icon - ESO" width="16" height="16">Torug</button>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="alkosh">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="roar-of-alkosh" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="pc-icon" src="/images/icons/gear_dromathra_medium_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Alkosh</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val">6000</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="crimson_oath">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="crimson-oaths-rive" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="pc-icon" src="/images/icons/gear_blackironhvy_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Crimson Oath&#039;s Rive</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val">3541</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card" id="pc-tremorscale">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="tremorscale" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="pc-icon" src="/images/icons/gear_undauntedsuneripper_head_a.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Tremorscale</span></span>
+    
+    
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Tremorscale"
+            data-popup-body="Tremorscale&#x27;s&#x20;penetration&#x20;scales&#x20;to&#x20;8&#x25;&#x20;of&#x20;your&#x20;armor">i</button>
+
+                                <span class="pc-val" id="pc-tremorscale-val">0</span>
+                            </div>
+                            <div class="pc-stat-input-row pc-hidden">
+                                <span class="pc-input-label">Your armor</span>
+                                <input type="number" class="pc-num-input" id="pc-tremorscale-armor" value="33000" min="0" max="99999" step="100" aria-label="Your armor">
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="runic_sunder">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                    
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--skill&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="skill-runic-sunder" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;d7b46a;" data-hx-tooltip-tone="skill"><img class="pc-icon&#x20;pc-icon--sq" src="/images/icons/ability_arcanist_007_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Runic Sunder</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val">2200</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="crystal_weapon">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                    
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--skill&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="skill-crystal-weapon" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;d7b46a;" data-hx-tooltip-tone="skill"><img class="pc-icon&#x20;pc-icon--sq" src="/images/icons/ability_sorcerer_crystalweapon.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Crystal Weapon</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val">1000</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card" id="pc-anthelmir">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="anthelmirs-construct" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="pc-icon" src="/images/icons/gear_histguardian_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Anthelmir&#039;s Construct</span></span>
+    
+    
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Anthelmir&#x27;s&#x20;Construct"
+            data-popup-body="Anthelmir&#x27;s&#x20;Construct&#x27;s&#x20;penetration&#x20;scales&#x20;to&#x20;40&#x25;&#x20;of&#x20;your&#x20;Weapon&#x20;Damage">i</button>
+
+                                <span class="pc-val" id="pc-anthelmir-val">0</span>
+                            </div>
+                            <div class="pc-stat-input-row pc-hidden">
+                                <span class="pc-input-label">Weapon damage</span>
+                                <input type="number" class="pc-num-input" id="pc-anthelmir-wd" value="5000" min="0" max="99999" step="100" aria-label="Weapon damage">
+                            </div>
+                        </div>
+
+                    </div>
+
+                                        <div class="pc-buff-col">
+                        <div class="pc-section-header">
+                            <span class="pc-section-title pc-green">Player</span>
+                            <span class="pc-section-total">+<span id="pc-player-total" class="pc-green-bold">0</span></span>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="piercing">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--champion-point&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="piercing" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;38bdf8;" data-hx-tooltip-tone="champion-point"><img class="pc-icon" src="/images/icons/gameuiart/champion/champion_points_magicka_icon.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Piercing (CP)</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val">700</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-slider-card" id="pc-la-card">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-concentration" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="pc-icon&#x20;pc-icon--round" src="/images/icons/ability_sorcerer_060.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Light Armor</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val" id="pc-la-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2,3,4,5,6,7"></div>
+                            <input type="range" class="pc-slider" id="pc-la-slider" min="0" max="7" value="0" aria-label="Light Armor pieces">
+                        </div>
+
+                                                                        <div class="pc-card pc-slider-card" id="pc-sp-card">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                    <span class="pc-nolink">Set Piece Bonuses</span>
+                                </div>
+                                <button class="pc-info-btn" type="button"
+                                    data-popup-title="Set Piece Bonuses"
+                                    data-popup-body="&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;Some&#x20;sets&#x20;&#x28;such&#x20;as&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_clandreamcarver_medium_head_a.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;width&#x3D;&quot;16&quot;&#x20;height&#x3D;&quot;16&quot;&gt;&#x20;&lt;span&#x20;class&#x3D;&quot;text-blue-400&quot;&gt;Ansuul&#x27;s&#x20;Torment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x29;&#x20;grant&#x20;penetration&#x20;as&#x20;2-4&#x20;piece&#x20;bonuses.&#x20;Some&#x20;Monster&#x20;Sets&#x20;&#x28;such&#x20;as&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&lt;span&#x20;role&#x3D;&quot;button&quot;&#x20;tabindex&#x3D;&quot;0&quot;&#x20;class&#x3D;&quot;hx-tip-trigger&amp;&#x23;x20&#x3B;hx-tip-trigger--gear&amp;&#x23;x20&#x3B;text-blue-400&amp;&#x23;x20&#x3B;hover&amp;&#x23;x3A&#x3B;text-blue-300&quot;&#x20;data-hx-tooltip-id&#x3D;&quot;valkyn-skoria&quot;&#x20;aria-expanded&#x3D;&quot;false&quot;&#x20;data-hx-tooltip-tone&#x3D;&quot;gear&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_undaunted_magma_head_a.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;aria-hidden&#x3D;&quot;true&quot;&#x20;loading&#x3D;&quot;lazy&quot;&#x20;decoding&#x3D;&quot;async&quot;&#x20;width&#x3D;&quot;14&quot;&#x20;height&#x3D;&quot;14&quot;&gt;&lt;span&#x20;class&#x3D;&quot;hx-tip-trigger__label&quot;&gt;Valkyn&#x20;Skoria&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&lt;&#x2F;span&gt;&#x29;&#x20;grant&#x20;penetration&#x20;as&#x20;a&#x20;1-piece&#x20;bonus.&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;">i</button>
+                                <span class="pc-val" id="pc-sp-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2,3,4,5"></div>
+                            <input type="range" class="pc-slider" id="pc-sp-slider" min="0" max="5" value="0" aria-label="Set Piece Bonuses">
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="velothi">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="velothi-ur-mages-amulet" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="pc-icon" src="/images/icons/u38_antiquities_goldandblueshalknecklace.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Velothi Ur-Mage&#039;s Amulet</span></span>
+    
+    
+
+                                </div>
+                                <span class="pc-val">1650</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="dismember">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-dismember" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="pc-icon&#x20;pc-icon--round" src="/images/icons/passive_necromancer_003.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Dismember</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val">3271</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card" id="pc-lover">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                        
+                                                                                                                    <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--mundus&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="the-lover" aria-expanded="false" data-hx-tooltip-tone="mundus"><img class="pc-icon&#x20;pc-icon--sq" src="/images/icons/mundus/the-lover.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">The Lover (Mundus)</span></span>
+    
+
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="The&#x20;Lover&#x20;Mundus"
+            data-popup-body="Lover&#x20;Mundus&#x20;provides&#x20;2744&#x20;penetration,&#x20;but&#x20;each&#x20;armor&#x20;piece&#x20;with&#x20;Divines&#x20;trait&#x20;increases&#x20;it&#x20;by&#x20;9.1&#x25;">i</button>
+
+                                <span class="pc-val" id="pc-lover-val">0</span>
+                            </div>
+                            <div class="pc-lover-opts pc-hidden">
+                                <span class="pc-input-label">Divines pieces</span>
+                                <div class="pc-step-labels" data-steps="0,1,2,3,4,5,6,7,8"></div>
+                                <input type="range" class="pc-slider" id="pc-lover-divines-slider" min="0" max="8" value="0" aria-label="Divines pieces">
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-slider-card" id="pc-mace">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-twin-blade-and-blunt" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="pc-icon&#x20;pc-icon--round" src="/images/icons/ability_weapon_016.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Mace / Maul</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val" id="pc-mace-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2"></div>
+                            <input type="range" class="pc-slider" id="pc-mace-slider" min="0" max="2" value="0" aria-label="Mace or Maul weapons">
+                        </div>
+
+                                                <div class="pc-card pc-slider-card" id="pc-sharp">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                                                            
+                                                                                                                    <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--trait&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="weapon-sharpened" aria-expanded="false" data-hx-tooltip-tone="trait"><img class="pc-icon" src="/images/icons/crafting_enchantment_base_fire_opal_r3.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Sharpened</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val" id="pc-sharp-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2"></div>
+                            <input type="range" class="pc-slider" id="pc-sharp-slider" min="0" max="2" value="0" aria-label="Sharpened weapons">
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="woodelf">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-hunters-eye" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="pc-icon&#x20;pc-icon--round" src="/images/icons/ability_armor_011.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Wood Elf Racial</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val">950</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-toggle" data-buff="arena1">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-check"></div>
+                                <div class="pc-name">
+                                    <span class="pc-nolink">
+                                        <img class="pc-icon" src="/images/icons/gear_dunmer_2hhammer_e.webp" alt="Arena weapon set icon - ESO" loading="lazy" decoding="async" width="28" height="28">
+                                        Arena Weapon 1-piece
+                                    </span>
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Arena&#x20;Weapon&#x20;1-piece"
+            data-popup-body="Perfected&#x20;version&#x20;of&#x20;some&#x20;Arena&#x20;Weapon&#x20;sets&#x20;provide&#x20;a&#x20;&#x28;smaller&#x20;than&#x20;usual&#x29;&#x20;penetration&#x20;bonus.&#x20;Count&#x20;this&#x20;only&#x20;if&#x20;you&#x27;re&#x20;using&#x20;the&#x20;Arena&#x20;Weapon&#x20;set&#x20;on&#x20;your&#x20;frontbar">i</button>
+
+                                <span class="pc-val">1190</span>
+                            </div>
+                        </div>
+
+                                                <div class="pc-card pc-slider-card" id="pc-ss-card">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-splintered-secrets" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="pc-icon&#x20;pc-icon--round" src="/images/icons/passive_arcanist_01.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Splintered Secrets</span></span>
+    
+
+
+                                </div>
+                                <span class="pc-val" id="pc-ss-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2,3,4,5,6"></div>
+                            <input type="range" class="pc-slider" id="pc-ss-slider" min="0" max="6" value="0" aria-label="Splintered Secrets Crux">
+                        </div>
+
+                                                <div class="pc-card pc-slider-card" id="pc-fon-card">
+                            <div class="pc-active-bar"></div>
+                            <div class="pc-card-row">
+                                <div class="pc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--champion-point&#x20;pc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="force-of-nature" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;38bdf8;" data-hx-tooltip-tone="champion-point"><img class="pc-icon" src="/images/icons/gameuiart/champion/champion_points_magicka_icon.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Force of Nature (CP)</span></span>
+    
+
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="Force&#x20;of&#x20;Nature"
+            data-popup-body="Although&#x20;there&#x20;are&#x20;8&#x20;status&#x20;effects&#x20;in&#x20;the&#x20;game,&#x20;Force&#x20;of&#x20;Nature&#x20;caps&#x20;at&#x20;5&#x20;stacks.&#x20;This&#x20;is&#x20;not&#x20;stated&#x20;anywhere&#x20;in-game.">i</button>
+
+                                <span class="pc-val" id="pc-fon-val">0</span>
+                            </div>
+                            <div class="pc-step-labels" data-steps="0,1,2,3,4,5"></div>
+                            <input type="range" class="pc-slider" id="pc-fon-slider" min="0" max="5" value="0" aria-label="Force of Nature stacks">
+                        </div>
+
+                                                <div class="pc-card pc-custom-card">
+                            <div class="pc-card-row">
+                                <div class="pc-name">Custom</div>
+                                <input type="number" class="pc-custom-input" id="pc-custom-pen" value="0" min="0" step="1" aria-label="Custom penetration">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>            </div>
+                        <div class="pc-panel pc-desktop-only">
+                <div class="pc-section-label">Target Enemy</div>
+                <div id="pc-enemy-desktop" class="pc-enemy-col">
+                    <div class="pc-enemy-card pc-active" data-enemy="instanced" role="button" tabindex="0">
+                        <div class="pc-active-bar"></div>
+                        <div class="pc-enemy-inner">
+                            <span class="pc-enemy-name">Instanced</span>
+                                <button class="pc-info-btn" type="button"
+            data-popup-title="Instanced&#x20;Content"
+            data-popup-body="Enemies&#x20;in&#x20;trials,&#x20;dungeons&#x20;and&#x20;arenas.&#x20;The&#x20;armor&#x20;of&#x20;enemies&#x20;in&#x20;arenas&#x20;can&#x20;vary.&#x20;Sometimes&#x20;they&#x20;even&#x20;have&#x20;different&#x20;Physical&#x20;and&#x20;Spell&#x20;Resistances">i</button>
+
+                            <span class="pc-enemy-armor">18200</span>
+                        </div>
+                    </div>
+                    <div class="pc-enemy-card" data-enemy="overland" role="button" tabindex="0">
+                        <div class="pc-active-bar"></div>
+                        <div class="pc-enemy-inner">
+                            <span class="pc-enemy-name">Overland</span>
+                                <button class="pc-info-btn" type="button"
+            data-popup-title="Regular&#x20;Overland"
+            data-popup-body="Standard&#x20;overland&#x20;enemies.">i</button>
+
+                            <span class="pc-enemy-armor">9100</span>
+                        </div>
+                    </div>
+                    <div class="pc-enemy-card" data-enemy="dragon" role="button" tabindex="0">
+                        <div class="pc-active-bar"></div>
+                        <div class="pc-enemy-inner">
+                            <span class="pc-enemy-name">Dragon</span>
+                                <button class="pc-info-btn" type="button"
+            data-popup-title="Overland&#x20;Dragons"
+            data-popup-body="Elsweyr&#x20;Dragons&#x20;have&#x20;higher&#x20;armor&#x20;than&#x20;regular&#x20;overland&#x20;enemies.">i</button>
+
+                            <span class="pc-enemy-armor">13650</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="pc-ring-desktop"></div>
+                <div class="pc-stats">
+                    <div class="pc-stat-row pc-stat-row-alt">
+                        <span class="pc-stat-label">Total penetration</span>
+                        <span class="pc-stat-val" id="pc-stat-total-d" style="color:#c8a84b">0</span>
+                    </div>
+                    <div class="pc-stat-row">
+                        <span class="pc-stat-label">Enemy armor</span>
+                        <span class="pc-stat-val" id="pc-stat-cap-d" style="color:#a0a0a0">18200</span>
+                    </div>
+                    <div class="pc-stat-row pc-stat-row-alt">
+                        <span class="pc-stat-label" id="pc-stat-gap-label-d">Missing</span>
+                        <span class="pc-stat-val" id="pc-stat-gap-val-d" style="color:#d9534f">0</span>
+                    </div>
+                    <div class="pc-stat-row">
+                        <span class="pc-stat-label">Gain at cap</span>
+                        <span class="pc-stat-val" id="pc-stat-gain-d" style="color:#606060"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+                <div id="pc-popup-portal" class="pc-popup-portal pc-hidden">
+            <div class="pc-popup-title"></div>
+            <div class="pc-popup-body"></div>
+        </div>
+
+        <div style="padding: 0 0 40px;">
+
+            <h2 class="guide-heading">What Is the Penetration Cap in ESO?</h2>
+            <p class="guide-text">Every enemy in ESO has an armor value that reduces the damage they take from your attacks. Instanced enemies in trials, dungeons, and arenas have 18200 armor - this is the penetration cap you need to hit for end-game PvE content. Overland enemies have 9100 armor, and Elsweyr dragons sit at 13650. Once your total penetration equals the enemy's armor value, you're ignoring their armor entirely and dealing full damage. Any penetration beyond that point is wasted.</p>
+
+            <h2 class="guide-heading">How to Use This Calculator</h2>
+            <p class="guide-text">Select your enemy type on the right, then toggle on every penetration source that applies to your build and group. Group buffs like Major Breach and Alkosh are typically applied by the tank - check with your group before counting them. The calculator updates in real time and shows your total penetration, how far you are from the cap, and the exact percentage of damage you're currently losing to the enemy's armor.</p>
+
+            <h2 class="guide-heading">Group vs. Player Penetration</h2>
+            <p class="guide-text">In an organised group, the tank handles the bulk of the penetration through Major Breach, Minor Breach, and the Crusher enchant. Together these alone contribute over 11000 penetration. As a damage dealer, your job is to cover the remaining gap with your own sources - Light Armor passives, the Piercing champion point, your weapon trait, and any relevant set bonuses. Solo or in a pug group without a tank, you'll need to cover far more yourself, which is where this calculator becomes especially useful.</p>
+
+            <h2 class="guide-heading">FAQ</h2>
+
+            <div class="accordion mb-2">
+                <button type="button" class="accordion-header">
+                    <span class="accordion-title">What is the maximum penetration in ESO?</span>
+                    <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+                <div class="accordion-content">
+                    <p class="guide-text mx-4">There is no hard cap on penetration itself, but any penetration above the enemy's armor is wasted. Instanced dungeon and trial enemies have 18200 armor, overland enemies have 9100, and dragons have 13650. Arena enemies can vary and sometimes have different Physical and Spell Resistances. Players in PvP can have wildly different armor values depending on their build and buffs, so there is no single penetration target for PvP.</p>
+                </div>
+            </div>
+
+            <div class="accordion mb-2">
+                <button type="button" class="accordion-header">
+                    <span class="accordion-title">How does armor penetration work in ESO?</span>
+                    <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+                <div class="accordion-content">
+                    <p class="guide-text mx-4">Enemies in ESO have armor that reduces the damage they take. Penetration ignores a flat amount of that armor. For instanced enemies, each point of armor provides roughly 0.0055% damage mitigation, so 18200 armor means about 36.4% damage reduction. If you have 18200 penetration, you ignore all of it and deal full damage.</p>
+                </div>
+            </div>
+
+            <div class="accordion mb-2">
+                <button type="button" class="accordion-header">
+                    <span class="accordion-title">How to get penetration up in ESO?</span>
+                    <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+                <div class="accordion-content">
+                    <p class="guide-text mx-4">Penetration comes from group debuffs like Major Breach (5948) and Minor Breach (2974), the Crusher enchantment on your tank's weapon, champion points like Piercing, gear sets, weapon traits like Sharpened, light armor passives, and class abilities. In organized groups, the tank and healer provide a large chunk of your penetration through debuffs.</p>
+                </div>
+            </div>
+
+            <div class="accordion mb-2">
+                <button type="button" class="accordion-header">
+                    <span class="accordion-title">How is armor penetration calculated in ESO?</span>
+                    <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+                <div class="accordion-content">
+                    <p class="guide-text mx-4">All your penetration sources are added together into one total. That total is subtracted from the enemy's armor. The remaining armor determines how much damage reduction the enemy has. For instanced enemies, armor provides 1% damage mitigation per 500 armor, so 18200 armor is 36.4% mitigation. Any penetration over the enemy's total armor does nothing.</p>
+                </div>
+            </div>
+
+            <div class="accordion">
+                <button type="button" class="accordion-header">
+                    <span class="accordion-title">Is Monster Armor the same as Player Armor in ESO?</span>
+                    <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+                <div class="accordion-content">
+                    <p class="guide-text mx-4">No. Player Armor grants 1% damage mitigation per 660 Armor and caps at 33000. Monster Armor grants 1% damage mitigation per 500 armor and would technically cap at 25000. This means that without any penetration, instanced enemies have 36.4% damage mitigation, while a player with that same amount of armor would only have 27.6% damage mitigation.</p>
+                </div>
+            </div>
+
+            <div class="divider-subtle"></div>
+            <p class="guide-text" style="margin-top: 16px; color: #a0a0a0; font-size: 13px; text-align: center;">Big thanks to SparkRip for creating a spreadsheet penetration calculator which this calculator is based off of - you can find it <a href="https://docs.google.com/spreadsheets/d/1ZDnmtfHZ_xudB5MJovryVMOovwn_Vtz-Pe550rxpygI/edit?gid=1115704764#gid=1115704764" class="text-blue-400 hover:text-blue-300" target="_blank" rel="noopener" aria-label="SparkRip spreadsheet penetration calculator">here</a>.</p>
+        </div>
+
+    </div>
+    </div>    ﻿<div id="thanks" class="my-8 text-center">
+                            
+    
+    <h2 class="font-bold text-3xl lg:text-7xl my-6">THANKS FOR READING</h2>
+    <a href="https://www.patreon.com/c/Hyperioxes" aria-label="Patreon"><img class="thanks-patreon-logo" src="/images/logos/patreonLogo.webp" alt="Patreon" loading="lazy" decoding="async" width="512" height="512"></a>
+    <p class="guide-text my-4">If you want to support my work, you can do so through <a class="text-orange-500 hover:text-orange-400 underline underline-offset-2" href="https://www.patreon.com/c/Hyperioxes">Patreon</a>.</p>
+</div>
+</main>
+    
+
+
+    ﻿<footer>
+    <div data-nosnippet="" style="background: #0e0c0a; border-top: 1px solid #eab308; padding: 48px 0;">
+        <div style="max-width: 1350px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; gap: 48px; align-items: stretch;">
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Discord</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Wild Heart is a Discord server where you can find advice for any aspect of PvE.</p>
+                <a href="https://discord.com/invite/wildheart" style="display: block; text-align: center;" aria-label="Discord">
+                    <img class="footer-social-logo" src="/images/discord-logo-white.svg" alt="Discord" width="169" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-1" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-1" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">YouTube</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Most builds on this site have a corresponding video on my YouTube channel.</p>
+                <a href="https://www.youtube.com/@Hyperioxes" style="display: block; text-align: center;" aria-label="YouTube">
+                    <img class="footer-social-logo" src="/images/yt_logo_mono_dark.webp" alt="YouTube" width="143" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-2" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-2" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Twitch</h3>
+                <p style="max-width: 260px; font-size: 13px; color: #888; line-height: 1.6; text-align: center;">I stream ESO build testing and gameplay on Twitch.</p>
+                <a href="https://www.twitch.tv/hyperioxes" style="display: block; text-align: center;" aria-label="Twitch">
+                    <img class="footer-social-logo" src="/images/twitchLogo.webp" alt="Twitch" width="800" height="265" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+        </div>
+
+        <div style="max-width: 1350px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid #2a2520; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 24px;">
+            <span style="font-size: 18px; font-weight: 700; letter-spacing: 0.1em; color: #888;">HYPERIOXES</span>
+            <a href="/privacy-policy" style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #a8a29e; text-decoration: none;">Privacy Policy</a>
+            <div id="ncmp-consent-link"></div>
+            <span data-ccpa-link="1"></span>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer-social-logo:hover,
+    .footer-social-logo:focus-visible {
+        opacity: 1 !important;
+    }
+    @media (max-width: 860px) {
+        .footer-divider-1 { display: none; }
+        .footer-divider-2 { display: none; }
+        .footer-divider-h { display: block !important; }
+    }
+</style>
+
+
+
+        <script src="/build/runtime.2033471d.js" defer></script><script src="/build/app.4d0ec687.js" defer></script>
+    
+    <script src="/build/penetration-calculator.de89dc8a.js" defer></script>
+    <script src="/build/4114.07180314.js" defer></script><script src="/build/tooltips.2333a265.js" defer></script>
+
+<script>
+function hyperioxesScheduleNitroAds(){var load=window.hyperioxesLoadNitroAds;if(typeof load!=="function")return;var run=function(){window.setTimeout(function(){if("requestIdleCallback"in window){window.requestIdleCallback(load,{timeout:3000});}else{load();}},1200);};if(document.readyState==="complete"){run();}else{window.addEventListener("load",run,{once:true});}}
+hyperioxesScheduleNitroAds();
+window['nitroAds'].createAd('rail-left', {
+  "format": "rail",
+  "rail": "left",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('rail-right', {
+  "format": "rail",
+  "rail": "right",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('anchor', {
+  "format": "anchor",
+  "anchor": "bottom",
+  "anchorClose": true,
+  "anchorPersistClose": true,
+  "mediaQuery": "(max-width: 1023px)",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming"
+});
+
+</script>
+
+</body>
+</html>

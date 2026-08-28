@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+            
+    
+            
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+
+    
+    <link rel="preload" href="/fonts/rajdhani-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
+
+    <style>
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: optional;
+            src: url('/fonts/rajdhani-500.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 600;
+            font-display: optional;
+            src: url('/fonts/rajdhani-600.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            font-display: optional;
+            src: url('/fonts/rajdhani-700.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 200 700;
+            font-display: optional;
+            src: url('/fonts/oswald.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: normal;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: italic;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3-italic.woff2') format('woff2');
+        }
+    </style>
+
+    
+            <script data-cfasync="false">
+            window.nitroAds=window.nitroAds||{createAd:function(){return new Promise(e=>{window.nitroAds.queue.push(["createAd",arguments,e])})},addUserToken:function(){window.nitroAds.queue.push(["addUserToken",arguments])},queue:[]};
+            window.hyperioxesLoadNitroAds=window.hyperioxesLoadNitroAds||function(){if(window.hyperioxesNitroAdsLoaded)return;window.hyperioxesNitroAdsLoaded=true;var s=document.createElement('script');s.async=true;s.dataset.cfasync='false';s.src='https://s.nitropay.com/ads-2364.js';document.head.appendChild(s);};
+        </script>
+        <script>document.documentElement.classList.add('js');</script>
+
+
+        <style>
+        body { background: #1c1917; }
+        .hidden { display: none !important; }
+
+        /* ── Layout utilities ── */
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .flex-wrap { flex-wrap: wrap; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-w-\[1350px\] { max-width: 1350px; }
+        .gap-4 { gap: 16px; }
+        .gap-2 { gap: 8px; }
+
+        /* ── Listing cards ── */
+        .listing-inner { display: flex; height: 200px; overflow: hidden; }
+        .listing-img { width: 355px; flex-shrink: 0; overflow: hidden; }
+        .listing-body { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12px 16px; }
+        .listing-body-top { flex: 1; }
+        .listing-title { font-size: 24px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #fff; line-height: 1.2; max-height: 4rem; overflow: hidden; }
+        .listing-date { font-size: 12px; color: #888; margin-top: 4px; }
+        .listing-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+        .guide-tag { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; border-width: 1px; border-style: solid; background: none; }
+        .listing-featured { height: 280px; }
+        .listing-featured .listing-img { width: 500px; }
+        .listing-featured .listing-title { font-size: 32px; }
+
+        /* ── Listings grid ── */
+        #listings-container { display: flex; flex-wrap: wrap; }
+        #listings-container > .listing-item { width: 100%; padding: 16px; }
+
+        @media (max-width: 640px) {
+            .listing-inner { flex-direction: column; height: auto; }
+            .listing-img { width: 100%; aspect-ratio: 16/9; height: auto; }
+            .listing-body { padding: 10px 14px 14px; gap: 6px; }
+            .listing-title { font-size: 18px; max-height: none; }
+            .listing-tags { margin-top: 0; }
+        }
+
+        @media (min-width: 980px) {
+            .lg\:hidden { display: none !important; }
+            .lg\:flex { display: flex !important; }
+            .lg\:block { display: block !important; }
+            .hidden.lg\:block { display: block !important; opacity: 1 !important; visibility: visible !important; }
+            .hidden.lg\:flex { display: flex !important; opacity: 1 !important; visibility: visible !important; }
+            .lg\:w-\[1350px\] { width: 1350px; }
+            .lg\:w-1\/2 { width: 50%; }
+            .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .home-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            #listings-container > .listing-item { width: 50%; }
+        }
+
+        /* Guide page shell */
+        .guide-page-layout { box-sizing: border-box; max-width: 1350px; margin: 0 auto; padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start; }
+        .guide-page-layout--dom-ordered { display: grid; grid-template-columns: minmax(0, 1fr); }
+        .guide-page-layout--dom-ordered > .guide-sidebar { display: none !important; }
+        .guide-shell-inline-only { display: block; }
+        body { margin: 0; }
+        @media (min-width: 1024px) {
+            .guide-page-layout--dom-ordered {
+                max-width: 1026px;
+                grid-template-columns: 220px minmax(0, 750px);
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--header {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar:not(.guide-sidebar--right) {
+                display: block !important;
+                grid-column: 1;
+                grid-row: 1 / span 2;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                scrollbar-color: #4a4237 #161412;
+                scrollbar-gutter: stable;
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--body {
+                grid-column: 2;
+                grid-row: 2;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar--right { display: none !important; }
+            .guide-shell-inline-only,
+            .guide-top-toc-wrap,
+            .guide-top-toc { display: none; }
+        }
+        @media (min-width: 1280px) {
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar {
+                max-width: 1350px;
+                grid-template-columns: 220px minmax(0, 1fr) 220px;
+            }
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar > .guide-sidebar--right {
+                display: block !important;
+                grid-column: 3;
+                grid-row: 1 / span 2;
+            }
+        }
+
+        /* Sidebar listing cards */
+        .guide-sidebar { flex: 0 0 220px; width: 220px; }
+        .guide-sidebar--right { order: 3; }
+        .guide-sidebar-box {
+            background: #161412;
+            border: 1px solid #302b26;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .guide-sidebar-box--listings { background: transparent; border: none; padding: 0; }
+        .guide-sidebar-box--listings .guide-sidebar-title {
+            color: #7a756f;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 10px;
+        }
+        .guide-sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2a2520;
+        }
+        .sidebar-card {
+            display: block;
+            text-decoration: none;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #161412;
+            border: 1px solid #302b26;
+        }
+        .sidebar-card-img {
+            width: 100%;
+            display: block;
+            opacity: 0.7;
+        }
+        .sidebar-card-body {
+            padding: 8px 10px 10px;
+            background: linear-gradient(to bottom, #1e1a17, #141210);
+        }
+        .sidebar-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #d4d0cc;
+            line-height: 1.35;
+        }
+        .sidebar-card-subtitle {
+            font-size: 10px;
+            color: #7a756f;
+            margin-top: 2px;
+        }
+    </style>
+
+                                            <link rel="stylesheet" href="/build/app.15dccee1.css">
+            
+            <link rel="stylesheet" href="/build/ultimate-calculator.18a8bfa4.css?v=uc20">
+                        <link rel="stylesheet" href="/build/tooltips.56105855.css?v=uc10">
+                <!-- Primary Meta Tags -->
+            <title>ESO Ultimate Generation Calculator | U50 | Hyperioxes</title>
+    <meta name="title" content="ESO Ultimate Generation Calculator | U50 | Hyperioxes"/>
+    <meta name="description" content="Calculate your ultimate generation in ESO and see how much Ultimate you&#039;re getting per second. Toggle various sources like Decisive, Heroism, sets, class passives, to see what&#039;s actually building your ult."/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:url" content="https://hyperioxes.com/eso/tools/ultimate-calculator"/>
+    <meta property="og:title" content="ESO Ultimate Generation Calculator | U50 | Hyperioxes"/>
+    <meta property="og:description" content="Calculate your ultimate generation in ESO and see how much Ultimate you&#039;re getting per second. Toggle various sources like Decisive, Heroism, sets, class passives, to see what&#039;s actually building your ult."/>
+    <meta property="og:image" content="https://hyperioxes.com/images/hyperIcon.webp"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:site_name" content="Hyperioxes"/>
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image"/>
+    <meta property="twitter:url" content="https://hyperioxes.com/eso/tools/ultimate-calculator"/>
+    <meta property="twitter:title" content="ESO Ultimate Generation Calculator | U50 | Hyperioxes"/>
+    <meta property="twitter:description" content="Calculate your ultimate generation in ESO and see how much Ultimate you&#039;re getting per second. Toggle various sources like Decisive, Heroism, sets, class passives, to see what&#039;s actually building your ult."/>
+    <meta property="twitter:image" content="https://hyperioxes.com/images/hyperIcon.webp"/>
+
+    <!-- Article -->
+    <link rel="canonical" href="https://hyperioxes.com/eso/tools/ultimate-calculator"/>
+    <meta property="article:author" content="Hyperioxes"/>
+    <meta property="article:published_time" content="2026-06-21T00:00:00+00:00"/>
+    <meta property="article:modified_time" content="2026-07-29T00:00:00+00:00"/>
+    <meta property="article:section" content="ESO Tools"/>
+    <meta property="article:tag" content="ESO Ultimate Generation Calculator"/>
+    <meta property="article:tag" content="ESO Ultimate Generation"/>
+    <meta property="article:tag" content="ESO Ultimate per Second"/>
+    <meta property="article:tag" content="ESO Decisive Trait"/>
+    <meta property="article:tag" content="Elder Scrolls Online"/>
+    <meta name="author" content="Hyperioxes"/>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "ESO Ultimate Generation Calculator | U50 | Hyperioxes",
+            "url": "https://hyperioxes.com/eso/tools/ultimate-calculator",
+            "description": "Calculate your ultimate generation in ESO and see how much Ultimate you're getting per second. Toggle various sources like Decisive, Heroism, sets, class passives, to see what's actually building your ult.",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Web",
+            "image": "https://hyperioxes.com/images/hyperIcon.webp",
+            "author": {"@type":"Person","@id":"https://hyperioxes.com/#hyperioxes","name":"Hyperioxes","url":"https://hyperioxes.com","sameAs":["https://www.youtube.com/@Hyperioxes","https://www.twitch.tv/hyperioxes"]},
+            "publisher": {
+                "@type": "Organization",
+                "name": "Hyperioxes",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://hyperioxes.com/images/logo.webp"
+                }
+            },
+            "datePublished": "2026-06-21T00:00:00+00:00",
+            "dateModified": "2026-07-29T00:00:00+00:00"
+        }
+    </script>
+    
+</head>
+<body class="bg-stone-900 text-white" style="font-family: 'Rajdhani', sans-serif;" data-guide-screenshots="false">
+
+    
+
+
+
+
+<header style="background: #0e0c0a; border-bottom: 1px solid #eab308; position: relative;">
+        <div class="hx-header-desktop" style="max-width: 1350px; margin: 0 auto; padding: 0 16px; align-items: center; height: 64px;">
+
+        <a class="hx-header-brand-desktop" href="/" style="font-size: 22px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase; padding-right: 32px; margin-right: 8px; border-right: 1px solid #2a2520; white-space: nowrap; transition: color 0.2s;">
+            Hyperioxes
+        </a>
+
+        <nav style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+            <div data-nosnippet="" style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/tank" aria-haspopup="true">
+            <img src="/images/uiElements/tankIcon.webp" alt="Tank" width="18" height="18">
+            Tank
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tank/arcanist-build">
+                            <img src="/images/icons/ability_arcanist_008_b.webp" alt="Arcanist Tank" width="18" height="18">
+                            Arcanist Tank
+                        </a>
+                                                                                <a href="/eso/tank/dragonknight-build">
+                            <img src="/images/icons/ability_dragonknight_007_b_u49_new.webp" alt="Dragonknight Tank" width="18" height="18">
+                            Dragonknight Tank
+                        </a>
+                                                                                <a href="/eso/tank/necromancer-build">
+                            <img src="/images/icons/ability_necromancer_011_b.webp" alt="Necromancer Tank" width="18" height="18">
+                            Necromancer Tank
+                        </a>
+                                                                                <a href="/eso/tank/nightblade-build">
+                            <img src="/images/icons/ability_nightblade_004_b.webp" alt="Nightblade Tank" width="18" height="18">
+                            Nightblade Tank
+                        </a>
+                                                                                <a href="/eso/tank/sorcerer-build">
+                            <img src="/images/icons/ability_sorcerer_typhoon.webp" alt="Sorcerer Tank" width="18" height="18">
+                            Sorcerer Tank
+                        </a>
+                                                                                <a href="/eso/tank/templar-build">
+                            <img src="/images/icons/ability_templar_radiant_ward.webp" alt="Templar Tank" width="18" height="18">
+                            Templar Tank
+                        </a>
+                                                                                <a href="/eso/tank/warden-build">
+                            <img src="/images/icons/ability_warden_003_a.webp" alt="Warden Tank" width="18" height="18">
+                            Warden Tank
+                        </a>
+                                                                                <a href="/eso/tank/sets">
+                            <img src="/images/icons/gear_amenossea_hvy_head_a.webp" alt="Tank Sets" width="18" height="18">
+                            Tank Sets
+                        </a>
+                                                                                <a href="/eso/tank/beginner-guide">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Beginner Tank Guide" width="18" height="18">
+                            Beginner Tank Guide
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/healer" aria-haspopup="true">
+            <img src="/images/uiElements/healerIcon.webp" alt="Healer" width="18" height="18">
+            Healer
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/healer/dps-healer-build">
+                            <img src="/images/icons/ability_ava_echoing_vigor.webp" alt="DPS Healer" width="18" height="18">
+                            DPS Healer
+                        </a>
+                                                                                <a href="/eso/healer/dungeon-subclass-build">
+                            <img src="/images/icons/ability_restorationstaff_003_b.png" alt="Dungeon Subclass Healer" width="18" height="18">
+                            Dungeon Subclass Healer
+                        </a>
+                                                                                <a href="/eso/healer/templar-build">
+                            <img src="/images/icons/ability_templar_extended_ritual.webp" alt="Templar Healer" width="18" height="18">
+                            Templar Healer
+                        </a>
+                                                                                <a href="/eso/healer/sets">
+                            <img src="/images/icons/gear_seagiantlgt_helmet.webp" alt="Healer Sets" width="18" height="18">
+                            Healer Sets
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/solo">
+            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo" width="18" height="18">
+            Solo
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dps">
+            <img src="/images/uiElements/dpsIcon.webp" alt="DPS" width="18" height="18">
+            DPS
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dungeon" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_groupinstance_complete.png" alt="Dungeons" width="18" height="18">
+            Dungeons
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/dungeon/bedlam-veil">
+                            <img src="/images/icons/ON-icon-achievement-Martial_Gift.png" alt="Bedlam Veil" width="18" height="18">
+                            Bedlam Veil
+                        </a>
+                                                                                <a href="/eso/dungeon/exiled-redoubt">
+                            <img src="/images/icons/achievement_u45_dun1_flavore.png" alt="Exiled Redoubt" width="18" height="18">
+                            Exiled Redoubt
+                        </a>
+                                                                                <a href="/eso/dungeon/lep-seclusa">
+                            <img src="/images/icons/achievement_u45_dun2_bosses.png" alt="Lep Seclusa" width="18" height="18">
+                            Lep Seclusa
+                        </a>
+                                                                                <a href="/eso/dungeon/gossamer-crypt">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_green.png" alt="Gossamer Crypt" width="18" height="18">
+                            Gossamer Crypt
+                        </a>
+                                                                                <a href="/eso/dungeon/mournful-catacomb">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_purple.png" alt="Mournful Catacomb" width="18" height="18">
+                            Mournful Catacomb
+                        </a>
+                                                                                <a href="/eso/dungeon/timeless-wallow">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_blue.png" alt="Timeless Wallow" width="18" height="18">
+                            Timeless Wallow
+                        </a>
+                                                </div>
+            </div>
+
+                                                                                                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/trial" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_raiddungeon_complete.png" alt="Trials" width="18" height="18">
+            Trials
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/trial/opulent-ordeal">
+                            <img src="/images/icons/achievement_u49_trial_vet.png" alt="Opulent Ordeal" width="18" height="18">
+                            Opulent Ordeal
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tier-lists" aria-haspopup="true">
+            <img src="/images/uiElements/tierListIcon.webp" alt="Tier Lists" width="18" height="18">
+            Tier Lists
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tier-lists/solo">
+                            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo Class Tier List" width="18" height="18">
+                            Solo Class Tier List
+                        </a>
+                                                                                <a href="/eso/tier-lists/tank">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Tank Class Tier List" width="18" height="18">
+                            Tank Class Tier List
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tools" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_crafting_complete.png" alt="Tools" width="18" height="18">
+            Tools
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tools/penetration-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Breach.png" alt="Penetration Calculator" width="18" height="18">
+                            Penetration Calculator
+                        </a>
+                                                                                <a href="/eso/tools/crit-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Force.png" alt="Crit Calculator" width="18" height="18">
+                            Crit Calculator
+                        </a>
+                                                                                <a href="/eso/tools/ultimate-calculator">
+                            <img src="/images/icons/ON-icon-misc-Minor_Heroism.png" alt="Ultimate Calculator" width="18" height="18">
+                            Ultimate Calculator
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/news">
+            <img src="/images/uiElements/newsIcon.png" alt="News" width="18" height="18">
+            News
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/guides" aria-haspopup="true">
+            <img src="/images/uiElements/guidesIcon.webp" alt="Guides" width="18" height="18">
+            Guides
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/guides/dynamic-encounters">
+                            <img src="/images/guides/dynamic-encounters/dynamic-encounter-icon.png" alt="" width="18" height="18">
+                            Dynamic Encounters
+                        </a>
+                                                                                <a href="/eso/guides/favors">
+                            <img src="/images/guides/favors/favor-icon.png?v=2" alt="" width="18" height="18">
+                            Favors
+                        </a>
+                                                                                <a href="/eso/guides/subclassing">
+                            <img src="/images/guides/subclassing/subclassing-icon.png" alt="" width="18" height="18">
+                            Subclassing
+                        </a>
+                                                                                <a href="/eso/night-market/oddities-and-races">
+                            <img src="/images/icons/death_recap_earth_ranged2.png" alt="Night Market Oddities and Races" width="18" height="18">
+                            Night Market Oddities &amp; Races
+                        </a>
+                                                                                <a href="/eso/night-market/boons">
+                            <img src="/images/icons/ability_u49_buff_fire_aura.png" alt="Night Market Boons" width="18" height="18">
+                            Night Market Boons
+                        </a>
+                                                                                <a href="/eso/guides/status-effects">
+                            <img src="/images/icons/ability_mage_062.png" alt="Status Effects" width="18" height="18">
+                            Status Effects
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/leveling-guides" aria-haspopup="true">
+            <img src="/images/uiElements/mapIcon.webp" alt="Leveling" width="18" height="18">
+            Leveling
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/leveling-guides/blackrose-prison">
+                            <img src="/images/icons/achievement_blackrose_boss_5.webp" alt="Blackrose Prison" width="18" height="18">
+                            Blackrose Prison
+                        </a>
+                                                </div>
+            </div>
+
+                                                                        </div>
+        </nav>
+    </div>
+
+        <div class="hx-header-mobile" style="border-top: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; height: 56px; padding: 0 16px;">
+            <a href="/" style="font-size: 20px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase;">Hyperioxes</a>
+            <button id="mobile-button" type="button" aria-label="Toggle navigation menu" aria-controls="mobile-dropdown-content" aria-expanded="false" style="color: #888; background: none; border: none; cursor: pointer; padding: 4px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-dropdown-content" class="hidden" data-nosnippet="" style="border-top: 1px solid #2a2520;">
+                                        <a href="/eso/tank" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tank</a>
+
+                                                                                                                                                                                                                                                                                                                                                                                                        <a href="/eso/healer" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Healer</a>
+
+                                                                                                                                                                                                                    <a href="/eso/solo" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Solo</a>
+
+                                                                    <a href="/eso/dps" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">DPS</a>
+
+                                                                    <a href="/eso/dungeon" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dungeons</a>
+
+                                                                                                                                                                                                                                                                                                                <a href="/eso/trial" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Trials</a>
+
+                                                                                                        <a href="/eso/tier-lists" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tier Lists</a>
+
+                                                                                                                                            <a href="/eso/tools" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tools</a>
+
+                                                                                                                                                                                <a href="/eso/news" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">News</a>
+
+                                                                    <a href="/eso/guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Guides</a>
+
+                                                                <a href="/eso/guides/dynamic-encounters" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dynamic Encounters</a>
+
+                                                                                    <a href="/eso/guides/favors" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Favors</a>
+
+                                                                                    <a href="/eso/guides/subclassing" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Subclassing</a>
+
+                                                                                    <a href="/eso/night-market/oddities-and-races" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Oddities &amp; Races</a>
+
+                                                                                    <a href="/eso/night-market/boons" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Boons</a>
+
+                                                                                                                            <a href="/eso/leveling-guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none;">Leveling</a>
+
+                                                                            </div>
+</header>
+
+<style>
+    .hx-header-brand-desktop:hover,
+    .hx-header-brand-desktop:focus-visible {
+        color: #eab308 !important;
+    }
+    .hx-header-desktop { display: none; }
+    .hx-header-mobile { display: block; }
+
+    .nav-item { position: relative; display: flex; align-items: center; }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 18px;
+        height: 64px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color 0.2s;
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #eab308;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+        transform-origin: left;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible { color: #eab308; }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after { transform: scaleX(1); }
+
+    .nav-link:focus-visible,
+    .dropdown-menu a:focus-visible {
+        outline: 2px solid #eab308;
+        outline-offset: -2px;
+    }
+
+    .nav-link img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; opacity: 0.7; transition: opacity 0.2s; }
+    .nav-link:hover img { opacity: 1; }
+
+    .nav-link .chevron, .nav-link svg { color: #555; transition: color 0.2s, transform 0.2s; flex-shrink: 0; }
+    .nav-link:hover svg { color: #eab308; transform: rotate(180deg); }
+
+    .nav-divider { width: 1px; background: #2a2520; height: 24px; align-self: center; margin: 0 2px; flex-shrink: 0; }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #161412;
+        border: 1px solid #2a2520;
+        border-top: 2px solid #eab308;
+        min-width: 200px;
+        z-index: 100;
+        padding: 6px 0;
+    }
+
+    .nav-item:hover .dropdown-menu,
+    .nav-item:focus-within .dropdown-menu { display: block; }
+
+    .nav-item.dropdown-escape-closed .dropdown-menu { display: none; }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .dropdown-menu a:hover,
+    .dropdown-menu a:focus-visible { color: #eab308; background: #1c1814; }
+    .dropdown-menu img { width: 18px; height: 18px; border-radius: 3px; opacity: 0.6; }
+    .dropdown-menu a:hover img { opacity: 1; }
+
+    @media (min-width: 1280px) {
+        .hx-header-desktop { display: flex; }
+        .hx-header-mobile,
+        #mobile-dropdown-content { display: none !important; }
+    }
+
+    @media (min-width: 1280px) and (max-width: 1535px) {
+        .hx-header-desktop { padding: 0 10px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 20px !important;
+            letter-spacing: 0.14em !important;
+            padding-right: 18px !important;
+            margin-right: 4px !important;
+        }
+
+        .nav-link {
+            gap: 4px;
+            padding: 0 8px;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-link > img { display: none; }
+        .nav-divider { height: 20px; margin: 0 1px; }
+    }
+
+    @media (min-width: 1536px) {
+        .hx-header-desktop { max-width: 1600px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 21px !important;
+            letter-spacing: 0.15em !important;
+            padding-right: 22px !important;
+            margin-right: 6px !important;
+        }
+
+        .nav-link {
+            gap: 6px;
+            padding: 0 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-divider { margin: 0 1px; }
+    }
+</style>
+
+<main>    
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/buffs.b6099190.3334744b559c.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/gear.33960e6b.8122395962ed.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/enchants.05cc509b.1fe490f2b099.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/skills.bd1acc71.d0e238c0c30e.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/passives.b3f10b1e.1ef44d08740f.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/class-mastery.876afdfd.429b130dfbe6.json"]}</script>
+    
+
+    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/traits.85b465cc.2db28beea22f.json"]}</script>
+    
+
+    
+
+
+
+
+
+
+
+
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+                        {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://hyperioxes.com/"
+            },                        {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Tools",
+                "item": "https://hyperioxes.com/eso/tools"
+            }                        ,{
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Ultimate Calculator",
+                "item": "https://hyperioxes.com/eso/tools/ultimate-calculator"
+            }
+        ]
+    }
+    </script>
+
+
+<div style="max-width: 1350px; margin: 20px auto 0; padding: 0 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #444;">
+    <a href="/" class="hover-link">Home</a>
+    <span style="color: #eab308; margin: 0 8px;">&gt;</span>
+    <a href="/eso/tools" class="hover-link">Tools</a>
+    <span style="color: #eab308; margin: 0 8px;">&gt;</span>
+    <span style="color: #ccc;">Ultimate Calculator</span>
+</div>
+
+<div style="max-width: 1350px; margin: 8px auto 0; padding: 0 16px;">
+    <div style="height: 1px; background: linear-gradient(to right, #eab30844, transparent);"></div>
+</div>
+
+<div class="max-w-[1350px] mx-auto" style="padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start;">
+
+    <div class="hidden lg:block guide-sidebar guide-sidebar--right">
+                    <div class="guide-sidebar-box" style="margin-top:16px;">
+        <div class="guide-sidebar-title">Related Tools</div>
+        <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                            <li><a href="/eso/tools/penetration-calculator" class="hover-link" style="font-size:14px;">Penetration Calculator</a></li>
+                            <li><a href="/eso/tools/crit-calculator" class="hover-link" style="font-size:14px;">Crit Calculator</a></li>
+                    </ul>
+    </div>
+
+        <div class="guide-sidebar-box" style="margin-top:16px;">
+            <div class="guide-sidebar-title">Related Guides</div>
+            <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                <li><a href="/eso/dps" class="hover-link" style="font-size:14px;">DPS Builds</a></li>
+                <li><a href="/eso/tank" class="hover-link" style="font-size:14px;">Tank Builds</a></li>
+                <li><a href="/eso/solo" class="hover-link" style="font-size:14px;">Solo Builds</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="ult-calc" style="flex: 1; min-width: 0; order: 2;">
+
+        <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #2a2520;">
+            <h1 style="font-size: 38px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #fff; line-height: 1.1; border-left: 4px solid #eab308; padding-left: 16px; margin-bottom: 16px;">
+                ESO Ultimate Generation Calculator
+            </h1>
+            <div style="height: 1px; background: #2a2520; margin: 16px 0;"></div>
+            <p class="guide-text mt-4 mx-2">Estimates your sustained Ultimate per second. Toggle your sources, set your Decisive weapons, and it shows the average ult/sec assuming everything triggers on cooldown.</p>
+        </div>
+
+        <div class="uc-sticky-bar uc-mobile-only">
+            <div class="uc-sticky-inner">
+                <span class="uc-sticky-label">Ultimate / sec</span>
+                <span id="uc-sticky-val" class="uc-sticky-val">0.0</span>
+                <span class="uc-sticky-unit">ult/s</span>
+            </div>
+        </div>
+
+        <div class="uc-layout">
+            <div class="uc-main">
+
+                <div class="uc-mobile-only">
+                    <div class="uc-result-card">
+                        <div class="uc-result-label">Ultimate per second</div>
+                        <div class="uc-result-num" id="uc-total-m">0.0</div>
+                        <div class="uc-bar">
+                            <div class="uc-bar-base" id="uc-bar-base-m" style="width:100%"></div>
+                            <div class="uc-bar-decisive" id="uc-bar-decisive-m" style="width:0%"></div>
+                        </div>
+                        <div class="uc-legend">
+                            <span class="uc-legend-item"><span class="uc-legend-dot base"></span>Base</span>
+                            <span class="uc-legend-item"><span class="uc-legend-dot decisive"></span>Decisive</span>
+                        </div>
+                        <div class="uc-stats">
+                            <div class="uc-stat-row uc-stat-row-alt">
+                                <span class="uc-stat-label">Base generation</span>
+                                <span class="uc-stat-val uc-gold-bold" id="uc-base-val-m">0.0</span>
+                            </div>
+                            <div class="uc-stat-row">
+                                <span class="uc-stat-label">Decisive bonus</span>
+                                <span class="uc-stat-val uc-decisive-text" id="uc-decisive-val-m">0.0</span>
+                            </div>
+                            <div class="uc-stat-row uc-stat-row-alt">
+                                <span class="uc-stat-label">Proc events / sec</span>
+                                <span class="uc-stat-val" id="uc-proc-val-m" style="color:#a0a0a0">0.0</span>
+                            </div>
+                            <div class="uc-stat-row">
+                                <span class="uc-stat-label">Ultimate / minute</span>
+                                <span class="uc-stat-val" id="uc-minute-val-m" style="color:#a0a0a0">0.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="uc-source-grid">
+                    <div class="uc-source-section">
+                            <div class="uc-section-header">
+        <span class="uc-section-title">Class Masteries</span>
+    </div>
+
+                        <div class="uc-source-section-grid">
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-erudites-rigor" data-source="erudites_rigor" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--class-mastery&#x20;uc-link" data-hx-tooltip-id="arcanist-erudites-rigor" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;64ff00;" data-hx-tooltip-tone="class-mastery"><img class="hx-tip-trigger__icon" src="/images/icons/passive_arcanist_11.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Erudite&#039;s Rigor</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-erudite-val">3</span><span class="uc-val-unit" id="uc-erudite-unit">/1s</span></span>
+                                </div>
+                                <div class="uc-erudite-opts uc-hidden">
+                                    <button class="uc-step-btn" type="button" data-erudite-step="-1" aria-label="Decrease Erudite interval">-</button>
+                                    <input class="uc-step-input" id="uc-erudite-seconds" type="number" min="1" max="60" step="1" value="1" inputmode="numeric" aria-label="Seconds per Erudite trigger">
+                                    <button class="uc-step-btn" type="button" data-erudite-step="1" aria-label="Increase Erudite interval">+</button>
+                                    <span class="uc-step-unit">seconds / trigger</span>
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">Crux / trigger</span>
+                                        <input class="uc-slider-range" id="uc-erudite-crux-range" type="range" min="0" max="3" step="1" value="3" data-erudite-crux aria-label="Crux per Erudite trigger">
+                                        <input class="uc-step-input uc-slider-number" id="uc-erudite-crux" type="number" min="0" max="3" step="1" value="3" inputmode="numeric" data-erudite-crux aria-label="Crux per Erudite trigger">
+                                    </label>
+                                </div>
+                            </div>
+                                <div class="uc-card uc-toggle" data-source="devout_guardian" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--class-mastery&#x20;uc-link" data-hx-tooltip-id="templar-devout-guardian" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;e4cb1f;" data-hx-tooltip-tone="class-mastery"><img class="hx-tip-trigger__icon" src="/images/icons/ability_templar_018.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Devout Guardian</span></span></span>
+            </div>
+            <span class="uc-val">10<span class="uc-val-unit">/6s</span></span>
+        </div>
+    </div>
+
+                                <div class="uc-card uc-toggle" data-source="bastion_light" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--class-mastery&#x20;uc-link" data-hx-tooltip-id="templar-bastion-of-light" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;e4cb1f;" data-hx-tooltip-tone="class-mastery"><img class="hx-tip-trigger__icon" src="/images/icons/ability_templar_025.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Bastion of Light</span></span></span>
+            </div>
+            <span class="uc-val">2<span class="uc-val-unit">/1s</span></span>
+        </div>
+    </div>
+
+                                <div class="uc-card uc-toggle" data-source="malevolent_promise" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--class-mastery&#x20;uc-link" data-hx-tooltip-id="necromancer-malevolent-promise" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;905ce0;" data-hx-tooltip-tone="class-mastery"><img class="hx-tip-trigger__icon" src="/images/icons/passive_armor_003.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Malevolent Promise</span></span></span>
+            </div>
+            <span class="uc-val">5<span class="uc-val-unit">/2s</span></span>
+        </div>
+    </div>
+
+                        </div>
+                    </div>
+
+                    <div class="uc-source-section">
+                            <div class="uc-section-header">
+        <span class="uc-section-title">Passives</span>
+    </div>
+
+                        <div class="uc-source-section-grid">
+                            <div class="uc-card uc-switch-card" id="uc-class-passive">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-name">
+                                        <span class="uc-nolink">Class Passive</span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-class-passive-val">0</span><span class="uc-val-unit" id="uc-class-passive-unit"></span></span>
+                                </div>
+                                <div class="uc-type-btns uc-class-passive-btns">
+                                    <button class="uc-type-btn uc-class-passive-none uc-active" type="button" data-class-source="">None</button>
+                                        <button class="uc-type-btn" type="button" data-class-source="implacable_outcome"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-implacable-outcome" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/passive_arcanist_08.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Implacable Outcome</span></span></button>
+
+                                        <button class="uc-type-btn" type="button" data-class-source="savage_beast"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-savage-beast" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/passive_warden_009.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Savage Beast</span></span></button>
+
+                                        <button class="uc-type-btn" type="button" data-class-source="prism"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-templar-prism" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/ability_templar_031.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Prism</span></span></button>
+
+                                        <button class="uc-type-btn" type="button" data-class-source="corpse_consumption"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-corpse-consumption" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/passive_necromancer_011.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Corpse Consumption</span></span></button>
+
+                                        <button class="uc-type-btn" type="button" data-class-source="transfer"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-transfer" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/passive_sorcerer_002.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Transfer</span></span></button>
+
+                                        <button class="uc-type-btn" type="button" data-class-source="blessing_peak"><span class="hx-tip-trigger hx-tip-trigger--passive" data-hx-tooltip-id="passive-blessing-at-the-peak" data-hx-tooltip-click-mode="hover-only" aria-expanded="false"><img class="hx-tip-trigger__icon" src="/images/icons/ability_dragonknight_024_u49_new.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Blessing at the Peak</span></span></button>
+
+                                </div>
+                            </div>
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-catalyst" data-source="catalyst" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;uc-link" data-hx-tooltip-id="passive-nightblade-catalyst" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="hx-tip-trigger__icon" src="/images/icons/passive_sorcerer_046.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Catalyst</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-catalyst-val">22</span><span class="uc-val-unit" id="uc-catalyst-unit">/45s</span></span>
+                                </div>
+                                <div class="uc-catalyst-opts uc-hidden">
+                                    <div class="uc-type-btns">
+                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--enchant&#x20;uc-step-unit" data-hx-tooltip-id="enchant-jewelry-potion-speed" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;f472b6;" data-hx-tooltip-tone="enchant"><img class="hx-tip-trigger__icon" src="/images/icons/enchantment_jewelry_potionpotency.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Potion Cooldown</span></span>
+                                        <button class="uc-type-btn uc-active" type="button" data-catalyst-glyphs="0">0</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-glyphs="1">1</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-glyphs="2">2</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-glyphs="3">3</button>
+                                    </div>
+                                    <div class="uc-type-btns">
+                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--trait&#x20;uc-step-unit" data-hx-tooltip-id="jewelry-infused" aria-expanded="false" data-hx-tooltip-tone="trait"><img class="hx-tip-trigger__icon" src="/images/icons/crafting_enchantment_base_jade_r1.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Infused</span></span>
+                                        <button class="uc-type-btn uc-active" type="button" data-catalyst-infused="0">0</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-infused="1">1</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-infused="2">2</button>
+                                        <button class="uc-type-btn" type="button" data-catalyst-infused="3">3</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                                <div class="uc-card uc-toggle" data-source="stalwart" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;uc-link" data-hx-tooltip-id="passive-stalwart" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="hx-tip-trigger__icon" src="/images/icons/ability_sorcerer_018.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Stalwart</span></span></span>
+            </div>
+            <span class="uc-val">5<span class="uc-val-unit">/10s</span></span>
+        </div>
+    </div>
+
+                        </div>
+                    </div>
+
+                    <div class="uc-source-section">
+                            <div class="uc-section-header">
+        <span class="uc-section-title">Skills</span>
+    </div>
+
+                        <div class="uc-source-section-grid">
+                                <div class="uc-card uc-toggle" data-source="exhilarating_drain" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--skill&#x20;uc-link" data-hx-tooltip-id="skill-exhilarating-drain" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;d7b46a;" data-hx-tooltip-tone="skill"><img class="hx-tip-trigger__icon" src="/images/icons/ability_u26_vampire_03_b.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Exhilarating Drain</span></span></span>
+            </div>
+            <span class="uc-val">5<span class="uc-val-unit">/1s</span></span>
+        </div>
+    </div>
+
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-necrotic-potency" data-source="necrotic_potency" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--skill&#x20;uc-link" data-hx-tooltip-id="skill-necrotic-potency" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;d7b46a;" data-hx-tooltip-tone="skill"><img class="hx-tip-trigger__icon" src="/images/icons/ability_necromancer_011_b.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Necrotic Potency</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-necrotic-val">6</span><span class="uc-val-unit" id="uc-necrotic-unit">/6s</span></span>
+                                </div>
+                                <div class="uc-necrotic-opts uc-hidden">
+                                    <button class="uc-step-btn" type="button" data-necrotic-step="-1" aria-label="Decrease corpse interval">-</button>
+                                    <input class="uc-step-input" id="uc-necrotic-seconds" type="number" min="1" max="60" step="1" value="6" inputmode="numeric" aria-label="Seconds per corpse">
+                                    <button class="uc-step-btn" type="button" data-necrotic-step="1" aria-label="Increase corpse interval">+</button>
+                                    <span class="uc-step-unit">seconds / corpse</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="uc-source-section">
+                            <div class="uc-section-header">
+        <span class="uc-section-title">Gear</span>
+    </div>
+
+                        <div class="uc-source-section-grid">
+                                <div class="uc-card uc-toggle" data-source="bloodspawn" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="bloodspawn" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_undauntedgargoyle_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Bloodspawn</span></span></span>
+            </div>
+            <span class="uc-val">13<span class="uc-val-unit">/proc</span></span>
+        </div>
+    </div>
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-baron-zaudrus" data-source="baron_zaudrus" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="baron-zaudrus" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_undredlord_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Baron Zaudrus</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-baron-val">4</span><span class="uc-val-unit" id="uc-baron-unit">/1s</span></span>
+                                </div>
+                                <div class="uc-baron-opts uc-hidden">
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">seconds / proc</span>
+                                        <input class="uc-slider-range" id="uc-baron-seconds-range" type="range" min="1" max="60" step="1" value="1" data-baron-seconds aria-label="Seconds per Baron Zaudrus proc">
+                                        <input class="uc-step-input uc-slider-number" id="uc-baron-seconds" type="number" min="1" max="60" step="1" value="1" inputmode="numeric" data-baron-seconds aria-label="Seconds per Baron Zaudrus proc">
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-hide-of-the-werewolf" data-source="hide_of_the_werewolf" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="hide-of-the-werewolf" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_primative_medium_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Hide of the Werewolf</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-werewolf-hide-val">6</span><span class="uc-val-unit" id="uc-werewolf-hide-unit">/5s</span></span>
+                                </div>
+                                <div class="uc-werewolf-hide-opts uc-hidden">
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">seconds / proc</span>
+                                        <input class="uc-slider-range" id="uc-werewolf-hide-seconds-range" type="range" min="5" max="15" step="1" value="5" data-werewolf-hide-seconds aria-label="Seconds per Hide of the Werewolf proc">
+                                        <input class="uc-step-input uc-slider-number" id="uc-werewolf-hide-seconds" type="number" min="5" max="15" step="1" value="5" inputmode="numeric" data-werewolf-hide-seconds aria-label="Seconds per Hide of the Werewolf proc">
+                                    </label>
+                                    <label class="uc-inline-check">
+                                        <input class="uc-inline-check-input" id="uc-werewolf-hide-werewolf" type="checkbox">
+                                        <span class="uc-check"></span>
+                                        <span class="uc-step-unit">Werewolf</span>
+                                    </label>
+                                </div>
+                            </div>
+                                <div class="uc-card uc-toggle" data-source="arkasis" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="arkasiss-genius" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_northlandsalch_heavy_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Arkasis&#039;s Genius</span></span></span>
+            </div>
+            <span class="uc-val">44<span class="uc-val-unit">/30s</span></span>
+        </div>
+    </div>
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-pillagers-profit" data-source="pillagers_profit" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="pillagers-profit" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_amenossea_lgt_head_a.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Pillager&#039;s Profit</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-pillager-val">50</span><span class="uc-val-unit" id="uc-pillager-unit">/45s</span></span>
+                                </div>
+                                <div class="uc-pillager-opts uc-hidden">
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">Ultimate spent</span>
+                                        <input class="uc-slider-range" id="uc-pillager-ultimate-range" type="range" min="0" max="500" step="1" value="500" data-pillager-ultimate aria-label="Ultimate spent for Pillager's Profit">
+                                        <input class="uc-step-input uc-slider-number" id="uc-pillager-ultimate" type="number" min="0" max="500" step="1" value="500" inputmode="numeric" data-pillager-ultimate aria-label="Ultimate spent for Pillager's Profit">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-arkay-charity" data-source="arkays_charity" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="arkays-charity" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_breton_light_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Arkay&#039;s Charity</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-arkay-val">13</span><span class="uc-val-unit" id="uc-arkay-unit">/9s</span></span>
+                                </div>
+                                <div class="uc-arkay-opts uc-hidden">
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">seconds / cleanse</span>
+                                        <input class="uc-slider-range" id="uc-arkay-seconds-range" type="range" min="9" max="27" step="1" value="9" data-arkay-seconds aria-label="Seconds per cleanse">
+                                        <input class="uc-step-input uc-slider-number" id="uc-arkay-seconds" type="number" min="9" max="27" step="1" value="9" inputmode="numeric" data-arkay-seconds aria-label="Seconds per cleanse">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="uc-card uc-toggle uc-expand-card" id="uc-cryptcanon-vestments" data-source="cryptcanon_vestments" role="button" tabindex="0">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;uc-link" data-hx-tooltip-id="cryptcanon-vestments" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="hx-tip-trigger__icon" src="/images/icons/gear_dunmercryptpriest_chest_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Cryptcanon Vestments</span></span></span>
+                                    </div>
+                                    <span class="uc-val"><span id="uc-cryptcanon-val">41.667</span><span class="uc-val-unit" id="uc-cryptcanon-unit">/60s</span></span>
+                                </div>
+                                <div class="uc-cryptcanon-opts uc-hidden">
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">seconds / transfer</span>
+                                        <input class="uc-slider-range" id="uc-cryptcanon-seconds-range" type="range" min="1" max="180" step="1" value="60" data-cryptcanon-seconds aria-label="Seconds per Cryptcanon transfer">
+                                        <input class="uc-step-input uc-slider-number" id="uc-cryptcanon-seconds" type="number" min="1" max="180" step="1" value="60" inputmode="numeric" data-cryptcanon-seconds aria-label="Seconds per Cryptcanon transfer">
+                                    </label>
+                                    <label class="uc-slider-row">
+                                        <span class="uc-step-unit">Ultimate / transfer</span>
+                                        <input class="uc-slider-range" id="uc-cryptcanon-ultimate-range" type="range" min="0" max="500" step="0.001" value="41.667" data-cryptcanon-ultimate aria-label="Ultimate per Cryptcanon transfer">
+                                        <input class="uc-step-input uc-slider-number" id="uc-cryptcanon-ultimate" type="number" min="0" max="500" step="0.001" value="41.667" inputmode="decimal" data-cryptcanon-ultimate aria-label="Ultimate per Cryptcanon transfer">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="uc-source-section">
+                            <div class="uc-section-header">
+        <span class="uc-section-title">Other</span>
+    </div>
+
+                        <div class="uc-source-section-grid">
+                                <div class="uc-card uc-toggle" data-source="light_attack" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink">Base Ultimate Regen<span role="button" tabindex="0" class="hx-tip-trigger&#x20;guide-info-dot" data-hx-tooltip-id="ultimate-calculator-combat-ultimate-regen" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;eab308;"><span class="hx-tip-trigger__label">?</span></span></span>
+            </div>
+            <span class="uc-val">3<span class="uc-val-unit">/1s</span></span>
+        </div>
+    </div>
+
+                                <div class="uc-card uc-toggle" data-source="minor_heroism" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;uc-link" data-hx-tooltip-id="minor-heroism" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Heroism.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Minor Heroism</span></span></span>
+            </div>
+            <span class="uc-val">1<span class="uc-val-unit">/1.5s</span></span>
+        </div>
+    </div>
+
+                                <div class="uc-card uc-toggle" data-source="major_heroism" role="button" tabindex="0">
+        <div class="uc-active-bar"></div>
+        <div class="uc-card-row">
+            <div class="uc-check"></div>
+            <div class="uc-name">
+                <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;uc-link" data-hx-tooltip-id="major-heroism" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Heroism.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Major Heroism</span></span></span>
+            </div>
+            <span class="uc-val">3<span class="uc-val-unit">/1.5s</span></span>
+        </div>
+    </div>
+
+
+                            <div class="uc-card uc-expand-card" id="uc-decisive">
+                                <div class="uc-active-bar"></div>
+                                <div class="uc-card-row">
+                                    <div class="uc-check"></div>
+                                    <div class="uc-name">
+                                        <span class="uc-nolink"><span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--trait&#x20;uc-link" data-hx-tooltip-id="weapon-decisive" aria-expanded="false" data-hx-tooltip-tone="trait"><img class="hx-tip-trigger__icon" src="/images/icons/crafting_smith_potion__sp_names_003.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Decisive</span></span></span>
+                                                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;guide-info-dot" data-hx-tooltip-id="ultimate-calculator-decisive" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;eab308;"><span class="hx-tip-trigger__label">?</span></span>
+    
+
+                                    </div>
+                                    <span class="uc-val uc-gold-bold" id="uc-decisive-card-pct">0.0%</span>
+                                </div>
+                                <div class="uc-decisive-opts uc-hidden">
+                                    <div class="uc-type-btns" data-group="decisive-weapon">
+                                        <button class="uc-type-btn" type="button" data-decisive="one_handed">1-handed</button>
+                                        <button class="uc-type-btn uc-active" type="button" data-decisive="two_handed">2-handed</button>
+                                        <button class="uc-type-btn" type="button" data-decisive="dual_wield">Dual Wield</button>
+                                    </div>
+                                    <div class="uc-divider-v"></div>
+                                    <button class="uc-toggle-btn" id="uc-decisive-heartland" type="button"><img class="uc-toggle-btn-icon" src="/images/icons/gear_breton_light_head_d.webp" alt="Heartland Conqueror gear set - ESO" loading="lazy" width="16" height="16">Heartland Conqueror</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="uc-merge-note" class="uc-merge-note uc-hidden">Minor and Major Heroism tick on the same 1.5s cadence and merge into one event, so Decisive only rolls once on them, not twice.</div>
+
+            </div>
+
+            <div class="uc-panel uc-desktop-only">
+                <div class="uc-section-label">Ultimate per second</div>
+                <div class="uc-result-card">
+                    <div class="uc-result-label">Ultimate per second</div>
+                    <div class="uc-result-num" id="uc-total-d">0.0</div>
+                    <div class="uc-bar">
+                        <div class="uc-bar-base" id="uc-bar-base-d" style="width:100%"></div>
+                        <div class="uc-bar-decisive" id="uc-bar-decisive-d" style="width:0%"></div>
+                    </div>
+                    <div class="uc-legend">
+                        <span class="uc-legend-item"><span class="uc-legend-dot base"></span>Base</span>
+                        <span class="uc-legend-item"><span class="uc-legend-dot decisive"></span>Decisive</span>
+                    </div>
+                </div>
+                <div class="uc-stats">
+                    <div class="uc-stat-row uc-stat-row-alt">
+                        <span class="uc-stat-label">Base generation</span>
+                        <span class="uc-stat-val uc-gold-bold" id="uc-base-val-d">0.0</span>
+                    </div>
+                    <div class="uc-stat-row">
+                        <span class="uc-stat-label">Decisive bonus</span>
+                        <span class="uc-stat-val uc-decisive-text" id="uc-decisive-val-d">0.0</span>
+                    </div>
+                    <div class="uc-stat-row uc-stat-row-alt">
+                        <span class="uc-stat-label">Proc events / sec</span>
+                        <span class="uc-stat-val" id="uc-proc-val-d" style="color:#a0a0a0">0.0</span>
+                    </div>
+                    <div class="uc-stat-row">
+                        <span class="uc-stat-label">Decisive chance</span>
+                        <span class="uc-stat-val" id="uc-decisive-chance-val" style="color:#a0a0a0">0.0%</span>
+                    </div>
+                    <div class="uc-stat-row uc-stat-row-alt">
+                        <span class="uc-stat-label">Ultimate / minute</span>
+                        <span class="uc-stat-val" id="uc-minute-val-d" style="color:#a0a0a0">0.0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+﻿<div id="thanks" class="my-8 text-center">
+                            
+    
+    <h2 class="font-bold text-3xl lg:text-7xl my-6">THANKS FOR READING</h2>
+    <a href="https://www.patreon.com/c/Hyperioxes" aria-label="Patreon"><img class="thanks-patreon-logo" src="/images/logos/patreonLogo.webp" alt="Patreon" loading="lazy" decoding="async" width="512" height="512"></a>
+    <p class="guide-text my-4">If you want to support my work, you can do so through <a class="text-orange-500 hover:text-orange-400 underline underline-offset-2" href="https://www.patreon.com/c/Hyperioxes">Patreon</a>.</p>
+</div>
+</main>
+    
+
+
+    ﻿<footer>
+    <div data-nosnippet="" style="background: #0e0c0a; border-top: 1px solid #eab308; padding: 48px 0;">
+        <div style="max-width: 1350px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; gap: 48px; align-items: stretch;">
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Discord</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Wild Heart is a Discord server where you can find advice for any aspect of PvE.</p>
+                <a href="https://discord.com/invite/wildheart" style="display: block; text-align: center;" aria-label="Discord">
+                    <img class="footer-social-logo" src="/images/discord-logo-white.svg" alt="Discord" width="169" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-1" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-1" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">YouTube</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Most builds on this site have a corresponding video on my YouTube channel.</p>
+                <a href="https://www.youtube.com/@Hyperioxes" style="display: block; text-align: center;" aria-label="YouTube">
+                    <img class="footer-social-logo" src="/images/yt_logo_mono_dark.webp" alt="YouTube" width="143" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-2" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-2" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Twitch</h3>
+                <p style="max-width: 260px; font-size: 13px; color: #888; line-height: 1.6; text-align: center;">I stream ESO build testing and gameplay on Twitch.</p>
+                <a href="https://www.twitch.tv/hyperioxes" style="display: block; text-align: center;" aria-label="Twitch">
+                    <img class="footer-social-logo" src="/images/twitchLogo.webp" alt="Twitch" width="800" height="265" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+        </div>
+
+        <div style="max-width: 1350px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid #2a2520; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 24px;">
+            <span style="font-size: 18px; font-weight: 700; letter-spacing: 0.1em; color: #888;">HYPERIOXES</span>
+            <a href="/privacy-policy" style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #a8a29e; text-decoration: none;">Privacy Policy</a>
+            <div id="ncmp-consent-link"></div>
+            <span data-ccpa-link="1"></span>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer-social-logo:hover,
+    .footer-social-logo:focus-visible {
+        opacity: 1 !important;
+    }
+    @media (max-width: 860px) {
+        .footer-divider-1 { display: none; }
+        .footer-divider-2 { display: none; }
+        .footer-divider-h { display: block !important; }
+    }
+</style>
+
+
+
+        <script src="/build/runtime.2033471d.js" defer></script><script src="/build/app.4d0ec687.js" defer></script>
+    
+            <script src="/build/ultimate-calculator.52c43cd6.js?v=uc32" defer></script>
+        <script src="/build/4114.07180314.js" defer></script><script src="/build/tooltips.2333a265.js" defer></script>
+
+<script>
+function hyperioxesScheduleNitroAds(){var load=window.hyperioxesLoadNitroAds;if(typeof load!=="function")return;var run=function(){window.setTimeout(function(){if("requestIdleCallback"in window){window.requestIdleCallback(load,{timeout:3000});}else{load();}},1200);};if(document.readyState==="complete"){run();}else{window.addEventListener("load",run,{once:true});}}
+hyperioxesScheduleNitroAds();
+window['nitroAds'].createAd('rail-left', {
+  "format": "rail",
+  "rail": "left",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('rail-right', {
+  "format": "rail",
+  "rail": "right",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('anchor', {
+  "format": "anchor",
+  "anchor": "bottom",
+  "anchorClose": true,
+  "anchorPersistClose": true,
+  "mediaQuery": "(max-width: 1023px)",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming"
+});
+
+</script>
+
+</body>
+</html>
