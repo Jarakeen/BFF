@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -72,52 +70,31 @@ class EligibleSkillBarRow(build_editor.SkillBarRow):
 
 
 class EligibleBuildEditor(build_editor.BuildEditor):
-    """Existing polished BuildEditor with explicit build/lycanthropy state."""
+    """BuildEditor with build-name and centralized skill eligibility."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.build_name = QLineEdit()
         self.build_name.setPlaceholderText("Build name")
-        self.vampire_checkbox = QCheckBox("Vampire")
-        self.werewolf_checkbox = QCheckBox("Werewolf")
-        self.vampire_checkbox.toggled.connect(self._on_vampire_toggled)
-        self.werewolf_checkbox.toggled.connect(self._on_werewolf_toggled)
 
-        # BuildEditor creates the Identity card first. Add the new state
-        # controls without changing the existing card layout or skill-bar UI.
+        # BuildEditor already owns the single Vampire/Werewolf pair in the
+        # Identity card. Add only the build-name field here. Do not create a
+        # second affiliation control pair.
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
             row = QHBoxLayout()
             row.addWidget(QLabel("Build Name"))
             row.addWidget(self.build_name, 2)
-            row.addSpacing(12)
-            row.addWidget(QLabel("Affiliation"))
-            row.addWidget(self.vampire_checkbox)
-            row.addWidget(self.werewolf_checkbox)
             row.addStretch(1)
             identity_card.addLayout(row)
 
         self.eso_class.currentTextChanged.connect(self._on_class_changed)
         self._sync_skill_state()
 
-    def _on_vampire_toggled(self, checked: bool):
-        if checked:
-            self.werewolf_checkbox.blockSignals(True)
-            self.werewolf_checkbox.setChecked(False)
-            self.werewolf_checkbox.blockSignals(False)
-        self._sync_skill_state()
-
-    def _on_werewolf_toggled(self, checked: bool):
-        if checked:
-            self.vampire_checkbox.blockSignals(True)
-            self.vampire_checkbox.setChecked(False)
-            self.vampire_checkbox.blockSignals(False)
-        self._sync_skill_state()
-
     def _sync_skill_state(self):
-        vampire = self.vampire_checkbox.isChecked()
-        werewolf = self.werewolf_checkbox.isChecked()
+        vampire = self.vampire.isChecked()
+        werewolf = self.werewolf.isChecked()
         for bar in (getattr(self, "front_bar", None), getattr(self, "back_bar", None)):
             if hasattr(bar, "set_affiliation"):
                 bar.set_affiliation(vampire=vampire, werewolf=werewolf)
@@ -134,13 +111,9 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     def model(self):
         model = super().model
         model.BuildName = self.build_name.text().strip()
-        model.Vampire = self.vampire_checkbox.isChecked()
-        model.Werewolf = self.werewolf_checkbox.isChecked()
         return model
 
     def load(self, model):
         super().load(model)
         self.build_name.setText(getattr(model, "BuildName", "") or "")
-        self.vampire_checkbox.setChecked(bool(getattr(model, "Vampire", False)))
-        self.werewolf_checkbox.setChecked(bool(getattr(model, "Werewolf", False)))
         self._sync_skill_state()
