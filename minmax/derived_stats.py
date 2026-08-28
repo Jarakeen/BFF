@@ -33,7 +33,7 @@ class DerivedStatTrace:
     stat: StatId
     steps: list[tuple[str, str, float, float]] = field(default_factory=list)
     raw_value: float = 0.0
-    final_value: int = 0
+    final_value: float = 0.0
 
     def add(self, label: str, operation: str, value: float, result: float) -> None:
         self.steps.append((label, operation, value, result))
@@ -42,18 +42,41 @@ class DerivedStatTrace:
 class DerivedStatCalculator:
     """Traceable first layer for derived combat stats.
 
-    The level-based Weapon/Spell Damage baseline is kept explicit here. Other
-    derived stats use supplied resolved contributions until their live-game
-    formula has been verified. This prevents the calculator from silently
-    inventing rules for ambiguous or version-sensitive ESO mechanics.
+    ESO stores several stats as ratios internally. In particular, critical
+    chance and critical damage are represented here as 0.10 / 0.50 rather than
+    10 / 50. Integer-facing stats continue to use ESO's ceiling behavior.
+    This keeps the calculation layer numerically correct and lets the UI
+    format ratio stats as percentages without multiplying an already-rounded
+    value by 100.
     """
+
+    RATIO_STATS = frozenset(
+        {
+            StatId.CRITICAL_CHANCE,
+            StatId.CRITICAL_DAMAGE,
+            StatId.HEALING_DONE,
+            StatId.HEALING_TAKEN,
+        }
+    )
 
     @staticmethod
     def eso_round(value: float) -> int:
         return int(ceil(value))
 
-    @staticmethod
+    def _finalize(self, trace: DerivedStatTrace) -> DerivedStatTrace:
+        trace.raw_value = trace.raw_value
+        if trace.stat in self.RATIO_STATS:
+            # Ratio stats must retain their fractional value. Applying ceil to
+            # 0.10 would turn 10% Critical Chance into 100% when formatted.
+            trace.final_value = trace.raw_value
+            trace.add("ESO ratio", "retain", trace.raw_value, trace.final_value)
+        else:
+            trace.final_value = self.eso_round(trace.raw_value)
+            trace.add("ESO rounding", "ceil", trace.final_value, trace.final_value)
+        return trace
+
     def _flat_percent(
+        self,
         stat: StatId,
         base: float,
         inputs: DerivedStatInputs,
@@ -78,9 +101,7 @@ class DerivedStatCalculator:
             trace.add(contribution.label, "add", contribution.value, current)
 
         trace.raw_value = current
-        trace.final_value = DerivedStatCalculator.eso_round(current)
-        trace.add("ESO rounding", "ceil", trace.final_value, trace.final_value)
-        return trace
+        return self._finalize(trace)
 
     def weapon_damage(self, inputs: DerivedStatInputs = DerivedStatInputs()) -> DerivedStatTrace:
         return self._flat_percent(
