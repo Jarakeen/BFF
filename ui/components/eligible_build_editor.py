@@ -114,14 +114,15 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addWidget(self.werewolf)
             row.addWidget(self.vampire)
 
-            for widget, placeholder in (
-                (self.attribute_magicka, "Mag"),
-                (self.attribute_stamina, "Stam"),
-                (self.attribute_health, "Health"),
+            for widget, prefix in (
+                (self.attribute_magicka, "Mag "),
+                (self.attribute_stamina, "Stam "),
+                (self.attribute_health, "Health "),
             ):
                 widget.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-                widget.setFixedWidth(72)
-                widget.lineEdit().setPlaceholderText(placeholder)
+                widget.setFixedWidth(78 if prefix != "Health " else 88)
+                widget.setPrefix(prefix)
+                widget.lineEdit().setPlaceholderText("")
                 row.addWidget(widget)
 
             self.attribute_total.setText("0/64")
