@@ -43,8 +43,8 @@ def test_flat_and_percentage_contributions_are_traced():
         )
     )
 
-    # (12000 + 7104 + 2100) * 1.15 = 24204.6 -> 24205.
-    assert trace.final_value == 24205
+    # 12000 + 7104 + 2100 = 21204; 21204 * 1.15 = 24384.6 -> 24385.
+    assert trace.final_value == 24385
     assert [step.label for step in trace.steps] == [
         "base",
         "attribute points",
