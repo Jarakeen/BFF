@@ -97,6 +97,8 @@ Exit criteria
 
 A real character can have a reusable, database-backed Build.
 
+------------------------------------
+
 PHASE 2 · Effect Architecture
 Status: 🟡
 
@@ -136,6 +138,8 @@ The existing effect-resolution system remains authoritative.
 Exit criteria
 
 A real build can expose the effects it actually provides.
+
+------------------------------------
 
 PHASE 3 · Static Combat Rules Engine
 Status: 🟢 foundation / 🟡 integration
@@ -218,6 +222,8 @@ One authoritative static combat calculation.
 
 No duplicate formulas living in random corners of the codebase.
 
+------------------------------------
+
 PHASE 4 · Resource & Sustain Engine
 Status: 🔴
 
@@ -257,6 +263,8 @@ Resource Curve
 Exit criteria
 
 BFF can determine whether a build can sustain its modeled activity rather than merely reporting recovery numbers.
+
+------------------------------------
 
 PHASE 5 · Real Build Resolution
 Status: 🟡 CURRENT
@@ -299,6 +307,9 @@ mythics
 arena effects
 skills
 conditional effects
+
+------------------------------------
+
 PHASE 6 · Damage / Effect Components
 Status: 🔴
 
@@ -329,6 +340,8 @@ This matters because direct damage and DoTs do not interact with every amplifier
 Exit criteria
 
 BFF can explain what kind of damage an ability actually produces.
+
+------------------------------------
 
 PHASE 7 · Conditional Effects & Proc Engine
 Status: 🔴
@@ -370,6 +383,8 @@ Exit criteria
 
 BFF can calculate expected conditional effect behavior.
 
+------------------------------------
+
 PHASE 8 · Combat State
 Status: 🔴
 
@@ -400,6 +415,8 @@ rather than only:
 
 "What does this build theoretically have?"
 
+------------------------------------
+
 PHASE 9 · Encounter Model
 Status: 🟡
 
@@ -424,6 +441,8 @@ The encounter model already defines mechanics, requirements, state transitions, 
 Exit criteria
 
 BFF understands what an encounter actually demands.
+
+------------------------------------
 
 PHASE 10 · Encounter Evaluation
 Status: 🟡 Current Phase 5 finish line
@@ -454,6 +473,8 @@ This is the practical Phase 5 finish line already identified in the project stat
 Exit criteria
 
 BFF can reliably evaluate a real roster against a real encounter.
+
+------------------------------------
 
 PHASE 11 · Provider Assignment
 Status: 🔴
@@ -490,6 +511,8 @@ Candidate Providers
 Optimal Assignment
 
 This is the bridge between Coverage and Optimization.
+
+------------------------------------
 
 PHASE 12 · Build Optimization
 Status: 🔴
@@ -538,6 +561,8 @@ BFF can make a recommendation such as:
 
 Replace X with Y because it increases expected encounter damage by Z while preserving required coverage and sustain.
 
+------------------------------------
+
 PHASE 13 · Rotation Engine
 Status: 🔴
 
@@ -571,6 +596,8 @@ mechanic handling
 
 Rotations must account for skill duration, cost, damage, resource constraints, and utility.
 
+------------------------------------
+
 PHASE 14 · Combat Simulation
 Status: 🔴
 
@@ -600,6 +627,8 @@ Damage  Buff       Mechanic Transition
 Exit criteria
 
 BFF can model an encounter over time.
+
+------------------------------------
 
 PHASE 15 · Encounter-Aware Optimization
 Status: 🔴
@@ -637,6 +666,8 @@ not:
 
 That distinction is the entire point.
 
+------------------------------------
+
 PHASE 16 · Explanation Engine
 Status: 🔴
 
@@ -667,6 +698,8 @@ Evidence:
 
 The existing project direction already envisions this level of explanation rather than simply displaying "Insufficient Major Force."
 
+------------------------------------
+
 PHASE 17 · ESO Logs Validation
 Status: 🔴
 
@@ -687,6 +720,8 @@ Diagnosis
 Model Refinement
 
 This becomes the feedback loop that keeps BFF honest.
+
+------------------------------------
 
 PHASE 18 · Strategy Engine
 Status: 🔴
@@ -716,6 +751,8 @@ This is where BFF can eventually say:
 "This is technically 2.3% better, but it requires perfect uptime during a mechanic your group currently struggles with. The safer option is probably better."
 
 Which is much more useful than worshipping the spreadsheet.
+
+------------------------------------
 
 PHASE 19 · Full Raid Optimizer
 Status: 🔴
