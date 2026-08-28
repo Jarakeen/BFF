@@ -79,8 +79,6 @@ class EligibleBuildEditor(build_editor.BuildEditor):
         self.build_name.setPlaceholderText("Build name")
         self.build_name.setFixedWidth(500)
 
-        # BuildEditor owns the authoritative controls. Move them out of the
-        # old two-row grid and put them into one compact row with Build Name.
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
             grid = identity_card.body_layout.itemAt(0).layout()
@@ -123,7 +121,7 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             ):
                 widget.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
                 widget.setFixedWidth(72)
-                widget.setToolTip(placeholder)
+                widget.lineEdit().setPlaceholderText(placeholder)
                 row.addWidget(widget)
 
             self.attribute_total.setText("0/64")
