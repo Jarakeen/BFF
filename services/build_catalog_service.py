@@ -34,7 +34,6 @@ class BuildCatalogService:
 
     @classmethod
     def _has_meaningful_value(cls, value: Any) -> bool:
-        """Return whether a legacy field or nested structure contains data."""
         if value is None:
             return False
         if isinstance(value, str):
@@ -49,9 +48,8 @@ class BuildCatalogService:
 
     @classmethod
     def _is_empty_member(cls, build: PlayerBuild) -> bool:
-        """Return True for the blank rows used by the legacy roster UI."""
-        data = build.to_dict()
-        return not cls._has_meaningful_value(data)
+        """Return True for blank placeholder rows in the legacy Builds UI."""
+        return not cls._has_meaningful_value(build.to_dict())
 
     @staticmethod
     def _normalize(data: Any) -> dict[str, Any]:
@@ -63,7 +61,6 @@ class BuildCatalogService:
         }
 
     def new_catalog(self) -> dict[str, Any]:
-        """Return a new empty canonical catalog with the current schema version."""
         return self._normalize(None)
 
     def load(self) -> dict[str, Any]:
@@ -87,11 +84,7 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create one character record per stable identity and one build per row.
-
-        Completely blank rows in the legacy Builds UI are placeholders and are
-        intentionally excluded from the canonical catalog.
-        """
+        """Create canonical records while excluding blank legacy placeholders."""
         catalog = self._normalize(None)
         characters: dict[str, dict[str, Any]] = {}
 
@@ -133,7 +126,6 @@ class BuildCatalogService:
         return catalog
 
     def import_legacy_file(self, legacy_path: Path) -> dict[str, Any]:
-        """Load a legacy builds.json file and convert it to the canonical catalog."""
         roster = BuildRoster.from_dict(
             json.loads(Path(legacy_path).read_text(encoding="utf-8"))
         )
