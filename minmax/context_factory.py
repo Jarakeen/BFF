@@ -27,8 +27,9 @@ class BuildCalculationContextFactory:
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
 
-        if gear_set_repository is not None and armor_glyph_repository is None:
-            armor_glyph_repository = ArmorGlyphEffectRepository(gear_set_repository.database_path)
+        database_path = getattr(gear_set_repository, "database_path", None)
+        if gear_set_repository is not None and armor_glyph_repository is None and database_path:
+            armor_glyph_repository = ArmorGlyphEffectRepository(database_path)
 
         self.gear_resolver = (
             GearStatInputResolver(
