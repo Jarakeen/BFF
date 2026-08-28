@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import ceil
 
+from .character_progression import AttributeAllocation
 from .stat_ids import StatId
 
 
-# Update 29 established these level-50 baseline values. They are deliberately
-# centralized here rather than scattered through individual formulas.
+# Current level-50 baseline used by the initial character-foundation layer.
+# Exact live-game formula reconciliation remains a separate verification task.
 BASE_MAX_HEALTH = 16_000.0
 BASE_MAX_MAGICKA = 12_000.0
 BASE_MAX_STAMINA = 12_000.0
@@ -43,8 +44,12 @@ class CalculationTrace:
 class ResourceInputs:
     """Explicit inputs to one primary resource/recovery calculation.
 
-    Flat contributions are kept separate from percentage modifiers so the
-    trace mirrors ESO's calculation structure and remains easy to audit.
+    Flat contributions remain separate from percentage modifiers so the trace
+    stays auditable and easy to reconcile against ESO.
+
+    ``attribute_points`` remains supported for focused single-stat calls.
+    Prefer ``BaseCharacterCalculator.calculate(attributes=...)`` for a full
+    character so one shared 64-point pool is enforced.
     """
 
     attribute_points: int = 0
@@ -73,15 +78,14 @@ class BaseCharacterState:
 class BaseCharacterCalculator:
     """Calculate the stable primary resource layer with an auditable trace.
 
-    This first implementation targets the current level-50 baseline used by
-    the ESO character/stat references. Pre-level-50 level-scaling formulas are
-    intentionally not guessed here; they will be added when the reference
-    material is sufficiently reliable.
+    The first implementation is intentionally limited to the level-50
+    foundation. It does not guess unresolved pre-level-50 or CP-scaled live
+    resource formula details.
     """
 
     @staticmethod
     def eso_round(value: float) -> int:
-        """ESO-facing integer rounding rule used by this calculation layer."""
+        """Apply the currently accepted ESO-facing integer rounding rule."""
         return int(ceil(value))
 
     @staticmethod
@@ -113,13 +117,7 @@ class BaseCharacterCalculator:
                 current += value
                 trace.add(label, "add", value, current)
 
-        trace.raw_value = current
-
-        percent = (
-            inputs.skill_percent
-            + inputs.buff_percent
-            + inputs.other_percent
-        )
+        percent = inputs.skill_percent + inputs.buff_percent + inputs.other_percent
         if percent:
             current *= 1.0 + percent
             trace.add("percentage modifiers", "multiply", 1.0 + percent, current)
@@ -186,6 +184,7 @@ class BaseCharacterCalculator:
     def calculate(
         self,
         *,
+        attributes: AttributeAllocation | None = None,
         health: ResourceInputs = ResourceInputs(),
         magicka: ResourceInputs = ResourceInputs(),
         stamina: ResourceInputs = ResourceInputs(),
@@ -193,6 +192,12 @@ class BaseCharacterCalculator:
         magicka_recovery: ResourceInputs = ResourceInputs(),
         stamina_recovery: ResourceInputs = ResourceInputs(),
     ) -> BaseCharacterState:
+        """Calculate all primary resources from one shared allocation."""
+        if attributes is not None:
+            health = replace(health, attribute_points=attributes.health)
+            magicka = replace(magicka, attribute_points=attributes.magicka)
+            stamina = replace(stamina, attribute_points=attributes.stamina)
+
         traces = {
             StatId.MAX_HEALTH: self.max_health(health),
             StatId.MAX_MAGICKA: self.max_magicka(magicka),

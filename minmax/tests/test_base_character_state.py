@@ -6,6 +6,7 @@ from minmax.base_character_state import (
     BaseCharacterCalculator,
     ResourceInputs,
 )
+from minmax.character_progression import AttributeAllocation
 from minmax.stat_ids import StatId
 
 
@@ -26,6 +27,16 @@ def test_attribute_points_use_health_122_and_magicka_stamina_111():
     assert calculator.max_health(ResourceInputs(attribute_points=64)).final_value == 23808
     assert calculator.max_magicka(ResourceInputs(attribute_points=64)).final_value == 19104
     assert calculator.max_stamina(ResourceInputs(attribute_points=64)).final_value == 19104
+
+
+def test_calculate_uses_one_shared_attribute_pool():
+    state = BaseCharacterCalculator().calculate(
+        attributes=AttributeAllocation(health=20, magicka=22, stamina=22)
+    )
+
+    assert state.max_health == 18440
+    assert state.max_magicka == 14442
+    assert state.max_stamina == 14442
 
 
 def test_flat_and_percentage_contributions_are_traced():
