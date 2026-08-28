@@ -11,6 +11,9 @@
       "Alliance": "Daggerfall Covenant",
       "Vampire": false,
       "Werewolf": false,
+      "AttributeHealth": 0,
+      "AttributeMagicka": 64,
+      "AttributeStamina": 0,
       "Armor": {
         "Head": {
           "Set": "Ozezan the Inferno",
@@ -215,6 +218,9 @@
       "Alliance": "",
       "Vampire": false,
       "Werewolf": false,
+      "AttributeHealth": 0,
+      "AttributeMagicka": 0,
+      "AttributeStamina": 0,
       "Armor": {
         "Head": {
           "Set": "",

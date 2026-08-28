@@ -361,21 +361,85 @@ class BuildEditor(QWidget):
         for spin, value in zip((self.attribute_health, self.attribute_magicka, self.attribute_stamina), values): spin.setMaximum(min(MAX_ATTRIBUTE_POINTS, MAX_ATTRIBUTE_POINTS - (total - value)))
         self.attribute_total.setText(str(total))
     def _build_identity_card(self):
-        card = FoundryCard("Identity"); grid = QGridLayout(); grid.setContentsMargins(8, 6, 8, 6); grid.setHorizontalSpacing(10); grid.setVerticalSpacing(6)
-        fields = [("Character Name", self._line("Character name")), ("@Gamertag", self._line("@Gamertag")), ("Race", self._combo(self.race_choices, True)), ("Class", self._combo(ESO_CLASSES)), ("Role", self._combo(["", "Tank", "Healer", "DD"])), ("Alliance", self._combo(["", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact"]))]
-        self.name, self.gamertag, self.race, self.eso_class, self.role, self.alliance = [w for _, w in fields]
-        self.name.textChanged.connect(self.nameChanged.emit); self.eso_class.currentTextChanged.connect(self._apply_class)
-        for column, (label, widget) in enumerate(fields): grid.addWidget(QLabel(label), 0, column); grid.addWidget(widget, 1, column)
-        self.vampire = QCheckBox("Vampire"); self.werewolf = QCheckBox("Werewolf")
-        self.attribute_health = self._attribute_spin(); self.attribute_magicka = self._attribute_spin(); self.attribute_stamina = self._attribute_spin(); self.attribute_total = QLabel("0")
-        self.attribute_total.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter); self.attribute_total.setProperty("overviewStatValue", True)
-        grid.addWidget(self.vampire, 2, 0); grid.addWidget(self.werewolf, 2, 1)
-        for column, label, spin in ((2, "Health", self.attribute_health), (3, "Magicka", self.attribute_magicka), (4, "Stamina", self.attribute_stamina)):
-            grid.addWidget(QLabel(label), 2, column); grid.addWidget(spin, 3, column)
-        grid.addWidget(QLabel("Total / 64"), 2, 5); grid.addWidget(self.attribute_total, 3, 5)
-        self.vampire.toggled.connect(self._sync_affiliations); self.werewolf.toggled.connect(self._sync_affiliations)
-        for spin in (self.attribute_health, self.attribute_magicka, self.attribute_stamina): spin.valueChanged.connect(self._update_attribute_limits)
-        card.addLayout(grid); return card
+        card = FoundryCard("Identity")
+
+        grid = QGridLayout()
+        grid.setContentsMargins(8, 6, 8, 6)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(6)
+
+        fields = [
+            ("Character Name", self._line("Character name")),
+            ("@Gamertag", self._line("@Gamertag")),
+            ("Race", self._combo(self.race_choices, True)),
+            ("Class", self._combo(ESO_CLASSES)),
+            ("Role", self._combo(["", "Tank", "Healer", "DD"])),
+            ("Alliance", self._combo([
+                "",
+                "Aldmeri Dominion",
+                "Daggerfall Covenant",
+                "Ebonheart Pact",
+            ])),
+        ]
+
+        (
+            self.name,
+            self.gamertag,
+            self.race,
+            self.eso_class,
+            self.role,
+            self.alliance,
+        ) = [widget for _, widget in fields]
+
+        self.name.textChanged.connect(self.nameChanged.emit)
+        self.eso_class.currentTextChanged.connect(self._apply_class)
+
+        for column, (label, widget) in enumerate(fields):
+            grid.addWidget(QLabel(label), 0, column)
+            grid.addWidget(widget, 1, column)
+
+        self.vampire = QCheckBox("Vampire")
+        self.werewolf = QCheckBox("Werewolf")
+
+        self.attribute_health = self._attribute_spin()
+        self.attribute_magicka = self._attribute_spin()
+        self.attribute_stamina = self._attribute_spin()
+        self.attribute_total = QLabel("0")
+
+        self.attribute_total.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        self.attribute_total.setProperty("overviewStatValue", True)
+
+        # ONE Vampire/Werewolf pair
+        grid.addWidget(self.vampire, 2, 0)
+        grid.addWidget(self.werewolf, 2, 1)
+
+        # Three attribute inputs
+        for column, label, spin in (
+            (2, "Health", self.attribute_health),
+            (3, "Magicka", self.attribute_magicka),
+            (4, "Stamina", self.attribute_stamina),
+        ):
+            grid.addWidget(QLabel(label), 2, column)
+            grid.addWidget(spin, 3, column)
+
+        # Total appears ONCE
+        grid.addWidget(QLabel("Total / 64"), 2, 5)
+        grid.addWidget(self.attribute_total, 3, 5)
+
+        self.vampire.toggled.connect(self._sync_affiliations)
+        self.werewolf.toggled.connect(self._sync_affiliations)
+
+        for spin in (
+            self.attribute_health,
+            self.attribute_magicka,
+            self.attribute_stamina,
+        ):
+            spin.valueChanged.connect(self._update_attribute_limits)
+
+        card.addLayout(grid)
+        return card
     def _sync_affiliations(self):
         if self.vampire.isChecked() and self.werewolf.isChecked():
             sender = self.sender(); other = self.werewolf if sender is self.vampire else self.vampire; other.blockSignals(True); other.setChecked(False); other.blockSignals(False)
