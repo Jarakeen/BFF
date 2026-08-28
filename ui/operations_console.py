@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -11,8 +9,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.base_character_state import BaseCharacterCalculator
-from minmax.character_progression import AttributeAllocation
+from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.context_factory import BuildCalculationContextFactory
+from minmax.race_repository import RaceRepository
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
 from services.expedition_service import ExpeditionService
@@ -126,14 +127,18 @@ class GearCard(FoundryCard):
 
 
 class OperationsConsole(FoundryPage):
-    """Raid Engine Overview, modeled after the supplied console reference."""
+    """Raid Engine Overview with live, traceable character-sheet calculations."""
 
     def __init__(self, expedition: ExpeditionService, parent=None):
         super().__init__(parent)
         self.expedition = expedition
-        self.build_service = BuildService(Path(__file__).resolve().parents[1] / "data" / "builds.json")
+        self.build_service = BuildService(get_data_dir() / "builds.json")
         self.roster = BuildRoster()
         self.calculator = BaseCharacterCalculator()
+        self.context_factory = BuildCalculationContextFactory(
+            calculator=self.calculator,
+            race_repository=RaceRepository(DEFAULT_DATABASE),
+        )
         self._build_ui()
         self.refresh()
 
@@ -221,6 +226,16 @@ class OperationsConsole(FoundryPage):
         except (IndexError, TypeError, ValueError):
             return None
 
+    @staticmethod
+    def _progression_for(build: PlayerBuild) -> CharacterProgression:
+        return CharacterProgression(
+            attributes=AttributeAllocation(
+                health=int(getattr(build, "AttributeHealth", 0)),
+                magicka=int(getattr(build, "AttributeMagicka", 0)),
+                stamina=int(getattr(build, "AttributeStamina", 0)),
+            )
+        )
+
     def _render(self):
         self._clear_layout(self.layout)
         build = self._selected_build()
@@ -237,23 +252,28 @@ class OperationsConsole(FoundryPage):
         player_row.addWidget(gear_card, 1)
         self.layout.addLayout(player_row)
 
-        if build is None:
-            attributes = AttributeAllocation()
-        else:
-            attributes = AttributeAllocation(
-                health=int(getattr(build, "AttributeHealth", 0)),
-                magicka=int(getattr(build, "AttributeMagicka", 0)),
-                stamina=int(getattr(build, "AttributeStamina", 0)),
-            )
-        state = self.calculator.calculate(attributes=attributes)
         stats = OverviewKeyStatsCard()
-        stats.set_base(state)
+        if build is None:
+            stats.set_base(self.calculator.calculate(attributes=AttributeAllocation()))
+        else:
+            index = self.player_combo.currentData()
+            try:
+                context = self.context_factory.build(
+                    character_id=f"overview-character-{index}",
+                    build_id=f"overview-build-{index}",
+                    build=build,
+                    progression=self._progression_for(build),
+                )
+                stats.set_context(context)
+            except Exception as exc:
+                self.status.error(f"Could not calculate selected build: {exc}")
+                stats.set_base(self.calculator.calculate(attributes=self._progression_for(build).attributes))
         self.layout.addWidget(stats)
 
         note = FoundryCard("Calculation Notes", "i")
         note.addWidget(QLabel(
             "These values are calculator output, not imported ESO values. "
-            "Use this panel to compare Foundry's math against ESO and other references."
+            "Hover any Key Stats value to inspect Foundry's calculation trace."
         ))
         self.layout.addWidget(note)
         self.layout.addStretch(1)
