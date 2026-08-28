@@ -78,9 +78,8 @@ class BaseCharacterState:
 class BaseCharacterCalculator:
     """Calculate the stable primary resource layer with an auditable trace.
 
-    The first implementation is intentionally limited to the level-50
-    foundation. It does not guess unresolved pre-level-50 or CP-scaled live
-    resource formula details.
+    Race contributions are supplied by the caller from the structured race
+    database. The calculator does not hard-code race names or racial values.
     """
 
     @staticmethod
@@ -111,7 +110,7 @@ class BaseCharacterCalculator:
             ("food flat", inputs.food_flat),
             ("mundus flat", inputs.mundus_flat),
             ("skill flat", inputs.skill_flat),
-            ("other flat", inputs.other_flat),
+            ("race", inputs.other_flat),
         ):
             if value:
                 current += value
@@ -185,6 +184,7 @@ class BaseCharacterCalculator:
         self,
         *,
         attributes: AttributeAllocation | None = None,
+        race_stats: dict[str, float] | None = None,
         health: ResourceInputs = ResourceInputs(),
         magicka: ResourceInputs = ResourceInputs(),
         stamina: ResourceInputs = ResourceInputs(),
@@ -192,11 +192,25 @@ class BaseCharacterCalculator:
         magicka_recovery: ResourceInputs = ResourceInputs(),
         stamina_recovery: ResourceInputs = ResourceInputs(),
     ) -> BaseCharacterState:
-        """Calculate all primary resources from one shared allocation."""
+        """Calculate all primary resources from one shared allocation.
+
+        ``race_stats`` should be the structured stat map returned by the race
+        repository, for example ``{"max_magicka": 2000, "magicka_recovery": 130}``.
+        It is intentionally data-driven so the race database remains the source
+        of racial values.
+        """
         if attributes is not None:
             health = replace(health, attribute_points=attributes.health)
             magicka = replace(magicka, attribute_points=attributes.magicka)
             stamina = replace(stamina, attribute_points=attributes.stamina)
+
+        race_stats = race_stats or {}
+        health = replace(health, other_flat=health.other_flat + float(race_stats.get("max_health", 0)))
+        magicka = replace(magicka, other_flat=magicka.other_flat + float(race_stats.get("max_magicka", 0)))
+        stamina = replace(stamina, other_flat=stamina.other_flat + float(race_stats.get("max_stamina", 0)))
+        health_recovery = replace(health_recovery, other_flat=health_recovery.other_flat + float(race_stats.get("health_recovery", 0)))
+        magicka_recovery = replace(magicka_recovery, other_flat=magicka_recovery.other_flat + float(race_stats.get("magicka_recovery", 0)))
+        stamina_recovery = replace(stamina_recovery, other_flat=stamina_recovery.other_flat + float(race_stats.get("stamina_recovery", 0)))
 
         traces = {
             StatId.MAX_HEALTH: self.max_health(health),
