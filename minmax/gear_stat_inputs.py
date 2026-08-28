@@ -1,0 +1,195 @@
+from __future__ import annotations
+
+from collections import Counter
+from dataclasses import dataclass, replace
+
+from models.build_model import GearSlot, PlayerBuild
+
+from .base_character_state import ResourceInputs
+from .core_stat_calculator import CoreStatInputs
+from .derived_stats import DerivedStatInputs, StatContribution
+from .effects import Effect, EffectOperation, EffectUnit
+from .gear_set_effect_service import GearSetEffectService
+from .gear_set_repository import GearSetRepository
+from .stat_ids import StatId
+
+
+RESOURCE_STATS = {
+    StatId.MAX_HEALTH: "health",
+    StatId.MAX_MAGICKA: "magicka",
+    StatId.MAX_STAMINA: "stamina",
+    StatId.HEALTH_RECOVERY: "health_recovery",
+    StatId.MAGICKA_RECOVERY: "magicka_recovery",
+    StatId.STAMINA_RECOVERY: "stamina_recovery",
+}
+
+CORE_FIELDS = {
+    StatId.WEAPON_DAMAGE: "weapon_damage",
+    StatId.SPELL_DAMAGE: "spell_damage",
+    StatId.PHYSICAL_RESISTANCE: "physical_resistance",
+    StatId.SPELL_RESISTANCE: "spell_resistance",
+    StatId.PHYSICAL_PENETRATION: "physical_penetration",
+    StatId.SPELL_PENETRATION: "spell_penetration",
+    StatId.WEAPON_CRITICAL: "weapon_critical",
+    StatId.SPELL_CRITICAL: "spell_critical",
+    StatId.CRITICAL_DAMAGE: "critical_damage",
+    StatId.CRITICAL_RESISTANCE: "critical_resistance",
+    StatId.HEALING_DONE: "healing_done",
+    StatId.HEALING_TAKEN: "healing_taken",
+}
+
+RATIO_POINT_STATS = {
+    StatId.CRITICAL_DAMAGE,
+    StatId.HEALING_DONE,
+    StatId.HEALING_TAKEN,
+}
+
+
+@dataclass(frozen=True)
+class GearCalculationInputs:
+    health: ResourceInputs = ResourceInputs()
+    magicka: ResourceInputs = ResourceInputs()
+    stamina: ResourceInputs = ResourceInputs()
+    health_recovery: ResourceInputs = ResourceInputs()
+    magicka_recovery: ResourceInputs = ResourceInputs()
+    stamina_recovery: ResourceInputs = ResourceInputs()
+    core: CoreStatInputs = CoreStatInputs()
+    set_counts: tuple[tuple[str, int], ...] = ()
+    applied_effect_count: int = 0
+    unresolved: tuple[str, ...] = ()
+
+
+class GearStatInputResolver:
+    """Translate equipped, unconditional set bonuses into calculator inputs.
+
+    Phase 2F deliberately starts with static set bonuses. Traits, glyphs,
+    armor values, weapon base damage, procs and conditional effects remain
+    separate layers so their formulas can be verified rather than guessed.
+    """
+
+    # UESP's max-level critical formula uses EffectiveLevel 66 for CP160
+    # endgame characters: rating / (2 * 66 * (100 + 66)).
+    MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
+
+    def __init__(self, repository: GearSetRepository):
+        self.repository = repository
+        self.service = GearSetEffectService(repository)
+
+    @classmethod
+    def critical_rating_to_ratio(cls, rating: float) -> float:
+        level = cls.MAX_LEVEL_EFFECTIVE_LEVEL
+        return float(rating) / (2.0 * level * (100.0 + level))
+
+    @staticmethod
+    def _slot_names(slot: GearSlot) -> list[str]:
+        return [name.strip() for name in (slot.Set, slot.Set2) if str(name).strip()]
+
+    @classmethod
+    def equipped_set_counts(cls, build: PlayerBuild, *, active_bar: str = "front") -> Counter[str]:
+        counts: Counter[str] = Counter()
+
+        # Seven armor pieces and three jewelry pieces each contribute one item.
+        for entry in build.Armor.values():
+            name = str(entry.get("Set", "") or "").strip()
+            if name:
+                counts[name] += 1
+        for slot in (build.Necklace, build.Ring1, build.Ring2):
+            if slot.Set.strip():
+                counts[slot.Set.strip()] += 1
+
+        # Only the currently active weapon bar contributes set pieces. Set2 is
+        # the second weapon slot for dual wield / sword-and-board configurations.
+        weapon = build.FrontBarWeapon if active_bar.casefold() == "front" else build.BackBarWeapon
+        for name in cls._slot_names(weapon):
+            counts[name] += 1
+
+        return counts
+
+    @staticmethod
+    def _resource_add(inputs: ResourceInputs, effect: Effect) -> ResourceInputs:
+        if effect.operation is EffectOperation.ADD:
+            return replace(inputs, set_flat=inputs.set_flat + float(effect.value))
+        if effect.operation is EffectOperation.ADD_PERCENT:
+            value = float(effect.value) / 100.0 if effect.unit is EffectUnit.PERCENT else float(effect.value)
+            return replace(inputs, other_percent=inputs.other_percent + value)
+        return inputs
+
+    @staticmethod
+    def _core_add(core: CoreStatInputs, stat: StatId, effect: Effect, *, value: float | None = None) -> CoreStatInputs:
+        field_name = CORE_FIELDS[stat]
+        current: DerivedStatInputs = getattr(core, field_name)
+        amount = float(effect.value if value is None else value)
+        contribution = StatContribution(effect.source, amount)
+
+        if effect.operation is EffectOperation.ADD:
+            updated = replace(current, flat=current.flat + (contribution,))
+        elif effect.operation is EffectOperation.ADD_PERCENT:
+            decimal = amount / 100.0 if effect.unit is EffectUnit.PERCENT else amount
+            contribution = StatContribution(effect.source, decimal)
+            if stat in RATIO_POINT_STATS:
+                updated = replace(
+                    current,
+                    additive_after_percent=current.additive_after_percent + (contribution,),
+                )
+            else:
+                updated = replace(current, percent=current.percent + (contribution,))
+        else:
+            return core
+        return replace(core, **{field_name: updated})
+
+    def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
+        result = GearCalculationInputs()
+        counts = self.equipped_set_counts(build, active_bar=active_bar)
+        result = replace(result, set_counts=tuple(sorted(counts.items())))
+        unresolved: list[str] = []
+        applied = 0
+
+        for set_name, piece_count in counts.items():
+            gear_set = self.repository.get_set(set_name)
+            if gear_set is None:
+                unresolved.append(f"Unknown set: {set_name}")
+                continue
+
+            effects = self.service.resolve_effects(gear_set.id, piece_count)
+            for effect in effects:
+                # Character-sheet baseline uses unconditional effects only.
+                if effect.condition:
+                    continue
+                stat = effect.stat
+                if stat is None:
+                    continue
+
+                resource_field = RESOURCE_STATS.get(stat)
+                if resource_field:
+                    before = getattr(result, resource_field)
+                    after = self._resource_add(before, effect)
+                    if after != before:
+                        result = replace(result, **{resource_field: after})
+                        applied += 1
+                    continue
+
+                # ESO gear-set "Critical Chance" is rating, not a percentage.
+                # Convert it once, then apply the ratio to both sheet crit stats.
+                if stat is StatId.CRITICAL_CHANCE and effect.operation is EffectOperation.ADD:
+                    ratio = self.critical_rating_to_ratio(effect.value)
+                    for target in (StatId.WEAPON_CRITICAL, StatId.SPELL_CRITICAL):
+                        current: DerivedStatInputs = getattr(result.core, CORE_FIELDS[target])
+                        contribution = StatContribution(f"{effect.source} (critical rating)", ratio)
+                        updated = replace(
+                            current,
+                            additive_after_percent=current.additive_after_percent + (contribution,),
+                        )
+                        result = replace(result, core=replace(result.core, **{CORE_FIELDS[target]: updated}))
+                    applied += 2
+                    continue
+
+                if stat in CORE_FIELDS:
+                    new_core = self._core_add(result.core, stat, effect)
+                    if new_core != result.core:
+                        result = replace(result, core=new_core)
+                        applied += 1
+                    continue
+
+                unresolved.append(f"Unsupported static effect: {set_name}: {stat.value}")
+
+        return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))

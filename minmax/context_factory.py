@@ -6,6 +6,8 @@ from .base_character_state import BaseCharacterCalculator
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .character_progression import CharacterProgression
 from .core_stat_calculator import CoreStatCalculator
+from .gear_set_repository import GearSetRepository
+from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .race_repository import RaceRepository
 
 
@@ -17,10 +19,12 @@ class BuildCalculationContextFactory:
         calculator: BaseCharacterCalculator | None = None,
         core_calculator: CoreStatCalculator | None = None,
         race_repository: RaceRepository | None = None,
+        gear_set_repository: GearSetRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
+        self.gear_resolver = GearStatInputResolver(gear_set_repository) if gear_set_repository is not None else None
 
     def build(
         self,
@@ -34,14 +38,27 @@ class BuildCalculationContextFactory:
         target_count: int = 1,
         target_resistance: float | None = None,
         fight_duration: float | None = None,
+        active_bar: str = "front",
     ) -> BuildCalculationContext:
         attributes = progression.attributes
         race_stats = self._race_stats(build.Race)
-        state = self.calculator.calculate(attributes=attributes, race_stats=race_stats)
+        gear = self._gear_inputs(build, active_bar=active_bar)
+
+        state = self.calculator.calculate(
+            attributes=attributes,
+            race_stats=race_stats,
+            health=gear.health,
+            magicka=gear.magicka,
+            stamina=gear.stamina,
+            health_recovery=gear.health_recovery,
+            magicka_recovery=gear.magicka_recovery,
+            stamina_recovery=gear.stamina_recovery,
+        )
         core_state = self.core_calculator.calculate(
             character_progression=progression,
             base_character=state,
             race_stats=race_stats,
+            inputs=gear.core,
         )
         skills = tuple(skill for skill in (*build.FrontBarSkills, *build.BackBarSkills) if str(skill).strip())
         return BuildCalculationContext(
@@ -56,9 +73,18 @@ class BuildCalculationContextFactory:
             target_resistance=target_resistance,
             fight_duration=fight_duration,
             selected_skills=skills,
+            active_bar=active_bar.casefold(),
+            gear_set_counts=gear.set_counts,
+            gear_effects_applied=gear.applied_effect_count,
+            unresolved_gear_effects=gear.unresolved,
         )
 
     def _race_stats(self, race_name: str) -> dict[str, float]:
         if self.race_repository is None or not str(race_name).strip():
             return {}
         return self.race_repository.get_stat_map_by_name(str(race_name).strip())
+
+    def _gear_inputs(self, build: PlayerBuild, *, active_bar: str) -> GearCalculationInputs:
+        if self.gear_resolver is None:
+            return GearCalculationInputs()
+        return self.gear_resolver.resolve(build, active_bar=active_bar)
