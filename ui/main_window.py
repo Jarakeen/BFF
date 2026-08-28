@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
+from engine.config import get_data_dir
 from ui.foundry_theme import apply_foundry_theme
 from ui.theme.foundry_palette import apply_foundry_palette
 from ui.components.foundry_sidebar import FoundrySidebar
@@ -36,7 +37,7 @@ from ui.field_notes_page import FieldNotesPage
 from ui.stream_elements_page import LiveOperationsPage
 from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
-from ui.achievement_desk_page import AchievementPage
+# from ui.achievement_desk_page import AchievementPage
 from ui.collections_page import CollectionsPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
@@ -53,10 +54,7 @@ class MainWindow(QMainWindow):
     def __init__(self, expedition=None):
         super().__init__()
 
-        if getattr(sys, "frozen", False):
-            data_dir = Path(sys.executable).resolve().parent / "data"
-        else:
-            data_dir = Path(__file__).resolve().parents[1] / "data"
+        data_dir = get_data_dir()
 
         self.eso_data_service = EsoAchievementDatabaseService(
             data_dir / "eso.db"
@@ -103,7 +101,7 @@ class MainWindow(QMainWindow):
             "live_operations": LiveOperationsPage(),
             "archive": ArchivePage(),
             "incident": IncidentPage(),
-            "achievement": AchievementPage(),
+            # "achievement": AchievementPage(),
             "collections": CollectionsPage(),
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(

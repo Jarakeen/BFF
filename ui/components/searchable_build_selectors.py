@@ -6,11 +6,12 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QComboBox, QCompleter
 
+from engine.config import get_resource_path
 from widgets import build_editor
 from ui.components.eligible_build_editor import EligibleBuildEditor, EligibleSkillBarRow
 from services.skill_choice_service import load_skill_choices
 
-ASSET_ROOT = Path(__file__).resolve().parents[2] / "assets" / "AbilityIcons" / "icons" / "128"
+ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
 
 
 def _configure_search(combo: QComboBox) -> None:

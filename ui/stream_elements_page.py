@@ -18,6 +18,8 @@ from pathlib import Path
 
 from PySide6.QtCore import QTimer, QSize
 from PySide6.QtGui import QIcon
+
+from engine.config import get_resource_path
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -1032,7 +1034,7 @@ class LiveOperationsPage(FoundryPage):
 
     def _set_status_icon(self, button, icon_name: str):
         """Use one of the real Foundry SVG icons for a status action."""
-        icon_path = Path("assets") / "icons" / f"{icon_name}.svg"
+        icon_path = get_resource_path("assets", "icons", f"{icon_name}.svg")
 
         if not icon_path.exists():
             return

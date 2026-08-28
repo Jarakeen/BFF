@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QListWidget,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_card import FoundryCard
@@ -101,7 +102,7 @@ class AchievementPage(QWidget):
             password=self.settings["ObsWebSocketPassword"],
         )
 
-        data_dir = Path(__file__).resolve().parents[1] / "data"
+        data_dir = get_data_dir()
 
         self.eso_data_service = EsoAchievementDatabaseService(
             data_dir / "eso.db"

@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 
@@ -80,7 +81,7 @@ class BroadcastPage(FoundryPage):
         )
 
         self.db = EsoDatabase(
-            Path("data/eso.db")
+            get_data_dir() / "eso.db"
         )
 
         self.roster_service = RosterService(

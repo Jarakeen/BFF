@@ -1,11 +1,12 @@
 from pathlib import Path
+from engine.config import get_resource_path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QAbstractSpinBox, QHBoxLayout, QLabel, QLineEdit
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
 
-ASSET_ROOT = Path(__file__).resolve().parents[2] / "assets" / "AbilityIcons" / "icons" / "128"
+ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
 
 
 def _icon_for_skill(skill: dict) -> QIcon:

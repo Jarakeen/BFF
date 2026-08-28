@@ -4,10 +4,11 @@ import sqlite3
 from pathlib import Path
 from typing import Iterable
 
+from engine.config import get_data_dir
 from services.skill_bar_eligibility import filter_skill_choices
 
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+DEFAULT_DATABASE = get_data_dir() / "eso.db"
 
 
 def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dict]:

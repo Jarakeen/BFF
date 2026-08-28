@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_data_dir
 from minmax.mock_roster_lab import MockRosterLab
 from models.build_model import BuildRoster
 from services.build_service import BuildService
@@ -149,7 +150,7 @@ class OptimizationPage(FoundryPage):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.data_dir = Path(__file__).resolve().parents[1] / "data"
+        self.data_dir = get_data_dir()
         self.database = EsoDatabase(self.data_dir / "eso.db")
         self.reference = ReferenceDataService(self.database)
         self.build_service = BuildService(self.data_dir / "builds.json")

@@ -14,6 +14,8 @@ import random
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
+
+from engine.config import get_resource_path
 from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -79,10 +81,8 @@ class CoffeeLevelWidget(QWidget):
         # Dice Icon
         # --------------------------------------------------
 
-        icon_path = (
-            Path("assets")
-            / "icons"
-            / "dice.svg"
+        icon_path = get_resource_path(
+            "assets", "icons", "dice.svg"
         )
 
         if icon_path.exists():

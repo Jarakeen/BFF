@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_button import ButtonRole, FoundryButton
@@ -74,7 +75,7 @@ class CapabilitiesPage(FoundryPage):
 
     def build_services(self):
 
-        data_dir = Path(__file__).resolve().parents[1] / "data"
+        data_dir = get_data_dir()
 
         self.database = EsoDatabase(data_dir / "eso.db")
 
