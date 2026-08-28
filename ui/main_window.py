@@ -35,12 +35,15 @@ from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
 from ui.achievement_desk_page import AchievementPage
 from ui.collections_page import CollectionsPage
+from ui.collectibles_page import CollectiblesPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from services.expedition_service import ExpeditionService
+
+
 class MainWindow(QMainWindow):
     """
     Black Feather Foundry main window.
@@ -59,6 +62,7 @@ class MainWindow(QMainWindow):
 
         if app is not None:
             apply_foundry_theme(app)
+
         #
         # Shared active Expedition
         #
@@ -68,6 +72,7 @@ class MainWindow(QMainWindow):
             if expedition is not None
             else ExpeditionService()
         )
+
         self.setWindowTitle(
             "Black Feather Foundry Field Office"
         )
@@ -78,9 +83,8 @@ class MainWindow(QMainWindow):
         )
 
         self.build_ui()
-
         self.connect_signals()
-        
+
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -92,20 +96,10 @@ class MainWindow(QMainWindow):
         #
 
         central = QWidget()
-
-        self.setCentralWidget(
-            central
-        )
+        self.setCentralWidget(central)
 
         layout = QHBoxLayout(central)
-
-        layout.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
-        )
-
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         #
@@ -113,76 +107,53 @@ class MainWindow(QMainWindow):
         #
 
         self.sidebar = FoundrySidebar()
-
         layout.addWidget(self.sidebar)
-        
-        
 
         #
         # Pages
         #
 
         self.stack = QStackedWidget()
-
-        layout.addWidget(
-            self.stack,
-            1,
-        )
+        layout.addWidget(self.stack, 1)
 
         #
         # Build Pages
         #
+        # "collections" is the existing Achievements workspace.
+        # "collectibles" is the dedicated shared page used by
+        # every collectibles:<category> sidebar route.
+        #
 
         self.pages = {
-
             "broadcast": BroadcastPage(),
-
             "field_office": FieldNotesPage(),
-
             "live_operations": LiveOperationsPage(),
-
             "archive": ArchivePage(),
-
             "incident": IncidentPage(),
-
             "achievement": AchievementPage(),
-
             "collections": CollectionsPage(),
-
-           "roster_page": RosterPage(),
-
-           "operations_console": OperationsConsole(
+            "collectibles": CollectiblesPage(),
+            "roster_page": RosterPage(),
+            "operations_console": OperationsConsole(
                 expedition=self.expedition_service
             ),
-
             "console:2": BuildsPage(),
-
             "console:3": CapabilitiesPage(),
-
             "settings": SettingsPage(),
-
-        }      
+        }
 
         self.page_containers = {}
 
         for name, page in self.pages.items():
-
-            container = self.wrap_page(
-                page
-            )
-
+            container = self.wrap_page(page)
             self.page_containers[name] = container
-
-            self.stack.addWidget(
-                container
-            )
+            self.stack.addWidget(container)
 
     # --------------------------------------------------
     # Signals
     # --------------------------------------------------
 
     def connect_signals(self):
-
         self.sidebar.pageRequested.connect(
             self.show_page
         )
@@ -195,6 +166,20 @@ class MainWindow(QMainWindow):
         self,
         page_name: str,
     ):
+        #
+        # Collections sidebar children all share one page.
+        # The route suffix is the normalized sidebar category.
+        #
+        if page_name.startswith("collectibles:"):
+            category = page_name.split(":", 1)[1]
+
+            collectibles_page = self.pages["collectibles"]
+            collectibles_page.set_category(category)
+
+            self.stack.setCurrentWidget(
+                self.page_containers["collectibles"]
+            )
+            return
 
         if page_name not in self.page_containers:
             print(
@@ -205,21 +190,16 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(
             self.page_containers[page_name]
         )
-        
+
     def wrap_page(self, page):
-
         scroll = QScrollArea()
-
         scroll.setWidgetResizable(True)
-
         scroll.setFrameShape(
             QScrollArea.NoFrame
         )
-
         scroll.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
-
         scroll.setVerticalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
@@ -230,5 +210,4 @@ class MainWindow(QMainWindow):
         )
 
         scroll.setWidget(page)
-
-        return scroll    
+        return scroll
