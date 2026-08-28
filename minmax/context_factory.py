@@ -5,14 +5,21 @@ from models.build_model import PlayerBuild
 from .base_character_state import BaseCharacterCalculator
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .character_progression import CharacterProgression
+from .core_stat_calculator import CoreStatCalculator
 from .race_repository import RaceRepository
 
 
 class BuildCalculationContextFactory:
     """Create one calculation snapshot from a canonical build and character state."""
 
-    def __init__(self, calculator: BaseCharacterCalculator | None = None, race_repository: RaceRepository | None = None) -> None:
+    def __init__(
+        self,
+        calculator: BaseCharacterCalculator | None = None,
+        core_calculator: CoreStatCalculator | None = None,
+        race_repository: RaceRepository | None = None,
+    ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
+        self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
 
     def build(
@@ -31,12 +38,18 @@ class BuildCalculationContextFactory:
         attributes = progression.attributes
         race_stats = self._race_stats(build.Race)
         state = self.calculator.calculate(attributes=attributes, race_stats=race_stats)
+        core_state = self.core_calculator.calculate(
+            character_progression=progression,
+            base_character=state,
+            race_stats=race_stats,
+        )
         skills = tuple(skill for skill in (*build.FrontBarSkills, *build.BackBarSkills) if str(skill).strip())
         return BuildCalculationContext(
             character_id=character_id,
             build_id=build_id,
             progression=progression,
             character_state=state,
+            core_state=core_state,
             environment=environment,
             target_type=target_type,
             target_count=target_count,
