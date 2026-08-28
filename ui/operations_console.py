@@ -60,8 +60,6 @@ class CoverageSummaryCard(FoundryCard):
         total = len(CORE_COVERAGE)
         columns = 3
         rows = (total + columns - 1) // columns
-        # Use a compact horizontal row of columns so the card remains close to
-        # the supplied Overview reference at normal desktop widths.
         for column in range(columns):
             column_widget = QWidget()
             column_layout = QVBoxLayout(column_widget)
@@ -239,9 +237,15 @@ class OperationsConsole(FoundryPage):
         player_row.addWidget(gear_card, 1)
         self.layout.addLayout(player_row)
 
-        state = self.calculator.calculate(
-            attributes=AttributeAllocation(health=0, magicka=64, stamina=0)
-        )
+        if build is None:
+            attributes = AttributeAllocation()
+        else:
+            attributes = AttributeAllocation(
+                health=int(getattr(build, "AttributeHealth", 0)),
+                magicka=int(getattr(build, "AttributeMagicka", 0)),
+                stamina=int(getattr(build, "AttributeStamina", 0)),
+            )
+        state = self.calculator.calculate(attributes=attributes)
         stats = OverviewKeyStatsCard()
         stats.set_base(state)
         self.layout.addWidget(stats)
