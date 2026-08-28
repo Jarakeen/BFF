@@ -58,32 +58,33 @@ def test_critical_damage_contributions_are_additive():
 
 
 def test_critical_damage_base_is_50_percent_not_100_percent():
-    trace = DerivedStatCalculator().resolved_stat(
-        StatId.CRITICAL_DAMAGE,
-        base=0.50,
-    )
-
+    trace = DerivedStatCalculator().resolved_stat(StatId.CRITICAL_DAMAGE, base=0.50)
     assert trace.raw_value == 0.50
     assert trace.final_value == 0.50
 
 
 def test_critical_chance_base_is_10_percent_not_100_percent():
-    trace = DerivedStatCalculator().resolved_stat(
-        StatId.CRITICAL_CHANCE,
-        base=0.10,
-    )
-
+    trace = DerivedStatCalculator().resolved_stat(StatId.CRITICAL_CHANCE, base=0.10)
     assert trace.raw_value == 0.10
     assert trace.final_value == 0.10
+
+
+def test_weapon_and_spell_critical_remain_ratio_values():
+    calculator = DerivedStatCalculator()
+    weapon = calculator.resolved_stat(StatId.WEAPON_CRITICAL, base=0.10)
+    spell = calculator.resolved_stat(StatId.SPELL_CRITICAL, base=0.10)
+
+    assert weapon.final_value == 0.10
+    assert spell.final_value == 0.10
+    assert weapon.steps[-1][0] == "ESO ratio"
+    assert spell.steps[-1][0] == "ESO ratio"
 
 
 def test_resolved_stat_does_not_invent_an_eso_formula():
     trace = DerivedStatCalculator().resolved_stat(
         StatId.SPELL_PENETRATION,
         base=1000,
-        inputs=DerivedStatInputs(
-            flat=(StatContribution("item", 500),),
-        ),
+        inputs=DerivedStatInputs(flat=(StatContribution("item", 500),)),
     )
 
     assert trace.final_value == 1500
