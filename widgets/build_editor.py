@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QComboBox,
@@ -35,6 +34,7 @@ from services.eso_icon_resolver import EsoIconResolver
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
 from services.eso_gear_icons import gear_icon_path
+from widgets.character_progression_card import CharacterProgressionCard
 
 
 QUALITY_CHOICES = ["", "White", "Green", "Blue", "Purple", "Gold"]
@@ -433,6 +433,7 @@ class BuildEditor(QWidget):
         self.image_path = ""
         self._notes = ""
         self._boss_cards = []
+        self._progression_card = CharacterProgressionCard()
         self._hydrate_reference_data()
         self._build_ui()
 
@@ -466,10 +467,14 @@ class BuildEditor(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
         root.addWidget(self._build_identity_card())
+        root.addWidget(self._build_progression_card())
         root.addWidget(self._build_gear_card())
         root.addWidget(self._build_cp_card())
         root.addWidget(self._build_skills_card())
         root.addWidget(self._build_boss_card())
+
+    def _build_progression_card(self):
+        return self._progression_card
 
     @staticmethod
     def _line(placeholder=""):
@@ -698,6 +703,7 @@ class BuildEditor(QWidget):
             for slot, row in self.gear_rows.items()
             if slot in ARMOR_SLOTS
         }
+        progression = self._progression_card.values
         return PlayerBuild(
             Name=self.name.text().strip(),
             Gamertag=self.gamertag.text().strip(),
@@ -706,6 +712,11 @@ class BuildEditor(QWidget):
             EsoClass=self.eso_class.currentText().strip(),
             Role=self.role.currentText().strip(),
             Alliance=self.alliance.currentText().strip(),
+            Vampire=bool(progression.get("vampire")),
+            Werewolf=bool(progression.get("werewolf")),
+            AttributeHealth=int(progression.get("health", 0)),
+            AttributeMagicka=int(progression.get("magicka", 0)),
+            AttributeStamina=int(progression.get("stamina", 0)),
             Armor=armor,
             FrontBarWeapon=self.gear_rows["main_hand"].value,
             BackBarWeapon=self.gear_rows["off_hand"].value,
@@ -730,6 +741,13 @@ class BuildEditor(QWidget):
         self.eso_class.setCurrentText(model.EsoClass)
         self.role.setCurrentText(getattr(model, "Role", "") or "")
         self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
+        self._progression_card.set_values(
+            health=getattr(model, "AttributeHealth", 0),
+            magicka=getattr(model, "AttributeMagicka", 0),
+            stamina=getattr(model, "AttributeStamina", 0),
+            vampire=getattr(model, "Vampire", False),
+            werewolf=getattr(model, "Werewolf", False),
+        )
         self._apply_class()
         for slot, row in self.gear_rows.items():
             if slot in ARMOR_SLOTS:
@@ -758,12 +776,4 @@ class BuildEditor(QWidget):
             self, "Character Image", "", "Images (*.png *.jpg *.jpeg *.webp)"
         )
         if filename:
-            pixmap = QPixmap(filename)
-            if not pixmap.isNull():
-                self.image_path = filename
-
-    def clear_image(self):
-        self.image_path = ""
-
-    def clear(self):
-        self.load(PlayerBuild())
+            self.image_path = filename
