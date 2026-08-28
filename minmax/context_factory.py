@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from models.build_model import PlayerBuild
 
+from .armor_glyph_repository import ArmorGlyphEffectRepository
 from .base_character_state import BaseCharacterCalculator
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .character_progression import CharacterProgression
@@ -20,11 +21,19 @@ class BuildCalculationContextFactory:
         core_calculator: CoreStatCalculator | None = None,
         race_repository: RaceRepository | None = None,
         gear_set_repository: GearSetRepository | None = None,
+        armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
-        self.gear_resolver = GearStatInputResolver(gear_set_repository) if gear_set_repository is not None else None
+        self.gear_resolver = (
+            GearStatInputResolver(
+                gear_set_repository,
+                armor_glyph_repository=armor_glyph_repository,
+            )
+            if gear_set_repository is not None
+            else None
+        )
 
     def build(
         self,
