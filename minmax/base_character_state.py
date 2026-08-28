@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import ceil
 
+from .character_progression import AttributeAllocation
 from .stat_ids import StatId
 
 
@@ -45,6 +46,10 @@ class ResourceInputs:
 
     Flat contributions are kept separate from percentage modifiers so the
     trace mirrors ESO's calculation structure and remains easy to audit.
+
+    ``attribute_points`` remains supported for focused single-stat calculations.
+    ``BaseCharacterCalculator.calculate(attributes=...)`` should be preferred
+    for a character because it enforces one shared 64-point allocation.
     """
 
     attribute_points: int = 0
@@ -186,6 +191,7 @@ class BaseCharacterCalculator:
     def calculate(
         self,
         *,
+        attributes: AttributeAllocation | None = None,
         health: ResourceInputs = ResourceInputs(),
         magicka: ResourceInputs = ResourceInputs(),
         stamina: ResourceInputs = ResourceInputs(),
@@ -193,6 +199,17 @@ class BaseCharacterCalculator:
         magicka_recovery: ResourceInputs = ResourceInputs(),
         stamina_recovery: ResourceInputs = ResourceInputs(),
     ) -> BaseCharacterState:
+        """Calculate all primary resources from one shared attribute allocation.
+
+        The legacy per-stat ``attribute_points`` inputs remain supported by the
+        individual methods for focused tests. When ``attributes`` is supplied,
+        it is the single source of truth for the three resource totals.
+        """
+        if attributes is not None:
+            health = replace(health, attribute_points=attributes.health)
+            magicka = replace(magicka, attribute_points=attributes.magicka)
+            stamina = replace(stamina, attribute_points=attributes.stamina)
+
         traces = {
             StatId.MAX_HEALTH: self.max_health(health),
             StatId.MAX_MAGICKA: self.max_magicka(magicka),
