@@ -4,6 +4,7 @@ from minmax.base_character_state import BaseCharacterCalculator
 from minmax.build_calculation_context import CombatEnvironment
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
+from minmax.race_repository import RaceRepository
 
 
 def test_factory_builds_context_from_character_and_build():
@@ -22,6 +23,36 @@ def test_factory_builds_context_from_character_and_build():
     assert context.progression is progression
     assert context.character_state.max_magicka == 19104
     assert context.selected_skills == ("Healing Seed", "Illustrious Healing", "Budding Seeds")
+
+
+def test_factory_resolves_racial_stats_when_repository_is_supplied(tmp_path):
+    database = tmp_path / "races.db"
+    import sqlite3
+
+    with sqlite3.connect(database) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE race (id INTEGER PRIMARY KEY, name TEXT, alliance TEXT, association TEXT);
+            CREATE TABLE race_stat (id INTEGER PRIMARY KEY, race_id INTEGER, stat TEXT, value REAL);
+            INSERT INTO race VALUES (1, 'Breton', 'Daggerfall Covenant', 'Breton');
+            INSERT INTO race_stat VALUES (1, 1, 'max_magicka', 2000);
+            INSERT INTO race_stat VALUES (2, 1, 'magicka_recovery', 130);
+            """
+        )
+
+    build = PlayerBuild(Race="Breton")
+    progression = CharacterProgression(attributes=AttributeAllocation(magicka=64))
+    factory = BuildCalculationContextFactory(race_repository=RaceRepository(database))
+
+    context = factory.build(
+        character_id="breton-1",
+        build_id="build-1",
+        build=build,
+        progression=progression,
+    )
+
+    assert context.character_state.max_magicka == 21104
+    assert context.character_state.magicka_recovery == 644
 
 
 def test_factory_preserves_explicit_combat_context():
