@@ -90,6 +90,7 @@ data/uesp/.cache/
 /docs
 /old_pages
 /packaging
+esologs* (these are all research files and fight logs)
 # ============================================================
 # Local launchers
 # ============================================================
