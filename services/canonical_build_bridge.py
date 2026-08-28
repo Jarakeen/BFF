@@ -59,13 +59,19 @@ class CanonicalBuildBridge:
 
     @staticmethod
     def _has_meaningful_legacy_data(value: Any) -> bool:
-        """Return True when a legacy value contains real user data."""
+        """Return True when a legacy value contains real user data.
+
+        Numeric zero is a default/empty value. Attribute allocations and other
+        counters are stored as zero when the character has not been configured.
+        """
         if value is None:
             return False
-        if isinstance(value, str):
-            return bool(value.strip())
         if isinstance(value, bool):
             return value
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, (int, float)):
+            return value != 0
         if isinstance(value, dict):
             return any(CanonicalBuildBridge._has_meaningful_legacy_data(v) for v in value.values())
         if isinstance(value, (list, tuple, set)):
