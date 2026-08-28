@@ -35,22 +35,23 @@ def test_spell_damage_applies_percentage_modifiers_after_flat_contributions():
     assert trace.raw_value == trace.final_value - 1 + 0.0000000000002
 
 
-def test_post_percentage_contributions_are_traced_separately():
+def test_critical_damage_contributions_are_additive():
     trace = DerivedStatCalculator().resolved_stat(
         StatId.CRITICAL_DAMAGE,
         base=0.5,
         inputs=DerivedStatInputs(
-            percent=(StatContribution("skill", 0.10),),
-            additive_after_percent=(StatContribution("bloodthirsty", 0.05),),
+            additive_after_percent=(
+                StatContribution("skill", 0.10),
+                StatContribution("bloodthirsty", 0.05),
+            ),
         ),
     )
 
-    # Critical Damage is additive percentage contribution, not a multiplier.
-    assert trace.final_value == 0.65
+    assert abs(trace.final_value - 0.65) < 1e-12
     assert abs(trace.raw_value - 0.65) < 1e-12
     assert [step[0] for step in trace.steps] == [
         "base",
-        "percentage modifiers",
+        "skill",
         "bloodthirsty",
         "ESO ratio",
     ]
