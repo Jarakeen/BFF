@@ -73,7 +73,8 @@ def test_context_factory_applies_static_gear_to_character_sheet_state():
         active_bar="front",
     )
 
-    assert context.character_state.max_magicka == 22200
+    # 12,000 base + (64 × 111) + 1,096 static set bonus.
+    assert context.character_state.max_magicka == 20200
     assert context.core_state is not None
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1129
     assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1129
