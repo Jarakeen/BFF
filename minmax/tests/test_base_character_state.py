@@ -54,7 +54,6 @@ def test_flat_and_percentage_contributions_are_traced():
         )
     )
 
-    # 12000 + 7104 + 2100 = 21204; 21204 * 1.15 = 24384.6 -> 24385.
     assert trace.final_value == 24385
     assert [step.label for step in trace.steps] == [
         "base",
@@ -68,6 +67,18 @@ def test_flat_and_percentage_contributions_are_traced():
         "percentage modifiers",
         "ESO rounding",
     ]
+
+
+def test_race_contributions_are_named_in_the_trace():
+    state = BaseCharacterCalculator().calculate(
+        attributes=AttributeAllocation(magicka=64),
+        race_stats={"max_magicka": 2000, "magicka_recovery": 130},
+    )
+
+    assert state.max_magicka == 21104
+    assert state.magicka_recovery == 644
+    assert "race" in [step.label for step in state.traces[StatId.MAX_MAGICKA].steps]
+    assert "race" in [step.label for step in state.traces[StatId.MAGICKA_RECOVERY].steps]
 
 
 def test_eso_rounding_uses_ceiling():
