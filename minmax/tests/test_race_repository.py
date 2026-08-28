@@ -44,3 +44,16 @@ def test_get_racial_stats():
         ("spell_damage", 258),
         ("weapon_damage", 258),
     ]
+
+
+def test_get_stat_map():
+    assert repository().get_stat_map(ALTMER_ID) == {
+        "max_magicka": 2000.0,
+        "spell_damage": 258.0,
+        "weapon_damage": 258.0,
+    }
+
+
+def test_get_stat_map_by_name():
+    assert repository().get_stat_map_by_name("Altmer")["max_magicka"] == 2000.0
+    assert repository().get_stat_map_by_name("Not A Race") == {}
