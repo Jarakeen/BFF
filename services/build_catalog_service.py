@@ -34,12 +34,20 @@ class BuildCatalogService:
 
     @classmethod
     def _has_meaningful_value(cls, value: Any) -> bool:
+        """Return whether a value contains meaningful user-entered data.
+
+        Numeric zero is a default/empty value. This matters because the
+        character model contains persistent counters such as the 64-point
+        attribute allocation, whose blank state is represented by 0.
+        """
         if value is None:
             return False
-        if isinstance(value, str):
-            return bool(value.strip())
         if isinstance(value, bool):
             return value
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, (int, float)):
+            return value != 0
         if isinstance(value, dict):
             return any(cls._has_meaningful_value(v) for v in value.values())
         if isinstance(value, (list, tuple, set)):
