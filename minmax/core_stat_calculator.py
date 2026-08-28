@@ -41,6 +41,15 @@ class CoreStatState:
 class CoreStatCalculator:
     """Aggregate 2C foundational combat stats without inventing unresolved ESO rules."""
 
+    # Update-50/level-50 UESP baseline values from the project's equations:
+    # crit chance starts at 10%, crit damage at 50%, and crit resistance at
+    # 1320 before item/set/skill/CP/buff contributions are applied.
+    VERIFIED_BASES = {
+        StatId.CRITICAL_CHANCE: 0.10,
+        StatId.CRITICAL_DAMAGE: 0.50,
+        StatId.CRITICAL_RESISTANCE: 1320.0,
+    }
+
     def __init__(self) -> None:
         self._derived = DerivedStatCalculator()
 
@@ -51,15 +60,7 @@ class CoreStatCalculator:
         base_character: BaseCharacterState,
         inputs: CoreStatInputs = CoreStatInputs(),
     ) -> CoreStatState:
-        """Return the base character state plus traceable derived stat results.
-
-        ``character_progression`` is accepted so the context remains explicitly
-        tied to a character snapshot. The current derived formulas consume the
-        already-resolved inputs; progression-specific formulas remain isolated
-        in their own verified layers.
-        """
-        # Keep the argument part of the public contract and make accidental
-        # omission visible to static readers without duplicating state here.
+        """Return the base character state plus traceable derived stat results."""
         _ = character_progression
 
         pairs = (
@@ -78,10 +79,14 @@ class CoreStatCalculator:
             (StatId.HEALING_TAKEN, inputs.healing_taken),
         )
 
-        derived = {
-            stat: self._derived.resolved_stat(stat, inputs=stat_inputs)
-            for stat, stat_inputs in pairs
-        }
+        derived = {}
+        for stat, stat_inputs in pairs:
+            base = self.VERIFIED_BASES.get(stat, 0.0)
+            derived[stat] = self._derived.resolved_stat(
+                stat,
+                base=base,
+                inputs=stat_inputs,
+            )
 
         # Weapon/Spell Damage have an established level baseline and therefore
         # use their specific calculators rather than the generic zero-base path.
