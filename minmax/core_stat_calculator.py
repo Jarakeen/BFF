@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .base_character_state import BaseCharacterState
 from .character_progression import CharacterProgression
@@ -39,7 +39,7 @@ class CoreStatState:
 
 
 class CoreStatCalculator:
-    """Aggregate 2C foundational combat stats without inventing unresolved ESO rules."""
+    """Aggregate foundational combat stats without inventing unresolved ESO rules."""
 
     # Update-50/level-50 UESP baseline values from the project's equations:
     # crit chance starts at 10%, crit damage at 50%, and crit resistance at
@@ -53,30 +53,58 @@ class CoreStatCalculator:
     def __init__(self) -> None:
         self._derived = DerivedStatCalculator()
 
+    @staticmethod
+    def _with_race_stat(inputs: DerivedStatInputs, race_stats: dict[str, float], stat: StatId) -> DerivedStatInputs:
+        value = float(race_stats.get(stat.value, 0.0))
+        if not value:
+            return inputs
+        return replace(
+            inputs,
+            flat=inputs.flat + (StatContribution("race", value),),
+        )
+
     def calculate(
         self,
         *,
         character_progression: CharacterProgression,
         base_character: BaseCharacterState,
+        race_stats: dict[str, float] | None = None,
         inputs: CoreStatInputs = CoreStatInputs(),
     ) -> CoreStatState:
-        """Return the base character state plus traceable derived stat results."""
+        """Return base character and derived stats with data-driven race contributions."""
         _ = character_progression
+        race_stats = race_stats or {}
+
+        resolved = CoreStatInputs(
+            weapon_damage=self._with_race_stat(inputs.weapon_damage, race_stats, StatId.WEAPON_DAMAGE),
+            spell_damage=self._with_race_stat(inputs.spell_damage, race_stats, StatId.SPELL_DAMAGE),
+            physical_resistance=self._with_race_stat(inputs.physical_resistance, race_stats, StatId.PHYSICAL_RESISTANCE),
+            spell_resistance=self._with_race_stat(inputs.spell_resistance, race_stats, StatId.SPELL_RESISTANCE),
+            physical_penetration=self._with_race_stat(inputs.physical_penetration, race_stats, StatId.PHYSICAL_PENETRATION),
+            spell_penetration=self._with_race_stat(inputs.spell_penetration, race_stats, StatId.SPELL_PENETRATION),
+            weapon_critical=self._with_race_stat(inputs.weapon_critical, race_stats, StatId.WEAPON_CRITICAL),
+            spell_critical=self._with_race_stat(inputs.spell_critical, race_stats, StatId.SPELL_CRITICAL),
+            critical_damage=self._with_race_stat(inputs.critical_damage, race_stats, StatId.CRITICAL_DAMAGE),
+            critical_chance=self._with_race_stat(inputs.critical_chance, race_stats, StatId.CRITICAL_CHANCE),
+            critical_resistance=self._with_race_stat(inputs.critical_resistance, race_stats, StatId.CRITICAL_RESISTANCE),
+            healing_done=self._with_race_stat(inputs.healing_done, race_stats, StatId.HEALING_DONE),
+            healing_taken=self._with_race_stat(inputs.healing_taken, race_stats, StatId.HEALING_TAKEN),
+        )
 
         pairs = (
-            (StatId.WEAPON_DAMAGE, inputs.weapon_damage),
-            (StatId.SPELL_DAMAGE, inputs.spell_damage),
-            (StatId.PHYSICAL_RESISTANCE, inputs.physical_resistance),
-            (StatId.SPELL_RESISTANCE, inputs.spell_resistance),
-            (StatId.PHYSICAL_PENETRATION, inputs.physical_penetration),
-            (StatId.SPELL_PENETRATION, inputs.spell_penetration),
-            (StatId.WEAPON_CRITICAL, inputs.weapon_critical),
-            (StatId.SPELL_CRITICAL, inputs.spell_critical),
-            (StatId.CRITICAL_DAMAGE, inputs.critical_damage),
-            (StatId.CRITICAL_CHANCE, inputs.critical_chance),
-            (StatId.CRITICAL_RESISTANCE, inputs.critical_resistance),
-            (StatId.HEALING_DONE, inputs.healing_done),
-            (StatId.HEALING_TAKEN, inputs.healing_taken),
+            (StatId.WEAPON_DAMAGE, resolved.weapon_damage),
+            (StatId.SPELL_DAMAGE, resolved.spell_damage),
+            (StatId.PHYSICAL_RESISTANCE, resolved.physical_resistance),
+            (StatId.SPELL_RESISTANCE, resolved.spell_resistance),
+            (StatId.PHYSICAL_PENETRATION, resolved.physical_penetration),
+            (StatId.SPELL_PENETRATION, resolved.spell_penetration),
+            (StatId.WEAPON_CRITICAL, resolved.weapon_critical),
+            (StatId.SPELL_CRITICAL, resolved.spell_critical),
+            (StatId.CRITICAL_DAMAGE, resolved.critical_damage),
+            (StatId.CRITICAL_CHANCE, resolved.critical_chance),
+            (StatId.CRITICAL_RESISTANCE, resolved.critical_resistance),
+            (StatId.HEALING_DONE, resolved.healing_done),
+            (StatId.HEALING_TAKEN, resolved.healing_taken),
         )
 
         derived = {}
@@ -90,7 +118,7 @@ class CoreStatCalculator:
 
         # Weapon/Spell Damage have an established level baseline and therefore
         # use their specific calculators rather than the generic zero-base path.
-        derived[StatId.WEAPON_DAMAGE] = self._derived.weapon_damage(inputs.weapon_damage)
-        derived[StatId.SPELL_DAMAGE] = self._derived.spell_damage(inputs.spell_damage)
+        derived[StatId.WEAPON_DAMAGE] = self._derived.weapon_damage(resolved.weapon_damage)
+        derived[StatId.SPELL_DAMAGE] = self._derived.spell_damage(resolved.spell_damage)
 
         return CoreStatState(base_character=base_character, derived=derived)
