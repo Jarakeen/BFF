@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QComboBox,
     QDialog,
+    QHBoxLayout,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -34,7 +35,6 @@ from services.eso_icon_resolver import EsoIconResolver
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
 from services.eso_gear_icons import gear_icon_path
-from widgets.character_progression_card import CharacterProgressionCard
 
 
 QUALITY_CHOICES = ["", "White", "Green", "Blue", "Purple", "Gold"]
@@ -54,6 +54,7 @@ ENCHANT_CHOICES = [
     "Absorb Stamina", "Poison", "Flame", "Frost", "Shock", "Crushing",
     "Disease", "Bashing", "Decrease Physical Harm",
 ]
+MAX_ATTRIBUTE_POINTS = 64
 
 
 class GearSlotRow(QWidget):
@@ -433,7 +434,6 @@ class BuildEditor(QWidget):
         self.image_path = ""
         self._notes = ""
         self._boss_cards = []
-        self._progression_card = CharacterProgressionCard()
         self._hydrate_reference_data()
         self._build_ui()
 
@@ -467,14 +467,10 @@ class BuildEditor(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
         root.addWidget(self._build_identity_card())
-        root.addWidget(self._build_progression_card())
         root.addWidget(self._build_gear_card())
         root.addWidget(self._build_cp_card())
         root.addWidget(self._build_skills_card())
         root.addWidget(self._build_boss_card())
-
-    def _build_progression_card(self):
-        return self._progression_card
 
     @staticmethod
     def _line(placeholder=""):
@@ -492,11 +488,29 @@ class BuildEditor(QWidget):
         widget.setMinimumHeight(28)
         return widget
 
+    @staticmethod
+    def _attribute_spin():
+        spin = QSpinBox()
+        spin.setRange(0, MAX_ATTRIBUTE_POINTS)
+        spin.setFixedWidth(70)
+        spin.setMinimumHeight(28)
+        return spin
+
+    def _update_attribute_limits(self):
+        values = (self.attribute_health.value(), self.attribute_magicka.value(), self.attribute_stamina.value())
+        total = sum(values)
+        for spin, value in zip(
+            (self.attribute_health, self.attribute_magicka, self.attribute_stamina), values
+        ):
+            spin.setMaximum(min(MAX_ATTRIBUTE_POINTS, MAX_ATTRIBUTE_POINTS - (total - value)))
+        self.attribute_total.setText(str(total))
+
     def _build_identity_card(self):
         card = FoundryCard("Identity")
         grid = QGridLayout()
         grid.setContentsMargins(8, 6, 8, 6)
         grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(6)
         fields = [
             ("Character Name", self._line("Character name")),
             ("@Gamertag", self._line("@Gamertag")),
@@ -511,8 +525,43 @@ class BuildEditor(QWidget):
         for column, (label, widget) in enumerate(fields):
             grid.addWidget(QLabel(label), 0, column)
             grid.addWidget(widget, 1, column)
+
+        self.vampire = QCheckBox("Vampire")
+        self.werewolf = QCheckBox("Werewolf")
+        self.attribute_health = self._attribute_spin()
+        self.attribute_magicka = self._attribute_spin()
+        self.attribute_stamina = self._attribute_spin()
+        self.attribute_total = QLabel("0")
+        self.attribute_total.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.attribute_total.setProperty("overviewStatValue", True)
+
+        grid.addWidget(self.vampire, 2, 0)
+        grid.addWidget(self.werewolf, 2, 1)
+        for column, label, spin in (
+            (2, "Health", self.attribute_health),
+            (3, "Magicka", self.attribute_magicka),
+            (4, "Stamina", self.attribute_stamina),
+        ):
+            grid.addWidget(QLabel(label), 2, column)
+            grid.addWidget(spin, 3, column)
+        grid.addWidget(QLabel("Total / 64"), 2, 5)
+        grid.addWidget(self.attribute_total, 3, 5)
+
+        self.vampire.toggled.connect(self._sync_affiliations)
+        self.werewolf.toggled.connect(self._sync_affiliations)
+        for spin in (self.attribute_health, self.attribute_magicka, self.attribute_stamina):
+            spin.valueChanged.connect(self._update_attribute_limits)
+
         card.addLayout(grid)
         return card
+
+    def _sync_affiliations(self):
+        if self.vampire.isChecked() and self.werewolf.isChecked():
+            sender = self.sender()
+            other = self.werewolf if sender is self.vampire else self.vampire
+            other.blockSignals(True)
+            other.setChecked(False)
+            other.blockSignals(False)
 
     def _gear_icon(self, slot):
         path = gear_icon_path(slot.lower())
@@ -601,52 +650,25 @@ class BuildEditor(QWidget):
 
     def _build_boss_card(self):
         card = FoundryCard("Boss Alternates")
-
         body = QVBoxLayout()
-
         self.boss_container = QVBoxLayout()
         body.addLayout(self.boss_container)
-
         actions = QHBoxLayout()
         actions.setSpacing(8)
-
-        add_boss = FoundryButton(
-            "+ Add Boss Alternate",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        add_build = FoundryButton(
-            "+ Add New Build",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
-        save = FoundryButton(
-            "Save This Build",
-            role=ButtonRole.PRIMARY,
-            compact=True,
-        )
-
-        cancel = FoundryButton(
-            "Cancel",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-
+        add_boss = FoundryButton("+ Add Boss Alternate", role=ButtonRole.SECONDARY, compact=True)
+        add_build = FoundryButton("+ Add New Build", role=ButtonRole.SECONDARY, compact=True)
+        save = FoundryButton("Save This Build", role=ButtonRole.PRIMARY, compact=True)
+        cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY, compact=True)
         add_boss.clicked.connect(self.add_boss_loadout)
         add_build.clicked.connect(self._handle_add_build)
         save.clicked.connect(self.saveRequested.emit)
         cancel.clicked.connect(self.cancelRequested.emit)
-
         actions.addWidget(add_boss)
         actions.addStretch()
         actions.addWidget(add_build)
         actions.addWidget(save)
         actions.addWidget(cancel)
-
         body.addLayout(actions)
-
         card.addLayout(body)
         return card
 
@@ -703,7 +725,6 @@ class BuildEditor(QWidget):
             for slot, row in self.gear_rows.items()
             if slot in ARMOR_SLOTS
         }
-        progression = self._progression_card.values
         return PlayerBuild(
             Name=self.name.text().strip(),
             Gamertag=self.gamertag.text().strip(),
@@ -712,11 +733,11 @@ class BuildEditor(QWidget):
             EsoClass=self.eso_class.currentText().strip(),
             Role=self.role.currentText().strip(),
             Alliance=self.alliance.currentText().strip(),
-            Vampire=bool(progression.get("vampire")),
-            Werewolf=bool(progression.get("werewolf")),
-            AttributeHealth=int(progression.get("health", 0)),
-            AttributeMagicka=int(progression.get("magicka", 0)),
-            AttributeStamina=int(progression.get("stamina", 0)),
+            Vampire=self.vampire.isChecked(),
+            Werewolf=self.werewolf.isChecked(),
+            AttributeHealth=self.attribute_health.value(),
+            AttributeMagicka=self.attribute_magicka.value(),
+            AttributeStamina=self.attribute_stamina.value(),
             Armor=armor,
             FrontBarWeapon=self.gear_rows["main_hand"].value,
             BackBarWeapon=self.gear_rows["off_hand"].value,
@@ -741,13 +762,23 @@ class BuildEditor(QWidget):
         self.eso_class.setCurrentText(model.EsoClass)
         self.role.setCurrentText(getattr(model, "Role", "") or "")
         self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
-        self._progression_card.set_values(
-            health=getattr(model, "AttributeHealth", 0),
-            magicka=getattr(model, "AttributeMagicka", 0),
-            stamina=getattr(model, "AttributeStamina", 0),
-            vampire=getattr(model, "Vampire", False),
-            werewolf=getattr(model, "Werewolf", False),
-        )
+        self.vampire.blockSignals(True)
+        self.werewolf.blockSignals(True)
+        self.attribute_health.blockSignals(True)
+        self.attribute_magicka.blockSignals(True)
+        self.attribute_stamina.blockSignals(True)
+        self.vampire.setChecked(bool(getattr(model, "Vampire", False)))
+        self.werewolf.setChecked(bool(getattr(model, "Werewolf", False)) and not self.vampire.isChecked())
+        self.attribute_health.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeHealth", 0) or 0))))
+        self.attribute_magicka.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeMagicka", 0) or 0))))
+        self.attribute_stamina.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeStamina", 0) or 0))))
+        self.attribute_stamina.blockSignals(False)
+        self.attribute_magicka.blockSignals(False)
+        self.attribute_health.blockSignals(False)
+        self.werewolf.blockSignals(False)
+        self.vampire.blockSignals(False)
+        self._sync_affiliations()
+        self._update_attribute_limits()
         self._apply_class()
         for slot, row in self.gear_rows.items():
             if slot in ARMOR_SLOTS:
