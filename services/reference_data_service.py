@@ -102,14 +102,18 @@ class ReferenceDataService:
 
     def list_skills(self) -> list[dict]:
         """
-        Return structured skill records for the Build Editor.
+        Return one display record for each base skill and morph.
 
-        These records retain the metadata needed for:
-        - class filtering
-        - combat filtering
-        - passive filtering
-        - ultimate filtering
-        - ESO skill icons
+        The canonical ``skill`` row owns the skill-line identity,
+        while ``skill_rank`` links that identity to the concrete
+        ability records. The concrete ability row is the source of
+        truth for the displayed name and icon, so morphs retain their
+        actual ESO names instead of inheriting the base skill name.
+
+        One record per morph is returned using the highest available
+        rank. The rank identity is retained in the returned mapping so
+        later calculation work can resolve the selected ability without
+        another name-based lookup.
         """
 
         if self._skill_rows is None:
@@ -118,37 +122,108 @@ class ReferenceDataService:
 
                 rows = self.database.execute(
                     """
+                    WITH ranked AS (
+                        SELECT
+                            s.id,
+                            s.base_ability_id,
+                            s.name AS base_name,
+                            s.index_name AS base_index_name,
+                            s.description AS base_description,
+                            s.texture AS base_texture,
+                            s.class_type,
+                            s.skill_line,
+                            s.target AS base_target,
+                            s.skill_type AS base_skill_type,
+                            s.is_passive,
+                            s.is_player,
+                            s.is_crafted,
+                            s.crafted_id,
+
+                            sr.ability_id,
+                            sr.display_id,
+                            sr.rank,
+                            sr.morph,
+                            sr.skill_index,
+                            sr.learned_level,
+
+                            COALESCE(
+                                NULLIF(ar.name, ''),
+                                s.name
+                            ) AS name,
+                            COALESCE(
+                                NULLIF(ar.index_name, ''),
+                                s.index_name
+                            ) AS index_name,
+                            COALESCE(
+                                NULLIF(ar.description, ''),
+                                s.description
+                            ) AS description,
+                            COALESCE(
+                                NULLIF(ar.texture, ''),
+                                s.texture
+                            ) AS texture,
+                            COALESCE(
+                                NULLIF(ar.target, ''),
+                                s.target
+                            ) AS target,
+                            COALESCE(
+                                ar.skill_type,
+                                s.skill_type
+                            ) AS skill_type,
+
+                            a.base_mechanic,
+                            a.cost,
+                            a.buff_type,
+
+                            ROW_NUMBER() OVER (
+                                PARTITION BY s.id, sr.morph
+                                ORDER BY sr.rank DESC, sr.ability_id DESC
+                            ) AS rn
+
+                        FROM skill s
+
+                        JOIN skill_rank sr
+                            ON sr.skill_id = s.id
+
+                        JOIN ability ar
+                            ON ar.ability_id = sr.ability_id
+
+                        LEFT JOIN ability a
+                            ON a.base_ability_id = s.base_ability_id
+
+                        WHERE s.name IS NOT NULL
+                        AND s.name != ''
+                    )
+
                     SELECT
-                        s.id,
-                        s.base_ability_id,
-                        s.name,
-                        s.index_name,
-                        s.description,
-                        s.texture,
-                        s.class_type,
-                        s.skill_line,
-                        s.target,
-                        s.skill_type,
-                        s.is_passive,
-                        s.is_player,
-                        s.is_crafted,
-                        s.crafted_id,
-
-                        a.base_mechanic,
-                        a.cost,
-                        a.buff_type
-
-                    FROM skill s
-
-                    LEFT JOIN ability a
-                        ON a.base_ability_id = s.base_ability_id
-
-                    WHERE s.name IS NOT NULL
-                    AND s.name != ''
-
-                    ORDER BY s.name
+                        id,
+                        base_ability_id,
+                        name,
+                        index_name,
+                        description,
+                        texture,
+                        class_type,
+                        skill_line,
+                        target,
+                        skill_type,
+                        is_passive,
+                        is_player,
+                        is_crafted,
+                        crafted_id,
+                        ability_id,
+                        display_id,
+                        rank,
+                        morph,
+                        skill_index,
+                        learned_level,
+                        base_mechanic,
+                        cost,
+                        buff_type
+                    FROM ranked
+                    WHERE rn = 1
+                    ORDER BY name
                     """
-).fetchall()
+                ).fetchall()
 
                 self._skill_rows = [
                     dict(row)
