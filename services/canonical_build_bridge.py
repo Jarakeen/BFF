@@ -81,8 +81,12 @@ class CanonicalBuildBridge:
     def _roster_from_catalog(cls, catalog: dict[str, Any]) -> BuildRoster:
         members: list[PlayerBuild] = []
         for entry in catalog.get("builds", []):
-            legacy = entry.get("legacy") if isinstance(entry, dict) else None
+            if not isinstance(entry, dict):
+                continue
+            legacy = entry.get("legacy")
             if not cls._is_valid_legacy_build(legacy):
                 continue
+            # The canonical catalog can contain historical placeholder builds;
+            # only reconstruct real legacy rows into the compatibility roster.
             members.append(PlayerBuild.from_dict(legacy))
         return BuildRoster(Members=members)
