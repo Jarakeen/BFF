@@ -7,6 +7,7 @@ ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetr
 WEAPON_TRAITS: list[str] = ["", "Precise", "Charged", "Powered", "Defending", "Training", "Sharpened", "Decisive", "Infused", "Nirnhoned"]
 JEWELRY_TRAITS: list[str] = ["", "Arcane", "Healthy", "Robust", "Bloodthirsty", "Harmony", "Protective", "Swift", "Triune", "Infused", "Nirnhoned"]
 BAR_SKILL_COUNT = 5
+MAX_ATTRIBUTE_POINTS = 64
 
 
 def _empty_bar() -> list[str]:
@@ -15,6 +16,13 @@ def _empty_bar() -> list[str]:
 
 def _empty_armor() -> dict[str, dict[str, str]]:
     return {slot: {"Set": "", "Set2": "", "Quality": "", "Trait": "", "Enchant": "", "EnchantTier": "", "Level": "", "Weight": ""} for slot in ARMOR_SLOTS}
+
+
+def _int_value(value, default: int = 0) -> int:
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return default
 
 
 @dataclass
@@ -84,6 +92,11 @@ class PlayerBuild:
     # character is not transformed. Vampire and Werewolf are mutually exclusive.
     Vampire: bool = False
     Werewolf: bool = False
+    # ESO grants a fixed lifetime pool of 64 level-up attribute points.
+    # These are deliberately separate from Champion Points.
+    AttributeHealth: int = 0
+    AttributeMagicka: int = 0
+    AttributeStamina: int = 0
 
     Armor: dict[str, dict[str, str]] = field(default_factory=_empty_armor)
     FrontBarWeapon: GearSlot = field(default_factory=GearSlot)
@@ -99,10 +112,18 @@ class PlayerBuild:
     Notes: str = ""
     BossLoadouts: list[BossLoadout] = field(default_factory=list)
 
+    @property
+    def attribute_points_total(self) -> int:
+        return self.AttributeHealth + self.AttributeMagicka + self.AttributeStamina
+
     def validate(self) -> list[str]:
         errors: list[str] = []
         if self.Vampire and self.Werewolf:
             errors.append("A character cannot be both Vampire and Werewolf.")
+        if any(value < 0 for value in (self.AttributeHealth, self.AttributeMagicka, self.AttributeStamina)):
+            errors.append("Attribute points cannot be negative.")
+        if self.attribute_points_total > MAX_ATTRIBUTE_POINTS:
+            errors.append(f"Attribute points cannot exceed {MAX_ATTRIBUTE_POINTS}.")
         return errors
 
     def to_dict(self) -> dict:
@@ -110,7 +131,9 @@ class PlayerBuild:
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
             "Role": self.Role, "Alliance": self.Alliance, "Vampire": self.Vampire,
-            "Werewolf": self.Werewolf, "Armor": self.Armor,
+            "Werewolf": self.Werewolf,
+            "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
+            "AttributeStamina": self.AttributeStamina, "Armor": self.Armor,
             "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "BackBarWeapon": self.BackBarWeapon.to_dict(),
             "Necklace": self.Necklace.to_dict(), "Ring1": self.Ring1.to_dict(), "Ring2": self.Ring2.to_dict(),
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
@@ -132,6 +155,9 @@ class PlayerBuild:
             Race=str(data.get("Race", "") or ""), EsoClass=str(data.get("EsoClass", "") or ""),
             Role=str(data.get("Role", "") or ""), Alliance=str(data.get("Alliance", "") or ""),
             Vampire=bool(data.get("Vampire", False)), Werewolf=bool(data.get("Werewolf", False)),
+            AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
+            AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
+            AttributeStamina=_int_value(data.get("AttributeStamina", 0)),
             Armor=armor, FrontBarWeapon=GearSlot.from_dict(data.get("FrontBarWeapon")), BackBarWeapon=GearSlot.from_dict(data.get("BackBarWeapon")),
             Necklace=GearSlot.from_dict(data.get("Necklace")), Ring1=GearSlot.from_dict(data.get("Ring1")), Ring2=GearSlot.from_dict(data.get("Ring2")),
             ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
