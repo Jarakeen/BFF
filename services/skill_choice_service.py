@@ -34,9 +34,9 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
             SELECT
                 sr.ability_id,
                 s.base_ability_id,
-                COALESCE(NULLIF(sr.raw_name, ''), s.name) AS name,
+                COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) AS name,
                 s.index_name,
-                COALESCE(NULLIF(sr.raw_description, ''), s.description) AS description,
+                COALESCE(NULLIF(sr.raw_description, ''), NULLIF(a.description, ''), s.description) AS description,
                 COALESCE(NULLIF(a.texture, ''), s.texture) AS texture,
                 s.class_type,
                 s.skill_line,
@@ -63,9 +63,9 @@ def load_skill_choices(database_path: str | Path = DEFAULT_DATABASE) -> list[dic
                 WHERE sr2.skill_id = sr.skill_id
                 GROUP BY sr2.skill_id, COALESCE(sr2.morph, 0)
             )
-            AND COALESCE(NULLIF(sr.raw_name, ''), s.name) IS NOT NULL
-            AND TRIM(COALESCE(NULLIF(sr.raw_name, ''), s.name)) <> ''
-            ORDER BY COALESCE(NULLIF(sr.raw_name, ''), s.name) COLLATE NOCASE,
+            AND COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) IS NOT NULL
+            AND TRIM(COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name)) <> ''
+            ORDER BY COALESCE(NULLIF(sr.raw_name, ''), NULLIF(a.name, ''), s.name) COLLATE NOCASE,
                      s.base_ability_id,
                      COALESCE(sr.morph, 0)
             """
