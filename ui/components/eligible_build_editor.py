@@ -1,7 +1,7 @@
 from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QAbstractSpinBox, QHBoxLayout, QLabel, QLineEdit
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -70,27 +70,73 @@ class EligibleSkillBarRow(build_editor.SkillBarRow):
 
 
 class EligibleBuildEditor(build_editor.BuildEditor):
-    """BuildEditor with build-name and centralized skill eligibility."""
+    """BuildEditor with compact build identity and centralized skill eligibility."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.build_name = QLineEdit()
         self.build_name.setPlaceholderText("Build name")
+        self.build_name.setFixedWidth(500)
 
-        # BuildEditor already owns the single Vampire/Werewolf pair in the
-        # Identity card. Add only the build-name field here. Do not create a
-        # second affiliation control pair.
+        # BuildEditor owns the authoritative controls. Move them out of the
+        # old two-row grid and put them into one compact row with Build Name.
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
+            grid = identity_card.body_layout.itemAt(0).layout()
+            if grid is not None:
+                keep = {
+                    self.vampire,
+                    self.werewolf,
+                    self.attribute_health,
+                    self.attribute_magicka,
+                    self.attribute_stamina,
+                    self.attribute_total,
+                }
+                remove = []
+                for index in range(grid.count() - 1, -1, -1):
+                    item = grid.itemAt(index)
+                    widget = item.widget()
+                    row, _column, _row_span, _column_span = grid.getItemPosition(index)
+                    if row >= 2:
+                        remove.append((index, widget))
+                for index, widget in remove:
+                    grid.takeAt(index)
+                    if widget is not None and widget not in keep:
+                        widget.setParent(None)
+                        widget.deleteLater()
+
             row = QHBoxLayout()
-            row.addWidget(QLabel("Build Name"))
-            row.addWidget(self.build_name, 2)
+            row.setContentsMargins(8, 4, 8, 4)
+            row.setSpacing(8)
+            row.addWidget(self.build_name)
+
+            self.werewolf.setText("WW")
+            self.vampire.setText("Vamp")
+            row.addWidget(self.werewolf)
+            row.addWidget(self.vampire)
+
+            for widget, placeholder in (
+                (self.attribute_magicka, "Mag"),
+                (self.attribute_stamina, "Stam"),
+                (self.attribute_health, "Health"),
+            ):
+                widget.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+                widget.setFixedWidth(72)
+                widget.setToolTip(placeholder)
+                row.addWidget(widget)
+
+            self.attribute_total.setText("0/64")
+            row.addWidget(self.attribute_total)
             row.addStretch(1)
             identity_card.addLayout(row)
 
         self.eso_class.currentTextChanged.connect(self._on_class_changed)
         self._sync_skill_state()
+
+    def _update_attribute_limits(self):
+        super()._update_attribute_limits()
+        self.attribute_total.setText(f"{self.attribute_health.value() + self.attribute_magicka.value() + self.attribute_stamina.value()}/64")
 
     def _sync_skill_state(self):
         vampire = self.vampire.isChecked()
