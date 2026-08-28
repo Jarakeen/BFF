@@ -21,3 +21,68 @@ Major Brittle: +20% - only source in the game is the Nunatak PvP monster set, it
 Total Critical damage buffs from a typical group: +109% most of the time, +129% bursts.
 
 These buffs easily push critical damage to cap and over. Shadow simply has no space to actually apply. 
+
+
+---------------------
+
+ESO Critical Damage Modifiers List
+
+Below you can find two lists that showcase all the known critical damage modifiers. Of course you won't be able to get all of these at once, because some of the critical damage modifiers are class or race specific or require a very special set. Some buffs like Major Force won't have a 100% uptime, these are all things that you need to keep in mind.
+Name 	% Gains
+Base 	50%
+[Minor Force] 	10%
+[Major Force] 	20%
+[Minor Brittle] 	10%
+[Major Brittle]* 	20%
+[The Shadow] Mundus Stone 	18%
+Backstabber Perk 	15%
+Fighting Finesse Perk 	10%
+[Elemental Catalyst] Set 	15%
+[Harpooner's Wading Kilt] Set 	10%
+[Sul-Xan's Torment] Set 	12%
+[Dexterity] Medium Armor Passive 	14%
+[Twin Blade and Blunt] Dual Wield Passive 	16%
+[Heavy Weapons] Two Handed Passive 	16%
+[Feline Ambush] Khajiit Passive 	12%
+[Hemorrhage] Nightblade Pass 	10%
+[Piercing Spear] Templar Passive 	10%
+[Glacial Presence] Warden Passive 	10%
+[Malacath's Band of Brutality] Set** 	-50% 
+
+
+ *Major Brittle is currently not available from any source.
+
+**Malacath reduces your critical damage
+Critical Damage Raid Example
+
+To reach the 125% critical damage hard cap you could stack the following buffs. Lets take a look at a magicka based raid group example.
+Name 	%Gains
+Base 	50%
+[Minor Force] 	10%
+[Major Force] 	20%
+[Minor Brittle] 	10%
+Backstabber Perk 	15%
+Fighting Finesse Perk 	10%
+[Elemental Catalyst] Set 	15%
+Total 	130%
+
+Please remember if you bring classes or races with you into a raid that already have critical damage modifiers (Glacial Presence, Hemorrhage, Piercing Spear and Feline Ambush) you will have to adjust the critical damage modifiers. If you are already at the hard cap of 125% then these passives will be useless.
+
+You also have to keep in mind that certain buffs might not have a 100% uptime, for example it is very hard to keep up Major Force all the time.
+
+That also means that while you play in a 4 player dungeon group you don't really have to worry about the critical damage hard cap in ESO. The hard cap is mostly important for very optimized raid groups.
+FAQ Critical Damage
+
+Lets take a look at a few common questions about critical damage in ESO.
+What is Critical Damage in ESO?
+
+Critical Damage is a 50% boost to damage done at its base level when an ability crits. That means if a normal hit deals 1000 damage, a critical hit deals 1500 damage. However, you can increase the amount of critical damage via modifiers from sets, skills, champion points and passives.
+How do you get high Crit Damage in ESO?
+
+To get high crit damage in ESO you need to combine different modifers, please visit the ESO Critical Damage Guide to see a full list of all the modifiers.
+How much damage does a Critical Hit do in ESO?
+
+A critical hit deals 50% more damage than a normal hit. That means if a normal hit deals 1000 damage, a critical hit deals 1500 damage. However, you can increase the amount of critical damage via modifiers from sets, skills, champion points and passives.
+Is Crit Chance better than Critical Damage in ESO?
+
+Both critical chance and critical damage are important. Increasing critical chance is better in most cases because you can increase that number without much help from anyone else. Critical damage is usually also increased by buffs and debuffs from support characters. 
