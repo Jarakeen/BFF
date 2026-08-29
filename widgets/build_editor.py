@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QFileDialog,
     QCheckBox,
@@ -43,10 +43,13 @@ LEVEL_CHOICES = ["", "Level 1", "Level 10", "Level 20", "Level 30", "Level 40", 
 ENCHANT_TIER_CHOICES = ["", "Trifling", "Inferior", "Petty", "Slight", "Minor", "Lesser", "Moderate", "Average", "Strong", "Major", "Greater", "Grand", "Splendid", "Monumental", "Superb", "Truly Superb"]
 ENCHANT_CHOICES = ["", "Max Magicka", "Max Health", "Max Stamina", "Prismatic Defense", "Magicka Recovery", "Health Recovery", "Stamina Recovery", "Weapon Damage", "Spell Damage", "Absorb Magicka", "Absorb Health", "Absorb Stamina", "Poison", "Flame", "Frost", "Shock", "Crushing", "Disease", "Bashing", "Decrease Physical Harm"]
 MAX_ATTRIBUTE_POINTS = 64
+ONE_HANDED_WEAPON_TYPES = {"sword", "axe", "mace", "dagger"}
+LEGACY_TWO_ITEM_WEAPON_TYPES = {"dual wield", "one hand and shield"}
+OFFHAND_WEAPON_TYPES = ["", "Sword", "Axe", "Mace", "Dagger", "Shield"]
 
 
 class GearSlotRow(QWidget):
-    def __init__(self, set_choices, trait_choices, *, armor=False, weapon=False, parent=None):
+    def __init__(self, set_choices, trait_choices, *, armor=False, weapon=False, weapon_types=None, parent=None):
         super().__init__(parent)
         self.armor = armor
         self.weapon = weapon
@@ -54,7 +57,7 @@ class GearSlotRow(QWidget):
         self.set2_combo = self._combo(set_choices, editable=True)
         self.quality_combo = self._combo(QUALITY_CHOICES)
         self.trait_combo = self._combo(trait_choices)
-        type_choices = ["", "Light", "Medium", "Heavy"] if armor else WEAPON_TYPES if weapon else [""]
+        type_choices = ["", "Light", "Medium", "Heavy"] if armor else (weapon_types or WEAPON_TYPES) if weapon else [""]
         self.type_combo = self._combo(type_choices)
         self.type_combo.setEnabled(armor or weapon)
         self.enchant_combo = self._combo(ENCHANT_CHOICES, editable=True)
@@ -210,7 +213,7 @@ class BossLoadoutCard(FoundryCard):
 class BuildEditor(QWidget):
     nameChanged = Signal(str); saveRequested = Signal(); cancelRequested = Signal(); addBuildRequested = Signal()
     def __init__(self, race_choices=None, set_choices=None, skill_choices=None, cp_choices=None, food_choices=None, potion_choices=None, parent=None):
-        super().__init__(parent); self.race_choices = race_choices or []; self.set_choices = set_choices or []; self.skill_choices = skill_choices or []; self.cp_choices = cp_choices or []; self.food_choices = food_choices or []; self.potion_choices = potion_choices or []; self.image_path = ""; self._notes = ""; self._boss_cards = []; self._hydrate_reference_data(); self._build_ui()
+        super().__init__(parent); self.race_choices = race_choices or []; self.set_choices = set_choices or []; self.skill_choices = skill_choices or []; self.cp_choices = cp_choices or []; self.food_choices = food_choices or []; self.potion_choices = potion_choices or []; self.image_path = ""; self._notes = ""; self._boss_cards = []; self._weapon_row_widgets = {}; self._hydrate_reference_data(); self._build_ui()
     def showEvent(self, event):
         super().showEvent(event); parent = self.parentWidget()
         while parent is not None:
@@ -259,14 +262,34 @@ class BuildEditor(QWidget):
         path = gear_icon_path(slot.lower()); label = QLabel(); label.setFixedSize(22, 22); label.setAlignment(Qt.AlignCenter)
         if path and Path(path).exists(): label.setPixmap(QIcon(str(path)).pixmap(QSize(18, 18)))
         return label
+    @staticmethod
+    def _bar_uses_offhand(main_slot: GearSlot, offhand_slot: GearSlot | None = None) -> bool:
+        weapon_type = str(main_slot.WeaponType or "").strip().casefold()
+        return weapon_type in ONE_HANDED_WEAPON_TYPES or weapon_type in LEGACY_TWO_ITEM_WEAPON_TYPES or bool(offhand_slot and not offhand_slot.is_empty)
+    def _set_weapon_row_visible(self, key: str, visible: bool):
+        for widget in self._weapon_row_widgets.get(key, ()): widget.setVisible(visible)
+    def _sync_weapon_offhand_visibility(self, bar: str, *, clear_hidden: bool = False):
+        main_key = f"{bar}_main_hand"; off_key = f"{bar}_off_hand"
+        main = self.gear_rows[main_key].value; off = self.gear_rows[off_key].value
+        visible = self._bar_uses_offhand(main, off if not clear_hidden else None)
+        if not visible and clear_hidden: self.gear_rows[off_key].clear()
+        self._set_weapon_row_visible(off_key, visible)
     def _build_gear_card(self):
         card = FoundryCard("Gear"); grid = QGridLayout(); grid.setContentsMargins(8, 5, 8, 5); grid.setHorizontalSpacing(6); grid.setVerticalSpacing(3); headers = ["", "Slot", "Set 1", "Set 2 (Monster/Backup)", "Quality", "Trait", "Weight / Weapon", "Enchantment", "Enchant Tier", "Level", ""]
         for column, text in enumerate(headers): header = QLabel(text); header.setStyleSheet("font-weight:700;"); grid.addWidget(header, 0, column)
-        self.gear_rows = {}; specs = [("Head", "Head", True), ("Shoulders", "Shoulders", True), ("Chest", "Chest", True), ("Hands", "Hands", True), ("Waist", "Waist", True), ("Legs", "Legs", True), ("Feet", "Feet", True), ("Neck", "Neck", False), ("Ring1", "Ring 1", False), ("Ring2", "Ring 2", False), ("main_hand", "Front Bar", False), ("off_hand", "Back Bar", False)]
-        for row, (slot, label, armor) in enumerate(specs, 1):
-            grid.addWidget(self._gear_icon(slot), row, 0); slot_label = QLabel(label); slot_label.setMinimumWidth(78); grid.addWidget(slot_label, row, 1); traits = ARMOR_TRAITS if armor else JEWELRY_TRAITS if slot in {"Neck", "Ring1", "Ring2"} else WEAPON_TRAITS; weapon = slot in {"main_hand", "off_hand"}; editor = GearSlotRow(self.set_choices, traits, armor=armor, weapon=weapon); self.gear_rows[slot] = editor
-            for column, widget in enumerate([editor.set_combo, editor.set2_combo, editor.quality_combo, editor.trait_combo, editor.type_combo, editor.enchant_combo, editor.enchant_tier_combo, editor.level_combo], 2): grid.addWidget(widget, row, column)
-            remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True); remove.setFixedWidth(28); remove.clicked.connect(editor.clear); grid.addWidget(remove, row, 10)
+        self.gear_rows = {}
+        specs = [("Head", "Head", True, False), ("Shoulders", "Shoulders", True, False), ("Chest", "Chest", True, False), ("Hands", "Hands", True, False), ("Waist", "Waist", True, False), ("Legs", "Legs", True, False), ("Feet", "Feet", True, False), ("Neck", "Neck", False, False), ("Ring1", "Ring 1", False, False), ("Ring2", "Ring 2", False, False), ("front_main_hand", "Front Main Hand", False, True), ("front_off_hand", "Front Off Hand", False, True), ("back_main_hand", "Back Main Hand", False, True), ("back_off_hand", "Back Off Hand", False, True)]
+        for row, (slot, label, armor, weapon) in enumerate(specs, 1):
+            icon = self._gear_icon(slot); grid.addWidget(icon, row, 0); slot_label = QLabel(label); slot_label.setMinimumWidth(98); grid.addWidget(slot_label, row, 1)
+            traits = ARMOR_TRAITS if armor else JEWELRY_TRAITS if slot in {"Neck", "Ring1", "Ring2"} else WEAPON_TRAITS
+            weapon_types = OFFHAND_WEAPON_TYPES if slot.endswith("off_hand") else None
+            editor = GearSlotRow(self.set_choices, traits, armor=armor, weapon=weapon, weapon_types=weapon_types); self.gear_rows[slot] = editor
+            widgets = [icon, slot_label]
+            for column, widget in enumerate([editor.set_combo, editor.set2_combo, editor.quality_combo, editor.trait_combo, editor.type_combo, editor.enchant_combo, editor.enchant_tier_combo, editor.level_combo], 2): grid.addWidget(widget, row, column); widgets.append(widget)
+            remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True); remove.setFixedWidth(28); remove.clicked.connect(editor.clear); grid.addWidget(remove, row, 10); widgets.append(remove)
+            if slot.endswith("off_hand"): self._weapon_row_widgets[slot] = tuple(widgets); self._set_weapon_row_visible(slot, False)
+        self.gear_rows["front_main_hand"].type_combo.currentTextChanged.connect(lambda *_: self._sync_weapon_offhand_visibility("front", clear_hidden=True))
+        self.gear_rows["back_main_hand"].type_combo.currentTextChanged.connect(lambda *_: self._sync_weapon_offhand_visibility("back", clear_hidden=True))
         card.addLayout(grid); return card
     def _build_cp_card(self): card = FoundryCard("Champion Points"); self.cp_grid = ChampionPointGrid(self.cp_choices); card.addWidget(self.cp_grid); return card
     def _build_skills_card(self):
@@ -297,13 +320,15 @@ class BuildEditor(QWidget):
     @property
     def model(self):
         armor = {slot: row.value.to_dict() for slot, row in self.gear_rows.items() if slot in ARMOR_SLOTS}
-        return PlayerBuild(Name=self.name.text().strip(), Gamertag=self.gamertag.text().strip(), ImagePath=self.image_path, Race=self.race.currentText().strip(), EsoClass=self.eso_class.currentText().strip(), Role=self.role.currentText().strip(), Alliance=self.alliance.currentText().strip(), Vampire=self.vampire.isChecked(), Werewolf=self.werewolf.isChecked(), AttributeHealth=self.attribute_health.value(), AttributeMagicka=self.attribute_magicka.value(), AttributeStamina=self.attribute_stamina.value(), Armor=armor, FrontBarWeapon=self.gear_rows["main_hand"].value, BackBarWeapon=self.gear_rows["off_hand"].value, Necklace=self.gear_rows["Neck"].value, Ring1=self.gear_rows["Ring1"].value, Ring2=self.gear_rows["Ring2"].value, ChampionPoints=self.cp_grid.value, FrontBarSkills=self.front_bar.value, BackBarSkills=self.back_bar.value, Food=self.food.currentText().strip(), Potion=self.potion.currentText().strip(), Notes=self._notes, BossLoadouts=[card.value for card in self._boss_cards])
+        return PlayerBuild(Name=self.name.text().strip(), Gamertag=self.gamertag.text().strip(), ImagePath=self.image_path, Race=self.race.currentText().strip(), EsoClass=self.eso_class.currentText().strip(), Role=self.role.currentText().strip(), Alliance=self.alliance.currentText().strip(), Vampire=self.vampire.isChecked(), Werewolf=self.werewolf.isChecked(), AttributeHealth=self.attribute_health.value(), AttributeMagicka=self.attribute_magicka.value(), AttributeStamina=self.attribute_stamina.value(), Armor=armor, FrontBarWeapon=self.gear_rows["front_main_hand"].value, FrontBarOffHand=self.gear_rows["front_off_hand"].value, BackBarWeapon=self.gear_rows["back_main_hand"].value, BackBarOffHand=self.gear_rows["back_off_hand"].value, Necklace=self.gear_rows["Neck"].value, Ring1=self.gear_rows["Ring1"].value, Ring2=self.gear_rows["Ring2"].value, ChampionPoints=self.cp_grid.value, FrontBarSkills=self.front_bar.value, BackBarSkills=self.back_bar.value, Food=self.food.currentText().strip(), Potion=self.potion.currentText().strip(), Notes=self._notes, BossLoadouts=[card.value for card in self._boss_cards])
     def load(self, model):
         self.image_path = model.ImagePath; self._notes = model.Notes; self.name.setText(model.Name); self.gamertag.setText(model.Gamertag); self.race.setCurrentText(model.Race); self.eso_class.setCurrentText(model.EsoClass); self.role.setCurrentText(getattr(model, "Role", "") or ""); self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
         self.vampire.blockSignals(True); self.werewolf.blockSignals(True); self.attribute_health.blockSignals(True); self.attribute_magicka.blockSignals(True); self.attribute_stamina.blockSignals(True); self.vampire.setChecked(bool(getattr(model, "Vampire", False))); self.werewolf.setChecked(bool(getattr(model, "Werewolf", False)) and not self.vampire.isChecked()); self.attribute_health.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeHealth", 0) or 0)))); self.attribute_magicka.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeMagicka", 0) or 0)))); self.attribute_stamina.setValue(max(0, min(MAX_ATTRIBUTE_POINTS, int(getattr(model, "AttributeStamina", 0) or 0)))); self.attribute_stamina.blockSignals(False); self.attribute_magicka.blockSignals(False); self.attribute_health.blockSignals(False); self.werewolf.blockSignals(False); self.vampire.blockSignals(False); self._sync_affiliations(); self._update_attribute_limits(); self._apply_class()
+        weapon_map = {"front_main_hand": model.FrontBarWeapon, "front_off_hand": model.FrontBarOffHand, "back_main_hand": model.BackBarWeapon, "back_off_hand": model.BackBarOffHand, "Neck": model.Necklace, "Ring1": model.Ring1, "Ring2": model.Ring2}
         for slot, row in self.gear_rows.items():
             if slot in ARMOR_SLOTS: row.load(GearSlot.from_dict(model.Armor.get(slot, {})))
-            else: row.load({"main_hand": model.FrontBarWeapon, "off_hand": model.BackBarWeapon, "Neck": model.Necklace, "Ring1": model.Ring1, "Ring2": model.Ring2}[slot])
+            else: row.load(weapon_map[slot])
+        self._sync_weapon_offhand_visibility("front"); self._sync_weapon_offhand_visibility("back")
         self.cp_grid.load_entries(model.ChampionPoints); self.front_bar.load(model.FrontBarSkills); self.back_bar.load(model.BackBarSkills); self.food.setCurrentText(model.Food); self.potion.setCurrentText(model.Potion)
         for card in list(self._boss_cards): self._remove_boss_loadout(card)
         for loadout in model.BossLoadouts: self.add_boss_loadout(loadout)
