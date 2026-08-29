@@ -31,6 +31,11 @@ SIDEBAR_CATEGORIES = [
     ("Mementos", 10),
     ("Emotes", 11),
     ("Customized Actions", 12),
+    ("Weapon Styles", 13),
+    ("Armor Styles", 14),
+    ("Furnishings", 15),
+    ("Fragments", 16),
+    ("Tools & Upgrades", 17),
 ]
 
 TYPE_TO_SIDEBAR = {
@@ -53,6 +58,16 @@ TYPE_TO_SIDEBAR = {
     "memento": "Mementos",
     "emote": "Emotes",
     "customized_action": "Customized Actions",
+    "weapon_style": "Weapon Styles",
+    "armor_style": "Armor Styles",
+    "furnishing": "Furnishings",
+    "fragment": "Fragments",
+    "combination_fragment": "Fragments",
+    "patron": "Fragments",
+    "account_upgrade": "Tools & Upgrades",
+    "tool": "Tools & Upgrades",
+    "story": "Tools & Upgrades",
+    "skill_style": "Tools & Upgrades",
 }
 
 DIRECT_TYPES = {
@@ -73,6 +88,20 @@ DIRECT_TYPES = {
     "Head Marking": "head_marking",
     "Emote": "emote",
     "Furniture": "furnishing",
+}
+
+TYPE_NAMES = {
+    "mount": "Mount", "pet": "Pet", "assistant": "Assistant",
+    "companion": "Companion", "house": "House", "costume": "Costume",
+    "skin": "Skin", "polymorph": "Polymorph", "personality": "Personality",
+    "hair": "Hair", "hat": "Hat", "facial_accessory": "Facial Accessory",
+    "facial_hair_horns": "Facial Hair / Horns", "piercing_jewelry": "Piercing / Jewelry",
+    "body_marking": "Body Marking", "head_marking": "Head Marking",
+    "memento": "Memento", "emote": "Emote", "customized_action": "Customized Action",
+    "furnishing": "Furnishing", "combination_fragment": "Combination Fragment",
+    "fragment": "Fragment", "armor_style": "Armor Style", "weapon_style": "Weapon Style",
+    "story": "Story", "patron": "Patron", "tool": "Tool",
+    "account_upgrade": "Account Upgrade", "skill_style": "Skill Style",
 }
 
 
@@ -103,10 +132,7 @@ class EsoCollectibleDatabaseService:
     def ensure_ready(self) -> None:
         try:
             self._create_schema()
-
-            count = self.connection.execute(
-                "SELECT COUNT(*) FROM collectible"
-            ).fetchone()[0]
+            count = self.connection.execute("SELECT COUNT(*) FROM collectible").fetchone()[0]
 
             if count == 0:
                 if not self._table_exists("entity") or not self._table_exists("entity_source"):
@@ -117,29 +143,24 @@ class EsoCollectibleDatabaseService:
                 raw_count = self.connection.execute(
                     "SELECT COUNT(*) FROM entity WHERE entity_type='collectible'"
                 ).fetchone()[0]
-
                 if raw_count == 0:
                     self.bootstrap_message = "Collectible reference data has not been installed."
                     self.available = False
                     return
 
                 self._bootstrap_from_entity_source()
-                count = self.connection.execute(
-                    "SELECT COUNT(*) FROM collectible"
-                ).fetchone()[0]
+                count = self.connection.execute("SELECT COUNT(*) FROM collectible").fetchone()[0]
                 self.bootstrap_message = f"Collectible catalog prepared ({count:,} records)."
             else:
                 self.bootstrap_message = f"Collectible catalog ready ({count:,} records)."
 
             self.available = count > 0
-
         except sqlite3.Error as exc:
             self.available = False
             self.bootstrap_message = f"Collectible database unavailable: {exc}"
 
     def _create_schema(self) -> None:
         db = self.connection
-
         db.executescript(
             """
             CREATE TABLE IF NOT EXISTS schema_migration (
@@ -203,7 +224,8 @@ class EsoCollectibleDatabaseService:
             CREATE INDEX IF NOT EXISTS idx_collectible_source_category ON collectible(source_category_name, source_subcategory_name);
             CREATE INDEX IF NOT EXISTS idx_collectible_progress_owned ON collectible_progress(owned);
 
-            CREATE VIEW IF NOT EXISTS collectible_search AS
+            DROP VIEW IF EXISTS collectible_search;
+            CREATE VIEW collectible_search AS
             SELECT
                 c.*,
                 t.display_name AS canonical_type_name,
@@ -212,37 +234,56 @@ class EsoCollectibleDatabaseService:
             LEFT JOIN collectible_type t ON t.key = c.canonical_type_key
             LEFT JOIN collectible_sidebar_category s ON s.key = c.sidebar_category_key;
 
-            CREATE VIEW IF NOT EXISTS collectible_audit AS
+            DROP VIEW IF EXISTS collectible_audit;
+            CREATE VIEW collectible_audit AS
             SELECT * FROM collectible WHERE audit_reason IS NOT NULL;
             """
         )
 
         for name, order in SIDEBAR_CATEGORIES:
             db.execute(
-                "INSERT OR IGNORE INTO collectible_sidebar_category(key, display_name, sort_order) VALUES (?, ?, ?)",
+                """
+                INSERT INTO collectible_sidebar_category(key, display_name, sort_order)
+                VALUES (?, ?, ?)
+                ON CONFLICT(key) DO UPDATE SET
+                    display_name = excluded.display_name,
+                    sort_order = excluded.sort_order
+                """,
                 (name, name, order),
             )
 
-        type_names = {
-            "mount": "Mount", "pet": "Pet", "assistant": "Assistant",
-            "companion": "Companion", "house": "House", "costume": "Costume",
-            "skin": "Skin", "polymorph": "Polymorph", "personality": "Personality",
-            "hair": "Hair", "hat": "Hat", "facial_accessory": "Facial Accessory",
-            "facial_hair_horns": "Facial Hair / Horns", "piercing_jewelry": "Piercing / Jewelry",
-            "body_marking": "Body Marking", "head_marking": "Head Marking",
-            "memento": "Memento", "emote": "Emote", "customized_action": "Customized Action",
-            "furnishing": "Furnishing", "combination_fragment": "Combination Fragment",
-            "fragment": "Fragment", "armor_style": "Armor Style", "weapon_style": "Weapon Style",
-            "story": "Story", "patron": "Patron", "tool": "Tool",
-            "account_upgrade": "Account Upgrade", "skill_style": "Skill Style",
-        }
-
-        for key, display in type_names.items():
+        for key, display in TYPE_NAMES.items():
             db.execute(
-                "INSERT OR IGNORE INTO collectible_type(key, display_name, sidebar_key) VALUES (?, ?, ?)",
+                """
+                INSERT INTO collectible_type(key, display_name, sidebar_key)
+                VALUES (?, ?, ?)
+                ON CONFLICT(key) DO UPDATE SET
+                    display_name = excluded.display_name,
+                    sidebar_key = excluded.sidebar_key
+                """,
                 (key, display, TYPE_TO_SIDEBAR.get(key)),
             )
 
+        # Existing normalized databases predate the expanded Collections menu.
+        # Re-assign every recognized canonical type on startup so a catalog does
+        # not need to be rebuilt merely to expose it in a different UI group.
+        for type_key, sidebar_key in TYPE_TO_SIDEBAR.items():
+            db.execute(
+                """
+                UPDATE collectible
+                SET sidebar_category_key = ?,
+                    audit_reason = CASE
+                        WHEN normalization_status = 'invalid' THEN audit_reason
+                        ELSE NULL
+                    END
+                WHERE canonical_type_key = ?
+                """,
+                (sidebar_key, type_key),
+            )
+
+        db.execute(
+            "INSERT OR REPLACE INTO schema_migration(migration_key) VALUES ('collectibles_sidebar_v2')"
+        )
         db.commit()
 
     @staticmethod
@@ -364,7 +405,8 @@ class EsoCollectibleDatabaseService:
         if not self.available:
             return 0
         return self.connection.execute(
-            "SELECT COUNT(*) FROM collectible WHERE sidebar_category_key = ?", (category,)
+            "SELECT COUNT(*) FROM collectible WHERE sidebar_category_key = ?",
+            (category,),
         ).fetchone()[0]
 
     def progress_summary(self, category: str | None = None) -> tuple[int, int]:
@@ -411,7 +453,8 @@ class EsoCollectibleDatabaseService:
             LEFT JOIN collectible_progress p ON p.collectible_id = c.id
             WHERE {where}
             ORDER BY c.name COLLATE NOCASE, c.id
-            """, params
+            """,
+            params,
         ).fetchall()
         return [dict(row) for row in rows]
 
@@ -508,15 +551,9 @@ class EsoCollectibleDatabaseService:
             ])
             for row in rows:
                 writer.writerow([
-                    row["id"],
-                    row["name"],
-                    row["category"],
-                    row["collectible_type"],
-                    row["subtype"],
-                    "Yes" if row["owned"] else "No",
-                    row["acquired_on"],
-                    row["notes"],
-                    row["updated_at"],
+                    row["id"], row["name"], row["category"], row["collectible_type"],
+                    row["subtype"], "Yes" if row["owned"] else "No",
+                    row["acquired_on"], row["notes"], row["updated_at"],
                 ])
 
         return target_path
