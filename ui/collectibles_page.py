@@ -13,9 +13,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -27,10 +26,12 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_status_bar import FoundryStatusBar
 from services.eso_collectible_database_service import EsoCollectibleDatabaseService
+from services.collectible_icon_catalog import CollectibleIconCatalog
 
 
 class CollectiblesPage(QWidget):
@@ -40,8 +41,9 @@ class CollectiblesPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        data_dir = Path(__file__).resolve().parents[1] / "data"
+        data_dir = get_data_dir()
         self.service = EsoCollectibleDatabaseService(data_dir / "eso.db")
+        self.icon_catalog = CollectibleIconCatalog(data_dir)
         self.category = self.DEFAULT_CATEGORY
         self.build_ui()
         self.connect_signals()
@@ -63,6 +65,7 @@ class CollectiblesPage(QWidget):
 
         self.results = QListWidget()
         self.results.setAlternatingRowColors(True)
+        self.results.setIconSize(QSize(42, 42))
         self.results.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
@@ -71,6 +74,11 @@ class CollectiblesPage(QWidget):
         self.list_card = FoundryCard(self.category)
         self.list_card.addWidget(self.search)
         self.list_card.addWidget(self.results)
+
+        self.detail_icon = QLabel()
+        self.detail_icon.setFixedSize(112, 112)
+        self.detail_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.detail_icon.setProperty("collectibleDetailIcon", True)
 
         self.detail_name = QLabel("Select a collectible.")
         self.detail_name.setWordWrap(True)
@@ -96,9 +104,21 @@ class CollectiblesPage(QWidget):
         self.detail_flags.setWordWrap(True)
         self.detail_flags.setProperty("collectibleDetailMeta", True)
 
+        detail_heading = QHBoxLayout()
+        detail_heading.setContentsMargins(0, 0, 0, 0)
+        detail_heading.setSpacing(12)
+        detail_heading.addWidget(self.detail_icon, 0, Qt.AlignmentFlag.AlignTop)
+
+        detail_text = QVBoxLayout()
+        detail_text.setContentsMargins(0, 0, 0, 0)
+        detail_text.setSpacing(4)
+        detail_text.addWidget(self.detail_name)
+        detail_text.addWidget(self.detail_type)
+        detail_text.addStretch(1)
+        detail_heading.addLayout(detail_text, 1)
+
         self.detail_card = FoundryCard("Collectible Details")
-        self.detail_card.addWidget(self.detail_name)
-        self.detail_card.addWidget(self.detail_type)
+        self.detail_card.addLayout(detail_heading)
         self.detail_card.addWidget(self.detail_description)
         self.detail_card.addWidget(self.detail_hint)
         self.detail_card.addWidget(self.detail_flags)
@@ -165,15 +185,24 @@ class CollectiblesPage(QWidget):
                 text = f"{text}   ·   {subtype}"
             item = QListWidgetItem(text)
             item.setData(Qt.ItemDataRole.UserRole, row["id"])
+
+            icon_path = self.icon_catalog.path_for(row["id"])
+            if icon_path is not None:
+                item.setIcon(QIcon(str(icon_path)))
+
             self.results.addItem(item)
 
         total = self.service.category_count(self.category)
         self.list_card.set_badge(f"{len(rows):,} / {total:,}")
 
+        icon_note = ""
+        if self.icon_catalog.available_count:
+            icon_note = f" · {self.icon_catalog.available_count:,} local icons cached"
+
         if self.search.text().strip():
-            self.status.info(f"{len(rows):,} matches in {self.category}.")
+            self.status.info(f"{len(rows):,} matches in {self.category}{icon_note}.")
         else:
-            self.status.info(f"{total:,} collectibles in {self.category}.")
+            self.status.info(f"{total:,} collectibles in {self.category}{icon_note}.")
 
         if rows:
             self.results.setCurrentRow(0)
@@ -193,6 +222,7 @@ class CollectiblesPage(QWidget):
             self._clear_details("Collectible details are unavailable.")
             return
 
+        self._set_detail_icon(int(collectible_id))
         self.detail_name.setText(row.get("name") or "Unnamed Collectible")
         type_name = row.get("canonical_type_name") or row.get("canonical_type_key") or ""
         subtype = row.get("source_subcategory_name") or ""
@@ -215,7 +245,25 @@ class CollectiblesPage(QWidget):
             flags.append("Appearance")
         self.detail_flags.setText(" · ".join(flags))
 
+    def _set_detail_icon(self, collectible_id: int) -> None:
+        self.detail_icon.clear()
+        icon_path = self.icon_catalog.path_for(collectible_id)
+        if icon_path is None:
+            return
+
+        pixmap = QPixmap(str(icon_path))
+        if pixmap.isNull():
+            return
+        self.detail_icon.setPixmap(
+            pixmap.scaled(
+                self.detail_icon.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
     def _clear_details(self, message: str = "Select a collectible."):
+        self.detail_icon.clear()
         self.detail_name.setText(message)
         self.detail_type.clear()
         self.detail_description.clear()
