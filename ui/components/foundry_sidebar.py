@@ -51,6 +51,12 @@ NAV_SECTIONS = [
             ("Mementos", "collectibles:Mementos"),
             ("Emotes", "collectibles:Emotes"),
             ("Customized Actions", "collectibles:Customized Actions"),
+            {"heading": "Styles & Reference"},
+            ("Weapon Styles", "collectibles:Weapon Styles"),
+            ("Armor Styles", "collectibles:Armor Styles"),
+            ("Furnishings", "collectibles:Furnishings"),
+            ("Fragments", "collectibles:Fragments"),
+            ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
         ],
     },
     {
