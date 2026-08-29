@@ -5,10 +5,16 @@ from dataclasses import dataclass
 from .build_calculation_context import BuildCalculationContext
 from .skill_coefficient_repository import ResolvedSkillRank, SkillCoefficientRepository
 from .skill_coefficients import (
+    InactiveSkillCoefficientTrace,
     SkillCoefficientTrace,
     SkillScalingInputs,
     UnsupportedSkillCoefficientType,
     evaluate_skill_coefficient,
+    is_inactive_skill_coefficient,
+)
+from .skill_tooltip_rounding import (
+    SkillTooltipRoundingCandidates,
+    tooltip_rounding_candidates,
 )
 from .stat_ids import StatId
 
@@ -18,7 +24,9 @@ class SkillTooltipResult:
     skill: ResolvedSkillRank | None
     scaling: SkillScalingInputs | None
     components: tuple[SkillCoefficientTrace, ...]
+    inactive_components: tuple[InactiveSkillCoefficientTrace, ...]
     raw_total: float | None
+    rounding_candidates: SkillTooltipRoundingCandidates | None
     unresolved: tuple[str, ...] = ()
 
 
@@ -64,7 +72,9 @@ class SkillTooltipCalculator:
                 skill=None,
                 scaling=None,
                 components=(),
+                inactive_components=(),
                 raw_total=None,
+                rounding_candidates=None,
                 unresolved=resolution.unresolved,
             )
         return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
@@ -80,7 +90,9 @@ class SkillTooltipCalculator:
                 skill=None,
                 scaling=None,
                 components=(),
+                inactive_components=(),
                 raw_total=None,
+                rounding_candidates=None,
                 unresolved=resolution.unresolved,
             )
         return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
@@ -98,7 +110,9 @@ class SkillTooltipCalculator:
                 skill=None,
                 scaling=None,
                 components=(),
+                inactive_components=(),
                 raw_total=None,
+                rounding_candidates=None,
                 unresolved=resolution.unresolved,
             )
         return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
@@ -112,12 +126,21 @@ class SkillTooltipCalculator:
         unresolved = list(unresolved_seed)
         scaling = self.scaling_from_context(context)
         components: list[SkillCoefficientTrace] = []
+        inactive_components: list[InactiveSkillCoefficientTrace] = []
 
         for coefficient in skill.coefficients:
             coefficient_type = str(coefficient.type or "").strip()
-            if coefficient_type == "-1" or coefficient.a < 0:
-                unresolved.append(
-                    f"{skill.entity_id}: coefficient {coefficient.coefficient_number} is inactive/sentinel"
+            if is_inactive_skill_coefficient(coefficient):
+                inactive_components.append(
+                    InactiveSkillCoefficientTrace(
+                        coefficient_number=coefficient.coefficient_number,
+                        coefficient_type=coefficient_type,
+                        a=coefficient.a,
+                        b=coefficient.b,
+                        c=coefficient.c,
+                        r=coefficient.r,
+                        reason="source marks this coefficient slot inactive/sentinel",
+                    )
                 )
                 continue
             try:
@@ -134,13 +157,16 @@ class SkillTooltipCalculator:
             components.append(trace)
 
         raw_total = sum(component.final_value for component in components) if components else None
-        if not components and not unresolved:
+        rounding = tooltip_rounding_candidates(raw_total) if raw_total is not None else None
+        if not components and not unresolved and not inactive_components:
             unresolved.append(f"{skill.entity_id}: no active coefficient components")
 
         return SkillTooltipResult(
             skill=skill,
             scaling=scaling,
             components=tuple(components),
+            inactive_components=tuple(inactive_components),
             raw_total=raw_total,
+            rounding_candidates=rounding,
             unresolved=tuple(unresolved),
         )

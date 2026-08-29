@@ -56,8 +56,37 @@ class SkillCoefficientTrace:
     final_value: float
 
 
+@dataclass(frozen=True)
+class InactiveSkillCoefficientTrace:
+    """One source coefficient slot that is explicitly marked inactive."""
+
+    coefficient_number: int
+    coefficient_type: str
+    a: float
+    b: float
+    c: float
+    r: float
+    reason: str
+
+
 class UnsupportedSkillCoefficientType(ValueError):
     pass
+
+
+def is_inactive_skill_coefficient(coefficient: SkillCoefficient) -> bool:
+    """Recognize only UESP's exact empty coefficient-slot marker.
+
+    Negative coefficients can be real formula terms, and two known type -1
+    records contain passive data. Neither case may be silently discarded.
+    """
+
+    return (
+        str(coefficient.type or "").strip() == "-1"
+        and float(coefficient.a) == -1.0
+        and float(coefficient.b) == -1.0
+        and float(coefficient.c) == -1.0
+        and float(coefficient.r) == -1.0
+    )
 
 
 def evaluate_skill_coefficient(

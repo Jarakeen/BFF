@@ -19,6 +19,7 @@ from minmax.skill_coefficient_repository import (
     ability_entity_id,
 )
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+from minmax.skill_tooltip_rounding import matching_rounding_policies
 from minmax.source_provenance import SourceProvenanceError, load_source_provenance
 from models.build_model import PlayerBuild
 
@@ -101,6 +102,7 @@ def evaluate_saved_build(
     build_name: str,
     entity_id: str,
     active_bar: str,
+    observed_tooltip: int | None = None,
 ) -> int:
     if not database_path.exists():
         print(f"Database not found: {database_path}")
@@ -227,11 +229,43 @@ def evaluate_saved_build(
         )
 
     print()
+    print("Inactive source coefficient slots:")
+    if not result.inactive_components:
+        print("  (none)")
+    for component in result.inactive_components:
+        print(
+            f"  #{component.coefficient_number} type={component.coefficient_type}: "
+            f"{component.reason} | A={component.a:.12g} | "
+            f"B={component.b:.12g} | C={component.c:.12g} | R={component.r:.12g}"
+        )
+
+    print()
     if result.raw_total is None:
         print("Raw tooltip total: unresolved")
     else:
         print(f"Raw tooltip total: {result.raw_total:.6f}")
-        print("Final ESO tooltip rounding: intentionally not applied")
+        rounding = result.rounding_candidates
+        if rounding is not None:
+            print("Tooltip rounding candidates (ESO policy unresolved):")
+            print(f"  floor:           {rounding.floor_value}")
+            print(f"  nearest-half-up: {rounding.nearest_half_up_value}")
+            print(f"  ceiling:         {rounding.ceiling_value}")
+            if observed_tooltip is not None:
+                matches = matching_rounding_policies(
+                    rounding,
+                    observed_tooltip,
+                )
+                print(f"Observed ESO tooltip: {observed_tooltip}")
+                if matches:
+                    print(
+                        "Observed value matches raw rounding: "
+                        + ", ".join(matches)
+                    )
+                else:
+                    print(
+                        "Observed value is not produced by raw rounding alone; "
+                        "an additional modifier or unresolved rule is present"
+                    )
 
     unresolved = tuple(context.unresolved_gear_effects) + tuple(result.unresolved)
     print()
@@ -258,6 +292,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--entity", default="blessing_of_protection")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
+    parser.add_argument(
+        "--observed-tooltip",
+        type=int,
+        help="Optional integer tooltip value observed in ESO for validation.",
+    )
     return parser
 
 
@@ -270,5 +309,6 @@ if __name__ == "__main__":
             build_name=arguments.build,
             entity_id=arguments.entity,
             active_bar=arguments.active_bar,
+            observed_tooltip=arguments.observed_tooltip,
         )
     )

@@ -14,8 +14,13 @@ from minmax.skill_coefficients import (
     SkillCoefficient,
     UnsupportedSkillCoefficientType,
     evaluate_skill_coefficient,
+    is_inactive_skill_coefficient,
 )
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+from minmax.skill_tooltip_rounding import (
+    matching_rounding_policies,
+    tooltip_rounding_candidates,
+)
 
 
 def _coefficient_db(tmp_path):
@@ -60,7 +65,8 @@ def _coefficient_db(tmp_path):
 
         INSERT INTO skill_coefficient VALUES
             (1, 14, 2, '8', 0.0499473, 0.525132, -0.520496, 1.0, NULL),
-            (2, 14, 1, '8', 0.175015, 1.83764, -1.73373, 1.0, NULL);
+            (2, 14, 1, '8', 0.175015, 1.83764, -1.73373, 1.0, NULL),
+            (3, 14, 3, '-1', -1.0, -1.0, -1.0, 1.0, NULL);
         """
     )
     connection.commit()
@@ -127,6 +133,33 @@ def test_unsupported_coefficient_type_is_explicit():
         evaluate_skill_coefficient(coefficient, max_stat=20000, power=3000)
 
 
+def test_negative_a_is_not_silently_classified_as_inactive():
+    coefficient = SkillCoefficient(
+        1,
+        "8",
+        -0.0000693,
+        0.315553,
+        -0.593874,
+        r=0.999998,
+    )
+
+    assert is_inactive_skill_coefficient(coefficient) is False
+    result = evaluate_skill_coefficient(
+        coefficient,
+        max_stat=30000,
+        power=5000,
+    )
+    assert result.final_value > 0
+
+
+def test_only_exact_uesp_empty_slot_marker_is_inactive():
+    sentinel = SkillCoefficient(3, "-1", -1.0, -1.0, -1.0, r=-1.0)
+    passive_data = SkillCoefficient(3, "-1", 0.02, 0.0, 0.0, r=-1.0)
+
+    assert is_inactive_skill_coefficient(sentinel) is True
+    assert is_inactive_skill_coefficient(passive_data) is False
+
+
 def test_repository_resolves_highest_rank_and_orders_components(tmp_path):
     path = _coefficient_db(tmp_path)
     repository = SkillCoefficientRepository(path)
@@ -138,7 +171,7 @@ def test_repository_resolves_highest_rank_and_orders_components(tmp_path):
     assert resolution.rank.skill_rank_id == 14
     assert resolution.rank.ability_id == 1004
     assert resolution.rank.rank == 4
-    assert [c.coefficient_number for c in resolution.rank.coefficients] == [1, 2]
+    assert [c.coefficient_number for c in resolution.rank.coefficients] == [1, 2, 3]
 
 
 def test_repository_reports_ambiguous_duplicate_skill_names(tmp_path):
@@ -189,13 +222,16 @@ def test_tooltip_calculator_uses_phase2_context_scaling(tmp_path):
     assert result.scaling.spell_damage == 5000
     assert result.scaling.highest_offensive_power == 5000
     assert len(result.components) == 2
+    assert len(result.inactive_components) == 1
+    assert result.inactive_components[0].coefficient_number == 3
+    assert result.unresolved == ()
 
     expected = (
         (0.175015 * 19104) + (1.83764 * 5000) - 1.73373
         + (0.0499473 * 19104) + (0.525132 * 5000) - 0.520496
     )
     assert result.raw_total == pytest.approx(expected)
-    assert result.unresolved == ()
+    assert result.rounding_candidates is not None
 
 
 def test_tooltip_calculator_evaluates_canonical_entity_id(tmp_path):
@@ -223,5 +259,21 @@ def test_tooltip_calculator_reports_unsupported_component_without_guessing(tmp_p
     )
 
     assert len(result.components) == 1
+    assert len(result.inactive_components) == 1
     assert result.raw_total == pytest.approx(result.components[0].final_value)
     assert any("Unsupported skill coefficient type" in message for message in result.unresolved)
+
+
+def test_tooltip_rounding_candidates_do_not_choose_unverified_policy():
+    candidates = tooltip_rounding_candidates(6619.350805)
+
+    assert candidates.floor_value == 6619
+    assert candidates.nearest_half_up_value == 6619
+    assert candidates.ceiling_value == 6620
+    assert candidates.distinct_values == (6619, 6620)
+    assert matching_rounding_policies(candidates, 6619) == (
+        "floor",
+        "nearest-half-up",
+    )
+    assert matching_rounding_policies(candidates, 6620) == ("ceiling",)
+    assert matching_rounding_policies(candidates, 7000) == ()
