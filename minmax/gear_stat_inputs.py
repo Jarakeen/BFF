@@ -462,15 +462,29 @@ class GearStatInputResolver:
                 result = replace(
                     result,
                     core=replace(core, weapon_critical=weapon_critical, spell_critical=spell_critical),
+                    applied_effect_count=result.applied_effect_count + 1,
                 )
                 continue
             resource_field = RESOURCE_STATS.get(effect.stat)
             if resource_field:
                 updated = self._resource_add(getattr(result, resource_field), effect)
-                result = replace(result, **{resource_field: updated})
+                if updated != getattr(result, resource_field):
+                    result = replace(
+                        result,
+                        **{
+                            resource_field: updated,
+                            "applied_effect_count": result.applied_effect_count + 1,
+                        },
+                    )
                 continue
             if effect.stat in CORE_FIELDS:
-                result = replace(result, core=self._core_add(result.core, effect.stat, effect))
+                updated_core = self._core_add(result.core, effect.stat, effect)
+                if updated_core != result.core:
+                    result = replace(
+                        result,
+                        core=updated_core,
+                        applied_effect_count=result.applied_effect_count + 1,
+                    )
 
         result = self._apply_armor_glyphs(result, build)
         result = self._apply_jewelry_traits(result, build)
