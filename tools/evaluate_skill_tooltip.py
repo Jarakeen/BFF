@@ -19,6 +19,7 @@ from minmax.skill_coefficient_repository import (
     ability_entity_id,
 )
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+from minmax.source_provenance import SourceProvenanceError, load_source_provenance
 from models.build_model import PlayerBuild
 
 
@@ -161,10 +162,23 @@ def evaluate_saved_build(
     print(f"Active bar:     {active_bar}")
     print(f"Entity ID:      {canonical_entity_id}")
     print(f"Slotted on:     {', '.join(slotted_bars) if slotted_bars else '(not slotted)'}")
-    print(
-        "Coefficient provenance: database rows only; "
-        "game-update stamp and retrieval timestamp unresolved"
-    )
+    try:
+        provenance = load_source_provenance("skill_coefficients")
+    except (OSError, json.JSONDecodeError, SourceProvenanceError) as exc:
+        print(f"Coefficient provenance: unavailable ({exc})")
+    else:
+        print(
+            f"Coefficient source: {provenance.source_system} "
+            f"{provenance.export_table} ({provenance.source_kind})"
+        )
+        print(f"Coefficient export: {provenance.export_url}")
+        print(
+            "Coefficient provenance: "
+            f"records={provenance.record_count or 'unresolved'} | "
+            f"game update={provenance.game_update or 'unresolved'} | "
+            f"API version={provenance.api_version or 'unresolved'} | "
+            f"retrieved at={provenance.retrieved_at or 'unresolved'}"
+        )
     print()
 
     if result.skill is None:
