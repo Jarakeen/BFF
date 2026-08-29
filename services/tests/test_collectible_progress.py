@@ -106,3 +106,54 @@ def test_collection_progress_exports_full_catalog_csv(tmp_path):
     assert rows[0]["Name"] == "Test Mount"
     assert rows[0]["Collected"] == "Yes"
     assert rows[0]["Notes"] == "Backup me"
+
+
+def test_expanded_collections_groups_existing_normalized_types(tmp_path):
+    db_path = tmp_path / "eso.db"
+    _database(db_path)
+
+    grouped_types = [
+        (201, "weapon_style", "Weapon Styles"),
+        (202, "armor_style", "Armor Styles"),
+        (203, "furnishing", "Furnishings"),
+        (204, "fragment", "Fragments"),
+        (205, "combination_fragment", "Fragments"),
+        (206, "patron", "Fragments"),
+        (207, "account_upgrade", "Tools & Upgrades"),
+        (208, "tool", "Tools & Upgrades"),
+        (209, "story", "Tools & Upgrades"),
+        (210, "skill_style", "Tools & Upgrades"),
+    ]
+
+    with sqlite3.connect(db_path) as db:
+        for collectible_id, type_key, _expected in grouped_types:
+            db.execute(
+                """
+                INSERT INTO collectible (
+                    id, entity_id, name, canonical_type_key,
+                    sidebar_category_key, normalization_status,
+                    audit_reason, source_raw_json
+                ) VALUES (?, ?, ?, ?, NULL, 'contextual', 'outside_sidebar', '{}')
+                """,
+                (
+                    collectible_id,
+                    f"collectible:{collectible_id}",
+                    f"Test {type_key}",
+                    type_key,
+                ),
+            )
+        db.commit()
+
+    service = EsoCollectibleDatabaseService(db_path)
+
+    for collectible_id, _type_key, expected_category in grouped_types:
+        row = service.collectible(collectible_id)
+        assert row is not None
+        assert row["sidebar_category_key"] == expected_category
+        assert row["audit_reason"] is None
+
+    assert service.category_count("Weapon Styles") == 1
+    assert service.category_count("Armor Styles") == 1
+    assert service.category_count("Furnishings") == 1
+    assert service.category_count("Fragments") == 3
+    assert service.category_count("Tools & Upgrades") == 4
