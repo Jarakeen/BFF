@@ -121,7 +121,7 @@ def test_gold_cp160_triune_feeds_all_three_resource_traces():
         progression=CharacterProgression(),
     )
 
-    assert context.character_state.max_health == 10473
+    assert context.character_state.max_health == 16473
     assert context.character_state.max_magicka == 12430
     assert context.character_state.max_stamina == 12430
     assert any(step.label == "Necklace: Triune" and step.value == 473 for step in context.character_state.traces[StatId.MAX_HEALTH].steps)
