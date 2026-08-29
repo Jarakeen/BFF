@@ -119,8 +119,9 @@ class BaseItemStatResolver:
             return core, applied
 
         if trait_key == "reinforced":
-            bonus = rating * ARMOR_REINFORCED_PERCENT_GOLD
-            label = f"{slot_name}: Reinforced (+16% item armor)"
+            reinforced_rating = float(floor(rating * (1.0 + ARMOR_REINFORCED_PERCENT_GOLD)))
+            bonus = reinforced_rating - rating
+            label = f"{slot_name}: Reinforced armor ({rating:g} -> {reinforced_rating:g})"
             core = self._core_flat(core, "physical_resistance", label, bonus)
             core = self._core_flat(core, "spell_resistance", label, bonus)
             return core, applied + 2
