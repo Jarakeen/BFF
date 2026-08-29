@@ -198,6 +198,19 @@ def test_tooltip_calculator_uses_phase2_context_scaling(tmp_path):
     assert result.unresolved == ()
 
 
+def test_tooltip_calculator_evaluates_canonical_entity_id(tmp_path):
+    path = _coefficient_db(tmp_path)
+    calculator = SkillTooltipCalculator(SkillCoefficientRepository(path))
+
+    result = calculator.evaluate_entity_id("test_morph", _context())
+
+    assert result.unresolved == ()
+    assert result.skill is not None
+    assert result.skill.entity_id == "test_morph"
+    assert result.skill.ability_id == 1004
+    assert result.raw_total is not None
+
+
 def test_tooltip_calculator_reports_unsupported_component_without_guessing(tmp_path):
     path = _coefficient_db(tmp_path)
     with sqlite3.connect(path) as connection:
