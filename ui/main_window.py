@@ -39,6 +39,7 @@ from ui.archive_page import ArchivePage
 from ui.incident_page import IncidentPage
 # from ui.achievement_desk_page import AchievementPage
 from ui.collections_page import CollectionsPage
+from ui.collectibles_page import CollectiblesPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
 from ui.settings_page import SettingsPage
@@ -95,6 +96,8 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
+        # "collections" remains the existing Achievements workspace.
+        # "collectibles" is the shared page for every collectibles:<category> route.
         self.pages = {
             "broadcast": BroadcastPage(),
             "field_office": FieldNotesPage(),
@@ -103,6 +106,7 @@ class MainWindow(QMainWindow):
             "incident": IncidentPage(),
             # "achievement": AchievementPage(),
             "collections": CollectionsPage(),
+            "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(
                 expedition=self.expedition_service
@@ -132,6 +136,13 @@ class MainWindow(QMainWindow):
     # --------------------------------------------------
 
     def show_page(self, page_name: str):
+        if page_name.startswith("collectibles:"):
+            category = page_name.split(":", 1)[1]
+            collectibles_page = self.pages["collectibles"]
+            collectibles_page.set_category(category)
+            self.stack.setCurrentWidget(self.page_containers["collectibles"])
+            return
+
         if page_name not in self.page_containers:
             print(f"[FoundryDock] Unknown navigation page: {page_name}")
             return
