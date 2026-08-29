@@ -19,7 +19,6 @@ def test_gold_cp160_invigorating_piece_adds_all_three_recoveries():
     build = PlayerBuild()
     build.Armor["Chest"].update(
         {
-            "Set": "Test Armor",
             "Weight": "Heavy",
             "Quality": "Gold",
             "Level": "CP160",
@@ -50,7 +49,6 @@ def test_multiple_invigorating_pieces_remain_individually_traceable():
     for slot, weight in (("Head", "Light"), ("Hands", "Medium")):
         build.Armor[slot].update(
             {
-                "Set": f"{slot} Set",
                 "Weight": weight,
                 "Quality": "Gold",
                 "Level": "CP160",
