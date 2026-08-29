@@ -13,6 +13,11 @@ _COLOR = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _NUMBER = r"([0-9]+(?:\.[0-9]+)?(?:-[0-9]+(?:\.[0-9]+)?)?)"
 
 
+_PROVISIONING_NAME_ALIASES = {
+    "clockwork citrus": "Clockwork Citrus Filet",
+}
+
+
 class ProvisioningStaticRepository:
     """Resolve long-duration food/drink character-sheet stats from eso.db.
 
