@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 
 ARMOR_SLOTS: list[str] = ["Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet"]
-ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetrable", "Infused", "Training", "Nirnhoned", "Sturdy", "Prosperous"]
+ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetrable", "Infused", "Training", "Nirnhoned", "Sturdy", "Invigorating"]
 WEAPON_TRAITS: list[str] = ["", "Precise", "Charged", "Powered", "Defending", "Training", "Sharpened", "Decisive", "Infused", "Nirnhoned"]
 JEWELRY_TRAITS: list[str] = ["", "Arcane", "Healthy", "Robust", "Bloodthirsty", "Harmony", "Protective", "Swift", "Triune", "Infused", "Nirnhoned"]
 WEAPON_TYPES: list[str] = [
