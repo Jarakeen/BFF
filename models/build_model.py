@@ -6,6 +6,17 @@ ARMOR_SLOTS: list[str] = ["Head", "Shoulders", "Chest", "Hands", "Waist", "Legs"
 ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetrable", "Infused", "Training", "Nirnhoned", "Sturdy", "Prosperous"]
 WEAPON_TRAITS: list[str] = ["", "Precise", "Charged", "Powered", "Defending", "Training", "Sharpened", "Decisive", "Infused", "Nirnhoned"]
 JEWELRY_TRAITS: list[str] = ["", "Arcane", "Healthy", "Robust", "Bloodthirsty", "Harmony", "Protective", "Swift", "Triune", "Infused", "Nirnhoned"]
+WEAPON_TYPES: list[str] = [
+    "",
+    "Bow",
+    "Inferno Staff",
+    "Lightning Staff",
+    "Ice Staff",
+    "Restoration Staff",
+    "Two-Handed",
+    "One Hand and Shield",
+    "Dual Wield",
+]
 BAR_SKILL_COUNT = 5
 MAX_ATTRIBUTE_POINTS = 64
 
@@ -35,6 +46,7 @@ class GearSlot:
     Quality: str = ""
     EnchantTier: str = ""
     Level: str = ""
+    WeaponType: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -42,7 +54,17 @@ class GearSlot:
     @classmethod
     def from_dict(cls, data: dict | None) -> "GearSlot":
         data = data or {}
-        return cls(Set=str(data.get("Set", "") or ""), Trait=str(data.get("Trait", "") or ""), Enchant=str(data.get("Enchant", "") or ""), Weight=str(data.get("Weight", "") or ""), Set2=str(data.get("Set2", "") or ""), Quality=str(data.get("Quality", "") or ""), EnchantTier=str(data.get("EnchantTier", "") or ""), Level=str(data.get("Level", "") or ""))
+        return cls(
+            Set=str(data.get("Set", "") or ""),
+            Trait=str(data.get("Trait", "") or ""),
+            Enchant=str(data.get("Enchant", "") or ""),
+            Weight=str(data.get("Weight", "") or ""),
+            Set2=str(data.get("Set2", "") or ""),
+            Quality=str(data.get("Quality", "") or ""),
+            EnchantTier=str(data.get("EnchantTier", "") or ""),
+            Level=str(data.get("Level", "") or ""),
+            WeaponType=str(data.get("WeaponType", "") or ""),
+        )
 
 
 @dataclass
