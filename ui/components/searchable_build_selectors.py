@@ -56,12 +56,22 @@ def _patch_builds_page() -> None:
     from widgets.build_editor import BuildEditor
 
     def _editor(self):
-        return BuildEditor(
-            race_choices=self.reference.list_race_names(),
-            set_choices=self.reference.list_gear_set_names(),
-            skill_choices=load_skill_choices(self.reference.database.database),
-            cp_choices=[c for c in self.reference.list_champion_points() if isinstance(c, dict) and c.get("name")],
-        )
+        cache = getattr(self, "_build_editor_reference_cache", None)
+        if cache is None:
+            cache = {
+                "race_choices": self.reference.list_race_names(),
+                "set_choices": self.reference.list_gear_set_names(),
+                "skill_choices": load_skill_choices(self.reference.database.database),
+                "cp_choices": [
+                    c
+                    for c in self.reference.list_champion_points()
+                    if isinstance(c, dict) and c.get("name")
+                ],
+                "food_choices": self.reference.list_food_names(),
+                "potion_choices": self.reference.list_potion_names(),
+            }
+            self._build_editor_reference_cache = cache
+        return BuildEditor(**cache)
 
     BuildsPage._editor = _editor
 
