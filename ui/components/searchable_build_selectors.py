@@ -51,8 +51,13 @@ class SearchableSkillBarRow(EligibleSkillBarRow):
 
 
 def _patch_builds_page() -> None:
-    """Make Builds use the same rank-collapsed, morph-aware skill records."""
+    """Patch live Builds-page selectors and canonical Phase 2 gear summaries."""
     from ui.builds_page import BuildsPage
+    from ui.components.builds_page_phase2_display import (
+        build_status_rows,
+        gear_card,
+        set_bonus_card,
+    )
     from widgets.build_editor import BuildEditor
 
     def _editor(self):
@@ -74,6 +79,9 @@ def _patch_builds_page() -> None:
         return BuildEditor(**cache)
 
     BuildsPage._editor = _editor
+    BuildsPage._gear_card = gear_card
+    BuildsPage._set_bonus_card = set_bonus_card
+    BuildsPage._status_rows = lambda _self, build: build_status_rows(build)
 
 
 def _patch_optimization_skill_picker() -> None:
