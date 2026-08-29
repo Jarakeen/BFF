@@ -10,6 +10,7 @@ from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
+from .jewelry_trait_repository import JewelryTraitRepository
 from .race_repository import RaceRepository
 
 
@@ -24,6 +25,7 @@ class BuildCalculationContextFactory:
         gear_set_repository: GearSetRepository | None = None,
         armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
         jewelry_glyph_repository: JewelryGlyphEffectRepository | None = None,
+        jewelry_trait_repository: JewelryTraitRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -35,12 +37,15 @@ class BuildCalculationContextFactory:
                 armor_glyph_repository = ArmorGlyphEffectRepository(database_path)
             if jewelry_glyph_repository is None:
                 jewelry_glyph_repository = JewelryGlyphEffectRepository(database_path)
+            if jewelry_trait_repository is None:
+                jewelry_trait_repository = JewelryTraitRepository(database_path)
 
         self.gear_resolver = (
             GearStatInputResolver(
                 gear_set_repository,
                 armor_glyph_repository=armor_glyph_repository,
                 jewelry_glyph_repository=jewelry_glyph_repository,
+                jewelry_trait_repository=jewelry_trait_repository,
             )
             if gear_set_repository is not None
             else None
