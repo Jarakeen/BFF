@@ -51,7 +51,6 @@ NAV_SECTIONS = [
             ("Mementos", "collectibles:Mementos"),
             ("Emotes", "collectibles:Emotes"),
             ("Customized Actions", "collectibles:Customized Actions"),
-            {"heading": "Styles & Reference"},
             ("Weapon Styles", "collectibles:Weapon Styles"),
             ("Armor Styles", "collectibles:Armor Styles"),
             ("Furnishings", "collectibles:Furnishings"),
@@ -187,10 +186,6 @@ class FoundrySidebar(QWidget):
         children_layout.setSpacing(2)
 
         for child in section["children"]:
-            if isinstance(child, dict):
-                children_layout.addWidget(self.build_group_heading(child["heading"]))
-                continue
-
             label, page = child
             child_button = self.make_nav_button(label, indent=True)
             child_button.clicked.connect(lambda _, p=page: self.activate(p))
@@ -208,11 +203,6 @@ class FoundrySidebar(QWidget):
         wrapper_layout.addWidget(header)
         wrapper_layout.addWidget(children_box)
         return wrapper
-
-    def build_group_heading(self, text):
-        label = QLabel(text.upper())
-        label.setProperty("sidebarHeading", True)
-        return label
 
     def make_nav_button(self, text, indent):
         button = QPushButton(text)
