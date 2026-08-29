@@ -74,12 +74,49 @@ Get-ChildItem -Path $SourceDataDir -File |
     } |
     Copy-Item -Destination $DataRoot -Force
 
-# Start with an intentionally empty build roster rather than shipping the
-# developer's saved characters/builds. Use UTF-8 without BOM so Python's JSON
-# loader behaves identically in Windows PowerShell 5 and PowerShell 7.
-$CleanBuildsPath = Join-Path $DataRoot "builds.json"
+# Use UTF-8 without BOM so Python's JSON loader behaves identically in Windows
+# PowerShell 5 and PowerShell 7.
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+# Start with an intentionally empty build roster rather than shipping the
+# developer's saved characters/builds.
+$CleanBuildsPath = Join-Path $DataRoot "builds.json"
 [System.IO.File]::WriteAllText($CleanBuildsPath, '{"Members": []}', $Utf8NoBom)
+
+# Ship clean portable settings rather than allowing workstation-specific
+# developer defaults to leak into a tester build.
+$FriendSettings = @'
+{
+  "EsoLogsClientId": "",
+  "BuildsExportFolder": "",
+  "CurrentExpeditionPath": "data/CurrentExpedition.json",
+  "CurrentIncidentPath": "data/CurrentIncident.json",
+  "FieldNoteCounterPath": "data/FieldNoteCounter.txt",
+  "CountersFolder": "data",
+  "ArchiveFolder": "Archive",
+  "WeatherFolder": "data/Weather",
+  "StreamEventsPath": "data/StreamEvents.json",
+  "StreamSessionPath": "data/StreamSession.json",
+  "BossLogPath": "Archive/BossLog.md",
+  "NarratorContentPath": "data/natural_history_narrator.json",
+  "AchievementRunDraftPath": "data/current_achievement_run.json",
+  "BrbSceneName": "BRB",
+  "EndOfStreamSceneName": "Ending",
+  "ObsWebSocketHost": "127.0.0.1",
+  "ObsWebSocketPort": 4455,
+  "ObsWebSocketPassword": "",
+  "GoogleCredentialsPath": "google_service_account.json",
+  "GoogleSpreadsheetId": "",
+  "GoogleSheetsPerson": "",
+  "AchievementProgressPath": "data/achievement_progress.json",
+  "MarkerLogPath": "data/MarkerLog.md",
+  "CurrentAchievementRunPath": "data/CurrentAchievementRun.json",
+  "CurrentBroadcastPath": "data/CurrentBroadcast.json",
+  "SessionArchiveFolder": "Archive/Sessions",
+  "BffRoot": "."
+}
+'@
+[System.IO.File]::WriteAllText((Join-Path $PackageRoot "settings.json"), $FriendSettings, $Utf8NoBom)
 
 $ReadmeSource = Join-Path $PSScriptRoot "FRIEND_README.txt"
 if (Test-Path $ReadmeSource) {
