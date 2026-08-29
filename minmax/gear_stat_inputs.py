@@ -12,6 +12,7 @@ from .derived_stats import DerivedStatInputs, StatContribution
 from .effects import Effect, EffectOperation, EffectUnit
 from .gear_set_effect_service import GearSetEffectService
 from .gear_set_repository import GearSetRepository
+from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .stat_ids import StatId
 
 
@@ -82,10 +83,12 @@ class GearStatInputResolver:
         self,
         repository: GearSetRepository,
         armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
+        jewelry_glyph_repository: JewelryGlyphEffectRepository | None = None,
     ):
         self.repository = repository
         self.service = GearSetEffectService(repository)
         self.armor_glyph_repository = armor_glyph_repository
+        self.jewelry_glyph_repository = jewelry_glyph_repository
 
     @classmethod
     def critical_rating_to_ratio(cls, rating: float) -> float:
