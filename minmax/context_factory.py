@@ -5,6 +5,7 @@ from models.build_model import PlayerBuild
 from .armor_glyph_repository import ArmorGlyphEffectRepository
 from .base_character_state import BaseCharacterCalculator
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
+from .champion_point_static_repository import ChampionPointStaticRepository
 from .character_progression import CharacterProgression
 from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
@@ -13,6 +14,7 @@ from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
 from .mundus_repository import MundusRepository
+from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
 from .static_build_inputs import StaticBuildInputResolver
 
@@ -31,6 +33,8 @@ class BuildCalculationContextFactory:
         jewelry_trait_repository: JewelryTraitRepository | None = None,
         base_item_resolver: BaseItemStatResolver | None = None,
         mundus_repository: MundusRepository | None = None,
+        champion_point_repository: ChampionPointStaticRepository | None = None,
+        provisioning_repository: ProvisioningStaticRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -47,6 +51,10 @@ class BuildCalculationContextFactory:
                 jewelry_trait_repository = JewelryTraitRepository(database_path)
             if mundus_repository is None:
                 mundus_repository = MundusRepository(database_path)
+            if champion_point_repository is None:
+                champion_point_repository = ChampionPointStaticRepository(database_path)
+            if provisioning_repository is None:
+                provisioning_repository = ProvisioningStaticRepository(database_path)
 
         self.gear_resolver = (
             GearStatInputResolver(
@@ -58,7 +66,11 @@ class BuildCalculationContextFactory:
             if gear_set_repository is not None
             else None
         )
-        self.static_build_resolver = StaticBuildInputResolver(mundus_repository)
+        self.static_build_resolver = StaticBuildInputResolver(
+            mundus_repository,
+            champion_point_repository=champion_point_repository,
+            provisioning_repository=provisioning_repository,
+        )
 
     def build(
         self,
