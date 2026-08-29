@@ -151,8 +151,6 @@ class CollectionsPage(QWidget):
             AchievementRatioCard()
         )
 
-       
-
         # --------------------------------------------------
         # Achievement browser
         #
@@ -369,7 +367,6 @@ class CollectionsPage(QWidget):
 
         workspace_layout.setSpacing(12)
 
-       
         # --------------------------------------------------
         # Achievements
         #
@@ -522,8 +519,8 @@ class CollectionsPage(QWidget):
         # Overall
         # --------------------------------------------------
 
-        self.points_stat.set_points(
-            overall["points_earned"]
+        self.points_stat.value.setText(
+            f"{overall['points_earned']:,} / {overall['points_total']:,}"
         )
 
         self.earned_stat.set_ratio(
