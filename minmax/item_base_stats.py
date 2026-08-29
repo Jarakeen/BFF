@@ -61,9 +61,6 @@ TWO_SLOT_WEAPON_TYPES = {
     "Two-Handed",
 }
 
-SUPPORTED_STATIC_ARMOR_TRAITS = {"reinforced", "nirnhoned", "impenetrable"}
-SUPPORTED_STATIC_WEAPON_TRAITS = {"nirnhoned", "precise", "sharpened", "powered", "defending"}
-
 
 class BaseItemStatResolver:
     """Apply deterministic CP160 Legendary base item stats and static traits.
@@ -145,7 +142,9 @@ class BaseItemStatResolver:
         if trait_key == "divines":
             unresolved.append(f"{slot_name} Divines: requires Mundus Stone resolution")
         elif trait_key == "infused":
-            unresolved.append(f"{slot_name} Infused: requires armor enchantment potency resolution")
+            # Armor Infused is applied by GearStatInputResolver when the glyph
+            # contribution is resolved. There is no independent static stat.
+            return core, applied
         elif trait_key in {"sturdy", "well-fitted", "training", "invigorating"}:
             unresolved.append(f"{slot_name} armor trait not yet resolved: {trait}")
         else:
