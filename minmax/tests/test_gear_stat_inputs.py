@@ -41,6 +41,31 @@ class FakeArmorGlyphRepository:
         return []
 
 
+class FakeJewelryGlyphRepository:
+    def get_jewelry_glyph_effect_by_name(self, glyph_name, *, use_max_value=True):
+        if glyph_name == "Glyph of Magicka Recovery":
+            return [
+                Effect(
+                    operation=EffectOperation.ADD,
+                    value=169,
+                    source="Glyph of Magicka Recovery",
+                    stat=StatId.MAGICKA_RECOVERY,
+                    unit=EffectUnit.FLAT,
+                )
+            ]
+        if glyph_name == "Glyph of Increase Physical Harm":
+            return [
+                Effect(
+                    operation=EffectOperation.ADD,
+                    value=174,
+                    source="Glyph of Increase Physical Harm",
+                    stat=StatId.WEAPON_DAMAGE,
+                    unit=EffectUnit.FLAT,
+                )
+            ]
+        return []
+
+
 def _four_piece_build():
     build = PlayerBuild(AttributeMagicka=64)
     build.Armor["Head"]["Set"] = "Test Set"
@@ -145,4 +170,90 @@ def test_non_max_armor_glyph_is_left_unresolved_until_scaling_is_verified():
     resolved = resolver.resolve(build)
 
     assert resolved.magicka.item_flat == 0
+    assert any("needs verified level/tier scaling" in entry for entry in resolved.unresolved)
+
+
+def test_cp160_truly_superb_jewelry_recovery_glyph_adds_named_resource_trace():
+    build = PlayerBuild()
+    build.Necklace = GearSlot(
+        Enchant="Magicka Recovery",
+        EnchantTier="Truly Superb",
+        Level="CP160",
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="jewelry-recovery",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    trace = context.character_state.traces[StatId.MAGICKA_RECOVERY]
+    assert any(step.label == "Necklace: Glyph of Magicka Recovery" and step.value == 169 for step in trace.steps)
+    assert context.gear_effects_applied == 1
+
+
+def test_cp160_truly_superb_jewelry_damage_glyph_feeds_core_trace():
+    build = PlayerBuild()
+    build.Ring1 = GearSlot(
+        Enchant="Weapon Damage",
+        EnchantTier="Truly Superb",
+        Level="CP160",
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="jewelry-damage",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1174
+    trace = context.core_state.derived[StatId.WEAPON_DAMAGE].trace
+    assert any(step.label == "Ring 1: Glyph of Increase Physical Harm" and step.value == 174 for step in trace.steps)
+    assert context.gear_effects_applied == 1
+
+
+def test_infused_jewelry_glyph_is_not_understated_before_trait_scaling_exists():
+    build = PlayerBuild()
+    build.Ring2 = GearSlot(
+        Trait="Infused",
+        Enchant="Magicka Recovery",
+        EnchantTier="Truly Superb",
+        Level="CP160",
+    )
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert resolved.magicka_recovery.item_flat == 0
+    assert any("Infused enchantment scaling not yet applied" in entry for entry in resolved.unresolved)
+
+
+def test_non_max_jewelry_glyph_is_left_unresolved_until_scaling_is_verified():
+    build = PlayerBuild()
+    build.Necklace = GearSlot(
+        Enchant="Stamina Recovery",
+        EnchantTier="Superb",
+        Level="CP150",
+    )
+    resolver = GearStatInputResolver(
+        FakeGearSetRepository(),
+        jewelry_glyph_repository=FakeJewelryGlyphRepository(),
+    )
+
+    resolved = resolver.resolve(build)
+
+    assert resolved.stamina_recovery.item_flat == 0
     assert any("needs verified level/tier scaling" in entry for entry in resolved.unresolved)
