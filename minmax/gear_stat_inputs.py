@@ -63,6 +63,15 @@ JEWELRY_ENCHANT_TO_GLYPH = {
 }
 
 STATIC_JEWELRY_TRAITS = {"arcane", "healthy", "robust", "triune", "protective"}
+TWO_SLOT_SET_WEAPON_TYPES = {
+    "bow",
+    "inferno staff",
+    "lightning staff",
+    "ice staff",
+    "restoration staff",
+    "two-handed",
+}
+LEGACY_TWO_ITEM_WEAPON_TYPES = {"dual wield", "one hand and shield"}
 
 ARMOR_MAJOR_ENCHANT_SLOTS = {"head", "chest", "legs"}
 ARMOR_MINOR_ENCHANT_SLOTS = {"shoulders", "hands", "waist", "feet"}
@@ -132,9 +141,28 @@ class GearStatInputResolver:
             if slot.Set.strip():
                 counts[slot.Set.strip()] += 1
 
-        weapon = build.FrontBarWeapon if active_bar.casefold() == "front" else build.BackBarWeapon
-        for name in cls._slot_names(weapon):
-            counts[name] += 1
+        main, offhand = build.active_weapon_slots(active_bar)
+        main_type = str(main.WeaponType or "").strip().casefold()
+
+        if not offhand.is_empty:
+            if main.Set.strip():
+                counts[main.Set.strip()] += 1
+            if offhand.Set.strip():
+                counts[offhand.Set.strip()] += 1
+            return counts
+
+        if main_type in TWO_SLOT_SET_WEAPON_TYPES:
+            if main.Set.strip():
+                counts[main.Set.strip()] += 2
+            return counts
+
+        if main_type in LEGACY_TWO_ITEM_WEAPON_TYPES:
+            for name in cls._slot_names(main):
+                counts[name] += 1
+            return counts
+
+        if main.Set.strip():
+            counts[main.Set.strip()] += 1
         return counts
 
     @staticmethod
