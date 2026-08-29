@@ -62,6 +62,9 @@ JEWELRY_ENCHANT_TO_GLYPH = {
     "spell damage": "Glyph of Increase Magical Harm",
 }
 
+STATIC_JEWELRY_TRAITS = {"triune", "protective"}
+MISSING_NUMERIC_JEWELRY_TRAITS = {"arcane", "healthy", "robust"}
+
 
 @dataclass(frozen=True)
 class GearCalculationInputs:
@@ -217,6 +220,73 @@ class GearStatInputResolver:
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
+    def _apply_jewelry_traits(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
+        unresolved = list(result.unresolved)
+        applied = result.applied_effect_count
+        slots = (
+            ("Necklace", build.Necklace),
+            ("Ring 1", build.Ring1),
+            ("Ring 2", build.Ring2),
+        )
+
+        for slot_name, slot in slots:
+            trait = str(slot.Trait or "").strip()
+            trait_key = trait.casefold()
+            if not trait or trait_key == "infused":
+                continue
+
+            if trait_key in MISSING_NUMERIC_JEWELRY_TRAITS:
+                unresolved.append(f"{slot_name} {trait}: numeric trait value is not present in jewelry_trait_effect")
+                continue
+
+            if trait_key not in STATIC_JEWELRY_TRAITS:
+                unresolved.append(f"{slot_name} jewelry trait not yet resolved: {trait}")
+                continue
+
+            if self.jewelry_trait_repository is None:
+                unresolved.append(f"{slot_name}: jewelry trait repository unavailable for {trait}")
+                continue
+
+            quality = str(slot.Quality or "").strip()
+            level = str(slot.Level or "").strip()
+            if level.casefold() != "cp160" or not quality:
+                unresolved.append(
+                    f"{slot_name} {trait}: needs verified max-level quality ({level or 'level unset'}, {quality or 'quality unset'})"
+                )
+                continue
+
+            effects = self.jewelry_trait_repository.get_static_effects(
+                trait,
+                quality=quality,
+                level=level,
+            )
+            if not effects:
+                unresolved.append(f"{slot_name} {trait}: no matching static trait effects found")
+                continue
+
+            for effect in effects:
+                stat = effect.stat
+                if stat is None:
+                    continue
+                source = f"{slot_name}: {trait}"
+                resource_field = RESOURCE_STATS.get(stat)
+                if resource_field:
+                    before = getattr(result, resource_field)
+                    after = self._resource_item_add(before, effect, source=source)
+                    if after != before:
+                        result = replace(result, **{resource_field: after})
+                        applied += 1
+                    continue
+                if stat in CORE_FIELDS:
+                    new_core = self._core_add(result.core, stat, effect, source=source)
+                    if new_core != result.core:
+                        result = replace(result, core=new_core)
+                        applied += 1
+                    continue
+                unresolved.append(f"{slot_name} unsupported jewelry trait effect: {stat.value}")
+
+        return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
+
     def _jewelry_effect_multiplier(self, slot_name: str, slot: GearSlot, unresolved: list[str]) -> tuple[float, str]:
         trait = str(slot.Trait or "").strip()
         if trait.casefold() != "infused":
@@ -352,4 +422,5 @@ class GearStatInputResolver:
 
         result = replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
         result = self._apply_armor_glyphs(result, build)
+        result = self._apply_jewelry_traits(result, build)
         return self._apply_jewelry_glyphs(result, build)
