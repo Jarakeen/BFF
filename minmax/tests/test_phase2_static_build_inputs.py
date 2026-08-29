@@ -51,7 +51,7 @@ def test_cp_static_repository_uses_completed_stage_thresholds(tmp_path):
     db.execute(
         "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
-            "Boundless Vitality",
+            "Threshold Health Test",
             0,
             50,
             "0,10,20,30,40,50",
@@ -63,12 +63,35 @@ def test_cp_static_repository_uses_completed_stage_thresholds(tmp_path):
     db.commit()
     db.close()
 
-    effects, unresolved = ChampionPointStaticRepository(path).resolve("Boundless Vitality", 35)
+    effects, unresolved = ChampionPointStaticRepository(path).resolve("Threshold Health Test", 35)
 
     assert unresolved == []
     assert len(effects) == 1
     assert effects[0].stat is StatId.MAX_HEALTH
     assert effects[0].value == 84.0
+
+
+def test_cp_static_repository_supports_per_point_stars(tmp_path):
+    path, db = _db(tmp_path)
+    db.execute(
+        "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "Boundless Vitality",
+            0,
+            50,
+            "",
+            "",
+            "Grants |cffffff28|r Max Health per stage.",
+            "Grants |cffffff28|r Max Health per stage.",
+        ),
+    )
+    db.commit()
+    db.close()
+
+    effects, unresolved = ChampionPointStaticRepository(path).resolve("Boundless Vitality", 20)
+
+    assert unresolved == []
+    assert effects[0].value == 560.0
 
 
 def test_cp_dynamic_star_stays_explicitly_unresolved(tmp_path):
@@ -159,7 +182,7 @@ def test_static_resolver_applies_cp_and_food_to_distinct_resource_buckets(tmp_pa
             "Boundless Vitality",
             0,
             50,
-            "0,10,20,30,40,50",
+            "",
             "",
             "Grants 28 Max Health per stage.",
             "Grants 28 Max Health per stage.",
@@ -184,6 +207,6 @@ def test_static_resolver_applies_cp_and_food_to_distinct_resource_buckets(tmp_pa
 
     result = resolver.apply(GearCalculationInputs(), build)
 
-    assert result.health.champion_flat == 56.0
+    assert result.health.champion_flat == 560.0
     assert result.health.food_flat == 4462.0
     assert result.unresolved == ()
