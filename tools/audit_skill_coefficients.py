@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE
+from minmax.skill_coefficient_repository import ability_entity_id
 
 
 def _table_exists(connection: sqlite3.Connection, name: str) -> bool:
@@ -101,8 +102,9 @@ def audit(database_path: str | Path = DEFAULT_DATABASE) -> int:
         print("  (none found)")
     else:
         for row in samples:
+            entity_id = ability_entity_id(row["name"])
             print(
-                f"  {row['name']} | ability={row['ability_id']} | "
+                f"  {entity_id} | name={row['name']} | source ability={row['ability_id']} | "
                 f"base={row['base_ability_id']} | rank={row['rank']} | morph={row['morph']}"
             )
     print()
