@@ -53,6 +53,22 @@ class SkillTooltipCalculator:
             spell_damage=float(spell_damage.final_value),
         )
 
+    def evaluate_entity_id(
+        self,
+        entity_id: str,
+        context: BuildCalculationContext,
+    ) -> SkillTooltipResult:
+        resolution = self.repository.resolve_entity_id(entity_id)
+        if resolution.rank is None:
+            return SkillTooltipResult(
+                skill=None,
+                scaling=None,
+                components=(),
+                raw_total=None,
+                unresolved=resolution.unresolved,
+            )
+        return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
+
     def evaluate_name(
         self,
         name: str,
@@ -74,6 +90,8 @@ class SkillTooltipCalculator:
         ability_id: int,
         context: BuildCalculationContext,
     ) -> SkillTooltipResult:
+        """Source/crosswalk lookup retained for diagnostics and reconciliation."""
+
         resolution = self.repository.resolve_ability_id(ability_id)
         if resolution.rank is None:
             return SkillTooltipResult(
@@ -99,7 +117,7 @@ class SkillTooltipCalculator:
             coefficient_type = str(coefficient.type or "").strip()
             if coefficient_type == "-1" or coefficient.a < 0:
                 unresolved.append(
-                    f"{skill.name}: coefficient {coefficient.coefficient_number} is inactive/sentinel"
+                    f"{skill.entity_id}: coefficient {coefficient.coefficient_number} is inactive/sentinel"
                 )
                 continue
             try:
@@ -110,14 +128,14 @@ class SkillTooltipCalculator:
                 )
             except UnsupportedSkillCoefficientType as exc:
                 unresolved.append(
-                    f"{skill.name}: coefficient {coefficient.coefficient_number}: {exc}"
+                    f"{skill.entity_id}: coefficient {coefficient.coefficient_number}: {exc}"
                 )
                 continue
             components.append(trace)
 
         raw_total = sum(component.final_value for component in components) if components else None
         if not components and not unresolved:
-            unresolved.append(f"{skill.name}: no active coefficient components")
+            unresolved.append(f"{skill.entity_id}: no active coefficient components")
 
         return SkillTooltipResult(
             skill=skill,
