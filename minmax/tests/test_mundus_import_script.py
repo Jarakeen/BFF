@@ -34,4 +34,4 @@ def test_mundus_import_script_runs_outside_repository_root(tmp_path):
             JOIN mundus_stone ms ON ms.id = me.mundus_id
             WHERE ms.game_update = 50
             """
-        ).fetchone()[0] == 16
+        ).fetchone()[0] == 17
