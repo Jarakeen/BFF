@@ -53,6 +53,14 @@ ARMOR_ENCHANT_TO_GLYPH = {
     "prismatic defense": "Glyph of Prismatic Defense",
 }
 
+JEWELRY_ENCHANT_TO_GLYPH = {
+    "health recovery": "Glyph of Health Recovery",
+    "magicka recovery": "Glyph of Magicka Recovery",
+    "stamina recovery": "Glyph of Stamina Recovery",
+    "weapon damage": "Glyph of Increase Physical Harm",
+    "spell damage": "Glyph of Increase Magical Harm",
+}
+
 
 @dataclass(frozen=True)
 class GearCalculationInputs:
@@ -72,9 +80,10 @@ class GearStatInputResolver:
     """Translate verified static gear effects into calculator inputs.
 
     Phase 2F currently understands unconditional set bonuses plus CP160,
-    Truly Superb armor resource glyphs. Other enchantment tiers/levels, armor
-    values, traits, weapon base damage, procs and conditional effects stay
-    unresolved until their rules are explicitly verified.
+    Truly Superb armor resource glyphs and selected static jewelry glyphs.
+    Lower enchantment tiers/levels, Infused jewelry, armor values, traits,
+    weapon base damage, procs and conditional effects stay unresolved until
+    their rules are explicitly verified.
     """
 
     MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
@@ -141,17 +150,24 @@ class GearStatInputResolver:
         )
 
     @staticmethod
-    def _core_add(core: CoreStatInputs, stat: StatId, effect: Effect, *, value: float | None = None) -> CoreStatInputs:
+    def _core_add(
+        core: CoreStatInputs,
+        stat: StatId,
+        effect: Effect,
+        *,
+        value: float | None = None,
+        source: str | None = None,
+    ) -> CoreStatInputs:
         field_name = CORE_FIELDS[stat]
         current: DerivedStatInputs = getattr(core, field_name)
         amount = float(effect.value if value is None else value)
-        contribution = StatContribution(effect.source, amount)
+        contribution = StatContribution(source or effect.source, amount)
 
         if effect.operation is EffectOperation.ADD:
             updated = replace(current, flat=current.flat + (contribution,))
         elif effect.operation is EffectOperation.ADD_PERCENT:
             decimal = amount / 100.0 if effect.unit is EffectUnit.PERCENT else amount
-            contribution = StatContribution(effect.source, decimal)
+            contribution = StatContribution(source or effect.source, decimal)
             if stat in RATIO_POINT_STATS:
                 updated = replace(current, additive_after_percent=current.additive_after_percent + (contribution,))
             else:
@@ -205,6 +221,72 @@ class GearStatInputResolver:
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
+    def _apply_jewelry_glyphs(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
+        if self.jewelry_glyph_repository is None:
+            return result
+
+        unresolved = list(result.unresolved)
+        applied = result.applied_effect_count
+        slots = (
+            ("Necklace", build.Necklace),
+            ("Ring 1", build.Ring1),
+            ("Ring 2", build.Ring2),
+        )
+
+        for slot_name, slot in slots:
+            enchant = str(slot.Enchant or "").strip()
+            if not enchant:
+                continue
+
+            glyph_name = JEWELRY_ENCHANT_TO_GLYPH.get(enchant.casefold())
+            if glyph_name is None:
+                unresolved.append(f"{slot_name} enchant not yet resolved: {enchant}")
+                continue
+
+            level = str(slot.Level or "").strip()
+            tier = str(slot.EnchantTier or "").strip()
+            if level.casefold() != "cp160" or tier.casefold() != "truly superb":
+                unresolved.append(
+                    f"{slot_name} {enchant}: needs verified level/tier scaling ({level or 'level unset'}, {tier or 'tier unset'})"
+                )
+                continue
+
+            if str(slot.Trait or "").strip().casefold() == "infused":
+                unresolved.append(f"{slot_name} {enchant}: Infused enchantment scaling not yet applied")
+                continue
+
+            effects = self.jewelry_glyph_repository.get_jewelry_glyph_effect_by_name(glyph_name, use_max_value=True)
+            if not effects:
+                unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
+                continue
+
+            for effect in effects:
+                stat = effect.stat
+                if stat is None:
+                    unresolved.append(f"{slot_name} unsupported jewelry glyph effect: unknown")
+                    continue
+
+                source = f"{slot_name}: {effect.source}"
+                resource_field = RESOURCE_STATS.get(stat)
+                if resource_field:
+                    before = getattr(result, resource_field)
+                    after = self._resource_item_add(before, effect, source=source)
+                    if after != before:
+                        result = replace(result, **{resource_field: after})
+                        applied += 1
+                    continue
+
+                if stat in CORE_FIELDS:
+                    new_core = self._core_add(result.core, stat, effect, source=source)
+                    if new_core != result.core:
+                        result = replace(result, core=new_core)
+                        applied += 1
+                    continue
+
+                unresolved.append(f"{slot_name} unsupported jewelry glyph effect: {stat.value}")
+
+        return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
+
     def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
         result = GearCalculationInputs()
         counts = self.equipped_set_counts(build, active_bar=active_bar)
@@ -255,4 +337,5 @@ class GearStatInputResolver:
                 unresolved.append(f"Unsupported static effect: {set_name}: {stat.value}")
 
         result = replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
-        return self._apply_armor_glyphs(result, build)
+        result = self._apply_armor_glyphs(result, build)
+        return self._apply_jewelry_glyphs(result, build)
