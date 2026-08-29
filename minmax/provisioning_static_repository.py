@@ -60,6 +60,34 @@ class ProvisioningStaticRepository:
     def _columns(connection: sqlite3.Connection, table: str) -> set[str]:
         return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")}
 
+    @staticmethod
+    def _description_from_payload(data: dict) -> str | None:
+        """Read tooltip text from raw or canonical processed provisioning JSON."""
+
+        containers = [data]
+        metadata = data.get("metadata")
+        if isinstance(metadata, dict):
+            containers.append(metadata)
+
+        raw_records = data.get("raw_records")
+        if isinstance(raw_records, list):
+            containers.extend(
+                record for record in raw_records if isinstance(record, dict)
+            )
+
+        for container in containers:
+            for key in (
+                "abilityDesc",
+                "ability_desc",
+                "ability_description",
+                "description",
+                "effect_description",
+            ):
+                value = container.get(key)
+                if value:
+                    return str(value)
+        return None
+
     def _from_entity_source(self, connection: sqlite3.Connection, name: str) -> str | None:
         if not self._table_exists(connection, "entity") or not self._table_exists(connection, "entity_source"):
             return None
@@ -82,10 +110,9 @@ class ProvisioningStaticRepository:
                 data = json.loads(raw)
             except (TypeError, ValueError, json.JSONDecodeError):
                 continue
-            for key in ("abilityDesc", "ability_desc", "description", "effect_description"):
-                value = data.get(key)
-                if value:
-                    return str(value)
+            description = self._description_from_payload(data)
+            if description:
+                return description
         return None
 
     def _from_dedicated_table(self, connection: sqlite3.Connection, name: str) -> str | None:

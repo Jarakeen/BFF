@@ -225,10 +225,12 @@ def test_provisioning_repository_resolves_verified_legacy_name_alias(tmp_path):
             "Clockwork Citrus Filet",
             json.dumps(
                 {
-                    "abilityDesc": (
-                        "Increase Max Health by 3326, Health Recovery by 406, "
-                        "Max Magicka by 3080 and Magicka Recovery by 338 for 2 hours."
-                    )
+                    "metadata": {
+                        "ability_description": (
+                            "Increase Max Health by 3326, Health Recovery by 406, "
+                            "Max Magicka by 3080 and Magicka Recovery by 338 for 2 hours."
+                        )
+                    }
                 }
             ),
         ),
