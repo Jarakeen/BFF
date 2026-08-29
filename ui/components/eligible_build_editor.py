@@ -2,7 +2,7 @@ from pathlib import Path
 from engine.config import get_resource_path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QAbstractSpinBox, QHBoxLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QAbstractSpinBox, QFrame, QHBoxLayout, QLabel
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
 
@@ -16,6 +16,15 @@ def _icon_for_skill(skill: dict) -> QIcon:
     filename = Path(texture.replace("\\", "/")).name
     local = ASSET_ROOT / Path(filename).with_suffix(".png")
     return QIcon(str(local)) if local.exists() else QIcon()
+
+
+def _vertical_separator() -> QFrame:
+    separator = QFrame()
+    separator.setFrameShape(QFrame.Shape.VLine)
+    separator.setFrameShadow(QFrame.Shadow.Plain)
+    separator.setFixedHeight(28)
+    separator.setStyleSheet("color: rgba(200, 164, 106, 0.45);")
+    return separator
 
 
 class EligibleSkillBarRow(build_editor.SkillBarRow):
@@ -76,21 +85,26 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.build_name = QLineEdit()
+        # Reuse the canonical fields created by BuildEditor. Recreating build_name
+        # here used to sever the visible control from the base model, while the
+        # grid cleanup also discarded the base Mundus selector entirely.
         self.build_name.setPlaceholderText("Build name")
         self.build_name.setFixedWidth(500)
+        self.mundus.setMinimumWidth(180)
 
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
             grid = identity_card.body_layout.itemAt(0).layout()
             if grid is not None:
                 keep = {
+                    self.build_name,
                     self.vampire,
                     self.werewolf,
                     self.attribute_health,
                     self.attribute_magicka,
                     self.attribute_stamina,
                     self.attribute_total,
+                    self.mundus,
                 }
                 remove = []
                 for index in range(grid.count() - 1, -1, -1):
@@ -115,6 +129,12 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addWidget(self.werewolf)
             row.addWidget(self.vampire)
 
+            # Treat attributes as one compact visual island rather than letting
+            # them bleed into the affiliation and Mundus controls.
+            row.addSpacing(18)
+            row.addWidget(_vertical_separator())
+            row.addSpacing(18)
+
             for widget, prefix in (
                 (self.attribute_magicka, "Mag "),
                 (self.attribute_stamina, "Stam "),
@@ -127,8 +147,18 @@ class EligibleBuildEditor(build_editor.BuildEditor):
                 row.addWidget(widget)
 
             self.attribute_total.setText("0/64")
+            self.attribute_total.setMinimumWidth(48)
             row.addWidget(self.attribute_total)
+
+            row.addSpacing(18)
+            row.addWidget(_vertical_separator())
+            row.addSpacing(18)
             row.addStretch(1)
+
+            mundus_label = QLabel("Mundus")
+            mundus_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            row.addWidget(mundus_label)
+            row.addWidget(self.mundus)
             identity_card.addLayout(row)
 
         self.eso_class.currentTextChanged.connect(self._on_class_changed)
@@ -136,7 +166,9 @@ class EligibleBuildEditor(build_editor.BuildEditor):
 
     def _update_attribute_limits(self):
         super()._update_attribute_limits()
-        self.attribute_total.setText(f"{self.attribute_health.value() + self.attribute_magicka.value() + self.attribute_stamina.value()}/64")
+        self.attribute_total.setText(
+            f"{self.attribute_health.value() + self.attribute_magicka.value() + self.attribute_stamina.value()}/64"
+        )
 
     def _sync_skill_state(self):
         vampire = self.vampire.isChecked()
