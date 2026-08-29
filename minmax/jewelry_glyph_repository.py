@@ -93,8 +93,8 @@ class JewelryGlyphEffectRepository:
                     f"Jewelry glyph effect has no usable value: {glyph_name!r}"
                 )
 
-            effects.append(
-                EffectMapper.create_additive(
+            effects.extend(
+                EffectMapper.create_additives(
                     effect_type=effect_type,
                     value=float(value),
                     unit=unit,

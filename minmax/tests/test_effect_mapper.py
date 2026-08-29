@@ -70,3 +70,30 @@ def test_unknown_effect_type_fails():
             unit="flat",
             source="Test",
         )
+
+
+
+def test_combined_weapon_spell_damage_fans_out_to_both_engine_stats():
+    effects = EffectMapper.create_additives(
+        effect_type="weapon_spell_damage",
+        value=174,
+        unit="flat",
+        source="Glyph of Increase Magical Harm",
+    )
+
+    assert [effect.stat for effect in effects] == [
+        StatId.WEAPON_DAMAGE,
+        StatId.SPELL_DAMAGE,
+    ]
+    assert all(effect.value == 174 for effect in effects)
+    assert all(effect.source == "Glyph of Increase Magical Harm" for effect in effects)
+
+
+def test_combined_effect_cannot_be_forced_through_singular_mapper():
+    with pytest.raises(ValueError, match="maps to multiple stats"):
+        EffectMapper.create_additive(
+            effect_type="weapon_spell_damage",
+            value=174,
+            unit="flat",
+            source="Glyph of Increase Magical Harm",
+        )
