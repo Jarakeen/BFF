@@ -26,6 +26,7 @@ from models.build_model import (
     ARMOR_TRAITS,
     WEAPON_TRAITS,
     JEWELRY_TRAITS,
+    WEAPON_TYPES,
     BossLoadout,
     ChampionPointEntry,
     GearSlot,
@@ -43,21 +44,70 @@ ENCHANT_TIER_CHOICES = ["", "Trifling", "Inferior", "Petty", "Slight", "Minor", 
 ENCHANT_CHOICES = ["", "Max Magicka", "Max Health", "Max Stamina", "Prismatic Defense", "Magicka Recovery", "Health Recovery", "Stamina Recovery", "Weapon Damage", "Spell Damage", "Absorb Magicka", "Absorb Health", "Absorb Stamina", "Poison", "Flame", "Frost", "Shock", "Crushing", "Disease", "Bashing", "Decrease Physical Harm"]
 MAX_ATTRIBUTE_POINTS = 64
 
+
 class GearSlotRow(QWidget):
-    def __init__(self, set_choices, trait_choices, *, armor=False, parent=None):
-        super().__init__(parent); self.armor = armor
-        self.set_combo = self._combo(set_choices, editable=True); self.set2_combo = self._combo(set_choices, editable=True); self.quality_combo = self._combo(QUALITY_CHOICES); self.trait_combo = self._combo(trait_choices); self.enchant_combo = self._combo(ENCHANT_CHOICES, editable=True); self.enchant_tier_combo = self._combo(ENCHANT_TIER_CHOICES); self.level_combo = self._combo(LEVEL_CHOICES, editable=True); self.weight_combo = self._combo(["", "Light", "Medium", "Heavy"]); self.weight_combo.setVisible(False); self.quality_combo.currentTextChanged.connect(self._style_quality); self._style_quality(self.quality_combo.currentText())
+    def __init__(self, set_choices, trait_choices, *, armor=False, weapon=False, parent=None):
+        super().__init__(parent)
+        self.armor = armor
+        self.weapon = weapon
+        self.set_combo = self._combo(set_choices, editable=True)
+        self.set2_combo = self._combo(set_choices, editable=True)
+        self.quality_combo = self._combo(QUALITY_CHOICES)
+        self.trait_combo = self._combo(trait_choices)
+        type_choices = ["", "Light", "Medium", "Heavy"] if armor else WEAPON_TYPES if weapon else [""]
+        self.type_combo = self._combo(type_choices)
+        self.type_combo.setEnabled(armor or weapon)
+        self.enchant_combo = self._combo(ENCHANT_CHOICES, editable=True)
+        self.enchant_tier_combo = self._combo(ENCHANT_TIER_CHOICES)
+        self.level_combo = self._combo(LEVEL_CHOICES, editable=True)
+        self.quality_combo.currentTextChanged.connect(self._style_quality)
+        self._style_quality(self.quality_combo.currentText())
+
     @staticmethod
     def _combo(values, editable=False):
-        combo = QComboBox(); combo.setMinimumHeight(28); combo.setEditable(editable); combo.addItems(values); combo.setInsertPolicy(QComboBox.NoInsert); return combo
+        combo = QComboBox()
+        combo.setMinimumHeight(28)
+        combo.setEditable(editable)
+        combo.addItems(values)
+        combo.setInsertPolicy(QComboBox.NoInsert)
+        return combo
+
     def _style_quality(self, value):
-        colors = {"White": "#d8d8d8", "Green": "#5dce72", "Blue": "#4da3ff", "Purple": "#b56cff", "Gold": "#e6b84f"}; self.quality_combo.setStyleSheet(f"QComboBox {{ border: 1px solid {colors.get(value, '#6b6255')}; }}")
+        colors = {"White": "#d8d8d8", "Green": "#5dce72", "Blue": "#4da3ff", "Purple": "#b56cff", "Gold": "#e6b84f"}
+        self.quality_combo.setStyleSheet(f"QComboBox {{ border: 1px solid {colors.get(value, '#6b6255')}; }}")
+
     @property
     def value(self):
-        return GearSlot(Set=self.set_combo.currentText().strip(), Set2=self.set2_combo.currentText().strip(), Quality=self.quality_combo.currentText().strip(), Trait=self.trait_combo.currentText().strip(), Enchant=self.enchant_combo.currentText().strip(), EnchantTier=self.enchant_tier_combo.currentText().strip(), Level=self.level_combo.currentText().strip(), Weight=self.weight_combo.currentText().strip())
+        return GearSlot(
+            Set=self.set_combo.currentText().strip(),
+            Set2=self.set2_combo.currentText().strip(),
+            Quality=self.quality_combo.currentText().strip(),
+            Trait=self.trait_combo.currentText().strip(),
+            Enchant=self.enchant_combo.currentText().strip(),
+            EnchantTier=self.enchant_tier_combo.currentText().strip(),
+            Level=self.level_combo.currentText().strip(),
+            Weight=self.type_combo.currentText().strip() if self.armor else "",
+            WeaponType=self.type_combo.currentText().strip() if self.weapon else "",
+        )
+
     def load(self, slot):
-        self.set_combo.setCurrentText(slot.Set or ""); self.set2_combo.setCurrentText(getattr(slot, "Set2", "") or ""); self.quality_combo.setCurrentText(getattr(slot, "Quality", "") or ""); self.trait_combo.setCurrentText(slot.Trait or ""); self.enchant_combo.setCurrentText(slot.Enchant or ""); self.enchant_tier_combo.setCurrentText(getattr(slot, "EnchantTier", "") or ""); self.level_combo.setCurrentText(getattr(slot, "Level", "") or ""); self.weight_combo.setCurrentText(getattr(slot, "Weight", "") or "")
-    def clear(self): self.load(GearSlot())
+        self.set_combo.setCurrentText(slot.Set or "")
+        self.set2_combo.setCurrentText(getattr(slot, "Set2", "") or "")
+        self.quality_combo.setCurrentText(getattr(slot, "Quality", "") or "")
+        self.trait_combo.setCurrentText(slot.Trait or "")
+        self.enchant_combo.setCurrentText(slot.Enchant or "")
+        self.enchant_tier_combo.setCurrentText(getattr(slot, "EnchantTier", "") or "")
+        self.level_combo.setCurrentText(getattr(slot, "Level", "") or "")
+        if self.armor:
+            self.type_combo.setCurrentText(getattr(slot, "Weight", "") or "")
+        elif self.weapon:
+            self.type_combo.setCurrentText(getattr(slot, "WeaponType", "") or "")
+        else:
+            self.type_combo.setCurrentIndex(0)
+
+    def clear(self):
+        self.load(GearSlot())
+
 
 class SkillBarRow(QWidget):
     def __init__(self, skill_choices, parent=None):
@@ -102,6 +152,7 @@ class SkillBarRow(QWidget):
     def clear(self):
         for field in self.fields: field.setCurrentIndex(0)
 
+
 class CompactCPSlot(QWidget):
     changed = Signal()
     def __init__(self, choices, discipline_id, entry=None, parent=None):
@@ -124,6 +175,7 @@ class CompactCPSlot(QWidget):
     @property
     def value(self): return self.entry
 
+
 class ChampionPointGrid(QWidget):
     changed = Signal()
     DISCIPLINES = ((3, "THE THIEF", "#5DCC7A"), (1, "THE MAGE", "#4DA3FF"), (2, "THE WARRIOR", "#FF5C5C"))
@@ -144,6 +196,7 @@ class ChampionPointGrid(QWidget):
     @property
     def value(self): return [slot.value for slot in self.slots if slot.value.Name.strip()]
 
+
 class BossLoadoutCard(FoundryCard):
     removeRequested = Signal(object)
     def __init__(self, skill_choices, parent=None):
@@ -153,6 +206,7 @@ class BossLoadoutCard(FoundryCard):
     def value(self): return BossLoadout(BossName=self.boss_name.text().strip(), FrontBarSkills=self.front_bar.value, BackBarSkills=self.back_bar.value, Food=self.food.text().strip(), Potion=self.potion.text().strip(), Notes=self.notes.text().strip())
     def load(self, loadout): self.boss_name.setText(loadout.BossName); self.front_bar.load(loadout.FrontBarSkills); self.back_bar.load(loadout.BackBarSkills); self.food.setText(loadout.Food); self.potion.setText(loadout.Potion); self.notes.setText(loadout.Notes)
 
+
 class BuildEditor(QWidget):
     nameChanged = Signal(str); saveRequested = Signal(); cancelRequested = Signal(); addBuildRequested = Signal()
     def __init__(self, race_choices=None, set_choices=None, skill_choices=None, cp_choices=None, food_choices=None, potion_choices=None, parent=None):
@@ -160,7 +214,7 @@ class BuildEditor(QWidget):
     def showEvent(self, event):
         super().showEvent(event); parent = self.parentWidget()
         while parent is not None:
-            if isinstance(parent, QDialog): parent.resize(max(parent.width(), 1500), max(parent.height(), 920)); break
+            if isinstance(parent, QDialog): parent.resize(max(parent.width(), 1600), max(parent.height(), 920)); break
             parent = parent.parentWidget()
     def _hydrate_reference_data(self):
         db_path = Path(__file__).resolve().parents[1] / "data" / "eso.db"
@@ -197,8 +251,6 @@ class BuildEditor(QWidget):
         grid.addWidget(QLabel("Total / 64"), 2, 5); grid.addWidget(self.attribute_total, 3, 5)
         self.vampire.toggled.connect(self._sync_affiliations); self.werewolf.toggled.connect(self._sync_affiliations)
         for spin in (self.attribute_health, self.attribute_magicka, self.attribute_stamina): spin.valueChanged.connect(self._update_attribute_limits)
-        # Build Name is intentionally supplied by EligibleBuildEditor, which
-        # reuses this card. Keep the base editor focused on character identity.
         card.addLayout(grid); return card
     def _sync_affiliations(self):
         if self.vampire.isChecked() and self.werewolf.isChecked():
@@ -208,13 +260,13 @@ class BuildEditor(QWidget):
         if path and Path(path).exists(): label.setPixmap(QIcon(str(path)).pixmap(QSize(18, 18)))
         return label
     def _build_gear_card(self):
-        card = FoundryCard("Gear"); grid = QGridLayout(); grid.setContentsMargins(8, 5, 8, 5); grid.setHorizontalSpacing(6); grid.setVerticalSpacing(3); headers = ["", "Slot", "Set 1", "Set 2 (Monster/Backup)", "Quality", "Trait", "Enchantment", "Enchant Tier", "Level", ""]
+        card = FoundryCard("Gear"); grid = QGridLayout(); grid.setContentsMargins(8, 5, 8, 5); grid.setHorizontalSpacing(6); grid.setVerticalSpacing(3); headers = ["", "Slot", "Set 1", "Set 2 (Monster/Backup)", "Quality", "Trait", "Weight / Weapon", "Enchantment", "Enchant Tier", "Level", ""]
         for column, text in enumerate(headers): header = QLabel(text); header.setStyleSheet("font-weight:700;"); grid.addWidget(header, 0, column)
         self.gear_rows = {}; specs = [("Head", "Head", True), ("Shoulders", "Shoulders", True), ("Chest", "Chest", True), ("Hands", "Hands", True), ("Waist", "Waist", True), ("Legs", "Legs", True), ("Feet", "Feet", True), ("Neck", "Neck", False), ("Ring1", "Ring 1", False), ("Ring2", "Ring 2", False), ("main_hand", "Front Bar", False), ("off_hand", "Back Bar", False)]
         for row, (slot, label, armor) in enumerate(specs, 1):
-            grid.addWidget(self._gear_icon(slot), row, 0); slot_label = QLabel(label); slot_label.setMinimumWidth(78); grid.addWidget(slot_label, row, 1); traits = ARMOR_TRAITS if armor else JEWELRY_TRAITS if slot in {"Neck", "Ring1", "Ring2"} else WEAPON_TRAITS; editor = GearSlotRow(self.set_choices, traits, armor=armor); self.gear_rows[slot] = editor
-            for column, widget in enumerate([editor.set_combo, editor.set2_combo, editor.quality_combo, editor.trait_combo, editor.enchant_combo, editor.enchant_tier_combo, editor.level_combo], 2): grid.addWidget(widget, row, column)
-            remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True); remove.setFixedWidth(28); remove.clicked.connect(editor.clear); grid.addWidget(remove, row, 9)
+            grid.addWidget(self._gear_icon(slot), row, 0); slot_label = QLabel(label); slot_label.setMinimumWidth(78); grid.addWidget(slot_label, row, 1); traits = ARMOR_TRAITS if armor else JEWELRY_TRAITS if slot in {"Neck", "Ring1", "Ring2"} else WEAPON_TRAITS; weapon = slot in {"main_hand", "off_hand"}; editor = GearSlotRow(self.set_choices, traits, armor=armor, weapon=weapon); self.gear_rows[slot] = editor
+            for column, widget in enumerate([editor.set_combo, editor.set2_combo, editor.quality_combo, editor.trait_combo, editor.type_combo, editor.enchant_combo, editor.enchant_tier_combo, editor.level_combo], 2): grid.addWidget(widget, row, column)
+            remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True); remove.setFixedWidth(28); remove.clicked.connect(editor.clear); grid.addWidget(remove, row, 10)
         card.addLayout(grid); return card
     def _build_cp_card(self): card = FoundryCard("Champion Points"); self.cp_grid = ChampionPointGrid(self.cp_choices); card.addWidget(self.cp_grid); return card
     def _build_skills_card(self):
@@ -256,5 +308,5 @@ class BuildEditor(QWidget):
         for card in list(self._boss_cards): self._remove_boss_loadout(card)
         for loadout in model.BossLoadouts: self.add_boss_loadout(loadout)
     def choose_image(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Character Image", "", "Images (*.png *.jpg *.jpeg *.webp)");
+        filename, _ = QFileDialog.getOpenFileName(self, "Character Image", "", "Images (*.png *.jpg *.jpeg *.webp)")
         if filename: self.image_path = filename
