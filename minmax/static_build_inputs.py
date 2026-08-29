@@ -32,6 +32,7 @@ class StaticBuildInputResolver:
     """Apply permanent/static build choices after the gear input layer."""
 
     MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
+    _RESOLVED_DIVINES_WARNING = "Divines: requires Mundus Stone resolution"
 
     def __init__(
         self,
@@ -208,6 +209,18 @@ class StaticBuildInputResolver:
         return replace(result, unresolved=tuple(unresolved))
 
     def apply(self, result: GearCalculationInputs, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
+        # BaseItemStatResolver predates the DB-backed Mundus layer and emits a
+        # placeholder warning for Divines. Divines itself has no sheet effect
+        # without a Mundus; with one selected, this resolver applies it below.
+        # Either way that old placeholder no longer represents unresolved math.
+        result = replace(
+            result,
+            unresolved=tuple(
+                message
+                for message in result.unresolved
+                if self._RESOLVED_DIVINES_WARNING not in message
+            ),
+        )
         result = self._apply_champion_points(result, build)
         result = self._apply_mundus(result, build, active_bar)
         return self._apply_food(result, build)
