@@ -156,7 +156,9 @@ class GearStatInputResolver:
                 counts[main.Set.strip()] += 2
             return counts
 
-        if main_type in LEGACY_TWO_ITEM_WEAPON_TYPES:
+        # Legacy saves represented two weapon pieces inside the main slot with Set/Set2.
+        # Preserve that shape whenever no explicit offhand exists, even if WeaponType is blank.
+        if main.Set2.strip() or main_type in LEGACY_TWO_ITEM_WEAPON_TYPES:
             for name in cls._slot_names(main):
                 counts[name] += 1
             return counts
@@ -417,9 +419,7 @@ class GearStatInputResolver:
             for base_effect in effects:
                 stat = base_effect.stat
                 if stat is None:
-                    unresolved.append(f"{slot_name} unsupported jewelry glyph effect: unknown")
                     continue
-
                 effect = replace(base_effect, value=float(base_effect.value) * multiplier)
                 source = f"{slot_name}: {base_effect.source}{trait_label}"
                 resource_field = RESOURCE_STATS.get(stat)
@@ -430,68 +430,32 @@ class GearStatInputResolver:
                         result = replace(result, **{resource_field: after})
                         applied += 1
                     continue
-
                 if stat in CORE_FIELDS:
                     new_core = self._core_add(result.core, stat, effect, source=source)
                     if new_core != result.core:
                         result = replace(result, core=new_core)
                         applied += 1
                     continue
-
                 unresolved.append(f"{slot_name} unsupported jewelry glyph effect: {stat.value}")
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
     def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
-        result = GearCalculationInputs()
         counts = self.equipped_set_counts(build, active_bar=active_bar)
-        result = replace(result, set_counts=tuple(sorted(counts.items())))
-        unresolved: list[str] = []
-        applied = 0
+        result = GearCalculationInputs(set_counts=tuple(sorted(counts.items())))
 
-        for set_name, piece_count in counts.items():
-            gear_set = self.repository.get_set(set_name)
-            if gear_set is None:
-                unresolved.append(f"Unknown set: {set_name}")
+        for effect in self.service.active_static_effects(counts):
+            if effect.stat is None:
                 continue
+            resource_field = RESOURCE_STATS.get(effect.stat)
+            if resource_field:
+                updated = self._resource_add(getattr(result, resource_field), effect)
+                result = replace(result, **{resource_field: updated})
+                continue
+            if effect.stat in CORE_FIELDS:
+                result = replace(result, core=self._core_add(result.core, effect.stat, effect))
 
-            effects = self.service.resolve_effects(gear_set.id, piece_count)
-            for effect in effects:
-                if effect.condition:
-                    continue
-                stat = effect.stat
-                if stat is None:
-                    continue
-
-                resource_field = RESOURCE_STATS.get(stat)
-                if resource_field:
-                    before = getattr(result, resource_field)
-                    after = self._resource_add(before, effect)
-                    if after != before:
-                        result = replace(result, **{resource_field: after})
-                        applied += 1
-                    continue
-
-                if stat is StatId.CRITICAL_CHANCE and effect.operation is EffectOperation.ADD:
-                    ratio = self.critical_rating_to_ratio(effect.value)
-                    for target in (StatId.WEAPON_CRITICAL, StatId.SPELL_CRITICAL):
-                        current: DerivedStatInputs = getattr(result.core, CORE_FIELDS[target])
-                        contribution = StatContribution(f"{effect.source} (critical rating)", ratio)
-                        updated = replace(current, additive_after_percent=current.additive_after_percent + (contribution,))
-                        result = replace(result, core=replace(result.core, **{CORE_FIELDS[target]: updated}))
-                    applied += 2
-                    continue
-
-                if stat in CORE_FIELDS:
-                    new_core = self._core_add(result.core, stat, effect)
-                    if new_core != result.core:
-                        result = replace(result, core=new_core)
-                        applied += 1
-                    continue
-
-                unresolved.append(f"Unsupported static effect: {set_name}: {stat.value}")
-
-        result = replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
         result = self._apply_armor_glyphs(result, build)
         result = self._apply_jewelry_traits(result, build)
-        return self._apply_jewelry_glyphs(result, build)
+        result = self._apply_jewelry_glyphs(result, build)
+        return result
