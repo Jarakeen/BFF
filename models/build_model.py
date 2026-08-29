@@ -6,6 +6,22 @@ ARMOR_SLOTS: list[str] = ["Head", "Shoulders", "Chest", "Hands", "Waist", "Legs"
 ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetrable", "Infused", "Training", "Nirnhoned", "Sturdy", "Invigorating"]
 WEAPON_TRAITS: list[str] = ["", "Precise", "Charged", "Powered", "Defending", "Training", "Sharpened", "Decisive", "Infused", "Nirnhoned"]
 JEWELRY_TRAITS: list[str] = ["", "Arcane", "Healthy", "Robust", "Bloodthirsty", "Harmony", "Protective", "Swift", "Triune", "Infused", "Nirnhoned"]
+MUNDUS_CHOICES: list[str] = [
+    "",
+    "The Apprentice",
+    "The Atronach",
+    "The Lady",
+    "The Lord",
+    "The Lover",
+    "The Mage",
+    "The Ritual",
+    "The Serpent",
+    "The Shadow",
+    "The Steed",
+    "The Thief",
+    "The Tower",
+    "The Warrior",
+]
 WEAPON_TYPES: list[str] = [
     "",
     "Bow",
@@ -133,6 +149,7 @@ class PlayerBuild:
     EsoClass: str = ""
     Role: str = ""
     Alliance: str = ""
+    Mundus: str = ""
     Vampire: bool = False
     Werewolf: bool = False
     AttributeHealth: int = 0
@@ -181,8 +198,8 @@ class PlayerBuild:
         return {
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
-            "Role": self.Role, "Alliance": self.Alliance, "Vampire": self.Vampire,
-            "Werewolf": self.Werewolf,
+            "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
+            "Vampire": self.Vampire, "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
             "AttributeStamina": self.AttributeStamina, "Armor": self.Armor,
             "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "FrontBarOffHand": self.FrontBarOffHand.to_dict(),
@@ -206,6 +223,7 @@ class PlayerBuild:
             BuildName=str(data.get("BuildName", "") or ""), ImagePath=str(data.get("ImagePath", "") or ""),
             Race=str(data.get("Race", "") or ""), EsoClass=str(data.get("EsoClass", "") or ""),
             Role=str(data.get("Role", "") or ""), Alliance=str(data.get("Alliance", "") or ""),
+            Mundus=str(data.get("Mundus", "") or ""),
             Vampire=bool(data.get("Vampire", False)), Werewolf=bool(data.get("Werewolf", False)),
             AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
             AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
