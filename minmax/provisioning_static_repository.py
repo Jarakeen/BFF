@@ -34,6 +34,11 @@ class ProvisioningStaticRepository:
         return _COLOR.sub("", str(text or "")).strip()
 
     @staticmethod
+    def canonical_name(name: str) -> str:
+        selected = str(name or "").strip()
+        return _PROVISIONING_NAME_ALIASES.get(selected.casefold(), selected)
+
+    @staticmethod
     def _cp160_value(token: str) -> float:
         """Use the CP160 endpoint when an ESO tooltip stores a level range."""
         values = [float(part) for part in str(token).split("-") if part]
@@ -114,7 +119,7 @@ class ProvisioningStaticRepository:
         return None
 
     def description(self, name: str) -> str | None:
-        selected = str(name or "").strip()
+        selected = self.canonical_name(name)
         if not selected:
             return None
         with self._connect() as connection:
@@ -131,7 +136,7 @@ class ProvisioningStaticRepository:
         )
 
     def resolve(self, name: str) -> tuple[list[Effect], list[str]]:
-        selected = str(name or "").strip()
+        selected = self.canonical_name(name)
         if not selected:
             return [], []
         description = self.description(selected)

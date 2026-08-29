@@ -210,3 +210,44 @@ def test_static_resolver_applies_cp_and_food_to_distinct_resource_buckets(tmp_pa
     assert result.health.champion_flat == 560.0
     assert result.health.food_flat == 4462.0
     assert result.unresolved == ()
+
+
+
+def test_provisioning_repository_resolves_verified_legacy_name_alias(tmp_path):
+    path, db = _db(tmp_path)
+    db.execute(
+        "INSERT INTO entity VALUES ('food:clockwork', 'food', 'Clockwork Citrus Filet', 'clockwork-citrus-filet')"
+    )
+    db.execute(
+        "INSERT INTO entity_source(entity_id, source, source_entity_type, source_id, source_name, raw_json) VALUES (?, 'ESO', 'food', '4', ?, ?)",
+        (
+            "food:clockwork",
+            "Clockwork Citrus Filet",
+            json.dumps(
+                {
+                    "abilityDesc": (
+                        "Increase Max Health by 3326, Health Recovery by 406, "
+                        "Max Magicka by 3080 and Magicka Recovery by 338 for 2 hours."
+                    )
+                }
+            ),
+        ),
+    )
+    db.commit()
+    db.close()
+
+    effects, unresolved = ProvisioningStaticRepository(path).resolve(
+        "clockwork citrus"
+    )
+
+    assert unresolved == []
+    assert {effect.stat: effect.value for effect in effects} == {
+        StatId.MAX_HEALTH: 3326.0,
+        StatId.MAX_MAGICKA: 3080.0,
+        StatId.HEALTH_RECOVERY: 406.0,
+        StatId.MAGICKA_RECOVERY: 338.0,
+    }
+    assert all(
+        effect.source == "Food/Drink: Clockwork Citrus Filet"
+        for effect in effects
+    )
