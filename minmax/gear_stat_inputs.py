@@ -13,6 +13,7 @@ from .effects import Effect, EffectOperation, EffectUnit
 from .gear_set_effect_service import GearSetEffectService
 from .gear_set_repository import GearSetRepository
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
+from .jewelry_trait_repository import JewelryTraitRepository
 from .stat_ids import StatId
 
 
@@ -77,14 +78,7 @@ class GearCalculationInputs:
 
 
 class GearStatInputResolver:
-    """Translate verified static gear effects into calculator inputs.
-
-    Phase 2F currently understands unconditional set bonuses plus CP160,
-    Truly Superb armor resource glyphs and selected static jewelry glyphs.
-    Lower enchantment tiers/levels, Infused jewelry, armor values, traits,
-    weapon base damage, procs and conditional effects stay unresolved until
-    their rules are explicitly verified.
-    """
+    """Translate verified static gear effects into calculator inputs."""
 
     MAX_LEVEL_EFFECTIVE_LEVEL = 66.0
 
@@ -93,11 +87,13 @@ class GearStatInputResolver:
         repository: GearSetRepository,
         armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
         jewelry_glyph_repository: JewelryGlyphEffectRepository | None = None,
+        jewelry_trait_repository: JewelryTraitRepository | None = None,
     ):
         self.repository = repository
         self.service = GearSetEffectService(repository)
         self.armor_glyph_repository = armor_glyph_repository
         self.jewelry_glyph_repository = jewelry_glyph_repository
+        self.jewelry_trait_repository = jewelry_trait_repository
 
     @classmethod
     def critical_rating_to_ratio(cls, rating: float) -> float:
@@ -221,6 +217,23 @@ class GearStatInputResolver:
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
+    def _jewelry_effect_multiplier(self, slot_name: str, slot: GearSlot, unresolved: list[str]) -> tuple[float, str]:
+        trait = str(slot.Trait or "").strip()
+        if trait.casefold() != "infused":
+            return 1.0, ""
+
+        if self.jewelry_trait_repository is None:
+            unresolved.append(f"{slot_name}: Infused jewelry trait repository unavailable")
+            return 0.0, ""
+
+        quality = str(slot.Quality or "").strip()
+        percent = self.jewelry_trait_repository.get_infused_enchantment_percent(quality)
+        if percent is None:
+            unresolved.append(f"{slot_name}: Infused jewelry value unavailable for quality {quality or 'unset'}")
+            return 0.0, ""
+
+        return 1.0 + (percent / 100.0), f" (Infused +{percent:g}%)"
+
     def _apply_jewelry_glyphs(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
         if self.jewelry_glyph_repository is None:
             return result
@@ -251,8 +264,8 @@ class GearStatInputResolver:
                 )
                 continue
 
-            if str(slot.Trait or "").strip().casefold() == "infused":
-                unresolved.append(f"{slot_name} {enchant}: Infused enchantment scaling not yet applied")
+            multiplier, trait_label = self._jewelry_effect_multiplier(slot_name, slot, unresolved)
+            if multiplier == 0.0:
                 continue
 
             effects = self.jewelry_glyph_repository.get_jewelry_glyph_effect_by_name(glyph_name, use_max_value=True)
@@ -260,13 +273,14 @@ class GearStatInputResolver:
                 unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
                 continue
 
-            for effect in effects:
-                stat = effect.stat
+            for base_effect in effects:
+                stat = base_effect.stat
                 if stat is None:
                     unresolved.append(f"{slot_name} unsupported jewelry glyph effect: unknown")
                     continue
 
-                source = f"{slot_name}: {effect.source}"
+                effect = replace(base_effect, value=float(base_effect.value) * multiplier)
+                source = f"{slot_name}: {base_effect.source}{trait_label}"
                 resource_field = RESOURCE_STATS.get(stat)
                 if resource_field:
                     before = getattr(result, resource_field)
