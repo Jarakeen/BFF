@@ -9,6 +9,7 @@ from .character_progression import CharacterProgression
 from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
+from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
 from .race_repository import RaceRepository
@@ -26,10 +27,12 @@ class BuildCalculationContextFactory:
         armor_glyph_repository: ArmorGlyphEffectRepository | None = None,
         jewelry_glyph_repository: JewelryGlyphEffectRepository | None = None,
         jewelry_trait_repository: JewelryTraitRepository | None = None,
+        base_item_resolver: BaseItemStatResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
+        self.base_item_resolver = base_item_resolver or BaseItemStatResolver()
 
         database_path = getattr(gear_set_repository, "database_path", None)
         if gear_set_repository is not None and database_path:
@@ -110,6 +113,9 @@ class BuildCalculationContextFactory:
         return self.race_repository.get_stat_map_by_name(str(race_name).strip())
 
     def _gear_inputs(self, build: PlayerBuild, *, active_bar: str) -> GearCalculationInputs:
-        if self.gear_resolver is None:
-            return GearCalculationInputs()
-        return self.gear_resolver.resolve(build, active_bar=active_bar)
+        gear = (
+            self.gear_resolver.resolve(build, active_bar=active_bar)
+            if self.gear_resolver is not None
+            else GearCalculationInputs()
+        )
+        return self.base_item_resolver.apply(gear, build, active_bar=active_bar)
