@@ -141,7 +141,7 @@ def test_active_bar_uses_only_that_weapon_base():
     assert back.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1571
 
 
-def test_dual_wield_stays_explicitly_unresolved_until_two_weapon_model_exists():
+def test_legacy_dual_wield_stays_explicitly_unresolved_until_hands_are_selected():
     build = PlayerBuild(
         FrontBarWeapon=GearSlot(
             WeaponType="Dual Wield",
@@ -153,7 +153,69 @@ def test_dual_wield_stays_explicitly_unresolved_until_two_weapon_model_exists():
     resolved = BaseItemStatResolver().apply(GearCalculationInputs(), build)
 
     assert not resolved.core.weapon_damage.flat
-    assert any("Dual Wield requires separate main/off-hand modeling" in entry for entry in resolved.unresolved)
+    assert any("legacy Dual Wield needs explicit main/off-hand weapons" in entry for entry in resolved.unresolved)
+
+
+def test_explicit_dual_wield_uses_main_plus_floored_17_7_percent_offhand_power():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(WeaponType="Dagger", Quality="Gold", Level="CP160"),
+        FrontBarOffHand=GearSlot(WeaponType="Axe", Quality="Gold", Level="CP160"),
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="dual-wield-base",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1571
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1571
+    assert any(
+        label == "Front Bar Off Hand: Axe contribution (17.7% of 1335)" and value == 236
+        for label, operation, value, result in context.core_state.derived[StatId.WEAPON_DAMAGE].steps
+    )
+
+
+def test_explicit_sword_and_board_uses_one_handed_power_and_shield_armor():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(WeaponType="Sword", Quality="Gold", Level="CP160"),
+        FrontBarOffHand=GearSlot(WeaponType="Shield", Quality="Gold", Level="CP160"),
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="sword-board-base",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1335
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1335
+    assert context.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 1720
+    assert context.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 1720
+
+
+def test_reinforced_gold_shield_uses_1720_base_and_floored_16_percent_bonus():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(WeaponType="Sword", Quality="Gold", Level="CP160"),
+        FrontBarOffHand=GearSlot(
+            WeaponType="Shield",
+            Quality="Gold",
+            Level="CP160",
+            Trait="Reinforced",
+        ),
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="reinforced-shield",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 1995
+    assert context.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 1995
 
 
 def test_non_gold_or_non_cp160_armor_is_not_guessed():
@@ -237,7 +299,6 @@ def test_armor_nirnhoned_and_impenetrable_feed_static_core_stats():
         progression=CharacterProgression(),
     )
 
-    # 1221 head + 253 Nirnhoned + 698 hands.
     assert context.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 2172
     assert context.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 2172
     assert context.core_state.derived[StatId.CRITICAL_RESISTANCE].final_value == 1452
