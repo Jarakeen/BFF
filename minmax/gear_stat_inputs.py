@@ -462,7 +462,7 @@ class GearStatInputResolver:
                 result = replace(
                     result,
                     core=replace(core, weapon_critical=weapon_critical, spell_critical=spell_critical),
-                    applied_effect_count=result.applied_effect_count + 1,
+                    applied_effect_count=result.applied_effect_count + 2,
                 )
                 continue
             resource_field = RESOURCE_STATS.get(effect.stat)
