@@ -62,8 +62,22 @@ JEWELRY_ENCHANT_TO_GLYPH = {
     "spell damage": "Glyph of Increase Magical Harm",
 }
 
-STATIC_JEWELRY_TRAITS = {"triune", "protective"}
-MISSING_NUMERIC_JEWELRY_TRAITS = {"arcane", "healthy", "robust"}
+STATIC_JEWELRY_TRAITS = {"arcane", "healthy", "robust", "triune", "protective"}
+
+ARMOR_MAJOR_ENCHANT_SLOTS = {"head", "chest", "legs"}
+ARMOR_MINOR_ENCHANT_SLOTS = {"shoulders", "hands", "waist", "feet"}
+ARMOR_INFUSED_PERCENT_BY_QUALITY = {
+    "white": 9.0,
+    "green": 13.0,
+    "blue": 17.0,
+    "purple": 21.0,
+    "gold": 25.0,
+    "normal": 9.0,
+    "fine": 13.0,
+    "superior": 17.0,
+    "epic": 21.0,
+    "legendary": 25.0,
+}
 
 
 @dataclass(frozen=True)
@@ -175,6 +189,34 @@ class GearStatInputResolver:
             return core
         return replace(core, **{field_name: updated})
 
+    @staticmethod
+    def _armor_glyph_multiplier(slot_name: str, entry: dict[str, str], unresolved: list[str]) -> tuple[float, str]:
+        slot_key = str(slot_name or "").strip().casefold()
+        if slot_key in ARMOR_MAJOR_ENCHANT_SLOTS:
+            multiplier = 1.0
+            labels: list[str] = []
+        elif slot_key in ARMOR_MINOR_ENCHANT_SLOTS:
+            multiplier = 0.4
+            labels = ["minor slot 40%"]
+        else:
+            unresolved.append(f"{slot_name} armor enchantment slot size is unknown")
+            return 0.0, ""
+
+        trait = str(entry.get("Trait", "") or "").strip()
+        if trait.casefold() == "infused":
+            quality = str(entry.get("Quality", "") or "").strip()
+            percent = ARMOR_INFUSED_PERCENT_BY_QUALITY.get(quality.casefold())
+            if percent is None:
+                unresolved.append(
+                    f"{slot_name} Infused: enchantment value unavailable for quality {quality or 'unset'}"
+                )
+                return 0.0, ""
+            multiplier *= 1.0 + (percent / 100.0)
+            labels.append(f"Infused +{percent:g}%")
+
+        suffix = f" ({', '.join(labels)})" if labels else ""
+        return multiplier, suffix
+
     def _apply_armor_glyphs(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
         if self.armor_glyph_repository is None:
             return result
@@ -200,19 +242,24 @@ class GearStatInputResolver:
                 )
                 continue
 
+            multiplier, slot_label = self._armor_glyph_multiplier(slot_name, entry, unresolved)
+            if multiplier == 0.0:
+                continue
+
             effects = self.armor_glyph_repository.get_armor_glyph_effect_by_name(glyph_name, use_max_value=True)
             if not effects:
                 unresolved.append(f"{slot_name} glyph not found: {glyph_name}")
                 continue
 
-            for effect in effects:
-                stat = effect.stat
+            for base_effect in effects:
+                stat = base_effect.stat
                 resource_field = RESOURCE_STATS.get(stat) if stat is not None else None
                 if not resource_field:
                     unresolved.append(f"{slot_name} unsupported armor glyph effect: {stat.value if stat else 'unknown'}")
                     continue
+                effect = replace(base_effect, value=float(base_effect.value) * multiplier)
                 before = getattr(result, resource_field)
-                source = f"{slot_name}: {effect.source}"
+                source = f"{slot_name}: {base_effect.source}{slot_label}"
                 after = self._resource_item_add(before, effect, source=source)
                 if after != before:
                     result = replace(result, **{resource_field: after})
@@ -233,10 +280,6 @@ class GearStatInputResolver:
             trait = str(slot.Trait or "").strip()
             trait_key = trait.casefold()
             if not trait or trait_key == "infused":
-                continue
-
-            if trait_key in MISSING_NUMERIC_JEWELRY_TRAITS:
-                unresolved.append(f"{slot_name} {trait}: numeric trait value is not present in jewelry_trait_effect")
                 continue
 
             if trait_key not in STATIC_JEWELRY_TRAITS:
