@@ -32,7 +32,7 @@ class ReferenceDataService:
     def __init__(self, database: EsoDatabase):
 
         self.database = database
-        
+
         self._race_names: list[str] | None = None
         self._gear_set_names: list[str] | None = None
         self._skill_names: list[str] | None = None
@@ -296,6 +296,7 @@ class ReferenceDataService:
             2: "red",
             3: "green",
         }.get(discipline_id, "")
+
     # --------------------------------------------------
     # Suggestions
     # --------------------------------------------------
@@ -357,29 +358,45 @@ class ReferenceDataService:
         return sorted(found)
 
     def list_food_names(self) -> list[str]:
-        if self._food_names is None:
-            try:
-                rows = self.database.execute(
-                    """
-                    SELECT DISTINCT name
-                    FROM food
-                    WHERE name IS NOT NULL
-                    AND name != ''
-                    ORDER BY name
-                    """
-                ).fetchall()
+        """Return the food/drink names available in the canonical DB.
 
-                self._food_names = [
-                    row["name"]
-                    for row in rows
-                ]
+        Provisioning data has existed in more than one schema during the
+        database migration work. Prefer canonical entity identities when
+        present, then fall back to the older dedicated ``food`` table.
+        """
+        if self._food_names is not None:
+            return self._food_names
 
-            except Exception as exc:
-                print("FOOD QUERY ERROR:", repr(exc))
-                self._food_names = []
+        names: set[str] = set()
+        try:
+            rows = self.database.execute(
+                """
+                SELECT name
+                FROM entity
+                WHERE entity_type IN ('food', 'drink', 'provisioning')
+                  AND name IS NOT NULL
+                  AND TRIM(name) != ''
+                """
+            ).fetchall()
+            names.update(str(row["name"]) for row in rows if row["name"])
+        except Exception:
+            pass
 
+        try:
+            rows = self.database.execute(
+                """
+                SELECT DISTINCT name
+                FROM food
+                WHERE name IS NOT NULL
+                  AND TRIM(name) != ''
+                """
+            ).fetchall()
+            names.update(str(row["name"]) for row in rows if row["name"])
+        except Exception:
+            pass
+
+        self._food_names = sorted(names, key=str.casefold)
         return self._food_names
-
 
     def list_potion_names(self) -> list[str]:
         if self._potion_names is None:
@@ -389,7 +406,9 @@ class ReferenceDataService:
                     SELECT name
                     FROM entity
                     WHERE entity_type = 'potion'
-                    ORDER BY name
+                    AND name IS NOT NULL
+                    AND TRIM(name) != ''
+                    ORDER BY name COLLATE NOCASE
                     """
                 ).fetchall()
 
@@ -403,32 +422,3 @@ class ReferenceDataService:
                 self._potion_names = []
 
         return self._potion_names
-
-    def list_food_names(self) -> list[str]:
-
-        if self._food_names is None:
-            try:
-                rows = self.database.execute(
-                    """
-                    SELECT name
-                    FROM entity
-                    WHERE entity_type = 'food'
-                    AND name IS NOT NULL
-                    AND name != ''
-                    ORDER BY name
-                    """
-                ).fetchall()
-
-                self._food_names = [
-                    row["name"]
-                    for row in rows
-                ]
-
-            except Exception as exc:
-                print(
-                    "FOOD QUERY ERROR:",
-                    repr(exc),
-                )
-                self._food_names = []
-
-        return self._food_names
