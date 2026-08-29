@@ -6,12 +6,13 @@
 #
 # Purpose:
 # Dedicated ESO Collectibles browser for the Collections
-# sidebar. This page is intentionally separate from the
-# existing Achievements pages.
+# sidebar, including personal collection tracking.
 #
 # ==================================================
 
 from __future__ import annotations
+
+from datetime import datetime
 
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon, QPixmap
@@ -24,6 +25,8 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QLabel,
     QSizePolicy,
+    QCheckBox,
+    QPushButton,
 )
 
 from engine.config import get_data_dir
@@ -41,10 +44,11 @@ class CollectiblesPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        data_dir = get_data_dir()
-        self.service = EsoCollectibleDatabaseService(data_dir / "eso.db")
-        self.icon_catalog = CollectibleIconCatalog(data_dir)
+        self.data_dir = get_data_dir()
+        self.service = EsoCollectibleDatabaseService(self.data_dir / "eso.db")
+        self.icon_catalog = CollectibleIconCatalog(self.data_dir)
         self.category = self.DEFAULT_CATEGORY
+        self.current_collectible_id: int | None = None
         self.build_ui()
         self.connect_signals()
         self.refresh()
@@ -71,7 +75,11 @@ class CollectiblesPage(QWidget):
             QSizePolicy.Policy.Expanding,
         )
 
+        self.backup_button = QPushButton("Back Up Collection")
+        self.backup_button.setToolTip("Export collection progress as a spreadsheet-compatible CSV backup.")
+
         self.list_card = FoundryCard(self.category)
+        self.list_card.set_header_action(self.backup_button)
         self.list_card.addWidget(self.search)
         self.list_card.addWidget(self.results)
 
@@ -104,6 +112,22 @@ class CollectiblesPage(QWidget):
         self.detail_flags.setWordWrap(True)
         self.detail_flags.setProperty("collectibleDetailMeta", True)
 
+        self.collected = QCheckBox("Collected")
+        self.acquired_on = QLineEdit()
+        self.acquired_on.setPlaceholderText("Acquired on (YYYY-MM-DD, optional)")
+        self.notes = QLineEdit()
+        self.notes.setPlaceholderText("Collection notes (optional)")
+        self.save_progress = QPushButton("Save Collection Status")
+        self.save_progress.setEnabled(False)
+
+        progress_fields = QVBoxLayout()
+        progress_fields.setContentsMargins(0, 0, 0, 0)
+        progress_fields.setSpacing(6)
+        progress_fields.addWidget(self.collected)
+        progress_fields.addWidget(self.acquired_on)
+        progress_fields.addWidget(self.notes)
+        progress_fields.addWidget(self.save_progress)
+
         detail_heading = QHBoxLayout()
         detail_heading.setContentsMargins(0, 0, 0, 0)
         detail_heading.setSpacing(12)
@@ -122,6 +146,7 @@ class CollectiblesPage(QWidget):
         self.detail_card.addWidget(self.detail_description)
         self.detail_card.addWidget(self.detail_hint)
         self.detail_card.addWidget(self.detail_flags)
+        self.detail_card.addLayout(progress_fields)
         self.detail_card.addStretch(1)
 
         workspace = QHBoxLayout()
@@ -142,6 +167,8 @@ class CollectiblesPage(QWidget):
     def connect_signals(self):
         self.search.textChanged.connect(self.refresh)
         self.results.currentItemChanged.connect(self._selection_changed)
+        self.save_progress.clicked.connect(self._save_collection_status)
+        self.backup_button.clicked.connect(self._backup_collection)
 
     def set_category(self, category: str):
         if not category:
@@ -161,6 +188,7 @@ class CollectiblesPage(QWidget):
         self.refresh()
 
     def refresh(self):
+        selected_id = self.current_collectible_id
         self.results.clear()
 
         if not self.service.available:
@@ -178,8 +206,10 @@ class CollectiblesPage(QWidget):
             return
 
         rows = self.service.collectibles(self.category, self.search.text())
-        for row in rows:
-            text = row["name"]
+        selected_row = -1
+        for index, row in enumerate(rows):
+            prefix = "✓  " if row.get("owned") else ""
+            text = prefix + row["name"]
             subtype = row.get("source_subcategory_name") or ""
             if subtype:
                 text = f"{text}   ·   {subtype}"
@@ -191,21 +221,27 @@ class CollectiblesPage(QWidget):
                 item.setIcon(QIcon(str(icon_path)))
 
             self.results.addItem(item)
+            if selected_id is not None and row["id"] == selected_id:
+                selected_row = index
 
-        total = self.service.category_count(self.category)
-        self.list_card.set_badge(f"{len(rows):,} / {total:,}")
+        owned, total = self.service.progress_summary(self.category)
+        self.list_card.set_badge(f"{owned:,} / {total:,} collected")
 
         icon_note = ""
         if self.icon_catalog.available_count:
             icon_note = f" · {self.icon_catalog.available_count:,} local icons cached"
 
         if self.search.text().strip():
-            self.status.info(f"{len(rows):,} matches in {self.category}{icon_note}.")
+            self.status.info(
+                f"{len(rows):,} matches · {owned:,}/{total:,} {self.category.lower()} collected{icon_note}."
+            )
         else:
-            self.status.info(f"{total:,} collectibles in {self.category}{icon_note}.")
+            self.status.info(
+                f"{owned:,} of {total:,} {self.category.lower()} collected{icon_note}."
+            )
 
         if rows:
-            self.results.setCurrentRow(0)
+            self.results.setCurrentRow(selected_row if selected_row >= 0 else 0)
         else:
             self._clear_details("No collectibles matched this search.")
 
@@ -222,7 +258,8 @@ class CollectiblesPage(QWidget):
             self._clear_details("Collectible details are unavailable.")
             return
 
-        self._set_detail_icon(int(collectible_id))
+        self.current_collectible_id = int(collectible_id)
+        self._set_detail_icon(self.current_collectible_id)
         self.detail_name.setText(row.get("name") or "Unnamed Collectible")
         type_name = row.get("canonical_type_name") or row.get("canonical_type_key") or ""
         subtype = row.get("source_subcategory_name") or ""
@@ -245,6 +282,38 @@ class CollectiblesPage(QWidget):
             flags.append("Appearance")
         self.detail_flags.setText(" · ".join(flags))
 
+        self.collected.setChecked(bool(row.get("owned")))
+        self.acquired_on.setText(row.get("acquired_on") or "")
+        self.notes.setText(row.get("notes") or "")
+        self.save_progress.setEnabled(True)
+
+    def _save_collection_status(self):
+        if self.current_collectible_id is None:
+            return
+
+        self.service.set_progress(
+            self.current_collectible_id,
+            owned=self.collected.isChecked(),
+            acquired_on=self.acquired_on.text(),
+            notes=self.notes.text(),
+        )
+        self.status.info("Collection status saved.")
+        self.refresh()
+
+    def _backup_collection(self):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = (
+            self.data_dir
+            / "backups"
+            / f"collectibles_{timestamp}.csv"
+        )
+        try:
+            path = self.service.export_progress_csv(backup_path)
+        except Exception as exc:
+            self.status.warning(f"Collection backup failed: {exc}")
+            return
+        self.status.info(f"Collection backup saved: {path}")
+
     def _set_detail_icon(self, collectible_id: int) -> None:
         self.detail_icon.clear()
         icon_path = self.icon_catalog.path_for(collectible_id)
@@ -263,12 +332,17 @@ class CollectiblesPage(QWidget):
         )
 
     def _clear_details(self, message: str = "Select a collectible."):
+        self.current_collectible_id = None
         self.detail_icon.clear()
         self.detail_name.setText(message)
         self.detail_type.clear()
         self.detail_description.clear()
         self.detail_hint.clear()
         self.detail_flags.clear()
+        self.collected.setChecked(False)
+        self.acquired_on.clear()
+        self.notes.clear()
+        self.save_progress.setEnabled(False)
 
     def closeEvent(self, event):
         self.service.close()
