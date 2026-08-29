@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import html
 import json
+import mimetypes
 import re
 import sqlite3
 import urllib.parse
@@ -103,7 +104,6 @@ def _score_url(url: str, collectible: CollectibleRef) -> int:
     if "/thumb/" not in lower:
         score += 2
 
-    # UESP/game icon metadata commonly preserves the final DDS stem.
     icon_stem = Path(collectible.icon.replace("\\", "/")).stem.casefold()
     if icon_stem and icon_stem in lower:
         score += 20
@@ -111,8 +111,6 @@ def _score_url(url: str, collectible: CollectibleRef) -> int:
     tokens = [token for token in re.findall(r"[a-z0-9]+", collectible.name.casefold()) if len(token) >= 4]
     score += min(8, sum(1 for token in tokens if token in lower))
 
-    # These are common nearby decorations/rewards and should not win over the
-    # actual collectible icon when a page contains several images.
     if "activeframe" in lower or "frame" in lower:
         score -= 25
     if "achievement" in lower:
@@ -130,9 +128,8 @@ def _candidates_for_file(path: Path, collectibles: dict[int, CollectibleRef]) ->
         return []
 
     candidates: dict[tuple[int, str], Candidate] = {}
+    source_html = str(path.resolve())
 
-    # Strong path: collectible ID appears in the saved page. Search a local
-    # window around each ID so unrelated site chrome does not compete.
     for pattern in COLLECT_ID_PATTERNS:
         for match in pattern.finditer(text):
             collectible_id = int(match.group(1))
@@ -146,9 +143,8 @@ def _candidates_for_file(path: Path, collectibles: dict[int, CollectibleRef]) ->
                 key = (collectible_id, url)
                 previous = candidates.get(key)
                 if previous is None or score > previous.score:
-                    candidates[key] = Candidate(collectible_id, url, path.name, score)
+                    candidates[key] = Candidate(collectible_id, url, source_html, score)
 
-    # Fallback path: a saved UESP page whose title is the collectible name.
     title_match = TITLE_RE.search(text)
     if title_match:
         title_key = _normalize_name(title_match.group(1))
@@ -161,7 +157,7 @@ def _candidates_for_file(path: Path, collectibles: dict[int, CollectibleRef]) ->
                     key = (collectible.id, url)
                     previous = candidates.get(key)
                     if previous is None or score > previous.score:
-                        candidates[key] = Candidate(collectible.id, url, path.name, score)
+                        candidates[key] = Candidate(collectible.id, url, source_html, score)
 
     return list(candidates.values())
 
@@ -198,11 +194,24 @@ def _extension(url: str, content_type: str = "") -> str:
     return ".png"
 
 
+def _read_candidate_bytes(candidate: Candidate) -> tuple[bytes, str]:
+    parsed = urllib.parse.urlparse(candidate.url)
+    if parsed.scheme in {"http", "https"}:
+        request = urllib.request.Request(candidate.url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.read(), response.headers.get("Content-Type", "")
+
+    source_page = Path(candidate.source_html)
+    local_ref = urllib.parse.unquote(parsed.path or candidate.url)
+    local_path = (source_page.parent / local_ref).resolve()
+    if not local_path.is_file():
+        raise FileNotFoundError(f"saved page image not found: {local_path}")
+    content_type = mimetypes.guess_type(local_path.name)[0] or ""
+    return local_path.read_bytes(), content_type
+
+
 def _download(candidate: Candidate, collectible: CollectibleRef, output_dir: Path, force: bool) -> tuple[str, str]:
-    request = urllib.request.Request(candidate.url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        body = response.read()
-        content_type = response.headers.get("Content-Type", "")
+    body, content_type = _read_candidate_bytes(candidate)
 
     if not body:
         raise RuntimeError("empty response")
@@ -258,7 +267,7 @@ def collect(
                 entry["file"] = filename
                 entry["sha256"] = digest
             entries[str(collectible_id)] = entry
-        except Exception as exc:  # network/source failures belong in the manifest report
+        except Exception as exc:
             failures.append({"id": collectible_id, "name": collectible.name, "url": candidate.url, "error": str(exc)})
 
         if number % 100 == 0:
