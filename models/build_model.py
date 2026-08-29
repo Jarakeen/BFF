@@ -14,6 +14,12 @@ WEAPON_TYPES: list[str] = [
     "Ice Staff",
     "Restoration Staff",
     "Two-Handed",
+    "Sword",
+    "Axe",
+    "Mace",
+    "Dagger",
+    "Shield",
+    # Legacy aggregate bar types retained for saved-build compatibility.
     "One Hand and Shield",
     "Dual Wield",
 ]
@@ -66,6 +72,23 @@ class GearSlot:
             WeaponType=str(data.get("WeaponType", "") or ""),
         )
 
+    @property
+    def is_empty(self) -> bool:
+        return not any(
+            str(value or "").strip()
+            for value in (
+                self.Set,
+                self.Set2,
+                self.Trait,
+                self.Enchant,
+                self.Weight,
+                self.Quality,
+                self.EnchantTier,
+                self.Level,
+                self.WeaponType,
+            )
+        )
+
 
 @dataclass
 class ChampionPointEntry:
@@ -110,19 +133,20 @@ class PlayerBuild:
     EsoClass: str = ""
     Role: str = ""
     Alliance: str = ""
-    # Persistent affiliation. These affect passive calculations even when the
-    # character is not transformed. Vampire and Werewolf are mutually exclusive.
     Vampire: bool = False
     Werewolf: bool = False
-    # ESO grants a fixed lifetime pool of 64 level-up attribute points.
-    # These are deliberately separate from Champion Points.
     AttributeHealth: int = 0
     AttributeMagicka: int = 0
     AttributeStamina: int = 0
 
     Armor: dict[str, dict[str, str]] = field(default_factory=_empty_armor)
+    # FrontBarWeapon / BackBarWeapon remain the primary/main-hand fields so
+    # existing saved builds continue to load unchanged. Explicit offhands are
+    # additive and empty for legacy two-slot weapon representations.
     FrontBarWeapon: GearSlot = field(default_factory=GearSlot)
+    FrontBarOffHand: GearSlot = field(default_factory=GearSlot)
     BackBarWeapon: GearSlot = field(default_factory=GearSlot)
+    BackBarOffHand: GearSlot = field(default_factory=GearSlot)
     Necklace: GearSlot = field(default_factory=GearSlot)
     Ring1: GearSlot = field(default_factory=GearSlot)
     Ring2: GearSlot = field(default_factory=GearSlot)
@@ -137,6 +161,11 @@ class PlayerBuild:
     @property
     def attribute_points_total(self) -> int:
         return self.AttributeHealth + self.AttributeMagicka + self.AttributeStamina
+
+    def active_weapon_slots(self, active_bar: str = "front") -> tuple[GearSlot, GearSlot]:
+        if str(active_bar or "front").casefold() == "back":
+            return self.BackBarWeapon, self.BackBarOffHand
+        return self.FrontBarWeapon, self.FrontBarOffHand
 
     def validate(self) -> list[str]:
         errors: list[str] = []
@@ -156,7 +185,8 @@ class PlayerBuild:
             "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
             "AttributeStamina": self.AttributeStamina, "Armor": self.Armor,
-            "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "BackBarWeapon": self.BackBarWeapon.to_dict(),
+            "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "FrontBarOffHand": self.FrontBarOffHand.to_dict(),
+            "BackBarWeapon": self.BackBarWeapon.to_dict(), "BackBarOffHand": self.BackBarOffHand.to_dict(),
             "Necklace": self.Necklace.to_dict(), "Ring1": self.Ring1.to_dict(), "Ring2": self.Ring2.to_dict(),
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
             "FrontBarSkills": self.FrontBarSkills, "BackBarSkills": self.BackBarSkills,
@@ -180,7 +210,11 @@ class PlayerBuild:
             AttributeHealth=_int_value(data.get("AttributeHealth", 0)),
             AttributeMagicka=_int_value(data.get("AttributeMagicka", 0)),
             AttributeStamina=_int_value(data.get("AttributeStamina", 0)),
-            Armor=armor, FrontBarWeapon=GearSlot.from_dict(data.get("FrontBarWeapon")), BackBarWeapon=GearSlot.from_dict(data.get("BackBarWeapon")),
+            Armor=armor,
+            FrontBarWeapon=GearSlot.from_dict(data.get("FrontBarWeapon")),
+            FrontBarOffHand=GearSlot.from_dict(data.get("FrontBarOffHand")),
+            BackBarWeapon=GearSlot.from_dict(data.get("BackBarWeapon")),
+            BackBarOffHand=GearSlot.from_dict(data.get("BackBarOffHand")),
             Necklace=GearSlot.from_dict(data.get("Necklace")), Ring1=GearSlot.from_dict(data.get("Ring1")), Ring2=GearSlot.from_dict(data.get("Ring2")),
             ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
             FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(), BackBarSkills=data.get("BackBarSkills") or _empty_bar(),
