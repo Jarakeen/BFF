@@ -33,6 +33,35 @@ def test_percent_unit_maps_correctly():
     assert effect.unit == EffectUnit.PERCENT
 
 
+@pytest.mark.parametrize(
+    ("effect_type", "expected"),
+    [
+        ("weapon_damage", StatId.WEAPON_DAMAGE),
+        ("spell_damage", StatId.SPELL_DAMAGE),
+        ("physical_resistance", StatId.PHYSICAL_RESISTANCE),
+        ("spell_resistance", StatId.SPELL_RESISTANCE),
+        ("physical_penetration", StatId.PHYSICAL_PENETRATION),
+        ("spell_penetration", StatId.SPELL_PENETRATION),
+        ("weapon_critical", StatId.WEAPON_CRITICAL),
+        ("spell_critical", StatId.SPELL_CRITICAL),
+        ("critical_chance", StatId.CRITICAL_CHANCE),
+        ("critical_damage", StatId.CRITICAL_DAMAGE),
+        ("critical_resistance", StatId.CRITICAL_RESISTANCE),
+        ("healing_taken", StatId.HEALING_TAKEN),
+    ],
+)
+def test_deterministic_engine_stats_share_effect_mapping(effect_type, expected):
+    effect = EffectMapper.create_additive(
+        effect_type=f"  {effect_type.upper()}  ",
+        value=100,
+        unit=" FLAT ",
+        source="Test",
+    )
+
+    assert effect.stat == expected
+    assert effect.unit == EffectUnit.FLAT
+
+
 def test_unknown_effect_type_fails():
     with pytest.raises(ValueError, match="Unsupported engine stat effect type"):
         EffectMapper.create_additive(
