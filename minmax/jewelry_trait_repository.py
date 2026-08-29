@@ -1,4 +1,3 @@
-import sqlite3
 from pathlib import Path
 
 from .effects import Effect, EffectOperation, EffectUnit
@@ -22,19 +21,99 @@ MAX_LEVEL_TO_DATABASE = {
     "cp160": 150,
 }
 
-STATIC_EFFECT_TYPES = {
-    "max_health": (StatId.MAX_HEALTH,),
-    "max_magicka": (StatId.MAX_MAGICKA,),
-    "max_stamina": (StatId.MAX_STAMINA,),
-    "physical_spell_resistance": (
-        StatId.PHYSICAL_RESISTANCE,
-        StatId.SPELL_RESISTANCE,
-    ),
+# Current CP160 trait values. These are intentionally hardcoded rather than
+# read from jewelry_trait_effect because the production database contains older
+# historical values for several traits (notably Protective and Triune) and no
+# numeric rows for Arcane, Healthy, or Robust.
+INFUSED_ENCHANTMENT_PERCENT = {
+    "Normal": 24.0,
+    "Fine": 33.0,
+    "Superior": 42.0,
+    "Epic": 51.0,
+    "Legendary": 60.0,
+}
+
+STATIC_TRAIT_VALUES = {
+    "arcane": {
+        "Normal": ((StatId.MAX_MAGICKA, 767.0),),
+        "Fine": ((StatId.MAX_MAGICKA, 797.0),),
+        "Superior": ((StatId.MAX_MAGICKA, 827.0),),
+        "Epic": ((StatId.MAX_MAGICKA, 847.0),),
+        "Legendary": ((StatId.MAX_MAGICKA, 877.0),),
+    },
+    "healthy": {
+        "Normal": ((StatId.MAX_HEALTH, 844.0),),
+        "Fine": ((StatId.MAX_HEALTH, 877.0),),
+        "Superior": ((StatId.MAX_HEALTH, 914.0),),
+        "Epic": ((StatId.MAX_HEALTH, 932.0),),
+        "Legendary": ((StatId.MAX_HEALTH, 965.0),),
+    },
+    "robust": {
+        "Normal": ((StatId.MAX_STAMINA, 767.0),),
+        "Fine": ((StatId.MAX_STAMINA, 797.0),),
+        "Superior": ((StatId.MAX_STAMINA, 827.0),),
+        "Epic": ((StatId.MAX_STAMINA, 847.0),),
+        "Legendary": ((StatId.MAX_STAMINA, 877.0),),
+    },
+    "protective": {
+        "Normal": (
+            (StatId.PHYSICAL_RESISTANCE, 1053.0),
+            (StatId.SPELL_RESISTANCE, 1053.0),
+        ),
+        "Fine": (
+            (StatId.PHYSICAL_RESISTANCE, 1091.0),
+            (StatId.SPELL_RESISTANCE, 1091.0),
+        ),
+        "Superior": (
+            (StatId.PHYSICAL_RESISTANCE, 1128.0),
+            (StatId.SPELL_RESISTANCE, 1128.0),
+        ),
+        "Epic": (
+            (StatId.PHYSICAL_RESISTANCE, 1153.0),
+            (StatId.SPELL_RESISTANCE, 1153.0),
+        ),
+        "Legendary": (
+            (StatId.PHYSICAL_RESISTANCE, 1190.0),
+            (StatId.SPELL_RESISTANCE, 1190.0),
+        ),
+    },
+    "triune": {
+        "Normal": (
+            (StatId.MAX_HEALTH, 422.0),
+            (StatId.MAX_MAGICKA, 384.0),
+            (StatId.MAX_STAMINA, 384.0),
+        ),
+        "Fine": (
+            (StatId.MAX_HEALTH, 438.0),
+            (StatId.MAX_MAGICKA, 399.0),
+            (StatId.MAX_STAMINA, 399.0),
+        ),
+        "Superior": (
+            (StatId.MAX_HEALTH, 455.0),
+            (StatId.MAX_MAGICKA, 414.0),
+            (StatId.MAX_STAMINA, 414.0),
+        ),
+        "Epic": (
+            (StatId.MAX_HEALTH, 466.0),
+            (StatId.MAX_MAGICKA, 424.0),
+            (StatId.MAX_STAMINA, 424.0),
+        ),
+        "Legendary": (
+            (StatId.MAX_HEALTH, 482.0),
+            (StatId.MAX_MAGICKA, 439.0),
+            (StatId.MAX_STAMINA, 439.0),
+        ),
+    },
 }
 
 
 class JewelryTraitRepository:
-    """Load deterministic jewelry trait rules from the ESO database."""
+    """Resolve deterministic jewelry trait rules using current game constants.
+
+    ``database_path`` is retained for dependency-injection compatibility and
+    provenance, but CP160 static trait math intentionally does not trust stale
+    numeric rows in the local database.
+    """
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
@@ -52,31 +131,7 @@ class JewelryTraitRepository:
         database_quality = self.database_quality(quality)
         if not database_quality:
             return None
-
-        with sqlite3.connect(self.database_path) as connection:
-            row = connection.execute(
-                """
-                SELECT value, unit
-                FROM jewelry_trait_effect
-                WHERE LOWER(TRIM(trait_name)) = 'infused'
-                  AND LOWER(TRIM(effect_type)) = 'enchantment_effect'
-                  AND LOWER(TRIM(item_type)) = 'jewelry'
-                  AND LOWER(TRIM(quality)) = LOWER(TRIM(?))
-                ORDER BY id
-                LIMIT 1
-                """,
-                (database_quality,),
-            ).fetchone()
-
-        if row is None:
-            return None
-
-        value, unit = row
-        if value is None:
-            return None
-        if str(unit or "").strip().casefold() != "percent":
-            raise ValueError(f"Infused jewelry rule has unsupported unit: {unit!r}")
-        return float(value)
+        return INFUSED_ENCHANTMENT_PERCENT.get(database_quality)
 
     def get_static_effects(self, trait_name: str, *, quality: str, level: str) -> list[Effect]:
         trait = str(trait_name or "").strip()
@@ -85,37 +140,14 @@ class JewelryTraitRepository:
         if not trait or not database_quality or item_level is None:
             return []
 
-        with sqlite3.connect(self.database_path) as connection:
-            rows = connection.execute(
-                """
-                SELECT effect_type, value, unit
-                FROM jewelry_trait_effect
-                WHERE LOWER(TRIM(trait_name)) = LOWER(TRIM(?))
-                  AND LOWER(TRIM(quality)) = LOWER(TRIM(?))
-                  AND item_level = ?
-                ORDER BY id
-                """,
-                (trait, database_quality, item_level),
-            ).fetchall()
-
-        effects: list[Effect] = []
-        for effect_type, value, unit in rows:
-            key = str(effect_type or "").strip().casefold()
-            stats = STATIC_EFFECT_TYPES.get(key)
-            if stats is None:
-                continue
-            if str(unit or "").strip().casefold() != "flat":
-                raise ValueError(
-                    f"Static jewelry trait {trait!r} has unsupported unit: {unit!r}"
-                )
-            for stat in stats:
-                effects.append(
-                    Effect(
-                        operation=EffectOperation.ADD,
-                        value=float(value),
-                        source=trait,
-                        stat=stat,
-                        unit=EffectUnit.FLAT,
-                    )
-                )
-        return effects
+        rows = STATIC_TRAIT_VALUES.get(trait.casefold(), {}).get(database_quality, ())
+        return [
+            Effect(
+                operation=EffectOperation.ADD,
+                value=value,
+                source=trait,
+                stat=stat,
+                unit=EffectUnit.FLAT,
+            )
+            for stat, value in rows
+        ]
