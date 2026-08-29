@@ -1,4 +1,4 @@
-from models.build_model import GearSlot, PlayerBuild
+from models.build_model import ARMOR_TRAITS, GearSlot, PlayerBuild
 
 
 def test_explicit_weapon_offhands_round_trip_without_breaking_legacy_main_hands():
@@ -44,3 +44,8 @@ def test_active_weapon_slots_select_matching_bar():
 
     assert (front_main.WeaponType, front_off.WeaponType) == ("Dagger", "Axe")
     assert (back_main.WeaponType, back_off.WeaponType) == ("Sword", "Shield")
+
+
+def test_current_armor_trait_choices_expose_invigorating_not_legacy_prosperous():
+    assert "Invigorating" in ARMOR_TRAITS
+    assert "Prosperous" not in ARMOR_TRAITS
