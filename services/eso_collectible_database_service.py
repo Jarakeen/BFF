@@ -5,14 +5,14 @@
 # services/eso_collectible_database_service.py
 #
 # Purpose:
-# Read-only runtime access to normalized ESO collectibles,
-# with a one-time bootstrap from canonical entity data when
-# the normalized collectible catalog is missing.
+# Runtime access to normalized ESO collectibles plus
+# user-owned collection progress and portable backups.
 #
 # ==================================================
 
 from __future__ import annotations
 
+import csv
 import json
 import sqlite3
 from pathlib import Path
@@ -91,6 +91,7 @@ class EsoCollectibleDatabaseService:
         if self._connection is None:
             self._connection = sqlite3.connect(self.database_path)
             self._connection.row_factory = sqlite3.Row
+            self._connection.execute("PRAGMA foreign_keys = ON")
         return self._connection
 
     def _table_exists(self, name: str) -> bool:
@@ -187,10 +188,20 @@ class EsoCollectibleDatabaseService:
                 source_raw_json TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS collectible_progress (
+                collectible_id INTEGER PRIMARY KEY,
+                owned INTEGER NOT NULL DEFAULT 0 CHECK (owned IN (0, 1)),
+                acquired_on TEXT,
+                notes TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (collectible_id) REFERENCES collectible(id) ON DELETE CASCADE
+            );
+
             CREATE INDEX IF NOT EXISTS idx_collectible_name ON collectible(name);
             CREATE INDEX IF NOT EXISTS idx_collectible_sidebar ON collectible(sidebar_category_key);
             CREATE INDEX IF NOT EXISTS idx_collectible_type ON collectible(canonical_type_key);
             CREATE INDEX IF NOT EXISTS idx_collectible_source_category ON collectible(source_category_name, source_subcategory_name);
+            CREATE INDEX IF NOT EXISTS idx_collectible_progress_owned ON collectible_progress(owned);
 
             CREATE VIEW IF NOT EXISTS collectible_search AS
             SELECT
@@ -356,25 +367,50 @@ class EsoCollectibleDatabaseService:
             "SELECT COUNT(*) FROM collectible WHERE sidebar_category_key = ?", (category,)
         ).fetchone()[0]
 
+    def progress_summary(self, category: str | None = None) -> tuple[int, int]:
+        if not self.available:
+            return 0, 0
+        params: list[object] = []
+        where = ""
+        if category:
+            where = "WHERE c.sidebar_category_key = ?"
+            params.append(category)
+        row = self.connection.execute(
+            f"""
+            SELECT
+                SUM(CASE WHEN COALESCE(p.owned, 0) = 1 THEN 1 ELSE 0 END) AS owned_count,
+                COUNT(*) AS total_count
+            FROM collectible c
+            LEFT JOIN collectible_progress p ON p.collectible_id = c.id
+            {where}
+            """,
+            params,
+        ).fetchone()
+        return int(row["owned_count"] or 0), int(row["total_count"] or 0)
+
     def collectibles(self, category: str, query: str = "") -> list[dict]:
         if not self.available:
             return []
         query = query.strip()
         params = [category]
-        where = "sidebar_category_key = ?"
+        where = "c.sidebar_category_key = ?"
         if query:
             pattern = f"%{query}%"
-            where += " AND (name LIKE ? OR description LIKE ? OR hint LIKE ? OR source_subcategory_name LIKE ?)"
+            where += " AND (c.name LIKE ? OR c.description LIKE ? OR c.hint LIKE ? OR c.source_subcategory_name LIKE ?)"
             params.extend([pattern, pattern, pattern, pattern])
 
         rows = self.connection.execute(
             f"""
-            SELECT id, name, description, hint, icon,
-                   canonical_type_key, source_subcategory_name,
-                   is_unlocked, is_usable, is_renameable
-            FROM collectible
+            SELECT c.id, c.name, c.description, c.hint, c.icon,
+                   c.canonical_type_key, c.source_subcategory_name,
+                   c.is_unlocked, c.is_usable, c.is_renameable,
+                   COALESCE(p.owned, 0) AS owned,
+                   COALESCE(p.acquired_on, '') AS acquired_on,
+                   COALESCE(p.notes, '') AS notes
+            FROM collectible c
+            LEFT JOIN collectible_progress p ON p.collectible_id = c.id
             WHERE {where}
-            ORDER BY name COLLATE NOCASE, id
+            ORDER BY c.name COLLATE NOCASE, c.id
             """, params
         ).fetchall()
         return [dict(row) for row in rows]
@@ -383,9 +419,107 @@ class EsoCollectibleDatabaseService:
         if not self.available:
             return None
         row = self.connection.execute(
-            "SELECT * FROM collectible_search WHERE id = ?", (collectible_id,)
+            """
+            SELECT cs.*,
+                   COALESCE(p.owned, 0) AS owned,
+                   COALESCE(p.acquired_on, '') AS acquired_on,
+                   COALESCE(p.notes, '') AS notes,
+                   COALESCE(p.updated_at, '') AS progress_updated_at
+            FROM collectible_search cs
+            LEFT JOIN collectible_progress p ON p.collectible_id = cs.id
+            WHERE cs.id = ?
+            """,
+            (collectible_id,),
         ).fetchone()
         return dict(row) if row else None
+
+    def set_progress(
+        self,
+        collectible_id: int,
+        *,
+        owned: bool,
+        acquired_on: str = "",
+        notes: str = "",
+    ) -> None:
+        if not self.available:
+            raise RuntimeError("Collectible database is not available.")
+
+        exists = self.connection.execute(
+            "SELECT 1 FROM collectible WHERE id = ?",
+            (int(collectible_id),),
+        ).fetchone()
+        if exists is None:
+            raise KeyError(f"Unknown collectible id: {collectible_id}")
+
+        acquired_on = acquired_on.strip() or None
+        notes = notes.strip()
+        self.connection.execute(
+            """
+            INSERT INTO collectible_progress (
+                collectible_id, owned, acquired_on, notes, updated_at
+            ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(collectible_id) DO UPDATE SET
+                owned = excluded.owned,
+                acquired_on = excluded.acquired_on,
+                notes = excluded.notes,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (int(collectible_id), 1 if owned else 0, acquired_on, notes),
+        )
+        self.connection.commit()
+
+    def export_progress_csv(self, target_path: Path) -> Path:
+        """Write a portable spreadsheet backup of the full collectible catalog."""
+        target_path = Path(target_path)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+
+        rows = self.connection.execute(
+            """
+            SELECT
+                c.id,
+                c.name,
+                COALESCE(s.display_name, c.sidebar_category_key, '') AS category,
+                COALESCE(t.display_name, c.canonical_type_key, '') AS collectible_type,
+                COALESCE(c.source_subcategory_name, '') AS subtype,
+                COALESCE(p.owned, 0) AS owned,
+                COALESCE(p.acquired_on, '') AS acquired_on,
+                COALESCE(p.notes, '') AS notes,
+                COALESCE(p.updated_at, '') AS updated_at
+            FROM collectible c
+            LEFT JOIN collectible_progress p ON p.collectible_id = c.id
+            LEFT JOIN collectible_type t ON t.key = c.canonical_type_key
+            LEFT JOIN collectible_sidebar_category s ON s.key = c.sidebar_category_key
+            ORDER BY category COLLATE NOCASE, c.name COLLATE NOCASE, c.id
+            """
+        ).fetchall()
+
+        with target_path.open("w", encoding="utf-8-sig", newline="") as handle:
+            writer = csv.writer(handle)
+            writer.writerow([
+                "Collectible ID",
+                "Name",
+                "Category",
+                "Type",
+                "Subtype",
+                "Collected",
+                "Acquired On",
+                "Notes",
+                "Progress Updated At",
+            ])
+            for row in rows:
+                writer.writerow([
+                    row["id"],
+                    row["name"],
+                    row["category"],
+                    row["collectible_type"],
+                    row["subtype"],
+                    "Yes" if row["owned"] else "No",
+                    row["acquired_on"],
+                    row["notes"],
+                    row["updated_at"],
+                ])
+
+        return target_path
 
     def close(self) -> None:
         if self._connection is not None:
