@@ -1,6 +1,8 @@
 from pathlib import Path
 
-project_root = Path(SPECPATH).resolve().parent.parent
+# PyInstaller defines SPECPATH as the directory containing this spec file.
+# packaging/ lives directly under the project root, so one parent is enough.
+project_root = Path(SPECPATH).resolve().parent
 
 # Read-only UI resources are bundled into PyInstaller's extraction directory.
 # Writable application data (especially data/eso.db) is deliberately NOT
