@@ -447,6 +447,23 @@ class GearStatInputResolver:
         for effect in self.service.active_static_effects(counts):
             if effect.stat is None:
                 continue
+            if effect.stat is StatId.CRITICAL_CHANCE:
+                ratio = self.critical_rating_to_ratio(effect.value)
+                contribution = StatContribution(effect.source, ratio)
+                core = result.core
+                weapon_critical = replace(
+                    core.weapon_critical,
+                    additive_after_percent=core.weapon_critical.additive_after_percent + (contribution,),
+                )
+                spell_critical = replace(
+                    core.spell_critical,
+                    additive_after_percent=core.spell_critical.additive_after_percent + (contribution,),
+                )
+                result = replace(
+                    result,
+                    core=replace(core, weapon_critical=weapon_critical, spell_critical=spell_critical),
+                )
+                continue
             resource_field = RESOURCE_STATS.get(effect.stat)
             if resource_field:
                 updated = self._resource_add(getattr(result, resource_field), effect)
