@@ -66,7 +66,7 @@ def _coefficient_db(tmp_path):
         INSERT INTO skill_coefficient VALUES
             (1, 14, 2, '8', 0.0499473, 0.525132, -0.520496, 1.0, NULL),
             (2, 14, 1, '8', 0.175015, 1.83764, -1.73373, 1.0, NULL),
-            (3, 14, 3, '-1', -1.0, -1.0, -1.0, 1.0, NULL);
+            (3, 14, 3, '-1', -1.0, -1.0, -1.0, -1.0, NULL);
         """
     )
     connection.commit()
