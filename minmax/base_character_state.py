@@ -61,6 +61,7 @@ class ResourceInputs:
     set_flat: float = 0.0
     food_flat: float = 0.0
     mundus_flat: float = 0.0
+    champion_flat: float = 0.0
     skill_flat: float = 0.0
     race_flat: float = 0.0
     other_flat: float = 0.0
@@ -128,6 +129,7 @@ class BaseCharacterCalculator:
         for label, value in (
             ("food flat", inputs.food_flat),
             ("mundus flat", inputs.mundus_flat),
+            ("Champion Point flat", inputs.champion_flat),
             ("skill flat", inputs.skill_flat),
             ("race", inputs.race_flat),
             ("other flat", inputs.other_flat),
