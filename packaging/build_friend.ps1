@@ -75,8 +75,11 @@ Get-ChildItem -Path $SourceDataDir -File |
     Copy-Item -Destination $DataRoot -Force
 
 # Start with an intentionally empty build roster rather than shipping the
-# developer's saved characters/builds.
-'{"Members": []}' | Set-Content -Path (Join-Path $DataRoot "builds.json") -Encoding UTF8
+# developer's saved characters/builds. Use UTF-8 without BOM so Python's JSON
+# loader behaves identically in Windows PowerShell 5 and PowerShell 7.
+$CleanBuildsPath = Join-Path $DataRoot "builds.json"
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($CleanBuildsPath, '{"Members": []}', $Utf8NoBom)
 
 $ReadmeSource = Join-Path $PSScriptRoot "FRIEND_README.txt"
 if (Test-Path $ReadmeSource) {
