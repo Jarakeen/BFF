@@ -146,6 +146,92 @@ def test_cp160_truly_superb_armor_glyph_adds_item_resource_with_named_trace():
     assert context.gear_effects_applied == 1
 
 
+def test_minor_armor_slot_uses_40_percent_glyph_strength():
+    build = PlayerBuild()
+    build.Armor["Hands"].update({"Enchant": "Max Magicka", "EnchantTier": "Truly Superb", "Level": "CP160"})
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="minor-glyph",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    trace = context.character_state.traces[StatId.MAX_MAGICKA]
+    assert any(
+        step.label == "Hands: Glyph of Magicka (minor slot 40%)"
+        and abs(step.value - 347.2) < 1e-12
+        for step in trace.steps
+    )
+
+
+def test_gold_infused_major_armor_increases_glyph_by_25_percent():
+    build = PlayerBuild()
+    build.Armor["Chest"].update(
+        {
+            "Enchant": "Max Magicka",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "Quality": "Gold",
+            "Trait": "Infused",
+        }
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="major-infused",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    trace = context.character_state.traces[StatId.MAX_MAGICKA]
+    assert any(
+        step.label == "Chest: Glyph of Magicka (Infused +25%)"
+        and step.value == 1085
+        for step in trace.steps
+    )
+    assert not any("Chest Infused" in entry for entry in context.unresolved_gear_effects)
+
+
+def test_gold_infused_minor_armor_combines_slot_and_trait_scaling():
+    build = PlayerBuild()
+    build.Armor["Hands"].update(
+        {
+            "Enchant": "Max Magicka",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "Quality": "Gold",
+            "Trait": "Infused",
+        }
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=FakeGearSetRepository(),
+        armor_glyph_repository=FakeArmorGlyphRepository(),
+    )
+
+    context = factory.build(
+        character_id="char",
+        build_id="minor-infused",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    trace = context.character_state.traces[StatId.MAX_MAGICKA]
+    assert any(
+        step.label == "Hands: Glyph of Magicka (minor slot 40%, Infused +25%)"
+        and step.value == 434
+        for step in trace.steps
+    )
+
+
 def test_non_max_armor_glyph_is_left_unresolved_until_scaling_is_verified():
     build = PlayerBuild()
     build.Armor["Chest"].update({"Enchant": "Max Magicka", "EnchantTier": "Superb", "Level": "CP150"})
