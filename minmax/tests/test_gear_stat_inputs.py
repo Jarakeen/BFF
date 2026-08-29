@@ -115,7 +115,6 @@ def test_context_factory_applies_static_gear_to_character_sheet_state():
         active_bar="front",
     )
 
-    # 12,000 base + (64 × 111) + 1,096 static set bonus.
     assert context.character_state.max_magicka == 20200
     assert context.core_state is not None
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1129
@@ -128,13 +127,7 @@ def test_context_factory_applies_static_gear_to_character_sheet_state():
 
 def test_cp160_truly_superb_armor_glyph_adds_item_resource_with_named_trace():
     build = PlayerBuild(AttributeMagicka=64)
-    build.Armor["Chest"].update(
-        {
-            "Enchant": "Max Magicka",
-            "EnchantTier": "Truly Superb",
-            "Level": "CP160",
-        }
-    )
+    build.Armor["Chest"].update({"Enchant": "Max Magicka", "EnchantTier": "Truly Superb", "Level": "CP160"})
     factory = BuildCalculationContextFactory(
         gear_set_repository=FakeGearSetRepository(),
         armor_glyph_repository=FakeArmorGlyphRepository(),
@@ -155,17 +148,8 @@ def test_cp160_truly_superb_armor_glyph_adds_item_resource_with_named_trace():
 
 def test_non_max_armor_glyph_is_left_unresolved_until_scaling_is_verified():
     build = PlayerBuild()
-    build.Armor["Chest"].update(
-        {
-            "Enchant": "Max Magicka",
-            "EnchantTier": "Superb",
-            "Level": "CP150",
-        }
-    )
-    resolver = GearStatInputResolver(
-        FakeGearSetRepository(),
-        armor_glyph_repository=FakeArmorGlyphRepository(),
-    )
+    build.Armor["Chest"].update({"Enchant": "Max Magicka", "EnchantTier": "Superb", "Level": "CP150"})
+    resolver = GearStatInputResolver(FakeGearSetRepository(), armor_glyph_repository=FakeArmorGlyphRepository())
 
     resolved = resolver.resolve(build)
 
@@ -175,11 +159,7 @@ def test_non_max_armor_glyph_is_left_unresolved_until_scaling_is_verified():
 
 def test_cp160_truly_superb_jewelry_recovery_glyph_adds_named_resource_trace():
     build = PlayerBuild()
-    build.Necklace = GearSlot(
-        Enchant="Magicka Recovery",
-        EnchantTier="Truly Superb",
-        Level="CP160",
-    )
+    build.Necklace = GearSlot(Enchant="Magicka Recovery", EnchantTier="Truly Superb", Level="CP160")
     factory = BuildCalculationContextFactory(
         gear_set_repository=FakeGearSetRepository(),
         jewelry_glyph_repository=FakeJewelryGlyphRepository(),
@@ -199,11 +179,7 @@ def test_cp160_truly_superb_jewelry_recovery_glyph_adds_named_resource_trace():
 
 def test_cp160_truly_superb_jewelry_damage_glyph_feeds_core_trace():
     build = PlayerBuild()
-    build.Ring1 = GearSlot(
-        Enchant="Weapon Damage",
-        EnchantTier="Truly Superb",
-        Level="CP160",
-    )
+    build.Ring1 = GearSlot(Enchant="Weapon Damage", EnchantTier="Truly Superb", Level="CP160")
     factory = BuildCalculationContextFactory(
         gear_set_repository=FakeGearSetRepository(),
         jewelry_glyph_repository=FakeJewelryGlyphRepository(),
@@ -216,9 +192,9 @@ def test_cp160_truly_superb_jewelry_damage_glyph_feeds_core_trace():
         progression=CharacterProgression(),
     )
 
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1174
-    trace = context.core_state.derived[StatId.WEAPON_DAMAGE].trace
-    assert any(step.label == "Ring 1: Glyph of Increase Physical Harm" and step.value == 174 for step in trace.steps)
+    trace = context.core_state.derived[StatId.WEAPON_DAMAGE]
+    assert trace.final_value == 1174
+    assert any(label == "Ring 1: Glyph of Increase Physical Harm" and value == 174 for label, operation, value, result in trace.steps)
     assert context.gear_effects_applied == 1
 
 
@@ -243,11 +219,7 @@ def test_infused_jewelry_glyph_is_not_understated_before_trait_scaling_exists():
 
 def test_non_max_jewelry_glyph_is_left_unresolved_until_scaling_is_verified():
     build = PlayerBuild()
-    build.Necklace = GearSlot(
-        Enchant="Stamina Recovery",
-        EnchantTier="Superb",
-        Level="CP150",
-    )
+    build.Necklace = GearSlot(Enchant="Stamina Recovery", EnchantTier="Superb", Level="CP150")
     resolver = GearStatInputResolver(
         FakeGearSetRepository(),
         jewelry_glyph_repository=FakeJewelryGlyphRepository(),
