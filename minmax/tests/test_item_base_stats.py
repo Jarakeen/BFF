@@ -180,3 +180,151 @@ def test_weapon_type_round_trips_and_old_builds_default_blank():
 
     assert restored.WeaponType == "Restoration Staff"
     assert old.WeaponType == ""
+
+
+def test_reinforced_heavy_chest_uses_floored_item_armor_value():
+    build = PlayerBuild()
+    build.Armor["Chest"].update(
+        {
+            "Set": "Test Armor",
+            "Weight": "Heavy",
+            "Quality": "Gold",
+            "Level": "CP160",
+            "Trait": "Reinforced",
+        }
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="reinforced",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    physical = context.core_state.derived[StatId.PHYSICAL_RESISTANCE]
+    assert physical.final_value == 3215
+    assert any(
+        label == "Chest: Reinforced armor (2772 -> 3215)" and value == 443
+        for label, operation, value, result in physical.steps
+    )
+
+
+def test_armor_nirnhoned_and_impenetrable_feed_static_core_stats():
+    build = PlayerBuild()
+    build.Armor["Head"].update(
+        {
+            "Set": "Head Set",
+            "Weight": "Light",
+            "Quality": "Gold",
+            "Level": "CP160",
+            "Trait": "Nirnhoned",
+        }
+    )
+    build.Armor["Hands"].update(
+        {
+            "Set": "Hand Set",
+            "Weight": "Light",
+            "Quality": "Gold",
+            "Level": "CP160",
+            "Trait": "Impenetrable",
+        }
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="armor-traits",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    # 1221 head + 253 Nirnhoned + 698 hands.
+    assert context.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 2172
+    assert context.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 2172
+    assert context.core_state.derived[StatId.CRITICAL_RESISTANCE].final_value == 1452
+
+
+def test_nirnhoned_weapon_uses_floored_item_power_not_global_percent_modifier():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(
+            WeaponType="Inferno Staff",
+            Quality="Gold",
+            Level="CP160",
+            Trait="Nirnhoned",
+        )
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="nirn-staff",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1535
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1535
+    assert any(
+        label == "Front Bar: Nirnhoned weapon power (1335 -> 1535)" and value == 200
+        for label, operation, value, result in context.core_state.derived[StatId.WEAPON_DAMAGE].steps
+    )
+
+
+def test_two_slot_precise_sharpened_powered_and_defending_double_character_wide_bonus():
+    cases = (
+        ("Precise", StatId.WEAPON_CRITICAL, 0.172),
+        ("Sharpened", StatId.PHYSICAL_PENETRATION, 3276),
+        ("Powered", StatId.HEALING_DONE, 0.09),
+        ("Defending", StatId.PHYSICAL_RESISTANCE, 3276),
+    )
+
+    for trait, stat, expected in cases:
+        build = PlayerBuild(
+            FrontBarWeapon=GearSlot(
+                WeaponType="Inferno Staff",
+                Quality="Gold",
+                Level="CP160",
+                Trait=trait,
+            )
+        )
+        context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+            character_id="char",
+            build_id=trait.casefold(),
+            build=build,
+            progression=CharacterProgression(),
+        )
+        assert abs(context.core_state.derived[stat].final_value - expected) < 1e-12
+
+
+def test_one_hand_and_shield_uses_single_weapon_trait_bonus():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(
+            WeaponType="One Hand and Shield",
+            Quality="Gold",
+            Level="CP160",
+            Trait="Precise",
+        )
+    )
+
+    context = BuildCalculationContextFactory(gear_set_repository=EmptyGearSetRepository()).build(
+        character_id="char",
+        build_id="one-hand-precise",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert abs(context.core_state.derived[StatId.WEAPON_CRITICAL].final_value - 0.136) < 1e-12
+    assert abs(context.core_state.derived[StatId.SPELL_CRITICAL].final_value - 0.136) < 1e-12
+
+
+def test_deferred_weapon_trait_is_explicitly_unresolved():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(
+            WeaponType="Inferno Staff",
+            Quality="Gold",
+            Level="CP160",
+            Trait="Charged",
+        )
+    )
+
+    resolved = BaseItemStatResolver().apply(GearCalculationInputs(), build)
+
+    assert any("Charged: requires status-effect chance model" in entry for entry in resolved.unresolved)
