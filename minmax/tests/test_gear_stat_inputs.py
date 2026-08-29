@@ -198,7 +198,7 @@ def test_cp160_truly_superb_jewelry_damage_glyph_feeds_core_trace():
     assert context.gear_effects_applied == 1
 
 
-def test_infused_jewelry_glyph_is_not_understated_before_trait_scaling_exists():
+def test_infused_jewelry_without_trait_repository_stays_unresolved():
     build = PlayerBuild()
     build.Ring2 = GearSlot(
         Trait="Infused",
@@ -214,7 +214,7 @@ def test_infused_jewelry_glyph_is_not_understated_before_trait_scaling_exists():
     resolved = resolver.resolve(build)
 
     assert resolved.magicka_recovery.item_flat == 0
-    assert any("Infused enchantment scaling not yet applied" in entry for entry in resolved.unresolved)
+    assert any("Infused jewelry trait repository unavailable" in entry for entry in resolved.unresolved)
 
 
 def test_non_max_jewelry_glyph_is_left_unresolved_until_scaling_is_verified():
