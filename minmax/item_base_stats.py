@@ -5,6 +5,7 @@ from math import floor
 
 from models.build_model import GearSlot, PlayerBuild
 
+from .base_character_state import FlatContribution, ResourceInputs
 from .derived_stats import DerivedStatInputs, StatContribution
 from .gear_stat_inputs import GearCalculationInputs
 
@@ -42,6 +43,7 @@ NAKED_LEVEL_50_POWER = 1000.0
 ARMOR_REINFORCED_PERCENT_GOLD = 0.16
 ARMOR_NIRNHONED_RESISTANCE_GOLD = 253.0
 ARMOR_IMPENETRABLE_CRITICAL_RESISTANCE_GOLD = 132.0
+ARMOR_INVIGORATING_RECOVERY_GOLD = 16.0
 
 WEAPON_NIRNHONED_PERCENT_GOLD = 0.15
 WEAPON_PRECISE_CRIT_GOLD = 0.036
@@ -88,6 +90,15 @@ class BaseItemStatResolver:
             + (StatContribution(label, float(amount)),),
         )
         return replace(core, **{field_name: updated})
+
+    @staticmethod
+    def _resource_item_flat(inputs: ResourceInputs, label: str, amount: float) -> ResourceInputs:
+        value = float(amount)
+        return replace(
+            inputs,
+            item_flat=inputs.item_flat + value,
+            item_contributions=inputs.item_contributions + (FlatContribution(label, value),),
+        )
 
     @staticmethod
     def _armor_equipped(entry: dict[str, str]) -> bool:
@@ -139,13 +150,18 @@ class BaseItemStatResolver:
             )
             return core, applied + 1
 
+        if trait_key == "invigorating":
+            # Recovery contributions are added by _apply_armor so they flow
+            # through the BaseCharacter resource traces rather than core stats.
+            return core, applied
+
         if trait_key == "divines":
             unresolved.append(f"{slot_name} Divines: requires Mundus Stone resolution")
         elif trait_key == "infused":
             # Armor Infused is applied by GearStatInputResolver when the glyph
             # contribution is resolved. There is no independent static stat.
             return core, applied
-        elif trait_key in {"sturdy", "well-fitted", "training", "invigorating"}:
+        elif trait_key in {"sturdy", "well-fitted", "training"}:
             unresolved.append(f"{slot_name} armor trait not yet resolved: {trait}")
         else:
             unresolved.append(f"{slot_name} unsupported armor trait: {trait}")
@@ -193,6 +209,28 @@ class BaseItemStatResolver:
                 applied=applied,
                 unresolved=unresolved,
             )
+
+            if trait.casefold() == "invigorating":
+                trait_label = f"{slot_name}: Invigorating (+16 recovery)"
+                result = replace(
+                    result,
+                    health_recovery=self._resource_item_flat(
+                        result.health_recovery,
+                        trait_label,
+                        ARMOR_INVIGORATING_RECOVERY_GOLD,
+                    ),
+                    magicka_recovery=self._resource_item_flat(
+                        result.magicka_recovery,
+                        trait_label,
+                        ARMOR_INVIGORATING_RECOVERY_GOLD,
+                    ),
+                    stamina_recovery=self._resource_item_flat(
+                        result.stamina_recovery,
+                        trait_label,
+                        ARMOR_INVIGORATING_RECOVERY_GOLD,
+                    ),
+                )
+                applied += 3
 
         return replace(result, core=core, applied_effect_count=applied, unresolved=tuple(unresolved))
 
