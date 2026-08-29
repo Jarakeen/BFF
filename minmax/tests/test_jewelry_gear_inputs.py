@@ -41,15 +41,21 @@ class FakeJewelryTraitRepository:
             return []
         if trait_name == "Triune":
             return [
-                Effect(EffectOperation.ADD, 473, "Triune", stat=StatId.MAX_HEALTH),
-                Effect(EffectOperation.ADD, 430, "Triune", stat=StatId.MAX_MAGICKA),
-                Effect(EffectOperation.ADD, 430, "Triune", stat=StatId.MAX_STAMINA),
+                Effect(EffectOperation.ADD, 482, "Triune", stat=StatId.MAX_HEALTH),
+                Effect(EffectOperation.ADD, 439, "Triune", stat=StatId.MAX_MAGICKA),
+                Effect(EffectOperation.ADD, 439, "Triune", stat=StatId.MAX_STAMINA),
             ]
         if trait_name == "Protective":
             return [
-                Effect(EffectOperation.ADD, 1824, "Protective", stat=StatId.PHYSICAL_RESISTANCE),
-                Effect(EffectOperation.ADD, 1824, "Protective", stat=StatId.SPELL_RESISTANCE),
+                Effect(EffectOperation.ADD, 1190, "Protective", stat=StatId.PHYSICAL_RESISTANCE),
+                Effect(EffectOperation.ADD, 1190, "Protective", stat=StatId.SPELL_RESISTANCE),
             ]
+        if trait_name == "Arcane":
+            return [Effect(EffectOperation.ADD, 877, "Arcane", stat=StatId.MAX_MAGICKA)]
+        if trait_name == "Healthy":
+            return [Effect(EffectOperation.ADD, 965, "Healthy", stat=StatId.MAX_HEALTH)]
+        if trait_name == "Robust":
+            return [Effect(EffectOperation.ADD, 877, "Robust", stat=StatId.MAX_STAMINA)]
         return []
 
 
@@ -106,7 +112,7 @@ def test_infused_without_verified_quality_stays_unresolved():
     assert any("Infused jewelry value unavailable" in entry for entry in resolved.unresolved)
 
 
-def test_gold_cp160_triune_feeds_all_three_resource_traces():
+def test_gold_cp160_triune_feeds_current_all_three_resource_traces():
     build = PlayerBuild()
     build.Necklace = GearSlot(Quality="Gold", Trait="Triune", Level="CP160")
     factory = BuildCalculationContextFactory(
@@ -121,16 +127,16 @@ def test_gold_cp160_triune_feeds_all_three_resource_traces():
         progression=CharacterProgression(),
     )
 
-    assert context.character_state.max_health == 16473
-    assert context.character_state.max_magicka == 12430
-    assert context.character_state.max_stamina == 12430
-    assert any(step.label == "Necklace: Triune" and step.value == 473 for step in context.character_state.traces[StatId.MAX_HEALTH].steps)
-    assert any(step.label == "Necklace: Triune" and step.value == 430 for step in context.character_state.traces[StatId.MAX_MAGICKA].steps)
-    assert any(step.label == "Necklace: Triune" and step.value == 430 for step in context.character_state.traces[StatId.MAX_STAMINA].steps)
+    assert context.character_state.max_health == 16482
+    assert context.character_state.max_magicka == 12439
+    assert context.character_state.max_stamina == 12439
+    assert any(step.label == "Necklace: Triune" and step.value == 482 for step in context.character_state.traces[StatId.MAX_HEALTH].steps)
+    assert any(step.label == "Necklace: Triune" and step.value == 439 for step in context.character_state.traces[StatId.MAX_MAGICKA].steps)
+    assert any(step.label == "Necklace: Triune" and step.value == 439 for step in context.character_state.traces[StatId.MAX_STAMINA].steps)
     assert context.gear_effects_applied == 3
 
 
-def test_gold_cp160_protective_feeds_both_resistance_traces():
+def test_gold_cp160_protective_feeds_current_both_resistance_traces():
     build = PlayerBuild()
     build.Ring1 = GearSlot(Quality="Gold", Trait="Protective", Level="CP160")
     factory = BuildCalculationContextFactory(
@@ -147,22 +153,35 @@ def test_gold_cp160_protective_feeds_both_resistance_traces():
 
     physical = context.core_state.derived[StatId.PHYSICAL_RESISTANCE]
     spell = context.core_state.derived[StatId.SPELL_RESISTANCE]
-    assert physical.final_value == 1824
-    assert spell.final_value == 1824
-    assert any(label == "Ring 1: Protective" and value == 1824 for label, operation, value, result in physical.steps)
-    assert any(label == "Ring 1: Protective" and value == 1824 for label, operation, value, result in spell.steps)
+    assert physical.final_value == 1190
+    assert spell.final_value == 1190
+    assert any(label == "Ring 1: Protective" and value == 1190 for label, operation, value, result in physical.steps)
+    assert any(label == "Ring 1: Protective" and value == 1190 for label, operation, value, result in spell.steps)
     assert context.gear_effects_applied == 2
 
 
-def test_arcane_is_explicitly_unresolved_when_numeric_source_is_missing():
-    build = PlayerBuild()
-    build.Ring2 = GearSlot(Quality="Gold", Trait="Arcane", Level="CP160")
-    resolver = GearStatInputResolver(
-        EmptyGearSetRepository(),
+def test_arcane_healthy_and_robust_feed_current_resource_traces():
+    build = PlayerBuild(
+        Necklace=GearSlot(Quality="Gold", Trait="Arcane", Level="CP160"),
+        Ring1=GearSlot(Quality="Gold", Trait="Healthy", Level="CP160"),
+        Ring2=GearSlot(Quality="Gold", Trait="Robust", Level="CP160"),
+    )
+    factory = BuildCalculationContextFactory(
+        gear_set_repository=EmptyGearSetRepository(),
         jewelry_trait_repository=FakeJewelryTraitRepository(),
     )
 
-    resolved = resolver.resolve(build)
+    context = factory.build(
+        character_id="char",
+        build_id="classic-jewelry-traits",
+        build=build,
+        progression=CharacterProgression(),
+    )
 
-    assert resolved.magicka.item_flat == 0
-    assert any("numeric trait value is not present" in entry for entry in resolved.unresolved)
+    assert context.character_state.max_magicka == 12877
+    assert context.character_state.max_health == 16965
+    assert context.character_state.max_stamina == 12877
+    assert any(step.label == "Necklace: Arcane" and step.value == 877 for step in context.character_state.traces[StatId.MAX_MAGICKA].steps)
+    assert any(step.label == "Ring 1: Healthy" and step.value == 965 for step in context.character_state.traces[StatId.MAX_HEALTH].steps)
+    assert any(step.label == "Ring 2: Robust" and step.value == 877 for step in context.character_state.traces[StatId.MAX_STAMINA].steps)
+    assert context.gear_effects_applied == 3
