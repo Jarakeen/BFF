@@ -527,8 +527,19 @@ class BuildEditor(QWidget):
         grid.addWidget(affiliation, 3, 1)
 
         attributes = QWidget()
-        attribute_grid = QGridLayout(attributes)
-        attribute_grid.setContentsMargins(96, 0, 0, 0)
+        attribute_row = QHBoxLayout(attributes)
+        attribute_row.setContentsMargins(22, 0, 22, 0)
+        attribute_row.setSpacing(14)
+
+        left_separator = QWidget()
+        left_separator.setFixedWidth(1)
+        left_separator.setMinimumHeight(44)
+        left_separator.setStyleSheet("background-color: rgba(200, 164, 106, 90);")
+        attribute_row.addWidget(left_separator)
+
+        attribute_fields = QWidget()
+        attribute_grid = QGridLayout(attribute_fields)
+        attribute_grid.setContentsMargins(8, 0, 8, 0)
         attribute_grid.setHorizontalSpacing(10)
         attribute_grid.setVerticalSpacing(2)
         for column, (label, spin) in enumerate(
@@ -538,6 +549,14 @@ class BuildEditor(QWidget):
             attribute_grid.addWidget(spin, 1, column)
         attribute_grid.addWidget(QLabel("Total / 64"), 0, 3)
         attribute_grid.addWidget(self.attribute_total, 1, 3)
+        attribute_row.addWidget(attribute_fields)
+
+        right_separator = QWidget()
+        right_separator.setFixedWidth(1)
+        right_separator.setMinimumHeight(44)
+        right_separator.setStyleSheet("background-color: rgba(200, 164, 106, 90);")
+        attribute_row.addWidget(right_separator)
+
         grid.addWidget(attributes, 2, 2, 2, 3)
 
         grid.addWidget(QLabel("Mundus"), 2, 5)
