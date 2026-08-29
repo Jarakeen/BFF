@@ -12,7 +12,9 @@ from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
+from .mundus_repository import MundusRepository
 from .race_repository import RaceRepository
+from .static_build_inputs import StaticBuildInputResolver
 
 
 class BuildCalculationContextFactory:
@@ -28,6 +30,7 @@ class BuildCalculationContextFactory:
         jewelry_glyph_repository: JewelryGlyphEffectRepository | None = None,
         jewelry_trait_repository: JewelryTraitRepository | None = None,
         base_item_resolver: BaseItemStatResolver | None = None,
+        mundus_repository: MundusRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -42,6 +45,8 @@ class BuildCalculationContextFactory:
                 jewelry_glyph_repository = JewelryGlyphEffectRepository(database_path)
             if jewelry_trait_repository is None:
                 jewelry_trait_repository = JewelryTraitRepository(database_path)
+            if mundus_repository is None:
+                mundus_repository = MundusRepository(database_path)
 
         self.gear_resolver = (
             GearStatInputResolver(
@@ -53,6 +58,7 @@ class BuildCalculationContextFactory:
             if gear_set_repository is not None
             else None
         )
+        self.static_build_resolver = StaticBuildInputResolver(mundus_repository)
 
     def build(
         self,
@@ -118,4 +124,5 @@ class BuildCalculationContextFactory:
             if self.gear_resolver is not None
             else GearCalculationInputs()
         )
-        return self.base_item_resolver.apply(gear, build, active_bar=active_bar)
+        gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
+        return self.static_build_resolver.apply(gear, build, active_bar=active_bar)
