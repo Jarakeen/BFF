@@ -70,15 +70,15 @@ def test_flat_and_percentage_contributions_are_traced():
     ]
 
 
-def test_named_percentage_contributors_preserve_source_without_double_counting():
+def test_named_percentage_contributors_stack_with_legacy_aggregate_and_preserve_source():
     trace = BaseCharacterCalculator().magicka_recovery(
         ResourceInputs(
-            skill_percent=0.99,
+            skill_percent=0.05,
             skill_percent_contributions=(PercentContribution("Warden: Flourish", 0.20),),
         )
     )
 
-    assert trace.final_value == 617
+    assert trace.final_value == 643
     labels = [step.label for step in trace.steps]
     assert "Warden: Flourish" in labels
     assert labels.count("percentage modifiers") == 1
