@@ -55,10 +55,11 @@ def main() -> int:
 
     from ui.theme import ThemeManager
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
+    from ui.scribing_support import install as install_scribing_support
 
-    # Install the shared skill/gear picker behavior before
-    # importing pages that may construct BuildEditor widgets.
+    # Install shared BuildEditor extensions before constructing page widgets.
     install_searchable_selectors()
+    install_scribing_support()
 
     from ui.main_window import MainWindow
 
