@@ -92,6 +92,24 @@ data/uesp/.cache/
 /old_pages
 /packaging
 esologs* (these are all research files and fight logs)
+build_editor_good.py
+CLAUDE.md
+debug.py
+Launch Foundry (debug).bat
+Launch Foundry.vbs
+MASTER_ROADMAP.md
+minmax_effect_architecture_search.txt
+minmax_effect_architecture.txt
+minmax_effect_core.txt
+minmax_review.txt
+Natural_history_narrator.md
+PATH_TO_DATABASE
+pyinstaller-build.log
+pytest.ini
+repo_diff.txt
+requirements-build.txt
+settings.json
+TODOs.md
 # ============================================================
 # Local launchers
 # ============================================================
