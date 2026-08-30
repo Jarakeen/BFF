@@ -22,7 +22,7 @@ def test_block_mitigation_modifier_values_and_layers():
     assert lookup("Deflect Bolts", "block_mitigation").layer is BlockModifierLayer.DAMAGE_FAMILY
 
 
-def test_resolved_standing_and_active_bar_block_sources_are_marked_implemented():
+def test_all_current_block_sources_are_marked_implemented_in_their_correct_scope():
     implemented = (
         lookup("Light Armor Penalties", "block_cost"),
         lookup("Medium Armor Bonuses", "block_cost"),
@@ -31,13 +31,17 @@ def test_resolved_standing_and_active_bar_block_sources_are_marked_implemented()
         lookup("Sword and Board", "block_mitigation"),
         lookup("Defensive Stance", "block_cost"),
         lookup("Defensive Stance", "block_mitigation"),
+        lookup("Bracing Anchor", "block_mitigation"),
+        lookup("Deflect Bolts", "block_mitigation"),
     )
     assert all("implemented" in entry.stacking_status for entry in implemented)
 
 
-def test_combat_and_damage_family_sources_remain_outside_generic_block_state():
+def test_contextual_sources_remain_scoped_out_of_generic_standing_state():
     bracing_anchor = lookup("Bracing Anchor", "block_mitigation")
     deflect_bolts = lookup("Deflect Bolts", "block_mitigation")
 
-    assert "must not enter standing sheet automatically" in bracing_anchor.stacking_status
-    assert "must not enter generic block mitigation" in deflect_bolts.stacking_status
+    assert "combat-state" in bracing_anchor.stacking_status
+    assert "inactive outside combat" in bracing_anchor.stacking_status
+    assert "incoming-attack-family" in deflect_bolts.stacking_status
+    assert "excluded from generic melee mitigation" in deflect_bolts.stacking_status
