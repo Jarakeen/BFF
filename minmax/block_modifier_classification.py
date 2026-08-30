@@ -68,7 +68,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         -0.10,
         BlockModifierLayer.ACTIVE_BAR_SLOT,
         "Defensive Stance slotted on active bar and shield equipped",
-        "value and activation verified; active-bar application not yet wired",
+        "implemented as an active-bar sequential block-cost multiplier",
     ),
     BlockModifierClassification(
         "Defensive Stance",
@@ -76,7 +76,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.10,
         BlockModifierLayer.ACTIVE_BAR_SLOT,
         "Defensive Stance slotted on active bar and shield equipped",
-        "value and activation verified; active-bar application not yet wired",
+        "implemented in the active-bar amount-blocked mitigation bucket",
     ),
     BlockModifierClassification(
         "Bracing Anchor",
