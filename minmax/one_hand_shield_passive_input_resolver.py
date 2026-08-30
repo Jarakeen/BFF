@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from models.build_model import GearSlot, PlayerBuild
+from models.build_model import PlayerBuild
 
 from .block_stats import BlockCostModifier
 from .derived_stats import StatContribution
@@ -11,14 +11,15 @@ from .gear_stat_inputs import GearCalculationInputs
 
 _ONE_HANDED_TYPES = {"sword", "axe", "mace", "dagger"}
 _LEGACY_ONE_HAND_SHIELD = "one hand and shield"
+_DEFENSIVE_STANCE = "defensive stance"
 
 
 class OneHandShieldPassiveInputResolver:
-    """Apply verified max-rank One Hand and Shield standing passives.
+    """Apply verified One Hand and Shield standing and active-bar effects.
 
-    Ownership is explicit and applicability is active-bar equipment dependent.
-    Conditional/slotted passives such as Defensive Stance are intentionally not
-    handled here.
+    Max-rank passive ownership is explicit for Fortress and Sword and Board.
+    Defensive Stance is instead proven by the skill being slotted on the active
+    bar and by a qualifying shield setup on that bar.
     """
 
     @staticmethod
@@ -31,6 +32,11 @@ class OneHandShieldPassiveInputResolver:
             return True
         return main_type in _ONE_HANDED_TYPES and offhand_type == "shield"
 
+    @staticmethod
+    def _active_bar_has_defensive_stance(build: PlayerBuild, active_bar: str) -> bool:
+        skills = build.BackBarSkills if str(active_bar or "front").casefold() == "back" else build.FrontBarSkills
+        return any(str(skill or "").strip().casefold() == _DEFENSIVE_STANCE for skill in skills)
+
     def apply(
         self,
         result: GearCalculationInputs,
@@ -39,31 +45,55 @@ class OneHandShieldPassiveInputResolver:
         active_bar: str = "front",
         passives_owned: bool = False,
     ) -> GearCalculationInputs:
-        if not passives_owned or not self._active_bar_has_one_hand_and_shield(build, active_bar):
+        if not self._active_bar_has_one_hand_and_shield(build, active_bar):
             return result
 
-        block_cost = replace(
-            result.core.block_cost,
-            sequential_modifiers=result.core.block_cost.sequential_modifiers
-            + (BlockCostModifier("One Hand and Shield: Fortress", -0.36),),
-        )
-        block_mitigation = replace(
-            result.core.block_mitigation,
-            amount_blocked_modifiers=result.core.block_mitigation.amount_blocked_modifiers
-            + (("One Hand and Shield: Sword and Board", 0.20),),
-        )
-        damage = StatContribution("One Hand and Shield: Sword and Board", 0.05)
-        core = replace(
-            result.core,
-            block_cost=block_cost,
-            block_mitigation=block_mitigation,
-            weapon_damage=replace(
-                result.core.weapon_damage,
-                percent=result.core.weapon_damage.percent + (damage,),
-            ),
-            spell_damage=replace(
-                result.core.spell_damage,
-                percent=result.core.spell_damage.percent + (damage,),
-            ),
-        )
-        return replace(result, core=core, applied_effect_count=result.applied_effect_count + 4)
+        core = result.core
+        applied = result.applied_effect_count
+
+        if passives_owned:
+            block_cost = replace(
+                core.block_cost,
+                sequential_modifiers=core.block_cost.sequential_modifiers
+                + (BlockCostModifier("One Hand and Shield: Fortress", -0.36),),
+            )
+            block_mitigation = replace(
+                core.block_mitigation,
+                amount_blocked_modifiers=core.block_mitigation.amount_blocked_modifiers
+                + (("One Hand and Shield: Sword and Board", 0.20),),
+            )
+            damage = StatContribution("One Hand and Shield: Sword and Board", 0.05)
+            core = replace(
+                core,
+                block_cost=block_cost,
+                block_mitigation=block_mitigation,
+                weapon_damage=replace(
+                    core.weapon_damage,
+                    percent=core.weapon_damage.percent + (damage,),
+                ),
+                spell_damage=replace(
+                    core.spell_damage,
+                    percent=core.spell_damage.percent + (damage,),
+                ),
+            )
+            applied += 4
+
+        if self._active_bar_has_defensive_stance(build, active_bar):
+            core = replace(
+                core,
+                block_cost=replace(
+                    core.block_cost,
+                    sequential_modifiers=core.block_cost.sequential_modifiers
+                    + (BlockCostModifier("One Hand and Shield: Defensive Stance", -0.10),),
+                ),
+                block_mitigation=replace(
+                    core.block_mitigation,
+                    amount_blocked_modifiers=core.block_mitigation.amount_blocked_modifiers
+                    + (("One Hand and Shield: Defensive Stance", 0.10),),
+                ),
+            )
+            applied += 2
+
+        if core == result.core:
+            return result
+        return replace(result, core=core, applied_effect_count=applied)
