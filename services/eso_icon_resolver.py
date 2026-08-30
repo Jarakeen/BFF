@@ -15,7 +15,7 @@ class EsoIconResolver:
         self.assets_root = Path(assets_root)
         self.icon_root = (
             self.assets_root
-            / "CapybaraIcons"
+            / "AbilityIcons"
             / "icons"
             / "128"
         )
@@ -27,6 +27,9 @@ class EsoIconResolver:
         Examples:
             /esoui/art/icons/ability_dragonknight_018.dds
                 -> ability_dragonknight_018_a.png
+
+            /esoui/art/icons/ability_grimoire_soulmagic2_shield.dds
+                -> ability_grimoire_soulmagic2_shield.png
 
         Returns None when no matching local asset exists.
         """
