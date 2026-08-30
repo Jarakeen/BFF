@@ -208,6 +208,16 @@ class StaticBuildInputResolver:
             result = self._apply_effect(result, effect, resource_bucket="food")
         return replace(result, unresolved=tuple(unresolved))
 
+    @staticmethod
+    def _mark_unresolved_potion(result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
+        potion_name = str(build.Potion or "").strip()
+        if not potion_name:
+            return result
+        message = f"Potion selected but potion effects are not yet modeled: {potion_name}"
+        if message in result.unresolved:
+            return result
+        return replace(result, unresolved=result.unresolved + (message,))
+
     def apply(self, result: GearCalculationInputs, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
         # BaseItemStatResolver predates the DB-backed Mundus layer and emits a
         # placeholder warning for Divines. Divines itself has no sheet effect
@@ -223,4 +233,5 @@ class StaticBuildInputResolver:
         )
         result = self._apply_champion_points(result, build)
         result = self._apply_mundus(result, build, active_bar)
-        return self._apply_food(result, build)
+        result = self._apply_food(result, build)
+        return self._mark_unresolved_potion(result, build)
