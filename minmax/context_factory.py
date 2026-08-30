@@ -10,7 +10,7 @@ from .block_item_input_resolver import BlockItemInputResolver
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .champion_point_static_repository import ChampionPointStaticRepository
 from .character_progression import CharacterProgression
-from .combat_state import CombatState
+from .combat_state import CombatState, IncomingAttackState
 from .combat_state_input_resolver import CombatStateInputResolver
 from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
@@ -121,6 +121,7 @@ class BuildCalculationContextFactory:
         progression: CharacterProgression,
         environment: CombatEnvironment = CombatEnvironment.PVE,
         combat_state: CombatState = CombatState(),
+        incoming_attack: IncomingAttackState = IncomingAttackState(),
         target_type: str = "monster",
         target_count: int = 1,
         target_resistance: float | None = None,
@@ -134,6 +135,7 @@ class BuildCalculationContextFactory:
             progression=progression,
             active_bar=active_bar,
             combat_state=combat_state,
+            incoming_attack=incoming_attack,
         )
 
         state = self.calculator.calculate(
@@ -161,6 +163,7 @@ class BuildCalculationContextFactory:
             core_state=core_state,
             environment=environment,
             combat_state=combat_state,
+            incoming_attack=incoming_attack,
             target_type=target_type,
             target_count=target_count,
             target_resistance=target_resistance,
@@ -184,6 +187,7 @@ class BuildCalculationContextFactory:
         progression: CharacterProgression,
         active_bar: str,
         combat_state: CombatState,
+        incoming_attack: IncomingAttackState,
     ) -> GearCalculationInputs:
         gear = (
             self.gear_resolver.resolve(build, active_bar=active_bar)
@@ -208,6 +212,7 @@ class BuildCalculationContextFactory:
             build,
             active_bar=active_bar,
             passives_owned=progression.owns_skill_line("One Hand and Shield"),
+            incoming_attack=incoming_attack,
         )
         gear = self.undaunted_passive_resolver.apply(
             gear,
