@@ -47,9 +47,10 @@ def _make_db(path):
         INSERT INTO skill_rank VALUES
             (10, 100, 'Complete', NULL, NULL, NULL, NULL),
             (20, 200, 'Unknown Kind', NULL, NULL, NULL, NULL),
-            (30, 300, 'Unknown Shape Time', NULL, NULL, NULL, NULL),
+            (30, 300, 'Unknown Shape', NULL, NULL, NULL, NULL),
             (40, 400, 'No Fragment', NULL, NULL, NULL, NULL),
-            (50, 500, 'Mismatch', NULL, NULL, NULL, NULL);
+            (50, 500, 'Mismatch', NULL, NULL, NULL, NULL),
+            (60, 600, 'Known Shield', NULL, NULL, NULL, NULL);
 
         INSERT INTO ability (
             ability_id, name, coef_description,
@@ -57,16 +58,18 @@ def _make_db(path):
         ) VALUES
             (100, 'Complete', 'Deal $1 Flame Damage to an enemy.', 8, .1, 1, 0, 1, 1000),
             (200, 'Unknown Kind', 'Increase a mysterious value by $1.', 8, .1, 1, 0, 1, 1000),
-            (300, 'Unknown Shape Time', 'Inflict $1 Flame Damage.', 8, .1, 1, 0, 1, 1000),
+            (300, 'Unknown Shape', 'Inflict $1 Flame Damage.', 8, .1, 1, 0, 1, 1000),
             (400, 'No Fragment', 'No coefficient placeholder here.', 8, .1, 1, 0, 1, 1000),
-            (500, 'Mismatch', 'Deal $1 Physical Damage to an enemy.', 8, .2, 1, 0, 1, 1000);
+            (500, 'Mismatch', 'Deal $1 Physical Damage to an enemy.', 8, .2, 1, 0, 1, 1000),
+            (600, 'Known Shield', 'Gain a damage shield that absorbs $1 damage for 6 seconds.', 8, .1, 1, 0, 1, 1000);
 
         INSERT INTO skill_coefficient VALUES
             (10, 1, '8', .1, 1, 0, 1, 1000),
             (20, 1, '8', .1, 1, 0, 1, 1000),
             (30, 1, '8', .1, 1, 0, 1, 1000),
             (40, 1, '8', .1, 1, 0, 1, 1000),
-            (50, 1, '8', .1, 1, 0, 1, 1000);
+            (50, 1, '8', .1, 1, 0, 1, 1000),
+            (60, 1, '8', .1, 1, 0, 1, 1000);
         """
     )
     db.commit()
@@ -82,41 +85,43 @@ def test_gap_audit_reports_only_unresolved_active_components(tmp_path):
     assert len(gaps) == 4
     assert {row.name for row in gaps} == {
         "Unknown Kind",
-        "Unknown Shape Time",
+        "Unknown Shape",
         "No Fragment",
         "Mismatch",
     }
 
 
-def test_gap_audit_preserves_overlapping_missing_fields(tmp_path):
+def test_gap_audit_counts_only_fields_required_for_effect_family(tmp_path):
     path = tmp_path / "eso.db"
     _make_db(path)
 
     gaps = load_import_gaps(path)
     summary = summarize(gaps)
 
-    unknown = next(row for row in gaps if row.name == "Unknown Shape Time")
-    assert unknown.reasons == ("periodicity", "target_shape")
+    unknown_shape = next(row for row in gaps if row.name == "Unknown Shape")
+    assert unknown_shape.reasons == ("target_shape",)
 
     field_counts = summary["field_counts"]
     combination_counts = summary["combination_counts"]
 
     assert summary["rows"] == 4
     assert field_counts["effect_kind"] == 1
-    assert field_counts["periodicity"] == 2
-    assert field_counts["target_shape"] == 2
+    assert field_counts["periodicity"] == 0
+    assert field_counts["target_shape"] == 1
     assert field_counts["missing_fragment"] == 1
     assert field_counts["slot_mismatch"] == 1
-    assert combination_counts[("periodicity", "target_shape")] == 1
+    assert combination_counts[("target_shape",)] == 1
 
 
-def test_complete_component_is_not_reported_as_gap(tmp_path):
+def test_complete_component_and_known_shield_are_not_reported_as_gaps(tmp_path):
     path = tmp_path / "eso.db"
     _make_db(path)
 
     gaps = load_import_gaps(path)
 
-    assert all(row.name != "Complete" for row in gaps)
+    names = {row.name for row in gaps}
+    assert "Complete" not in names
+    assert "Known Shield" not in names
 
 
 def test_gap_samples_round_robin_across_reason_combinations(tmp_path):
@@ -128,8 +133,8 @@ def test_gap_samples_round_robin_across_reason_combinations(tmp_path):
 
     assert len(samples) == 4
     assert {row.reasons for row in samples} == {
-        ("effect_kind", "periodicity", "target_shape"),
-        ("periodicity", "target_shape"),
+        ("effect_kind",),
+        ("target_shape",),
         ("missing_fragment",),
         ("slot_mismatch",),
     }
