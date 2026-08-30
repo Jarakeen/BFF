@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from .base_character_state import BaseCharacterState
 from .character_progression import CharacterProgression
+from .combat_state import CombatState
 
 if TYPE_CHECKING:
     from .core_stat_calculator import CoreStatState
@@ -50,6 +51,7 @@ class BuildCalculationContext:
     character_state: BaseCharacterState
     core_state: CoreStatState | None = None
     environment: CombatEnvironment = CombatEnvironment.PVE
+    combat_state: CombatState = CombatState()
     target_type: str = "monster"
     target_resistance: float | None = None
     target_count: int = 1
