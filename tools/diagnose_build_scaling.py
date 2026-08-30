@@ -43,6 +43,8 @@ DERIVED_STATS = (
     (StatId.SPELL_RESISTANCE, "Spell Resistance"),
     (StatId.HEALING_DONE, "Healing Done"),
     (StatId.HEALING_TAKEN, "Healing Taken"),
+    (StatId.BLOCK_COST, "Block Cost"),
+    (StatId.BLOCK_MITIGATION, "Block Mitigation"),
 )
 
 KNOWN_COVERAGE_GAPS = (
@@ -54,7 +56,7 @@ KNOWN_COVERAGE_GAPS = (
     "Weapon passive effects are classified but do not contribute generic standing sheet stats for Restoration/Destruction Staff.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block cost and Block Mitigation are not yet represented as first-class shared stats.",
+    "Block Cost and Block Mitigation now have verified naked level-50 baselines; armor, weapon, trait, enchantment, CP, and combat-state modifier stacking is not yet wired.",
 )
 
 
