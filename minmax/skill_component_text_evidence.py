@@ -27,6 +27,7 @@ _DAMAGE_TYPES = {
 }
 
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+_ANY_PLACEHOLDER_RE = re.compile(r"\$\d+(?!\d)")
 
 
 @dataclass(frozen=True)
@@ -56,9 +57,6 @@ class SkillComponentTextEvidence:
 
 def _normalize_text(value: str | None) -> str:
     text = str(value or "").replace("\r", " ").replace("\n", " ")
-    # UESP color markup is presentation-only and may sit between words and
-    # numeric values (for example ``every |cffffff1|r second``). Remove those
-    # tags before semantic matching while preserving coefficient placeholders.
     text = _COLOR_TAG_RE.sub("", text)
     return " ".join(text.split())
 
@@ -72,9 +70,6 @@ def _fragment_around_placeholder(text: str, number: int) -> str:
     if match is None:
         return ""
 
-    # Sentence boundaries are the safest useful unit. If no punctuation exists,
-    # preserve a bounded local window rather than pretending the whole tooltip is
-    # mechanically one component.
     start = max(text.rfind(".", 0, match.start()), text.rfind(";", 0, match.start()))
     start = 0 if start < 0 else start + 1
 
@@ -97,20 +92,41 @@ def _fragment_around_placeholder(text: str, number: int) -> str:
     return text[local_start:local_end].strip()
 
 
-def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
-    """Resolve effect kind only when wording ties the mechanic to ``$N``.
+def _component_segment(fragment: str, coefficient_number: int) -> str:
+    """Return the clause owned by ``$N`` without borrowing later coefficients.
 
-    A whole sentence may mention damage while ``$N`` is actually a heal amount,
-    buff duration, shield value, or another mechanic. Placeholder-centered
-    matching prevents those neighboring words from stealing the coefficient.
+    The segment starts after the previous coefficient placeholder, if any, and
+    ends before the next coefficient placeholder, if any. This prevents wording
+    such as ``$2 Damage over 10 seconds`` from incorrectly making ``$1`` a DoT.
     """
+
+    match = _placeholder_pattern(coefficient_number).search(fragment)
+    if match is None:
+        return ""
+
+    placeholders = list(_ANY_PLACEHOLDER_RE.finditer(fragment))
+    current_index = next(
+        (index for index, item in enumerate(placeholders) if item.start() == match.start()),
+        None,
+    )
+    if current_index is None:
+        return fragment
+
+    start = 0 if current_index == 0 else placeholders[current_index - 1].end()
+    end = len(fragment) if current_index + 1 >= len(placeholders) else placeholders[current_index + 1].start()
+    return fragment[start:end].strip()
+
+
+def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
+    """Resolve effect kind only when wording ties the mechanic to ``$N``."""
 
     placeholder = rf"\${int(coefficient_number)}(?!\d)"
 
     shield_patterns = (
-        rf"(?:damage\s+shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}\s+damage\b",
-        rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}\s+damage\b",
-        rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}\s+damage\b",
+        rf"(?:damage\s+shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
+        rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
+        rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}(?:\s+damage)?\b",
+        rf"\bshield(?:ing|s|ed)?\b[^.;]{{0,80}}?\bfor\s+{placeholder}\b",
     )
     if any(re.search(pattern, lower) for pattern in shield_patterns):
         return "shield"
@@ -119,6 +135,7 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
         rf"\bheal(?:ing|s|ed)?\b[^.;]{{0,70}}?{placeholder}(?:\s+health)?\b",
         rf"\brestore(?:s|d|ing)?\b[^.;]{{0,70}}?{placeholder}\s+health\b",
         rf"{placeholder}\s+health\b[^.;]{{0,45}}?\bheal(?:ing|s|ed)?\b",
+        rf"\bsiphon(?:s|ed|ing)?\s+{placeholder}\s+health\b",
     )
     if any(re.search(pattern, lower) for pattern in heal_patterns):
         return "heal"
@@ -156,6 +173,7 @@ def extract_component_text_evidence(
         )
 
     lower = fragment.casefold()
+    component_lower = _component_segment(fragment, coefficient_number).casefold()
     evidence: list[str] = [f"coef_description contains ${int(coefficient_number)}"]
 
     effect_kind = _placeholder_effect_kind(lower, coefficient_number)
@@ -185,15 +203,12 @@ def extract_component_text_evidence(
             r"\beach\s+seconds?\b",
             r"\bdamage\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
         )
-        if any(re.search(pattern, lower) for pattern in periodic_patterns):
+        if any(re.search(pattern, component_lower) for pattern in periodic_patterns):
             is_dot = True
-            evidence.append("fragment explicitly describes periodic/over-time damage")
+            evidence.append("current coefficient explicitly describes periodic/over-time damage")
         else:
-            # Once $N is proven to be an actual damage amount, absence of
-            # periodic/over-time wording in the same component sentence is
-            # sufficient to identify this amount as one damage event.
             is_dot = False
-            evidence.append("placeholder is a damage event without periodic wording")
+            evidence.append("current coefficient is a damage event without periodic wording")
 
         aoe_patterns = (
             r"\ball enemies in (?:the|an) area\b",
@@ -201,6 +216,7 @@ def extract_component_text_evidence(
             r"\bnearby enemies\b",
             r"\benemies near you\b",
             r"\benemies around (?:you|them|the target)\b",
+            r"\bfoes around you\b",
             r"\benemies in the (?:target )?area\b",
             r"\bto all enemies\b",
             r"\bblast(?:s|ing)? all enemies\b",
@@ -208,40 +224,59 @@ def extract_component_text_evidence(
         if any(re.search(pattern, lower) for pattern in aoe_patterns):
             is_aoe = True
             evidence.append("fragment explicitly describes multiple/area enemies")
-        elif any(phrase in lower for phrase in ("an enemy", "the enemy", "target enemy")):
+        elif any(
+            phrase in lower
+            for phrase in (
+                "an enemy",
+                "the enemy",
+                "target enemy",
+                "your foe",
+                "the target",
+            )
+        ):
             is_aoe = False
-            evidence.append("fragment explicitly describes one enemy")
+            evidence.append("fragment explicitly describes one enemy/target")
 
     elif effect_kind == "heal":
-        if any(phrase in lower for phrase in (
-            "you and your allies",
-            "allies in the area",
-            "allies in",
-            "nearby allies",
-            "all allies",
-        )):
+        if any(
+            phrase in lower
+            for phrase in (
+                "you and your allies",
+                "allies in the area",
+                "allies in",
+                "nearby allies",
+                "all allies",
+            )
+        ):
             is_aoe = True
             evidence.append("fragment explicitly describes multiple allies")
-        elif any(phrase in lower for phrase in (
-            "an ally",
-            "target ally",
-            "you are healed",
-            "healing you",
-            "you heal for",
-            "heal for",
-        )):
+        elif any(
+            phrase in lower
+            for phrase in (
+                "an ally",
+                "target ally",
+                "you are healed",
+                "healing you",
+                "you heal for",
+                "heal for",
+                "siphon ",
+            )
+        ):
             is_aoe = False
             evidence.append("fragment explicitly describes one recipient/self")
 
-        if any(re.search(pattern, lower) for pattern in (
-            r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
-            r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
-        )):
+        if any(
+            re.search(pattern, component_lower)
+            for pattern in (
+                r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
+                r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
+            )
+        ):
             is_dot = True
-            evidence.append("fragment explicitly describes periodic healing")
+            evidence.append("current coefficient explicitly describes periodic healing")
         else:
             is_dot = False
-            evidence.append("placeholder is an immediate/triggered heal without periodic wording")
+            evidence.append("current coefficient is an immediate/triggered heal without periodic wording")
 
     # Shields are their own effect family. ``is_dot`` and ``is_aoe`` are not
     # invented merely to make the row look complete. Recipient shape may be
