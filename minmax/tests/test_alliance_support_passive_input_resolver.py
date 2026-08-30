@@ -4,6 +4,7 @@ from minmax.alliance_support_passive_input_resolver import AllianceSupportPassiv
 from minmax.character_progression import CharacterProgression
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_stat_inputs import GearCalculationInputs
+from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 
 
@@ -78,5 +79,5 @@ def test_context_factory_applies_owned_support_magicka_aid_to_final_recovery():
     )
 
     assert context.character_state.magicka_recovery == 566
-    trace = context.character_state.traces[next(stat for stat in context.character_state.traces if stat.value == "magicka_recovery")]
+    trace = context.character_state.traces[StatId.MAGICKA_RECOVERY]
     assert "Support: Magicka Aid" in [step.label for step in trace.steps]
