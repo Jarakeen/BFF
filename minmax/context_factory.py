@@ -3,6 +3,7 @@ from __future__ import annotations
 from models.build_model import PlayerBuild
 
 from .armor_glyph_repository import ArmorGlyphEffectRepository
+from .armor_passive_input_resolver import ArmorPassiveInputResolver
 from .base_character_state import BaseCharacterCalculator
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .champion_point_static_repository import ChampionPointStaticRepository
@@ -38,11 +39,13 @@ class BuildCalculationContextFactory:
         champion_point_repository: ChampionPointStaticRepository | None = None,
         provisioning_repository: ProvisioningStaticRepository | None = None,
         skill_line_repository: SkillLineRepository | None = None,
+        armor_passive_resolver: ArmorPassiveInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
         self.base_item_resolver = base_item_resolver or BaseItemStatResolver()
+        self.armor_passive_resolver = armor_passive_resolver or ArmorPassiveInputResolver()
 
         database_path = getattr(gear_set_repository, "database_path", None)
         if gear_set_repository is not None and database_path:
@@ -98,7 +101,7 @@ class BuildCalculationContextFactory:
     ) -> BuildCalculationContext:
         attributes = progression.attributes
         race_stats = self._race_stats(build.Race)
-        gear = self._gear_inputs(build, active_bar=active_bar)
+        gear = self._gear_inputs(build, progression=progression, active_bar=active_bar)
 
         state = self.calculator.calculate(
             attributes=attributes,
@@ -140,7 +143,13 @@ class BuildCalculationContextFactory:
             return {}
         return self.race_repository.get_stat_map_by_name(str(race_name).strip())
 
-    def _gear_inputs(self, build: PlayerBuild, *, active_bar: str) -> GearCalculationInputs:
+    def _gear_inputs(
+        self,
+        build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        active_bar: str,
+    ) -> GearCalculationInputs:
         gear = (
             self.gear_resolver.resolve(build, active_bar=active_bar)
             if self.gear_resolver is not None
@@ -150,4 +159,10 @@ class BuildCalculationContextFactory:
         gear = self.static_build_resolver.apply(gear, build, active_bar=active_bar)
         if self.warden_passive_resolver is not None:
             gear = self.warden_passive_resolver.apply(gear, build, active_bar=active_bar)
+        gear = self.armor_passive_resolver.apply(
+            gear,
+            build,
+            light_armor_passives_owned=progression.owns_skill_line("Light Armor"),
+            medium_armor_passives_owned=progression.owns_skill_line("Medium Armor"),
+        )
         return gear
