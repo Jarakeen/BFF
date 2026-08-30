@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -115,6 +115,50 @@ def summarize(rows: tuple[ImportGapRow, ...]) -> dict[str, object]:
     }
 
 
+def sample_gap_rows(
+    rows: tuple[ImportGapRow, ...],
+    limit: int,
+) -> tuple[ImportGapRow, ...]:
+    """Return representative rows across gap combinations.
+
+    Database order often clusters ranks/morphs from the same skill family. A
+    simple ``rows[:N]`` therefore makes a broad audit look much narrower than
+    it is. This sampler walks the distinct reason combinations round-robin,
+    largest groups first, while preserving source order within each group.
+    """
+
+    if limit <= 0 or not rows:
+        return ()
+
+    groups: dict[tuple[str, ...], list[ImportGapRow]] = defaultdict(list)
+    for row in rows:
+        groups[row.reasons].append(row)
+
+    keys = sorted(
+        groups,
+        key=lambda key: (-len(groups[key]), key),
+    )
+    positions = {key: 0 for key in keys}
+    selected: list[ImportGapRow] = []
+
+    while len(selected) < min(limit, len(rows)):
+        added = False
+        for key in keys:
+            index = positions[key]
+            group = groups[key]
+            if index >= len(group):
+                continue
+            selected.append(group[index])
+            positions[key] = index + 1
+            added = True
+            if len(selected) >= limit:
+                break
+        if not added:
+            break
+
+    return tuple(selected)
+
+
 def _clean(value: object, *, max_len: int = 280) -> str:
     text = " ".join(str(value or "").split())
     if len(text) > max_len:
@@ -162,9 +206,10 @@ def main() -> int:
         print(f"  {count:5}  {label}")
 
     print("\nNOTE: counts overlap when one component is missing multiple fields.")
+    print("Samples are round-robin across gap combinations, not raw database order.")
     print("This audit is read-only and does not populate skill_component_classification.")
 
-    for row in rows[: max(0, args.samples)]:
+    for row in sample_gap_rows(rows, max(0, args.samples)):
         print("\n----------------------------------------")
         print(
             f"rank={row.skill_rank_id} coef={row.coefficient_number} "
