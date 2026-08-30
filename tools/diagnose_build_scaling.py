@@ -47,7 +47,8 @@ DERIVED_STATS = (
 KNOWN_COVERAGE_GAPS = (
     "Verified standing Warden passives are partially resolved; other class passive families are not yet wired.",
     "Verified Light/Medium armor passives are resolved only when character ownership is explicitly supplied.",
-    "Weapon, Undaunted, guild, alliance, and other non-class passive families are not yet generally resolved into shared stats.",
+    "Verified Undaunted Mettle is resolved when Undaunted ownership is explicitly supplied; triggered Undaunted Command remains combat-state work.",
+    "Weapon, guild, alliance, and other non-class passive families are not yet generally resolved into shared stats.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
     "Block cost/mitigation and Critical Healing are not yet represented as first-class Phase 2 stats.",

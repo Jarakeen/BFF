@@ -19,6 +19,7 @@ from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
 from .skill_line_repository import SkillLineRepository
 from .static_build_inputs import StaticBuildInputResolver
+from .undaunted_passive_input_resolver import UndauntedPassiveInputResolver
 from .warden_passive_input_resolver import WardenPassiveInputResolver
 
 
@@ -40,12 +41,14 @@ class BuildCalculationContextFactory:
         provisioning_repository: ProvisioningStaticRepository | None = None,
         skill_line_repository: SkillLineRepository | None = None,
         armor_passive_resolver: ArmorPassiveInputResolver | None = None,
+        undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
         self.base_item_resolver = base_item_resolver or BaseItemStatResolver()
         self.armor_passive_resolver = armor_passive_resolver or ArmorPassiveInputResolver()
+        self.undaunted_passive_resolver = undaunted_passive_resolver or UndauntedPassiveInputResolver()
 
         database_path = getattr(gear_set_repository, "database_path", None)
         if gear_set_repository is not None and database_path:
@@ -164,5 +167,10 @@ class BuildCalculationContextFactory:
             build,
             light_armor_passives_owned=progression.owns_skill_line("Light Armor"),
             medium_armor_passives_owned=progression.owns_skill_line("Medium Armor"),
+        )
+        gear = self.undaunted_passive_resolver.apply(
+            gear,
+            build,
+            undaunted_passives_owned=progression.owns_skill_line("Undaunted"),
         )
         return gear
