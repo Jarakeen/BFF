@@ -15,6 +15,23 @@ class CombatState:
 
 
 @dataclass(frozen=True)
+class IncomingAttackState:
+    """Explicit properties of the incoming hit currently being evaluated.
+
+    Damage-family-specific defenses must not leak into the generic standing
+    character sheet. Callers identify the hit family when they need a contextual
+    mitigation result.
+    """
+
+    is_ranged: bool = False
+    is_projectile: bool = False
+
+    @property
+    def qualifies_for_deflect_bolts(self) -> bool:
+        return self.is_ranged or self.is_projectile
+
+
+@dataclass(frozen=True)
 class LightAttackState:
     """Resolved inputs required by the staff light-attack formulas."""
 
