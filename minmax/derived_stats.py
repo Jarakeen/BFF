@@ -43,10 +43,11 @@ class DerivedStatCalculator:
     """Traceable first layer for derived combat stats.
 
     ESO stores several stats as ratios internally. Critical chance, critical
-    damage, critical healing, and healing modifiers are represented here as
-    decimal ratios rather than UI percentages. Integer-facing stats continue to
-    use ESO's ceiling behavior. Keeping all ratio-like sheet stats in one set
-    prevents values such as 2% Critical Healing from being rounded to 100%.
+    damage, critical healing, healing modifiers, and block mitigation are
+    represented here as decimal ratios rather than UI percentages. Integer-
+    facing stats continue to use ESO's ceiling behavior. Keeping all ratio-like
+    sheet stats in one set prevents values such as 2% Critical Healing or 50%
+    Block Mitigation from being rounded to whole-number nonsense.
     """
 
     RATIO_STATS = frozenset(
@@ -58,6 +59,7 @@ class DerivedStatCalculator:
             StatId.CRITICAL_HEALING,
             StatId.HEALING_DONE,
             StatId.HEALING_TAKEN,
+            StatId.BLOCK_MITIGATION,
         }
     )
 
