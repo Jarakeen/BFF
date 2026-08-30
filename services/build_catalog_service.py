@@ -1,116 +1,152 @@
 from __future__ import annotations
-
 import copy
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
 
-
-CATALOG_SCHEMA_VERSION = 2
+SCHEMA_VERSION = 2
 
 
 class BuildCatalogService:
-    """Persistent canonical catalog of characters and their builds.
+    """Persist character identity separately from reusable build configs.
 
-    A character is an identity. A build is a configuration belonging to
-    that identity. This keeps one character reusable across multiple builds
-    and gives consumers such as Optimization a stable reference instead of
-    recreating a character from a UI-local roster slot.
-
-    The catalog deliberately stores serialized PlayerBuild payloads for now.
-    Mechanical conversion into minmax.character_build.CharacterBuild belongs
-    at the application/engine boundary and must not be duplicated here.
+    eso.db remains read-only ESO reference data. User-owned state lives here.
+    Existing builds.json can be migrated without changing or deleting it.
     """
 
-    def __init__(self, path: Path):
-        self.path = Path(path)
-
-    # --------------------------------------------------
-    # Catalog lifecycle
-    # --------------------------------------------------
+    def __init__(self, catalog_path: Path):
+        self.catalog_path = Path(catalog_path)
 
     @staticmethod
-    def new_catalog() -> dict[str, Any]:
+    def _stable_id(kind: str, value: str) -> str:
+        return str(uuid5(NAMESPACE_URL, f"bff:{kind}:{value}"))
+
+    @staticmethod
+    def _identity(build: PlayerBuild, index: int) -> str:
+        return (
+            build.Gamertag.strip().casefold()
+            or build.Name.strip().casefold()
+            or f"member-{index + 1}"
+        )
+
+    @classmethod
+    def _has_meaningful_value(cls, value: Any) -> bool:
+        """Return whether a value contains meaningful user-entered data.
+
+        Numeric zero is a default/empty value. This matters because the
+        character model contains persistent counters such as the 64-point
+        attribute allocation, whose blank state is represented by 0.
+        """
+        if value is None:
+            return False
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, (int, float)):
+            return value != 0
+        if isinstance(value, dict):
+            return any(cls._has_meaningful_value(v) for v in value.values())
+        if isinstance(value, (list, tuple, set)):
+            return any(cls._has_meaningful_value(v) for v in value)
+        return True
+
+    @classmethod
+    def _is_empty_member(cls, build: PlayerBuild) -> bool:
+        """Return True for blank placeholder rows in the legacy Builds UI."""
+        return not cls._has_meaningful_value(build.to_dict())
+
+    @staticmethod
+    def _normalize(data: Any) -> dict[str, Any]:
+        data = data if isinstance(data, dict) else {}
         return {
-            "schema_version": CATALOG_SCHEMA_VERSION,
-            "characters": [],
-            "builds": [],
+            "schema_version": SCHEMA_VERSION,
+            "characters": list(data.get("characters") or []),
+            "builds": list(data.get("builds") or []),
         }
 
+    def new_catalog(self) -> dict[str, Any]:
+        return self._normalize(None)
+
     def load(self) -> dict[str, Any]:
-        if not self.path.exists():
-            return self.new_catalog()
-
+        if not self.catalog_path.exists():
+            return self._normalize(None)
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
+            return self._normalize(
+                json.loads(self.catalog_path.read_text(encoding="utf-8"))
+            )
         except (OSError, json.JSONDecodeError):
-            return self.new_catalog()
-
-        return self._normalize(data)
+            return self._normalize(None)
 
     def save(self, catalog: dict[str, Any]) -> None:
         normalized = self._normalize(catalog)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
+        self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
+        temp = self.catalog_path.with_suffix(self.catalog_path.suffix + ".tmp")
+        temp.write_text(
             json.dumps(normalized, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-
-    # --------------------------------------------------
-    # Legacy migration
-    # --------------------------------------------------
+        temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Convert the old one-build-per-roster-slot model into the catalog.
+        """Create canonical records while excluding blank legacy placeholders."""
+        catalog = self._normalize(None)
+        characters: dict[str, dict[str, Any]] = {}
 
-        Character identity is keyed by gamertag when available, otherwise by
-        character name. Blank placeholder members are ignored. Multiple
-        legacy builds for the same identity become separate build records
-        pointing at one character record.
-        """
-        catalog = self.new_catalog()
-        characters_by_key: dict[str, dict[str, Any]] = {}
-
-        for member in roster.Members:
-            if not member.Name.strip() and not member.Gamertag.strip():
+        for index, member in enumerate(roster.Members):
+            if self._is_empty_member(member):
                 continue
 
-            identity_key = self._identity_key(member)
-            character = characters_by_key.get(identity_key)
-
-            if character is None:
-                character = {
-                    "character_id": self._stable_id("character", identity_key),
-                    "name": member.Name.strip(),
-                    "gamertag": member.Gamertag.strip(),
-                }
-                characters_by_key[identity_key] = character
-                catalog["characters"].append(character)
-
-            payload = member.to_dict()
-            build_name = member.BuildName.strip() or "Default"
+            identity = self._identity(member, index)
+            character_id = self._stable_id("character", identity)
             build_id = self._stable_id(
                 "build",
-                f"{character['character_id']}:{build_name}",
+                f"{character_id}:{member.BuildName.strip().casefold() or index}",
             )
 
-            catalog["builds"].append(
-                {
-                    "build_id": build_id,
-                    "character_id": character["character_id"],
-                    "name": build_name,
-                    "payload": payload,
+            if character_id not in characters:
+                characters[character_id] = {
+                    "character_id": character_id,
+                    "name": member.Name,
+                    "gamertag": member.Gamertag,
+                    "eso_class": member.EsoClass,
+                    "race": member.Race,
+                    "role": member.Role,
+                    "alliance": member.Alliance,
+                    "vampire": member.Vampire,
+                    "werewolf": member.Werewolf,
                 }
-            )
 
-        return self._normalize(catalog)
+            legacy = member.to_dict()
+            legacy["CharacterId"] = character_id
+            legacy["BuildId"] = build_id
+            catalog["builds"].append({
+                "build_id": build_id,
+                "character_id": character_id,
+                "name": member.BuildName,
+                "legacy": legacy,
+                "payload": copy.deepcopy(legacy),
+            })
 
-    # --------------------------------------------------
-    # Canonical access
-    # --------------------------------------------------
+        catalog["characters"] = list(characters.values())
+        return catalog
+
+    def import_legacy_file(self, legacy_path: Path) -> dict[str, Any]:
+        roster = BuildRoster.from_dict(
+            json.loads(Path(legacy_path).read_text(encoding="utf-8"))
+        )
+        return self.import_legacy_roster(roster)
+
+    def migrate_if_needed(self, legacy_path: Path) -> dict[str, Any]:
+        current = self.load()
+        if current["characters"] or current["builds"] or not Path(legacy_path).exists():
+            return current
+        migrated = self.import_legacy_file(legacy_path)
+        self.save(migrated)
+        return migrated
 
     def get_character(self, character_id: str) -> dict[str, Any] | None:
         catalog = self.load()
@@ -126,14 +162,6 @@ class BuildCatalogService:
                 return copy.deepcopy(build)
         return None
 
-    def builds_for_character(self, character_id: str) -> list[dict[str, Any]]:
-        catalog = self.load()
-        return [
-            copy.deepcopy(build)
-            for build in catalog["builds"]
-            if build.get("character_id") == character_id
-        ]
-
     def upsert_build(
         self,
         *,
@@ -141,16 +169,22 @@ class BuildCatalogService:
         build_name: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
-        """Insert or replace one canonical build without duplicating identity."""
+        """Insert or replace one build without duplicating character identity."""
         catalog = self.load()
         name = build_name.strip() or "Default"
-        build_id = self._stable_id("build", f"{character_id}:{name}")
+
+        build_id = self._stable_id(
+            "build",
+            f"{character_id}:{name.casefold()}",
+        )
 
         record = {
             "build_id": build_id,
             "character_id": character_id,
             "name": name,
             "payload": copy.deepcopy(payload),
+            # Keep Phase 2F's legacy bridge available to older consumers.
+            "legacy": copy.deepcopy(payload),
         }
 
         for index, existing in enumerate(catalog["builds"]):
@@ -163,43 +197,9 @@ class BuildCatalogService:
         self.save(catalog)
         return copy.deepcopy(record)
 
-    # --------------------------------------------------
-    # Normalization
-    # --------------------------------------------------
-
-    def _normalize(self, catalog: dict[str, Any]) -> dict[str, Any]:
-        data = dict(catalog or {})
-        data["schema_version"] = CATALOG_SCHEMA_VERSION
-        data["characters"] = [
-            dict(character)
-            for character in data.get("characters", [])
-            if isinstance(character, dict)
+    def builds_for_character(self, character_id: str) -> list[dict[str, Any]]:
+        return [
+            build
+            for build in self.load()["builds"]
+            if build.get("character_id") == character_id
         ]
-        data["builds"] = [
-            dict(build)
-            for build in data.get("builds", [])
-            if isinstance(build, dict)
-        ]
-
-        for character in data["characters"]:
-            character.setdefault("character_id", "")
-            character.setdefault("name", "")
-            character.setdefault("gamertag", "")
-
-        for build in data["builds"]:
-            build.setdefault("build_id", "")
-            build.setdefault("character_id", "")
-            build.setdefault("name", "Default")
-            build.setdefault("payload", {})
-
-        return data
-
-    @staticmethod
-    def _identity_key(member: PlayerBuild) -> str:
-        value = member.Gamertag.strip() or member.Name.strip()
-        return " ".join(value.casefold().split())
-
-    @staticmethod
-    def _stable_id(kind: str, value: str) -> str:
-        digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
-        return f"{kind}_{digest}"

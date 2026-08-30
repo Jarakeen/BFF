@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+    <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
+            
+    
+            
+    <link rel="shortcut icon" href="/images/favicon.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+
+    
+    <link rel="preload" href="/fonts/rajdhani-500.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
+
+    <style>
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: optional;
+            src: url('/fonts/rajdhani-500.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 600;
+            font-display: optional;
+            src: url('/fonts/rajdhani-600.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            font-display: optional;
+            src: url('/fonts/rajdhani-700.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 200 700;
+            font-display: optional;
+            src: url('/fonts/oswald.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: normal;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Source Sans 3';
+            font-style: italic;
+            font-weight: 200 900;
+            font-display: optional;
+            src: url('/fonts/source-sans-3-italic.woff2') format('woff2');
+        }
+    </style>
+
+    
+            <script data-cfasync="false">
+            window.nitroAds=window.nitroAds||{createAd:function(){return new Promise(e=>{window.nitroAds.queue.push(["createAd",arguments,e])})},addUserToken:function(){window.nitroAds.queue.push(["addUserToken",arguments])},queue:[]};
+            window.hyperioxesLoadNitroAds=window.hyperioxesLoadNitroAds||function(){if(window.hyperioxesNitroAdsLoaded)return;window.hyperioxesNitroAdsLoaded=true;var s=document.createElement('script');s.async=true;s.dataset.cfasync='false';s.src='https://s.nitropay.com/ads-2364.js';document.head.appendChild(s);};
+        </script>
+        <script>document.documentElement.classList.add('js');</script>
+
+
+        <style>
+        body { background: #1c1917; }
+        .hidden { display: none !important; }
+
+        /* ── Layout utilities ── */
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .flex-wrap { flex-wrap: wrap; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-w-\[1350px\] { max-width: 1350px; }
+        .gap-4 { gap: 16px; }
+        .gap-2 { gap: 8px; }
+
+        /* ── Listing cards ── */
+        .listing-inner { display: flex; height: 200px; overflow: hidden; }
+        .listing-img { width: 355px; flex-shrink: 0; overflow: hidden; }
+        .listing-body { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12px 16px; }
+        .listing-body-top { flex: 1; }
+        .listing-title { font-size: 24px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #fff; line-height: 1.2; max-height: 4rem; overflow: hidden; }
+        .listing-date { font-size: 12px; color: #888; margin-top: 4px; }
+        .listing-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+        .guide-tag { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; border-width: 1px; border-style: solid; background: none; }
+        .listing-featured { height: 280px; }
+        .listing-featured .listing-img { width: 500px; }
+        .listing-featured .listing-title { font-size: 32px; }
+
+        /* ── Listings grid ── */
+        #listings-container { display: flex; flex-wrap: wrap; }
+        #listings-container > .listing-item { width: 100%; padding: 16px; }
+
+        @media (max-width: 640px) {
+            .listing-inner { flex-direction: column; height: auto; }
+            .listing-img { width: 100%; aspect-ratio: 16/9; height: auto; }
+            .listing-body { padding: 10px 14px 14px; gap: 6px; }
+            .listing-title { font-size: 18px; max-height: none; }
+            .listing-tags { margin-top: 0; }
+        }
+
+        @media (min-width: 980px) {
+            .lg\:hidden { display: none !important; }
+            .lg\:flex { display: flex !important; }
+            .lg\:block { display: block !important; }
+            .hidden.lg\:block { display: block !important; opacity: 1 !important; visibility: visible !important; }
+            .hidden.lg\:flex { display: flex !important; opacity: 1 !important; visibility: visible !important; }
+            .lg\:w-\[1350px\] { width: 1350px; }
+            .lg\:w-1\/2 { width: 50%; }
+            .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+            .home-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            #listings-container > .listing-item { width: 50%; }
+        }
+
+        /* Guide page shell */
+        .guide-page-layout { box-sizing: border-box; max-width: 1350px; margin: 0 auto; padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start; }
+        .guide-page-layout--dom-ordered { display: grid; grid-template-columns: minmax(0, 1fr); }
+        .guide-page-layout--dom-ordered > .guide-sidebar { display: none !important; }
+        .guide-shell-inline-only { display: block; }
+        body { margin: 0; }
+        @media (min-width: 1024px) {
+            .guide-page-layout--dom-ordered {
+                max-width: 1026px;
+                grid-template-columns: 220px minmax(0, 750px);
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--header {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar:not(.guide-sidebar--right) {
+                display: block !important;
+                grid-column: 1;
+                grid-row: 1 / span 2;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                scrollbar-color: #4a4237 #161412;
+                scrollbar-gutter: stable;
+            }
+            .guide-page-layout--dom-ordered > .guide-page-main--body {
+                grid-column: 2;
+                grid-row: 2;
+            }
+            .guide-page-layout--dom-ordered > .guide-sidebar--right { display: none !important; }
+            .guide-shell-inline-only,
+            .guide-top-toc-wrap,
+            .guide-top-toc { display: none; }
+        }
+        @media (min-width: 1280px) {
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar {
+                max-width: 1350px;
+                grid-template-columns: 220px minmax(0, 1fr) 220px;
+            }
+            .guide-page-layout--dom-ordered.guide-page-layout--with-right-sidebar > .guide-sidebar--right {
+                display: block !important;
+                grid-column: 3;
+                grid-row: 1 / span 2;
+            }
+        }
+
+        /* Sidebar listing cards */
+        .guide-sidebar { flex: 0 0 220px; width: 220px; }
+        .guide-sidebar--right { order: 3; }
+        .guide-sidebar-box {
+            background: #161412;
+            border: 1px solid #302b26;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .guide-sidebar-box--listings { background: transparent; border: none; padding: 0; }
+        .guide-sidebar-box--listings .guide-sidebar-title {
+            color: #7a756f;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 10px;
+        }
+        .guide-sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2a2520;
+        }
+        .sidebar-card {
+            display: block;
+            text-decoration: none;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #161412;
+            border: 1px solid #302b26;
+        }
+        .sidebar-card-img {
+            width: 100%;
+            display: block;
+            opacity: 0.7;
+        }
+        .sidebar-card-body {
+            padding: 8px 10px 10px;
+            background: linear-gradient(to bottom, #1e1a17, #141210);
+        }
+        .sidebar-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #d4d0cc;
+            line-height: 1.35;
+        }
+        .sidebar-card-subtitle {
+            font-size: 10px;
+            color: #7a756f;
+            margin-top: 2px;
+        }
+    </style>
+
+                                            <link rel="stylesheet" href="/build/app.15dccee1.css">
+            
+            <link rel="stylesheet" href="/build/crit-calculator.9f63f1de.css">
+                        <link rel="stylesheet" href="/build/tooltips.56105855.css">
+                <!-- Primary Meta Tags -->
+        <title>ESO Critical Damage Calculator | U50 | Hyperioxes</title>
+    <meta name="title" content="ESO Critical Damage Calculator | U50 | Hyperioxes"/>
+    <meta name="description"
+          content="Calculate your critical damage and critical chance in ESO. Toggle buffs, gear, and passives to see their DPS impact in real time. Includes a crit rating converter."/>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:url" content="https://hyperioxes.com/eso/tools/crit-calculator"/>
+    <meta property="og:title" content="ESO Critical Damage Calculator | U50 | Hyperioxes"/>
+    <meta property="og:description"
+          content="Calculate your critical damage and critical chance in ESO. Toggle buffs, gear, and passives to see their DPS impact in real time. Includes a crit rating converter."/>
+    <meta property="og:image" content="https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/tools/critCalculator.jpg"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="675"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:site_name" content="Hyperioxes"/>
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image"/>
+    <meta property="twitter:url" content="https://hyperioxes.com/eso/tools/crit-calculator"/>
+    <meta property="twitter:title" content="ESO Critical Damage Calculator | U50 | Hyperioxes"/>
+    <meta property="twitter:description"
+          content="Calculate your critical damage and critical chance in ESO. Toggle buffs, gear, and passives to see their DPS impact in real time. Includes a crit rating converter."/>
+    <meta property="twitter:image" content="https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/tools/critCalculator.jpg"/>
+
+    <!-- Article -->
+    <link rel="canonical" href="https://hyperioxes.com/eso/tools/crit-calculator"/>
+    <meta property="article:author" content="Hyperioxes"/>
+    <meta property="article:published_time" content="2026-03-19T00:00:00+00:00"/>
+    <meta property="article:modified_time" content="2026-07-29T00:00:00+00:00"/>
+    <meta property="article:section" content="ESO Tools"/>
+    <meta property="article:tag" content="ESO Crit Calculator"/>
+    <meta property="article:tag" content="ESO Critical Damage"/>
+    <meta property="article:tag" content="ESO Critical Chance"/>
+    <meta property="article:tag" content="ESO DPS Tools"/>
+    <meta property="article:tag" content="Elder Scrolls Online"/>
+    <meta name="author" content="Hyperioxes"/>
+
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"WebApplication","name":"ESO Critical Damage Calculator | U50 | Hyperioxes","url":"https://hyperioxes.com/eso/tools/crit-calculator","description":"Calculate your critical damage and critical chance in ESO. Toggle buffs, gear, and passives to see their DPS impact in real time. Includes a crit rating converter.","applicationCategory":"GameApplication","operatingSystem":"Web","image":"https://img.hyperioxes.com/media/cache/social_thumbnail/images/thumbnails/tools/critCalculator.jpg","author":{"@type":"Person","@id":"https://hyperioxes.com/#hyperioxes","name":"Hyperioxes","url":"https://hyperioxes.com","sameAs":["https://www.youtube.com/@Hyperioxes","https://www.twitch.tv/hyperioxes"]},"publisher":{"@type":"Organization","name":"Hyperioxes","logo":{"@type":"ImageObject","url":"https://hyperioxes.com/images/logo.webp"}},"datePublished":"2026-03-19T00:00:00+00:00","dateModified":"2026-07-29T00:00:00+00:00"}
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "How does crit damage work in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Critical damage in ESO starts at a base of 50%, meaning critical hits deal 150% of normal damage. You can increase this through buffs like Major and Minor Force, gear sets, class passives, champion points, and racial bonuses. There is a hard cap of 125% critical damage, introduced in Update 32, meaning critical hits can deal at most 225% of normal damage."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How is crit chance calculated in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "All characters start with a base 10% critical chance. On top of that, crit rating from gear, sets, and buffs is converted to a percentage by dividing by 21918. For example, 1096 crit rating gives roughly 5% crit chance. Buffs like Major Prophecy/Savagery add a flat 12% directly. There is no hard cap on critical chance - you can reach 100%."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What is a good crit rate in ESO?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "There is no single target number for crit chance in ESO. The value of crit chance depends on your current crit damage, group buffs, and the rest of your stats. Crit chance has diminishing returns - the more you have, the less each additional point is worth. However, higher crit damage counteracts this by making each critical hit more valuable. Use this calculator to see how much total DPS each point of crit chance is actually worth for your specific build."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Is crit damage better than crit chance?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Neither is universally better - it depends on your current stats and group setup. Adding crit damage is worth more when you already have high crit chance, and adding crit chance is worth more when you already have high crit damage. In organized trial groups, crit damage is often pushed to the 125% cap by group buffs like Aggressive Warhorn and Lucent Echoes, making additional crit chance more valuable. The DPS impact calculators on this page let you compare exactly how much total damage each stat adds for your specific setup."
+                    }
+                }
+            ]
+        }
+    </script>
+    
+</head>
+<body class="bg-stone-900 text-white" style="font-family: 'Rajdhani', sans-serif;" data-guide-screenshots="false">
+
+    
+
+
+
+
+<header style="background: #0e0c0a; border-bottom: 1px solid #eab308; position: relative;">
+        <div class="hx-header-desktop" style="max-width: 1350px; margin: 0 auto; padding: 0 16px; align-items: center; height: 64px;">
+
+        <a class="hx-header-brand-desktop" href="/" style="font-size: 22px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase; padding-right: 32px; margin-right: 8px; border-right: 1px solid #2a2520; white-space: nowrap; transition: color 0.2s;">
+            Hyperioxes
+        </a>
+
+        <nav style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+            <div data-nosnippet="" style="display: flex; align-items: stretch; height: 100%; flex: 1; min-width: 0;">
+                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/tank" aria-haspopup="true">
+            <img src="/images/uiElements/tankIcon.webp" alt="Tank" width="18" height="18">
+            Tank
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tank/arcanist-build">
+                            <img src="/images/icons/ability_arcanist_008_b.webp" alt="Arcanist Tank" width="18" height="18">
+                            Arcanist Tank
+                        </a>
+                                                                                <a href="/eso/tank/dragonknight-build">
+                            <img src="/images/icons/ability_dragonknight_007_b_u49_new.webp" alt="Dragonknight Tank" width="18" height="18">
+                            Dragonknight Tank
+                        </a>
+                                                                                <a href="/eso/tank/necromancer-build">
+                            <img src="/images/icons/ability_necromancer_011_b.webp" alt="Necromancer Tank" width="18" height="18">
+                            Necromancer Tank
+                        </a>
+                                                                                <a href="/eso/tank/nightblade-build">
+                            <img src="/images/icons/ability_nightblade_004_b.webp" alt="Nightblade Tank" width="18" height="18">
+                            Nightblade Tank
+                        </a>
+                                                                                <a href="/eso/tank/sorcerer-build">
+                            <img src="/images/icons/ability_sorcerer_typhoon.webp" alt="Sorcerer Tank" width="18" height="18">
+                            Sorcerer Tank
+                        </a>
+                                                                                <a href="/eso/tank/templar-build">
+                            <img src="/images/icons/ability_templar_radiant_ward.webp" alt="Templar Tank" width="18" height="18">
+                            Templar Tank
+                        </a>
+                                                                                <a href="/eso/tank/warden-build">
+                            <img src="/images/icons/ability_warden_003_a.webp" alt="Warden Tank" width="18" height="18">
+                            Warden Tank
+                        </a>
+                                                                                <a href="/eso/tank/sets">
+                            <img src="/images/icons/gear_amenossea_hvy_head_a.webp" alt="Tank Sets" width="18" height="18">
+                            Tank Sets
+                        </a>
+                                                                                <a href="/eso/tank/beginner-guide">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Beginner Tank Guide" width="18" height="18">
+                            Beginner Tank Guide
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/healer" aria-haspopup="true">
+            <img src="/images/uiElements/healerIcon.webp" alt="Healer" width="18" height="18">
+            Healer
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/healer/dps-healer-build">
+                            <img src="/images/icons/ability_ava_echoing_vigor.webp" alt="DPS Healer" width="18" height="18">
+                            DPS Healer
+                        </a>
+                                                                                <a href="/eso/healer/dungeon-subclass-build">
+                            <img src="/images/icons/ability_restorationstaff_003_b.png" alt="Dungeon Subclass Healer" width="18" height="18">
+                            Dungeon Subclass Healer
+                        </a>
+                                                                                <a href="/eso/healer/templar-build">
+                            <img src="/images/icons/ability_templar_extended_ritual.webp" alt="Templar Healer" width="18" height="18">
+                            Templar Healer
+                        </a>
+                                                                                <a href="/eso/healer/sets">
+                            <img src="/images/icons/gear_seagiantlgt_helmet.webp" alt="Healer Sets" width="18" height="18">
+                            Healer Sets
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/solo">
+            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo" width="18" height="18">
+            Solo
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dps">
+            <img src="/images/uiElements/dpsIcon.webp" alt="DPS" width="18" height="18">
+            DPS
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/dungeon" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_groupinstance_complete.png" alt="Dungeons" width="18" height="18">
+            Dungeons
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/dungeon/bedlam-veil">
+                            <img src="/images/icons/ON-icon-achievement-Martial_Gift.png" alt="Bedlam Veil" width="18" height="18">
+                            Bedlam Veil
+                        </a>
+                                                                                <a href="/eso/dungeon/exiled-redoubt">
+                            <img src="/images/icons/achievement_u45_dun1_flavore.png" alt="Exiled Redoubt" width="18" height="18">
+                            Exiled Redoubt
+                        </a>
+                                                                                <a href="/eso/dungeon/lep-seclusa">
+                            <img src="/images/icons/achievement_u45_dun2_bosses.png" alt="Lep Seclusa" width="18" height="18">
+                            Lep Seclusa
+                        </a>
+                                                                                <a href="/eso/dungeon/gossamer-crypt">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_green.png" alt="Gossamer Crypt" width="18" height="18">
+                            Gossamer Crypt
+                        </a>
+                                                                                <a href="/eso/dungeon/mournful-catacomb">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_purple.png" alt="Mournful Catacomb" width="18" height="18">
+                            Mournful Catacomb
+                        </a>
+                                                                                <a href="/eso/dungeon/timeless-wallow">
+                            <img src="/images/icons/achievement_u49_dungeon_boss_blue.png" alt="Timeless Wallow" width="18" height="18">
+                            Timeless Wallow
+                        </a>
+                                                </div>
+            </div>
+
+                                                                                                                                                <div class="nav-item">
+        <a class="nav-link" href="/eso/trial" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_raiddungeon_complete.png" alt="Trials" width="18" height="18">
+            Trials
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/trial/opulent-ordeal">
+                            <img src="/images/icons/achievement_u49_trial_vet.png" alt="Opulent Ordeal" width="18" height="18">
+                            Opulent Ordeal
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tier-lists" aria-haspopup="true">
+            <img src="/images/uiElements/tierListIcon.webp" alt="Tier Lists" width="18" height="18">
+            Tier Lists
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tier-lists/solo">
+                            <img src="/images/icons/poi/poi_groupboss_complete.png" alt="Solo Class Tier List" width="18" height="18">
+                            Solo Class Tier List
+                        </a>
+                                                                                <a href="/eso/tier-lists/tank">
+                            <img src="/images/uiElements/tankIcon.webp" alt="Tank Class Tier List" width="18" height="18">
+                            Tank Class Tier List
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/tools" aria-haspopup="true">
+            <img src="/images/icons/poi/poi_crafting_complete.png" alt="Tools" width="18" height="18">
+            Tools
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/tools/penetration-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Breach.png" alt="Penetration Calculator" width="18" height="18">
+                            Penetration Calculator
+                        </a>
+                                                                                <a href="/eso/tools/crit-calculator">
+                            <img src="/images/icons/ON-icon-misc-Major_Force.png" alt="Crit Calculator" width="18" height="18">
+                            Crit Calculator
+                        </a>
+                                                                                <a href="/eso/tools/ultimate-calculator">
+                            <img src="/images/icons/ON-icon-misc-Minor_Heroism.png" alt="Ultimate Calculator" width="18" height="18">
+                            Ultimate Calculator
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/news">
+            <img src="/images/uiElements/newsIcon.png" alt="News" width="18" height="18">
+            News
+                    </a>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/guides" aria-haspopup="true">
+            <img src="/images/uiElements/guidesIcon.webp" alt="Guides" width="18" height="18">
+            Guides
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/guides/dynamic-encounters">
+                            <img src="/images/guides/dynamic-encounters/dynamic-encounter-icon.png" alt="" width="18" height="18">
+                            Dynamic Encounters
+                        </a>
+                                                                                <a href="/eso/guides/favors">
+                            <img src="/images/guides/favors/favor-icon.png?v=2" alt="" width="18" height="18">
+                            Favors
+                        </a>
+                                                                                <a href="/eso/guides/subclassing">
+                            <img src="/images/guides/subclassing/subclassing-icon.png" alt="" width="18" height="18">
+                            Subclassing
+                        </a>
+                                                                                <a href="/eso/night-market/oddities-and-races">
+                            <img src="/images/icons/death_recap_earth_ranged2.png" alt="Night Market Oddities and Races" width="18" height="18">
+                            Night Market Oddities &amp; Races
+                        </a>
+                                                                                <a href="/eso/night-market/boons">
+                            <img src="/images/icons/ability_u49_buff_fire_aura.png" alt="Night Market Boons" width="18" height="18">
+                            Night Market Boons
+                        </a>
+                                                                                <a href="/eso/guides/status-effects">
+                            <img src="/images/icons/ability_mage_062.png" alt="Status Effects" width="18" height="18">
+                            Status Effects
+                        </a>
+                                                </div>
+            </div>
+
+                                                    <div class="nav-divider"></div>
+                                                                                                            <div class="nav-item">
+        <a class="nav-link" href="/eso/leveling-guides" aria-haspopup="true">
+            <img src="/images/uiElements/mapIcon.webp" alt="Leveling" width="18" height="18">
+            Leveling
+                            <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    </a>
+                    <div class="dropdown-menu">
+                                                            <a href="/eso/leveling-guides/blackrose-prison">
+                            <img src="/images/icons/achievement_blackrose_boss_5.webp" alt="Blackrose Prison" width="18" height="18">
+                            Blackrose Prison
+                        </a>
+                                                </div>
+            </div>
+
+                                                                        </div>
+        </nav>
+    </div>
+
+        <div class="hx-header-mobile" style="border-top: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; height: 56px; padding: 0 16px;">
+            <a href="/" style="font-size: 20px; font-weight: 700; letter-spacing: 0.18em; color: #fff; text-decoration: none; text-transform: uppercase;">Hyperioxes</a>
+            <button id="mobile-button" type="button" aria-label="Toggle navigation menu" aria-controls="mobile-dropdown-content" aria-expanded="false" style="color: #888; background: none; border: none; cursor: pointer; padding: 4px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-dropdown-content" class="hidden" data-nosnippet="" style="border-top: 1px solid #2a2520;">
+                                        <a href="/eso/tank" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tank</a>
+
+                                                                                                                                                                                                                                                                                                                                                                                                        <a href="/eso/healer" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Healer</a>
+
+                                                                                                                                                                                                                    <a href="/eso/solo" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Solo</a>
+
+                                                                    <a href="/eso/dps" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">DPS</a>
+
+                                                                    <a href="/eso/dungeon" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dungeons</a>
+
+                                                                                                                                                                                                                                                                                                                <a href="/eso/trial" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Trials</a>
+
+                                                                                                        <a href="/eso/tier-lists" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tier Lists</a>
+
+                                                                                                                                            <a href="/eso/tools" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Tools</a>
+
+                                                                                                                                                                                <a href="/eso/news" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">News</a>
+
+                                                                    <a href="/eso/guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Guides</a>
+
+                                                                <a href="/eso/guides/dynamic-encounters" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Dynamic Encounters</a>
+
+                                                                                    <a href="/eso/guides/favors" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Favors</a>
+
+                                                                                    <a href="/eso/guides/subclassing" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Subclassing</a>
+
+                                                                                    <a href="/eso/night-market/oddities-and-races" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Oddities &amp; Races</a>
+
+                                                                                    <a href="/eso/night-market/boons" style="display: block; padding: 10px 20px 10px 32px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; text-decoration: none; border-bottom: 1px solid #1a1814;">Night Market Boons</a>
+
+                                                                                                                            <a href="/eso/leveling-guides" style="display: block; padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; text-decoration: none;">Leveling</a>
+
+                                                                            </div>
+</header>
+
+<style>
+    .hx-header-brand-desktop:hover,
+    .hx-header-brand-desktop:focus-visible {
+        color: #eab308 !important;
+    }
+    .hx-header-desktop { display: none; }
+    .hx-header-mobile { display: block; }
+
+    .nav-item { position: relative; display: flex; align-items: center; }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 18px;
+        height: 64px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color 0.2s;
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #eab308;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+        transform-origin: left;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible { color: #eab308; }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after { transform: scaleX(1); }
+
+    .nav-link:focus-visible,
+    .dropdown-menu a:focus-visible {
+        outline: 2px solid #eab308;
+        outline-offset: -2px;
+    }
+
+    .nav-link img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; opacity: 0.7; transition: opacity 0.2s; }
+    .nav-link:hover img { opacity: 1; }
+
+    .nav-link .chevron, .nav-link svg { color: #555; transition: color 0.2s, transform 0.2s; flex-shrink: 0; }
+    .nav-link:hover svg { color: #eab308; transform: rotate(180deg); }
+
+    .nav-divider { width: 1px; background: #2a2520; height: 24px; align-self: center; margin: 0 2px; flex-shrink: 0; }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #161412;
+        border: 1px solid #2a2520;
+        border-top: 2px solid #eab308;
+        min-width: 200px;
+        z-index: 100;
+        padding: 6px 0;
+    }
+
+    .nav-item:hover .dropdown-menu,
+    .nav-item:focus-within .dropdown-menu { display: block; }
+
+    .nav-item.dropdown-escape-closed .dropdown-menu { display: none; }
+
+    .dropdown-menu a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .dropdown-menu a:hover,
+    .dropdown-menu a:focus-visible { color: #eab308; background: #1c1814; }
+    .dropdown-menu img { width: 18px; height: 18px; border-radius: 3px; opacity: 0.6; }
+    .dropdown-menu a:hover img { opacity: 1; }
+
+    @media (min-width: 1280px) {
+        .hx-header-desktop { display: flex; }
+        .hx-header-mobile,
+        #mobile-dropdown-content { display: none !important; }
+    }
+
+    @media (min-width: 1280px) and (max-width: 1535px) {
+        .hx-header-desktop { padding: 0 10px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 20px !important;
+            letter-spacing: 0.14em !important;
+            padding-right: 18px !important;
+            margin-right: 4px !important;
+        }
+
+        .nav-link {
+            gap: 4px;
+            padding: 0 8px;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-link > img { display: none; }
+        .nav-divider { height: 20px; margin: 0 1px; }
+    }
+
+    @media (min-width: 1536px) {
+        .hx-header-desktop { max-width: 1600px !important; }
+
+        .hx-header-brand-desktop {
+            font-size: 21px !important;
+            letter-spacing: 0.15em !important;
+            padding-right: 22px !important;
+            margin-right: 6px !important;
+        }
+
+        .nav-link {
+            gap: 6px;
+            padding: 0 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-divider { margin: 0 1px; }
+    }
+</style>
+
+<main>    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/buffs.d095df5b.caca85c47c85.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/skills.da37f415.197d6cb5646d.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/gear.16cc640a.bcf7c7e2a942.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/passives.b405e36e.f329de0d44cb.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/class-mastery.e8e0c26c7b7c.json","/tooltips/buffs.422e74f25302.json","/tooltips/status.fbad8b2e00ad.json","/tooltips/passives.f288026b5a6d.json","/tooltips/skills.b8b40b497e16.json","/tooltips/traits.d51dabcda35d.json","/tooltips/champion-points.7a64e3aa7f25.json"]}</script>
+    
+
+    
+
+        
+                
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/champion-points.e9134c0e.c2dcb621b081.json"]}</script>
+    
+
+    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/mundus.6755a3a3.221a64b92a29.json"]}</script>
+    
+
+    
+
+        
+        
+        
+                    <script type="application/json" data-hx-tooltip-sources>{"sources":["/tooltips/traits.6932eb5e.a1929320a4ae.json"]}</script>
+    
+
+    
+
+
+
+
+            <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+                        {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://hyperioxes.com/"
+            },                        {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Tools",
+                "item": "https://hyperioxes.com/eso/tools"
+            }                        ,{
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Crit Calculator",
+                "item": "https://hyperioxes.com/eso/tools/crit-calculator"
+            }
+        ]
+    }
+    </script>
+
+    <nav class="site-breadcrumb" aria-label="Breadcrumb">
+        <ol class="site-breadcrumb__list">
+                            <li class="site-breadcrumb__item">
+                    <a href="/" class="hover-link">Home</a>
+                    <span class="site-breadcrumb__separator" aria-hidden="true">›</span>
+                </li>
+                            <li class="site-breadcrumb__item">
+                    <a href="/eso/tools" class="hover-link">Tools</a>
+                    <span class="site-breadcrumb__separator" aria-hidden="true">›</span>
+                </li>
+                        <li class="site-breadcrumb__item">
+                <span class="site-breadcrumb__current" aria-current="page">Crit Calculator</span>
+            </li>
+        </ol>
+    </nav>
+
+
+    <div style="max-width: 1350px; margin: 8px auto 0; padding: 0 16px;">
+        <div style="height: 1px; background: linear-gradient(to right, #eab30844, transparent);"></div>
+    </div>
+
+    <div class="max-w-[1350px] mx-auto" style="padding: 20px 16px; display: flex; gap: 24px; align-items: flex-start;">
+
+                <div class="hidden lg:block guide-sidebar guide-sidebar--right">
+                        <div class="guide-sidebar-box" style="margin-top:16px;">
+        <div class="guide-sidebar-title">Related Tools</div>
+        <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                            <li><a href="/eso/tools/penetration-calculator" class="cc-link" style="font-size:14px;">Penetration Calculator</a></li>
+                            <li><a href="/eso/tools/ultimate-calculator" class="cc-link" style="font-size:14px;">Ultimate Calculator</a></li>
+                    </ul>
+    </div>
+
+            <div class="guide-sidebar-box" style="margin-top:16px;">
+                <div class="guide-sidebar-title">Related Guides</div>
+                <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+                    <li><a href="/eso/dps" class="cc-link" style="font-size:14px;">DPS Builds</a></li>
+                    <li><a href="/eso/solo" class="cc-link" style="font-size:14px;">Solo Builds</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="crit-calc" style="flex: 1; min-width: 0; order: 2;">
+
+                        <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #2a2520;">
+                <h1 style="font-size: 38px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #fff; line-height: 1.1; border-left: 4px solid #eab308; padding-left: 16px; margin-bottom: 16px;">
+                    ESO Critical Damage Calculator
+                </h1>
+                <div style="height: 1px; background: #2a2520; margin: 16px 0;"></div>
+                <div class="alert-verified">
+                    Up to date for: Update 50 - 29th July 2026
+                </div>
+                <div class="alert-green">
+                    Last changed: Update 50 - 8th June 2026
+                </div>
+                <p class="guide-text mt-4 mx-2">Calculate your critical damage, critical chance, and see exactly how much DPS each stat is worth. Toggle your buffs, gear, and passives to see their contribution in real time.</p>
+            </div>
+
+            <div class="cc-layout">
+
+                        <div class="cc-main">
+
+
+            <div class="cc-section">
+                <div class="cc-section-header">
+                    <h2 class="cc-section-title">Critical Damage</h2>
+                </div>
+
+                <div class="cc-card-grid">
+
+                                        <div class="cc-col">
+                        <div class="cc-ring-box cc-ring-inline cc-desktop-only">
+                            <div id="cc-ring-dmg"></div>
+                            <div class="cc-ring-stats">
+                                <div class="cc-ring-stat">
+                                    <span class="cc-ring-stat-label">Total</span>
+                                    <span class="cc-ring-stat-val" id="cc-dmg-total" style="color:#c8a84b">50.0%</span>
+                                </div>
+                                <div class="cc-ring-stat">
+                                    <span class="cc-ring-stat-label">Cap</span>
+                                    <span class="cc-ring-stat-val" id="cc-dmg-cap" style="color:#a0a0a0">125%</span>
+                                </div>
+                                <div class="cc-ring-stat">
+                                    <span class="cc-ring-stat-label" id="cc-dmg-gap-label">Missing</span>
+                                    <span class="cc-ring-stat-val" id="cc-dmg-gap-val" style="color:var(--cc-danger-text)">75.0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Buffs / Debuffs</span>
+                        </div>
+
+                                                <div class="cc-card cc-always-on">
+                            <div class="cc-card-row">
+                                <div class="cc-name"><span class="cc-nolink">Base Game</span></div>
+                                <span class="cc-always-on-tag">Always On</span>
+                                <span class="cc-val">50%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-majorForce" data-dmg-toggle="majorForce">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="major-force" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Force.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Major Force</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">20%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-minorForce" data-dmg-toggle="minorForce">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="minor-force" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Force.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Minor Force</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-minorBrittle" data-dmg-toggle="minorBrittle">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="minor-brittle" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fca5a5;" data-hx-tooltip-tone="debuff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Brittle.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Minor Brittle</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-majorBrittle" data-dmg-toggle="majorBrittle">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="major-brittle" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fca5a5;" data-hx-tooltip-tone="debuff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Brittle.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Major Brittle</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">20%</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Class</span>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-arcanist" data-dmg-toggle="arcanist">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-fated-fortune" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_arcanist_04.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Fated Fortune</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">12%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-templar" data-dmg-toggle="templar">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-templar-piercing-spear" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_templar_022.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Piercing Spear</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">12%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-blessingPeak" data-dmg-toggle="blessingPeak">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-blessing-at-the-peak" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_dragonknight_024_u49_new.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Blessing at the Peak</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-nightblade" data-dmg-toggle="nightblade">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-hemorrhage" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_weapon_017.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Hemorrhage</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-card" id="cc-dmg-aboveAndBeyond" data-dmg-toggle="aboveAndBeyond">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--class-mastery&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="nightblade-above-and-beyond" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;da302a;" data-hx-tooltip-tone="class-mastery"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_armor_008.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Above and Beyond</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">25%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-warden-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-advanced-species" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_warden_011.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Advanced Species</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-warden-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6"></div>
+                            <input type="range" class="cc-slider" id="cc-warden-slider" min="0" max="6" value="0" aria-label="Advanced Species">
+                        </div>
+                    </div>
+
+                                        <div class="cc-col">
+                        <div class="cc-col-header">
+                            <span class="cc-col-title cc-green">Gear</span>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-med-armor-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-dexterity" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_armor_006.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Medium Armor</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-med-armor-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7"></div>
+                            <input type="range" class="cc-slider" id="cc-med-armor-slider" min="0" max="7" value="0" aria-label="Medium Armor">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-axes-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-twin-blade-and-blunt" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_weapon_016.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Axe</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-axes-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2"></div>
+                            <input type="range" class="cc-slider" id="cc-axes-slider" min="0" max="2" value="0" aria-label="Axe">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-elem-cat-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="elemental-catalyst" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_northlandsalchlgt_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Elemental Catalyst</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-elem-cat-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3"></div>
+                            <input type="range" class="cc-slider" id="cc-elem-cat-slider" min="0" max="3" value="0" aria-label="Elemental Catalyst">
+                        </div>
+
+                                                <div class="cc-card" id="cc-true-sworn-dmg">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="true-sworn-fury" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_blackdrakevilla_lgt_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">True-Sworn Fury</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-true-sworn-dmg-val">4%</span>
+                            </div>
+                            <div class="cc-expand-opts cc-hidden">
+                                <div class="cc-step-labels" data-steps="x1,x2,x4"></div>
+                                <input type="range" class="cc-slider" id="cc-true-sworn-dmg-slider" min="0" max="2" value="0" aria-label="True-Sworn Fury">
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-backAlleyGourmand" data-dmg-toggle="backAlleyGourmand">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="back-alley-gourmand" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_feraldruid_light_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Back-Alley Gourmand</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val">13%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-sulXanDmg" data-dmg-toggle="sulXanDmg">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="perfected-sul-xans-torment" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_rockgrove_med_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Sul-Xan&#039;s Torment</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val">12%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-lucentEchoes" data-dmg-toggle="lucentEchoes">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="perfected-lucent-echoes" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_lucentguardian_heavy_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Lucent Echoes</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val">11%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-kilt-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="harpooners-wading-kilt" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_kothringikilt_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Harpooner&#039;s Wading Kilt</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-kilt-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8,9,10"></div>
+                            <input type="range" class="cc-slider" id="cc-kilt-slider" min="0" max="10" value="0" aria-label="Harpooner's Wading Kilt">
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-ordersWrath" data-dmg-toggle="ordersWrath">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="orders-wrath" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_breton_light_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Order&#039;s Wrath</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val">8%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-malacath" data-dmg-toggle="malacath">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="malacaths-band-of-brutality" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/antiquities_malacaths_band_of_brutality.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Malacath&#039;s Band of Brutality</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" style="color:var(--cc-danger-text)">-50%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-moras-dmg-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="mora-scribes-thesis" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_lucentguardian_light_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Mora Scribe&#039;s Thesis</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-moras-dmg-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8,9,10,11,12"></div>
+                            <input type="range" class="cc-slider" id="cc-moras-dmg-slider" min="0" max="12" value="0" aria-label="Mora Scribe's Thesis">
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Other</span>
+                        </div>
+
+                                                <div class="cc-card" id="cc-shadow">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                    <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--mundus&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="the-shadow" aria-expanded="false" data-hx-tooltip-tone="mundus"><img class="cc-icon&#x20;cc-icon--sq" src="/images/icons/mundus/the-shadow.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Shadow (Mundus)</span></span>
+    
+
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="The&#x20;Shadow&#x20;Mundus"
+            data-popup-body="Shadow&#x20;Mundus&#x20;provides&#x20;11&#x25;&#x20;Critical&#x20;Damage,&#x20;but&#x20;each&#x20;armor&#x20;piece&#x20;with&#x20;Divines&#x20;trait&#x20;increases&#x20;it.&#x20;ZOS&#x20;rounds&#x20;all&#x20;stat&#x20;values&#x20;down,&#x20;which&#x20;means&#x20;the&#x20;first&#x20;Divines&#x20;piece&#x20;grants&#x20;no&#x20;extra&#x20;Critical&#x20;Damage&#x20;&#x28;11&#x20;x&#x20;1.09085&#x20;rounds&#x20;down&#x20;to&#x20;11&#x29;.">i</button>
+
+                                <span class="cc-val" id="cc-shadow-val">11%</span>
+                            </div>
+                            <div class="cc-expand-opts cc-hidden">
+                                <span class="cc-input-label">Divines pieces</span>
+                                <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8"></div>
+                                <input type="range" class="cc-slider" id="cc-shadow-div-slider" min="0" max="8" value="0" aria-label="The Shadow Divines pieces">
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-backstabber" data-dmg-toggle="backstabber">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--champion-point&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="backstabber" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;38bdf8;" data-hx-tooltip-tone="champion-point"><img class="cc-icon" src="/images/icons/gameuiart/champion/champion_points_magicka_icon.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Backstabber</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-fightingFinesse" data-dmg-toggle="fightingFinesse">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--champion-point&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="fighting-finesse" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;38bdf8;" data-hx-tooltip-tone="champion-point"><img class="cc-icon" src="/images/icons/gameuiart/champion/champion_points_magicka_icon.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Fighting Finesse</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">8%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-dmg-khajiit" data-dmg-toggle="khajiit">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-feline-ambush" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_armor_006.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Khajiit Racial</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val">12%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-custom-card">
+                            <div class="cc-card-row">
+                                <div class="cc-name">Custom (%)</div>
+                                <input type="number" class="cc-custom-input" id="cc-custom-dmg" value="0" min="0" step="1" aria-label="Custom critical damage (%)">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>            </div>
+
+<div style="height: 1px; background: #2a2520; margin: 0 0 32px;"></div>
+
+                        <div class="cc-section">
+                <div class="cc-section-header">
+                    <h2 class="cc-section-title">Critical Chance</h2>
+                    <button class="cc-display-toggle" id="cc-chance-display-toggle" type="button">
+                        <span class="cc-display-toggle-label">Show</span>
+                        <span class="cc-display-toggle-opt cc-display-toggle-active" data-mode="pct">Chance %</span>
+                        <span class="cc-display-toggle-opt" data-mode="rating">Rating</span>
+                    </button>
+                </div>
+
+                <div class="cc-card-grid">
+
+                                        <div class="cc-col">
+                        <div class="cc-ring-box cc-ring-inline cc-desktop-only">
+                            <div id="cc-ring-chance"></div>
+                            <div class="cc-ring-stats">
+                                <div class="cc-ring-stat">
+                                    <span class="cc-ring-stat-label">Total</span>
+                                    <span class="cc-ring-stat-val" id="cc-chance-total" style="color:#c8a84b">10.00%</span>
+                                </div>
+                                <div class="cc-ring-stat">
+                                    <span class="cc-ring-stat-label">Cap</span>
+                                    <span class="cc-ring-stat-val" style="color:#a0a0a0">100%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Buffs</span>
+                        </div>
+
+                                                <div class="cc-card cc-always-on">
+                            <div class="cc-card-row">
+                                <div class="cc-name"><span class="cc-nolink">Base Game</span></div>
+                                <span class="cc-always-on-tag">Always On</span>
+                                <span class="cc-val">10%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-majorProphecy" data-chance-toggle="majorProphecy">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="major-savagery" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Savagery.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Major Savagery</span></span>
+    
+
+ /                                     
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="major-prophecy" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Major_Prophecy.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Prophecy</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-val-majorProphecy">12%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-minorProphecy" data-chance-toggle="minorProphecy">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="minor-savagery" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Savagery.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Minor Savagery</span></span>
+    
+
+ /                                     
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--buff-debuff&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="minor-prophecy" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;86efac;" data-hx-tooltip-tone="buff"><img class="hx-tip-trigger__icon" src="/images/icons/ON-icon-misc-Minor_Prophecy.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Prophecy</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-val-minorProphecy">6%</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Class</span>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-deathKnell" data-chance-toggle="deathKnell">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-death-knell" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_necromancer_004.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Death Knell</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-val-deathKnell">20%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-pressure-pts-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-pressure-points" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_weapon_015.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Pressure Points</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-pressure-pts-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6"></div>
+                            <input type="range" class="cc-slider" id="cc-pressure-pts-slider" min="0" max="6" value="0" aria-label="Pressure Points">
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-masterAssassin" data-chance-toggle="masterAssassin">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-master-assassin" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/passive_weapon_026.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Master Assassin</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-val-masterAssassin">6.60%</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-col-header">
+                            <span class="cc-col-title">Other</span>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-precision" data-chance-toggle="precision">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--champion-point&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="precision" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;38bdf8;" data-hx-tooltip-tone="champion-point"><img class="cc-icon" src="/images/icons/gameuiart/champion/champion_points_magicka_icon.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Precision</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-val-precision">1.46%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-thief">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                        
+                                                                                                                    <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--mundus&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="the-thief" aria-expanded="false" data-hx-tooltip-tone="mundus"><img class="cc-icon&#x20;cc-icon--sq" src="/images/icons/mundus/the-thief.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Thief (Mundus)</span></span>
+    
+
+
+                                </div>
+                                    <button class="pc-info-btn" type="button"
+            data-popup-title="The&#x20;Thief&#x20;Mundus"
+            data-popup-body="Thief&#x20;Mundus&#x20;provides&#x20;1212&#x20;Critical&#x20;Rating&#x20;&#x28;5.53&#x25;&#x20;Critical&#x20;Chance&#x29;,&#x20;but&#x20;each&#x20;armor&#x20;piece&#x20;with&#x20;Divines&#x20;trait&#x20;increases&#x20;it&#x20;by&#x20;roughly&#x20;110&#x20;rating.">i</button>
+
+                                <span class="cc-val" id="cc-thief-val">5.53%</span>
+                            </div>
+                            <div class="cc-expand-opts cc-hidden">
+                                <span class="cc-input-label">Divines pieces</span>
+                                <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8"></div>
+                                <input type="range" class="cc-slider" id="cc-thief-div-slider" min="0" max="8" value="0" aria-label="The Thief Divines pieces">
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-custom-card">
+                            <div class="cc-card-row">
+                                <div class="cc-name">Custom (%)</div>
+                                <input type="number" class="cc-custom-input" id="cc-custom-chance" value="0" min="0" step="1" aria-label="Custom critical chance (%)">
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="cc-col">
+                        <div class="cc-col-header">
+                            <span class="cc-col-title cc-green">Gear</span>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-light-armor-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-prodigy" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_sorcerer_038.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Light Armor</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-light-armor-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7"></div>
+                            <input type="range" class="cc-slider" id="cc-light-armor-slider" min="0" max="7" value="0" aria-label="Light Armor">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-set-piece-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                    <span class="cc-nolink">Set Piece Bonuses</span>
+                                </div>
+                                                                <button class="pc-info-btn" type="button"
+                                    data-popup-title="Set Piece Bonuses"
+                                    data-popup-body="&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;Some&#x20;sets&#x20;grant&#x20;critical&#x20;chance&#x20;as&#x20;2-4&#x20;piece&#x20;bonuses.&#x20;For&#x20;example&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&lt;span&#x20;role&#x3D;&quot;button&quot;&#x20;tabindex&#x3D;&quot;0&quot;&#x20;class&#x3D;&quot;hx-tip-trigger&amp;&#x23;x20&#x3B;hx-tip-trigger--gear&amp;&#x23;x20&#x3B;text-blue-400&amp;&#x23;x20&#x3B;hover&amp;&#x23;x3A&#x3B;text-blue-300&quot;&#x20;data-hx-tooltip-id&#x3D;&quot;orders-wrath&quot;&#x20;aria-expanded&#x3D;&quot;false&quot;&#x20;data-hx-tooltip-tone&#x3D;&quot;gear&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_breton_light_head_d.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;aria-hidden&#x3D;&quot;true&quot;&#x20;loading&#x3D;&quot;lazy&quot;&#x20;decoding&#x3D;&quot;async&quot;&#x20;width&#x3D;&quot;14&quot;&#x20;height&#x3D;&quot;14&quot;&gt;&lt;span&#x20;class&#x3D;&quot;hx-tip-trigger__label&quot;&gt;Order&amp;&#x23;039&#x3B;s&#x20;Wrath&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&lt;&#x2F;span&gt;,&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&lt;span&#x20;role&#x3D;&quot;button&quot;&#x20;tabindex&#x3D;&quot;0&quot;&#x20;class&#x3D;&quot;hx-tip-trigger&amp;&#x23;x20&#x3B;hx-tip-trigger--gear&amp;&#x23;x20&#x3B;text-blue-400&amp;&#x23;x20&#x3B;hover&amp;&#x23;x3A&#x3B;text-blue-300&quot;&#x20;data-hx-tooltip-id&#x3D;&quot;mothers-sorrow&quot;&#x20;aria-expanded&#x3D;&quot;false&quot;&#x20;data-hx-tooltip-tone&#x3D;&quot;gear&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_argonian_light_head_d.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;aria-hidden&#x3D;&quot;true&quot;&#x20;loading&#x3D;&quot;lazy&quot;&#x20;decoding&#x3D;&quot;async&quot;&#x20;width&#x3D;&quot;14&quot;&#x20;height&#x3D;&quot;14&quot;&gt;&lt;span&#x20;class&#x3D;&quot;hx-tip-trigger__label&quot;&gt;Mother&amp;&#x23;039&#x3B;s&#x20;Sorrow&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&lt;&#x2F;span&gt;,&#x20;or&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&lt;span&#x20;role&#x3D;&quot;button&quot;&#x20;tabindex&#x3D;&quot;0&quot;&#x20;class&#x3D;&quot;hx-tip-trigger&amp;&#x23;x20&#x3B;hx-tip-trigger--gear&amp;&#x23;x20&#x3B;text-blue-400&amp;&#x23;x20&#x3B;hover&amp;&#x23;x3A&#x3B;text-blue-300&quot;&#x20;data-hx-tooltip-id&#x3D;&quot;highland-sentinel&quot;&#x20;aria-expanded&#x3D;&quot;false&quot;&#x20;data-hx-tooltip-tone&#x3D;&quot;gear&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_breton_light_head_d.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;aria-hidden&#x3D;&quot;true&quot;&#x20;loading&#x3D;&quot;lazy&quot;&#x20;decoding&#x3D;&quot;async&quot;&#x20;width&#x3D;&quot;14&quot;&#x20;height&#x3D;&quot;14&quot;&gt;&lt;span&#x20;class&#x3D;&quot;hx-tip-trigger__label&quot;&gt;Highland&#x20;Sentinel&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&lt;&#x2F;span&gt;.&#x20;Some&#x20;Monster&#x20;Sets&#x20;&#x28;such&#x20;as&#x20;&lt;span&#x20;class&#x3D;&quot;content&quot;&gt;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&lt;span&#x20;role&#x3D;&quot;button&quot;&#x20;tabindex&#x3D;&quot;0&quot;&#x20;class&#x3D;&quot;hx-tip-trigger&amp;&#x23;x20&#x3B;hx-tip-trigger--gear&amp;&#x23;x20&#x3B;text-blue-400&amp;&#x23;x20&#x3B;hover&amp;&#x23;x3A&#x3B;text-blue-300&quot;&#x20;data-hx-tooltip-id&#x3D;&quot;slimecraw&quot;&#x20;aria-expanded&#x3D;&quot;false&quot;&#x20;data-hx-tooltip-tone&#x3D;&quot;gear&quot;&gt;&lt;img&#x20;class&#x3D;&quot;tiny-icon&quot;&#x20;src&#x3D;&quot;&#x2F;images&#x2F;icons&#x2F;gear_undauntedcrocodile_head_a.webp&quot;&#x20;alt&#x3D;&quot;&quot;&#x20;aria-hidden&#x3D;&quot;true&quot;&#x20;loading&#x3D;&quot;lazy&quot;&#x20;decoding&#x3D;&quot;async&quot;&#x20;width&#x3D;&quot;14&quot;&#x20;height&#x3D;&quot;14&quot;&gt;&lt;span&#x20;class&#x3D;&quot;hx-tip-trigger__label&quot;&gt;Slimecraw&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&#x20;&#x20;&#x20;&#x20;&#x0A;&lt;&#x2F;span&gt;&#x29;&#x20;grant&#x20;critical&#x20;chance&#x20;as&#x20;a&#x20;1-piece&#x20;bonus.&#x0A;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;">i</button>
+                                <span class="cc-val" id="cc-set-piece-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8,9,10"></div>
+                            <input type="range" class="cc-slider" id="cc-set-piece-slider" min="0" max="10" value="0" aria-label="Set Piece Bonuses">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-daggers-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                                
+                                                                                                                                <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--passive&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="passive-twin-blade-and-blunt" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;b8a5d8;" data-hx-tooltip-tone="passive"><img class="cc-icon&#x20;cc-icon--round" src="/images/icons/ability_weapon_016.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Dagger</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-daggers-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2"></div>
+                            <input type="range" class="cc-slider" id="cc-daggers-slider" min="0" max="2" value="0" aria-label="Dagger">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-precise-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                            
+                                                                                                                    <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--trait&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="weapon-precise" aria-expanded="false" data-hx-tooltip-tone="trait"><img class="cc-icon" src="/images/icons/crafting_jewelry_base_ruby_r3.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Precise</span></span>
+    
+
+
+                                </div>
+                                <span class="cc-val" id="cc-precise-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2"></div>
+                            <input type="range" class="cc-slider" id="cc-precise-slider" min="0" max="2" value="0" aria-label="Precise">
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-berserkingWarrior" data-chance-toggle="berserkingWarrior">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="berserking-warrior" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_craglorn_heavy_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Berserking Warrior</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-berserkingWarrior">11.30%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-highlandSentinel" data-chance-toggle="highlandSentinel">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="highland-sentinel" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_breton_light_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Highland Sentinel</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-highlandSentinel">10.56%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-tzogvin" data-chance-toggle="tzogvin">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="tzogvins-warband" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_coldsnap_medium_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Tzogvin&#039;s Warband</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-tzogvin">8.07%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-sulXanChance" data-chance-toggle="sulXanChance">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="perfected-sul-xans-torment" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_rockgrove_med_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Sul-Xan&#039;s Torment</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-sulXanChance">9.86%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-mothersSorrow" data-chance-toggle="mothersSorrow">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="mothers-sorrow" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_argonian_light_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Mother&#039;s Sorrow</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-mothersSorrow">6.97%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-leviathan" data-chance-toggle="leviathan">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="leviathan" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_reach_medium_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Leviathan</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-leviathan">6.97%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-morasWhispers" data-chance-toggle="morasWhispers">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="moras-whispers" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_hermaeusmora_shoulders_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Mora&#039;s Whispers</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-morasWhispers">6.97%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-ordersWrath" data-chance-toggle="ordersWrath">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="orders-wrath" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_breton_light_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Order&#039;s Wrath</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-ordersWrath">4.30%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-medusa" data-chance-toggle="medusa">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="medusa" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_argonian_heavy_head_d.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Medusa</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-medusa">4.07%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-true-sworn">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="true-sworn-fury" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_blackdrakevilla_lgt_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">True-Sworn Fury</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-true-sworn-val">3.23%</span>
+                            </div>
+                            <div class="cc-expand-opts cc-hidden">
+                                <div class="cc-step-labels" data-steps="x1,x2,x4"></div>
+                                <input type="range" class="cc-slider" id="cc-true-sworn-slider" min="0" max="2" value="0" aria-label="True-Sworn Fury">
+                            </div>
+                        </div>
+
+                                                <div class="cc-card" id="cc-chance-slimecraw" data-chance-toggle="slimecraw">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-check"></div>
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="slimecraw" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_undauntedcrocodile_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Slimecraw (2-piece)</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-val-slimecraw">0.52%</span>
+                            </div>
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-kilt-chance-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="harpooners-wading-kilt" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;fb923c;" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_kothringikilt_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Harpooner&#039;s Wading Kilt</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-kilt-chance-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8,9,10"></div>
+                            <input type="range" class="cc-slider" id="cc-kilt-chance-slider" min="0" max="10" value="0" aria-label="Harpooner's Wading Kilt">
+                        </div>
+
+                                                <div class="cc-card cc-slider-card" id="cc-moras-chance-card">
+                            <div class="cc-active-bar"></div>
+                            <div class="cc-card-row">
+                                <div class="cc-name">
+                                                                                
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;cc-link&#x20;hx-tip-trigger--calculator" data-hx-tooltip-id="mora-scribes-thesis" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="cc-icon" src="/images/icons/gear_lucentguardian_light_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Mora Scribe&#039;s Thesis</span></span>
+    
+    
+
+                                </div>
+                                <span class="cc-val" id="cc-moras-chance-val">0%</span>
+                            </div>
+                            <div class="cc-step-labels" data-steps="0,1,2,3,4,5,6,7,8,9,10,11,12"></div>
+                            <input type="range" class="cc-slider" id="cc-moras-chance-slider" min="0" max="12" value="0" aria-label="Mora Scribe's Thesis">
+                        </div>
+
+                    </div>
+
+                </div>            </div>
+            </div>
+                        <div class="cc-panel cc-desktop-only">
+
+                                <div class="cc-util-box">
+                    <div class="cc-util-title">DPS Impact</div>
+                    <button class="cc-transfer-btn" id="cc-transfer">Fill from calculators</button>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Chance</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-cc" value="60" min="0" max="100" step="0.1" aria-label="Crit Chance">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Dmg</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-cd" value="70" min="0" step="0.1" aria-label="Crit Dmg">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">New Crit Chance</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-new-cc" value="60" min="0" max="100" step="0.1" aria-label="New Crit Chance">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">New Crit Dmg</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-new-cd" value="90" min="0" step="0.1" aria-label="New Crit Dmg">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-result">
+                        <span class="cc-util-result-label">Damage Increase</span>
+                        <span class="cc-util-result-value"><span id="cc-imp-result">0.00</span>%</span>
+                    </div>
+                </div>
+
+                                <div class="cc-util-box">
+                    <div class="cc-util-title">Crit Rating Converter
+                        <button class="pc-info-btn" type="button" style="display:inline; vertical-align:middle; margin-left:4px;"
+                            data-popup-title="Crit Rating Converter"
+                            data-popup-body="ESO converts Critical Rating to Critical Chance using the formula: Crit Chance = Rating / 21918. So 21918 rating = 100% Critical Chance.">i</button>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Rating</span>
+                        <input type="number" class="cc-util-input" id="cc-rating-input" value="0" min="0" step="1" aria-label="Crit Rating">
+                    </div>
+                    <div class="cc-util-result">
+                        <span class="cc-util-result-label">Crit Chance</span>
+                        <span class="cc-util-result-value"><span id="cc-rating-result">0.00</span>%</span>
+                    </div>
+                </div>
+
+            </div>
+                        <div class="cc-mobile-only" style="padding: 0 16px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div class="cc-ring-box" style="flex:1;">
+                        <div class="cc-ring-label">Critical Damage</div>
+                        <div id="cc-ring-dmg-m"></div>
+                    </div>
+                    <div class="cc-ring-box" style="flex:1;">
+                        <div class="cc-ring-label">Critical Chance</div>
+                        <div id="cc-ring-chance-m"></div>
+                    </div>
+                </div>
+                <div class="cc-util-box" style="margin-bottom: 12px;">
+                    <div class="cc-util-title">Crit Rating Converter
+                        <button class="pc-info-btn" type="button" style="display:inline; vertical-align:middle; margin-left:4px;"
+                            data-popup-title="Crit Rating Converter"
+                            data-popup-body="ESO converts Critical Rating to Critical Chance using the formula: Crit Chance = Rating / 21918. So 21918 rating = 100% Critical Chance.">i</button>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Rating</span>
+                        <input type="number" class="cc-util-input" id="cc-rating-input-m" value="0" min="0" step="1" aria-label="Crit Rating">
+                    </div>
+                    <div class="cc-util-result">
+                        <span class="cc-util-result-label">Crit Chance</span>
+                        <span class="cc-util-result-value"><span id="cc-rating-result-m">0.00</span>%</span>
+                    </div>
+                </div>
+                <div class="cc-util-box" style="margin-bottom: 12px;">
+                    <div class="cc-util-title">DPS Impact</div>
+                    <button class="cc-transfer-btn" id="cc-transfer-m">Fill from calculators</button>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Chance</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-cc-m" value="60" min="0" max="100" step="0.1" aria-label="Crit Chance">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">Crit Dmg</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-cd-m" value="70" min="0" step="0.1" aria-label="Crit Dmg">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">New Crit Chance</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-new-cc-m" value="60" min="0" max="100" step="0.1" aria-label="New Crit Chance">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-row">
+                        <span class="cc-util-label">New Crit Dmg</span>
+                        <input type="number" class="cc-util-input" id="cc-imp-new-cd-m" value="90" min="0" step="0.1" aria-label="New Crit Dmg">
+                        <span class="cc-util-unit">%</span>
+                    </div>
+                    <div class="cc-util-result">
+                        <span class="cc-util-result-label">Damage Increase</span>
+                        <span class="cc-util-result-value"><span id="cc-imp-result-m">0.00</span>%</span>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+                        <div id="cc-popup-portal" class="cc-popup-portal cc-hidden">
+                <div class="cc-popup-title"></div>
+                <div class="cc-popup-body"></div>
+            </div>
+
+
+            <div style="padding: 0 0 40px;">
+
+                <h2 class="guide-heading">How Critical Damage Works in ESO</h2>
+                <p class="guide-text">Every character in ESO starts with a base 50% Critical Damage bonus. When you land a critical hit, your damage is multiplied by 1 + your total Critical Damage. So at 50% base, a crit does 1.5x damage. Every source of Critical Damage - buffs like Major Force, gear sets, class passives, champion points - stacks additively on top of that 50% base. Since Update 32 (Deadlands), Critical Damage is hard capped at 125%. Anything beyond that is wasted.</p>
+
+                <h2 class="guide-heading">How Critical Chance Works in ESO</h2>
+                <p class="guide-text">Critical Chance in ESO comes from a stat called Critical Rating. Divide your rating by 21918 to get your crit chance percentage. Every character starts with a base 10% Critical Chance regardless of gear or stats. Sources like the Thief Mundus, weapon traits like Precise, armor passives, and gear sets all add Critical Rating (or flat crit chance in some cases) on top of that base. You can check your current Critical Chance in the character sheet under Advanced Stats. There is no hard cap on Critical Chance, but since it's a percentage, it naturally caps at 100%.</p>
+
+                <h2 class="guide-heading">FAQ</h2>
+
+                <div class="accordion mb-2">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">How does crit damage work in ESO?</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="guide-text mx-4">Critical damage in ESO starts at a base of 50%, meaning critical hits deal 150% of normal damage. You can increase this through buffs like Major and Minor Force, gear sets, class passives, champion points, and racial bonuses. There is a hard cap of 125% critical damage, introduced in Update 32, meaning critical hits can deal at most 225% of normal damage.</p>
+                    </div>
+                </div>
+
+                <div class="accordion mb-2">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">How is crit chance calculated in ESO?</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="guide-text mx-4">All characters start with a base 10% critical chance. On top of that, crit rating from gear, sets, and buffs is converted to a percentage by dividing by 21918. For example, 1096 crit rating gives roughly 5% crit chance. Buffs like Major Prophecy/Savagery add a flat 12% directly. There is no hard cap on critical chance - you can reach 100%.</p>
+                    </div>
+                </div>
+
+                <div class="accordion mb-2">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">What is a good crit rate in ESO?</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="guide-text mx-4">There is no single target number for crit chance in ESO. The value of crit chance depends on your current crit damage, group buffs, and the rest of your stats. Crit chance has diminishing returns - the more you have, the less each additional point is worth. However, higher crit damage counteracts this by making each critical hit more valuable. Use this calculator to see how much total DPS each point of crit chance is actually worth for your specific build.</p>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">Is crit damage better than crit chance?</span>
+                        <svg class="accordion-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="guide-text mx-4">Neither is universally better - it depends on your current stats and group setup. Adding crit damage is worth more when you already have high crit chance, and adding crit chance is worth more when you already have high crit damage. In organized trial groups, crit damage is often pushed to the 125% cap by group buffs like <span class="content">                                                
+                                                                                                                                        <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--skill&#x20;text-blue-400&#x20;hover&#x3A;text-blue-300" data-hx-tooltip-id="skill-aggressive-horn" aria-expanded="false" style="--hx-tip-entry-accent: &#x23;d7b46a;" data-hx-tooltip-tone="skill"><img class="tiny-icon" src="/images/icons/ability_ava_003_a.png" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Aggressive Warhorn</span></span>
+    
+    
+</span> and <span class="content">                                            
+                                                                                                                            <span role="button" tabindex="0" class="hx-tip-trigger&#x20;hx-tip-trigger--gear&#x20;text-blue-400&#x20;hover&#x3A;text-blue-300" data-hx-tooltip-id="perfected-lucent-echoes" aria-expanded="false" data-hx-tooltip-tone="gear"><img class="tiny-icon" src="/images/icons/gear_lucentguardian_heavy_head_a.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="14" height="14"><span class="hx-tip-trigger__label">Lucent Echoes</span></span>
+    
+    
+</span>, making additional crit chance more valuable. The DPS impact calculators on this page let you compare exactly how much total damage each stat adds for your specific setup.</p>
+                    </div>
+                </div>
+
+                <div class="divider-subtle"></div>
+                <p class="guide-text" style="margin-top: 16px; color: #a0a0a0; font-size: 13px; text-align: center;">Big thanks to SparkRip for creating a spreadsheet calculator which this tool is based off of - you can find it <a href="https://docs.google.com/spreadsheets/d/1ZDnmtfHZ_xudB5MJovryVMOovwn_Vtz-Pe550rxpygI/edit?gid=1115704764#gid=1115704764" class="text-blue-400 hover:text-blue-300" target="_blank" rel="noopener">here</a>.</p>
+            </div>
+
+        </div>
+    </div>    ﻿<div id="thanks" class="my-8 text-center">
+                            
+    
+    <h2 class="font-bold text-3xl lg:text-7xl my-6">THANKS FOR READING</h2>
+    <a href="https://www.patreon.com/c/Hyperioxes" aria-label="Patreon"><img class="thanks-patreon-logo" src="/images/logos/patreonLogo.webp" alt="Patreon" loading="lazy" decoding="async" width="512" height="512"></a>
+    <p class="guide-text my-4">If you want to support my work, you can do so through <a class="text-orange-500 hover:text-orange-400 underline underline-offset-2" href="https://www.patreon.com/c/Hyperioxes">Patreon</a>.</p>
+</div>
+</main>
+    
+
+
+    ﻿<footer>
+    <div data-nosnippet="" style="background: #0e0c0a; border-top: 1px solid #eab308; padding: 48px 0;">
+        <div style="max-width: 1350px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; gap: 48px; align-items: stretch;">
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Discord</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Wild Heart is a Discord server where you can find advice for any aspect of PvE.</p>
+                <a href="https://discord.com/invite/wildheart" style="display: block; text-align: center;" aria-label="Discord">
+                    <img class="footer-social-logo" src="/images/discord-logo-white.svg" alt="Discord" width="169" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-1" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-1" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">YouTube</h3>
+                <p style="font-size: 13px; color: #888; line-height: 1.6; text-align: center;">Most builds on this site have a corresponding video on my YouTube channel.</p>
+                <a href="https://www.youtube.com/@Hyperioxes" style="display: block; text-align: center;" aria-label="YouTube">
+                    <img class="footer-social-logo" src="/images/yt_logo_mono_dark.webp" alt="YouTube" width="143" height="32" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+            <div class="footer-divider-2" style="width: 1px; background: #2a2520; align-self: stretch;"></div>
+            <div class="footer-divider-h footer-divider-h-2" style="display: none; height: 1px; background: #2a2520; width: 100%;"></div>
+
+            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; justify-content: center;">
+                <h3 style="font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888;">Twitch</h3>
+                <p style="max-width: 260px; font-size: 13px; color: #888; line-height: 1.6; text-align: center;">I stream ESO build testing and gameplay on Twitch.</p>
+                <a href="https://www.twitch.tv/hyperioxes" style="display: block; text-align: center;" aria-label="Twitch">
+                    <img class="footer-social-logo" src="/images/twitchLogo.webp" alt="Twitch" width="800" height="265" loading="lazy" style="height: 32px; width: auto; opacity: 0.8; transition: opacity 0.2s;">
+                </a>
+            </div>
+
+        </div>
+
+        <div style="max-width: 1350px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid #2a2520; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 24px;">
+            <span style="font-size: 18px; font-weight: 700; letter-spacing: 0.1em; color: #888;">HYPERIOXES</span>
+            <a href="/privacy-policy" style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #a8a29e; text-decoration: none;">Privacy Policy</a>
+            <div id="ncmp-consent-link"></div>
+            <span data-ccpa-link="1"></span>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer-social-logo:hover,
+    .footer-social-logo:focus-visible {
+        opacity: 1 !important;
+    }
+    @media (max-width: 860px) {
+        .footer-divider-1 { display: none; }
+        .footer-divider-2 { display: none; }
+        .footer-divider-h { display: block !important; }
+    }
+</style>
+
+
+
+        <script src="/build/runtime.2033471d.js" defer></script><script src="/build/app.4d0ec687.js" defer></script>
+    
+    <script src="/build/crit-calculator.62e30c1b.js" defer></script>
+    <script src="/build/4114.07180314.js" defer></script><script src="/build/tooltips.2333a265.js" defer></script>
+
+<script>
+function hyperioxesScheduleNitroAds(){var load=window.hyperioxesLoadNitroAds;if(typeof load!=="function")return;var run=function(){window.setTimeout(function(){if("requestIdleCallback"in window){window.requestIdleCallback(load,{timeout:3000});}else{load();}},1200);};if(document.readyState==="complete"){run();}else{window.addEventListener("load",run,{once:true});}}
+hyperioxesScheduleNitroAds();
+window['nitroAds'].createAd('rail-left', {
+  "format": "rail",
+  "rail": "left",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('rail-right', {
+  "format": "rail",
+  "rail": "right",
+  "mediaQuery": "(min-width: 1920px)",
+  "railCollisionWhitelist": ["*"],
+  "railOffsetTop": 0,
+  "railOffsetBottom": 0,
+  "railCloseColor": "#666666",
+  "railSpacing": 10,
+  "railStack": false,
+  "railStickyTop": 0,
+  "railVerticalAlign": "center",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming",
+  "refreshLimit": 0,
+  "report": {"enabled": true, "icon": true, "wording": "Report Ad", "position": "top-right"}
+});
+window['nitroAds'].createAd('anchor', {
+  "format": "anchor",
+  "anchor": "bottom",
+  "anchorClose": true,
+  "anchorPersistClose": true,
+  "mediaQuery": "(max-width: 1023px)",
+  "keywords": "eso, elder scrolls online, build guide, mmo, gaming"
+});
+
+</script>
+
+</body>
+</html>

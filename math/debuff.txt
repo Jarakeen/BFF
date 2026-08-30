@@ -1,0 +1,135 @@
+Debuffs
+Debuff Name 	Type 	Description 	Sources 	Icon
+Breach
+	Minor 	Decreases target's physical and spell resistance by 2974. 	Abilities 	Deep Fissure, Fatewoven Armor, Petrify, Pierce Armor, Sundered (Physical damage status), Wall of Frost against Chilled enemies 	ON-icon-misc-Minor Breach.png
+Sets 	Corpseburster, Dragon's Defilement, Hand of Mephala, The Saint and the Seducer, Sunderflame, Tarnished Nightmare (applies Sundered Status)
+Scribing 	Breach on Mender's Bond, Smash, Soul Burst, Torchbearer, Ulfsild's Contingency
+Potions 	Breach Breach Potion or Poison, Increase Spell Resist Increase Spell Resist Poison
+Major 	Decrease target's physical and spell resistance by 5948. 	Abilities 	Crushing Weapon, Deep Fissure, Disintegrating Dragonfire, Mark Target, Puncture, Razor Caltrops, Rip and Tear, Unnerving Boneyard, Weakness to Elements 	ON-icon-misc-Major Breach.png
+Sets 	Kynmarcher's Cruelty, Night Mother's Gaze
+Scribing 	Breach on Wield Soul
+
+Brittle
+	Minor 	Increases target's Crit Damage Taken by 10% 	Abilities 	Chilled (Frost damage status) with an Ice Staff equipped, Rune of the Colorless Pool 	ON-icon-misc-Minor Brittle.png
+Sets 	The Saint and the Seducer, Glittering Goad
+Scribing 	Brittle on Elemental Explosion, Mender's Bond
+Major 	Increases target's Crit Damage Taken by 20% 	Abilities 	Tundra's Maw 	ON-icon-misc-Major Brittle.png
+Sets 	Nunatak
+
+Cowardice
+	Minor 	Reduces the target's Weapon and Spell Damage by 215 	Abilities 	Corrupting Pollen, Erudite's Rigor, Power Extraction 	ON-icon-misc-Minor Cowardice.png
+Sets 	Healing Mage, The Saint and the Seducer
+Scribing 	Cowardice on Elemental Explosion, Torchbearer, Trample
+Potions 	Cowardice Cowardice Potion or Poison, Increase Spell Power Increase Spell Power Poison
+Major 	Reduces the target's Weapon and Spell Damage by 430 	Abilities 	Aspect of Terror, Bone Totem, Chains of Flame, Deafening Roar 	ON-icon-misc-Major Cowardice.png
+Sets 	Kynmarcher's Cruelty, Nix-Hound's Howl, Gardener of Seasons, Vykosa
+Scribing 	Cowardice on Shield Throw, Wield Soul
+
+Defile
+	Minor 	Reduces target's Healing Taken and Shield Strength by 6%. 	Abilities 	Diseased (Disease damage status), Lethal Arrow, Render Flesh (applies to self) 	ON-icon-misc-Minor Defile.png
+Sets 	Affliction, Fasalla's Guile, Pirate Skeleton, Thurvokun (set) (applies Diseased Status)
+Scribing 	Defile on Elemental Explosion, Trample
+Potions 	Defile Defile Potion or Poison, Vitality Vitality Poison
+Major 	Reduces target's Healing Taken and Shield Strength by 12%. 	Abilities 	Blighted Blastbones, Corrupting Pollen, Dark Flare, Shifting Standard , Soul Harvest 	ON-icon-misc-Major Defile.png
+Sets 	Durok's Bane, Kynmarcher's Cruelty, Ward of Cyrodiil
+Scribing 	Defile on Wield Soul
+
+Enervation
+	Minor 	Reduce Critical Damage by 10% 	Sets 	Blunted Blades, Critical Riposte, Lady Malygda, Wizard's Riposte 	ON-icon-misc-Minor Enervation.png
+Scribing 	Enervation on Elemental Explosion, Shield Throw, Ulfsild's Contingency
+Potions 	Enervation Enervation Potion or Poison, Weapon Critical Weapon Critical Poison
+Major 	N/A 			ON-icon-misc-Major Enervation.png
+
+Fracture
+	Minor 	Reduce Physical Resistance by 1320 	Potions 	Fracture Fracture Potion or Poison, Increase Armor Increase Armor Poison 	ON-icon-misc-Minor Fracture.png
+Major 	N/A 			ON-icon-misc-Major Fracture.png
+
+Hindrance
+	Minor 	Reduce Movement Speed by 40% 	Potions 	Hindrance Hindrance Potion or Poison, Speed Speed Poison 	ON-icon-misc-Minor Hindrance.png
+Major 	N/A 			ON-icon-misc-Major Hindrance.png
+
+Lifesteal
+	Minor 	Attacking the enemy restores 600 health per second 	Abilities 	Blood Altar, Force Siphon, Leeching Vines, Runic Embrace 	ON-icon-misc-Minor Lifesteal.png
+Sets 	Call of the Undertaker
+Scribing 	Lifesteal on Elemental Explosion, Traveling Knife, Vault
+Major 	N/A 			ON-icon-misc-Major Lifesteal.png
+
+Magickasteal
+	Minor 	Attacking the enemy restores 168 magicka per second 	Abilities 	Elemental Drain, Overcharged (Magic damage status), Siphon Spirit 	ON-icon-misc-Minor Magickasteal.png
+Scribing 	Magickasteal on Elemental Explosion, Soul Burst, Ulfsild's Contingency
+Major 	N/A 			ON-icon-misc-Major Magickasteal.png
+
+Maim
+	Minor 	Reduce Damage dealt by 5% 	Abilities 	Chilled (Frost damage status), Choking Talons, Grave Grasp, Inner Beast, Low Slash, Runic Jolt, Summon Shade, Sun Shield 	ON-icon-misc-Minor Maim.png
+Sets 	Knightmare, The Saint and the Seducer, Shadowrend, Thurvokun
+Scribing 	Maim on Mender's Bond, Smash, Soul Burst, Traveling Knife, Vault
+Potions 	Maim Maim Potion or Poison, Increase Weapon Power Increase Weapon Power Poison
+Major 	Reduce Damage dealt by 10% 	Abilities 	Deafening Roar, Empowering Grasp, Encase, Frost Clench, Frozen Device, Icy Aura, Nova 	ON-icon-misc-Major Maim.png
+Sets 	Bani's Torment, Kynmarcher's Cruelty, Lady Thorn, Reflected Fury, Silver Rose Vigil, Void Bash
+Scribing 	Maim on Shield Throw, Wield Soul
+
+Mangle
+	Minor 	Reduces target's max health by 10%. 	Abilities 	Pulsar 	ON-icon-misc-Minor Mangle.png
+Scribing 	Mangle on Smash, Torchbearer, Trample
+Verse 	Tomefoolery
+Major 	N/A 			ON-icon-misc-Major Mangle.png
+
+Timidity
+	Minor 	Drains 1 Ultimate every 1.5 seconds. 	Sets 	Baron Thirsk 	ON-icon-misc-Major Timidity.png
+Major 	N/A 			ON-icon-misc-Major Timidity.png
+
+Uncertainty
+	Minor 	Reduces weapon/spell critical by 1314. 	Sets 	Critical Riposte 	ON-icon-misc-Minor Uncertainty.png
+Scribing 	Uncertainty on Torchbearer, Traveling Knife
+Potions 	Uncertainty Uncertainty Potion or Poison, Weapon Critical Weapon Critical Poison, Spell Critical Spell Critical Poison
+Major 	N/A 			ON-icon-misc-Major Uncertainty.png
+
+Vulnerability
+	Minor 	Increase damage taken by 5% 	Abilities 	Boneyard, Concussed status (Shock damage status), Fossilize, Inner Beast, Rune of Eldritch Horror, Swarm, Teleport Strike 	ON-icon-misc-Minor Vulnerability.png
+Sets 	Infallible Mage, Noble's Conquest, The Saint and the Seducer, Scavenging Demise, Wise Mage
+Scribing 	Vulnerability on Mender's Bond, Trample, Traveling Knife, Ulfsild's Contingency, Vault
+Potions 	Vulnerability Vulnerability Potion or Poison, Protection Protection Poison
+Major 	Increase damage taken by 10% 	Abilities 	Frozen Colossus 	ON-icon-misc-Major Vulnerability.png
+Sets 	Archdruid Devyric, Kynmarcher's Cruelty, Turning Tide, Umbral Edge, Coup De Grâce, Stonehulk Domination
+
+Miscellaneous Buffs
+Buff Name 	Description 	Sources 	Icon
+
+Ayleid Health Bonus 	Gain 10% health for 10 minutes (30 minutes if in Cyrodiil) 	Ayleid Wells 	ON-icon-misc-Soul.png
+
+Batasha's Brew 	Increase idle stamina regeneration by 5% for 30 minutes.
+(Despite stating "idle", it works both in and out of combat, and both moving and standing still) 	Batasha in Wrothgar 	ON-icon-stolen-Wine.png
+
+Blessing of War 	Increase Alliance Points gained by 20% for 1 hour. Only active while in Cyrodiil or Cyrodiil delves. 	Defeating Delve bosses in Cyrodiil 	ON-icon-ava-Blessing of War.png
+
+Firelight 	Increases your Max Stamina by 5% for 30 minutes. 	Lightbringer NPCs 	ON-icon-misc-Lit Torch.png
+
+Looking for Group 	Increases your Max Health by 25% and your Weapon and Spell Damage by 20%. 	Entering a Group Dungeon through the Dungeon Finder while under level 50. 	ON-icon-misc-Looking for Group.png
+
+Magicka Attunement 	Increases your Spell Resistance by 6600 in Craglorn. Not effective in Trials or in Dragonstar Arena. for 1 hour. 	Magical Aura available by completing Magical Anomalies in Craglorn 	ON-icon-misc-Magicka Attunement.png
+
+Malacath's Blessing 	Increases critical resistance by 1% for 30 minutes. 	Malacath Priests in Wrothgar 	ON-icon-stolen-Wine.png
+
+Nirncrux Infusion 	Increases your Physical Resistance by 6600 in Craglorn. Not effective in Trials or in Dragonstar Arena. for 1 hour. 	Stable Nirncrux available by completing Nirncrux Mines in Craglorn 	ON-icon-misc-Nirncrux Infusion.png
+
+Revealed 	There's no place to hide in the arena for 1 second, every second.
+You cannot crouch, go in stealth or go invisible. Despite giving negative effects, it is considered a buff. 	During the whole world boss combat of Kvatch Arena 	ON-icon-achievement-Spellscar Defender.png
+
+Scuttle Sprint 	Increases Movement Speed by 20% for 3 minutes. 	Harvesting a Scuttlebloom 	ON-icon-misc-Crowd Control Immunity.png
+
+Trinimac's Blessing 	Increases critical chance by 1% for 30 minutes. 	Trinimac Priests in Wrothgar 	ON-icon-stolen-Wine.png
+
+Yokudan Might 	Increases your damage done by 5% in Craglorn. Not effective in Trials or in Dragonstar Arena for 1 hour. 	Consectated Aura available by completing Anka-Ra Burial Sites in Craglorn 	ON-icon-skill-Heavy Armor-Unstoppable Brute.png
+
+Quest-Related
+Buff Name 	Description 	Sources 	Icon
+
+Blacksap's Brew 	Increases Movement Speed by 4%. Decreases Damage Taken by 10% 	Acquired during The Blacksap's Hold 	ON-icon-misc-Blessing.png
+
+Blessing of Arkay 	Reduces damage from Daedra by 5% for 5 minutes 	Will of the Broken quest. Depending on your choice, a temporary buff in the quest or available anytime from Vaudrie after completion. 	ON-icon-stolen-Potion.png
+
+Snake Scales 	Decreases Damage Taken by 5% and Increases Damage Done by 5% while in Grahtwood for 1 hour 	Bosmer Insight quest reward 	ON-icon-misc-Scales.png
+
+Tiger's Fur 	Increases Movement Speed by 4% and Decreases Damage Taken by 5% while in Grahtwood for 1 hour 	Bosmer Insight quest reward 	ON-icon-food-Iron Peat.png
+
+Wolf's Pelt 	Increases Movement Speed by 4% and Increases Damage Done by 5% while in Grahtwood for 1 hour 	Bosmer Insight quest reward 

@@ -1,0 +1,173 @@
+Buffs
+Buff Name 	Type 	Description 	Sources 	Icon
+
+Aegis
+	Minor 	Take 5% less damage from Dungeon, Trial and Arena Monsters. 	Sets 	Aegis of Galenwe, Automated Defense, Claw of Yolnahkriin, Eternal Warrior, Eye of Nahviintaas, Inventor's Guard, Kyne's Wind, Lucent Echoes, Lunar Bastion, Oakensoul Ring, Pearlescent Ward, Pillager's Profit, Saxhleel Champion, Stone-Talker's Oath, Test of Resolve, Transformative Hope, Twilight Remedy, Vestment of Olorime, Vrol's Command, Xoryn's Masterpiece 	ON-icon-misc-Minor Aegis.png
+Major 	Take 10% less damage from Dungeon, Trial and Arena Monsters. 	Sets 	Automated Defense, Inventor's Guard, Ironblood, Test of Resolve, Vrol's Command 	ON-icon-misc-Major Aegis.png
+
+Berserk
+	Minor 	Increases all damage done by 5%. 	Abilities 	Ambush, Bird of Prey, Camouflaged Hunter, Combat Prayer, Dark Exchange, Spear Wall 	ON-icon-misc-Minor Berserk.png
+Sets 	Kinras's Wrath, Oakensoul Ring, Slimecraw, Stone's Accord
+Scribing 	Berserk on Banner Bearer, Smash, Traveling Knife, Vault
+Major 	Increases all damage done by 10%. 	Abilities 	Chains of Devastation, Lead From the Front, Reaper's Mark, Summon Storm Atronach, Werewolf Berserker, Wrecking Blow 	ON-icon-misc-Major Berserk.png
+Sets 	Heem-Jas' Retribution, Kinras's Wrath, The Saint and the Seducer, Sea-Serpent's Coil, Tharriker's Strike, Unchained Aggressor
+
+Brutality
+	Minor 	Increases weapon damage by 10%. 	Abilities 	Elder Dragon 	ON-icon-misc-Minor Brutality.png
+Potions 	Increase Weapon Power Increase Weapon Power Poison
+Major 	Increases weapon damage by 20%. 	Abilities 	Betty Netch, Biting Jabs, Degeneration, Drain Power, Hidden Blade, Hircine's Bounty, Molten Weapons, Momentum, Skeletal Mage, Surge, Pariah's Resolve, Tome-Bearer's Inspiration, Venom Arrow 	ON-icon-misc-Major Brutality.png
+Sets 	Dreugh King Slayer, Oakensoul Ring, Rattlecage
+Scribing 	Brutality and Sorcery on Banner Bearer, Elemental Explosion, Smash, Soul Burst, Torchbearer, Trample, Traveling Knife, Ulfsild's Contingency, Vault, Wield Soul
+Potions 	Increase Weapon Power Increase Weapon Power Potion
+
+Courage
+	Minor 	Increase your Weapon and Spell Damage by 215 	Abilities 	Arcanist's Domain, Blood of the Elder Dragon, Power Extraction, Pack Leader 	ON-icon-misc-Minor Courage.png
+Sets 	Claw of Yolnahkriin, Crusader, Magma Incarnate, Oakensoul Ring, Pangrit Denmother, Phoenix Moth Theurge
+Scribing 	Courage on Banner Bearer, Mender's Bond, Soul Burst
+Major 	Increase your Weapon and Spell Damage by 430 	Abilities 	Ferocious Roar 	ON-icon-misc-Major Courage.png
+Sets 	Nix-Hound's Howl, The Saint and the Seducer, Sea-Serpent's Coil, Spell Power Cure, Vestment of Olorime
+
+Empower
+	- 	Increases damage against monsters with Heavy Attacks by 70%. 	Abilities 	Ambush, Empowering Grasp, Might of the Guild, Molten Armaments, Solar Flare, Wrecking Blow 	ON-icon-misc-Major Empower.png
+Sets 	Aegis of Galenwe, Grisly Gourmet, Might of the Lost Legion, Oakensoul Ring, Queen's Elegance, Rage of the Ursauk
+Scribing 	Empower on Mender's Bond, Wield Soul
+
+Endurance
+	Minor 	Increases stamina recovery by 15%. 	Abilities 	Arcanist's Domain, Circle of Protection, Enchanted Growth, Momentum, Refreshing Path, Regenerative Ward, Restoring Aura 	ON-icon-misc-Minor Endurance.png
+Sets 	Oakensoul Ring
+Scribing 	Intellect and Endurance on Banner Bearer, Mender's Bond, Soul Burst, Ulfsild's Contingency, Vault
+Major 	Increases stamina recovery by 30%. 	Abilities 	Blood of the Green Dragon, Pariah's Resolve 	ON-icon-misc-Major Endurance.png
+Sets 	Apocryphal Inspiration
+Scribing 	Intellect and Endurance on Wield Soul
+Potions 	Restore Stamina Restore Stamina Potion
+
+Evasion
+	Minor 	Reduces damage from area attacks by 10%. 	Abilities 	Circumvented Fate, Deceptive Predator 	ON-icon-misc-Minor Evasion.png
+Sets 	Abyssal Brace
+Scribing 	Evasion on Mender's Bond, Torchbearer
+Major 	Reduces damage from area attacks by 20%. 	Abilities 	Blade Cloak, Blur, Chains of Devastation, Deafening Roar, Elusive Mist, Evasion 	ON-icon-misc-Major Evasion.png
+Sets 	Gossamer, Grace of Gloom, Hist Bark, Leki's Focus, The Saint and the Seducer, Spectre's Eye
+Scribing 	Evasion on Shield Throw, Vault
+
+Expedition
+	Minor 	Increases movement speed by 15%. 	Abilities 	Charging Maneuver, Concealed Weapon, Hasty Prayer, Hurricane, Quick Siphon 	ON-icon-misc-Minor Expedition.png
+Sets 	Gryphon's Ferocity, Jailbreaker
+Scribing 	Expedition on Smash, Soul Burst, Traveling Knife, Vault
+Major 	Increases movement speed by 30%. 	Abilities 	Accelerate, Boundless Storm, Elude, Elusive Mist, Falcon's Swiftness, Fleet-Footed Gate, Frozen Retreat, Hasty Retreat, Padomaic Sprint, Pariah's Resolve, Path of Darkness, Quick Cloak, Rapid Maneuver, Wing Buffet 	ON-icon-misc-Major Expedition.png
+Sets 	Adept Rider, Coward's Gear, Daedric Trickery, Dreugh King Slayer, False God's Devotion, Quick Serpent, Skooma Smuggler, Vicious Serpent
+Scribing 	Expedition on Trample
+Potions 	Speed Speed Potion or Poison
+
+Force
+	Minor 	Increases critical damage done by 10%. 	Abilities 	Accelerate, Roar, Stalwart Guard, Trap Beast 	ON-icon-misc-Minor Force.png
+Sets 	The Blind (set), Grave Inevitability, Gryphon's Ferocity, Medusa, Oakensoul Ring, Phoenix Moth Theurge, Twilight Remedy, Tzogvin's Warband, Velothi Ur-Mage's Amulet
+Scribing 	Force on Mender's Bond, Smash, Traveling Knife, Ulfsild's Contingency, Vault
+Major 	Increases critical damage done by 20%. 	Abilities 	Aggressive Horn, Ink-Scribe's Verve, Light's Champion 	ON-icon-misc-Major Force.png
+Sets 	Grave Inevitability, Grisly Gourmet, The Saint and the Seducer, Saxhleel Champion
+
+Fortitude
+	Minor 	Increases health recovery by 15%. 	Abilities 	Arcanist's Domain, Hearthfire, Restoring Aura 	ON-icon-misc-Minor Fortitude.png
+Sets 	Oakensoul Ring
+Major 	Increases health recovery by 30%. 	Abilities 	Dragon Blood 	ON-icon-misc-Major Fortitude.png
+Sets 	Apocryphal Inspiration
+Potions 	Restore Health Restore Health Potion
+
+Gallop
+	- (Counts as a Minor Buff) 	Increases mounted speed by 15%. (Multiplicatively) 	Abilities 	Continuous Attack 	ON-icon-misc-Major Gallop.png
+Sets 	Adept Rider
+
+Heroism
+	Minor 	Generates 1 Ultimate every 1.5 seconds. (Only while in combat) 	Abilities 	Audacious Runemend, Hearthfire, Heroic Slash 	ON-icon-misc-Minor Heroism.png
+Sets 	Champion of the Hist, Cryptcanon Vestments, Daring Corsair, Gardener of Seasons, Indomitable Fury, Oakensoul Ring, Reawakened Hierophant, Ritemaster's Bond, Shalk Exoskeleton
+Scribing 	Heroism on Banner Bearer, Mender's Bond, Torchbearer
+Potions 	Heroism Heroism Potion
+Major 	Generates 3 Ultimate every 1.5 seconds. (Only while in combat) 	Abilities 	Bountiful Harvest, Shimmering Shield 	ON-icon-misc-Major Heroism.png
+Sets 	Basalt-Blooded Warrior, Daedric Trickery, Drake's Rush, Hanu's Compassion, Transformative Hope
+Scribing 	Heroism on Trample
+Champion 	Last Stand
+
+Intellect
+	Minor 	Increases magicka recovery by 15%. 	Abilities 	Arcanist's Domain, Enchanted Growth, Refreshing Path, Regenerative Ward, Restoring Aura 	ON-icon-misc-Minor Intellect.png
+Sets 	Oakensoul Ring
+Scribing 	Intellect and Endurance on Banner Bearer, Mender's Bond, Soul Burst, Ulfsild's Contingency, Vault
+Major 	Increases magicka recovery by 30%. 	Sets 	Apocryphal Inspiration 	ON-icon-misc-Major Intellect.png
+Scribing 	Intellect and Endurance on Wield Soul
+Potions 	Restore Magicka Restore Magicka Potion
+
+Mending
+	Minor 	Increases healing done by 8%. 	Abilities 	Healthy Offering, Sacred Ground 	ON-icon-misc-Minor Mending.png
+Sets 	Healer's Habit, Naga Shaman, Oakensoul Ring
+Major 	Increases healing done by 16%. 	Abilities 	Accelerated Growth, Essence Drain, Obsidian Shield 	ON-icon-misc-Major Mending.png
+Sets 	Daedric Trickery, Wisdom of Vanus
+Physical Resistance
+		Increases physical resistance by 1320. 	Potions 	Increase Armor Increase Armor Poison 	ON-icon-misc-Minor Resolve.png
+Physical Resistance Potion
+
+		Increases physical resistance by 5280. 	Potions 	Increase Armor Increase Armor Potion 	ON-icon-misc-Major Resolve.png
+Prophecy
+	Minor 	Increases spell critical by 1314. 	Abilities 	Exploitation 	ON-icon-misc-Minor Prophecy.png
+Potions 	Spell Critical Spell Critical Poison
+Major 	Increases spell critical by 2629. 	Abilities 	Bound Armaments, Expert Hunter, Grim Focus, Inferno, Lotus Flower, Magelight, Roar, Shocking Siphon, Sun Fire 	ON-icon-misc-Major Prophecy.png
+Sets 	Oakensoul Ring, Toothrow, Treasure Hunter
+Scribing 	Savagery and Prophecy on Banner Bearer, Elemental Explosion, Smash, Soul Burst, Torchbearer, Trample, Traveling Knife, Ulfsild's Contingency, Vault, Wield Soul
+Potions 	Spell Critical Spell Critical Potion
+
+Protection
+	Minor 	Reduces damage taken by 5%. 	Abilities 	Bone Totem, Bound Armor, Circle of Protection, Deafening Roar, Frost Impulse, Ice Fortress, Protect the Brood, Ransack, Runic Defense, Shadow Cloak, Spear Wall, Temporal Guard 	ON-icon-misc-Minor Protection.png
+Sets 	Indomitable Fury, Ironblood, Oakensoul Ring, Vampire Cloak
+Scribing 	Protection on Banner Bearer, Mender's Bond, Ulfsild's Contingency
+Potions 	Protection Protection Potion or Poison
+Verses 	Apocryphal Emissary 1st stack
+Major 	Reduces damage taken by 10%. 	Abilities 	Consuming Darkness, Deaden Pain, Focused Charge, Glyphic of the Tides, Hearth and Home, Lead From the Front, Pack Leader, Remembrance, Revealing Flare, Sleet Storm 	ON-icon-misc-Major Protection.png
+Sets 	Coward's Gear, Daedric Trickery, Hagraven's Garden, Immortal Warrior, Ironblood, Pirate Skeleton, Reawakened Hierophant, Steadfast Hero, Test of Resolve
+Scribing 	Protection on Trample
+
+Resolve
+	Minor 	Increases physical and spell resistance by 2974. 	Abilities 	Blessing of Protection, Bone Armor, Bound Aegis, Mirage, Resolving Vigor, Runic Defense 	ON-icon-misc-Minor Resolve.png
+Sets 	Magma Incarnate, Stone's Accord
+Scribing 	Resolve on Banner Bearer, Soul Burst, Torchbearer, Ulfsild's Contingency
+Verses 	Apocryphal Emissary 2nd stack
+Major 	Increases physical and spell resistance by 5948. 	Abilities 	Balance, Bone Armor, Earthspike Mantle, Fatewoven Armor, Feral Cruelty, Frost Cloak, Lightning Form, Mend Spirit, Rune Focus, Shadow Barrier, Unstoppable 	ON-icon-misc-Major Resolve.png
+Sets 	Mighty Chudan, Mighty Glacier, Oakensoul Ring, The Saint and the Seducer
+Scribing 	Resolve on Shield Throw, Wield Soul
+
+Savagery
+	Minor 	Increases weapon critical by 1314. 	Abilities 	Hemorrhage 	ON-icon-misc-Minor Savagery.png
+Potions 	Weapon Critical Weapon Critical Poison
+Major 	Increases weapon critical by 2629. 	Abilities 	Bound Armaments, Expert Hunter, Grim Focus, Inferno, Lotus Flower, Magelight, Roar, Shocking Siphon, Sun Fire 	ON-icon-misc-Major Savagery.png
+Sets 	Oakensoul Ring, Toothrow, Treasure Hunter
+Scribing 	Savagery and Prophecy on Banner Bearer, Elemental Explosion, Smash, Soul Burst, Torchbearer, Trample, Traveling Knife, Ulfsild's Contingency, Vault, Wield Soul
+Potions 	Weapon Critical Weapon Critical Potion
+
+Slayer
+	Minor 	Increases damage done to Dungeon, Trial and Arena Monsters by 5%. 	Sets 	Ansuul's Torment, Arms of Relequen, Bahsei's Mania, Coral Riptide, False God's Devotion, Infallible Mage, Mantle of Siroria, Master Architect, Moondancer, Mora Scribe's Thesis, Oakensoul Ring, Peace and Serenity, Roaring Opportunist, Roar of Alkosh, Slivers of the Null Arca, Sul-Xan's Torment, Tooth of Lokkestiiz, Vicious Serpent, War Machine, Whorl of the Depths, Yandir's Might 	ON-icon-misc-Minor Slayer.png
+Major 	Increases damage done to Dungeon, Trial and Arena Monsters by 10%. 	Sets 	Master Architect, Roaring Opportunist, Tooth of Lokkestiiz, War Machine 	ON-icon-misc-Major Slayer.png
+
+Sorcery
+	Minor 	Increases spell damage by 10%. 	Abilities 	Illuminate 	ON-icon-misc-Minor Sorcery.png
+Potions 	Increase Spell Power Increase Spell Power Poison
+Major 	Increases spell damage by 20%. 	Abilities 	Betty Netch, Biting Jabs, Degeneration, Drain Power, Hidden Blade, Hircine's Bounty, Molten Weapons, Momentum, Pariah's Resolve, Skeletal Mage, Surge, Tome-Bearer's Inspiration, Venom Arrow 	ON-icon-misc-Major Sorcery.png
+Sets 	Dreugh King Slayer, Oakensoul Ring, Rattlecage
+Scribing 	Brutality and Sorcery on Banner Bearer, Elemental Explosion, Smash, Soul Burst, Torchbearer, Trample, Traveling Knife, Ulfsild's Contingency, Vault, Wield Soul
+Potions 	Increase Spell Power Increase Spell Power Potion
+
+Spell Resistance
+		Increases spell resistance by 1320. 	Potions 	Increase Spell Resist Increase Spell Resist Poison 	ON-icon-misc-Minor Ward.png
+
+Spell Resistance Potion
+		Increases spell resistance by 5280. 	Potions 	Increase Spell Resist Increase Spell Resist Potion 	ON-icon-misc-Major Ward.png
+
+Toughness
+	Minor 	Increases maximum health by 10%. 	Abilities 	Maturation 	ON-icon-misc-Minor Toughness.png
+Sets 	Warrior-Poet
+Verses 	Apocryphal Emissary 3rd stack
+
+Vitality
+	Minor 	Increases healing received and shield Strength by 6%. 	Abilities 	Blood of the Green Dragon, Mystic Guard, Vibrant Shroud 	ON-icon-misc-Minor Vitality.png
+Sets 	Gardener of Seasons, Hollowfang Thirst, Naga Shaman, Order of Diagna, Ozezan the Inferno
+Scribing 	Vitality on Mender's Bond, Smash, Torchbearer
+Potions 	Vitality Vitality Poison
+Major 	Increases healing received and Shield Strength by 12%. 	Abilities 	Bone Surge, Erudite's Rigor, Hircine's Fortitude, Soul Siphon 	ON-icon-misc-Major Vitality.png
+Sets 	Bani's Torment, Daedric Trickery, Jailer's Tenacity, Mender's Ward, Scourge Harvester
+Scribing 	Vitality on Shield Throw, Wield Soul
+Potions 	Vitality Vitality Potion 

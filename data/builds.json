@@ -1,96 +1,203 @@
 {
   "Members": [
     {
-      "Name": "Jarakeen",
-      "Gamertag": "Magrat",
+      "Name": "Magrat",
+      "Gamertag": "Jarakeen",
+      "BuildName": "DF Healer",
       "ImagePath": "C:/Users/nourg/Downloads/Avatar.png",
       "Race": "Breton",
       "EsoClass": "Warden",
+      "Role": "Healer",
+      "Alliance": "Daggerfall Covenant",
+      "Mundus": "The Ritual",
+      "Vampire": false,
+      "Werewolf": false,
+      "AttributeHealth": 0,
+      "AttributeMagicka": 64,
+      "AttributeStamina": 0,
       "Armor": {
         "Head": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Magma Incarnate",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Medium",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Shoulders": {
           "Set": "Spaulder of Ruin",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Chest": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
-        },
-        "Legs": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Serpent's Disdain",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Hands": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Waist": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
-          "Enchant": "magica",
-          "Weight": "Light"
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Legs": {
+          "Set": "Serpent's Disdain",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Feet": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
-          "Weight": ""
+          "Set": "Serpent's Disdain",
+          "Trait": "Divines",
+          "Enchant": "Max Magicka",
+          "Weight": "Light",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         }
       },
       "FrontBarWeapon": {
         "Set": "Master Architect",
         "Trait": "Powered",
-        "Enchant": "crusher",
-        "Weight": ""
+        "Enchant": "Weapon Damage",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": "Restoration Staff"
+      },
+      "FrontBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
       },
       "BackBarWeapon": {
         "Set": "Master Architect",
-        "Trait": "Infused",
-        "Enchant": "weapon power",
-        "Weight": ""
+        "Trait": "Charged",
+        "Enchant": "Crushing",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": "Ice Staff"
+      },
+      "BackBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
       },
       "Necklace": {
         "Set": "Master Architect",
-        "Trait": "Infused",
-        "Enchant": "spell power",
-        "Weight": ""
+        "Trait": "Arcane",
+        "Enchant": "Magicka Recovery",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "Ring1": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "spell power",
-        "Weight": ""
+        "Enchant": "Magicka Recovery",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "Ring2": {
-        "Set": "",
-        "Trait": "",
-        "Enchant": "",
-        "Weight": ""
+        "Set": "Master Architect",
+        "Trait": "Infused",
+        "Enchant": "Magicka Recovery",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "ChampionPoints": [
+        {
+          "Name": "Rationer",
+          "Points": "30"
+        },
+        {
+          "Name": "Breakfall",
+          "Points": "50"
+        },
+        {
+          "Name": "Liquid Efficiency",
+          "Points": "50"
+        },
+        {
+          "Name": "Rationer",
+          "Points": "50"
+        },
         {
           "Name": "Swift Renewal",
           "Points": "50"
         },
         {
-          "Name": "Hope Infusion",
+          "Name": "Soothing Tide",
           "Points": "50"
         },
         {
-          "Name": "Enlivening Overflow",
+          "Name": "Rejuvenator",
           "Points": "50"
         },
         {
@@ -107,47 +214,217 @@
         },
         {
           "Name": "Rejuvenation",
-          "Points": "50"
+          "Points": "56"
         },
         {
-          "Name": "Expert Evasion",
-          "Points": "50"
-        },
-        {
-          "Name": "Rationer",
-          "Points": "30"
-        },
-        {
-          "Name": "Breakfall",
-          "Points": "50"
-        },
-        {
-          "Name": "Liquid Efficiency",
-          "Points": "50"
-        },
-        {
-          "Name": "Professional Upkeep",
+          "Name": "Boundless Vitality",
           "Points": "50"
         }
       ],
       "FrontBarSkills": [
-        "Caltrops",
-        "Wall of Elements",
-        "Low Slash",
-        "Defensive Posture",
-        "Impulse",
-        "Secluded Grove"
+        "Budding Seeds",
+        "Radiating Regeneration",
+        "Combat Prayer",
+        "Illustrious Healing",
+        "Energy Orb",
+        "Eternal Guardian"
       ],
       "BackBarSkills": [
-        "Pounce",
-        "Betty Netch",
-        "Bone Shield",
-        "Frost Cloak",
-        "Circle of Protection",
-        "War Horn"
+        "Elemental Blockade",
+        "Echoing Vigor",
+        "Winter's Revenge",
+        "Expansive Frost Cloak",
+        "Overflowing Altar",
+        "Aggressive Horn"
       ],
-      "Food": "clockwork citrus",
+      "Food": "Witchmother's Potent Brew",
       "Potion": "spell power",
+      "Notes": "",
+      "BossLoadouts": []
+    },
+    {
+      "Name": "",
+      "Gamertag": "",
+      "BuildName": "",
+      "ImagePath": "",
+      "Race": "",
+      "EsoClass": "",
+      "Role": "",
+      "Alliance": "",
+      "Mundus": "",
+      "Vampire": false,
+      "Werewolf": false,
+      "AttributeHealth": 0,
+      "AttributeMagicka": 0,
+      "AttributeStamina": 0,
+      "Armor": {
+        "Head": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Shoulders": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Chest": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Hands": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Waist": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Legs": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        },
+        "Feet": {
+          "Set": "",
+          "Set2": "",
+          "Quality": "",
+          "Trait": "",
+          "Enchant": "",
+          "EnchantTier": "",
+          "Level": "",
+          "Weight": ""
+        }
+      },
+      "FrontBarWeapon": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "FrontBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "BackBarWeapon": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "BackBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "Necklace": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "Ring1": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "Ring2": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "ChampionPoints": [],
+      "FrontBarSkills": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "BackBarSkills": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "Food": "",
+      "Potion": "",
       "Notes": "",
       "BossLoadouts": []
     }

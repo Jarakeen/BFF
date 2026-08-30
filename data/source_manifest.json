@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "skill_coefficients": {
+      "artifact": "data/raw/skill_coef_raw.json",
+      "source_system": "UESP ESO Log Collector",
+      "source_kind": "derived_virtual_view_export",
+      "export_url": "https://esolog.uesp.net/exportJson.php?table=skillCoef",
+      "export_table": "skillCoef",
+      "documentation_url": "https://en.uesp.net/wiki/User:Daveh/ESO_Log_Collector",
+      "documentation_revision_id": 3576235,
+      "record_count": 3629,
+      "retrieved_at": null,
+      "game_update": null,
+      "api_version": null,
+      "provenance_status": "incomplete",
+      "derivation": "UESP-calculated coefficient view derived from minedSkills tooltip observations.",
+      "notes": [
+        "The documentation revision identifies the source documentation only; it is not the coefficient dataset version.",
+        "The export does not provide a reliable ESO game-update stamp, API version, or retrieval timestamp.",
+        "Numeric ability IDs are source crosswalk identifiers, not canonical BFF skill identities."
+      ]
+    },
+    "provisioning_food": {
+      "artifact": "data/raw/food.json",
+      "source_system": "UESP ESO Log Collector",
+      "source_kind": "filtered_minedItemSummary_export",
+      "export_url": "https://esolog.uesp.net/exportJson.php?table=minedItemSummary",
+      "export_table": "minedItemSummary",
+      "documentation_url": "https://en.uesp.net/wiki/User:Daveh/ESO_Log_Collector",
+      "documentation_revision_id": 3576235,
+      "record_count": 492,
+      "retrieved_at": null,
+      "game_update": null,
+      "api_version": null,
+      "provenance_status": "incomplete",
+      "derivation": "UESP minedItemSummary export filtered to item type 4 food records.",
+      "notes": [
+        "The exact original export filter URL is unresolved.",
+        "Numeric itemId values are source crosswalk identifiers, not canonical BFF food identities."
+      ]
+    },
+    "provisioning_drink": {
+      "artifact": "data/raw/drink.json",
+      "source_system": "UESP ESO Log Collector",
+      "source_kind": "filtered_minedItemSummary_export",
+      "export_url": "https://esolog.uesp.net/exportJson.php?table=minedItemSummary",
+      "export_table": "minedItemSummary",
+      "documentation_url": "https://en.uesp.net/wiki/User:Daveh/ESO_Log_Collector",
+      "documentation_revision_id": 3576235,
+      "record_count": 518,
+      "retrieved_at": null,
+      "game_update": null,
+      "api_version": null,
+      "provenance_status": "incomplete",
+      "derivation": "UESP minedItemSummary export filtered to item type 12 drink records.",
+      "notes": [
+        "The exact original export filter URL is unresolved.",
+        "Numeric itemId values are source crosswalk identifiers, not canonical BFF drink identities."
+      ]
+    }
+  }
+}

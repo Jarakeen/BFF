@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 
@@ -73,9 +74,7 @@ class RosterPage(FoundryPage):
         # the roster is not a separate database.
         #
 
-        data_dir = (
-            Path(__file__).resolve().parents[1] / "data"
-        )
+        data_dir = get_data_dir()
 
         self.database = EsoDatabase(
             data_dir / "eso.db"

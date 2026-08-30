@@ -1,0 +1,342 @@
+{
+  "schema_version": 2,
+  "characters": [
+    {
+      "character_id": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+      "name": "Magrat",
+      "gamertag": "Jarakeen",
+      "eso_class": "Warden",
+      "race": "Breton",
+      "role": "Healer",
+      "alliance": "",
+      "vampire": false,
+      "werewolf": false
+    }
+  ],
+  "builds": [
+    {
+      "build_id": "6688e999-4106-5556-8984-07ccf5390070",
+      "character_id": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+      "name": "DF Healer",
+      "legacy": {
+        "Name": "Magrat",
+        "Gamertag": "Jarakeen",
+        "BuildName": "DF Healer",
+        "ImagePath": "",
+        "Race": "Breton",
+        "EsoClass": "Warden",
+        "Role": "Healer",
+        "Alliance": "",
+        "Vampire": false,
+        "Werewolf": false,
+        "Armor": {
+          "Head": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Shoulders": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Chest": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Hands": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Waist": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Legs": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Feet": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          }
+        },
+        "FrontBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Necklace": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Ring1": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Ring2": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "ChampionPoints": [],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "Food": "",
+        "Potion": "",
+        "Notes": "",
+        "BossLoadouts": [],
+        "CharacterId": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+        "BuildId": "6688e999-4106-5556-8984-07ccf5390070"
+      }
+    },
+    {
+      "build_id": "40438329-76a9-54a2-ab9a-6febd8590ff1",
+      "character_id": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+      "name": "DSR HM",
+      "legacy": {
+        "Name": "Magrat",
+        "Gamertag": "Jarakeen",
+        "BuildName": "DSR HM",
+        "ImagePath": "",
+        "Race": "Breton",
+        "EsoClass": "Warden",
+        "Role": "Healer",
+        "Alliance": "",
+        "Vampire": false,
+        "Werewolf": false,
+        "Armor": {
+          "Head": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Shoulders": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Chest": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Hands": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Waist": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Legs": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          },
+          "Feet": {
+            "Set": "",
+            "Set2": "",
+            "Quality": "",
+            "Trait": "",
+            "Enchant": "",
+            "EnchantTier": "",
+            "Level": "",
+            "Weight": ""
+          }
+        },
+        "FrontBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Necklace": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Ring1": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "Ring2": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": ""
+        },
+        "ChampionPoints": [],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "Food": "",
+        "Potion": "",
+        "Notes": "",
+        "BossLoadouts": [],
+        "CharacterId": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+        "BuildId": "40438329-76a9-54a2-ab9a-6febd8590ff1"
+      }
+    }
+  ]
+}

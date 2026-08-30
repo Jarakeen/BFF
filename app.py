@@ -6,6 +6,8 @@ from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
+from engine.config import get_resource_path
+
 
 def _set_windows_app_id() -> None:
     """
@@ -52,6 +54,12 @@ def main() -> int:
     #
 
     from ui.theme import ThemeManager
+    from ui.components.searchable_build_selectors import install as install_searchable_selectors
+
+    # Install the shared skill/gear picker behavior before
+    # importing pages that may construct BuildEditor widgets.
+    install_searchable_selectors()
+
     from ui.main_window import MainWindow
 
     #
@@ -59,15 +67,15 @@ def main() -> int:
     #
 
     theme = ThemeManager()
-    otter = " Otter_Engineer.ico "
+    app_icon = get_resource_path("bff.ico")
 
-    if theme.logo:
+    if theme.logo and app_icon.exists():
         app.setWindowIcon(
-            QIcon(otter)
+            QIcon(str(app_icon))
         )
 
-    style_file = Path(
-        "assets/themes/bff/foundry.qss"
+    style_file = get_resource_path(
+        "assets", "themes", "bff", "foundry.qss"
     )
 
     if style_file.exists():

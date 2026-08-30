@@ -1,0 +1,487 @@
+===== calculation.py =====
+from dataclasses import dataclass, field
+
+from services.minmax.build import Build
+from services.minmax.effects import Effect, EffectOperation
+from services.minmax.stat_ids import StatId
+from services.minmax.effect_kinds import EffectKind
+
+@dataclass
+class StatBreakdown:
+    base: float = 0.0
+    additive: float = 0.0
+    multiplicative: float = 1.0
+
+    sources: list[Effect] = field(default_factory=list)
+
+    @property
+    def final(self) -> float:
+        return (self.base + self.additive) * self.multiplicative
+
+
+@dataclass
+class CalculationResult:
+    stats: dict[StatId, StatBreakdown]
+
+    def value(self, stat: StatId) -> float:
+        breakdown = self.stats.get(stat)
+
+        if breakdown is None:
+            return 0.0
+
+        return breakdown.final
+
+
+class StatEngine:
+
+    def calculate(self, build: Build) -> CalculationResult:
+        state: dict[StatId, StatBreakdown] = {}
+
+        for stat_name, value in build.base_stats.items():
+            stat = StatId(stat_name)
+
+            state[stat] = StatBreakdown(
+                base=value
+            )
+
+        for effect in build.effects:
+
+            if effect.kind != EffectKind.STAT:
+                continue
+
+            if effect.stat is None:
+                raise ValueError(
+                    f"Stat effect has no stat: {effect.source!r}"
+                )
+
+            breakdown = state.setdefault(
+                effect.stat,
+                StatBreakdown()
+            )
+
+            breakdown.sources.append(effect)
+
+            if effect.operation == EffectOperation.ADD:
+                breakdown.additive += effect.value
+
+            elif effect.operation == EffectOperation.ADD_PERCENT:
+                breakdown.multiplicative += effect.value / 100.0
+
+            elif effect.operation == EffectOperation.MULTIPLY:
+                breakdown.multiplicative *= effect.value
+
+            elif effect.operation == EffectOperation.SET:
+                breakdown.base = effect.value
+
+            else:
+                raise ValueError(
+                    f"Unsupported effect operation: "
+                    f"{effect.operation}"
+                )
+        return CalculationResult(stats=state)
+
+===== effect_mapper.py =====
+from .effect_kinds import EffectKind
+from .effects import Effect, EffectOperation, EffectUnit
+from .stat_ids import StatId
+
+
+class EffectMapper:
+
+    STAT_MAP: dict[str, StatId] = {
+        "maximum_health": StatId.MAX_HEALTH,
+        "maximum_magicka": StatId.MAX_MAGICKA,
+        "maximum_stamina": StatId.MAX_STAMINA,
+
+        "max_health": StatId.MAX_HEALTH,
+        "max_magicka": StatId.MAX_MAGICKA,
+        "max_stamina": StatId.MAX_STAMINA,
+
+        "health_recovery": StatId.HEALTH_RECOVERY,
+        "magicka_recovery": StatId.MAGICKA_RECOVERY,
+        "stamina_recovery": StatId.STAMINA_RECOVERY,
+
+        "healing_done": StatId.HEALING_DONE,
+    }
+
+    @classmethod
+    def to_stat(cls, effect_type: str) -> StatId:
+        try:
+            return cls.STAT_MAP[effect_type]
+        except KeyError as exc:
+            raise ValueError(
+                f"Unsupported engine stat effect type: "
+                f"{effect_type!r}"
+            ) from exc
+
+    @staticmethod
+    def to_unit(unit: str) -> EffectUnit:
+        try:
+            return EffectUnit(unit)
+        except ValueError as exc:
+            raise ValueError(
+                f"Unsupported effect unit: {unit!r}"
+            ) from exc
+
+    @classmethod
+    def create_additive(
+        cls,
+        *,
+        effect_type: str,
+        value: float,
+        unit: str,
+        source: str,
+    ) -> Effect:
+
+        return Effect(
+            kind=EffectKind.STAT,
+            stat=cls.to_stat(effect_type),
+            operation=EffectOperation.ADD,
+            value=float(value),
+            source=source,
+            unit=cls.to_unit(unit),
+        )
+
+===== enchantment_calculation.py =====
+from dataclasses import dataclass
+
+from .effects import EffectUnit
+from .rule_effects import RuleEffect
+
+
+@dataclass(frozen=True)
+class ModifierContribution:
+    source: str
+    percentage: float
+    contribution: float
+
+
+@dataclass(frozen=True)
+class EnchantmentCalculation:
+    base_value: float
+    final_value: float
+    modifiers: list[ModifierContribution]
+
+
+def calculate_enchantment_effect(
+    *,
+    base_value: float,
+    rules: list[RuleEffect],
+) -> EnchantmentCalculation:
+
+    percentage = 0.0
+    modifiers: list[ModifierContribution] = []
+
+    for rule in rules:
+        if rule.unit != EffectUnit.PERCENT:
+            continue
+
+        contribution = base_value * (
+            rule.value / 100.0
+        )
+
+        percentage += rule.value
+
+        modifiers.append(
+            ModifierContribution(
+                source=rule.source,
+                percentage=rule.value,
+                contribution=contribution,
+            )
+        )
+
+    final_value = base_value * (
+        1.0 + percentage / 100.0
+    )
+
+    return EnchantmentCalculation(
+        base_value=base_value,
+        final_value=final_value,
+        modifiers=modifiers,
+    )
+
+
+def test_non_percent_rule_does_not_modify_effect_value():
+    cooldown = RuleEffect(
+        rule_type="enchantment_cooldown_reduction",
+        value=50,
+        source="Jade",
+        unit=EffectUnit.PERCENT,
+        target_system="weapon_enchantment",
+    )
+
+    result = calculate_enchantment_effect(
+        base_value=1000,
+        rules=[cooldown],
+    )
+
+    assert result.final_value == 1000
+    assert result.modifiers == []
+
+===== glyph_repository.py =====
+import sqlite3
+from pathlib import Path
+
+from .effect_mapper import EffectMapper
+from .effects import Effect
+from .stat_ids import StatId
+
+
+class GlyphEffectRepository:
+    """Loads glyph effects from the ESO database."""
+
+    def __init__(self, database_path: str | Path):
+        self.database_path = str(database_path)
+
+    def get_jewelry_glyph_effect(
+        self,
+        item_id: int,
+        *,
+        use_max_value: bool = True,
+    ) -> list[Effect]:
+
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    g.name,
+                    e.effect_type,
+                    e.value_min,
+                    e.value_max,
+                    e.unit,
+                    e.description
+                FROM jewelry_glyph g
+                JOIN jewelry_glyph_effect e
+                    ON e.glyph_item_id = g.item_id
+                WHERE g.item_id = ?
+                ORDER BY e.id
+                """,
+                (item_id,),
+            ).fetchall()
+
+        effects: list[Effect] = []
+
+        for (
+            glyph_name,
+            effect_type,
+            value_min,
+            value_max,
+            unit,
+            description,
+        ) in rows:
+
+            value = value_max if use_max_value else value_min
+
+            if value is None:
+                raise ValueError(
+                    f"Glyph effect has no usable value: "
+                    f"{glyph_name!r}"
+                )
+
+            effect = EffectMapper.create_additive(
+                effect_type=effect_type,
+                value=float(value),
+                unit=unit,
+                source=glyph_name,
+            )
+
+            effects.append(effect)
+
+        return effects
+
+===== armor_glyph_repository.py =====
+import sqlite3
+from pathlib import Path
+
+from .effect_mapper import EffectMapper
+from .effects import Effect
+
+
+class ArmorGlyphEffectRepository:
+    """Loads armor glyph effects from the ESO database."""
+
+    def __init__(self, database_path: str | Path):
+        self.database_path = str(database_path)
+
+    def get_armor_glyph_effect(
+        self,
+        item_id: int,
+        *,
+        use_max_value: bool = True,
+    ) -> list[Effect]:
+
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    g.name,
+                    e.effect_type,
+                    e.value_min,
+                    e.value_max,
+                    e.unit,
+                    e.description
+                FROM armor_glyph g
+                JOIN armor_glyph_effect e
+                    ON e.glyph_item_id = g.item_id
+                WHERE g.item_id = ?
+                ORDER BY e.id
+                """,
+                (item_id,),
+            ).fetchall()
+
+        effects: list[Effect] = []
+
+        for (
+            glyph_name,
+            effect_type,
+            value_min,
+            value_max,
+            unit,
+            description,
+        ) in rows:
+
+            value = value_max if use_max_value else value_min
+
+            if value is None:
+                raise ValueError(
+                    f"Armor glyph effect has no usable value: "
+                    f"{glyph_name!r}"
+                )
+
+            effects.append(
+                EffectMapper.create_additive(
+                    effect_type=effect_type,
+                    value=float(value),
+                    unit=unit,
+                    source=glyph_name,
+                )
+            )
+
+        return effects
+
+===== rule_repository.py =====
+import sqlite3
+from pathlib import Path
+
+from .effects import EffectUnit
+from .rule_effects import RuleEffect
+
+
+class RuleRepository:
+    """Loads rule-effect data from the ESO database."""
+
+    def __init__(self, database_path: str | Path):
+        self.database_path = str(database_path)
+
+    def get_infused_effect(
+        self,
+        *,
+        gear_type: str,
+        quality: str,
+    ) -> RuleEffect:
+
+        with sqlite3.connect(self.database_path) as connection:
+            row = connection.execute(
+                """
+                SELECT
+                    trait_name,
+                    effect_type,
+                    value,
+                    unit
+                FROM jewelry_trait_effect
+                WHERE trait_name = 'Infused'
+                  AND effect_type = 'enchantment_effect'
+                  AND item_type = ?
+                  AND quality = ?
+                """,
+                (gear_type, quality),
+            ).fetchone()
+
+        if row is None:
+            raise ValueError(
+                f"No Infused enchantment effect found for "
+                f"gear_type={gear_type!r}, quality={quality!r}"
+            )
+
+        trait_name, effect_type, value, unit = row
+
+        return RuleEffect(
+            rule_type=effect_type,
+            value=float(value),
+            source=trait_name,
+            unit=EffectUnit(unit),
+            target_system="enchantment",
+            gear_type=gear_type,
+            quality=quality,
+        )
+
+    def get_weapon_trait_rules(
+        self,
+        trait_name: str,
+    ) -> list[RuleEffect]:
+
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    material_name,
+                    effect_type,
+                    value,
+                    unit,
+                    description
+                FROM weapon_trait_effect
+                WHERE material_name = ?
+                ORDER BY id
+                """,
+                (trait_name,),
+            ).fetchall()
+
+        effects: list[RuleEffect] = []
+
+        for (
+            material_name,
+            effect_type,
+            value,
+            unit,
+            description,
+        ) in rows:
+
+            if value is None:
+                raise ValueError(
+                    f"Weapon trait rule has no value: "
+                    f"{trait_name!r} / {effect_type!r}"
+                )
+
+            effects.append(
+                RuleEffect(
+                    rule_type=effect_type,
+                    value=float(value),
+                    source=material_name,
+                    unit=EffectUnit(unit),
+                    target_system="weapon_enchantment",
+                )
+            )
+
+        return effects
+
+===== rule_effects.py =====
+from dataclasses import dataclass
+
+from .effects import EffectUnit
+
+
+@dataclass(frozen=True)
+class RuleEffect:
+    rule_type: str
+    value: float
+    source: str
+    unit: EffectUnit
+
+    target_system: str | None = None
+    condition: str | None = None
+
+    material_name: str | None = None
+    gear_type: str | None = None
+    quality: str | None = None
+    item_level: int | None = None
+

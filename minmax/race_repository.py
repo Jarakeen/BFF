@@ -72,6 +72,17 @@ class RaceRepository:
 
         return [self._to_race_stat(row) for row in rows]
 
+    def get_stat_map(self, race_id: int) -> dict[str, float]:
+        """Return structured racial stat contributions keyed by StatId value."""
+        return {stat.stat: float(stat.value) for stat in self.get_stats(race_id)}
+
+    def get_stat_map_by_name(self, name: str) -> dict[str, float]:
+        """Resolve a race by name and return its structured stat contributions."""
+        race = self.get_race(name)
+        if race is None:
+            return {}
+        return self.get_stat_map(race.id)
+
     @staticmethod
     def _to_race(row) -> Race:
         race_id, name, alliance, association = row

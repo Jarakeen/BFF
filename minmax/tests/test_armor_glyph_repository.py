@@ -59,3 +59,24 @@ def test_prismatic_glyph_can_resolve_minimum_values():
     assert values[StatId.MAX_HEALTH] == 38
     assert values[StatId.MAX_MAGICKA] == 35
     assert values[StatId.MAX_STAMINA] == 35
+
+
+def test_health_glyph_can_resolve_strongest_value_by_saved_name():
+    repository = ArmorGlyphEffectRepository(DB_PATH)
+
+    effects = repository.get_armor_glyph_effect_by_name("Glyph of Health")
+
+    assert len(effects) == 1
+    assert effects[0].stat == StatId.MAX_HEALTH
+    assert effects[0].value == 954
+
+
+def test_prismatic_glyph_name_keeps_each_resource_effect():
+    repository = ArmorGlyphEffectRepository(DB_PATH)
+
+    effects = repository.get_armor_glyph_effect_by_name("Glyph of Prismatic Defense")
+    values = {effect.stat: effect.value for effect in effects}
+
+    assert values[StatId.MAX_HEALTH] == 477
+    assert values[StatId.MAX_MAGICKA] == 434
+    assert values[StatId.MAX_STAMINA] == 434

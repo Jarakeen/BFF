@@ -5,11 +5,7 @@ from .effect_instance import EffectVariant
 
 
 class GearSlot(str, Enum):
-    """
-    The seven non-weapon equipment slots. These are NOT bar-specific in
-    ESO - the same armor/jewelry is worn regardless of which bar is
-    active, unlike weapons (see weapon.py).
-    """
+    """The ten non-weapon equipment slots in ESO."""
 
     HEAD = "head"
     SHOULDERS = "shoulders"
@@ -34,7 +30,7 @@ class GearPieceCategory(str, Enum):
 
 @dataclass(frozen=True)
 class ArmorPiece:
-    """One piece of armor or jewelry in one of the seven non-weapon slots."""
+    """One piece of armor or jewelry in one of the ten non-weapon slots."""
 
     slot: GearSlot
     category: GearPieceCategory = GearPieceCategory.NORMAL
@@ -43,7 +39,11 @@ class ArmorPiece:
     """Stable identity of the gear set this piece belongs to, if any."""
 
     glyph_id: str | None = None
+    enchantment_id: str | None = None
     trait: str | None = None
+    quality: str | None = None
+    level: int | None = None
+    weight: str | None = None
 
     effects: tuple[EffectVariant, ...] = field(default_factory=tuple)
     """Proc/stat effects this specific piece can contribute."""

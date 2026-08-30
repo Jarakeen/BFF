@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_card import FoundryCard
@@ -77,10 +78,7 @@ class CollectionsPage(QWidget):
 
     def build_services(self):
 
-        data_dir = (
-            Path(__file__).resolve().parents[1]
-            / "data"
-        )
+        data_dir = get_data_dir()
 
         # --------------------------------------------------
         # ESO achievement database
@@ -152,8 +150,6 @@ class CollectionsPage(QWidget):
         self.pvp_stat = (
             AchievementRatioCard()
         )
-
-       
 
         # --------------------------------------------------
         # Achievement browser
@@ -371,7 +367,6 @@ class CollectionsPage(QWidget):
 
         workspace_layout.setSpacing(12)
 
-       
         # --------------------------------------------------
         # Achievements
         #
@@ -524,8 +519,8 @@ class CollectionsPage(QWidget):
         # Overall
         # --------------------------------------------------
 
-        self.points_stat.set_points(
-            overall["points_earned"]
+        self.points_stat.value.setText(
+            f"{overall['points_earned']:,} / {overall['points_total']:,}"
         )
 
         self.earned_stat.set_ratio(

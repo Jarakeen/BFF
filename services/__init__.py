@@ -97,4 +97,22 @@ class RequiresEffectRule:
             self.required_effect in player.provides
             for player in self.roster
         )
-        
+
+
+# ----------------------------------------------------------------------
+# Build persistence hardening
+# ----------------------------------------------------------------------
+# BuildService is imported by many pages directly. Installing the hardened
+# methods here keeps the public BuildService API intact while making the
+# write atomic and preventing corrupt JSON from being silently interpreted
+# as an empty roster.
+
+def _install_build_persistence():
+    from .build_service import BuildService
+    from .build_persistence import load, save
+
+    BuildService.load = load
+    BuildService.save = save
+
+
+_install_build_persistence()

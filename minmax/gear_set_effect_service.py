@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .effects import Effect
 from .gear_set_effect_resolver import GearSetEffectResolver
 from .gear_set_repository import GearSetRepository
@@ -48,6 +50,38 @@ class GearSetEffectService:
                     bonus,
                     use_max_value=use_max_value,
                     source=f"{set_name} ({bonus.piece_count})",
+                )
+            )
+
+        return effects
+
+    def active_static_effects(
+        self,
+        equipped_sets: Mapping[str, int],
+        *,
+        use_max_value: bool = True,
+    ) -> list[Effect]:
+        """Resolve active static effects for set-name -> equipped-piece counts.
+
+        Unknown set names contribute no effects. This keeps the gear input layer
+        tolerant of incomplete or synthetic build data while centralizing the
+        name-to-ID lookup inside the set service.
+        """
+
+        effects: list[Effect] = []
+        for set_name, equipped_piece_count in equipped_sets.items():
+            if equipped_piece_count <= 0:
+                continue
+
+            gear_set = self.repository.get_set(str(set_name))
+            if gear_set is None:
+                continue
+
+            effects.extend(
+                self.resolve_effects(
+                    gear_set.id,
+                    equipped_piece_count,
+                    use_max_value=use_max_value,
                 )
             )
 
