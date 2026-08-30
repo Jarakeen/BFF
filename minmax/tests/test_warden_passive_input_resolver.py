@@ -1,5 +1,8 @@
 from models.build_model import PlayerBuild
+from minmax.character_progression import CharacterProgression
+from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_stat_inputs import GearCalculationInputs
+from minmax.stat_ids import StatId
 from minmax.warden_passive_input_resolver import WardenPassiveInputResolver
 
 
@@ -62,3 +65,37 @@ def test_non_warden_build_is_unchanged():
     original = GearCalculationInputs()
 
     assert _resolver().apply(original, build, active_bar="front") == original
+
+
+def test_context_factory_applies_verified_warden_passives_to_final_stats():
+    build = PlayerBuild(
+        EsoClass="Warden",
+        FrontBarSkills=["Eternal Guardian", "", "", "", "", ""],
+        BackBarSkills=["Winter's Revenge", "Expansive Frost Cloak", "", "", "", ""],
+    )
+    factory = BuildCalculationContextFactory(skill_line_repository=FakeSkillLineRepository())
+
+    front = factory.build(
+        character_id="warden",
+        build_id="front",
+        build=build,
+        progression=CharacterProgression(),
+        active_bar="front",
+    )
+    back = factory.build(
+        character_id="warden",
+        build_id="back",
+        build=build,
+        progression=CharacterProgression(),
+        active_bar="back",
+    )
+
+    assert front.character_state.magicka_recovery == 617
+    assert front.character_state.stamina_recovery == 617
+    assert front.core_state.derived[StatId.CRITICAL_DAMAGE].final_value == 0.55
+    assert front.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 0
+    assert back.character_state.magicka_recovery == 514
+    assert back.character_state.stamina_recovery == 514
+    assert back.core_state.derived[StatId.CRITICAL_DAMAGE].final_value == 0.50
+    assert back.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 2480
+    assert back.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 2480
