@@ -181,6 +181,7 @@ class BuildCalculationContextFactory:
             build,
             light_armor_passives_owned=progression.owns_skill_line("Light Armor"),
             medium_armor_passives_owned=progression.owns_skill_line("Medium Armor"),
+            heavy_armor_passives_owned=progression.owns_skill_line("Heavy Armor"),
         )
         gear = self.undaunted_passive_resolver.apply(
             gear,
