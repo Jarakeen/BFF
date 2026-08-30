@@ -56,7 +56,7 @@ KNOWN_COVERAGE_GAPS = (
     "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress and Sword and Board standing effects are wired with explicit ownership plus active-bar shield eligibility.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block Cost and Block Mitigation use dedicated verified stacking calculators; armor plus One Hand and Shield standing modifiers are wired, while Defensive Stance, traits, enchantments, remaining CP, and combat/damage-family block sources remain incomplete.",
+    "Block Cost and Block Mitigation use dedicated verified stacking calculators; armor, One Hand and Shield standing passives, and slotted Defensive Stance are wired, while traits, enchantments, remaining CP, and combat/damage-family block sources remain incomplete.",
 )
 
 
