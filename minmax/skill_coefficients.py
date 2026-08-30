@@ -68,6 +68,24 @@ class SkillCoefficientTrace:
 
 
 @dataclass(frozen=True)
+class SkillPowerEquivalentDiagnostic:
+    """Power-only equivalent for an observed value.
+
+    This is a diagnostic, not a claim about the actual ESO mechanic. It answers
+    the counterfactual question: with the evaluated resource terms and constants
+    held fixed, what offensive power would make the raw type-8 coefficient
+    expression equal the observed value?
+    """
+
+    observed_value: float
+    current_power: float
+    equivalent_power: float
+    power_delta: float
+    raw_value_at_current_power: float
+    observed_to_raw_ratio: float | None
+
+
+@dataclass(frozen=True)
 class InactiveSkillCoefficientTrace:
     """One source coefficient slot that is explicitly marked inactive."""
 
@@ -150,4 +168,44 @@ def evaluate_skill_coefficient(
         constant_term=constant_term,
         before_r=before_r,
         final_value=final_value,
+    )
+
+
+def power_equivalent_for_observed_value(
+    components: tuple[SkillCoefficientTrace, ...],
+    observed_value: float,
+) -> SkillPowerEquivalentDiagnostic | None:
+    """Solve the type-8 expression for power as a diagnostic comparison.
+
+    All components must have been evaluated with the same offensive-power input.
+    A zero combined B coefficient cannot be solved for power and returns None.
+    """
+
+    if not components:
+        return None
+
+    powers = {float(component.power) for component in components}
+    if len(powers) != 1:
+        raise ValueError("coefficient components use different offensive-power inputs")
+
+    combined_b = sum(float(component.b) for component in components)
+    if combined_b == 0.0:
+        return None
+
+    fixed_terms = sum(
+        float(component.resource_term) + float(component.constant_term)
+        for component in components
+    )
+    current_power = next(iter(powers))
+    raw_value = sum(float(component.final_value) for component in components)
+    equivalent_power = (float(observed_value) - fixed_terms) / combined_b
+    ratio = float(observed_value) / raw_value if raw_value != 0.0 else None
+
+    return SkillPowerEquivalentDiagnostic(
+        observed_value=float(observed_value),
+        current_power=current_power,
+        equivalent_power=equivalent_power,
+        power_delta=equivalent_power - current_power,
+        raw_value_at_current_power=raw_value,
+        observed_to_raw_ratio=ratio,
     )
