@@ -31,12 +31,12 @@ def _component(number: int, value: float) -> SkillCoefficientResult:
     return SkillCoefficientResult(
         coefficient_number=number,
         coefficient_type="8",
+        max_stat=0.0,
+        power=0.0,
         a=0.0,
         b=0.0,
         c=value,
-        r=1.0,
-        max_stat=0.0,
-        power=0.0,
+        raw_value=value,
         scaled_value=value,
     )
 
