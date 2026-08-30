@@ -49,14 +49,14 @@ DERIVED_STATS = (
 
 KNOWN_COVERAGE_GAPS = (
     "Verified standing Warden passives are partially resolved; other class passive families are not yet wired.",
-    "Verified Light/Medium armor passives are resolved only when character ownership is explicitly supplied.",
+    "Verified Light/Medium/Heavy armor passives are resolved only when character ownership is explicitly supplied.",
     "Verified Undaunted Mettle is resolved when Undaunted ownership is explicitly supplied; triggered Undaunted Command remains combat-state work.",
     "Verified Mages Guild Magicka Controller and Fighters Guild Slayer are resolved from owned skill lines plus active-bar slot counts; other guild passive effects remain ability-family or combat-state work.",
     "Verified Support Magicka Aid is resolved from Support ownership plus active-bar Support slot counts; Psijic and Assault standing-sheet audits found no generic standing contribution.",
-    "Weapon passive effects are classified but do not contribute generic standing sheet stats for Restoration/Destruction Staff.",
+    "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress and Sword and Board standing effects are wired with explicit ownership plus active-bar shield eligibility.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block Cost and Block Mitigation use dedicated verified stacking calculators; Light/Medium block-cost and Heavy block-mitigation armor modifiers are wired with explicit ownership, while weapon, trait, enchantment, CP, and combat-state block sources remain incomplete.",
+    "Block Cost and Block Mitigation use dedicated verified stacking calculators; armor plus One Hand and Shield standing modifiers are wired, while Defensive Stance, traits, enchantments, remaining CP, and combat/damage-family block sources remain incomplete.",
 )
 
 
