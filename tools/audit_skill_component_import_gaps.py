@@ -160,6 +160,14 @@ def sample_across_gap_combinations(
     return tuple(selected)
 
 
+def sample_gap_rows(
+    rows: tuple[ImportGapRow, ...],
+    limit: int,
+) -> tuple[ImportGapRow, ...]:
+    """Backward-compatible public name for diversified gap sampling."""
+    return sample_across_gap_combinations(rows, limit)
+
+
 def _clean(value: object, *, max_len: int = 280) -> str:
     text = " ".join(str(value or "").split())
     if len(text) > max_len:
@@ -211,7 +219,7 @@ def main() -> int:
     print("Samples are round-robin across gap combinations, not raw database order.")
     print("This audit is read-only and does not populate skill_component_classification.")
 
-    sample_rows = sample_across_gap_combinations(rows, max(0, args.samples))
+    sample_rows = sample_gap_rows(rows, max(0, args.samples))
     for row in sample_rows:
         print("\n----------------------------------------")
         print(
