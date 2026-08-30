@@ -10,6 +10,12 @@ def test_warding_burst_uses_existing_soul_burst_shield_icon_texture():
     )
 
 
+def test_goading_throw_uses_existing_shield_throw_taunt_icon_texture():
+    assert texture_for_scribed_skill("Shield Throw", "Taunt") == (
+        "/esoui/art/icons/ability_grimoire_1handed_taunt.dds"
+    )
+
+
 def test_unknown_grimoire_icon_family_does_not_guess():
     assert texture_for_scribed_skill("Unknown Grimoire", "Damage Shield") == ""
 
