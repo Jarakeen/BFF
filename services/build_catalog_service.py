@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -128,6 +128,7 @@ class BuildCatalogService:
                 "character_id": character_id,
                 "name": member.BuildName,
                 "legacy": legacy,
+                "payload": copy.deepcopy(legacy),
             })
 
         catalog["characters"] = list(characters.values())
@@ -147,11 +148,58 @@ class BuildCatalogService:
         self.save(migrated)
         return migrated
 
-    def characters(self) -> list[dict[str, Any]]:
-        return self.load()["characters"]
+    def get_character(self, character_id: str) -> dict[str, Any] | None:
+        catalog = self.load()
+        for character in catalog["characters"]:
+            if character.get("character_id") == character_id:
+                return copy.deepcopy(character)
+        return None
+
+    def get_build(self, build_id: str) -> dict[str, Any] | None:
+        catalog = self.load()
+        for build in catalog["builds"]:
+            if build.get("build_id") == build_id:
+                return copy.deepcopy(build)
+        return None
+
+    def upsert_build(
+        self,
+        *,
+        character_id: str,
+        build_name: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Insert or replace one build without duplicating character identity."""
+        catalog = self.load()
+        name = build_name.strip() or "Default"
+
+        build_id = self._stable_id(
+            "build",
+            f"{character_id}:{name.casefold()}",
+        )
+
+        record = {
+            "build_id": build_id,
+            "character_id": character_id,
+            "name": name,
+            "payload": copy.deepcopy(payload),
+            # Keep Phase 2F's legacy bridge available to older consumers.
+            "legacy": copy.deepcopy(payload),
+        }
+
+        for index, existing in enumerate(catalog["builds"]):
+            if existing.get("build_id") == build_id:
+                catalog["builds"][index] = record
+                self.save(catalog)
+                return copy.deepcopy(record)
+
+        catalog["builds"].append(record)
+        self.save(catalog)
+        return copy.deepcopy(record)
 
     def builds_for_character(self, character_id: str) -> list[dict[str, Any]]:
         return [
-            build for build in self.load()["builds"]
+            build
+            for build in self.load()["builds"]
             if build.get("character_id") == character_id
         ]
