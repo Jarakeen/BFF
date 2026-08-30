@@ -103,3 +103,9 @@ Before a mechanic enters the shared stat/combat pipeline:
 5. Validate against a live character sheet, tooltip, combat log, or another appropriate observable result.
 
 A convenient calculator matching our expected number is evidence, not proof. ESO already provides enough opportunities for accidental folklore without us manufacturing more.
+
+
+
+https://www.btvtools.com/
+https://www.esologs.com/
+https://eso-hub.com/en/buffs-debuffs

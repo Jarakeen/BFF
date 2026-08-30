@@ -237,10 +237,22 @@
         "Overflowing Altar",
         "Aggressive Horn"
       ],
+      "ScribedSkills": [
+        "Goading Throw"
+      ],
       "Food": "Witchmother's Potent Brew",
       "Potion": "spell power",
       "Notes": "",
-      "BossLoadouts": []
+      "BossLoadouts": [],
+      "ScribedSkillRecipes": [
+        {
+          "ResultName": "Goading Throw",
+          "Grimoire": "Shield Throw",
+          "Focus": "Taunt",
+          "Signature": "Druid's Resurgence",
+          "Affix": "Maim"
+        }
+      ]
     },
     {
       "Name": "",
@@ -423,10 +435,12 @@
         "",
         ""
       ],
+      "ScribedSkills": [],
       "Food": "",
       "Potion": "",
       "Notes": "",
-      "BossLoadouts": []
+      "BossLoadouts": [],
+      "ScribedSkillRecipes": []
     },
     {
       "Name": "YOUR TANK BUILD",
@@ -654,7 +668,7 @@
         "Hungry Scythe",
         "Resolving Vigor",
         "Razor Caltrops",
-        "Inner Rage",
+        "goading throw",
         "Replenishing Barrier"
       ],
       "BackBarSkills": [
@@ -665,10 +679,30 @@
         "Pulsar",
         "Glacial Colossus"
       ],
+      "ScribedSkills": [
+        "Leashing Soul",
+        "Goading Throw"
+      ],
       "Food": "frothgar",
       "Potion": "Health Elixir",
       "Notes": "",
-      "BossLoadouts": []
+      "BossLoadouts": [],
+      "ScribedSkillRecipes": [
+        {
+          "ResultName": "Leashing Soul",
+          "Grimoire": "Wield Soul",
+          "Focus": "Pull",
+          "Signature": "Druid's Resurgence",
+          "Affix": "Cowardice"
+        },
+        {
+          "ResultName": "Goading Throw",
+          "Grimoire": "Shield Throw",
+          "Focus": "Taunt",
+          "Signature": "Sage's Remedy",
+          "Affix": "Maim"
+        }
+      ]
     }
   ]
 }
