@@ -18,7 +18,8 @@
       "notes": [
         "The documentation revision identifies the source documentation only; it is not the coefficient dataset version.",
         "The export does not provide a reliable ESO game-update stamp, API version, or retrieval timestamp.",
-        "Numeric ability IDs are source crosswalk identifiers, not canonical BFF skill identities."
+        "Numeric ability IDs are source crosswalk identifiers, not canonical BFF skill identities.",
+        "The source R value is regression fit-quality metadata (R/R-squared style evidence of model accuracy), not an ESO game multiplier; BFF preserves it for provenance and does not multiply skill values by it."
       ]
     },
     "provisioning_food": {
