@@ -192,4 +192,22 @@ class ChampionPointStaticRepository:
                 [],
             )
 
+        tireless = re.match(
+            rf"^Reduces the cost of Block by {_VALUE} Stamina per stage\.$",
+            first_line,
+            flags=re.IGNORECASE,
+        )
+        if tireless:
+            amount = float(tireless.group(1)) * stages
+            return self._effects_for_simple_stat(source, StatId.BLOCK_COST, amount, EffectUnit.FLAT), []
+
+        fortification = re.match(
+            rf"^Increases the amount of damage you can block by {_VALUE}% per stage\.$",
+            first_line,
+            flags=re.IGNORECASE,
+        )
+        if fortification:
+            amount = float(fortification.group(1)) * stages
+            return self._effects_for_simple_stat(source, StatId.BLOCK_MITIGATION, amount, EffectUnit.PERCENT), []
+
         return [], [f"Champion Point is dynamic or not yet stat-mapped: {source}"]
