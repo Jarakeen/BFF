@@ -35,6 +35,7 @@ DERIVED_STATS = (
     (StatId.WEAPON_CRITICAL, "Weapon Critical"),
     (StatId.SPELL_CRITICAL, "Spell Critical"),
     (StatId.CRITICAL_DAMAGE, "Critical Damage"),
+    (StatId.CRITICAL_HEALING, "Critical Healing"),
     (StatId.CRITICAL_RESISTANCE, "Critical Resistance"),
     (StatId.PHYSICAL_PENETRATION, "Physical Penetration"),
     (StatId.SPELL_PENETRATION, "Spell Penetration"),
@@ -49,11 +50,11 @@ KNOWN_COVERAGE_GAPS = (
     "Verified Light/Medium armor passives are resolved only when character ownership is explicitly supplied.",
     "Verified Undaunted Mettle is resolved when Undaunted ownership is explicitly supplied; triggered Undaunted Command remains combat-state work.",
     "Verified Mages Guild Magicka Controller and Fighters Guild Slayer are resolved from owned skill lines plus active-bar slot counts; other guild passive effects remain ability-family or combat-state work.",
+    "Verified Support Magicka Aid is resolved from Support ownership plus active-bar Support slot counts; Psijic and Assault standing-sheet audits found no generic standing contribution.",
     "Weapon passive effects are classified but do not contribute generic standing sheet stats for Restoration/Destruction Staff.",
-    "Alliance and other non-class passive families are not yet generally resolved into shared stats.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block cost/mitigation and Critical Healing are not yet represented as first-class Phase 2 stats.",
+    "Block cost and Block Mitigation are not yet represented as first-class shared stats.",
 )
 
 
