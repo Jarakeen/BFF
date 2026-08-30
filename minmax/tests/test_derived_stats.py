@@ -63,6 +63,20 @@ def test_critical_damage_base_is_50_percent_not_100_percent():
     assert trace.final_value == 0.50
 
 
+def test_critical_healing_retains_ratio_value_instead_of_integer_rounding():
+    trace = DerivedStatCalculator().resolved_stat(
+        StatId.CRITICAL_HEALING,
+        base=0.0,
+        inputs=DerivedStatInputs(
+            additive_after_percent=(StatContribution("Medium Armor: Dexterity", 0.02),),
+        ),
+    )
+
+    assert trace.raw_value == 0.02
+    assert trace.final_value == 0.02
+    assert trace.steps[-1][0] == "ESO ratio"
+
+
 def test_critical_chance_base_is_10_percent_not_100_percent():
     trace = DerivedStatCalculator().resolved_stat(StatId.CRITICAL_CHANCE, base=0.10)
     assert trace.raw_value == 0.10
