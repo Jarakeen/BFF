@@ -55,3 +55,18 @@ def test_core_stat_naked_character_bases_match_reference_sheet():
     assert state.derived[StatId.SPELL_RESISTANCE].final_value == 0
     assert state.derived[StatId.PHYSICAL_PENETRATION].final_value == 0
     assert state.derived[StatId.SPELL_PENETRATION].final_value == 0
+    assert state.derived[StatId.BLOCK_COST].final_value == 1750
+    assert state.derived[StatId.BLOCK_MITIGATION].final_value == 0.50
+
+
+def test_block_mitigation_retains_ratio_instead_of_integer_rounding():
+    base = BaseCharacterCalculator().calculate()
+    state = CoreStatCalculator().calculate(
+        character_progression=CharacterProgression(),
+        base_character=base,
+    )
+
+    trace = state.derived[StatId.BLOCK_MITIGATION]
+    assert trace.raw_value == 0.50
+    assert trace.final_value == 0.50
+    assert trace.steps[-1] == ("ESO ratio", "retain", 0.50, 0.50)
