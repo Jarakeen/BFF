@@ -12,6 +12,12 @@ from .stat_ids import StatId
 _COLOR = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _VALUE = r"([0-9]+(?:\.[0-9]+)?)"
 
+# ESO ChampionSkillType values. NORMAL is the always-active/non-slottable
+# passive type; the other two types require Champion Bar slots.
+CHAMPION_SKILL_TYPE_NORMAL = 0
+CHAMPION_SKILL_TYPE_NORMAL_SLOTTABLE = 1
+CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE = 2
+
 
 @dataclass(frozen=True)
 class ChampionPointRecord:
@@ -21,9 +27,25 @@ class ChampionPointRecord:
     jump_points: tuple[int, ...]
     description: str
 
+    @property
+    def is_slottable(self) -> bool:
+        return self.skill_type in {
+            CHAMPION_SKILL_TYPE_NORMAL_SLOTTABLE,
+            CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE,
+        }
+
+    @property
+    def is_non_slottable(self) -> bool:
+        return self.skill_type == CHAMPION_SKILL_TYPE_NORMAL
+
 
 class ChampionPointStaticRepository:
-    """Resolve only unconditional static CP effects from canonical DB tooltips."""
+    """Resolve unconditional static CP effects from canonical DB tooltips.
+
+    For the current build profile, all non-slottable CP passives are assumed to
+    be fully purchased. Slottable stars remain build/loadout choices and are
+    resolved from the saved Champion Point entries.
+    """
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
@@ -36,6 +58,21 @@ class ChampionPointStaticRepository:
     @staticmethod
     def _clean(text: str | None) -> str:
         return _COLOR.sub("", str(text or "")).strip()
+
+    @staticmethod
+    def _record_from_row(row: sqlite3.Row) -> ChampionPointRecord:
+        jumps = tuple(
+            int(value)
+            for value in str(row["jump_points"] or "").split(",")
+            if str(value).strip().isdigit()
+        )
+        return ChampionPointRecord(
+            name=str(row["name"]),
+            skill_type=int(row["skill_type"] or 0),
+            max_points=int(row["max_points"] or 0),
+            jump_points=jumps,
+            description=ChampionPointStaticRepository._clean(row["description"]),
+        )
 
     def get(self, name: str) -> ChampionPointRecord | None:
         with self._connect() as connection:
@@ -50,18 +87,41 @@ class ChampionPointStaticRepository:
             ).fetchone()
         if row is None:
             return None
-        jumps = tuple(
-            int(value)
-            for value in str(row["jump_points"] or "").split(",")
-            if str(value).strip().isdigit()
-        )
-        return ChampionPointRecord(
-            name=str(row["name"]),
-            skill_type=int(row["skill_type"] or 0),
-            max_points=int(row["max_points"] or 0),
-            jump_points=jumps,
-            description=self._clean(row["description"]),
-        )
+        return self._record_from_row(row)
+
+    def non_slottable_records(self) -> tuple[ChampionPointRecord, ...]:
+        """Return every always-active Champion Point passive in the database."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT name, skill_type, max_points, jump_points,
+                       COALESCE(min_description, max_description, description, '') AS description
+                FROM champion_point
+                WHERE skill_type = ?
+                  AND name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE
+                """,
+                (CHAMPION_SKILL_TYPE_NORMAL,),
+            ).fetchall()
+        return tuple(self._record_from_row(row) for row in rows)
+
+    def resolve_all_non_slottable_maxed(self) -> tuple[list[Effect], list[str]]:
+        """Resolve all non-slottable passives at their maximum purchased rank.
+
+        This reflects the current character-profile invariant that every
+        non-slottable CP passive is purchased. Unsupported or conditional
+        passives remain explicit unresolved mechanics rather than being guessed.
+        """
+
+        effects: list[Effect] = []
+        unresolved: list[str] = []
+        for record in self.non_slottable_records():
+            resolved, missing = self.resolve(record.name, record.max_points)
+            effects.extend(resolved)
+            unresolved.extend(missing)
+        return effects, unresolved
 
     @staticmethod
     def _stages(record: ChampionPointRecord, points: int) -> int:
