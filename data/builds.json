@@ -102,7 +102,7 @@
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "Level 1",
+        "Level": "CP160",
         "WeaponType": "Restoration Staff"
       },
       "FrontBarOffHand": {
@@ -185,7 +185,7 @@
           "Points": "50"
         },
         {
-          "Name": "Rationer",
+          "Name": "Breakfall",
           "Points": "50"
         },
         {
@@ -223,14 +223,14 @@
       ],
       "FrontBarSkills": [
         "Budding Seeds",
-        "Radiating Regeneration",
+        "Race Against Time",
         "Combat Prayer",
         "Illustrious Healing",
         "Energy Orb",
         "Eternal Guardian"
       ],
       "BackBarSkills": [
-        "Elemental Blockade",
+        "Elemental Ring",
         "Echoing Vigor",
         "Winter's Revenge",
         "Expansive Frost Cloak",
