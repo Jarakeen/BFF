@@ -16,7 +16,9 @@ from .jewelry_trait_repository import JewelryTraitRepository
 from .mundus_repository import MundusRepository
 from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
+from .skill_line_repository import SkillLineRepository
 from .static_build_inputs import StaticBuildInputResolver
+from .warden_passive_input_resolver import WardenPassiveInputResolver
 
 
 class BuildCalculationContextFactory:
@@ -35,6 +37,7 @@ class BuildCalculationContextFactory:
         mundus_repository: MundusRepository | None = None,
         champion_point_repository: ChampionPointStaticRepository | None = None,
         provisioning_repository: ProvisioningStaticRepository | None = None,
+        skill_line_repository: SkillLineRepository | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -55,6 +58,8 @@ class BuildCalculationContextFactory:
                 champion_point_repository = ChampionPointStaticRepository(database_path)
             if provisioning_repository is None:
                 provisioning_repository = ProvisioningStaticRepository(database_path)
+            if skill_line_repository is None:
+                skill_line_repository = SkillLineRepository(database_path)
 
         self.gear_resolver = (
             GearStatInputResolver(
@@ -70,6 +75,11 @@ class BuildCalculationContextFactory:
             mundus_repository,
             champion_point_repository=champion_point_repository,
             provisioning_repository=provisioning_repository,
+        )
+        self.warden_passive_resolver = (
+            WardenPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
         )
 
     def build(
@@ -137,4 +147,7 @@ class BuildCalculationContextFactory:
             else GearCalculationInputs()
         )
         gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
-        return self.static_build_resolver.apply(gear, build, active_bar=active_bar)
+        gear = self.static_build_resolver.apply(gear, build, active_bar=active_bar)
+        if self.warden_passive_resolver is not None:
+            gear = self.warden_passive_resolver.apply(gear, build, active_bar=active_bar)
+        return gear
