@@ -26,11 +26,24 @@ CONFIDENCE = 1.0
 class ImportSummary:
     scanned: int
     active: int
+    qualified: int
     inserted: int
     skipped_inactive: int
     skipped_slot_mismatch: int
     skipped_missing_fragment: int
     skipped_incomplete: int
+
+
+@dataclass(frozen=True)
+class ClassificationCandidate:
+    skill_rank_id: int
+    coefficient_number: int
+    effect_kind: str
+    damage_type: str | None
+    is_dot: bool
+    is_aoe: bool
+    evidence_fragment: str
+    evidence: tuple[str, ...]
 
 
 def _create_table(db: sqlite3.Connection) -> None:
@@ -70,11 +83,77 @@ def _complete_for_import(evidence) -> bool:
     return True
 
 
+def _evaluate_candidates(
+    database_path: str | Path,
+    *,
+    limit: int | None = None,
+) -> tuple[tuple[ClassificationCandidate, ...], ImportSummary]:
+    path = Path(database_path)
+    if not path.exists():
+        raise FileNotFoundError(path)
+
+    rows = load_slot_audit(path, limit=limit)
+
+    active = 0
+    skipped_inactive = 0
+    skipped_slot_mismatch = 0
+    skipped_missing_fragment = 0
+    skipped_incomplete = 0
+    candidates: list[ClassificationCandidate] = []
+
+    for row in rows:
+        if not is_active_coefficient(row):
+            skipped_inactive += 1
+            continue
+        active += 1
+
+        if row.raw_slot_matches_coefficient is not True:
+            skipped_slot_mismatch += 1
+            continue
+
+        evidence = extract_component_text_evidence(
+            row.coef_description,
+            row.coefficient_number,
+        )
+        if not evidence.fragment:
+            skipped_missing_fragment += 1
+            continue
+        if not _complete_for_import(evidence):
+            skipped_incomplete += 1
+            continue
+
+        candidates.append(
+            ClassificationCandidate(
+                skill_rank_id=int(row.skill_rank_id),
+                coefficient_number=int(row.coefficient_number),
+                effect_kind=str(evidence.effect_kind),
+                damage_type=evidence.damage_type,
+                is_dot=bool(evidence.is_dot),
+                is_aoe=bool(evidence.is_aoe),
+                evidence_fragment=evidence.fragment,
+                evidence=tuple(evidence.evidence),
+            )
+        )
+
+    summary = ImportSummary(
+        scanned=len(rows),
+        active=active,
+        qualified=len(candidates),
+        inserted=0,
+        skipped_inactive=skipped_inactive,
+        skipped_slot_mismatch=skipped_slot_mismatch,
+        skipped_missing_fragment=skipped_missing_fragment,
+        skipped_incomplete=skipped_incomplete,
+    )
+    return tuple(candidates), summary
+
+
 def import_skill_component_classifications(
     database_path: str | Path,
     *,
     clear_existing: bool = True,
     limit: int | None = None,
+    dry_run: bool = False,
 ) -> ImportSummary:
     """Populate verified per-coefficient semantics from coefficient-aware text.
 
@@ -82,48 +161,25 @@ def import_skill_component_classifications(
     prove critical eligibility, so that field requires a separate verified source.
     Rows are imported only when the active coefficient is aligned to its same-numbered
     raw source slot and the text extractor proves all currently required semantics.
+
+    When ``dry_run`` is true, the exact qualification logic is executed but the
+    database is never opened for writing. No table is created, altered, cleared,
+    or populated.
     """
 
     path = Path(database_path)
-    if not path.exists():
-        raise FileNotFoundError(path)
+    candidates, summary = _evaluate_candidates(path, limit=limit)
 
-    rows = load_slot_audit(path, limit=limit)
+    if dry_run:
+        return summary
 
-    scanned = len(rows)
-    active = 0
     inserted = 0
-    skipped_inactive = 0
-    skipped_slot_mismatch = 0
-    skipped_missing_fragment = 0
-    skipped_incomplete = 0
-
     with sqlite3.connect(path) as db:
         _create_table(db)
         if clear_existing:
             db.execute(f"DELETE FROM {TABLE}")
 
-        for row in rows:
-            if not is_active_coefficient(row):
-                skipped_inactive += 1
-                continue
-            active += 1
-
-            if row.raw_slot_matches_coefficient is not True:
-                skipped_slot_mismatch += 1
-                continue
-
-            evidence = extract_component_text_evidence(
-                row.coef_description,
-                row.coefficient_number,
-            )
-            if not evidence.fragment:
-                skipped_missing_fragment += 1
-                continue
-            if not _complete_for_import(evidence):
-                skipped_incomplete += 1
-                continue
-
+        for candidate in candidates:
             db.execute(
                 f"""
                 INSERT OR REPLACE INTO {TABLE} (
@@ -141,17 +197,17 @@ def import_skill_component_classifications(
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    int(row.skill_rank_id),
-                    int(row.coefficient_number),
-                    str(evidence.effect_kind),
-                    evidence.damage_type,
-                    int(bool(evidence.is_dot)),
-                    int(bool(evidence.is_aoe)),
+                    candidate.skill_rank_id,
+                    candidate.coefficient_number,
+                    candidate.effect_kind,
+                    candidate.damage_type,
+                    int(candidate.is_dot),
+                    int(candidate.is_aoe),
                     None,
                     SOURCE,
                     CONFIDENCE,
-                    evidence.fragment,
-                    json.dumps(list(evidence.evidence), ensure_ascii=False),
+                    candidate.evidence_fragment,
+                    json.dumps(list(candidate.evidence), ensure_ascii=False),
                 ),
             )
             inserted += 1
@@ -159,13 +215,14 @@ def import_skill_component_classifications(
         db.commit()
 
     return ImportSummary(
-        scanned=scanned,
-        active=active,
+        scanned=summary.scanned,
+        active=summary.active,
+        qualified=summary.qualified,
         inserted=inserted,
-        skipped_inactive=skipped_inactive,
-        skipped_slot_mismatch=skipped_slot_mismatch,
-        skipped_missing_fragment=skipped_missing_fragment,
-        skipped_incomplete=skipped_incomplete,
+        skipped_inactive=summary.skipped_inactive,
+        skipped_slot_mismatch=summary.skipped_slot_mismatch,
+        skipped_missing_fragment=summary.skipped_missing_fragment,
+        skipped_incomplete=summary.skipped_incomplete,
     )
 
 
@@ -180,21 +237,29 @@ def main() -> int:
         action="store_true",
         help="Keep existing classification rows instead of rebuilding the table contents.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Evaluate exactly what would qualify without writing anything to the database.",
+    )
     args = parser.parse_args()
 
     summary = import_skill_component_classifications(
         args.database,
         clear_existing=not args.append,
         limit=args.limit,
+        dry_run=args.dry_run,
     )
 
     print("\n========================================")
     print(" PHASE 3 SKILL COMPONENT IMPORT")
     print("========================================")
     print(f"Database:                 {args.database}")
+    print(f"Mode:                     {'DRY RUN / READ ONLY' if args.dry_run else 'WRITE'}")
     print(f"Coefficient rows scanned: {summary.scanned}")
     print(f"Active coefficients:      {summary.active}")
-    print(f"Imported rows:            {summary.inserted}")
+    print(f"Qualified rows:           {summary.qualified}")
+    print(f"Rows written:             {summary.inserted}")
     print(f"Inactive slots skipped:   {summary.skipped_inactive}")
     print(f"Slot mismatches skipped:  {summary.skipped_slot_mismatch}")
     print(f"Missing fragments:        {summary.skipped_missing_fragment}")
