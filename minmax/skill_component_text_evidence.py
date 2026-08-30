@@ -26,6 +26,8 @@ _DAMAGE_TYPES = {
     "bleed": "bleed",
 }
 
+_COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+
 
 @dataclass(frozen=True)
 class SkillComponentTextEvidence:
@@ -54,11 +56,14 @@ class SkillComponentTextEvidence:
 
 def _normalize_text(value: str | None) -> str:
     text = str(value or "").replace("\r", " ").replace("\n", " ")
+    # UESP color markup is presentation-only and may sit between words and
+    # numeric values (for example ``every |cffffff1|r second``). Remove those
+    # tags before semantic matching while preserving coefficient placeholders.
+    text = _COLOR_TAG_RE.sub("", text)
     return " ".join(text.split())
 
 
 def _placeholder_pattern(number: int) -> re.Pattern[str]:
-    # UESP coefficient-aware descriptions commonly wrap $N in color markup.
     return re.compile(rf"\${int(number)}(?!\d)")
 
 
@@ -160,7 +165,9 @@ def extract_component_text_evidence(
 
         aoe_patterns = (
             r"\ball enemies in (?:the|an) area\b",
+            r"\ball enemies hit\b",
             r"\bnearby enemies\b",
+            r"\benemies around (?:you|them|the target)\b",
             r"\benemies in the (?:target )?area\b",
             r"\bto all enemies\b",
         )
