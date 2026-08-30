@@ -20,5 +20,24 @@ def test_block_mitigation_modifier_values_and_layers():
     assert lookup("Deflect Bolts", "block_mitigation").layer is BlockModifierLayer.DAMAGE_FAMILY
 
 
-def test_stacking_is_not_claimed_resolved():
-    assert all("unresolved" in x.stacking_status or "must not enter" in x.stacking_status for x in VERIFIED_BLOCK_MODIFIERS)
+def test_standing_block_sources_are_marked_implemented():
+    implemented = (
+        lookup("Light Armor Penalties", "block_cost"),
+        lookup("Medium Armor Bonuses", "block_cost"),
+        lookup("Heavy Armor Bonuses", "block_mitigation"),
+        lookup("Fortress", "block_cost"),
+        lookup("Sword and Board", "block_mitigation"),
+    )
+    assert all("implemented" in entry.stacking_status for entry in implemented)
+
+
+def test_context_bound_block_sources_remain_unapplied_to_generic_standing_state():
+    defensive_cost = lookup("Defensive Stance", "block_cost")
+    defensive_mitigation = lookup("Defensive Stance", "block_mitigation")
+    bracing_anchor = lookup("Bracing Anchor", "block_mitigation")
+    deflect_bolts = lookup("Deflect Bolts", "block_mitigation")
+
+    assert "not yet wired" in defensive_cost.stacking_status
+    assert "not yet wired" in defensive_mitigation.stacking_status
+    assert "must not enter standing sheet automatically" in bracing_anchor.stacking_status
+    assert "must not enter generic block mitigation" in deflect_bolts.stacking_status
