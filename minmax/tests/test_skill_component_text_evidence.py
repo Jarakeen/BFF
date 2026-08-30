@@ -218,3 +218,75 @@ def test_fire_rune_triggered_blast_is_direct_aoe_damage():
     assert evidence.damage_type == "flame"
     assert evidence.is_dot is False
     assert evidence.is_aoe is True
+
+
+def test_shatterspike_foes_around_you_is_explicit_aoe_dot():
+    text = (
+        "As the armor forms you blast foes around you with shattered obsidian, "
+        "causing them to take |cffffff$1|r Flame Damage over 20 seconds."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "flame"
+    assert evidence.is_dot is True
+    assert evidence.is_aoe is True
+
+
+def test_searing_strike_initial_hit_does_not_borrow_second_component_dot_wording():
+    text = (
+        "Slash your foe with a fiery claw, dealing |cffffff$1|r Flame Damage and an "
+        "additional |cffffff$2|r Flame Damage over 10 seconds."
+    )
+
+    first = extract_component_text_evidence(text, 1)
+    second = extract_component_text_evidence(text, 2)
+
+    assert first.effect_kind == "damage"
+    assert first.is_dot is False
+    assert first.is_aoe is False
+    assert second.effect_kind == "damage"
+    assert second.is_dot is True
+    assert second.is_aoe is False
+
+
+def test_superheated_ward_absorb_amount_without_damage_suffix_is_shield():
+    text = (
+        "Roil the air around you or an ally, granting a damage shield that absorbs "
+        "up to |cffffff$1|r for 6 seconds."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "shield"
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
+
+
+def test_unstable_wall_projectile_barrier_amount_is_shield():
+    text = (
+        "When the effect ends, the barrier explodes, dealing |cffffff$3|r Frost Damage "
+        "and shielding you and nearby allies for |cffffff$4|r from projectiles."
+    )
+
+    evidence = extract_component_text_evidence(text, 4)
+
+    assert evidence.effect_kind == "shield"
+    assert evidence.damage_type is None
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
+
+
+def test_soul_tether_siphoned_health_is_periodic_self_heal():
+    text = (
+        "Ravaged enemies are tethered to you for 8 seconds, and while they remain within "
+        "10 meters, you siphon |cffffff$2|r Health from them every second."
+    )
+
+    evidence = extract_component_text_evidence(text, 2)
+
+    assert evidence.effect_kind == "heal"
+    assert evidence.damage_type is None
+    assert evidence.is_dot is True
+    assert evidence.is_aoe is False
