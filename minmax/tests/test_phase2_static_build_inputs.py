@@ -94,6 +94,32 @@ def test_cp_static_repository_supports_per_point_stars(tmp_path):
     assert effects[0].value == 560.0
 
 
+def test_cp_finesse_resolves_critical_damage_and_critical_healing(tmp_path):
+    path, db = _db(tmp_path)
+    db.execute(
+        "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "Finesse",
+            0,
+            20,
+            "0,10,20",
+            "",
+            "Increases your Critical Damage and Critical Healing done by 2% per stage.",
+            "Increases your Critical Damage and Critical Healing done by 2% per stage.",
+        ),
+    )
+    db.commit()
+    db.close()
+
+    effects, unresolved = ChampionPointStaticRepository(path).resolve("Finesse", 20)
+
+    assert unresolved == []
+    assert {effect.stat: effect.value for effect in effects} == {
+        StatId.CRITICAL_DAMAGE: 4.0,
+        StatId.CRITICAL_HEALING: 4.0,
+    }
+
+
 def test_cp_dynamic_star_stays_explicitly_unresolved(tmp_path):
     path, db = _db(tmp_path)
     db.execute(
