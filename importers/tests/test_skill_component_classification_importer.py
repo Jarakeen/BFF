@@ -112,7 +112,7 @@ def test_importer_writes_only_complete_verified_active_components(tmp_path):
     assert rows[0][7] == 'UESP coefficient-aware tooltip text'
     assert rows[0][8] == 1.0
     assert '$1 Flame Damage' in rows[0][9]
-    assert 'fragment explicitly says Flame Damage' in json.loads(rows[0][10])
+    assert 'placeholder explicitly precedes Flame Damage' in json.loads(rows[0][10])
 
 
 def test_imported_rows_are_readable_by_runtime_repository(tmp_path):
@@ -130,6 +130,44 @@ def test_imported_rows_are_readable_by_runtime_repository(tmp_path):
     assert components[0].can_crit is None
     assert not components[0].is_complete_damage_identity
     assert components[1].is_dot is True
+
+
+def test_importer_persists_explicit_shield_without_fake_damage_routing_fields(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+    db = sqlite3.connect(path)
+    db.execute(
+        "INSERT INTO skill_rank VALUES (40, 400, 'Shield Fixture', NULL, NULL, NULL, NULL)"
+    )
+    db.execute(
+        """
+        INSERT INTO ability (
+            ability_id, name, coef_description,
+            type1, a1, b1, c1, r1, avg1
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            400,
+            'Shield Fixture',
+            'You gain a damage shield that absorbs $1 damage for 6 seconds.',
+            8, .1, 1.0, 0, 1, 1000,
+        ),
+    )
+    db.execute("INSERT INTO skill_coefficient VALUES (40, 1, '8', .1, 1.0, 0, 1, 1000)")
+    db.commit()
+    db.close()
+
+    summary = import_skill_component_classifications(path)
+    component = SkillComponentRepository(path).get_component(40, 1)
+
+    assert summary.qualified == 3
+    assert component is not None
+    assert component.effect_kind is SkillEffectKind.SHIELD
+    assert component.damage_type is None
+    assert component.is_dot is None
+    assert component.is_aoe is None
+    assert component.can_crit is None
+    assert not component.is_complete_damage_identity
 
 
 def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path):
