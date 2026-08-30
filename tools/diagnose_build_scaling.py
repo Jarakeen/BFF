@@ -45,8 +45,8 @@ DERIVED_STATS = (
 )
 
 KNOWN_COVERAGE_GAPS = (
-    "Class passives are not yet generally resolved into the shared stat pipeline.",
-    "Skill-passive stat bonuses are not yet generally resolved from slotted skills.",
+    "Verified standing Warden passives are partially resolved; other class passive families are not yet wired.",
+    "Owned armor, weapon, Undaunted, guild, alliance, and other non-class passive families are not yet generally resolved into shared stats.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
     "Block cost/mitigation and Critical Healing are not yet represented as first-class Phase 2 stats.",
