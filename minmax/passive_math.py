@@ -30,8 +30,13 @@ def _count(value: int) -> int:
     return max(0, int(value))
 
 
-def warden_flourish_recovery_percent() -> float:
-    return WARDEN_FLOURISH_RECOVERY_PERCENT
+def warden_flourish_recovery_percent(slotted_animal_companion_abilities: int) -> float:
+    """Return Flourish's recovery bonus for the active bar.
+
+    Max-rank Flourish grants +20% Magicka and Stamina Recovery only while at
+    least one Animal Companions ability is slotted on the active bar.
+    """
+    return WARDEN_FLOURISH_RECOVERY_PERCENT if _count(slotted_animal_companion_abilities) > 0 else 0.0
 
 
 def warden_advanced_species_crit_damage(slotted_animal_companion_abilities: int) -> float:
