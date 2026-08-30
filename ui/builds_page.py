@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QScrollArea,
+    QSizePolicy,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -203,12 +204,22 @@ class BuildsPage(FoundryPage):
         right.addWidget(self._set_bonus_card(build))
         top.addLayout(right, 2)
         self.detail_layout.addLayout(top)
+
         lower = QHBoxLayout()
         lower.setSpacing(10)
-        lower.addWidget(self._cp_card(build), 1)
-        lower.addWidget(self._skills_card(build), 1)
-        lower.addWidget(self._notes_card(build), 1)
+        cp_card = self._cp_card(build)
+        skills_card = self._skills_card(build)
+        notes_card = self._notes_card(build)
+        cp_card.setMinimumWidth(170)
+        cp_card.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        skills_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        notes_card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        lower.addWidget(cp_card, 1)
+        lower.addWidget(skills_card, 3)
+        lower.addWidget(notes_card, 1)
         self.detail_layout.addLayout(lower)
+
+        self.detail_layout.addWidget(self._scribed_skills_card(build))
         self.detail_layout.addWidget(self._alternates_card(build))
         self.detail_layout.addStretch(1)
 
@@ -299,13 +310,17 @@ class BuildsPage(FoundryPage):
         card = FoundryCard("CP & Stats Snapshot (all Champion Passives included)")
         entries = [entry for entry in build.ChampionPoints if entry.Name.strip()]
         if not entries:
-            card.addWidget(QLabel("Champion Points not configured."))
+            label = QLabel("Champion Points not configured.")
+            label.setWordWrap(True)
+            card.addWidget(label)
         else:
             for entry in entries:
                 text = entry.Name.strip()
                 if entry.Points.strip():
                     text += f"  {entry.Points.strip()}"
-                card.addWidget(QLabel(text))
+                label = QLabel(text)
+                label.setWordWrap(True)
+                card.addWidget(label)
         return card
 
     def _skills_card(self, build: PlayerBuild) -> QWidget:
@@ -313,17 +328,105 @@ class BuildsPage(FoundryPage):
         front = [s for s in build.FrontBarSkills if s.strip()]
         back = [s for s in build.BackBarSkills if s.strip()]
         card.addWidget(QLabel("Front Bar"))
-        card.addWidget(QLabel("  •  ".join(front) or "Not configured"))
+        front_label = QLabel("  •  ".join(front) or "Not configured")
+        front_label.setWordWrap(True)
+        front_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        card.addWidget(front_label)
         card.addWidget(QLabel("Back Bar"))
-        card.addWidget(QLabel("  •  ".join(back) or "Not configured"))
-        card.addWidget(QLabel(f"Food: {build.Food or '—'}"))
-        card.addWidget(QLabel(f"Potion: {build.Potion or '—'}"))
+        back_label = QLabel("  •  ".join(back) or "Not configured")
+        back_label.setWordWrap(True)
+        back_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        card.addWidget(back_label)
+        food = QLabel(f"Food: {build.Food or '—'}")
+        potion = QLabel(f"Potion: {build.Potion or '—'}")
+        food.setWordWrap(True)
+        potion.setWordWrap(True)
+        card.addWidget(food)
+        card.addWidget(potion)
         return card
 
     def _notes_card(self, build: PlayerBuild) -> QWidget:
         card = FoundryCard("Notes")
-        card.addWidget(QLabel(build.Notes.strip() or "No build notes recorded."))
+        label = QLabel(build.Notes.strip() or "No build notes recorded.")
+        label.setWordWrap(True)
+        card.addWidget(label)
         return card
+
+    def _scribed_skill_names(self) -> list[str]:
+        names: set[str] = set()
+        try:
+            for skill in self.reference.list_skills():
+                if not isinstance(skill, dict):
+                    continue
+                try:
+                    crafted = int(skill.get("is_crafted") or 0) == 1
+                except (TypeError, ValueError):
+                    crafted = False
+                name = str(skill.get("name") or "").strip()
+                if crafted and name:
+                    names.add(name)
+        except Exception:
+            return []
+        return sorted(names, key=str.casefold)
+
+    def _scribed_skills_card(self, build: PlayerBuild) -> QWidget:
+        card = FoundryCard("Scribed Skills")
+        selected = [str(name).strip() for name in getattr(build, "ScribedSkills", []) if str(name).strip()]
+        if selected:
+            label = QLabel("  •  ".join(selected))
+            label.setWordWrap(True)
+            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            card.addWidget(label)
+        else:
+            label = QLabel("No scribed skill access recorded for this build.")
+            label.setWordWrap(True)
+            card.addWidget(label)
+        actions = QHBoxLayout()
+        actions.addStretch()
+        edit = FoundryButton("Choose Scribed Skills", role=ButtonRole.SECONDARY, compact=True)
+        edit.clicked.connect(self._edit_scribed_skills)
+        actions.addWidget(edit)
+        card.addLayout(actions)
+        return card
+
+    def _edit_scribed_skills(self):
+        if not self.roster.Members or self.selected_index >= len(self.roster.Members):
+            return
+        build = self.roster.Members[self.selected_index]
+        available = self._scribed_skill_names()
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Scribed Skills — {build.Name or build.BuildName or 'Build'}")
+        dialog.resize(520, 620)
+        layout = QVBoxLayout(dialog)
+        explanation = QLabel("Choose the scribed skills this character has access to. Selected skills become eligible for this build's skill bars.")
+        explanation.setWordWrap(True)
+        layout.addWidget(explanation)
+        choices = QListWidget()
+        selected = {str(name).strip().casefold() for name in getattr(build, "ScribedSkills", []) if str(name).strip()}
+        for name in available:
+            item = QListWidgetItem(name)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if name.casefold() in selected else Qt.CheckState.Unchecked)
+            choices.addItem(item)
+        layout.addWidget(choices, 1)
+        actions = QHBoxLayout()
+        actions.addStretch()
+        cancel = FoundryButton("Cancel", role=ButtonRole.SECONDARY, compact=True)
+        save = FoundryButton("Save Scribed Access", role=ButtonRole.PRIMARY, compact=True)
+        cancel.clicked.connect(dialog.reject)
+        save.clicked.connect(dialog.accept)
+        actions.addWidget(cancel)
+        actions.addWidget(save)
+        layout.addLayout(actions)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        build.ScribedSkills = [
+            choices.item(index).text().strip()
+            for index in range(choices.count())
+            if choices.item(index).checkState() == Qt.CheckState.Checked
+        ]
+        self._save()
+        self._refresh_detail()
 
     def _alternates_card(self, build: PlayerBuild) -> QWidget:
         card = FoundryCard("Boss Alternates")
@@ -362,9 +465,24 @@ class BuildsPage(FoundryPage):
                 continue
         return str(total) if total else "—"
 
-    def _editor(self) -> BuildEditor:
+    def _editor(self, build: PlayerBuild | None = None) -> BuildEditor:
         skills = self.reference.list_skills()
-        skill_choices = [skill for skill in skills if isinstance(skill, dict) and str(skill.get("name", "")).strip()]
+        allowed_scribed = {
+            str(name).strip().casefold()
+            for name in getattr(build, "ScribedSkills", [])
+            if str(name).strip()
+        } if build is not None else set()
+        skill_choices = []
+        for skill in skills:
+            if not isinstance(skill, dict) or not str(skill.get("name", "")).strip():
+                continue
+            try:
+                is_crafted = int(skill.get("is_crafted") or 0) == 1
+            except (TypeError, ValueError):
+                is_crafted = False
+            if is_crafted and str(skill.get("name") or "").strip().casefold() not in allowed_scribed:
+                continue
+            skill_choices.append(skill)
         cp = self.reference.list_champion_points()
         cp_choices = [point for point in cp if isinstance(point, dict) and str(point.get("name", "")).strip()]
         return BuildEditor(race_choices=self.reference.list_race_names(), set_choices=self.reference.list_gear_set_names(), skill_choices=skill_choices, cp_choices=cp_choices)
@@ -386,14 +504,16 @@ class BuildsPage(FoundryPage):
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        editor = self._editor()
+        editor = self._editor(build)
         scroll.setWidget(editor)
         layout.addWidget(scroll, 1)
         editor.load(build)
         editor.saveRequested.connect(dialog.accept)
         editor.cancelRequested.connect(dialog.reject)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.roster.Members[self.selected_index] = editor.model
+            updated = editor.model
+            updated.ScribedSkills = list(getattr(build, "ScribedSkills", []))
+            self.roster.Members[self.selected_index] = updated
             self._save()
             self._refresh_roster()
 
