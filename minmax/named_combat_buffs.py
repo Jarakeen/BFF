@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Verified named combat buffs that modify first-class shared stats.
+"""Verified named combat buffs and their routing layer.
 
-Source: ``math/buff.txt`` in this repository. This registry intentionally
-contains only effects that can be routed into the existing shared stat model
-without inventing Damage Done, Damage Taken, shield-strength, movement, or
-other future combat-component semantics.
+Source: ``math/buff.txt`` in this repository. Shared-sheet effects are mapped to
+first-class stats here. Component-layer buffs are canonicalized here as known
+names but are intentionally consumed by the damage/healing/shield layer that
+owns their semantics.
 """
 
 from dataclasses import dataclass
@@ -58,12 +58,19 @@ NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
     "Minor Toughness": (NamedBuffEffect(StatId.MAX_HEALTH, 0.10, "resource_percent"),),
 }
 
+# Known named buffs whose effects belong to a later component calculation, not
+# the shared standing/stat layer. Values are resolved by that owning layer.
+COMPONENT_LAYER_BUFFS = frozenset({
+    "Minor Berserk",
+    "Major Berserk",
+})
+
 
 def canonical_buff_name(value: str) -> str | None:
     key = " ".join(str(value or "").strip().casefold().split())
     if not key:
         return None
-    for name in NAMED_BUFF_EFFECTS:
+    for name in (*NAMED_BUFF_EFFECTS.keys(), *COMPONENT_LAYER_BUFFS):
         if name.casefold() == key:
             return name
     return None
@@ -72,3 +79,8 @@ def canonical_buff_name(value: str) -> str | None:
 def effects_for_buff(value: str) -> tuple[NamedBuffEffect, ...]:
     canonical = canonical_buff_name(value)
     return NAMED_BUFF_EFFECTS.get(canonical or "", ())
+
+
+def is_component_layer_buff(value: str) -> bool:
+    canonical = canonical_buff_name(value)
+    return bool(canonical and canonical in COMPONENT_LAYER_BUFFS)
