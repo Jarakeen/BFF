@@ -2,6 +2,7 @@ import json
 import sqlite3
 
 from importers.skill_component_classification_importer import (
+    SOURCE,
     import_skill_component_classifications,
 )
 from minmax.skill_component_classification import SkillEffectKind
@@ -80,16 +81,40 @@ def _make_db(path):
     db.close()
 
 
+def _create_classification_table(db):
+    db.executescript(
+        """
+        CREATE TABLE skill_component_classification (
+            skill_rank_id INTEGER NOT NULL,
+            coefficient_number INTEGER NOT NULL,
+            effect_kind TEXT NOT NULL,
+            damage_type TEXT,
+            is_dot INTEGER,
+            is_aoe INTEGER,
+            can_crit INTEGER,
+            source TEXT,
+            confidence REAL,
+            evidence_fragment TEXT,
+            evidence_json TEXT,
+            PRIMARY KEY (skill_rank_id, coefficient_number)
+        );
+        """
+    )
+
+
 def test_importer_writes_only_complete_verified_active_components(tmp_path):
     path = tmp_path / 'eso.db'
     _make_db(path)
 
-    summary = import_skill_component_classifications(path)
+    summary = import_skill_component_classifications(path, dry_run=False)
 
     assert summary.scanned == 5
     assert summary.active == 4
     assert summary.qualified == 2
+    assert summary.write_eligible == 2
     assert summary.inserted == 2
+    assert summary.removed_derived == 0
+    assert summary.protected_existing == 0
     assert summary.skipped_inactive == 1
     assert summary.skipped_slot_mismatch == 1
     assert summary.skipped_incomplete == 1
@@ -109,7 +134,8 @@ def test_importer_writes_only_complete_verified_active_components(tmp_path):
     assert len(rows) == 2
     assert rows[0][0:7] == (10, 1, 'damage', 'flame', 0, 1, None)
     assert rows[1][0:7] == (10, 2, 'damage', 'flame', 1, 1, None)
-    assert rows[0][7] == 'UESP coefficient-aware tooltip text'
+    assert rows[0][7] == SOURCE
+    assert 'upstream provenance unresolved' in rows[0][7]
     assert rows[0][8] == 1.0
     assert '$1 Flame Damage' in rows[0][9]
     assert 'placeholder explicitly precedes Flame Damage' in json.loads(rows[0][10])
@@ -118,7 +144,7 @@ def test_importer_writes_only_complete_verified_active_components(tmp_path):
 def test_imported_rows_are_readable_by_runtime_repository(tmp_path):
     path = tmp_path / 'eso.db'
     _make_db(path)
-    import_skill_component_classifications(path)
+    import_skill_component_classifications(path, dry_run=False)
 
     components = SkillComponentRepository(path).get_for_skill_rank(10)
 
@@ -157,7 +183,7 @@ def test_importer_persists_explicit_shield_without_fake_damage_routing_fields(tm
     db.commit()
     db.close()
 
-    summary = import_skill_component_classifications(path)
+    summary = import_skill_component_classifications(path, dry_run=False)
     component = SkillComponentRepository(path).get_component(40, 1)
 
     assert summary.qualified == 3
@@ -193,7 +219,7 @@ def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path)
     db.commit()
     db.close()
 
-    import_skill_component_classifications(path)
+    import_skill_component_classifications(path, dry_run=False)
 
     db = sqlite3.connect(path)
     columns = {row[1] for row in db.execute('PRAGMA table_info(skill_component_classification)')}
@@ -203,7 +229,7 @@ def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path)
     assert 'evidence_json' in columns
 
 
-def test_dry_run_qualifies_rows_without_creating_or_modifying_classification_table(tmp_path):
+def test_api_defaults_to_read_only_dry_run(tmp_path):
     path = tmp_path / 'eso.db'
     _make_db(path)
 
@@ -211,15 +237,13 @@ def test_dry_run_qualifies_rows_without_creating_or_modifying_classification_tab
     before_schema = tuple(db.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall())
     db.close()
 
-    summary = import_skill_component_classifications(path, dry_run=True)
+    summary = import_skill_component_classifications(path)
 
     assert summary.scanned == 5
     assert summary.active == 4
     assert summary.qualified == 2
+    assert summary.write_eligible == 2
     assert summary.inserted == 0
-    assert summary.skipped_inactive == 1
-    assert summary.skipped_slot_mismatch == 1
-    assert summary.skipped_incomplete == 1
 
     db = sqlite3.connect(path)
     after_schema = tuple(db.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall())
@@ -230,3 +254,84 @@ def test_dry_run_qualifies_rows_without_creating_or_modifying_classification_tab
 
     assert before_schema == after_schema
     assert table is None
+
+
+def test_foreign_manual_row_is_never_overwritten(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+    db = sqlite3.connect(path)
+    _create_classification_table(db)
+    db.execute(
+        """
+        INSERT INTO skill_component_classification (
+            skill_rank_id, coefficient_number, effect_kind, damage_type,
+            is_dot, is_aoe, can_crit, source, confidence,
+            evidence_fragment, evidence_json
+        ) VALUES (10, 1, 'damage', 'shock', 0, 0, 1, 'manual verification', 1.0, 'manual', '[]')
+        """
+    )
+    db.commit()
+    db.close()
+
+    preflight = import_skill_component_classifications(path)
+    result = import_skill_component_classifications(path, dry_run=False)
+
+    assert preflight.qualified == 2
+    assert preflight.write_eligible == 1
+    assert preflight.protected_existing == 1
+    assert result.inserted == 1
+    assert result.protected_existing == 1
+
+    db = sqlite3.connect(path)
+    protected = db.execute(
+        """
+        SELECT damage_type, is_aoe, can_crit, source, evidence_fragment
+        FROM skill_component_classification
+        WHERE skill_rank_id = 10 AND coefficient_number = 1
+        """
+    ).fetchone()
+    db.close()
+
+    assert protected == ('shock', 0, 1, 'manual verification', 'manual')
+
+
+def test_rebuild_deletes_only_rows_owned_by_this_extractor(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+    db = sqlite3.connect(path)
+    _create_classification_table(db)
+    db.execute(
+        """
+        INSERT INTO skill_component_classification (
+            skill_rank_id, coefficient_number, effect_kind, source
+        ) VALUES (999, 1, 'shield', ?,)
+        """.replace(',)', ')'),
+        (SOURCE,),
+    )
+    db.execute(
+        """
+        INSERT INTO skill_component_classification (
+            skill_rank_id, coefficient_number, effect_kind, source
+        ) VALUES (998, 1, 'shield', 'manual verification')
+        """
+    )
+    db.commit()
+    db.close()
+
+    preflight = import_skill_component_classifications(path)
+    assert preflight.removed_derived == 1
+
+    result = import_skill_component_classifications(path, dry_run=False)
+    assert result.removed_derived == 1
+
+    db = sqlite3.connect(path)
+    manual = db.execute(
+        "SELECT effect_kind, source FROM skill_component_classification WHERE skill_rank_id = 998"
+    ).fetchone()
+    old_derived = db.execute(
+        "SELECT 1 FROM skill_component_classification WHERE skill_rank_id = 999"
+    ).fetchone()
+    db.close()
+
+    assert manual == ('shield', 'manual verification')
+    assert old_derived is None
