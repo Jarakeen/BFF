@@ -1,6 +1,8 @@
 import pytest
 
 from minmax.alliance_support_passive_input_resolver import AllianceSupportPassiveInputResolver
+from minmax.character_progression import CharacterProgression
+from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_stat_inputs import GearCalculationInputs
 from models.build_model import PlayerBuild
 
@@ -61,3 +63,20 @@ def test_magicka_aid_ignores_assault_abilities_and_opposite_bar():
         support_passives_owned=True,
     )
     assert back.magicka_recovery.skill_percent_contributions[-1].value == pytest.approx(0.10)
+
+
+def test_context_factory_applies_owned_support_magicka_aid_to_final_recovery():
+    build = PlayerBuild(FrontBarSkills=["Barrier", "", "", "", "", ""])
+    context = BuildCalculationContextFactory(
+        alliance_support_passive_resolver=_resolver(),
+    ).build(
+        character_id="support-test",
+        build_id="support-build",
+        build=build,
+        progression=CharacterProgression(owned_skill_lines=("Support",)),
+        active_bar="front",
+    )
+
+    assert context.character_state.magicka_recovery == 566
+    trace = context.character_state.traces[next(stat for stat in context.character_state.traces if stat.value == "magicka_recovery")]
+    assert "Support: Magicka Aid" in [step.label for step in trace.steps]
