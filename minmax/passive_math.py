@@ -13,6 +13,11 @@ WARDEN_PIERCING_COLD_FROST_DAMAGE_PERCENT = 0.15
 UNDAUNTED_METTLE_RESOURCE_PERCENT_PER_ARMOR_TYPE = 0.02
 
 
+# Mages Guild / Fighters Guild standing passives, max rank.
+MAGES_GUILD_MAGICKA_CONTROLLER_PERCENT_PER_SLOTTED = 0.02
+FIGHTERS_GUILD_SLAYER_WEAPON_SPELL_DAMAGE_PERCENT_PER_SLOTTED = 0.03
+
+
 # Light Armor, max-rank passive values per equipped piece.
 LIGHT_ARMOR_PENETRATION_PER_PIECE = 939.0
 LIGHT_ARMOR_MAGICKA_RECOVERY_PERCENT_PER_PIECE = 0.04
@@ -51,6 +56,14 @@ def undaunted_mettle_resource_percent(equipped_armor_type_count: int) -> float:
     # ESO has only three armor types; clamp rather than allowing malformed build
     # data to create impossible passive values.
     return min(_count(equipped_armor_type_count), 3) * UNDAUNTED_METTLE_RESOURCE_PERCENT_PER_ARMOR_TYPE
+
+
+def mages_guild_magicka_controller_percent(slotted_mages_guild_abilities: int) -> float:
+    return _count(slotted_mages_guild_abilities) * MAGES_GUILD_MAGICKA_CONTROLLER_PERCENT_PER_SLOTTED
+
+
+def fighters_guild_slayer_weapon_spell_damage_percent(slotted_fighters_guild_abilities: int) -> float:
+    return _count(slotted_fighters_guild_abilities) * FIGHTERS_GUILD_SLAYER_WEAPON_SPELL_DAMAGE_PERCENT_PER_SLOTTED
 
 
 def light_armor_penetration(piece_count: int) -> float:

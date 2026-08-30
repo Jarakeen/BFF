@@ -11,6 +11,7 @@ from .character_progression import CharacterProgression
 from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
+from .guild_passive_input_resolver import GuildPassiveInputResolver
 from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
@@ -42,6 +43,7 @@ class BuildCalculationContextFactory:
         skill_line_repository: SkillLineRepository | None = None,
         armor_passive_resolver: ArmorPassiveInputResolver | None = None,
         undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
+        guild_passive_resolver: GuildPassiveInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -84,6 +86,11 @@ class BuildCalculationContextFactory:
         )
         self.warden_passive_resolver = (
             WardenPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.guild_passive_resolver = guild_passive_resolver or (
+            GuildPassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
             else None
         )
@@ -173,4 +180,12 @@ class BuildCalculationContextFactory:
             build,
             undaunted_passives_owned=progression.owns_skill_line("Undaunted"),
         )
+        if self.guild_passive_resolver is not None:
+            gear = self.guild_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                mages_guild_passives_owned=progression.owns_skill_line("Mages Guild"),
+                fighters_guild_passives_owned=progression.owns_skill_line("Fighters Guild"),
+            )
         return gear
