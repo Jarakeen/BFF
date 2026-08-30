@@ -1,6 +1,10 @@
 import sqlite3
 
-from tools.audit_skill_component_import_gaps import load_import_gaps, summarize
+from tools.audit_skill_component_import_gaps import (
+    load_import_gaps,
+    sample_gap_rows,
+    summarize,
+)
 
 
 def _make_db(path):
@@ -113,3 +117,26 @@ def test_complete_component_is_not_reported_as_gap(tmp_path):
     gaps = load_import_gaps(path)
 
     assert all(row.name != "Complete" for row in gaps)
+
+
+def test_gap_samples_round_robin_across_reason_combinations(tmp_path):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    gaps = load_import_gaps(path)
+    samples = sample_gap_rows(gaps, 4)
+
+    assert len(samples) == 4
+    assert {row.reasons for row in samples} == {
+        ("effect_kind", "periodicity", "target_shape"),
+        ("periodicity", "target_shape"),
+        ("missing_fragment",),
+        ("slot_mismatch",),
+    }
+
+
+def test_gap_samples_zero_limit_returns_empty(tmp_path):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    assert sample_gap_rows(load_import_gaps(path), 0) == ()
