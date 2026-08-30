@@ -28,7 +28,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.03,
         BlockModifierLayer.STANDING_EQUIPMENT,
         "per Light Armor piece equipped",
-        "value and activation verified; global block-cost stacking order unresolved",
+        "implemented as a sequential block-cost multiplier with explicit Light Armor ownership",
     ),
     BlockModifierClassification(
         "Medium Armor Bonuses",
@@ -36,7 +36,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         -0.03,
         BlockModifierLayer.STANDING_EQUIPMENT,
         "per Medium Armor piece equipped",
-        "value and activation verified; global block-cost stacking order unresolved",
+        "implemented as a sequential block-cost multiplier with explicit Medium Armor ownership",
     ),
     BlockModifierClassification(
         "Heavy Armor Bonuses",
@@ -44,7 +44,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.01,
         BlockModifierLayer.STANDING_EQUIPMENT,
         "per Heavy Armor piece equipped",
-        "value and activation verified; global block-mitigation stacking order unresolved",
+        "implemented as direct block-mitigation percentage points with explicit Heavy Armor ownership",
     ),
     BlockModifierClassification(
         "Fortress",
@@ -52,7 +52,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         -0.36,
         BlockModifierLayer.STANDING_EQUIPMENT,
         "One Hand and Shield passive owned and one-hand weapon + shield equipped on active bar",
-        "value and activation verified; global block-cost stacking order unresolved",
+        "implemented as a sequential block-cost multiplier after eligibility is satisfied",
     ),
     BlockModifierClassification(
         "Sword and Board",
@@ -60,7 +60,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.20,
         BlockModifierLayer.STANDING_EQUIPMENT,
         "One Hand and Shield passive owned and one-hand weapon + shield equipped on active bar",
-        "value and activation verified; global block-mitigation stacking order unresolved",
+        "implemented in the amount-blocked mitigation bucket after eligibility is satisfied",
     ),
     BlockModifierClassification(
         "Defensive Stance",
@@ -68,7 +68,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         -0.10,
         BlockModifierLayer.ACTIVE_BAR_SLOT,
         "Defensive Stance slotted on active bar and shield equipped",
-        "value and activation verified; global block-cost stacking order unresolved",
+        "value and activation verified; active-bar application not yet wired",
     ),
     BlockModifierClassification(
         "Defensive Stance",
@@ -76,7 +76,7 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.10,
         BlockModifierLayer.ACTIVE_BAR_SLOT,
         "Defensive Stance slotted on active bar and shield equipped",
-        "value and activation verified; global block-mitigation stacking order unresolved",
+        "value and activation verified; active-bar application not yet wired",
     ),
     BlockModifierClassification(
         "Bracing Anchor",
