@@ -29,7 +29,7 @@
         },
         "Shoulders": {
           "Set": "Spaulder of Ruin",
-          "Trait": "Divines",
+          "Trait": "Infused",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
@@ -102,7 +102,7 @@
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "CP160",
+        "Level": "Level 1",
         "WeaponType": "Restoration Staff"
       },
       "FrontBarOffHand": {
@@ -173,7 +173,7 @@
       },
       "ChampionPoints": [
         {
-          "Name": "Rationer",
+          "Name": "Master Gatherer",
           "Points": "30"
         },
         {
