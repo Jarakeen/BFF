@@ -9,6 +9,7 @@
       "EsoClass": "Warden",
       "Role": "Healer",
       "Alliance": "Daggerfall Covenant",
+      "Mundus": "The Ritual",
       "Vampire": false,
       "Werewolf": false,
       "AttributeHealth": 0,
@@ -16,14 +17,15 @@
       "AttributeStamina": 0,
       "Armor": {
         "Head": {
-          "Set": "Ozezan the Inferno",
+          "Set": "Magma Incarnate",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Medium",
           "Set2": "",
           "Quality": "Gold",
-          "EnchantTier": "Splendid",
-          "Level": "CP160"
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Shoulders": {
           "Set": "Spaulder of Ruin",
@@ -33,108 +35,141 @@
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Chest": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Hands": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Waist": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Legs": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Feet": {
-          "Set": "Spell Power Cure",
+          "Set": "Serpent's Disdain",
           "Trait": "Divines",
           "Enchant": "Max Magicka",
           "Weight": "Light",
           "Set2": "",
           "Quality": "Gold",
           "EnchantTier": "Truly Superb",
-          "Level": "CP160"
+          "Level": "CP160",
+          "WeaponType": ""
         }
       },
       "FrontBarWeapon": {
         "Set": "Master Architect",
         "Trait": "Powered",
-        "Enchant": "Crushing",
-        "Weight": "",
-        "Set2": "",
-        "Quality": "Gold",
-        "EnchantTier": "Truly Superb",
-        "Level": "CP160"
-      },
-      "BackBarWeapon": {
-        "Set": "Master Architect",
-        "Trait": "Infused",
         "Enchant": "Weapon Damage",
         "Weight": "",
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "CP160"
+        "Level": "CP160",
+        "WeaponType": "Restoration Staff"
       },
-      "Necklace": {
+      "FrontBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "BackBarWeapon": {
         "Set": "Master Architect",
-        "Trait": "Infused",
-        "Enchant": "Spell Damage",
+        "Trait": "Charged",
+        "Enchant": "Crushing",
         "Weight": "",
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "CP160"
+        "Level": "CP160",
+        "WeaponType": "Ice Staff"
+      },
+      "BackBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "Necklace": {
+        "Set": "Master Architect",
+        "Trait": "Arcane",
+        "Enchant": "Magicka Recovery",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "Ring1": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "Spell Damage",
+        "Enchant": "Magicka Recovery",
         "Weight": "",
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "CP160"
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "Ring2": {
         "Set": "Master Architect",
         "Trait": "Infused",
-        "Enchant": "Spell Damage",
+        "Enchant": "Magicka Recovery",
         "Weight": "",
         "Set2": "",
         "Quality": "Gold",
         "EnchantTier": "Truly Superb",
-        "Level": "CP160"
+        "Level": "CP160",
+        "WeaponType": ""
       },
       "ChampionPoints": [
         {
@@ -150,7 +185,7 @@
           "Points": "50"
         },
         {
-          "Name": "Fortune's Favor",
+          "Name": "Rationer",
           "Points": "50"
         },
         {
@@ -158,11 +193,11 @@
           "Points": "50"
         },
         {
-          "Name": "Hope Infusion",
+          "Name": "Soothing Tide",
           "Points": "50"
         },
         {
-          "Name": "Enlivening Overflow",
+          "Name": "Rejuvenator",
           "Points": "50"
         },
         {
@@ -187,22 +222,22 @@
         }
       ],
       "FrontBarSkills": [
-        "Healing Seed",
-        "Regeneration",
-        "Blessing of Protection",
-        "Grand Healing",
-        "Necrotic Orb",
-        "Feral Guardian"
+        "Budding Seeds",
+        "Radiating Regeneration",
+        "Combat Prayer",
+        "Illustrious Healing",
+        "Energy Orb",
+        "Eternal Guardian"
       ],
       "BackBarSkills": [
-        "Wall of Elements",
-        "Vigor",
-        "Weakness to Elements",
-        "Frost Cloak",
-        "Blood Altar",
-        "War Horn"
+        "Elemental Blockade",
+        "Echoing Vigor",
+        "Winter's Revenge",
+        "Expansive Frost Cloak",
+        "Overflowing Altar",
+        "Aggressive Horn"
       ],
-      "Food": "clockwork citrus",
+      "Food": "Witchmother's Potent Brew",
       "Potion": "spell power",
       "Notes": "",
       "BossLoadouts": []
@@ -216,6 +251,7 @@
       "EsoClass": "",
       "Role": "",
       "Alliance": "",
+      "Mundus": "",
       "Vampire": false,
       "Werewolf": false,
       "AttributeHealth": 0,
@@ -301,7 +337,19 @@
         "Set2": "",
         "Quality": "",
         "EnchantTier": "",
-        "Level": ""
+        "Level": "",
+        "WeaponType": ""
+      },
+      "FrontBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
       },
       "BackBarWeapon": {
         "Set": "",
@@ -311,7 +359,19 @@
         "Set2": "",
         "Quality": "",
         "EnchantTier": "",
-        "Level": ""
+        "Level": "",
+        "WeaponType": ""
+      },
+      "BackBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
       },
       "Necklace": {
         "Set": "",
@@ -321,7 +381,8 @@
         "Set2": "",
         "Quality": "",
         "EnchantTier": "",
-        "Level": ""
+        "Level": "",
+        "WeaponType": ""
       },
       "Ring1": {
         "Set": "",
@@ -331,7 +392,8 @@
         "Set2": "",
         "Quality": "",
         "EnchantTier": "",
-        "Level": ""
+        "Level": "",
+        "WeaponType": ""
       },
       "Ring2": {
         "Set": "",
@@ -341,7 +403,8 @@
         "Set2": "",
         "Quality": "",
         "EnchantTier": "",
-        "Level": ""
+        "Level": "",
+        "WeaponType": ""
       },
       "ChampionPoints": [],
       "FrontBarSkills": [
