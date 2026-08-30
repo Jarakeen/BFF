@@ -116,9 +116,40 @@ class StaticBuildInputResolver:
             return result
         return replace(result, core=replace(result.core, **{field_name: updated}))
 
+    @staticmethod
+    def _apply_block_effect(result: GearCalculationInputs, effect: Effect) -> GearCalculationInputs:
+        if effect.stat is StatId.BLOCK_COST and effect.operation is EffectOperation.ADD:
+            block_cost = replace(
+                result.core.block_cost,
+                flat_reductions=result.core.block_cost.flat_reductions
+                + ((effect.source, float(effect.value)),),
+            )
+            return replace(
+                result,
+                core=replace(result.core, block_cost=block_cost),
+                applied_effect_count=result.applied_effect_count + 1,
+            )
+
+        if effect.stat is StatId.BLOCK_MITIGATION and effect.operation is EffectOperation.ADD_PERCENT:
+            decimal = float(effect.value) / 100.0 if effect.unit is EffectUnit.PERCENT else float(effect.value)
+            block_mitigation = replace(
+                result.core.block_mitigation,
+                amount_blocked_modifiers=result.core.block_mitigation.amount_blocked_modifiers
+                + ((effect.source, decimal),),
+            )
+            return replace(
+                result,
+                core=replace(result.core, block_mitigation=block_mitigation),
+                applied_effect_count=result.applied_effect_count + 1,
+            )
+
+        return result
+
     def _apply_effect(self, result: GearCalculationInputs, effect: Effect, *, resource_bucket: str) -> GearCalculationInputs:
         if effect.stat is None:
             return result
+        if effect.stat in {StatId.BLOCK_COST, StatId.BLOCK_MITIGATION}:
+            return self._apply_block_effect(result, effect)
         if effect.stat is StatId.CRITICAL_CHANCE:
             ratio = self.critical_rating_to_ratio(effect.value)
             contribution = StatContribution(effect.source, ratio)
