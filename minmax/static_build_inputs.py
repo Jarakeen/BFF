@@ -174,13 +174,12 @@ class StaticBuildInputResolver:
         return replace(result, unresolved=tuple(unresolved))
 
     def _apply_non_slottable_champion_points(self, result: GearCalculationInputs) -> GearCalculationInputs:
-        """Apply the build-profile invariant that every passive CP star is maxed."""
+        """Apply the temporary profile assumption that passive CP stars are maxed when CP data is available."""
+
+        if self.champion_point_repository is None:
+            return result
 
         unresolved = list(result.unresolved)
-        if self.champion_point_repository is None:
-            unresolved.append("Non-slottable Champion Point passives require a static CP repository")
-            return replace(result, unresolved=tuple(unresolved))
-
         effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
         unresolved.extend(passive_unresolved)
         for effect in effects:
