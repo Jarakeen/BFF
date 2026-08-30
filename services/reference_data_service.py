@@ -62,14 +62,47 @@ class ReferenceDataService:
         return self._race_names
 
     def list_gear_set_names(self) -> list[str]:
+        """Return every selectable gear-set name known to the database.
+
+        Older imports populate ``gear_set`` directly, while newer canonical
+        imports may first register a set in ``entity`` as ``entity_type='gear_set'``.
+        The build editor should expose both sources so arena weapons and other
+        canonical-only set entities are selectable before their bonus math is
+        necessarily fully normalized into ``gear_set_bonus``.
+        """
 
         if self._gear_set_names is None:
 
             try:
+                if self.database.table_exists("entity"):
+                    rows = self.database.execute(
+                        """
+                        SELECT name
+                        FROM (
+                            SELECT name
+                            FROM gear_set
+                            WHERE name IS NOT NULL AND TRIM(name) <> ''
 
-                rows = self.database.execute(
-                    "SELECT name FROM gear_set ORDER BY name"
-                ).fetchall()
+                            UNION
+
+                            SELECT name
+                            FROM entity
+                            WHERE entity_type = 'gear_set'
+                              AND name IS NOT NULL
+                              AND TRIM(name) <> ''
+                        )
+                        ORDER BY name COLLATE NOCASE
+                        """
+                    ).fetchall()
+                else:
+                    rows = self.database.execute(
+                        """
+                        SELECT name
+                        FROM gear_set
+                        WHERE name IS NOT NULL AND TRIM(name) <> ''
+                        ORDER BY name COLLATE NOCASE
+                        """
+                    ).fetchall()
 
                 self._gear_set_names = [row["name"] for row in rows]
 
@@ -258,17 +291,10 @@ class ReferenceDataService:
                         max_description,
                         max_points,
                         jump_points,
-                        jump_point_delta,
-                        num_jump_points,
-                        is_root,
-                        is_cluster_root,
-                        parent_skill_id,
-                        skill_index,
-                        discipline_index
+                        skill_type
                     FROM champion_point
-                    WHERE name IS NOT NULL
-                    AND name != ''
-                    ORDER BY discipline_id, name
+                    WHERE name IS NOT NULL AND TRIM(name) <> ''
+                    ORDER BY name COLLATE NOCASE
                     """
                 ).fetchall()
 
@@ -279,146 +305,60 @@ class ReferenceDataService:
 
         return self._cp_rows
 
-    def champion_point_discipline(self, discipline_id: int) -> str:
-        """Return the ESO Champion Point discipline name."""
-
-        return {
-            1: "Warfare",
-            2: "Fitness",
-            3: "Craft",
-        }.get(discipline_id, "Unknown")
-
-    def champion_point_discipline_color(self, discipline_id: int) -> str:
-        """Return the display color associated with an ESO CP discipline."""
-
-        return {
-            1: "blue",
-            2: "red",
-            3: "green",
-        }.get(discipline_id, "")
-
-    # --------------------------------------------------
-    # Suggestions
-    # --------------------------------------------------
-
-    def suggest_watches_for_sets(
-        self,
-        set_names: list[str],
-    ) -> list[str]:
-        """
-        Given a list of equipped gear set names, return the
-        Major/Minor buffs and debuffs their set bonus text
-        mentions -- a starting point for "what should I
-        watch" on the Capabilities page, not a guarantee the
-        set was slotted for that buff specifically.
-        """
-
-        names = [n for n in set_names if n]
-
-        if not names:
-            return []
-
-        found: list[str] = []
-
-        seen: set[str] = set()
-
-        try:
-
-            placeholders = ",".join("?" for _ in names)
-
-            rows = self.database.execute(
-                f"""
-                SELECT gsb.description
-                FROM gear_set_bonus gsb
-                JOIN gear_set gs ON gs.id = gsb.set_id
-                WHERE gs.name IN ({placeholders})
-                """,
-                tuple(names),
-            ).fetchall()
-
-            for row in rows:
-
-                description = row["description"] or ""
-
-                for match in _BUFF_PATTERN.finditer(description):
-
-                    buff = match.group(0).strip()
-
-                    key = buff.casefold()
-
-                    if key not in seen:
-
-                        seen.add(key)
-
-                        found.append(buff)
-
-        except Exception:
-            return []
-
-        return sorted(found)
-
     def list_food_names(self) -> list[str]:
-        """Return the food/drink names available in the canonical DB.
-
-        Provisioning data has existed in more than one schema during the
-        database migration work. Prefer canonical entity identities when
-        present, then fall back to the older dedicated ``food`` table.
-        """
-        if self._food_names is not None:
-            return self._food_names
-
-        names: set[str] = set()
-        try:
-            rows = self.database.execute(
-                """
-                SELECT name
-                FROM entity
-                WHERE entity_type IN ('food', 'drink', 'provisioning')
-                  AND name IS NOT NULL
-                  AND TRIM(name) != ''
-                """
-            ).fetchall()
-            names.update(str(row["name"]) for row in rows if row["name"])
-        except Exception:
-            pass
-
-        try:
-            rows = self.database.execute(
-                """
-                SELECT DISTINCT name
-                FROM food
-                WHERE name IS NOT NULL
-                  AND TRIM(name) != ''
-                """
-            ).fetchall()
-            names.update(str(row["name"]) for row in rows if row["name"])
-        except Exception:
-            pass
-
-        self._food_names = sorted(names, key=str.casefold)
+        if self._food_names is None:
+            self._food_names = self._list_entity_names("food", "drink")
         return self._food_names
 
     def list_potion_names(self) -> list[str]:
         if self._potion_names is None:
-            try:
-                rows = self.database.execute(
-                    """
-                    SELECT name
-                    FROM entity
-                    WHERE entity_type = 'potion'
-                    AND name IS NOT NULL
-                    AND TRIM(name) != ''
-                    ORDER BY name COLLATE NOCASE
-                    """
-                ).fetchall()
-
-                self._potion_names = [
-                    row["name"]
-                    for row in rows
-                ]
-
-            except Exception as exc:
-                print("POTION QUERY ERROR:", repr(exc))
-                self._potion_names = []
-
+            self._potion_names = self._list_entity_names("potion")
         return self._potion_names
+
+    def _list_entity_names(self, *entity_types: str) -> list[str]:
+        try:
+            if not entity_types:
+                return []
+            placeholders = ",".join("?" for _ in entity_types)
+            rows = self.database.execute(
+                f"""
+                SELECT DISTINCT name
+                FROM entity
+                WHERE entity_type IN ({placeholders})
+                  AND name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE
+                """,
+                tuple(entity_types),
+            ).fetchall()
+            return [row["name"] for row in rows]
+        except Exception:
+            return []
+
+    # --------------------------------------------------
+    # Buff/debuff extraction helpers
+    # --------------------------------------------------
+
+    def buffs_for_sets(self, set_names: list[str]) -> list[str]:
+        names = [str(name or "").strip() for name in set_names if str(name or "").strip()]
+        if not names:
+            return []
+        placeholders = ",".join("?" for _ in names)
+        try:
+            rows = self.database.execute(
+                f"""
+                SELECT description
+                FROM gear_set_bonus
+                WHERE set_id IN (
+                    SELECT id FROM gear_set WHERE name IN ({placeholders})
+                )
+                """,
+                tuple(names),
+            ).fetchall()
+        except Exception:
+            return []
+        found: set[str] = set()
+        for row in rows:
+            for match in _BUFF_PATTERN.finditer(str(row["description"] or "")):
+                found.add(match.group(0))
+        return sorted(found, key=str.casefold)
