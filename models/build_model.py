@@ -170,6 +170,10 @@ class PlayerBuild:
     ChampionPoints: list[ChampionPointEntry] = field(default_factory=list)
     FrontBarSkills: list[str] = field(default_factory=_empty_bar)
     BackBarSkills: list[str] = field(default_factory=_empty_bar)
+    # Scribed skills are character access, not a bar slot by themselves.
+    # Script configuration will be modeled separately; this list answers which
+    # crafted/grimoire skills are available to this build for bar selection.
+    ScribedSkills: list[str] = field(default_factory=list)
     Food: str = ""
     Potion: str = ""
     Notes: str = ""
@@ -207,6 +211,7 @@ class PlayerBuild:
             "Necklace": self.Necklace.to_dict(), "Ring1": self.Ring1.to_dict(), "Ring2": self.Ring2.to_dict(),
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
             "FrontBarSkills": self.FrontBarSkills, "BackBarSkills": self.BackBarSkills,
+            "ScribedSkills": list(self.ScribedSkills),
             "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
         }
@@ -236,6 +241,7 @@ class PlayerBuild:
             Necklace=GearSlot.from_dict(data.get("Necklace")), Ring1=GearSlot.from_dict(data.get("Ring1")), Ring2=GearSlot.from_dict(data.get("Ring2")),
             ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
             FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(), BackBarSkills=data.get("BackBarSkills") or _empty_bar(),
+            ScribedSkills=[str(name).strip() for name in (data.get("ScribedSkills") or []) if str(name).strip()],
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
             BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
         )
