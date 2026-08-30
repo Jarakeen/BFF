@@ -56,7 +56,9 @@ def test_six_light_one_medium_applies_verified_owned_armor_passives():
 
     assert result.core.critical_damage.additive_after_percent[-1].label == "Medium Armor: Dexterity (Critical Damage)"
     assert result.core.critical_damage.additive_after_percent[-1].value == pytest.approx(0.02)
-    assert any("Critical Healing" in message for message in result.unresolved)
+    assert result.core.critical_healing.additive_after_percent[-1].label == "Medium Armor: Dexterity (Critical Healing)"
+    assert result.core.critical_healing.additive_after_percent[-1].value == pytest.approx(0.02)
+    assert not any("Critical Healing" in message for message in result.unresolved)
 
 
 def test_equipped_weight_does_not_apply_passives_without_ownership():
@@ -76,6 +78,7 @@ def test_light_and_medium_ownership_are_independent():
     assert light_only.magicka_recovery.skill_percent_contributions
     assert not light_only.stamina_recovery.skill_percent_contributions
     assert not light_only.core.weapon_damage.percent
+    assert not light_only.core.critical_healing.additive_after_percent
 
     medium_only = ArmorPassiveInputResolver().apply(
         GearCalculationInputs(),
@@ -85,6 +88,7 @@ def test_light_and_medium_ownership_are_independent():
     assert not medium_only.magicka_recovery.skill_percent_contributions
     assert medium_only.stamina_recovery.skill_percent_contributions
     assert medium_only.core.weapon_damage.percent
+    assert medium_only.core.critical_healing.additive_after_percent
 
 
 def test_context_factory_uses_character_progression_ownership_for_armor_passives():
@@ -105,7 +109,8 @@ def test_context_factory_uses_character_progression_ownership_for_armor_passives
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1020
     assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1020
     assert context.core_state.derived[StatId.CRITICAL_DAMAGE].final_value == pytest.approx(0.52)
-    assert any("Critical Healing" in message for message in context.unresolved_gear_effects)
+    assert context.core_state.derived[StatId.CRITICAL_HEALING].final_value == pytest.approx(0.02)
+    assert not any("Critical Healing" in message for message in context.unresolved_gear_effects)
 
 
 def test_context_factory_does_not_infer_armor_passive_ownership_from_equipment():
@@ -122,3 +127,4 @@ def test_context_factory_does_not_infer_armor_passive_ownership_from_equipment()
     assert context.character_state.stamina_recovery == 514
     assert context.core_state.derived[StatId.PHYSICAL_PENETRATION].final_value == 0
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
+    assert context.core_state.derived[StatId.CRITICAL_HEALING].final_value == 0
