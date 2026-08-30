@@ -11,6 +11,11 @@ class SkillCoefficient:
     Max Resource + Weapon/Spell Damage model already used by the project's
     earlier coefficient implementation. Other coefficient types remain
     explicit unresolved mechanics until their formulas are verified.
+
+    ``r`` is retained exactly as supplied by the UESP coefficient export for
+    provenance. In UESP's regression-derived coefficient data this value is a
+    fit-quality statistic (R/R²-style regression metadata), not a game-side
+    multiplier and therefore must not alter the evaluated skill value.
     """
 
     coefficient_number: int
@@ -55,6 +60,12 @@ class SkillCoefficientTrace:
     before_r: float
     final_value: float
 
+    @property
+    def fit_quality(self) -> float:
+        """Regression fit metadata carried from the UESP source export."""
+
+        return self.r
+
 
 @dataclass(frozen=True)
 class InactiveSkillCoefficientTrace:
@@ -97,12 +108,15 @@ def evaluate_skill_coefficient(
 ) -> SkillCoefficientTrace:
     """Evaluate one raw ESO coefficient component without tooltip rounding.
 
-    Type 8 uses the project's previously tested relation::
+    Verified type-8 relation::
 
-        before_r = (A * MaxStat) + (B * Power) + C
-        value = before_r * R
+        value = (A * MaxStat) + (B * Power) + C
 
-    Rounding and combat multipliers deliberately live above this layer. A raw
+    The source ``R`` value is regression-fit metadata. It is preserved on the
+    returned trace for auditability but is deliberately *not* multiplied into
+    the game value.
+
+    Rounding and combat modifiers deliberately live above this layer. A raw
     coefficient trace should remain useful when those later rules change.
     """
 
@@ -120,7 +134,7 @@ def evaluate_skill_coefficient(
     power_term = float(coefficient.b) * float(power)
     constant_term = float(coefficient.c)
     before_r = resource_term + power_term + constant_term
-    final_value = before_r * float(coefficient.r)
+    final_value = before_r
 
     return SkillCoefficientTrace(
         coefficient_number=int(coefficient.coefficient_number),
