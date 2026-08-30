@@ -84,15 +84,15 @@ VERIFIED_BLOCK_MODIFIERS = (
         0.20,
         BlockModifierLayer.COMBAT_STATE,
         "slotted Champion Point active while in combat",
-        "combat-state source; must not enter standing sheet automatically",
+        "implemented as explicit combat-state amount-blocked mitigation; inactive outside combat",
     ),
     BlockModifierClassification(
         "Deflect Bolts",
         "block_mitigation",
         0.14,
         BlockModifierLayer.DAMAGE_FAMILY,
-        "One Hand and Shield equipped; applies only to projectiles and ranged attacks",
-        "damage-family-specific; must not enter generic block mitigation",
+        "One Hand and Shield passives owned and one-hand weapon + shield equipped; applies only to projectiles and ranged attacks",
+        "implemented as explicit incoming-attack-family amount-blocked mitigation; excluded from generic melee mitigation",
     ),
 )
 
