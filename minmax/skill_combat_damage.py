@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .combat_damage_modifiers import damage_done_from_combat_state
+from .combat_damage_modifiers import (
+    damage_done_from_combat_state,
+    damage_taken_from_target_state,
+)
 from .combat_state import CombatState
 from .damage_done import DamageDoneModifiers
+from .damage_taken import DamageTakenModifiers
 from .dd_damage import (
     DDDamageEvent,
     DDDamageResult,
@@ -35,19 +39,21 @@ def calculate_skill_combat_damage(
     is_aoe: bool = False,
     mitigation: DDMitigationResult | None = None,
     combat_state: CombatState | None = None,
+    target_combat_state: CombatState | None = None,
     damage_done: DamageDoneModifiers | None = None,
+    damage_taken: DamageTakenModifiers | None = None,
 ) -> SkillCombatDamageResult:
     """Connect database-backed skill damage to the authoritative DD pipeline.
 
     ``SkillDamageService.evaluate`` already scales active coefficients by the
     caller-supplied max-stat/power, so ``total_raw_damage`` is passed as an
-    already-scaled event value. Damage Done is then resolved by event identity,
-    followed by expected critical damage and target mitigation.
+    already-scaled event value.
 
-    If ``damage_done`` is supplied explicitly it is authoritative. Otherwise
-    verified named Damage Done buffs are resolved from ``combat_state``. This
-    keeps a selected potion or merely available buff from becoming active by
-    implication.
+    Attacker Damage Done is resolved from ``combat_state`` unless explicitly
+    supplied. Target-side Damage Taken is independently resolved from
+    ``target_combat_state`` unless explicitly supplied. This prevents effects
+    such as Berserk, Vulnerability, and Protection from crossing semantic
+    layers merely because their arithmetic eventually multiplies damage.
     """
 
     if skill_damage.total_raw_damage < 0:
@@ -67,12 +73,18 @@ def calculate_skill_combat_damage(
         if damage_done is not None
         else damage_done_from_combat_state(combat_state)
     )
+    resolved_damage_taken = (
+        damage_taken
+        if damage_taken is not None
+        else damage_taken_from_target_state(target_combat_state)
+    )
 
     damage = calculate_dd_damage(
         event,
         stats,
         mitigation=mitigation,
         damage_done=resolved_damage_done,
+        damage_taken=resolved_damage_taken,
     )
 
     return SkillCombatDamageResult(
