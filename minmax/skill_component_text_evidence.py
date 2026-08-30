@@ -97,6 +97,43 @@ def _fragment_around_placeholder(text: str, number: int) -> str:
     return text[local_start:local_end].strip()
 
 
+def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
+    """Resolve effect kind only when wording ties the mechanic to ``$N``.
+
+    A whole sentence may mention damage while ``$N`` is actually a heal amount,
+    buff duration, shield value, or another mechanic. Placeholder-centered
+    matching prevents those neighboring words from stealing the coefficient.
+    """
+
+    placeholder = rf"\${int(coefficient_number)}(?!\d)"
+
+    shield_patterns = (
+        rf"(?:damage\s+shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}\s+damage\b",
+        rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}\s+damage\b",
+        rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}\s+damage\b",
+    )
+    if any(re.search(pattern, lower) for pattern in shield_patterns):
+        return "shield"
+
+    heal_patterns = (
+        rf"\bheal(?:ing|s|ed)?\b[^.;]{{0,70}}?{placeholder}(?:\s+health)?\b",
+        rf"\brestore(?:s|d|ing)?\b[^.;]{{0,70}}?{placeholder}\s+health\b",
+        rf"{placeholder}\s+health\b[^.;]{{0,45}}?\bheal(?:ing|s|ed)?\b",
+    )
+    if any(re.search(pattern, lower) for pattern in heal_patterns):
+        return "heal"
+
+    damage_type_group = "|".join(re.escape(token) for token in _DAMAGE_TYPES)
+    damage_patterns = (
+        rf"{placeholder}\s+(?:{damage_type_group})\s+damage\b",
+        rf"\b(?:deal(?:ing|s)?|take(?:s|n)?|inflict(?:ing|s)?|hit(?:s|ting)?|blast(?:s|ing)?)\b[^.;]{{0,80}}?{placeholder}\s+damage\b",
+    )
+    if any(re.search(pattern, lower) for pattern in damage_patterns):
+        return "damage"
+
+    return None
+
+
 def extract_component_text_evidence(
     coef_description: str | None,
     coefficient_number: int,
@@ -121,31 +158,25 @@ def extract_component_text_evidence(
     lower = fragment.casefold()
     evidence: list[str] = [f"coef_description contains ${int(coefficient_number)}"]
 
-    effect_kind: str | None = None
+    effect_kind = _placeholder_effect_kind(lower, coefficient_number)
     damage_type: str | None = None
     is_dot: bool | None = None
     is_aoe: bool | None = None
     can_crit: bool | None = None
 
-    # Effect kind is accepted only when the fragment explicitly names the
-    # outcome. ``Health`` by itself is not enough because max-health and health
-    # cost text exist in ESO tooltips. Shield wording is checked before generic
-    # Damage because the phrase ``damage shield`` contains the word damage.
-    if any(token in lower for token in ("damage shield", "shield that absorbs", "absorbs ")):
-        effect_kind = "shield"
-        evidence.append("fragment explicitly describes a damage shield")
-    elif " damage" in lower:
-        effect_kind = "damage"
-        evidence.append("fragment explicitly says Damage")
-    elif any(token in lower for token in ("healing ", "heal ", "heals ", "restore ")) and "health" in lower:
-        effect_kind = "heal"
-        evidence.append("fragment explicitly describes healing/restoring Health")
+    if effect_kind == "shield":
+        evidence.append("placeholder is explicitly the damage-shield absorb amount")
+    elif effect_kind == "heal":
+        evidence.append("placeholder is explicitly the healing/restored-Health amount")
+    elif effect_kind == "damage":
+        evidence.append("placeholder is explicitly the damage amount")
 
     if effect_kind == "damage":
+        placeholder = rf"\${int(coefficient_number)}(?!\d)"
         for token, canonical in _DAMAGE_TYPES.items():
-            if re.search(rf"\b{re.escape(token)}\s+damage\b", lower):
+            if re.search(rf"{placeholder}\s+{re.escape(token)}\s+damage\b", lower):
                 damage_type = canonical
-                evidence.append(f"fragment explicitly says {token.title()} Damage")
+                evidence.append(f"placeholder explicitly precedes {token.title()} Damage")
                 break
 
         periodic_patterns = (
@@ -157,19 +188,22 @@ def extract_component_text_evidence(
         if any(re.search(pattern, lower) for pattern in periodic_patterns):
             is_dot = True
             evidence.append("fragment explicitly describes periodic/over-time damage")
-        elif any(phrase in lower for phrase in ("dealing", "deal ", "deals ")):
-            # Explicit one-shot wording can establish direct only when no
-            # periodic wording is present in the same component fragment.
+        else:
+            # Once $N is proven to be an actual damage amount, absence of
+            # periodic/over-time wording in the same component sentence is
+            # sufficient to identify this amount as one damage event.
             is_dot = False
-            evidence.append("fragment describes a damage event without periodic wording")
+            evidence.append("placeholder is a damage event without periodic wording")
 
         aoe_patterns = (
             r"\ball enemies in (?:the|an) area\b",
             r"\ball enemies hit\b",
             r"\bnearby enemies\b",
+            r"\benemies near you\b",
             r"\benemies around (?:you|them|the target)\b",
             r"\benemies in the (?:target )?area\b",
             r"\bto all enemies\b",
+            r"\bblast(?:s|ing)? all enemies\b",
         )
         if any(re.search(pattern, lower) for pattern in aoe_patterns):
             is_aoe = True
@@ -179,12 +213,25 @@ def extract_component_text_evidence(
             evidence.append("fragment explicitly describes one enemy")
 
     elif effect_kind == "heal":
-        if any(phrase in lower for phrase in ("you and your allies", "allies in", "nearby allies", "all allies")):
+        if any(phrase in lower for phrase in (
+            "you and your allies",
+            "allies in the area",
+            "allies in",
+            "nearby allies",
+            "all allies",
+        )):
             is_aoe = True
             evidence.append("fragment explicitly describes multiple allies")
-        elif any(phrase in lower for phrase in ("an ally", "target ally")):
+        elif any(phrase in lower for phrase in (
+            "an ally",
+            "target ally",
+            "you are healed",
+            "healing you",
+            "you heal for",
+            "heal for",
+        )):
             is_aoe = False
-            evidence.append("fragment explicitly describes one ally")
+            evidence.append("fragment explicitly describes one recipient/self")
 
         if any(re.search(pattern, lower) for pattern in (
             r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
@@ -194,7 +241,11 @@ def extract_component_text_evidence(
             evidence.append("fragment explicitly describes periodic healing")
         else:
             is_dot = False
-            evidence.append("fragment describes an immediate heal without periodic wording")
+            evidence.append("placeholder is an immediate/triggered heal without periodic wording")
+
+    # Shields are their own effect family. ``is_dot`` and ``is_aoe`` are not
+    # invented merely to make the row look complete. Recipient shape may be
+    # added later when explicitly useful to a shield evaluator.
 
     # ESO critical eligibility is deliberately unresolved here. Tooltip prose
     # usually does not prove whether an effect can crit.
