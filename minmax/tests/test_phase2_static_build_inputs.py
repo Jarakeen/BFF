@@ -77,7 +77,7 @@ def test_cp_static_repository_supports_per_point_stars(tmp_path):
         "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             "Boundless Vitality",
-            0,
+            1,
             50,
             "",
             "",
@@ -180,7 +180,7 @@ def test_static_resolver_applies_cp_and_food_to_distinct_resource_buckets(tmp_pa
         "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             "Boundless Vitality",
-            0,
+            1,
             50,
             "",
             "",
@@ -211,6 +211,62 @@ def test_static_resolver_applies_cp_and_food_to_distinct_resource_buckets(tmp_pa
     assert result.health.food_flat == 4462.0
     assert result.unresolved == ()
 
+
+def test_static_resolver_applies_all_non_slottable_cp_at_max_without_saved_entry(tmp_path):
+    path, db = _db(tmp_path)
+    db.execute(
+        "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "Blessed",
+            0,
+            20,
+            "0,10,20",
+            "",
+            "Increases your Healing Done by 1% per stage.",
+            "Increases your Healing Done by 1% per stage.",
+        ),
+    )
+    db.commit()
+    db.close()
+
+    result = StaticBuildInputResolver(
+        champion_point_repository=ChampionPointStaticRepository(path),
+    ).apply(GearCalculationInputs(), PlayerBuild())
+
+    contribution = result.core.healing_done.additive_after_percent
+    assert len(contribution) == 1
+    assert contribution[0].label == "Champion Point: Blessed"
+    assert contribution[0].value == 0.02
+    assert result.unresolved == ()
+
+
+def test_static_resolver_does_not_double_apply_legacy_saved_passive_cp_entry(tmp_path):
+    path, db = _db(tmp_path)
+    db.execute(
+        "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            "Blessed",
+            0,
+            20,
+            "0,10,20",
+            "",
+            "Increases your Healing Done by 1% per stage.",
+            "Increases your Healing Done by 1% per stage.",
+        ),
+    )
+    db.commit()
+    db.close()
+
+    build = PlayerBuild(
+        ChampionPoints=[ChampionPointEntry(Name="Blessed", Points="20")]
+    )
+    result = StaticBuildInputResolver(
+        champion_point_repository=ChampionPointStaticRepository(path),
+    ).apply(GearCalculationInputs(), build)
+
+    contribution = result.core.healing_done.additive_after_percent
+    assert len(contribution) == 1
+    assert contribution[0].value == 0.02
 
 
 def test_provisioning_repository_resolves_verified_legacy_name_alias(tmp_path):
