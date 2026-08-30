@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -33,17 +33,32 @@ class ImportGapRow:
 
 
 def _gap_reasons(evidence) -> tuple[str, ...]:
-    reasons: list[str] = []
     if not evidence.fragment:
         return ("missing_fragment",)
     if evidence.effect_kind is None:
+        return ("effect_kind",)
+
+    reasons: list[str] = []
+    if evidence.effect_kind == "damage":
+        if evidence.damage_type is None:
+            reasons.append("damage_type")
+        if evidence.is_dot is None:
+            reasons.append("periodicity")
+        if evidence.is_aoe is None:
+            reasons.append("target_shape")
+    elif evidence.effect_kind == "heal":
+        if evidence.is_dot is None:
+            reasons.append("periodicity")
+        if evidence.is_aoe is None:
+            reasons.append("target_shape")
+    elif evidence.effect_kind == "shield":
+        # Damage-routing fields are not applicable to a shield. A proven shield
+        # amount is therefore not considered unresolved merely because is_dot or
+        # is_aoe is NULL.
+        pass
+    else:
         reasons.append("effect_kind")
-    if evidence.effect_kind == "damage" and evidence.damage_type is None:
-        reasons.append("damage_type")
-    if evidence.is_dot is None:
-        reasons.append("periodicity")
-    if evidence.is_aoe is None:
-        reasons.append("target_shape")
+
     return tuple(reasons)
 
 
@@ -115,46 +130,32 @@ def summarize(rows: tuple[ImportGapRow, ...]) -> dict[str, object]:
     }
 
 
-def sample_gap_rows(
+def sample_across_gap_combinations(
     rows: tuple[ImportGapRow, ...],
     limit: int,
 ) -> tuple[ImportGapRow, ...]:
-    """Return representative rows across gap combinations.
-
-    Database order often clusters ranks/morphs from the same skill family. A
-    simple ``rows[:N]`` therefore makes a broad audit look much narrower than
-    it is. This sampler walks the distinct reason combinations round-robin,
-    largest groups first, while preserving source order within each group.
-    """
-
-    if limit <= 0 or not rows:
+    if limit <= 0:
         return ()
 
-    groups: dict[tuple[str, ...], list[ImportGapRow]] = defaultdict(list)
+    grouped: dict[tuple[str, ...], deque[ImportGapRow]] = defaultdict(deque)
     for row in rows:
-        groups[row.reasons].append(row)
+        grouped[row.reasons].append(row)
 
-    keys = sorted(
-        groups,
-        key=lambda key: (-len(groups[key]), key),
+    ordered_groups = sorted(
+        grouped,
+        key=lambda reasons: (-len(grouped[reasons]), reasons),
     )
-    positions = {key: 0 for key in keys}
     selected: list[ImportGapRow] = []
 
-    while len(selected) < min(limit, len(rows)):
-        added = False
-        for key in keys:
-            index = positions[key]
-            group = groups[key]
-            if index >= len(group):
-                continue
-            selected.append(group[index])
-            positions[key] = index + 1
-            added = True
-            if len(selected) >= limit:
-                break
-        if not added:
-            break
+    while ordered_groups and len(selected) < limit:
+        next_groups: list[tuple[str, ...]] = []
+        for reasons in ordered_groups:
+            queue = grouped[reasons]
+            if queue and len(selected) < limit:
+                selected.append(queue.popleft())
+            if queue:
+                next_groups.append(reasons)
+        ordered_groups = next_groups
 
     return tuple(selected)
 
@@ -205,11 +206,13 @@ def main() -> int:
         label = ", ".join(reasons)
         print(f"  {count:5}  {label}")
 
-    print("\nNOTE: counts overlap when one component is missing multiple fields.")
+    print("\nNOTE: counts overlap when one component is missing multiple required fields.")
+    print("Non-applicable damage-routing fields are not counted as gaps for shields.")
     print("Samples are round-robin across gap combinations, not raw database order.")
     print("This audit is read-only and does not populate skill_component_classification.")
 
-    for row in sample_gap_rows(rows, max(0, args.samples)):
+    sample_rows = sample_across_gap_combinations(rows, max(0, args.samples))
+    for row in sample_rows:
         print("\n----------------------------------------")
         print(
             f"rank={row.skill_rank_id} coef={row.coefficient_number} "
