@@ -26,7 +26,7 @@ STURDY_PERCENT_BY_QUALITY = {
 # CP160 Truly Superb Gold Glyph of Bracing.
 TRULY_SUPERB_BRACING_REDUCTION = 203.0
 
-# Gold jewelry Infused increases enchantment effectiveness by 60%.
+# Jewelry Infused increases enchantment effectiveness by item quality.
 JEWELRY_INFUSED_PERCENT_BY_QUALITY = {
     "white": 0.24,
     "normal": 0.24,
@@ -128,6 +128,7 @@ class BlockItemInputResolver:
         reductions = list(result.core.block_cost.flat_reductions)
         unresolved = list(result.unresolved)
         applied = result.applied_effect_count
+        resolved_slots: set[str] = set()
 
         for slot_name, slot in (
             ("Necklace", build.Necklace),
@@ -143,7 +144,18 @@ class BlockItemInputResolver:
                 continue
 
             reductions.append((f"{slot_name}: Glyph of Bracing{suffix}", reduction))
+            resolved_slots.add(slot_name)
             applied += 1
+
+        if resolved_slots:
+            unresolved = [
+                message
+                for message in unresolved
+                if not any(
+                    message.startswith(f"{slot_name} enchant not yet resolved:")
+                    for slot_name in resolved_slots
+                )
+            ]
 
         return replace(
             result,
