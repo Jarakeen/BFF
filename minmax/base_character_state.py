@@ -60,9 +60,9 @@ class ResourceInputs:
 
     Aggregate fields remain for backwards compatibility while optional named
     contributions let the UI explain exactly which source produced a value.
-    When named contributions are supplied their sum replaces the matching
-    aggregate field for tracing/calculation so the same source cannot be
-    counted twice.
+    Named percentage contributions are additional to legacy aggregate fields;
+    callers migrating a source to a named contribution should stop adding that
+    same source to the aggregate field so it cannot be counted twice.
     """
 
     attribute_points: int = 0
@@ -150,21 +150,17 @@ class BaseCharacterCalculator:
                 current += value
                 trace.add(label, "add", value, current)
 
-        percent = 0.0
-        percent_groups = (
-            (inputs.skill_percent, inputs.skill_percent_contributions),
-            (inputs.buff_percent, inputs.buff_percent_contributions),
-            (inputs.other_percent, inputs.other_percent_contributions),
-        )
-        for aggregate, contributions in percent_groups:
-            if contributions:
-                for contribution in contributions:
-                    percent += contribution.value
-                    # Record provenance without applying the multiplier until all
-                    # additive percentage sources have been collected.
-                    trace.add(contribution.label, "percent", contribution.value, current)
-            else:
-                percent += aggregate
+        percent = inputs.skill_percent + inputs.buff_percent + inputs.other_percent
+        for contributions in (
+            inputs.skill_percent_contributions,
+            inputs.buff_percent_contributions,
+            inputs.other_percent_contributions,
+        ):
+            for contribution in contributions:
+                percent += contribution.value
+                # Record provenance without applying the multiplier until all
+                # additive percentage sources have been collected.
+                trace.add(contribution.label, "percent", contribution.value, current)
 
         if percent:
             current *= 1.0 + percent
