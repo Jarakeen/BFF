@@ -40,8 +40,8 @@ class ClassificationCandidate:
     coefficient_number: int
     effect_kind: str
     damage_type: str | None
-    is_dot: bool
-    is_aoe: bool
+    is_dot: bool | None
+    is_aoe: bool | None
     evidence_fragment: str
     evidence: tuple[str, ...]
 
@@ -74,13 +74,28 @@ def _create_table(db: sqlite3.Connection) -> None:
 
 
 def _complete_for_import(evidence) -> bool:
+    """Return whether the row is safe to persist without inventing mechanics.
+
+    Damage needs a complete routing identity because those fields can affect
+    combat math immediately. Heal semantics need delivery and recipient shape
+    to be mechanically complete. A shield may be persisted once its effect kind
+    is explicitly proven; damage-only routing fields are not applicable and stay
+    NULL rather than being fabricated as False.
+    """
+
     if evidence.effect_kind is None:
         return False
-    if evidence.is_dot is None or evidence.is_aoe is None:
-        return False
-    if evidence.effect_kind == "damage" and evidence.damage_type is None:
-        return False
-    return True
+    if evidence.effect_kind == "damage":
+        return (
+            evidence.damage_type is not None
+            and evidence.is_dot is not None
+            and evidence.is_aoe is not None
+        )
+    if evidence.effect_kind == "heal":
+        return evidence.is_dot is not None and evidence.is_aoe is not None
+    if evidence.effect_kind == "shield":
+        return True
+    return False
 
 
 def _evaluate_candidates(
@@ -128,8 +143,8 @@ def _evaluate_candidates(
                 coefficient_number=int(row.coefficient_number),
                 effect_kind=str(evidence.effect_kind),
                 damage_type=evidence.damage_type,
-                is_dot=bool(evidence.is_dot),
-                is_aoe=bool(evidence.is_aoe),
+                is_dot=evidence.is_dot,
+                is_aoe=evidence.is_aoe,
                 evidence_fragment=evidence.fragment,
                 evidence=tuple(evidence.evidence),
             )
@@ -160,7 +175,8 @@ def import_skill_component_classifications(
     This importer deliberately leaves ``can_crit`` NULL. Tooltip wording does not
     prove critical eligibility, so that field requires a separate verified source.
     Rows are imported only when the active coefficient is aligned to its same-numbered
-    raw source slot and the text extractor proves all currently required semantics.
+    raw source slot and the text extractor proves the mechanics required for that
+    effect family.
 
     When ``dry_run`` is true, the exact qualification logic is executed but the
     database is never opened for writing. No table is created, altered, cleared,
@@ -201,8 +217,8 @@ def import_skill_component_classifications(
                     candidate.coefficient_number,
                     candidate.effect_kind,
                     candidate.damage_type,
-                    int(candidate.is_dot),
-                    int(candidate.is_aoe),
+                    None if candidate.is_dot is None else int(candidate.is_dot),
+                    None if candidate.is_aoe is None else int(candidate.is_aoe),
                     None,
                     SOURCE,
                     CONFIDENCE,
