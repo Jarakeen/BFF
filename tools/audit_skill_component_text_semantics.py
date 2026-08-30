@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from minmax.skill_component_text_evidence import (
     SkillComponentTextEvidence,
@@ -14,7 +20,6 @@ from tools.audit_skill_coefficient_slots import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 
 
