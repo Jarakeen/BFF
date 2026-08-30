@@ -78,9 +78,9 @@ def combat_prayer_investigation_scenarios(*, ritual_bonus: float) -> tuple[Heali
 
     Current values are sourced independently; tooltip visibility is deliberately
     called out in notes where it is not yet verified for the current game build.
-    Powered is intentionally omitted from displayed-tooltip scenarios because
-    historical testing found it affected actual healing but not ability tooltip
-    values. That behavior still requires current validation.
+    Powered appears only as an explicitly hypothetical tooltip-visible scenario,
+    because historical testing found it affected actual healing but not ability
+    tooltip values. That behavior still requires current validation.
     """
 
     ritual = float(ritual_bonus)
@@ -89,6 +89,11 @@ def combat_prayer_investigation_scenarios(*, ritual_bonus: float) -> tuple[Heali
     rejuvenator = 205.0
     major_sorcery = 0.20
     major_mending = 0.16
+    blessed = 0.02
+    powered = 0.09
+
+    common = ritual + restoration_master + soothing_tide
+    fully_conditional = common + major_mending
 
     return (
         HealingScenario(
@@ -103,29 +108,41 @@ def combat_prayer_investigation_scenarios(*, ritual_bonus: float) -> tuple[Heali
         ),
         HealingScenario(
             name="+ Soothing Tide",
-            tooltip_healing_done=ritual + restoration_master + soothing_tide,
+            tooltip_healing_done=common,
             notes=("Soothing Tide current value +10% AoE Healing Done; current tooltip visibility unresolved",),
         ),
         HealingScenario(
             name="+ Rejuvenator",
             effective_power_flat=rejuvenator,
-            tooltip_healing_done=ritual + restoration_master + soothing_tide,
+            tooltip_healing_done=common,
             notes=("Rejuvenator current value +205 W/SD to healing abilities; current tooltip behavior unresolved",),
         ),
         HealingScenario(
             name="+ Major Sorcery",
             effective_power_flat=rejuvenator,
             power_percent=major_sorcery,
-            tooltip_healing_done=ritual + restoration_master + soothing_tide,
+            tooltip_healing_done=common,
             notes=("Major Sorcery +20% W/SD; conditional on buff being active",),
         ),
         HealingScenario(
             name="+ Major Mending",
             effective_power_flat=rejuvenator,
             power_percent=major_sorcery,
-            tooltip_healing_done=(
-                ritual + restoration_master + soothing_tide + major_mending
-            ),
+            tooltip_healing_done=fully_conditional,
             notes=("Major Mending +16% Healing Done; conditional on buff being active",),
+        ),
+        HealingScenario(
+            name="+ Blessed",
+            effective_power_flat=rejuvenator,
+            power_percent=major_sorcery,
+            tooltip_healing_done=fully_conditional + blessed,
+            notes=("Blessed is a non-slottable Warfare passive: +1% Healing Done per stage, max 2%",),
+        ),
+        HealingScenario(
+            name="+ Powered if tooltip-visible",
+            effective_power_flat=rejuvenator,
+            power_percent=major_sorcery,
+            tooltip_healing_done=fully_conditional + blessed + powered,
+            notes=("Powered contributes +9% Healing Done on this two-handed Restoration Staff; tooltip visibility is being tested, not assumed",),
         ),
     )
