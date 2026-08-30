@@ -9,7 +9,7 @@ from .champion_point_static_repository import ChampionPointStaticRepository
 from .combat_state import CombatState
 from .derived_stats import StatContribution
 from .gear_stat_inputs import CORE_FIELDS, GearCalculationInputs, GearStatInputResolver
-from .named_combat_buffs import effects_for_buff
+from .named_combat_buffs import effects_for_buff, is_component_layer_buff
 from .stat_ids import StatId
 
 
@@ -60,6 +60,10 @@ class CombatStateInputResolver:
         for buff_name in combat_state.active_buffs:
             effects = effects_for_buff(buff_name)
             if not effects:
+                # Known component-layer buffs are intentionally resolved later
+                # by the damage/healing/shield pipeline that owns their meaning.
+                if is_component_layer_buff(buff_name):
+                    continue
                 unresolved.append(f"Active combat buff not yet stat-mapped: {buff_name}")
                 continue
 
