@@ -93,7 +93,10 @@ def test_recovery_buffs_and_minor_toughness_route_to_primary_resource_layer():
     assert context.character_state.stamina_recovery == 669
 
 
-def test_unmapped_active_buff_remains_explicitly_unresolved():
+def test_component_layer_buff_is_known_without_polluting_shared_stat_inputs():
     context = _context("Major Berserk")
 
-    assert "Active combat buff not yet stat-mapped: Major Berserk" in context.unresolved_gear_effects
+    assert context.combat_state.has_buff("Major Berserk")
+    assert context.unresolved_gear_effects == ()
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1000
