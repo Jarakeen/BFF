@@ -50,6 +50,20 @@ def test_meteor_second_active_component_is_explicit_flame_aoe_dot():
     assert evidence.can_crit is None
 
 
+def test_meteor_marked_up_tick_interval_is_still_explicit_dot():
+    text = (
+        "After impact, enemies in the target area take |cffffff$2|r Flame Damage "
+        "every |cffffff1|r second for |cffffff11|r seconds."
+    )
+
+    evidence = extract_component_text_evidence(text, 2)
+
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "flame"
+    assert evidence.is_dot is True
+    assert evidence.is_aoe is True
+
+
 def test_corrosive_armor_damage_component_uses_coefficient_aware_placeholder():
     text = (
         "Ignite the molten lava in your veins, limiting incoming damage to 6% of "
@@ -61,6 +75,34 @@ def test_corrosive_armor_damage_component_uses_coefficient_aware_placeholder():
 
     assert evidence.effect_kind == "damage"
     assert evidence.damage_type == "flame"
+    assert evidence.is_dot is True
+    assert evidence.is_aoe is True
+
+
+def test_lotus_fan_initial_hit_is_aoe_when_enemies_around_you_are_explicit():
+    text = (
+        "Flash through the shadows and ambush an enemy while unleashing a fan of knives, "
+        "dealing |cffffff$1|r Magic Damage to them and enemies around you."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "magical"
+    assert evidence.is_dot is False
+    assert evidence.is_aoe is True
+
+
+def test_lotus_fan_marked_up_over_time_component_is_aoe_dot():
+    text = (
+        "All enemies hit take an additional |cffffff$2|r Magic Damage over "
+        "|cffffff5|r seconds and are afflicted with Minor Vulnerability."
+    )
+
+    evidence = extract_component_text_evidence(text, 2)
+
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "magical"
     assert evidence.is_dot is True
     assert evidence.is_aoe is True
 
