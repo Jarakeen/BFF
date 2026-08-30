@@ -48,6 +48,7 @@ eso.db.pre_gear_customizationq
 *.sqlite3
 \YOUR_DB_PATH
 # Generated/raw data that should not be committed
+
 /data/raw/
 data/cache/
 data/tmp/
