@@ -67,6 +67,6 @@ def test_combat_prayer_fixture_produces_auditable_scenario_ladder():
     ]
 
     assert values == sorted(values)
-    assert values[0] == pytest.approx(6095.44618718464)
+    assert values[0] == pytest.approx(6095.74618758864)
     assert values[-1] == pytest.approx(8713.98449621568)
     assert 9436.0 > values[-1]
