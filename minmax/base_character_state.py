@@ -35,6 +35,14 @@ class FlatContribution:
     value: float
 
 
+@dataclass(frozen=True)
+class PercentContribution:
+    """Named decimal percentage contribution retained for audit traces."""
+
+    label: str
+    value: float
+
+
 @dataclass
 class CalculationTrace:
     stat: StatId
@@ -51,9 +59,10 @@ class ResourceInputs:
     """Explicit inputs to one primary resource/recovery calculation.
 
     Aggregate fields remain for backwards compatibility while optional named
-    item/set contributions let the UI explain exactly which gear produced a
-    value. When named contributions are supplied their sum is represented by
-    the matching aggregate field but is traced only once.
+    contributions let the UI explain exactly which source produced a value.
+    Named percentage contributions are additional to legacy aggregate fields;
+    callers migrating a source to a named contribution should stop adding that
+    same source to the aggregate field so it cannot be counted twice.
     """
 
     attribute_points: int = 0
@@ -70,6 +79,9 @@ class ResourceInputs:
     other_percent: float = 0.0
     item_contributions: tuple[FlatContribution, ...] = ()
     set_contributions: tuple[FlatContribution, ...] = ()
+    skill_percent_contributions: tuple[PercentContribution, ...] = ()
+    buff_percent_contributions: tuple[PercentContribution, ...] = ()
+    other_percent_contributions: tuple[PercentContribution, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -139,6 +151,17 @@ class BaseCharacterCalculator:
                 trace.add(label, "add", value, current)
 
         percent = inputs.skill_percent + inputs.buff_percent + inputs.other_percent
+        for contributions in (
+            inputs.skill_percent_contributions,
+            inputs.buff_percent_contributions,
+            inputs.other_percent_contributions,
+        ):
+            for contribution in contributions:
+                percent += contribution.value
+                # Record provenance without applying the multiplier until all
+                # additive percentage sources have been collected.
+                trace.add(contribution.label, "percent", contribution.value, current)
+
         if percent:
             current *= 1.0 + percent
             trace.add("percentage modifiers", "multiply", 1.0 + percent, current)

@@ -4,6 +4,7 @@ from minmax.base_character_state import (
     BASE_MAX_MAGICKA,
     BASE_MAX_STAMINA,
     BaseCharacterCalculator,
+    PercentContribution,
     ResourceInputs,
 )
 from minmax.character_progression import AttributeAllocation
@@ -67,6 +68,20 @@ def test_flat_and_percentage_contributions_are_traced():
         "percentage modifiers",
         "ESO rounding",
     ]
+
+
+def test_named_percentage_contributors_stack_with_legacy_aggregate_and_preserve_source():
+    trace = BaseCharacterCalculator().magicka_recovery(
+        ResourceInputs(
+            skill_percent=0.05,
+            skill_percent_contributions=(PercentContribution("Warden: Flourish", 0.20),),
+        )
+    )
+
+    assert trace.final_value == 643
+    labels = [step.label for step in trace.steps]
+    assert "Warden: Flourish" in labels
+    assert labels.count("percentage modifiers") == 1
 
 
 def test_race_contributions_are_named_in_the_trace():

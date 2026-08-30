@@ -15,8 +15,10 @@ from minmax.passive_math import (
 )
 
 
-def test_warden_flourish_is_twenty_percent_recovery():
-    assert warden_flourish_recovery_percent() == 0.20
+def test_warden_flourish_requires_an_animal_companion_skill_on_active_bar():
+    assert warden_flourish_recovery_percent(0) == 0.0
+    assert warden_flourish_recovery_percent(1) == 0.20
+    assert warden_flourish_recovery_percent(6) == 0.20
 
 
 def test_warden_advanced_species_scales_per_slotted_animal_companion_skill():
