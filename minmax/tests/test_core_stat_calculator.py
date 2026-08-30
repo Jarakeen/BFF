@@ -49,6 +49,7 @@ def test_core_stat_naked_character_bases_match_reference_sheet():
     assert state.derived[StatId.SPELL_CRITICAL].final_value == 0.10
     assert state.derived[StatId.CRITICAL_CHANCE].final_value == 0.10
     assert state.derived[StatId.CRITICAL_DAMAGE].final_value == 0.50
+    assert state.derived[StatId.CRITICAL_HEALING].final_value == 0.0
     assert state.derived[StatId.CRITICAL_RESISTANCE].final_value == 1320
     assert state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 0
     assert state.derived[StatId.SPELL_RESISTANCE].final_value == 0
