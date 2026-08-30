@@ -28,3 +28,6 @@ class StatId(str, Enum):
     CRITICAL_RESISTANCE = "critical_resistance"
     HEALING_DONE = "healing_done"
     HEALING_TAKEN = "healing_taken"
+
+    BLOCK_COST = "block_cost"
+    BLOCK_MITIGATION = "block_mitigation"
