@@ -31,7 +31,7 @@ def test_healing_scenario_applies_power_then_tooltip_healing_done():
     assert result.tooltip_value == pytest.approx(5544.0)
 
 
-def test_combat_prayer_scenarios_keep_powered_out_of_displayed_tooltip_ladder():
+def test_combat_prayer_scenarios_label_powered_as_hypothesis():
     scenarios = combat_prayer_investigation_scenarios(ritual_bonus=0.13096)
 
     assert [scenario.name for scenario in scenarios] == [
@@ -41,9 +41,12 @@ def test_combat_prayer_scenarios_keep_powered_out_of_displayed_tooltip_ladder():
         "+ Rejuvenator",
         "+ Major Sorcery",
         "+ Major Mending",
+        "+ Blessed",
+        "+ Powered if tooltip-visible",
     ]
-    assert scenarios[-1].tooltip_healing_done == pytest.approx(0.44096)
-    assert all("Powered" not in scenario.name for scenario in scenarios)
+    assert scenarios[-2].tooltip_healing_done == pytest.approx(0.46096)
+    assert scenarios[-1].tooltip_healing_done == pytest.approx(0.55096)
+    assert "if tooltip-visible" in scenarios[-1].name
 
 
 def test_combat_prayer_fixture_produces_auditable_scenario_ladder():
@@ -68,5 +71,5 @@ def test_combat_prayer_fixture_produces_auditable_scenario_ladder():
 
     assert values == sorted(values)
     assert values[0] == pytest.approx(6095.74618758864)
-    assert values[-1] == pytest.approx(8713.98449621568)
+    assert values[-1] == pytest.approx(9379.19261714208)
     assert 9436.0 > values[-1]
