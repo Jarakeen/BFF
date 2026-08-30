@@ -55,7 +55,8 @@ KNOWN_COVERAGE_GAPS = (
     "Verified Mages Guild Magicka Controller and Fighters Guild Slayer are resolved from owned skill lines plus active-bar slot counts; other guild passive effects remain ability-family or combat-state work.",
     "Verified Support Magicka Aid is resolved from Support ownership plus active-bar Support slot counts; Psijic and Assault standing-sheet audits found no generic standing contribution.",
     "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress, Sword and Board, and contextual Deflect Bolts effects are wired with explicit ownership plus active-bar shield eligibility.",
-    "Selected potions are recorded, but active potion buffs are not yet modeled.",
+    "Selected potions are recorded but never activate buffs automatically; callers must supply explicit active named buffs.",
+    "Named buffs that modify first-class shared stats are combat-state routed; Damage Done, Damage Taken, shield-strength, movement, and other component-specific buffs remain later routing work.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
     "Block Cost and Block Mitigation use dedicated verified stacking calculators; static block sources, Bracing Anchor combat-state activation, and Deflect Bolts incoming-attack-family mitigation are wired.",
 )
@@ -112,6 +113,12 @@ def main() -> int:
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
     parser.add_argument("--in-combat", action="store_true", help="Activate verified combat-state effects such as Bracing Anchor.")
+    parser.add_argument(
+        "--active-buff",
+        action="append",
+        default=[],
+        help="Explicitly active named combat buff; repeat for multiple buffs (for example: --active-buff 'Major Sorcery').",
+    )
     parser.add_argument("--incoming-ranged", action="store_true", help="Evaluate incoming-hit effects that apply to ranged attacks.")
     parser.add_argument("--incoming-projectile", action="store_true", help="Evaluate incoming-hit effects that apply to projectile attacks.")
     parser.add_argument(
@@ -124,7 +131,7 @@ def main() -> int:
 
     build = _find_build(_load_builds(args.builds), args.build)
     progression = _progression(build, owned_skill_lines=tuple(args.owned_skill_line))
-    combat_state = CombatState(in_combat=args.in_combat)
+    combat_state = CombatState(in_combat=args.in_combat, active_buffs=tuple(args.active_buff))
     incoming_attack = IncomingAttackState(
         is_ranged=args.incoming_ranged,
         is_projectile=args.incoming_projectile,
@@ -156,6 +163,10 @@ def main() -> int:
     print(f"Race:       {build.Race or '(unset)'}")
     print(f"Active bar: {args.active_bar}")
     print(f"In combat:  {context.combat_state.in_combat}")
+    print(
+        "Active buffs: "
+        + (", ".join(context.combat_state.active_buffs) if context.combat_state.active_buffs else "(none supplied)")
+    )
     print(f"Incoming ranged:     {context.incoming_attack.is_ranged}")
     print(f"Incoming projectile: {context.incoming_attack.is_projectile}")
     print(f"Food:       {build.Food or '(none)'}")
