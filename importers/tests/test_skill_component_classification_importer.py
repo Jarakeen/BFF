@@ -88,6 +88,7 @@ def test_importer_writes_only_complete_verified_active_components(tmp_path):
 
     assert summary.scanned == 5
     assert summary.active == 4
+    assert summary.qualified == 2
     assert summary.inserted == 2
     assert summary.skipped_inactive == 1
     assert summary.skipped_slot_mismatch == 1
@@ -162,3 +163,32 @@ def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path)
 
     assert 'evidence_fragment' in columns
     assert 'evidence_json' in columns
+
+
+def test_dry_run_qualifies_rows_without_creating_or_modifying_classification_table(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+
+    db = sqlite3.connect(path)
+    before_schema = tuple(db.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall())
+    db.close()
+
+    summary = import_skill_component_classifications(path, dry_run=True)
+
+    assert summary.scanned == 5
+    assert summary.active == 4
+    assert summary.qualified == 2
+    assert summary.inserted == 0
+    assert summary.skipped_inactive == 1
+    assert summary.skipped_slot_mismatch == 1
+    assert summary.skipped_incomplete == 1
+
+    db = sqlite3.connect(path)
+    after_schema = tuple(db.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall())
+    table = db.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='skill_component_classification'"
+    ).fetchone()
+    db.close()
+
+    assert before_schema == after_schema
+    assert table is None
