@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from .damage_done import DamageDoneBreakdown, DamageDoneModifiers, resolve_damage_done
+from .damage_taken import DamageTakenBreakdown, DamageTakenModifiers, resolve_damage_taken
 from .dd_damage_profile import get_dd_damage_profile
 from .dd_mitigation import DDMitigationResult
 from .dd_stat_evaluation import DDStatEvaluation
@@ -42,6 +43,10 @@ class DDDamageResult:
     mitigation_multiplier: float = 1.0
     mitigated_damage: float = 0.0
 
+    damage_taken: DamageTakenBreakdown = DamageTakenBreakdown()
+    damage_taken_multiplier: float = 1.0
+    final_damage: float = 0.0
+
 
 def calculate_dd_damage(
     event: DDDamageEvent,
@@ -49,14 +54,23 @@ def calculate_dd_damage(
     *,
     mitigation: DDMitigationResult | None = None,
     damage_done: DamageDoneModifiers = DamageDoneModifiers(),
+    damage_taken: DamageTakenModifiers = DamageTakenModifiers(),
 ) -> DDDamageResult:
     """Calculate expected damage for a modeled DD event.
 
+    The authoritative stage order is:
+
+        scaled event
+        -> attacker Damage Done
+        -> expected critical damage
+        -> target resistance mitigation
+        -> target Damage Taken
+        -> final damage
+
     Applicable Damage Done categories are additive inside one ESO event bucket:
-    generic + damage type + Direct/DoT + Single Target/AoE.  That bucket is
-    applied to the scaled event before expected critical damage and target
-    mitigation.  With the default zero-value modifiers this preserves the
-    pre-Phase-3 behavior exactly.
+    generic + damage type + Direct/DoT + Single Target/AoE. Target Damage Taken
+    remains its own later bucket so Vulnerability/Protection never leak into
+    attacker stats or the Damage Done calculation.
     """
 
     if event.base_value < 0:
@@ -158,6 +172,10 @@ def calculate_dd_damage(
         expected_damage * mitigation_multiplier
     )
 
+    damage_taken_breakdown = resolve_damage_taken(damage_taken)
+    damage_taken_multiplier = damage_taken_breakdown.multiplier
+    final_damage = mitigated_damage * damage_taken_multiplier
+
     return DDDamageResult(
         base_damage=event.base_value,
         scaled_damage=scaled_damage,
@@ -173,4 +191,7 @@ def calculate_dd_damage(
         damage_done_damage=damage_done_damage,
         mitigation_multiplier=mitigation_multiplier,
         mitigated_damage=mitigated_damage,
+        damage_taken=damage_taken_breakdown,
+        damage_taken_multiplier=damage_taken_multiplier,
+        final_damage=final_damage,
     )
