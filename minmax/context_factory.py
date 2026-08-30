@@ -10,6 +10,8 @@ from .block_item_input_resolver import BlockItemInputResolver
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .champion_point_static_repository import ChampionPointStaticRepository
 from .character_progression import CharacterProgression
+from .combat_state import CombatState
+from .combat_state_input_resolver import CombatStateInputResolver
 from .core_stat_calculator import CoreStatCalculator
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
@@ -50,6 +52,7 @@ class BuildCalculationContextFactory:
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
         block_item_resolver: BlockItemInputResolver | None = None,
+        combat_state_resolver: CombatStateInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -92,6 +95,7 @@ class BuildCalculationContextFactory:
             champion_point_repository=champion_point_repository,
             provisioning_repository=provisioning_repository,
         )
+        self.combat_state_resolver = combat_state_resolver or CombatStateInputResolver(champion_point_repository)
         self.warden_passive_resolver = (
             WardenPassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
@@ -116,6 +120,7 @@ class BuildCalculationContextFactory:
         build: PlayerBuild,
         progression: CharacterProgression,
         environment: CombatEnvironment = CombatEnvironment.PVE,
+        combat_state: CombatState = CombatState(),
         target_type: str = "monster",
         target_count: int = 1,
         target_resistance: float | None = None,
@@ -124,7 +129,12 @@ class BuildCalculationContextFactory:
     ) -> BuildCalculationContext:
         attributes = progression.attributes
         race_stats = self._race_stats(build.Race)
-        gear = self._gear_inputs(build, progression=progression, active_bar=active_bar)
+        gear = self._gear_inputs(
+            build,
+            progression=progression,
+            active_bar=active_bar,
+            combat_state=combat_state,
+        )
 
         state = self.calculator.calculate(
             attributes=attributes,
@@ -150,6 +160,7 @@ class BuildCalculationContextFactory:
             character_state=state,
             core_state=core_state,
             environment=environment,
+            combat_state=combat_state,
             target_type=target_type,
             target_count=target_count,
             target_resistance=target_resistance,
@@ -172,6 +183,7 @@ class BuildCalculationContextFactory:
         *,
         progression: CharacterProgression,
         active_bar: str,
+        combat_state: CombatState,
     ) -> GearCalculationInputs:
         gear = (
             self.gear_resolver.resolve(build, active_bar=active_bar)
@@ -181,6 +193,7 @@ class BuildCalculationContextFactory:
         gear = self.block_item_resolver.apply(gear, build)
         gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
         gear = self.static_build_resolver.apply(gear, build, active_bar=active_bar)
+        gear = self.combat_state_resolver.apply(gear, build, combat_state=combat_state)
         if self.warden_passive_resolver is not None:
             gear = self.warden_passive_resolver.apply(gear, build, active_bar=active_bar)
         gear = self.armor_passive_resolver.apply(
