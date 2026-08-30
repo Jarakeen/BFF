@@ -5,6 +5,7 @@ from dataclasses import replace
 from models.build_model import PlayerBuild
 
 from .base_character_state import PercentContribution
+from .block_stats import BlockCostModifier
 from .derived_stats import StatContribution
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .passive_math import (
@@ -19,7 +20,7 @@ from .passive_math import (
 
 
 class ArmorPassiveInputResolver:
-    """Apply verified standing Light/Medium armor passives to shared inputs.
+    """Apply verified standing armor passives to shared inputs.
 
     Ownership is explicit. Equipped armor weight alone does not prove the
     character has purchased/maxed the passive ranks.
@@ -45,11 +46,20 @@ class ArmorPassiveInputResolver:
         *,
         light_armor_passives_owned: bool = False,
         medium_armor_passives_owned: bool = False,
+        heavy_armor_passives_owned: bool = False,
     ) -> GearCalculationInputs:
-        light_count, medium_count, _heavy_count = self._armor_counts(build)
+        light_count, medium_count, heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
 
         if light_armor_passives_owned and light_count:
+            block_cost = replace(
+                result.core.block_cost,
+                sequential_modifiers=result.core.block_cost.sequential_modifiers
+                + (BlockCostModifier("Light Armor: Block Cost Penalty", 0.03 * light_count),),
+            )
+            result = replace(result, core=replace(result.core, block_cost=block_cost))
+            applied += 1
+
             magicka_recovery = light_armor_magicka_recovery_percent(light_count)
             if magicka_recovery:
                 source = PercentContribution("Light Armor: Evocation", magicka_recovery)
@@ -115,6 +125,14 @@ class ArmorPassiveInputResolver:
                 applied += 2
 
         if medium_armor_passives_owned and medium_count:
+            block_cost = replace(
+                result.core.block_cost,
+                sequential_modifiers=result.core.block_cost.sequential_modifiers
+                + (BlockCostModifier("Medium Armor: Block Cost Bonus", -0.03 * medium_count),),
+            )
+            result = replace(result, core=replace(result.core, block_cost=block_cost))
+            applied += 1
+
             stamina_recovery = medium_armor_stamina_recovery_percent(medium_count)
             if stamina_recovery:
                 source = PercentContribution("Medium Armor: Wind Walker", stamina_recovery)
@@ -165,6 +183,15 @@ class ArmorPassiveInputResolver:
                     ),
                 )
                 applied += 2
+
+        if heavy_armor_passives_owned and heavy_count:
+            mitigation = replace(
+                result.core.block_mitigation,
+                direct_points=result.core.block_mitigation.direct_points
+                + (("Heavy Armor: Block Mitigation Bonus", 0.01 * heavy_count),),
+            )
+            result = replace(result, core=replace(result.core, block_mitigation=mitigation))
+            applied += 1
 
         return replace(
             result,
