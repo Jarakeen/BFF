@@ -55,7 +55,10 @@ def test_gear_set_picker_falls_back_when_canonical_entity_table_is_absent(tmp_pa
         db.execute(
             "CREATE TABLE gear_set (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"
         )
-        db.execute("INSERT INTO gear_set(id, name) VALUES (1, 'Serpent\'s Disdain')")
+        db.execute(
+            "INSERT INTO gear_set(id, name) VALUES (?, ?)",
+            (1, "Serpent's Disdain"),
+        )
         db.commit()
 
     reference = ReferenceDataService(EsoDatabase(path))
