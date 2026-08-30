@@ -6,6 +6,7 @@ from .alliance_support_passive_input_resolver import AllianceSupportPassiveInput
 from .armor_glyph_repository import ArmorGlyphEffectRepository
 from .armor_passive_input_resolver import ArmorPassiveInputResolver
 from .base_character_state import BaseCharacterCalculator
+from .block_item_input_resolver import BlockItemInputResolver
 from .build_calculation_context import BuildCalculationContext, CombatEnvironment
 from .champion_point_static_repository import ChampionPointStaticRepository
 from .character_progression import CharacterProgression
@@ -48,11 +49,13 @@ class BuildCalculationContextFactory:
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
+        block_item_resolver: BlockItemInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
         self.race_repository = race_repository
         self.base_item_resolver = base_item_resolver or BaseItemStatResolver()
+        self.block_item_resolver = block_item_resolver or BlockItemInputResolver()
         self.armor_passive_resolver = armor_passive_resolver or ArmorPassiveInputResolver()
         self.undaunted_passive_resolver = undaunted_passive_resolver or UndauntedPassiveInputResolver()
         self.one_hand_shield_passive_resolver = one_hand_shield_passive_resolver or OneHandShieldPassiveInputResolver()
@@ -175,6 +178,7 @@ class BuildCalculationContextFactory:
             if self.gear_resolver is not None
             else GearCalculationInputs()
         )
+        gear = self.block_item_resolver.apply(gear, build)
         gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
         gear = self.static_build_resolver.apply(gear, build, active_bar=active_bar)
         if self.warden_passive_resolver is not None:
