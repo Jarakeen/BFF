@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.character_progression import AttributeAllocation, CharacterProgression
-from minmax.combat_state import CombatState
+from minmax.combat_state import CombatState, IncomingAttackState
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
@@ -54,10 +54,10 @@ KNOWN_COVERAGE_GAPS = (
     "Verified Undaunted Mettle is resolved when Undaunted ownership is explicitly supplied; triggered Undaunted Command remains combat-state work.",
     "Verified Mages Guild Magicka Controller and Fighters Guild Slayer are resolved from owned skill lines plus active-bar slot counts; other guild passive effects remain ability-family or combat-state work.",
     "Verified Support Magicka Aid is resolved from Support ownership plus active-bar Support slot counts; Psijic and Assault standing-sheet audits found no generic standing contribution.",
-    "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress and Sword and Board standing effects are wired with explicit ownership plus active-bar shield eligibility.",
+    "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress, Sword and Board, and contextual Deflect Bolts effects are wired with explicit ownership plus active-bar shield eligibility.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block Cost and Block Mitigation use dedicated verified stacking calculators; static block sources and Bracing Anchor combat-state activation are wired, while damage-family block sources remain incomplete.",
+    "Block Cost and Block Mitigation use dedicated verified stacking calculators; static block sources, Bracing Anchor combat-state activation, and Deflect Bolts incoming-attack-family mitigation are wired.",
 )
 
 
@@ -112,6 +112,8 @@ def main() -> int:
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
     parser.add_argument("--in-combat", action="store_true", help="Activate verified combat-state effects such as Bracing Anchor.")
+    parser.add_argument("--incoming-ranged", action="store_true", help="Evaluate incoming-hit effects that apply to ranged attacks.")
+    parser.add_argument("--incoming-projectile", action="store_true", help="Evaluate incoming-hit effects that apply to projectile attacks.")
     parser.add_argument(
         "--owned-skill-line",
         action="append",
@@ -123,6 +125,10 @@ def main() -> int:
     build = _find_build(_load_builds(args.builds), args.build)
     progression = _progression(build, owned_skill_lines=tuple(args.owned_skill_line))
     combat_state = CombatState(in_combat=args.in_combat)
+    incoming_attack = IncomingAttackState(
+        is_ranged=args.incoming_ranged,
+        is_projectile=args.incoming_projectile,
+    )
     context = BuildCalculationContextFactory(
         race_repository=RaceRepository(args.database),
         gear_set_repository=GearSetRepository(args.database),
@@ -132,6 +138,7 @@ def main() -> int:
         build=build,
         progression=progression,
         combat_state=combat_state,
+        incoming_attack=incoming_attack,
         active_bar=args.active_bar,
     )
 
@@ -149,6 +156,8 @@ def main() -> int:
     print(f"Race:       {build.Race or '(unset)'}")
     print(f"Active bar: {args.active_bar}")
     print(f"In combat:  {context.combat_state.in_combat}")
+    print(f"Incoming ranged:     {context.incoming_attack.is_ranged}")
+    print(f"Incoming projectile: {context.incoming_attack.is_projectile}")
     print(f"Food:       {build.Food or '(none)'}")
     print(f"Potion:     {build.Potion or '(none)'}")
     print(f"Mundus:     {build.Mundus or '(none)'}")
