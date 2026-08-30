@@ -46,7 +46,7 @@ def _static_db(tmp_path):
         "INSERT INTO champion_point VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             "Boundless Vitality",
-            0,
+            1,
             50,
             "",
             "",
