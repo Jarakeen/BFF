@@ -296,7 +296,7 @@ class BuildsPage(FoundryPage):
         return card
 
     def _cp_card(self, build: PlayerBuild) -> QWidget:
-        card = FoundryCard("CP & Stats Snapshot")
+        card = FoundryCard("CP & Stats Snapshot (all Champion Passives included)")
         entries = [entry for entry in build.ChampionPoints if entry.Name.strip()]
         if not entries:
             card.addWidget(QLabel("Champion Points not configured."))
