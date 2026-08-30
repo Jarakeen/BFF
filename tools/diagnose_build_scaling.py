@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
@@ -56,7 +57,7 @@ KNOWN_COVERAGE_GAPS = (
     "Restoration/Destruction Staff passives do not contribute generic standing sheet stats; verified One Hand and Shield Fortress and Sword and Board standing effects are wired with explicit ownership plus active-bar shield eligibility.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block Cost and Block Mitigation use dedicated verified stacking calculators; armor passives, One Hand and Shield standing passives, slotted Defensive Stance, Sturdy, CP160 Truly Superb Bracing, passive Tireless Guardian, and passive Fortification are wired, while slottable/combat-state and damage-family block sources remain incomplete.",
+    "Block Cost and Block Mitigation use dedicated verified stacking calculators; static block sources and Bracing Anchor combat-state activation are wired, while damage-family block sources remain incomplete.",
 )
 
 
@@ -110,6 +111,7 @@ def main() -> int:
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
+    parser.add_argument("--in-combat", action="store_true", help="Activate verified combat-state effects such as Bracing Anchor.")
     parser.add_argument(
         "--owned-skill-line",
         action="append",
@@ -120,6 +122,7 @@ def main() -> int:
 
     build = _find_build(_load_builds(args.builds), args.build)
     progression = _progression(build, owned_skill_lines=tuple(args.owned_skill_line))
+    combat_state = CombatState(in_combat=args.in_combat)
     context = BuildCalculationContextFactory(
         race_repository=RaceRepository(args.database),
         gear_set_repository=GearSetRepository(args.database),
@@ -128,6 +131,7 @@ def main() -> int:
         build_id=build.BuildName.strip() or "saved-build",
         build=build,
         progression=progression,
+        combat_state=combat_state,
         active_bar=args.active_bar,
     )
 
@@ -144,6 +148,7 @@ def main() -> int:
     print(f"Class:      {build.EsoClass or '(unset)'}")
     print(f"Race:       {build.Race or '(unset)'}")
     print(f"Active bar: {args.active_bar}")
+    print(f"In combat:  {context.combat_state.in_combat}")
     print(f"Food:       {build.Food or '(none)'}")
     print(f"Potion:     {build.Potion or '(none)'}")
     print(f"Mundus:     {build.Mundus or '(none)'}")
