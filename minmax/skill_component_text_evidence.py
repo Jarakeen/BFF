@@ -27,7 +27,7 @@ _DAMAGE_TYPES = {
 }
 
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
-_ANY_PLACEHOLDER_RE = re.compile(r"\$\d+(?!\d)")
+_ANY_PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
 
 
 @dataclass(frozen=True)
@@ -126,7 +126,12 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
         rf"(?:damage\s+shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
         rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
         rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}(?:\s+damage)?\b",
-        rf"\bshield(?:ing|s|ed)?\b[^.;]{{0,80}}?\bfor\s+{placeholder}\b",
+        # Do not allow the bare noun ``shield`` here. In wording such as
+        # ``while the shield persists, you are healed for $N Health`` the
+        # shield is only context and $N belongs to the heal. This pattern is
+        # reserved for verbs that explicitly assign the placeholder to the
+        # shielding amount itself.
+        rf"\b(?:shielding|shields|shielded)\b[^.;]{{0,80}}?\bfor\s+{placeholder}\b",
     )
     if any(re.search(pattern, lower) for pattern in shield_patterns):
         return "shield"
@@ -205,7 +210,7 @@ def extract_component_text_evidence(
         )
         if any(re.search(pattern, component_lower) for pattern in periodic_patterns):
             is_dot = True
-            evidence.append("current coefficient explicitly describes periodic/over-time damage")
+            evidence.append("current coefficient segment explicitly describes periodic/over-time damage")
         else:
             is_dot = False
             evidence.append("current coefficient is a damage event without periodic wording")
@@ -215,8 +220,8 @@ def extract_component_text_evidence(
             r"\ball enemies hit\b",
             r"\bnearby enemies\b",
             r"\benemies near you\b",
-            r"\benemies around (?:you|them|the target)\b",
             r"\bfoes around you\b",
+            r"\benemies around (?:you|them|the target)\b",
             r"\benemies in the (?:target )?area\b",
             r"\bto all enemies\b",
             r"\bblast(?:s|ing)? all enemies\b",
@@ -224,56 +229,43 @@ def extract_component_text_evidence(
         if any(re.search(pattern, lower) for pattern in aoe_patterns):
             is_aoe = True
             evidence.append("fragment explicitly describes multiple/area enemies")
-        elif any(
-            phrase in lower
-            for phrase in (
-                "an enemy",
-                "the enemy",
-                "target enemy",
-                "your foe",
-                "the target",
-            )
-        ):
+        elif any(phrase in lower for phrase in (
+            "an enemy",
+            "the enemy",
+            "target enemy",
+            "your foe",
+        )):
             is_aoe = False
-            evidence.append("fragment explicitly describes one enemy/target")
+            evidence.append("fragment explicitly describes one enemy/foe")
 
     elif effect_kind == "heal":
-        if any(
-            phrase in lower
-            for phrase in (
-                "you and your allies",
-                "allies in the area",
-                "allies in",
-                "nearby allies",
-                "all allies",
-            )
-        ):
+        if any(phrase in lower for phrase in (
+            "you and your allies",
+            "allies in the area",
+            "allies in",
+            "nearby allies",
+            "all allies",
+        )):
             is_aoe = True
             evidence.append("fragment explicitly describes multiple allies")
-        elif any(
-            phrase in lower
-            for phrase in (
-                "an ally",
-                "target ally",
-                "you are healed",
-                "healing you",
-                "you heal for",
-                "heal for",
-                "siphon ",
-            )
-        ):
+        elif any(phrase in lower for phrase in (
+            "an ally",
+            "target ally",
+            "you are healed",
+            "healing you",
+            "you heal for",
+            "heal for",
+            "you siphon",
+        )):
             is_aoe = False
             evidence.append("fragment explicitly describes one recipient/self")
 
-        if any(
-            re.search(pattern, component_lower)
-            for pattern in (
-                r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
-                r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
-            )
-        ):
+        if any(re.search(pattern, component_lower) for pattern in (
+            r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
+            r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
+        )):
             is_dot = True
-            evidence.append("current coefficient explicitly describes periodic healing")
+            evidence.append("current coefficient segment explicitly describes periodic healing")
         else:
             is_dot = False
             evidence.append("current coefficient is an immediate/triggered heal without periodic wording")
