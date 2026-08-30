@@ -56,10 +56,12 @@ def main() -> int:
     from ui.theme import ThemeManager
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
     from ui.scribing_support import install as install_scribing_support
+    from ui.scribing_editor_compat import install as install_scribing_editor_compat
 
     # Install shared BuildEditor extensions before constructing page widgets.
     install_searchable_selectors()
     install_scribing_support()
+    install_scribing_editor_compat()
 
     from ui.main_window import MainWindow
 
