@@ -173,6 +173,20 @@ class StaticBuildInputResolver:
             result = self._apply_effect(result, effect, resource_bucket="mundus")
         return replace(result, unresolved=tuple(unresolved))
 
+    def _apply_non_slottable_champion_points(self, result: GearCalculationInputs) -> GearCalculationInputs:
+        """Apply the build-profile invariant that every passive CP star is maxed."""
+
+        unresolved = list(result.unresolved)
+        if self.champion_point_repository is None:
+            unresolved.append("Non-slottable Champion Point passives require a static CP repository")
+            return replace(result, unresolved=tuple(unresolved))
+
+        effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
+        unresolved.extend(passive_unresolved)
+        for effect in effects:
+            result = self._apply_effect(result, effect, resource_bucket="champion")
+        return replace(result, unresolved=tuple(unresolved))
+
     def _apply_champion_points(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
         entries = [entry for entry in build.ChampionPoints if str(entry.Name or "").strip()]
         if not entries:
@@ -183,6 +197,11 @@ class StaticBuildInputResolver:
             return replace(result, unresolved=tuple(unresolved))
 
         for entry in entries:
+            record = self.champion_point_repository.get(entry.Name)
+            if record is not None and record.is_non_slottable:
+                # Passive stars were already applied at max rank above. Ignore a
+                # legacy saved entry so the same passive cannot be counted twice.
+                continue
             try:
                 points = int(str(entry.Points or "0").strip() or 0)
             except (TypeError, ValueError):
@@ -231,6 +250,7 @@ class StaticBuildInputResolver:
                 if self._RESOLVED_DIVINES_WARNING not in message
             ),
         )
+        result = self._apply_non_slottable_champion_points(result)
         result = self._apply_champion_points(result, build)
         result = self._apply_mundus(result, build, active_bar)
         result = self._apply_food(result, build)
