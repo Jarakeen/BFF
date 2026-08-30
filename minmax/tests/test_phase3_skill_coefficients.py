@@ -16,6 +16,7 @@ from minmax.skill_coefficients import (
     evaluate_skill_coefficient,
     is_inactive_skill_coefficient,
 )
+from minmax.skill_effect_modifiers import ModifierVisibility, SkillEffectModifier
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
 from minmax.skill_tooltip_rounding import (
     matching_rounding_policies,
@@ -117,13 +118,14 @@ def test_type_8_coefficient_preserves_raw_formula_trace():
     assert result.final_value == pytest.approx(14436.91627)
 
 
-def test_r_is_applied_after_base_coefficient_expression():
+def test_r_is_preserved_as_fit_metadata_not_applied_as_multiplier():
     coefficient = SkillCoefficient(1, "8", 0.1, 1.0, 5.0, r=0.5)
 
     result = evaluate_skill_coefficient(coefficient, max_stat=20000, power=3000)
 
     assert result.before_r == pytest.approx(5005.0)
-    assert result.final_value == pytest.approx(2502.5)
+    assert result.final_value == pytest.approx(5005.0)
+    assert result.fit_quality == pytest.approx(0.5)
 
 
 def test_unsupported_coefficient_type_is_explicit():
@@ -231,7 +233,43 @@ def test_tooltip_calculator_uses_phase2_context_scaling(tmp_path):
         + (0.0499473 * 19104) + (0.525132 * 5000) - 0.520496
     )
     assert result.raw_total == pytest.approx(expected)
+    assert result.tooltip_value == pytest.approx(expected)
+    assert result.actual_effect_value == pytest.approx(expected)
+    assert result.tooltip_modifier_trace == ()
+    assert result.actual_effect_modifier_trace == ()
     assert result.rounding_candidates is not None
+
+
+def test_tooltip_and_actual_modifier_layers_are_independent(tmp_path):
+    path = _coefficient_db(tmp_path)
+    calculator = SkillTooltipCalculator(SkillCoefficientRepository(path))
+    modifiers = (
+        SkillEffectModifier(
+            name="verified tooltip-visible test modifier",
+            visibility=ModifierVisibility.TOOLTIP_AND_ACTUAL,
+            multiplier=1.10,
+            source="test fixture",
+        ),
+        SkillEffectModifier(
+            name="verified actual-only test modifier",
+            visibility=ModifierVisibility.ACTUAL_ONLY,
+            multiplier=1.20,
+            source="test fixture",
+        ),
+    )
+
+    result = calculator.evaluate_name("Test Morph", _context(), modifiers=modifiers)
+
+    assert result.raw_total is not None
+    assert result.tooltip_value == pytest.approx(result.raw_total * 1.10)
+    assert result.actual_effect_value == pytest.approx(result.raw_total * 1.10 * 1.20)
+    assert [trace.name for trace in result.tooltip_modifier_trace] == [
+        "verified tooltip-visible test modifier"
+    ]
+    assert [trace.name for trace in result.actual_effect_modifier_trace] == [
+        "verified tooltip-visible test modifier",
+        "verified actual-only test modifier",
+    ]
 
 
 def test_tooltip_calculator_evaluates_canonical_entity_id(tmp_path):
