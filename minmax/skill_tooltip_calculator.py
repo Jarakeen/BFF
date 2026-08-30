@@ -12,6 +12,11 @@ from .skill_coefficients import (
     evaluate_skill_coefficient,
     is_inactive_skill_coefficient,
 )
+from .skill_effect_modifiers import (
+    SkillEffectModifier,
+    SkillEffectModifierTrace,
+    apply_skill_effect_modifier,
+)
 from .skill_tooltip_rounding import (
     SkillTooltipRoundingCandidates,
     tooltip_rounding_candidates,
@@ -26,17 +31,28 @@ class SkillTooltipResult:
     components: tuple[SkillCoefficientTrace, ...]
     inactive_components: tuple[InactiveSkillCoefficientTrace, ...]
     raw_total: float | None
+    tooltip_value: float | None
+    actual_effect_value: float | None
+    tooltip_modifier_trace: tuple[SkillEffectModifierTrace, ...]
+    actual_effect_modifier_trace: tuple[SkillEffectModifierTrace, ...]
     rounding_candidates: SkillTooltipRoundingCandidates | None
     unresolved: tuple[str, ...] = ()
 
 
 class SkillTooltipCalculator:
-    """Phase 3 raw skill-tooltip foundation.
+    """Phase 3 skill-value pipeline.
 
-    This layer resolves coefficient components against the already-calculated
-    Phase 2 character state. It intentionally does not apply crit, target
-    mitigation, execute rules, CP damage multipliers, passives, or final ESO
-    tooltip rounding. Those are separate, auditable combat layers.
+    The calculator deliberately keeps three layers separate::
+
+        raw coefficient value
+            -> verified tooltip-visible modifiers
+            -> displayed-tooltip candidate
+            -> verified actual-effect-only/additional modifiers
+            -> actual-effect candidate
+
+    Crit, target mitigation, execute rules, unverified CP/passive behavior, and
+    the final ESO rounding policy remain outside this layer until each rule is
+    independently verified.
     """
 
     def __init__(self, repository: SkillCoefficientRepository) -> None:
@@ -65,63 +81,77 @@ class SkillTooltipCalculator:
         self,
         entity_id: str,
         context: BuildCalculationContext,
+        *,
+        modifiers: tuple[SkillEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         resolution = self.repository.resolve_entity_id(entity_id)
         if resolution.rank is None:
-            return SkillTooltipResult(
-                skill=None,
-                scaling=None,
-                components=(),
-                inactive_components=(),
-                raw_total=None,
-                rounding_candidates=None,
-                unresolved=resolution.unresolved,
-            )
-        return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
+            return self._unresolved_result(resolution.unresolved)
+        return self._evaluate_resolution(
+            resolution.rank,
+            resolution.unresolved,
+            context,
+            modifiers,
+        )
 
     def evaluate_name(
         self,
         name: str,
         context: BuildCalculationContext,
+        *,
+        modifiers: tuple[SkillEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         resolution = self.repository.resolve_name(name)
         if resolution.rank is None:
-            return SkillTooltipResult(
-                skill=None,
-                scaling=None,
-                components=(),
-                inactive_components=(),
-                raw_total=None,
-                rounding_candidates=None,
-                unresolved=resolution.unresolved,
-            )
-        return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
+            return self._unresolved_result(resolution.unresolved)
+        return self._evaluate_resolution(
+            resolution.rank,
+            resolution.unresolved,
+            context,
+            modifiers,
+        )
 
     def evaluate_ability_id(
         self,
         ability_id: int,
         context: BuildCalculationContext,
+        *,
+        modifiers: tuple[SkillEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         """Source/crosswalk lookup retained for diagnostics and reconciliation."""
 
         resolution = self.repository.resolve_ability_id(ability_id)
         if resolution.rank is None:
-            return SkillTooltipResult(
-                skill=None,
-                scaling=None,
-                components=(),
-                inactive_components=(),
-                raw_total=None,
-                rounding_candidates=None,
-                unresolved=resolution.unresolved,
-            )
-        return self._evaluate_resolution(resolution.rank, resolution.unresolved, context)
+            return self._unresolved_result(resolution.unresolved)
+        return self._evaluate_resolution(
+            resolution.rank,
+            resolution.unresolved,
+            context,
+            modifiers,
+        )
+
+    @staticmethod
+    def _unresolved_result(unresolved: tuple[str, ...]) -> SkillTooltipResult:
+        return SkillTooltipResult(
+            skill=None,
+            scaling=None,
+            components=(),
+            inactive_components=(),
+            raw_total=None,
+            tooltip_value=None,
+            actual_effect_value=None,
+            tooltip_modifier_trace=(),
+            actual_effect_modifier_trace=(),
+            rounding_candidates=None,
+            unresolved=unresolved,
+        )
 
     def _evaluate_resolution(
         self,
         skill: ResolvedSkillRank,
         unresolved_seed: tuple[str, ...],
         context: BuildCalculationContext,
+        modifiers: tuple[SkillEffectModifier, ...],
     ) -> SkillTooltipResult:
         unresolved = list(unresolved_seed)
         scaling = self.scaling_from_context(context)
@@ -157,9 +187,30 @@ class SkillTooltipCalculator:
             components.append(trace)
 
         raw_total = sum(component.final_value for component in components) if components else None
-        rounding = tooltip_rounding_candidates(raw_total) if raw_total is not None else None
         if not components and not unresolved and not inactive_components:
             unresolved.append(f"{skill.entity_id}: no active coefficient components")
+
+        tooltip_value = raw_total
+        actual_effect_value = raw_total
+        tooltip_trace: list[SkillEffectModifierTrace] = []
+        actual_trace: list[SkillEffectModifierTrace] = []
+
+        if raw_total is not None:
+            for modifier in modifiers:
+                if modifier.affects_tooltip:
+                    trace = apply_skill_effect_modifier(tooltip_value, modifier)
+                    tooltip_trace.append(trace)
+                    tooltip_value = trace.output_value
+                if modifier.affects_actual_effect:
+                    trace = apply_skill_effect_modifier(actual_effect_value, modifier)
+                    actual_trace.append(trace)
+                    actual_effect_value = trace.output_value
+
+        rounding = (
+            tooltip_rounding_candidates(tooltip_value)
+            if tooltip_value is not None
+            else None
+        )
 
         return SkillTooltipResult(
             skill=skill,
@@ -167,6 +218,10 @@ class SkillTooltipCalculator:
             components=tuple(components),
             inactive_components=tuple(inactive_components),
             raw_total=raw_total,
+            tooltip_value=tooltip_value,
+            actual_effect_value=actual_effect_value,
+            tooltip_modifier_trace=tuple(tooltip_trace),
+            actual_effect_modifier_trace=tuple(actual_trace),
             rounding_candidates=rounding,
             unresolved=tuple(unresolved),
         )
