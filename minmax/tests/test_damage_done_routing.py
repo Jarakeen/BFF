@@ -77,6 +77,14 @@ def test_damage_done_categories_share_one_additive_event_bucket():
     assert result.mitigated_damage == pytest.approx(1210.0)
 
 
+def test_magical_event_uses_magic_damage_done_category():
+    result = resolve_damage_done(
+        DamageDoneModifiers(magic=0.08),
+        damage_type="magical",
+    )
+    assert result.damage_type == pytest.approx(0.08)
+
+
 def test_major_berserk_reaches_skill_damage_only_when_explicitly_active():
     skill = SkillDamageResult(
         skill_rank_id=123,
@@ -87,14 +95,14 @@ def test_major_berserk_reaches_skill_damage_only_when_explicitly_active():
     standing = calculate_skill_combat_damage(
         skill,
         _stats(),
-        damage_type="magic",
+        damage_type="magical",
         can_crit=False,
         combat_state=CombatState(),
     )
     active = calculate_skill_combat_damage(
         skill,
         _stats(),
-        damage_type="magic",
+        damage_type="magical",
         can_crit=False,
         combat_state=CombatState(active_buffs=("major berserk",)),
     )
