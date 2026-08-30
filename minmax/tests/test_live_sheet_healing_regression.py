@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from minmax.base_character_state import BaseCharacterCalculator
@@ -43,18 +45,18 @@ def _six_divines_one_infused_ritual_build() -> PlayerBuild:
 def test_six_divines_infused_shoulders_and_powered_match_live_healing_sheet():
     build = _six_divines_one_infused_ritual_build()
     initial = GearCalculationInputs()
-    initial = GearCalculationInputs(
-        core=initial.core.__class__(
-            **{
-                **initial.core.__dict__,
-                "healing_done": initial.core.healing_done.__class__(
-                    additive_after_percent=(
-                        StatContribution("Front Bar: Powered", 0.09),
-                        StatContribution("Champion Point: Blessed", 0.02),
-                    )
+    initial = replace(
+        initial,
+        core=replace(
+            initial.core,
+            healing_done=replace(
+                initial.core.healing_done,
+                additive_after_percent=(
+                    StatContribution("Front Bar: Powered", 0.09),
+                    StatContribution("Champion Point: Blessed", 0.02),
                 ),
-            }
-        )
+            ),
+        ),
     )
 
     resolved = StaticBuildInputResolver(mundus_repository=_RitualRepository()).apply(
