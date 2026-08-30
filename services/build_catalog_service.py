@@ -32,6 +32,30 @@ class BuildCatalogService:
             or f"member-{index + 1}"
         )
 
+    @staticmethod
+    def _normalize_owned_skill_lines(value: Any) -> list[str]:
+        """Return a stable, duplicate-free character skill-line ownership list."""
+        if not isinstance(value, (list, tuple, set)):
+            return []
+        seen: set[str] = set()
+        normalized: list[str] = []
+        for entry in value:
+            name = str(entry or "").strip()
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            seen.add(key)
+            normalized.append(name)
+        return normalized
+
+    @classmethod
+    def _normalize_character(cls, value: Any) -> dict[str, Any]:
+        character = copy.deepcopy(value) if isinstance(value, dict) else {}
+        character["owned_skill_lines"] = cls._normalize_owned_skill_lines(
+            character.get("owned_skill_lines")
+        )
+        return character
+
     @classmethod
     def _has_meaningful_value(cls, value: Any) -> bool:
         """Return whether a value contains meaningful user-entered data.
@@ -59,12 +83,15 @@ class BuildCatalogService:
         """Return True for blank placeholder rows in the legacy Builds UI."""
         return not cls._has_meaningful_value(build.to_dict())
 
-    @staticmethod
-    def _normalize(data: Any) -> dict[str, Any]:
+    @classmethod
+    def _normalize(cls, data: Any) -> dict[str, Any]:
         data = data if isinstance(data, dict) else {}
         return {
             "schema_version": SCHEMA_VERSION,
-            "characters": list(data.get("characters") or []),
+            "characters": [
+                cls._normalize_character(character)
+                for character in list(data.get("characters") or [])
+            ],
             "builds": list(data.get("builds") or []),
         }
 
@@ -118,6 +145,7 @@ class BuildCatalogService:
                     "alliance": member.Alliance,
                     "vampire": member.Vampire,
                     "werewolf": member.Werewolf,
+                    "owned_skill_lines": [],
                 }
 
             legacy = member.to_dict()
@@ -153,6 +181,29 @@ class BuildCatalogService:
         for character in catalog["characters"]:
             if character.get("character_id") == character_id:
                 return copy.deepcopy(character)
+        return None
+
+    def set_owned_skill_lines(
+        self,
+        *,
+        character_id: str,
+        owned_skill_lines: list[str] | tuple[str, ...] | set[str],
+    ) -> dict[str, Any] | None:
+        """Persist non-class skill-line ownership for one character.
+
+        Class skill lines are inferred from the character's class and therefore
+        should not be stored here. This list is for progression-dependent lines
+        such as Undaunted, guild, Alliance War, armor, and weapon skill lines.
+        """
+        catalog = self.load()
+        for index, character in enumerate(catalog["characters"]):
+            if character.get("character_id") != character_id:
+                continue
+            updated = copy.deepcopy(character)
+            updated["owned_skill_lines"] = self._normalize_owned_skill_lines(owned_skill_lines)
+            catalog["characters"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
         return None
 
     def get_build(self, build_id: str) -> dict[str, Any] | None:
