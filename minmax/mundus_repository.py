@@ -31,7 +31,7 @@ U50_MUNDUS_EFFECTS: dict[str, tuple[tuple[str, float, str, int, str], ...]] = {
     "The Serpent": ((StatId.STAMINA_RECOVERY.value, 310.0, "flat", 1, ""),),
     "The Shadow": (
         (StatId.CRITICAL_DAMAGE.value, 11.0, "percent", 1, ""),
-        ("critical_healing", 11.0, "percent", 0, "Critical healing is not yet a character-sheet StatId."),
+        (StatId.CRITICAL_HEALING.value, 11.0, "percent", 1, ""),
     ),
     "The Steed": (
         (StatId.HEALTH_RECOVERY.value, 238.0, "flat", 1, ""),
