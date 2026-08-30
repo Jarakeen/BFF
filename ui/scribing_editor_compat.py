@@ -10,6 +10,7 @@ instead of depending on the signature of whichever extension installed first.
 
 import zlib
 
+from services.scribing_icons import texture_for_scribed_skill
 from services.skill_choice_service import load_skill_choices
 from ui.scribing_support import _recipes_for, _synthetic_skill
 
@@ -37,6 +38,7 @@ def _configured_skill(recipe) -> dict:
     skill["id"] = synthetic_id
     skill["ability_id"] = synthetic_id
     skill["base_ability_id"] = synthetic_id
+    skill["texture"] = texture_for_scribed_skill(recipe.Grimoire, recipe.Focus)
     return skill
 
 
