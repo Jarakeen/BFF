@@ -187,8 +187,9 @@ class ChampionPointStaticRepository:
         if finesse:
             amount = float(finesse.group(1)) * stages
             return (
-                self._effects_for_simple_stat(source, StatId.CRITICAL_DAMAGE, amount, EffectUnit.PERCENT),
-                [f"Champion Point: {source} critical healing is outside the current character-sheet StatId layer"],
+                self._effects_for_simple_stat(source, StatId.CRITICAL_DAMAGE, amount, EffectUnit.PERCENT)
+                + self._effects_for_simple_stat(source, StatId.CRITICAL_HEALING, amount, EffectUnit.PERCENT),
+                [],
             )
 
         return [], [f"Champion Point is dynamic or not yet stat-mapped: {source}"]
