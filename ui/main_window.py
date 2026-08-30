@@ -11,8 +11,6 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -21,12 +19,9 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QScrollArea,
     QSizePolicy,
-    QApplication,
 )
 
 from engine.config import get_data_dir
-from ui.foundry_theme import apply_foundry_theme
-from ui.theme.foundry_palette import apply_foundry_palette
 from ui.components.foundry_sidebar import FoundrySidebar
 from services.eso_achievement_database_service import (
     EsoAchievementDatabaseService,
@@ -60,11 +55,6 @@ class MainWindow(QMainWindow):
         self.eso_data_service = EsoAchievementDatabaseService(
             data_dir / "eso.db"
         )
-
-        app = QApplication.instance()
-        if app is not None:
-            apply_foundry_theme(app)
-            apply_foundry_palette(app)
 
         self.expedition_service = (
             expedition
