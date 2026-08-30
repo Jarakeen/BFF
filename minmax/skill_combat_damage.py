@@ -177,7 +177,7 @@ def calculate_classified_skill_combat_damage(
             )
             continue
 
-        raw_value = float(component.final_value)
+        raw_value = float(component.scaled_value)
         if raw_value < 0:
             raise ValueError(
                 f"Skill rank {skill_damage.skill_rank_id} coefficient {number}: raw damage cannot be negative"
