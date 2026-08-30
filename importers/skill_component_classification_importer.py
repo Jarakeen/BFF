@@ -18,7 +18,7 @@ from tools.audit_skill_component_text_semantics import is_active_coefficient
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 TABLE = "skill_component_classification"
-SOURCE = "UESP coefficient-aware tooltip text"
+SOURCE = "ability.coef_description semantic extractor; upstream provenance unresolved"
 CONFIDENCE = 1.0
 
 
@@ -27,7 +27,10 @@ class ImportSummary:
     scanned: int
     active: int
     qualified: int
+    write_eligible: int
     inserted: int
+    removed_derived: int
+    protected_existing: int
     skipped_inactive: int
     skipped_slot_mismatch: int
     skipped_missing_fragment: int
@@ -44,6 +47,20 @@ class ClassificationCandidate:
     is_aoe: bool | None
     evidence_fragment: str
     evidence: tuple[str, ...]
+
+    @property
+    def key(self) -> tuple[int, int]:
+        return (self.skill_rank_id, self.coefficient_number)
+
+
+def _table_exists(db: sqlite3.Connection) -> bool:
+    return (
+        db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+            (TABLE,),
+        ).fetchone()
+        is not None
+    )
 
 
 def _create_table(db: sqlite3.Connection) -> None:
@@ -74,14 +91,7 @@ def _create_table(db: sqlite3.Connection) -> None:
 
 
 def _complete_for_import(evidence) -> bool:
-    """Return whether the row is safe to persist without inventing mechanics.
-
-    Damage needs a complete routing identity because those fields can affect
-    combat math immediately. Heal semantics need delivery and recipient shape
-    to be mechanically complete. A shield may be persisted once its effect kind
-    is explicitly proven; damage-only routing fields are not applicable and stay
-    NULL rather than being fabricated as False.
-    """
+    """Return whether the row is safe to persist without inventing mechanics."""
 
     if evidence.effect_kind is None:
         return False
@@ -154,7 +164,10 @@ def _evaluate_candidates(
         scanned=len(rows),
         active=active,
         qualified=len(candidates),
+        write_eligible=len(candidates),
         inserted=0,
+        removed_derived=0,
+        protected_existing=0,
         skipped_inactive=skipped_inactive,
         skipped_slot_mismatch=skipped_slot_mismatch,
         skipped_missing_fragment=skipped_missing_fragment,
@@ -163,39 +176,108 @@ def _evaluate_candidates(
     return tuple(candidates), summary
 
 
+def _existing_classification_state(
+    database_path: str | Path,
+) -> tuple[dict[tuple[int, int], str | None], int]:
+    """Read current classification ownership without mutating the database."""
+
+    path = Path(database_path)
+    with sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True) as db:
+        if not _table_exists(db):
+            return {}, 0
+        rows = db.execute(
+            f"SELECT skill_rank_id, coefficient_number, source FROM {TABLE}"
+        ).fetchall()
+
+    sources = {
+        (int(skill_rank_id), int(coefficient_number)): source
+        for skill_rank_id, coefficient_number, source in rows
+    }
+    derived_count = sum(1 for source in sources.values() if source == SOURCE)
+    return sources, derived_count
+
+
+def _protect_foreign_rows(
+    candidates: tuple[ClassificationCandidate, ...],
+    existing_sources: dict[tuple[int, int], str | None],
+) -> tuple[tuple[ClassificationCandidate, ...], int]:
+    """Never overwrite a row owned by another/manual evidence source."""
+
+    eligible: list[ClassificationCandidate] = []
+    protected = 0
+    for candidate in candidates:
+        existing_source = existing_sources.get(candidate.key)
+        if candidate.key in existing_sources and existing_source != SOURCE:
+            protected += 1
+            continue
+        eligible.append(candidate)
+    return tuple(eligible), protected
+
+
 def import_skill_component_classifications(
     database_path: str | Path,
     *,
-    clear_existing: bool = True,
+    replace_derived: bool = True,
     limit: int | None = None,
-    dry_run: bool = False,
+    dry_run: bool = True,
 ) -> ImportSummary:
     """Populate verified per-coefficient semantics from coefficient-aware text.
 
-    This importer deliberately leaves ``can_crit`` NULL. Tooltip wording does not
-    prove critical eligibility, so that field requires a separate verified source.
-    Rows are imported only when the active coefficient is aligned to its same-numbered
-    raw source slot and the text extractor proves the mechanics required for that
-    effect family.
-
-    When ``dry_run`` is true, the exact qualification logic is executed but the
-    database is never opened for writing. No table is created, altered, cleared,
-    or populated.
+    Safety rules:
+    - dry-run is the API default;
+    - ``can_crit`` remains NULL until a separate verified source exists;
+    - rebuilds delete only rows owned by this exact extractor ``SOURCE``;
+    - rows owned by manual or other sources are never overwritten;
+    - source wording does not claim provenance that ``skills_raw.json`` has not
+      formally established.
     """
 
     path = Path(database_path)
     candidates, summary = _evaluate_candidates(path, limit=limit)
+    existing_sources, existing_derived = _existing_classification_state(path)
+    eligible, protected = _protect_foreign_rows(candidates, existing_sources)
 
     if dry_run:
-        return summary
+        return ImportSummary(
+            scanned=summary.scanned,
+            active=summary.active,
+            qualified=summary.qualified,
+            write_eligible=len(eligible),
+            inserted=0,
+            removed_derived=existing_derived if replace_derived else 0,
+            protected_existing=protected,
+            skipped_inactive=summary.skipped_inactive,
+            skipped_slot_mismatch=summary.skipped_slot_mismatch,
+            skipped_missing_fragment=summary.skipped_missing_fragment,
+            skipped_incomplete=summary.skipped_incomplete,
+        )
 
     inserted = 0
+    removed_derived = 0
     with sqlite3.connect(path) as db:
         _create_table(db)
-        if clear_existing:
-            db.execute(f"DELETE FROM {TABLE}")
 
-        for candidate in candidates:
+        # Re-read ownership inside the write transaction in case the table was
+        # created or changed between preflight and mutation.
+        current_rows = db.execute(
+            f"SELECT skill_rank_id, coefficient_number, source FROM {TABLE}"
+        ).fetchall()
+        current_sources = {
+            (int(skill_rank_id), int(coefficient_number)): source
+            for skill_rank_id, coefficient_number, source in current_rows
+        }
+        eligible, protected = _protect_foreign_rows(candidates, current_sources)
+
+        if replace_derived:
+            removed_derived = int(
+                db.execute(
+                    f"SELECT COUNT(*) FROM {TABLE} WHERE source = ?",
+                    (SOURCE,),
+                ).fetchone()[0]
+            )
+            db.execute(f"DELETE FROM {TABLE} WHERE source = ?", (SOURCE,))
+
+        for candidate in eligible:
             db.execute(
                 f"""
                 INSERT OR REPLACE INTO {TABLE} (
@@ -234,7 +316,10 @@ def import_skill_component_classifications(
         scanned=summary.scanned,
         active=summary.active,
         qualified=summary.qualified,
+        write_eligible=len(eligible),
         inserted=inserted,
+        removed_derived=removed_derived,
+        protected_existing=protected,
         skipped_inactive=summary.skipped_inactive,
         skipped_slot_mismatch=summary.skipped_slot_mismatch,
         skipped_missing_fragment=summary.skipped_missing_fragment,
@@ -249,32 +334,40 @@ def main() -> int:
     parser.add_argument("--database", default=str(DEFAULT_DATABASE))
     parser.add_argument("--limit", type=int)
     parser.add_argument(
-        "--append",
+        "--write",
         action="store_true",
-        help="Keep existing classification rows instead of rebuilding the table contents.",
+        help="Explicitly write qualified derived rows. Default is read-only dry-run.",
     )
     parser.add_argument(
-        "--dry-run",
+        "--append-derived",
         action="store_true",
-        help="Evaluate exactly what would qualify without writing anything to the database.",
+        help=(
+            "Do not first remove rows owned by this extractor source. Foreign/manual "
+            "rows are protected in either mode."
+        ),
     )
     args = parser.parse_args()
 
+    dry_run = not args.write
     summary = import_skill_component_classifications(
         args.database,
-        clear_existing=not args.append,
+        replace_derived=not args.append_derived,
         limit=args.limit,
-        dry_run=args.dry_run,
+        dry_run=dry_run,
     )
 
     print("\n========================================")
     print(" PHASE 3 SKILL COMPONENT IMPORT")
     print("========================================")
     print(f"Database:                 {args.database}")
-    print(f"Mode:                     {'DRY RUN / READ ONLY' if args.dry_run else 'WRITE'}")
+    print(f"Mode:                     {'DRY RUN / READ ONLY' if dry_run else 'WRITE'}")
+    print(f"Source:                   {SOURCE}")
     print(f"Coefficient rows scanned: {summary.scanned}")
     print(f"Active coefficients:      {summary.active}")
     print(f"Qualified rows:           {summary.qualified}")
+    print(f"Write-eligible rows:      {summary.write_eligible}")
+    print(f"Protected existing rows:  {summary.protected_existing}")
+    print(f"Derived rows to replace:  {summary.removed_derived}")
     print(f"Rows written:             {summary.inserted}")
     print(f"Inactive slots skipped:   {summary.skipped_inactive}")
     print(f"Slot mismatches skipped:  {summary.skipped_slot_mismatch}")
