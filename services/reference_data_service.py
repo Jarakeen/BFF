@@ -362,3 +362,13 @@ class ReferenceDataService:
             for match in _BUFF_PATTERN.finditer(str(row["description"] or "")):
                 found.add(match.group(0))
         return sorted(found, key=str.casefold)
+
+    def suggest_watches_for_sets(self, set_names: list[str]) -> list[str]:
+        """Backward-compatible public API used by Optimization/Capabilities.
+
+        This is the same set-bonus Major/Minor extraction as ``buffs_for_sets``.
+        Keep the established method name because UI callers use it during app
+        startup and coverage rendering.
+        """
+
+        return self.buffs_for_sets(set_names)
