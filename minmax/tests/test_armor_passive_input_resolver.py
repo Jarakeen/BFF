@@ -1,7 +1,10 @@
 import pytest
 
 from minmax.armor_passive_input_resolver import ArmorPassiveInputResolver
+from minmax.character_progression import CharacterProgression
+from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_stat_inputs import GearCalculationInputs
+from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 
 
@@ -82,3 +85,40 @@ def test_light_and_medium_ownership_are_independent():
     assert not medium_only.magicka_recovery.skill_percent_contributions
     assert medium_only.stamina_recovery.skill_percent_contributions
     assert medium_only.core.weapon_damage.percent
+
+
+def test_context_factory_uses_character_progression_ownership_for_armor_passives():
+    build = _six_light_one_medium()
+    progression = CharacterProgression(owned_skill_lines=("Light Armor", "Medium Armor"))
+
+    context = BuildCalculationContextFactory().build(
+        character_id="character",
+        build_id="build",
+        build=build,
+        progression=progression,
+    )
+
+    assert context.character_state.magicka_recovery == 638
+    assert context.character_state.stamina_recovery == 535
+    assert context.core_state.derived[StatId.PHYSICAL_PENETRATION].final_value == 5634
+    assert context.core_state.derived[StatId.SPELL_PENETRATION].final_value == 5634
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1020
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1020
+    assert context.core_state.derived[StatId.CRITICAL_DAMAGE].final_value == pytest.approx(0.52)
+    assert any("Critical Healing" in message for message in context.unresolved_gear_effects)
+
+
+def test_context_factory_does_not_infer_armor_passive_ownership_from_equipment():
+    build = _six_light_one_medium()
+
+    context = BuildCalculationContextFactory().build(
+        character_id="character",
+        build_id="build",
+        build=build,
+        progression=CharacterProgression(),
+    )
+
+    assert context.character_state.magicka_recovery == 514
+    assert context.character_state.stamina_recovery == 514
+    assert context.core_state.derived[StatId.PHYSICAL_PENETRATION].final_value == 0
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000

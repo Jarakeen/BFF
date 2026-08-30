@@ -46,7 +46,8 @@ DERIVED_STATS = (
 
 KNOWN_COVERAGE_GAPS = (
     "Verified standing Warden passives are partially resolved; other class passive families are not yet wired.",
-    "Owned armor, weapon, Undaunted, guild, alliance, and other non-class passive families are not yet generally resolved into shared stats.",
+    "Verified Light/Medium armor passives are resolved only when character ownership is explicitly supplied.",
+    "Weapon, Undaunted, guild, alliance, and other non-class passive families are not yet generally resolved into shared stats.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
     "Block cost/mitigation and Critical Healing are not yet represented as first-class Phase 2 stats.",
@@ -76,13 +77,14 @@ def _find_build(builds: list[PlayerBuild], requested: str) -> PlayerBuild:
     return matches[0]
 
 
-def _progression(build: PlayerBuild) -> CharacterProgression:
+def _progression(build: PlayerBuild, *, owned_skill_lines: tuple[str, ...] = ()) -> CharacterProgression:
     return CharacterProgression(
         attributes=AttributeAllocation(
             health=build.AttributeHealth,
             magicka=build.AttributeMagicka,
             stamina=build.AttributeStamina,
-        )
+        ),
+        owned_skill_lines=owned_skill_lines,
     )
 
 
@@ -102,9 +104,16 @@ def main() -> int:
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
+    parser.add_argument(
+        "--owned-skill-line",
+        action="append",
+        default=[],
+        help="Character-owned/maxed passive skill line to include; repeat for multiple lines.",
+    )
     args = parser.parse_args()
 
     build = _find_build(_load_builds(args.builds), args.build)
+    progression = _progression(build, owned_skill_lines=tuple(args.owned_skill_line))
     context = BuildCalculationContextFactory(
         race_repository=RaceRepository(args.database),
         gear_set_repository=GearSetRepository(args.database),
@@ -112,7 +121,7 @@ def main() -> int:
         character_id=build.Name.strip() or build.Gamertag.strip() or "saved-character",
         build_id=build.BuildName.strip() or "saved-build",
         build=build,
-        progression=_progression(build),
+        progression=progression,
         active_bar=args.active_bar,
     )
 
@@ -132,6 +141,10 @@ def main() -> int:
     print(f"Food:       {build.Food or '(none)'}")
     print(f"Potion:     {build.Potion or '(none)'}")
     print(f"Mundus:     {build.Mundus or '(none)'}")
+    print(
+        "Owned skill lines: "
+        + (", ".join(progression.owned_skill_lines) if progression.owned_skill_lines else "(none supplied)")
+    )
 
     print("\nPRIMARY RESOURCE LAYER")
     for stat, label in PRIMARY_STATS:

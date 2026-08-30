@@ -55,14 +55,37 @@ class ChampionPointState:
 
 @dataclass(frozen=True)
 class CharacterProgression:
-    """Progression state needed by MinMax; acquisition mechanics are intentionally excluded."""
+    """Character-owned progression state used by MinMax calculations.
+
+    Skill-line ownership belongs to the character rather than any individual
+    build. A build still has to satisfy equipment/bar requirements before an
+    owned passive can contribute to the shared stat pipeline.
+    """
 
     level: int = 50
     attributes: AttributeAllocation = AttributeAllocation()
     champion_points: ChampionPointState = ChampionPointState()
+    owned_skill_lines: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if isinstance(self.level, bool) or not isinstance(self.level, int):
             raise TypeError("level must be an integer")
         if self.level < 1 or self.level > 50:
             raise ValueError("character level must be between 1 and 50")
+
+        seen: set[str] = set()
+        normalized: list[str] = []
+        for value in self.owned_skill_lines:
+            name = str(value or "").strip()
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            seen.add(key)
+            normalized.append(name)
+        object.__setattr__(self, "owned_skill_lines", tuple(normalized))
+
+    def owns_skill_line(self, skill_line: str) -> bool:
+        requested = str(skill_line or "").strip().casefold()
+        return bool(requested) and any(
+            owned.casefold() == requested for owned in self.owned_skill_lines
+        )

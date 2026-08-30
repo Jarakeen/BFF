@@ -54,6 +54,18 @@ def test_character_progression_defaults_to_level_50_with_empty_pools():
     assert progression.level == 50
     assert progression.attributes.total == 0
     assert progression.champion_points.total == 0
+    assert progression.owned_skill_lines == ()
+
+
+def test_character_progression_normalizes_owned_skill_lines():
+    progression = CharacterProgression(
+        owned_skill_lines=(" Light Armor ", "medium armor", "LIGHT ARMOR", ""),
+    )
+
+    assert progression.owned_skill_lines == ("Light Armor", "medium armor")
+    assert progression.owns_skill_line("light armor")
+    assert progression.owns_skill_line("Medium Armor")
+    assert not progression.owns_skill_line("Heavy Armor")
 
 
 def test_character_level_is_1_to_50():
