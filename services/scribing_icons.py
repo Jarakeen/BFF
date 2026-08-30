@@ -10,6 +10,7 @@ GRIMOIRE_ICON_STEMS: dict[str, str] = {
     "Wield Soul": "soulmagic1",
     "Soul Burst": "soulmagic2",
     "Elemental Explosion": "staffdestro",
+    "Shield Throw": "1handed",
 }
 
 FOCUS_ICON_SUFFIXES: dict[str, str] = {
