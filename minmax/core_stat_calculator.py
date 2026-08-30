@@ -31,6 +31,8 @@ class CoreStatInputs:
     critical_resistance: DerivedStatInputs = DerivedStatInputs()
     healing_done: DerivedStatInputs = DerivedStatInputs()
     healing_taken: DerivedStatInputs = DerivedStatInputs()
+    block_cost: DerivedStatInputs = DerivedStatInputs()
+    block_mitigation: DerivedStatInputs = DerivedStatInputs()
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,8 @@ class CoreStatCalculator:
     # Verified naked level-50 baselines used by the ESO character sheet.
     # Critical Healing is the character-sheet bonus above ESO's inherent
     # critical-heal multiplier, so its displayed standing baseline is 0%.
+    # U50 tank references verify naked Block Cost at 1750 Stamina and base
+    # Block Mitigation at 50%; modifier stacking remains a separate concern.
     VERIFIED_BASES = {
         StatId.WEAPON_CRITICAL: 0.10,
         StatId.SPELL_CRITICAL: 0.10,
@@ -52,6 +56,8 @@ class CoreStatCalculator:
         StatId.CRITICAL_DAMAGE: 0.50,
         StatId.CRITICAL_HEALING: 0.0,
         StatId.CRITICAL_RESISTANCE: 1320.0,
+        StatId.BLOCK_COST: 1750.0,
+        StatId.BLOCK_MITIGATION: 0.50,
     }
 
     def __init__(self) -> None:
@@ -94,6 +100,8 @@ class CoreStatCalculator:
             critical_resistance=self._with_race_stat(inputs.critical_resistance, race_stats, StatId.CRITICAL_RESISTANCE),
             healing_done=self._with_race_stat(inputs.healing_done, race_stats, StatId.HEALING_DONE),
             healing_taken=self._with_race_stat(inputs.healing_taken, race_stats, StatId.HEALING_TAKEN),
+            block_cost=self._with_race_stat(inputs.block_cost, race_stats, StatId.BLOCK_COST),
+            block_mitigation=self._with_race_stat(inputs.block_mitigation, race_stats, StatId.BLOCK_MITIGATION),
         )
 
         pairs = (
@@ -111,6 +119,8 @@ class CoreStatCalculator:
             (StatId.CRITICAL_RESISTANCE, resolved.critical_resistance),
             (StatId.HEALING_DONE, resolved.healing_done),
             (StatId.HEALING_TAKEN, resolved.healing_taken),
+            (StatId.BLOCK_COST, resolved.block_cost),
+            (StatId.BLOCK_MITIGATION, resolved.block_mitigation),
         )
 
         derived = {}
