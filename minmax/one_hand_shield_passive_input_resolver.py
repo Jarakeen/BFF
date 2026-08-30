@@ -5,6 +5,7 @@ from dataclasses import replace
 from models.build_model import PlayerBuild
 
 from .block_stats import BlockCostModifier
+from .combat_state import IncomingAttackState
 from .derived_stats import StatContribution
 from .gear_stat_inputs import GearCalculationInputs
 
@@ -15,11 +16,11 @@ _DEFENSIVE_STANCE = "defensive stance"
 
 
 class OneHandShieldPassiveInputResolver:
-    """Apply verified One Hand and Shield standing and active-bar effects.
+    """Apply verified One Hand and Shield standing and contextual effects.
 
-    Max-rank passive ownership is explicit for Fortress and Sword and Board.
-    Defensive Stance is instead proven by the skill being slotted on the active
-    bar and by a qualifying shield setup on that bar.
+    Max-rank passive ownership is explicit for Fortress, Sword and Board, and
+    Deflect Bolts. Defensive Stance is proven by the skill being slotted on the
+    active bar and by a qualifying shield setup on that bar.
     """
 
     @staticmethod
@@ -44,6 +45,7 @@ class OneHandShieldPassiveInputResolver:
         *,
         active_bar: str = "front",
         passives_owned: bool = False,
+        incoming_attack: IncomingAttackState = IncomingAttackState(),
     ) -> GearCalculationInputs:
         if not self._active_bar_has_one_hand_and_shield(build, active_bar):
             return result
@@ -57,10 +59,16 @@ class OneHandShieldPassiveInputResolver:
                 sequential_modifiers=core.block_cost.sequential_modifiers
                 + (BlockCostModifier("One Hand and Shield: Fortress", -0.36),),
             )
+            mitigation_modifiers = core.block_mitigation.amount_blocked_modifiers + (
+                ("One Hand and Shield: Sword and Board", 0.20),
+            )
+            if incoming_attack.qualifies_for_deflect_bolts:
+                mitigation_modifiers += (("One Hand and Shield: Deflect Bolts", 0.14),)
+                applied += 1
+
             block_mitigation = replace(
                 core.block_mitigation,
-                amount_blocked_modifiers=core.block_mitigation.amount_blocked_modifiers
-                + (("One Hand and Shield: Sword and Board", 0.20),),
+                amount_blocked_modifiers=mitigation_modifiers,
             )
             damage = StatContribution("One Hand and Shield: Sword and Board", 0.05)
             core = replace(
