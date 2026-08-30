@@ -33,70 +33,40 @@ def main() -> int:
 
     _set_windows_app_id()
 
-    #
-    # Create the Qt application FIRST
-    #
-
+    # Create the Qt application FIRST.
     app = QApplication(sys.argv)
 
-    app.setApplicationName(
-        "Black Feather Foundry Field Office"
-    )
+    app.setApplicationName("Black Feather Foundry Field Office")
+    app.setOrganizationName("Black Feather Foundry")
 
-    app.setOrganizationName(
-        "Black Feather Foundry"
-    )
-
-    #
     # Import Qt-dependent modules AFTER QApplication exists.
-    # This helps us catch modules that accidentally create
-    # widgets during import.
-    #
-
     from ui.theme import ThemeManager
+    from ui.grimoire_theme import apply_grimoire_theme
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
     from ui.scribing_support import install as install_scribing_support
     from ui.scribing_editor_compat import install as install_scribing_editor_compat
 
-    # Install shared BuildEditor extensions before constructing page widgets.
     install_searchable_selectors()
     install_scribing_support()
     install_scribing_editor_compat()
 
     from ui.main_window import MainWindow
 
-    #
-    # Theme
-    #
-
     theme = ThemeManager()
     app_icon = get_resource_path("bff.ico")
 
     if theme.logo and app_icon.exists():
-        app.setWindowIcon(
-            QIcon(str(app_icon))
-        )
+        app.setWindowIcon(QIcon(str(app_icon)))
 
-    style_file = get_resource_path(
-        "assets", "themes", "bff", "foundry.qss"
-    )
-
-    if style_file.exists():
-
-        app.setStyleSheet(
-            style_file.read_text(
-                encoding="utf-8"
-            )
-        )
-
-    #
-    # Main Window
-    #
+    # Grimoire is the current BFF visual skin. Keep the existing foundry.qss
+    # as a safe fallback so a missing packaged texture cannot prevent startup.
+    if not apply_grimoire_theme(app):
+        style_file = get_resource_path("assets", "themes", "bff", "foundry.qss")
+        if style_file.exists():
+            app.setStyleSheet(style_file.read_text(encoding="utf-8"))
 
     window = MainWindow()
-
     window.show()
-
     return app.exec()
 
 
