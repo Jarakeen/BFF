@@ -1,3 +1,5 @@
+import pytest
+
 from minmax.passive_math import (
     light_armor_critical_rating,
     light_armor_magicka_recovery_percent,
@@ -20,7 +22,7 @@ def test_warden_flourish_is_twenty_percent_recovery():
 def test_warden_advanced_species_scales_per_slotted_animal_companion_skill():
     assert warden_advanced_species_crit_damage(0) == 0.0
     assert warden_advanced_species_crit_damage(1) == 0.05
-    assert warden_advanced_species_crit_damage(3) == 0.15
+    assert warden_advanced_species_crit_damage(3) == pytest.approx(0.15)
 
 
 def test_warden_frozen_armor_scales_per_slotted_winters_embrace_skill():
