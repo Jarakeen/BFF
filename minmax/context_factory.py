@@ -17,6 +17,7 @@ from .item_base_stats import BaseItemStatResolver
 from .jewelry_glyph_repository import JewelryGlyphEffectRepository
 from .jewelry_trait_repository import JewelryTraitRepository
 from .mundus_repository import MundusRepository
+from .one_hand_shield_passive_input_resolver import OneHandShieldPassiveInputResolver
 from .provisioning_static_repository import ProvisioningStaticRepository
 from .race_repository import RaceRepository
 from .skill_line_repository import SkillLineRepository
@@ -46,6 +47,7 @@ class BuildCalculationContextFactory:
         undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
         alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
+        one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -53,6 +55,7 @@ class BuildCalculationContextFactory:
         self.base_item_resolver = base_item_resolver or BaseItemStatResolver()
         self.armor_passive_resolver = armor_passive_resolver or ArmorPassiveInputResolver()
         self.undaunted_passive_resolver = undaunted_passive_resolver or UndauntedPassiveInputResolver()
+        self.one_hand_shield_passive_resolver = one_hand_shield_passive_resolver or OneHandShieldPassiveInputResolver()
 
         database_path = getattr(gear_set_repository, "database_path", None)
         if gear_set_repository is not None and database_path:
@@ -182,6 +185,12 @@ class BuildCalculationContextFactory:
             light_armor_passives_owned=progression.owns_skill_line("Light Armor"),
             medium_armor_passives_owned=progression.owns_skill_line("Medium Armor"),
             heavy_armor_passives_owned=progression.owns_skill_line("Heavy Armor"),
+        )
+        gear = self.one_hand_shield_passive_resolver.apply(
+            gear,
+            build,
+            active_bar=active_bar,
+            passives_owned=progression.owns_skill_line("One Hand and Shield"),
         )
         gear = self.undaunted_passive_resolver.apply(
             gear,
