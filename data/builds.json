@@ -427,6 +427,248 @@
       "Potion": "",
       "Notes": "",
       "BossLoadouts": []
+    },
+    {
+      "Name": "YOUR TANK BUILD",
+      "Gamertag": "Jarakeen",
+      "BuildName": "YOUR TANK BUILD",
+      "ImagePath": "",
+      "Race": "Nord",
+      "EsoClass": "Necromancer",
+      "Role": "Tank",
+      "Alliance": "Daggerfall Covenant",
+      "Mundus": "The Atronach",
+      "Vampire": false,
+      "Werewolf": false,
+      "AttributeHealth": 64,
+      "AttributeMagicka": 0,
+      "AttributeStamina": 0,
+      "Armor": {
+        "Head": {
+          "Set": "Archdruid Devyric",
+          "Trait": "Divines",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Shoulders": {
+          "Set": "Perfected Saxhleel Champion",
+          "Trait": "Reinforced",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Chest": {
+          "Set": "Archdruid Devyric",
+          "Trait": "Divines",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Hands": {
+          "Set": "Perfected Saxhleel Champion",
+          "Trait": "Sturdy",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Waist": {
+          "Set": "Perfected Saxhleel Champion",
+          "Trait": "Sturdy",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Legs": {
+          "Set": "Perfected Saxhleel Champion",
+          "Trait": "Reinforced",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Feet": {
+          "Set": "Perfected Saxhleel Champion",
+          "Trait": "Sturdy",
+          "Enchant": "Prismatic Defense",
+          "Weight": "Heavy",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP30",
+          "WeaponType": ""
+        }
+      },
+      "FrontBarWeapon": {
+        "Set": "Perfected Puncturing Remedy",
+        "Trait": "Decisive",
+        "Enchant": "Prismatic Defense",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": "One Hand and Shield"
+      },
+      "FrontBarOffHand": {
+        "Set": "Perfected Puncturing Remedy",
+        "Trait": "Decisive",
+        "Enchant": "Prismatic Defense",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": "Mace"
+      },
+      "BackBarWeapon": {
+        "Set": "Powerful Assault",
+        "Trait": "Charged",
+        "Enchant": "Crushing",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": "Ice Staff"
+      },
+      "BackBarOffHand": {
+        "Set": "",
+        "Trait": "",
+        "Enchant": "",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "",
+        "EnchantTier": "",
+        "Level": "",
+        "WeaponType": ""
+      },
+      "Necklace": {
+        "Set": "Powerful Assault",
+        "Trait": "Harmony",
+        "Enchant": "Prismatic Defense",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
+      },
+      "Ring1": {
+        "Set": "Powerful Assault",
+        "Trait": "Harmony",
+        "Enchant": "Prismatic Defense",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
+      },
+      "Ring2": {
+        "Set": "Powerful Assault",
+        "Trait": "Harmony",
+        "Enchant": "Prismatic Defense",
+        "Weight": "",
+        "Set2": "",
+        "Quality": "Gold",
+        "EnchantTier": "Truly Superb",
+        "Level": "CP160",
+        "WeaponType": ""
+      },
+      "ChampionPoints": [
+        {
+          "Name": "Breakfall",
+          "Points": "50"
+        },
+        {
+          "Name": "Master Gatherer",
+          "Points": "50"
+        },
+        {
+          "Name": "Liquid Efficiency",
+          "Points": "50"
+        },
+        {
+          "Name": "Rationer",
+          "Points": "50"
+        },
+        {
+          "Name": "Ironclad",
+          "Points": "50"
+        },
+        {
+          "Name": "Duelist's Rebuff",
+          "Points": "50"
+        },
+        {
+          "Name": "Bulwark",
+          "Points": "50"
+        },
+        {
+          "Name": "Enduring Resolve",
+          "Points": "50"
+        },
+        {
+          "Name": "Boundless Vitality",
+          "Points": "50"
+        },
+        {
+          "Name": "Fortified",
+          "Points": "50"
+        },
+        {
+          "Name": "Rejuvenation",
+          "Points": "50"
+        },
+        {
+          "Name": "Shield Master",
+          "Points": "50"
+        }
+      ],
+      "FrontBarSkills": [
+        "Necrotic Potency",
+        "Hungry Scythe",
+        "Resolving Vigor",
+        "Razor Caltrops",
+        "Inner Rage",
+        "Replenishing Barrier"
+      ],
+      "BackBarSkills": [
+        "Elemental Susceptibility",
+        "Elemental Blockade",
+        "Summoner's Armor",
+        "Spirit Guardian",
+        "Pulsar",
+        "Glacial Colossus"
+      ],
+      "Food": "frothgar",
+      "Potion": "Health Elixir",
+      "Notes": "",
+      "BossLoadouts": []
     }
   ]
 }
