@@ -22,8 +22,7 @@ class ArmorPassiveInputResolver:
     """Apply verified standing Light/Medium armor passives to shared inputs.
 
     Ownership is explicit. Equipped armor weight alone does not prove the
-    character has purchased/maxed the passive ranks. Critical Healing remains
-    explicit as unresolved until it has a first-class shared stat model.
+    character has purchased/maxed the passive ranks.
     """
 
     @staticmethod
@@ -49,7 +48,6 @@ class ArmorPassiveInputResolver:
     ) -> GearCalculationInputs:
         light_count, medium_count, _heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
-        unresolved = list(result.unresolved)
 
         if light_armor_passives_owned and light_count:
             magicka_recovery = light_armor_magicka_recovery_percent(light_count)
@@ -150,25 +148,25 @@ class ArmorPassiveInputResolver:
 
             critical = medium_armor_crit_damage_healing_percent(medium_count)
             if critical:
-                contribution = StatContribution("Medium Armor: Dexterity (Critical Damage)", critical)
+                damage_contribution = StatContribution("Medium Armor: Dexterity (Critical Damage)", critical)
+                healing_contribution = StatContribution("Medium Armor: Dexterity (Critical Healing)", critical)
                 result = replace(
                     result,
                     core=replace(
                         result.core,
                         critical_damage=replace(
                             result.core.critical_damage,
-                            additive_after_percent=result.core.critical_damage.additive_after_percent + (contribution,),
+                            additive_after_percent=result.core.critical_damage.additive_after_percent + (damage_contribution,),
+                        ),
+                        critical_healing=replace(
+                            result.core.critical_healing,
+                            additive_after_percent=result.core.critical_healing.additive_after_percent + (healing_contribution,),
                         ),
                     ),
                 )
-                unresolved.append(
-                    f"Medium Armor: Dexterity also grants {critical * 100:g}% Critical Healing; "
-                    "Critical Healing is not yet a first-class shared stat"
-                )
-                applied += 1
+                applied += 2
 
         return replace(
             result,
             applied_effect_count=applied,
-            unresolved=tuple(unresolved),
         )
