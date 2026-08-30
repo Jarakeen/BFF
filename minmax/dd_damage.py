@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from .damage_done import DamageDoneBreakdown, DamageDoneModifiers, resolve_damage_done
 from .dd_damage_profile import get_dd_damage_profile
 from .dd_mitigation import DDMitigationResult
 from .dd_stat_evaluation import DDStatEvaluation
@@ -14,6 +15,8 @@ class DDDamageEvent:
 
     damage_type: str | None = None
     can_crit: bool = True
+    is_dot: bool = False
+    is_aoe: bool = False
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,10 @@ class DDDamageResult:
     penetration_stat: str | None
     penetration: float
 
+    damage_done: DamageDoneBreakdown = DamageDoneBreakdown()
+    damage_done_multiplier: float = 1.0
+    damage_done_damage: float = 0.0
+
     mitigation_multiplier: float = 1.0
     mitigated_damage: float = 0.0
 
@@ -41,8 +48,16 @@ def calculate_dd_damage(
     stats: DDStatEvaluation,
     *,
     mitigation: DDMitigationResult | None = None,
+    damage_done: DamageDoneModifiers = DamageDoneModifiers(),
 ) -> DDDamageResult:
-    """Calculate expected damage for a modeled DD event."""
+    """Calculate expected damage for a modeled DD event.
+
+    Applicable Damage Done categories are additive inside one ESO event bucket:
+    generic + damage type + Direct/DoT + Single Target/AoE.  That bucket is
+    applied to the scaled event before expected critical damage and target
+    mitigation.  With the default zero-value modifiers this preserves the
+    pre-Phase-3 behavior exactly.
+    """
 
     if event.base_value < 0:
         raise ValueError(
@@ -101,10 +116,19 @@ def calculate_dd_damage(
         + offensive_power * event.scaling_coefficient
     )
 
+    damage_done_breakdown = resolve_damage_done(
+        damage_done,
+        damage_type=event.damage_type,
+        is_dot=event.is_dot,
+        is_aoe=event.is_aoe,
+    )
+    damage_done_multiplier = damage_done_breakdown.multiplier
+    damage_done_damage = scaled_damage * damage_done_multiplier
+
     if not event.can_crit:
         critical_chance = 0.0
         critical_damage = 0.0
-        expected_damage = scaled_damage
+        expected_damage = damage_done_damage
 
     else:
         critical_chance = (
@@ -116,7 +140,7 @@ def calculate_dd_damage(
         )
 
         expected_damage = (
-            scaled_damage
+            damage_done_damage
             * (
                 1.0
                 + critical_chance * critical_damage
@@ -144,6 +168,9 @@ def calculate_dd_damage(
         offensive_power=offensive_power,
         penetration_stat=penetration_stat,
         penetration=penetration,
+        damage_done=damage_done_breakdown,
+        damage_done_multiplier=damage_done_multiplier,
+        damage_done_damage=damage_done_damage,
         mitigation_multiplier=mitigation_multiplier,
         mitigated_damage=mitigated_damage,
     )
