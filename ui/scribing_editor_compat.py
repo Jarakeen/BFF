@@ -8,10 +8,36 @@ that build's configured scribed skills. Keep that composition explicit here
 instead of depending on the signature of whichever extension installed first.
 """
 
+import zlib
+
 from services.skill_choice_service import load_skill_choices
 from ui.scribing_support import _recipes_for, _synthetic_skill
 
 _INSTALLED = False
+
+
+def _synthetic_id(recipe) -> int:
+    payload = "\x1f".join(
+        str(value or "").strip().casefold()
+        for value in (
+            recipe.ResultName,
+            recipe.Grimoire,
+            recipe.Focus,
+            recipe.Signature,
+            recipe.Affix,
+        )
+    ).encode("utf-8")
+    # Keep synthetic configured skills out of ESO's positive ability-ID space.
+    return -(zlib.crc32(payload) + 1)
+
+
+def _configured_skill(recipe) -> dict:
+    skill = _synthetic_skill(recipe)
+    synthetic_id = _synthetic_id(recipe)
+    skill["id"] = synthetic_id
+    skill["ability_id"] = synthetic_id
+    skill["base_ability_id"] = synthetic_id
+    return skill
 
 
 def install() -> None:
@@ -49,7 +75,7 @@ def install() -> None:
             name = recipe.ResultName.strip()
             if not name or name.casefold() in existing:
                 continue
-            skill_choices.append(_synthetic_skill(recipe))
+            skill_choices.append(_configured_skill(recipe))
             existing.add(name.casefold())
 
         editor_kwargs = dict(cache)

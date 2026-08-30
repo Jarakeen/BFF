@@ -33,7 +33,21 @@ def is_ultimate(skill: dict) -> bool:
 
 
 def is_player_active(skill: dict) -> bool:
-    return _int(skill.get("is_player")) == 1 and _int(skill.get("is_passive")) == 0 and _int(skill.get("is_crafted")) == 0 and bool(_text(skill.get("name")))
+    """Return whether a skill can participate in active-bar eligibility.
+
+    Raw crafted rows remain excluded because they do not identify one actual
+    configured scribed ability. A synthetic/configured scribed entry is allowed
+    only when it carries the complete recipe payload injected for this build.
+    """
+    if _int(skill.get("is_player")) != 1 or _int(skill.get("is_passive")) != 0 or not _text(skill.get("name")):
+        return False
+    if _int(skill.get("is_crafted")) == 0:
+        return True
+    recipe = skill.get("scribing_recipe")
+    return isinstance(recipe, dict) and all(
+        _text(recipe.get(field))
+        for field in ("ResultName", "Grimoire", "Focus", "Signature", "Affix")
+    )
 
 
 def _class_allowed(skill: dict, character_class: str | None) -> bool:
