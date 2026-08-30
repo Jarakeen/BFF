@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from models.build_model import PlayerBuild
 
+from .alliance_support_passive_input_resolver import AllianceSupportPassiveInputResolver
 from .armor_glyph_repository import ArmorGlyphEffectRepository
 from .armor_passive_input_resolver import ArmorPassiveInputResolver
 from .base_character_state import BaseCharacterCalculator
@@ -44,6 +45,7 @@ class BuildCalculationContextFactory:
         armor_passive_resolver: ArmorPassiveInputResolver | None = None,
         undaunted_passive_resolver: UndauntedPassiveInputResolver | None = None,
         guild_passive_resolver: GuildPassiveInputResolver | None = None,
+        alliance_support_passive_resolver: AllianceSupportPassiveInputResolver | None = None,
     ) -> None:
         self.calculator = calculator or BaseCharacterCalculator()
         self.core_calculator = core_calculator or CoreStatCalculator()
@@ -91,6 +93,11 @@ class BuildCalculationContextFactory:
         )
         self.guild_passive_resolver = guild_passive_resolver or (
             GuildPassiveInputResolver(skill_line_repository)
+            if skill_line_repository is not None
+            else None
+        )
+        self.alliance_support_passive_resolver = alliance_support_passive_resolver or (
+            AllianceSupportPassiveInputResolver(skill_line_repository)
             if skill_line_repository is not None
             else None
         )
@@ -187,5 +194,12 @@ class BuildCalculationContextFactory:
                 active_bar=active_bar,
                 mages_guild_passives_owned=progression.owns_skill_line("Mages Guild"),
                 fighters_guild_passives_owned=progression.owns_skill_line("Fighters Guild"),
+            )
+        if self.alliance_support_passive_resolver is not None:
+            gear = self.alliance_support_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                support_passives_owned=progression.owns_skill_line("Support"),
             )
         return gear

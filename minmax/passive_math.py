@@ -18,6 +18,10 @@ MAGES_GUILD_MAGICKA_CONTROLLER_PERCENT_PER_SLOTTED = 0.02
 FIGHTERS_GUILD_SLAYER_WEAPON_SPELL_DAMAGE_PERCENT_PER_SLOTTED = 0.03
 
 
+# Alliance War Support standing passive, max rank.
+SUPPORT_MAGICKA_AID_RECOVERY_PERCENT_PER_SLOTTED = 0.10
+
+
 # Light Armor, max-rank passive values per equipped piece.
 LIGHT_ARMOR_PENETRATION_PER_PIECE = 939.0
 LIGHT_ARMOR_MAGICKA_RECOVERY_PERCENT_PER_PIECE = 0.04
@@ -64,6 +68,10 @@ def mages_guild_magicka_controller_percent(slotted_mages_guild_abilities: int) -
 
 def fighters_guild_slayer_weapon_spell_damage_percent(slotted_fighters_guild_abilities: int) -> float:
     return _count(slotted_fighters_guild_abilities) * FIGHTERS_GUILD_SLAYER_WEAPON_SPELL_DAMAGE_PERCENT_PER_SLOTTED
+
+
+def support_magicka_aid_recovery_percent(slotted_support_abilities: int) -> float:
+    return _count(slotted_support_abilities) * SUPPORT_MAGICKA_AID_RECOVERY_PERCENT_PER_SLOTTED
 
 
 def light_armor_penetration(piece_count: int) -> float:
