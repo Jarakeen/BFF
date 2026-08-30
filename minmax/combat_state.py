@@ -2,6 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+
+@dataclass(frozen=True)
+class CombatState:
+    """Explicit transient combat conditions for one calculation snapshot.
+
+    Static build math must not infer these conditions from selected gear, skills,
+    or Champion Points. Callers opt into combat-state effects deliberately.
+    """
+
+    in_combat: bool = False
+
+
 @dataclass(frozen=True)
 class LightAttackState:
     """Resolved inputs required by the staff light-attack formulas."""
@@ -39,5 +51,3 @@ class LightAttackState:
     single_target_damage_done: float = 0.0
     dot_damage_done: float = 0.0
     damage_done: float = 0.0
-    
-    
