@@ -20,6 +20,38 @@ from models.build_model import PlayerBuild
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
 
+PRIMARY_STATS = (
+    (StatId.MAX_HEALTH, "Max Health"),
+    (StatId.MAX_MAGICKA, "Max Magicka"),
+    (StatId.MAX_STAMINA, "Max Stamina"),
+    (StatId.HEALTH_RECOVERY, "Health Recovery"),
+    (StatId.MAGICKA_RECOVERY, "Magicka Recovery"),
+    (StatId.STAMINA_RECOVERY, "Stamina Recovery"),
+)
+
+DERIVED_STATS = (
+    (StatId.WEAPON_DAMAGE, "Weapon Damage"),
+    (StatId.SPELL_DAMAGE, "Spell Damage"),
+    (StatId.WEAPON_CRITICAL, "Weapon Critical"),
+    (StatId.SPELL_CRITICAL, "Spell Critical"),
+    (StatId.CRITICAL_DAMAGE, "Critical Damage"),
+    (StatId.CRITICAL_RESISTANCE, "Critical Resistance"),
+    (StatId.PHYSICAL_PENETRATION, "Physical Penetration"),
+    (StatId.SPELL_PENETRATION, "Spell Penetration"),
+    (StatId.PHYSICAL_RESISTANCE, "Physical Resistance"),
+    (StatId.SPELL_RESISTANCE, "Spell Resistance"),
+    (StatId.HEALING_DONE, "Healing Done"),
+    (StatId.HEALING_TAKEN, "Healing Taken"),
+)
+
+KNOWN_COVERAGE_GAPS = (
+    "Class passives are not yet generally resolved into the shared stat pipeline.",
+    "Skill-passive stat bonuses are not yet generally resolved from slotted skills.",
+    "Selected potions are recorded, but active potion buffs are not yet modeled.",
+    "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
+    "Block cost/mitigation and Critical Healing are not yet represented as first-class Phase 2 stats.",
+)
+
 
 def _load_builds(path: Path) -> list[PlayerBuild]:
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -56,12 +88,16 @@ def _progression(build: PlayerBuild) -> CharacterProgression:
 
 def _print_trace(label: str, trace) -> None:
     print(f"\n{label}: {trace.final_value:.6f}")
-    for step_label, operation, value, result in trace.steps:
-        print(f"  {step_label}: {operation} {value:.6f} -> {result:.6f}")
+    for step in trace.steps:
+        if hasattr(step, "label"):
+            print(f"  {step.label}: {step.operation} {step.value:.6f} -> {step.result:.6f}")
+        else:
+            step_label, operation, value, result = step
+            print(f"  {step_label}: {operation} {value:.6f} -> {result:.6f}")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Trace saved-build scaling stats used by Phase 3 skill math.")
+    parser = argparse.ArgumentParser(description="Trace saved-build shared stats used by Phase 2/3 combat math.")
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", default="DF Healer")
@@ -85,19 +121,26 @@ def main() -> int:
         return 1
 
     print("========================================")
-    print(" PHASE 3 BUILD SCALING TRACE")
+    print(" SHARED BUILD MATH TRACE")
     print("========================================")
     print(f"Character:  {build.Name or '(unnamed)'}")
     print(f"Build:      {build.BuildName or '(unnamed)'}")
+    print(f"Role:       {build.Role or '(unset)'}")
+    print(f"Class:      {build.EsoClass or '(unset)'}")
+    print(f"Race:       {build.Race or '(unset)'}")
     print(f"Active bar: {args.active_bar}")
+    print(f"Food:       {build.Food or '(none)'}")
     print(f"Potion:     {build.Potion or '(none)'}")
     print(f"Mundus:     {build.Mundus or '(none)'}")
 
-    for stat, label in (
-        (StatId.WEAPON_DAMAGE, "Weapon Damage"),
-        (StatId.SPELL_DAMAGE, "Spell Damage"),
-        (StatId.HEALING_DONE, "Healing Done"),
-    ):
+    print("\nPRIMARY RESOURCE LAYER")
+    for stat, label in PRIMARY_STATS:
+        trace = context.character_state.traces.get(stat)
+        if trace is not None:
+            _print_trace(label, trace)
+
+    print("\nDERIVED COMBAT STAT LAYER")
+    for stat, label in DERIVED_STATS:
         trace = context.core_state.derived.get(stat)
         if trace is not None:
             _print_trace(label, trace)
@@ -108,6 +151,10 @@ def main() -> int:
             print(f"  - {message}")
     else:
         print("  (none)")
+
+    print("\nKnown shared-pipeline coverage gaps:")
+    for message in KNOWN_COVERAGE_GAPS:
+        print(f"  - {message}")
 
     return 0
 
