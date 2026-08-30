@@ -56,7 +56,7 @@ KNOWN_COVERAGE_GAPS = (
     "Weapon passive effects are classified but do not contribute generic standing sheet stats for Restoration/Destruction Staff.",
     "Selected potions are recorded, but active potion buffs are not yet modeled.",
     "Conditional/proc buffs must remain unresolved unless their active state is explicitly supplied.",
-    "Block Cost and Block Mitigation now have verified naked level-50 baselines; armor, weapon, trait, enchantment, CP, and combat-state modifier stacking is not yet wired.",
+    "Block Cost and Block Mitigation use dedicated verified stacking calculators; Light/Medium block-cost and Heavy block-mitigation armor modifiers are wired with explicit ownership, while weapon, trait, enchantment, CP, and combat-state block sources remain incomplete.",
 )
 
 
