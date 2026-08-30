@@ -25,7 +25,9 @@ class WardenPassiveInputResolver:
     """
 
     ANIMAL_COMPANIONS = "animal companions"
+    GREEN_BALANCE = "green balance"
     WINTERS_EMBRACE = "winter's embrace"
+    WARDEN_LINES = frozenset({ANIMAL_COMPANIONS, GREEN_BALANCE, WINTERS_EMBRACE})
 
     def __init__(self, skill_line_repository: SkillLineRepository) -> None:
         self.skill_line_repository = skill_line_repository
@@ -44,16 +46,20 @@ class WardenPassiveInputResolver:
             name = str(raw_name or "").strip()
             if not name:
                 continue
-            skill_line = self.skill_line_repository.skill_line_for_ability_name(
-                name,
-                class_name="Warden",
-            )
+
+            # Resolve globally so ordinary weapon/guild/alliance skills do not
+            # become false Warden-math warnings. Only Warden class lines matter
+            # to the passives handled by this resolver.
+            skill_line = self.skill_line_repository.skill_line_for_ability_name(name)
             if skill_line is None:
                 unresolved.append(
-                    f"Warden passive math: could not resolve skill line for slotted ability {name!r} on {active_bar} bar"
+                    f"Warden passive math: could not resolve canonical skill line for slotted ability {name!r} on {active_bar} bar"
                 )
                 continue
-            counts[skill_line.casefold()] += 1
+
+            key = skill_line.casefold()
+            if key in self.WARDEN_LINES:
+                counts[key] += 1
 
         return counts, tuple(unresolved)
 
