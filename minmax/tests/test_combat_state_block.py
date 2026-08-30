@@ -51,6 +51,13 @@ def _build(points: int) -> PlayerBuild:
     )
 
 
+def _step_label_value(step):
+    if hasattr(step, "label"):
+        return step.label, step.value
+    label, _operation, value, _result = step
+    return label, value
+
+
 def test_bracing_anchor_is_known_but_inactive_out_of_combat(tmp_path):
     context = BuildCalculationContextFactory(
         champion_point_repository=_repo(tmp_path),
@@ -82,9 +89,9 @@ def test_bracing_anchor_applies_maxed_amount_blocked_bonus_in_combat(tmp_path):
     assert context.combat_state.in_combat is True
     assert trace.final_value == pytest.approx(0.60)
     assert any(
-        step.label == "Champion Point: Bracing Anchor (in combat)"
-        and step.value == pytest.approx(0.20)
-        for step in trace.steps
+        label == "Champion Point: Bracing Anchor (in combat)"
+        and value == pytest.approx(0.20)
+        for label, value in map(_step_label_value, trace.steps)
     )
     assert not any("Bracing Anchor" in message for message in context.unresolved_gear_effects)
 
