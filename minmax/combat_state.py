@@ -2,16 +2,42 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .named_combat_buffs import canonical_buff_name
+
 
 @dataclass(frozen=True)
 class CombatState:
     """Explicit transient combat conditions for one calculation snapshot.
 
     Static build math must not infer these conditions from selected gear, skills,
-    or Champion Points. Callers opt into combat-state effects deliberately.
+    potions, or Champion Points. Callers opt into combat-state effects
+    deliberately. Named buffs are canonicalized and deduplicated at the state
+    boundary so downstream resolvers do not need to guess aliases.
     """
 
     in_combat: bool = False
+    active_buffs: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        seen: set[str] = set()
+        normalized: list[str] = []
+        for value in self.active_buffs:
+            canonical = canonical_buff_name(value)
+            if canonical is None:
+                name = " ".join(str(value or "").strip().split())
+                if not name:
+                    continue
+                canonical = name
+            key = canonical.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            normalized.append(canonical)
+        object.__setattr__(self, "active_buffs", tuple(normalized))
+
+    def has_buff(self, name: str) -> bool:
+        requested = " ".join(str(name or "").strip().casefold().split())
+        return bool(requested) and any(buff.casefold() == requested for buff in self.active_buffs)
 
 
 @dataclass(frozen=True)
