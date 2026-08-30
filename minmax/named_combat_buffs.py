@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Verified named combat buffs and their routing layer.
 
-Source: ``math/buff.txt`` in this repository. Shared-sheet effects are mapped to
-first-class stats here. Component-layer buffs are canonicalized here as known
-names but are intentionally consumed by the damage/healing/shield layer that
-owns their semantics.
+Source: ``math/buff.txt`` and ``math/debuff.txt`` in this repository.
+Shared-sheet effects are mapped to first-class stats here. Component-layer
+buffs/debuffs are canonicalized here as known names but are intentionally
+consumed by the damage/healing/shield layer that owns their semantics.
 """
 
 from dataclasses import dataclass
@@ -58,11 +58,15 @@ NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
     "Minor Toughness": (NamedBuffEffect(StatId.MAX_HEALTH, 0.10, "resource_percent"),),
 }
 
-# Known named buffs whose effects belong to a later component calculation, not
-# the shared standing/stat layer. Values are resolved by that owning layer.
+# Known named effects whose semantics belong to a later component calculation,
+# not the shared standing/stat layer. Values are resolved by that owning layer.
 COMPONENT_LAYER_BUFFS = frozenset({
     "Minor Berserk",
     "Major Berserk",
+    "Minor Protection",
+    "Major Protection",
+    "Minor Vulnerability",
+    "Major Vulnerability",
 })
 
 
