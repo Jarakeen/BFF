@@ -124,16 +124,17 @@ def extract_component_text_evidence(
 
     # Effect kind is accepted only when the fragment explicitly names the
     # outcome. ``Health`` by itself is not enough because max-health and health
-    # cost text exist in ESO tooltips.
-    if " damage" in lower:
+    # cost text exist in ESO tooltips. Shield wording is checked before generic
+    # Damage because the phrase ``damage shield`` contains the word damage.
+    if any(token in lower for token in ("damage shield", "shield that absorbs", "absorbs ")):
+        effect_kind = "shield"
+        evidence.append("fragment explicitly describes a damage shield")
+    elif " damage" in lower:
         effect_kind = "damage"
         evidence.append("fragment explicitly says Damage")
     elif any(token in lower for token in ("healing ", "heal ", "heals ", "restore ")) and "health" in lower:
         effect_kind = "heal"
         evidence.append("fragment explicitly describes healing/restoring Health")
-    elif any(token in lower for token in ("damage shield", "shield that absorbs", "absorbs ")):
-        effect_kind = "shield"
-        evidence.append("fragment explicitly describes a damage shield")
 
     if effect_kind == "damage":
         for token, canonical in _DAMAGE_TYPES.items():
@@ -182,9 +183,9 @@ def extract_component_text_evidence(
             r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
             r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
         )):
-            is_dot = True  # temporal component; retained as the shared periodic flag for now
+            is_dot = True
             evidence.append("fragment explicitly describes periodic healing")
-        elif effect_kind == "heal":
+        else:
             is_dot = False
             evidence.append("fragment describes an immediate heal without periodic wording")
 
