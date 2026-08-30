@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "database": "eso.db",
+  "html_root": "C:\\Users\\nourg\\OneDrive\\Desktop\\BFF\\40_Stream Studio\\OBS\\Scripts\\FoundryDock\\data",
+  "icon_root": "collectible_icons",
+  "collectible_count": 13162,
+  "matched_count": 0,
+  "downloaded_count": 0,
+  "failure_count": 0,
+  "entries": {},
+  "failures": []
+}
