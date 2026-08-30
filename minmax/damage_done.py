@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class DamageDoneModifiers:
     """Additive ESO Damage Done categories for one attacker snapshot.
 
-    Values are decimal ratios (0.05 == 5%).  The event classifier decides which
+    Values are decimal ratios (0.05 == 5%). The event classifier decides which
     categories apply; applicable categories share one additive Damage Done
     bucket rather than multiplying independently.
     """
@@ -50,7 +50,10 @@ class DamageDoneBreakdown:
 
 
 _TYPE_FIELDS = {
+    # The DD profile calls the base magic family "magical" while the ESO math
+    # source calls the modifier category Magic Damage Done. Accept both names.
     "magic": "magic",
+    "magical": "magic",
     "physical": "physical",
     "flame": "flame",
     "frost": "frost",
