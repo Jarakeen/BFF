@@ -1,5 +1,12 @@
+import subprocess
+import sys
+from pathlib import Path
+
 from tools.audit_skill_coefficient_slots import CoefficientSlotAuditRow
 from tools.audit_skill_component_text_semantics import is_active_coefficient
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def _row(*, coefficient_type: str, a: float, b: float, c: float, r: float):
@@ -38,3 +45,17 @@ def test_other_negative_coefficient_data_is_not_silently_discarded():
     assert is_active_coefficient(
         _row(coefficient_type="-1", a=0.0, b=-1.0, c=-1.0, r=-1.0)
     )
+
+
+def test_component_semantics_audit_can_be_launched_as_a_script():
+    script = ROOT / "tools" / "audit_skill_component_text_semantics.py"
+    completed = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "Audit explicit per-coefficient semantics" in completed.stdout
