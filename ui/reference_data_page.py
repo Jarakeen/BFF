@@ -52,17 +52,17 @@ class ReferenceDataPage(FoundryPage):
 
         workspace = QHBoxLayout()
         workspace.setContentsMargins(0, 0, 0, 0)
-        workspace.setSpacing(10)
+        workspace.setSpacing(8)
 
-        index_card = FoundryCard("Reference Index")
+        index_card = FoundryCard("Reference Index", "⌕").set_watermark("compass", 0.04)
         self.results = QListWidget()
         self.results.currentTextChanged.connect(self._show_entry)
         index_card.addWidget(self.results)
         workspace.addWidget(index_card, 1)
 
         center = QVBoxLayout()
-        center.setSpacing(10)
-        self.entry_card = FoundryCard("Reference Entry")
+        center.setSpacing(8)
+        self.entry_card = FoundryCard("Reference Entry", "✦").set_watermark("compass", 0.055)
         self.entry_name = QLabel()
         self.entry_name.setProperty("heroTitle", True)
         self.entry_summary = QLabel()
@@ -76,7 +76,7 @@ class ReferenceDataPage(FoundryPage):
         self.entry_card.addStretch(1)
         center.addWidget(self.entry_card, 4)
 
-        related = FoundryCard("Related Effects / Appears In")
+        related = FoundryCard("Related Effects / Appears In", "↗").set_watermark("compass", 0.035)
         self.related_label = QLabel()
         self.related_label.setWordWrap(True)
         related.addWidget(self.related_label)
@@ -84,16 +84,15 @@ class ReferenceDataPage(FoundryPage):
         workspace.addLayout(center, 3)
 
         right = QVBoxLayout()
-        right.setSpacing(10)
-        death = FoundryCard("Why Did We Die?")
-        death.setProperty("parchment", True)
+        right.setSpacing(8)
+        death = FoundryCard("Why Did We Die?", "☠").make_parchment().set_watermark("compass", 0.10)
         self.death_label = QLabel()
         self.death_label.setWordWrap(True)
         death.addWidget(self.death_label)
         death.addWidget(QPushButton("Analyze Selected Death"))
         right.addWidget(death, 2)
 
-        image = FoundryCard("Mechanic Visual")
+        image = FoundryCard("Mechanic Visual", "◉").set_watermark("compass", 0.06)
         visual = QLabel("MECHANIC / ATTACK VISUAL\n\nArtwork, icon, combat-log sample,\nor positioning diagram can live here.")
         visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
         visual.setMinimumHeight(260)
@@ -101,9 +100,12 @@ class ReferenceDataPage(FoundryPage):
         image.addWidget(visual)
         right.addWidget(image, 2)
 
-        notes = FoundryCard("Field Notes")
-        notes.setProperty("parchment", True)
-        notes.addWidget(QLabel("Use this page during prog when somebody asks:\n\n'What was THAT?'\n\nThe answer should eventually be faster than opening six browser tabs and interrogating the dead person."))
+        notes = FoundryCard("Field Notes", "✎").make_parchment().set_watermark("feather", 0.12)
+        notes.addWidget(QLabel(
+            "Use this page during prog when somebody asks:\n\n"
+            "'What was THAT?'\n\n"
+            "The answer should eventually be faster than opening six browser tabs and interrogating the dead person."
+        ))
         right.addWidget(notes, 1)
         workspace.addLayout(right, 2)
 
