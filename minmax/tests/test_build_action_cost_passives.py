@@ -197,3 +197,26 @@ def test_build_final_cost_withholds_result_for_unverified_evocation_count(tmp_pa
 
     assert result.final_cost is None
     assert len(result.unresolved) == 1
+
+
+def test_wind_walker_is_explicitly_unresolved_when_owned_with_medium_armor(tmp_path: Path) -> None:
+    build = PlayerBuild(
+        Armor=_armor("Medium", "Medium", "Medium", "Medium", "Medium", "Medium", "Light")
+    )
+    progression = CharacterProgression(owned_skill_lines=("Medium Armor",))
+
+    result = _resolver(tmp_path).resolve(build, progression=progression)
+
+    assert result.modifiers.modifiers == ()
+    assert result.unresolved == (
+        "Medium Armor: Wind Walker action-cost behavior is not live-verified for 6 equipped Medium pieces",
+    )
+
+
+def test_wind_walker_is_not_claimed_without_medium_armor_skill_line_ownership(tmp_path: Path) -> None:
+    build = PlayerBuild(Armor=_armor("Medium", "Medium", "Medium", "Medium", "Medium", "Medium", "Light"))
+
+    result = _resolver(tmp_path).resolve(build)
+
+    assert result.modifiers.modifiers == ()
+    assert result.unresolved == ()
