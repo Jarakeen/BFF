@@ -6,6 +6,7 @@ from minmax.skill_coefficient import (
     SkillCoefficientResult,
     evaluate_skill_coefficient,
 )
+from minmax.skill_coefficients import is_inactive_skill_coefficient
 from minmax.skill_coefficient_service import (
     SkillCoefficientService,
 )
@@ -52,11 +53,13 @@ class SkillDamageService:
             )
         )
 
+        # Only UESP's exact -1/-1/-1/-1 empty-slot marker is inactive.
+        # Negative coefficient terms can be real mechanics and must remain
+        # available to the evaluator.
         active_coefficients = tuple(
             coefficient
             for coefficient in coefficients
-            if coefficient.type != "-1"
-            and coefficient.a >= 0
+            if not is_inactive_skill_coefficient(coefficient)
         )
 
         components = tuple(
