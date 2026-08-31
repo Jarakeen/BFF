@@ -21,6 +21,14 @@ class _SkillEffects:
         return ()
 
 
+class _Enchantments:
+    def __init__(self, matches: dict[str, tuple[int, ...]] | None = None):
+        self.matches = matches or {}
+
+    def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
+        return self.matches.get(label, ())
+
+
 def _make_db(path: Path) -> None:
     with sqlite3.connect(path) as db:
         db.executescript(
@@ -122,6 +130,70 @@ def test_adapts_real_saved_bar_without_fillers_and_counts_active_staff_as_two(tm
     assert result.build.front_bar.slots[2].effects[0].name == "berserk"
     assert result.build.validate() == ()
     assert equipped_gear_set_counts(result.build, BarId.FRONT) == {"332": 5}
+
+
+def test_adapts_unique_saved_weapon_enchantment_item_id(tmp_path: Path):
+    db_path = tmp_path / "eso.db"
+    _make_db(db_path)
+    saved = _df_healer_like_build()
+    saved.FrontBarWeapon.Enchant = "Weapon Damage"
+
+    result = SavedBuildCharacterAdapter(
+        db_path,
+        skill_effect_repository=_SkillEffects(),
+        weapon_enchantment_repository=_Enchantments({"Weapon Damage": (12345,)}),
+    ).adapt(saved)
+
+    assert result.build is not None
+    assert result.build.front_bar is not None
+    assert result.build.front_bar.main_hand.enchantment_id == "weapon_damage"
+    assert result.build.front_bar.main_hand.enchantment_item_id == 12345
+    assert result.unresolved == ()
+
+
+def test_ambiguous_saved_weapon_enchantment_is_not_guessed(tmp_path: Path):
+    db_path = tmp_path / "eso.db"
+    _make_db(db_path)
+    saved = _df_healer_like_build()
+    saved.FrontBarWeapon.Enchant = "Weapon Damage"
+
+    result = SavedBuildCharacterAdapter(
+        db_path,
+        skill_effect_repository=_SkillEffects(),
+        weapon_enchantment_repository=_Enchantments({"Weapon Damage": (12345, 67890)}),
+    ).adapt(saved)
+
+    assert result.build is not None
+    assert result.build.front_bar is not None
+    assert result.build.front_bar.main_hand.enchantment_id == "weapon_damage"
+    assert result.build.front_bar.main_hand.enchantment_item_id is None
+    assert any(
+        "weapon enchantment label is ambiguous (2 matches): Weapon Damage" in message
+        for message in result.unresolved
+    )
+
+
+def test_missing_saved_weapon_enchantment_is_reported(tmp_path: Path):
+    db_path = tmp_path / "eso.db"
+    _make_db(db_path)
+    saved = _df_healer_like_build()
+    saved.FrontBarWeapon.Enchant = "Unknown Enchant"
+
+    result = SavedBuildCharacterAdapter(
+        db_path,
+        skill_effect_repository=_SkillEffects(),
+        weapon_enchantment_repository=_Enchantments(),
+    ).adapt(saved)
+
+    assert result.build is not None
+    assert result.build.front_bar is not None
+    assert result.build.front_bar.main_hand.enchantment_id == "unknown_enchant"
+    assert result.build.front_bar.main_hand.enchantment_item_id is None
+    assert any(
+        "weapon enchantment label not found in WeaponEnchantmentRepository: Unknown Enchant"
+        in message
+        for message in result.unresolved
+    )
 
 
 def test_ambiguous_legacy_two_handed_weapon_is_not_guessed(tmp_path: Path):
