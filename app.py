@@ -42,8 +42,9 @@ def main() -> int:
     # Set the application icon as early as possible so Windows does not briefly
     # fall back to the generic Python/Qt icon during startup.
     app_icon = get_resource_path("bff.ico")
-    if app_icon.exists():
-        app.setWindowIcon(QIcon(str(app_icon)))
+    foundry_icon = QIcon(str(app_icon)) if app_icon.exists() else QIcon()
+    if not foundry_icon.isNull():
+        app.setWindowIcon(foundry_icon)
 
     # Show one static, motion-free startup screen before loading the heavier UI
     # modules. The splash does not animate, blink, fade, or cycle text.
@@ -76,6 +77,11 @@ def main() -> int:
             app.setStyleSheet(style_file.read_text(encoding="utf-8"))
 
     window = MainWindow()
+    if not foundry_icon.isNull():
+        # Explicitly assign the icon to the real top-level window as well as
+        # QApplication. Windows can otherwise retain the identity of the first
+        # visible startup window and show a generic taskbar icon.
+        window.setWindowIcon(foundry_icon)
     window.show()
     app.processEvents()
     splash.finish(window)
