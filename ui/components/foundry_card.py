@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLayout,
+    QPushButton,
     QSizePolicy,
     QTableWidget,
     QTableView,
@@ -20,8 +21,8 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_resource_path
-from ui.iconography import icon_path
 from ui.theme.fonts import Fonts
+from ui.ux_icons import icon_path, semantic_icon, set_button_icon
 
 
 class FoundryCard(QFrame):
@@ -89,10 +90,12 @@ class FoundryCard(QFrame):
         root.addWidget(self.header, 0)
         root.addWidget(self.body, 1)
 
-        self.set_icon(icon)
+        self.set_icon(icon or semantic_icon(title))
 
     def set_title(self, title: str):
         self.title_label.setText(title)
+        if not self._icon_name:
+            self.set_icon(semantic_icon(title))
 
     def set_icon(self, icon: str):
         self._icon_name = icon or ""
@@ -109,7 +112,7 @@ class FoundryCard(QFrame):
                 self.icon_label.setToolTip(icon.replace("-", " ").title())
                 return
 
-        # Backward-compatible fallback for callers still passing a glyph.
+        # Backward compatibility for the few callers that still pass a glyph.
         self.icon_label.setText(icon)
 
     def set_badge(self, text: str):
@@ -121,6 +124,10 @@ class FoundryCard(QFrame):
             item = self.header_action_layout.takeAt(0)
             if item.widget():
                 item.widget().setParent(None)
+        if isinstance(widget, QPushButton):
+            set_button_icon(widget)
+        else:
+            self._decorate_children(widget)
         self.header_action_layout.addWidget(widget)
 
     def set_body_margins(self, left: int, top: int, right: int, bottom: int):
@@ -139,7 +146,6 @@ class FoundryCard(QFrame):
         return self
 
     def make_parchment(self):
-        """Turn the whole card, including header/body, into one paper surface."""
         self.setProperty("parchment", True)
         self.style().unpolish(self)
         self.style().polish(self)
@@ -147,7 +153,6 @@ class FoundryCard(QFrame):
         return self
 
     def set_watermark(self, kind: str | None, opacity: float = 0.08):
-        """Paint a very faint compass or feather mark in the lower-right corner."""
         self._watermark = None
         self._watermark_opacity = max(0.0, min(0.25, float(opacity)))
         filename = self._WATERMARKS.get(str(kind or "").lower())
@@ -162,14 +167,37 @@ class FoundryCard(QFrame):
         self.update()
         return self
 
+    @staticmethod
+    def _decorate_children(widget: QWidget):
+        for button in widget.findChildren(QPushButton):
+            set_button_icon(button)
+
+    @classmethod
+    def _decorate_layout(cls, layout: QLayout):
+        for index in range(layout.count()):
+            item = layout.itemAt(index)
+            widget = item.widget()
+            nested = item.layout()
+            if isinstance(widget, QPushButton):
+                set_button_icon(widget)
+            elif widget is not None:
+                cls._decorate_children(widget)
+            if nested is not None:
+                cls._decorate_layout(nested)
+
     def addWidget(self, widget: QWidget):
         if self.body_layout.count() == 0 and isinstance(widget, (QTableWidget, QTableView)):
             self.make_table_card()
             widget.setFrameShape(QFrame.NoFrame)
             widget.setLineWidth(0)
+        if isinstance(widget, QPushButton):
+            set_button_icon(widget)
+        else:
+            self._decorate_children(widget)
         self.body_layout.addWidget(widget)
 
     def addLayout(self, layout: QLayout):
+        self._decorate_layout(layout)
         self.body_layout.addLayout(layout)
 
     def addStretch(self, stretch: int = 0):
@@ -190,8 +218,7 @@ class FoundryCard(QFrame):
         parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
         ornament = QColor("#6F5736" if parchment else "#9A794A")
         ornament.setAlpha(105 if parchment else 82)
-        pen = QPen(ornament, 1.0)
-        painter.setPen(pen)
+        painter.setPen(QPen(ornament, 1.0))
 
         inset = 4
         arm = 8
@@ -215,8 +242,10 @@ class FoundryCard(QFrame):
                 Qt.TransformationMode.SmoothTransformation,
             )
             painter.setOpacity(self._watermark_opacity)
-            x = self.width() - scaled.width() - 14
-            y = self.height() - scaled.height() - 12
-            painter.drawPixmap(x, y, scaled)
+            painter.drawPixmap(
+                self.width() - scaled.width() - 14,
+                self.height() - scaled.height() - 12,
+                scaled,
+            )
 
         painter.end()
