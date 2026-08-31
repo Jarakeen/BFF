@@ -30,25 +30,60 @@ def _load_build(path: Path, build_name: str) -> PlayerBuild:
     raise ValueError(f"Saved build not found: {build_name}")
 
 
-def _ability_row(connection: sqlite3.Connection, ability_id: int) -> tuple:
-    row = connection.execute(
+def _ability_row(
+    connection: sqlite3.Connection,
+    *,
+    ability_id: int | None = None,
+    name: str | None = None,
+) -> tuple:
+    if ability_id is not None:
+        row = connection.execute(
+            """
+            SELECT ability_id, name, rank, morph, base_cost, base_mechanic, skill_line
+            FROM ability
+            WHERE ability_id = ?
+              AND base_cost > 0
+            """,
+            (ability_id,),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"Positive-cost ability not found: {ability_id}")
+        return row
+
+    requested_name = str(name or "").strip()
+    rows = connection.execute(
         """
         SELECT ability_id, name, rank, morph, base_cost, base_mechanic, skill_line
         FROM ability
-        WHERE ability_id = ?
+        WHERE name = ? COLLATE NOCASE
           AND base_cost > 0
+        ORDER BY rank DESC, morph, ability_id
         """,
-        (ability_id,),
-    ).fetchone()
-    if row is None:
-        raise ValueError(f"Positive-cost ability not found: {ability_id}")
-    return row
+        (requested_name,),
+    ).fetchall()
+    if not rows:
+        raise ValueError(f"Positive-cost ability not found: {requested_name}")
+
+    highest_rank = max(int(row[2] or 0) for row in rows)
+    highest = [row for row in rows if int(row[2] or 0) == highest_rank]
+    if len(highest) != 1:
+        candidates = [
+            f"ability_id={row[0]} rank={row[2]} morph={row[3]}"
+            for row in highest
+        ]
+        raise ValueError(
+            f"Ability name is ambiguous at highest rank: {requested_name}. "
+            + "; ".join(candidates)
+        )
+    return highest[0]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit saved-build Phase 4 action cost inputs and output")
     parser.add_argument("--build", required=True)
-    parser.add_argument("--ability-id", required=True, type=int)
+    identity = parser.add_mutually_exclusive_group(required=True)
+    identity.add_argument("--ability-id", type=int)
+    identity.add_argument("--name", help="Exact ability name; resolves the unique highest-rank row")
     parser.add_argument("--database", default=str(ROOT / "data" / "eso.db"))
     parser.add_argument("--builds", default=str(ROOT / "data" / "builds.json"))
     parser.add_argument(
@@ -66,7 +101,9 @@ def main() -> int:
 
     with sqlite3.connect(database) as connection:
         ability_id, ability_name, rank, morph, base_cost, base_mechanic, skill_line = _ability_row(
-            connection, args.ability_id
+            connection,
+            ability_id=args.ability_id,
+            name=args.name,
         )
 
     base = resolve_base_action_cost(
