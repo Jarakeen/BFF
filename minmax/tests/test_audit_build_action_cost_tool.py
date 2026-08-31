@@ -18,6 +18,7 @@ def _database(tmp_path: Path) -> Path:
             """
             CREATE TABLE ability (
                 id INTEGER PRIMARY KEY,
+                ability_id INTEGER,
                 name TEXT,
                 rank INTEGER,
                 morph INTEGER,
@@ -41,8 +42,8 @@ def _database(tmp_path: Path) -> Path:
             """
         )
         connection.execute(
-            "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (41189, "Combat Prayer", 4, 2, 4590, 1, "Restoration Staff"),
+            "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (99, 41189, "Combat Prayer", 4, 2, 4590, 1, "Restoration Staff"),
         )
         connection.execute(
             "INSERT INTO jewelry_glyph VALUES (?, ?)",
@@ -109,6 +110,7 @@ def test_tool_prints_modifier_breakdown_and_final_cost(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
+    assert "Ability ID:     41189" in result.stdout
     assert "Breton: Magicka Mastery" in result.stdout
     assert "Light Armor: Evocation (6 pieces)" in result.stdout
     assert "Necklace: Glyph of Reduce Spell Cost" in result.stdout
