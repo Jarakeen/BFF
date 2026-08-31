@@ -15,7 +15,7 @@ from minmax.build_final_action_cost import BuildFinalActionCostResolver
 from minmax.character_progression import CharacterProgression
 from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
-from minmax.resource_costs import ResourceType, resolve_base_action_cost
+from minmax.resource_costs import resolve_base_action_cost
 from models.build_model import PlayerBuild
 
 
@@ -33,14 +33,15 @@ def _load_build(path: Path, build_name: str) -> PlayerBuild:
 def _ability_row(connection: sqlite3.Connection, ability_id: int) -> tuple:
     row = connection.execute(
         """
-        SELECT id, name, rank, morph, base_cost, base_mechanic, skill_line
+        SELECT ability_id, name, rank, morph, base_cost, base_mechanic, skill_line
         FROM ability
-        WHERE id = ?
+        WHERE ability_id = ?
+          AND base_cost > 0
         """,
         (ability_id,),
     ).fetchone()
     if row is None:
-        raise ValueError(f"Ability not found: {ability_id}")
+        raise ValueError(f"Positive-cost ability not found: {ability_id}")
     return row
 
 
