@@ -37,7 +37,7 @@ def test_type_8_uses_max_stat_and_power():
     )
 
 
-def test_r_scales_the_coefficient_result():
+def test_r_is_fit_metadata_not_a_coefficient_multiplier():
     coefficient = SkillCoefficient(
         coefficient_number=1,
         type="8",
@@ -58,7 +58,7 @@ def test_r_scales_the_coefficient_result():
     )
 
     assert result.scaled_value == pytest.approx(
-        552.5
+        1105.0
     )
 
 
@@ -111,4 +111,3 @@ def test_unsupported_coefficient_type_is_rejected():
             max_stat=1000,
             power=1000,
         )
-        
