@@ -82,12 +82,21 @@ class BuildActionCostModifierResolver:
         self.jewelry_trait_repository = jewelry_trait_repository
 
     @staticmethod
-    def _light_armor_count(build: PlayerBuild) -> int:
+    def _armor_weight_count(build: PlayerBuild, weight: str) -> int:
+        requested = str(weight or "").strip().casefold()
         return sum(
             1
             for entry in build.Armor.values()
-            if str(entry.get("Weight", "") or "").strip().casefold() == "light"
+            if str(entry.get("Weight", "") or "").strip().casefold() == requested
         )
+
+    @staticmethod
+    def _light_armor_count(build: PlayerBuild) -> int:
+        return BuildActionCostModifierResolver._armor_weight_count(build, "light")
+
+    @staticmethod
+    def _medium_armor_count(build: PlayerBuild) -> int:
+        return BuildActionCostModifierResolver._armor_weight_count(build, "medium")
 
     @staticmethod
     def _standing_passive_modifiers(
@@ -155,6 +164,20 @@ class BuildActionCostModifierResolver:
                             resources=(ResourceType.MAGICKA,),
                         )
                     )
+
+        # Wind Walker is a standing Stamina ability-cost reduction source for
+        # Medium Armor. Its displayed current tooltip reports a per-piece value,
+        # but Light Armor live validation proved that tooltip text alone is not
+        # sufficient evidence for Phase 4 canonical cost math. Until Wind Walker
+        # is isolated with current live ability-cost observations, do not omit it
+        # and do not guess its numeric contribution.
+        if progression is not None and progression.owns_skill_line("Medium Armor"):
+            medium_count = BuildActionCostModifierResolver._medium_armor_count(build)
+            if medium_count:
+                unresolved.append(
+                    "Medium Armor: Wind Walker action-cost behavior is not live-verified "
+                    f"for {medium_count} equipped Medium pieces"
+                )
 
         return tuple(modifiers), tuple(unresolved)
 
