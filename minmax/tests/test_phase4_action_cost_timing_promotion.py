@@ -91,7 +91,7 @@ def test_apply_promotion_adds_columns_and_populates_values() -> None:
         ORDER BY ability_id
         """
     ).fetchall()
-    assert rows == [
+    assert [tuple(row) for row in rows] == [
         (103503, 0, "0"),
         (132141, 1, "2000"),
     ]
