@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from models.build_model import PlayerBuild
 
 from .build_action_cost_modifiers import BuildActionCostModifierResolver
+from .character_progression import CharacterProgression
 from .final_action_cost import FinalActionCost, calculate_final_action_cost
 from .resource_cost_modifiers import ActionCostModifierSet
 from .resource_costs import BaseActionCost
@@ -36,8 +37,12 @@ class BuildFinalActionCostResolver:
         base_cost: BaseActionCost,
         *,
         skill_line: str | None = None,
+        progression: CharacterProgression | None = None,
     ) -> BuildFinalActionCost:
-        resolved_modifiers = self.modifier_resolver.resolve(build)
+        resolved_modifiers = self.modifier_resolver.resolve(
+            build,
+            progression=progression,
+        )
         if resolved_modifiers.unresolved:
             return BuildFinalActionCost(
                 final_cost=None,
