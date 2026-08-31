@@ -245,6 +245,7 @@ def extract_component_text_evidence(
             r"\benemies around (?:you|them|the target)\b",
             r"\benemies in the (?:target )?area\b",
             r"\benemies in your path\b",
+            r"\b(?:enemies|foes) in front of you\b",
             r"\bto all enemies\b",
             r"\bblast(?:s|ing)? all enemies\b",
         )
