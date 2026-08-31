@@ -51,6 +51,20 @@ class ScheduledRecoveryTick:
     tick: RecoveryTick
 
 
+@dataclass(frozen=True)
+class AppliedRecoveryTick:
+    """Result of applying one scheduled recovery tick to one resource pool."""
+
+    time_seconds: float
+    resource: ResourceType
+    before: int
+    attempted_restore: int
+    applied_restore: int
+    after: int
+    maximum: int
+    suppressed: bool
+
+
 RecoveryActivityResolver = Callable[[float], RecoveryActivityState]
 
 
@@ -128,3 +142,44 @@ def schedule_in_combat_recovery_ticks(
         tick_index += 1
 
     return tuple(scheduled)
+
+
+def apply_scheduled_recovery_tick(
+    pool: StaticResourcePool,
+    current_amount: int,
+    event: ScheduledRecoveryTick,
+) -> AppliedRecoveryTick:
+    """Apply one scheduled recovery tick and clamp the pool at its maximum.
+
+    Recovery timing is responsible only for the recovery event itself. Costs,
+    flat restores, heavy attacks, and external restores remain separate event
+    types for the later sustain timeline.
+    """
+
+    current = int(current_amount)
+    maximum = int(pool.maximum)
+    if current < 0:
+        raise ValueError(f"Current resource cannot be negative: {current_amount}")
+    if current > maximum:
+        raise ValueError(
+            f"Current {pool.resource.value} exceeds pool maximum: {current} > {maximum}"
+        )
+    if event.tick.resource is not pool.resource:
+        raise ValueError(
+            "Recovery tick resource does not match pool: "
+            f"{event.tick.resource.value} != {pool.resource.value}"
+        )
+
+    attempted = int(event.tick.restored_amount)
+    after = min(maximum, current + attempted)
+    applied = after - current
+    return AppliedRecoveryTick(
+        time_seconds=float(event.time_seconds),
+        resource=pool.resource,
+        before=current,
+        attempted_restore=attempted,
+        applied_restore=applied,
+        after=after,
+        maximum=maximum,
+        suppressed=event.tick.suppressed,
+    )
