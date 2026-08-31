@@ -40,6 +40,15 @@ class FoundryCard(QFrame):
         self._watermark: QPixmap | None = None
         self._watermark_opacity = 0.08
         self._icon_name = ""
+        self._corner_ornament = QPixmap()
+
+        corner_path = get_resource_path(
+            "assets", "themes", "bff", "grimoire", "assets", "corner_brass.svg"
+        )
+        if corner_path.exists():
+            corner = QPixmap(str(corner_path))
+            if not corner.isNull():
+                self._corner_ornament = corner
 
         self.header = QWidget()
         self.header.setProperty("cardHeader", True)
@@ -209,6 +218,27 @@ class FoundryCard(QFrame):
             if item.widget():
                 item.widget().deleteLater()
 
+    @staticmethod
+    def _draw_mirrored_pixmap(
+        painter: QPainter,
+        pixmap: QPixmap,
+        x: int,
+        y: int,
+        *,
+        mirror_x: bool = False,
+        mirror_y: bool = False,
+        opacity: float = 1.0,
+    ) -> None:
+        painter.save()
+        painter.setOpacity(opacity)
+        painter.translate(
+            x + (pixmap.width() if mirror_x else 0),
+            y + (pixmap.height() if mirror_y else 0),
+        )
+        painter.scale(-1.0 if mirror_x else 1.0, -1.0 if mirror_y else 1.0)
+        painter.drawPixmap(0, 0, pixmap)
+        painter.restore()
+
     def paintEvent(self, event):
         super().paintEvent(event)
 
@@ -216,22 +246,66 @@ class FoundryCard(QFrame):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
-        ornament = QColor("#6F5736" if parchment else "#9A794A")
-        ornament.setAlpha(105 if parchment else 82)
-        painter.setPen(QPen(ornament, 1.0))
 
-        inset = 4
-        arm = 8
-        w = self.width() - 1
-        h = self.height() - 1
-        painter.drawLine(inset, inset, inset + arm, inset)
-        painter.drawLine(inset, inset, inset, inset + arm)
-        painter.drawLine(w - inset, inset, w - inset - arm, inset)
-        painter.drawLine(w - inset, inset, w - inset, inset + arm)
-        painter.drawLine(inset, h - inset, inset + arm, h - inset)
-        painter.drawLine(inset, h - inset, inset, h - inset - arm)
-        painter.drawLine(w - inset, h - inset, w - inset - arm, h - inset)
-        painter.drawLine(w - inset, h - inset, w - inset, h - inset - arm)
+        # The grimoire mockup uses small brass book-corner flourishes rather
+        # than plain L-shaped corner ticks. Draw the shared SVG in all four
+        # orientations so every FoundryCard inherits the same visual language.
+        if (
+            not self._corner_ornament.isNull()
+            and self.width() >= 76
+            and self.height() >= 58
+        ):
+            corner = self._corner_ornament
+            inset = 2
+            opacity = 0.58 if parchment else 0.92
+            right = self.width() - corner.width() - inset
+            bottom = self.height() - corner.height() - inset
+
+            self._draw_mirrored_pixmap(
+                painter, corner, inset, inset, opacity=opacity
+            )
+            self._draw_mirrored_pixmap(
+                painter,
+                corner,
+                right,
+                inset,
+                mirror_x=True,
+                opacity=opacity,
+            )
+            self._draw_mirrored_pixmap(
+                painter,
+                corner,
+                inset,
+                bottom,
+                mirror_y=True,
+                opacity=opacity,
+            )
+            self._draw_mirrored_pixmap(
+                painter,
+                corner,
+                right,
+                bottom,
+                mirror_x=True,
+                mirror_y=True,
+                opacity=opacity,
+            )
+        else:
+            # Safe fallback if the optional SVG cannot be loaded.
+            ornament = QColor("#6F5736" if parchment else "#9A794A")
+            ornament.setAlpha(105 if parchment else 82)
+            painter.setPen(QPen(ornament, 1.0))
+            inset = 4
+            arm = 8
+            w = self.width() - 1
+            h = self.height() - 1
+            painter.drawLine(inset, inset, inset + arm, inset)
+            painter.drawLine(inset, inset, inset, inset + arm)
+            painter.drawLine(w - inset, inset, w - inset - arm, inset)
+            painter.drawLine(w - inset, inset, w - inset, inset + arm)
+            painter.drawLine(inset, h - inset, inset + arm, h - inset)
+            painter.drawLine(inset, h - inset, inset, h - inset - arm)
+            painter.drawLine(w - inset, h - inset, w - inset - arm, h - inset)
+            painter.drawLine(w - inset, h - inset, w - inset, h - inset - arm)
 
         if self._watermark is not None and self.width() > 130 and self.height() > 110:
             target = min(92, max(52, min(self.width(), self.height()) // 3))
