@@ -304,16 +304,17 @@ def test_rebuild_deletes_only_rows_owned_by_this_extractor(tmp_path):
         """
         INSERT INTO skill_component_classification (
             skill_rank_id, coefficient_number, effect_kind, source
-        ) VALUES (999, 1, 'shield', ?,)
-        """.replace(',)', ')'),
-        (SOURCE,),
+        ) VALUES (?, ?, ?, ?)
+        """,
+        (999, 1, 'shield', SOURCE),
     )
     db.execute(
         """
         INSERT INTO skill_component_classification (
             skill_rank_id, coefficient_number, effect_kind, source
-        ) VALUES (998, 1, 'shield', 'manual verification')
-        """
+        ) VALUES (?, ?, ?, ?)
+        """,
+        (998, 1, 'shield', 'manual verification'),
     )
     db.commit()
     db.close()
