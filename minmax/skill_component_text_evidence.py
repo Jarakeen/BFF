@@ -65,23 +65,37 @@ def _placeholder_pattern(number: int) -> re.Pattern[str]:
     return re.compile(rf"\${int(number)}(?!\d)")
 
 
+def _sentence_boundaries(text: str) -> tuple[int, ...]:
+    """Return punctuation boundaries without treating decimal points as stops."""
+
+    boundaries: list[int] = []
+    for index, char in enumerate(text):
+        if char == ";":
+            boundaries.append(index)
+            continue
+        if char != ".":
+            continue
+
+        previous_is_digit = index > 0 and text[index - 1].isdigit()
+        next_is_digit = index + 1 < len(text) and text[index + 1].isdigit()
+        if previous_is_digit and next_is_digit:
+            continue
+        boundaries.append(index)
+
+    return tuple(boundaries)
+
+
 def _fragment_around_placeholder(text: str, number: int) -> str:
     match = _placeholder_pattern(number).search(text)
     if match is None:
         return ""
 
-    start = max(text.rfind(".", 0, match.start()), text.rfind(";", 0, match.start()))
-    start = 0 if start < 0 else start + 1
+    boundaries = _sentence_boundaries(text)
+    prior = [position for position in boundaries if position < match.start()]
+    following = [position for position in boundaries if position >= match.end()]
 
-    end_candidates = [
-        position
-        for position in (
-            text.find(".", match.end()),
-            text.find(";", match.end()),
-        )
-        if position >= 0
-    ]
-    end = min(end_candidates) + 1 if end_candidates else len(text)
+    start = prior[-1] + 1 if prior else 0
+    end = following[0] + 1 if following else len(text)
 
     fragment = text[start:end].strip()
     if len(fragment) <= 360:
@@ -126,11 +140,6 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
         rf"(?:damage\s+shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
         rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
         rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}(?:\s+damage)?\b",
-        # Do not allow the bare noun ``shield`` here. In wording such as
-        # ``while the shield persists, you are healed for $N Health`` the
-        # shield is only context and $N belongs to the heal. This pattern is
-        # reserved for verbs that explicitly assign the placeholder to the
-        # shielding amount itself.
         rf"\b(?:shielding|shields|shielded)\b[^.;]{{0,80}}?\bfor\s+{placeholder}\b",
     )
     if any(re.search(pattern, lower) for pattern in shield_patterns):
@@ -152,6 +161,16 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
     )
     if any(re.search(pattern, lower) for pattern in damage_patterns):
         return "damage"
+
+    # Explicit non-damage scalar or duration coefficients are safely classed as
+    # utility. They deliberately carry no damage/heal routing fields.
+    utility_patterns = (
+        rf"\b(?:duration|for)\b[^.;]{{0,40}}?{placeholder}\s+seconds?\b",
+        rf"\bcurrent\s+duration\s*:\s*{placeholder}\s+seconds?\b",
+        rf"{placeholder}\s*%\b",
+    )
+    if any(re.search(pattern, lower) for pattern in utility_patterns):
+        return "utility"
 
     return None
 
@@ -193,6 +212,8 @@ def extract_component_text_evidence(
         evidence.append("placeholder is explicitly the healing/restored-Health amount")
     elif effect_kind == "damage":
         evidence.append("placeholder is explicitly the damage amount")
+    elif effect_kind == "utility":
+        evidence.append("placeholder is explicitly a non-damage duration/percentage scalar")
 
     if effect_kind == "damage":
         placeholder = rf"\${int(coefficient_number)}(?!\d)"
@@ -223,6 +244,7 @@ def extract_component_text_evidence(
             r"\bfoes around you\b",
             r"\benemies around (?:you|them|the target)\b",
             r"\benemies in the (?:target )?area\b",
+            r"\benemies in your path\b",
             r"\bto all enemies\b",
             r"\bblast(?:s|ing)? all enemies\b",
         )
@@ -270,9 +292,8 @@ def extract_component_text_evidence(
             is_dot = False
             evidence.append("current coefficient is an immediate/triggered heal without periodic wording")
 
-    # Shields are their own effect family. ``is_dot`` and ``is_aoe`` are not
-    # invented merely to make the row look complete. Recipient shape may be
-    # added later when explicitly useful to a shield evaluator.
+    # Shields and utility coefficients are their own effect families. Damage
+    # routing fields stay NULL rather than being fabricated as False.
 
     # ESO critical eligibility is deliberately unresolved here. Tooltip prose
     # usually does not prove whether an effect can crit.
