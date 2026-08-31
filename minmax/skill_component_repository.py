@@ -10,12 +10,17 @@ class SkillComponentRepository:
     """Read verified per-coefficient component identities from the ESO database.
 
     The repository never infers component mechanics from names, duration, or
-    target text.  If the canonical classification table is unavailable or a
-    row is incomplete, callers receive only what the database explicitly
-    proves.
+    target text. If the canonical classification table is unavailable or a row
+    is incomplete, callers receive only what the database explicitly proves.
+
+    Positive runtime critical observations live in a separate evidence table.
+    An explicit classification ``can_crit`` value always wins; otherwise any
+    stored positive runtime proof resolves ``can_crit`` to True. Absence of
+    runtime evidence remains None and never becomes False.
     """
 
     TABLE = "skill_component_classification"
+    CRITICAL_EVIDENCE_TABLE = "skill_component_critical_evidence"
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
@@ -50,21 +55,41 @@ class SkillComponentRepository:
             db.row_factory = sqlite3.Row
             if not self._table_exists(db, self.TABLE):
                 return ()
+
+            has_runtime_crit = self._table_exists(db, self.CRITICAL_EVIDENCE_TABLE)
+            if has_runtime_crit:
+                can_crit_expression = f"""
+                    CASE
+                        WHEN c.can_crit IS NOT NULL THEN c.can_crit
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM {self.CRITICAL_EVIDENCE_TABLE} e
+                            WHERE e.skill_rank_id = c.skill_rank_id
+                              AND e.coefficient_number = c.coefficient_number
+                              AND e.can_crit = 1
+                              AND e.observed_count > 0
+                        ) THEN 1
+                        ELSE NULL
+                    END
+                """
+            else:
+                can_crit_expression = "c.can_crit"
+
             rows = db.execute(
                 f"""
                 SELECT
-                    skill_rank_id,
-                    coefficient_number,
-                    effect_kind,
-                    damage_type,
-                    is_dot,
-                    is_aoe,
-                    can_crit,
-                    source,
-                    confidence
-                FROM {self.TABLE}
-                WHERE skill_rank_id = ?
-                ORDER BY coefficient_number
+                    c.skill_rank_id,
+                    c.coefficient_number,
+                    c.effect_kind,
+                    c.damage_type,
+                    c.is_dot,
+                    c.is_aoe,
+                    {can_crit_expression} AS can_crit,
+                    c.source,
+                    c.confidence
+                FROM {self.TABLE} c
+                WHERE c.skill_rank_id = ?
+                ORDER BY c.coefficient_number
                 """,
                 (int(skill_rank_id),),
             ).fetchall()
