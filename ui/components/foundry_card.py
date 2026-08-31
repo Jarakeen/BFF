@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPainter, QPixmap, QPen
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
@@ -17,16 +19,24 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from engine.config import get_resource_path
 from ui.theme.fonts import Fonts
 
 
 class FoundryCard(QFrame):
-    """Dense book-panel card used throughout the Foundry UI."""
+    """Dense book-panel card with restrained grimoire ornamentation."""
+
+    _WATERMARKS = {
+        "compass": "compass_watermark.svg",
+        "feather": "feather_watermark.svg",
+    }
 
     def __init__(self, title: str = "", icon: str = "", parent=None):
         super().__init__(parent)
         self.setProperty("foundryCard", True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self._watermark: QPixmap | None = None
+        self._watermark_opacity = 0.08
 
         self.header = QWidget()
         self.header.setProperty("cardHeader", True)
@@ -112,6 +122,23 @@ class FoundryCard(QFrame):
         self.setProperty("parchment", True)
         self.style().unpolish(self)
         self.style().polish(self)
+        self.update()
+        return self
+
+    def set_watermark(self, kind: str | None, opacity: float = 0.08):
+        """Paint a very faint compass or feather mark in the lower-right corner."""
+        self._watermark = None
+        self._watermark_opacity = max(0.0, min(0.25, float(opacity)))
+        filename = self._WATERMARKS.get(str(kind or "").lower())
+        if filename:
+            path = get_resource_path(
+                "assets", "themes", "bff", "grimoire", "assets", filename
+            )
+            if path.exists():
+                pixmap = QPixmap(str(path))
+                if not pixmap.isNull():
+                    self._watermark = pixmap
+        self.update()
         return self
 
     def addWidget(self, widget: QWidget):
@@ -132,3 +159,45 @@ class FoundryCard(QFrame):
             item = self.body_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
+        ornament = QColor("#6F5736" if parchment else "#9A794A")
+        ornament.setAlpha(105 if parchment else 82)
+        pen = QPen(ornament, 1.0)
+        painter.setPen(pen)
+
+        # Tiny binding-like corner marks. Deliberately restrained: they should
+        # register as craftsmanship, not announce a theme park.
+        inset = 4
+        arm = 8
+        w = self.width() - 1
+        h = self.height() - 1
+        painter.drawLine(inset, inset, inset + arm, inset)
+        painter.drawLine(inset, inset, inset, inset + arm)
+        painter.drawLine(w - inset, inset, w - inset - arm, inset)
+        painter.drawLine(w - inset, inset, w - inset, inset + arm)
+        painter.drawLine(inset, h - inset, inset + arm, h - inset)
+        painter.drawLine(inset, h - inset, inset, h - inset - arm)
+        painter.drawLine(w - inset, h - inset, w - inset - arm, h - inset)
+        painter.drawLine(w - inset, h - inset, w - inset, h - inset - arm)
+
+        if self._watermark is not None and self.width() > 130 and self.height() > 110:
+            target = min(92, max(52, min(self.width(), self.height()) // 3))
+            scaled = self._watermark.scaled(
+                target,
+                target,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            painter.setOpacity(self._watermark_opacity)
+            x = self.width() - scaled.width() - 14
+            y = self.height() - scaled.height() - 12
+            painter.drawPixmap(x, y, scaled)
+
+        painter.end()
