@@ -20,10 +20,12 @@ from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepositor
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
+from minmax.resource_timeline import ResourceTimelineEventKind
 from minmax.saved_build_activity import create_saved_bar_activity_plan
 from models.build_model import PlayerBuild
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
+_CP_DYNAMIC_PREFIX = "Champion Point is dynamic or not yet stat-mapped: "
 
 
 def _load_saved_builds(path: Path) -> list[PlayerBuild]:
@@ -61,6 +63,42 @@ def _audit_progression(build: PlayerBuild) -> CharacterProgression:
         ),
         owned_skill_lines=tuple(sorted(armor_lines)),
     )
+
+
+def _build_relevant_unresolved(
+    build: PlayerBuild,
+    messages: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Keep audit diagnostics scoped to mechanics relevant to this saved build.
+
+    StaticBuildInputResolver temporarily assumes all passive/non-slottable CP
+    stars are maxed and therefore may report dynamic/unmapped stars that are not
+    present in the saved build at all. That global character-sheet diagnostic is
+    useful elsewhere but overwhelms this Phase 4 saved-build audit. Here we keep
+    dynamic CP warnings only for names explicitly present in the saved build and
+    preserve every non-CP warning unchanged.
+    """
+
+    selected_cp = {
+        str(entry.Name or "").strip().casefold()
+        for entry in build.ChampionPoints
+        if str(entry.Name or "").strip()
+    }
+    filtered: list[str] = []
+    seen: set[str] = set()
+    for raw_message in messages:
+        message = str(raw_message or "").strip()
+        if not message:
+            continue
+        if message.startswith(_CP_DYNAMIC_PREFIX):
+            cp_name = message[len(_CP_DYNAMIC_PREFIX):].strip().casefold()
+            if cp_name not in selected_cp:
+                continue
+        if message in seen:
+            continue
+        seen.add(message)
+        filtered.append(message)
+    return tuple(filtered)
 
 
 def audit_saved_build_sustain(
@@ -142,6 +180,10 @@ def audit_saved_build_sustain(
         "Audit progression assumption: "
         + (", ".join(progression.owned_skill_lines) if progression.owned_skill_lines else "no armor lines inferred")
     )
+    print(
+        "Audit dynamic-event boundary: no heavy attacks, potion resource events, "
+        "conditional recovery windows, or triggered restore procs are auto-scheduled"
+    )
     print()
 
     print("Deterministic saved-bar activity plan:")
@@ -167,6 +209,27 @@ def audit_saved_build_sustain(
         )
 
     sustain = run.sustain
+    recovery_applied = sum(
+        max(0, event.applied_change)
+        for event in run.timeline.events
+        if event.kind is ResourceTimelineEventKind.RECOVERY_TICK
+    )
+    explicit_restore_applied = sum(
+        max(0, event.applied_change)
+        for event in run.timeline.events
+        if event.kind is ResourceTimelineEventKind.RESTORATION
+    )
+    recovery_wasted = sum(
+        max(0, event.wasted_restore)
+        for event in run.timeline.events
+        if event.kind is ResourceTimelineEventKind.RECOVERY_TICK
+    )
+    explicit_restore_wasted = sum(
+        max(0, event.wasted_restore)
+        for event in run.timeline.events
+        if event.kind is ResourceTimelineEventKind.RESTORATION
+    )
+
     print()
     print("Sustain result:")
     print(f"  Sustains:              {sustain.sustains}")
@@ -175,8 +238,10 @@ def audit_saved_build_sustain(
     print(f"  Minimum resource:      {sustain.minimum_amount}")
     print(f"  Total cost attempted:  {sustain.total_cost_attempted}")
     print(f"  Total cost paid:       {sustain.total_cost_paid}")
-    print(f"  Restoration applied:   {sustain.total_restoration_applied}")
-    print(f"  Restoration wasted:    {sustain.total_restoration_wasted}")
+    print(f"  Recovery applied:      {recovery_applied}")
+    print(f"  Explicit restores:     {explicit_restore_applied}")
+    print(f"  Recovery wasted:       {recovery_wasted}")
+    print(f"  Restore wasted:        {explicit_restore_wasted}")
     if sustain.first_failure is not None:
         failure = sustain.first_failure
         print(
@@ -185,9 +250,12 @@ def audit_saved_build_sustain(
             f"cost={failure.attempted_cost}"
         )
 
-    unresolved = tuple(context.unresolved_gear_effects) + tuple(run.unresolved)
+    unresolved = _build_relevant_unresolved(
+        build,
+        tuple(context.unresolved_gear_effects) + tuple(run.unresolved),
+    )
     print()
-    print("Unresolved:")
+    print("Build-relevant unresolved:")
     if unresolved:
         for message in unresolved:
             print(f"  - {message}")
