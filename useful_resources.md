@@ -109,3 +109,4 @@ A convenient calculator matching our expected number is evidence, not proof. ESO
 https://www.btvtools.com/
 https://www.esologs.com/
 https://eso-hub.com/en/buffs-debuffs
+https://game-icons.net/
