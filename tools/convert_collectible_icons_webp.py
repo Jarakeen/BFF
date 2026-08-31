@@ -128,6 +128,7 @@ def optimize(icon_dir: Path, *, apply: bool = False) -> dict[str, int]:
     already_webp = 0
     not_smaller = 0
     verified_identical = 0
+    verification_failed = 0
     conversions: dict[str, tuple[str, bytes, str]] = {}
 
     for index, (filename, path) in enumerate(sorted(referenced.items()), 1):
@@ -140,12 +141,17 @@ def optimize(icon_dir: Path, *, apply: bool = False) -> dict[str, int]:
         roundtrip = _decode_webp(webp_bytes)
 
         if original_image.size() != roundtrip.size() or _rgba_bytes(original_image) != _rgba_bytes(roundtrip):
-            raise RuntimeError(f"Pixel verification failed for {filename}; refusing conversion")
+            verification_failed += 1
+            if index % 1000 == 0:
+                print(f"  inspected {index:,}/{len(referenced):,} icon files")
+            continue
 
         verified_identical += 1
         original_size = path.stat().st_size
         if len(webp_bytes) >= original_size:
             not_smaller += 1
+            if index % 1000 == 0:
+                print(f"  inspected {index:,}/{len(referenced):,} icon files")
             continue
 
         target_name = f"{path.stem}.webp"
@@ -166,6 +172,7 @@ def optimize(icon_dir: Path, *, apply: bool = False) -> dict[str, int]:
             "manifest_entries": len(entry_files),
             "converted_files": converted_files,
             "verified_identical": verified_identical,
+            "verification_failed": verification_failed,
             "already_webp": already_webp,
             "not_smaller": not_smaller,
             "before_bytes": before_bytes,
@@ -231,6 +238,7 @@ def optimize(icon_dir: Path, *, apply: bool = False) -> dict[str, int]:
         "manifest_entries": len(entry_files),
         "converted_files": converted_files,
         "verified_identical": verified_identical,
+        "verification_failed": verification_failed,
         "already_webp": already_webp,
         "not_smaller": not_smaller,
         "before_bytes": before_bytes,
@@ -263,6 +271,7 @@ def main() -> None:
     print(f"Referenced files:     {result['referenced_files']:,}")
     print(f"Manifest entries:     {result['manifest_entries']:,}")
     print(f"Pixel-verified:       {result['verified_identical']:,}")
+    print(f"Verification failed:  {result['verification_failed']:,}")
     print(f"Files convertible:    {result['converted_files']:,}")
     print(f"Already WebP:         {result['already_webp']:,}")
     print(f"WebP not smaller:     {result['not_smaller']:,}")
