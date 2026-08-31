@@ -1,11 +1,11 @@
-🖤 Black Feather Foundry
-Updated Development Roadmap
-North Star
+# 🖤 Black Feather Foundry
+## Updated Development Roadmap
 
-BFF becomes a trustworthy, database-backed ESO combat, effects, encounter, and optimization engine that can explain not only what is optimal, but why.
+## North Star
 
-The core architecture is:
+BFF becomes a trustworthy, database-backed ESO combat, effects, encounter, and optimization engine that can explain not only **what** is optimal, but **why**.
 
+```text
 REAL ESO DATA
       ↓
 CANONICAL BUILD
@@ -29,98 +29,52 @@ ENCOUNTER OPTIMIZATION
 EXPLANATION
       ↓
 LOG VALIDATION
-PHASE 0 · Data Foundation
-Status: 🟢 Complete
+```
 
-The database and core ESO data infrastructure already exist.
+---
 
-Includes
-ESO database
-skills
-morphs
-skill ranks
-coefficients
-scaling information
-gear
-set effects
-encounter imports
-UESP encounter data
-repositories
-data services
-Exit criteria
+# PHASE 0 · Data Foundation
+**Status: 🟢 Complete**
 
-BFF has a reliable database-backed source for ESO information.
+Database-backed ESO information exists for skills, morphs, skill ranks, coefficients, gear, set effects, encounter imports, UESP encounter data, repositories, and data services.
 
-PHASE 1 · Canonical Build System
-Status: 🟢 / 🟡
+**Exit criteria:** BFF has a reliable database-backed source for ESO information.
 
-This is the foundation for everything else.
+---
 
-A Build becomes the single canonical representation of a character configuration.
+# PHASE 1 · Canonical Build System
+**Status: 🟢 / 🟡**
 
+A Build is the reusable canonical representation of one character configuration.
+
+```text
 Character
  └── Build
-      ├── Race
-      ├── Class
-      ├── Gear
-      │    ├── Sets
-      │    ├── Traits
-      │    └── Enchants
-      ├── Skills
-      ├── Morphs
-      ├── Ultimates
-      ├── Passives
-      ├── CP
-      ├── Mundus
-      ├── Food
-      ├── Potions
+      ├── Race / Class
+      ├── Gear / Traits / Enchants
+      ├── Skills / Morphs / Ultimates
+      ├── Passives / CP
+      ├── Mundus / Food / Potions
       └── Configuration
-Important architectural rule
+```
 
-A character may have multiple builds.
+A character may have many builds. The same saved Character → Build must ultimately be selectable everywhere, including Optimization, Raid Planning, Encounter Analysis, and Log Analysis. No rebuilding the same person five times because software apparently developed paperwork envy.
 
-The same character/build must then be available everywhere:
+**Remaining:** finish shared character-level progression/ownership persistence and make saved Character → Build selection authoritative across downstream pages.
 
-Builds
-   ↓
-Optimization
-   ↓
-Raid Planning
-   ↓
-Encounter Analysis
-   ↓
-Log Analysis
+**Exit criteria:** a real character can have reusable database-backed builds that downstream systems consume directly.
 
-No rebuilding the same character five times because apparently software enjoys administrative punishment.
+---
 
-Exit criteria
+# PHASE 2 · Effect Architecture
+**Status: 🟡 Advanced foundation**
 
-A real character can have a reusable, database-backed Build.
+The existing EffectVariant / effect-resolution architecture remains authoritative for effect identity, category, magnitude, duration, chance, cooldown, trigger, target, conditions, and stacking.
 
-------------------------------------
-
-PHASE 2 · Effect Architecture
-Status: 🟡
-
-Make the existing effect architecture authoritative.
-
-EffectVariant already supports concepts such as:
-
-identity
-category
-magnitude
-duration
-chance
-cooldown
-trigger
-target
-conditions
-stacking
-
-Pipeline
+```text
 ESO Database
      ↓
-Skill / Morph
+Skill / Morph / Gear
      ↓
 EffectVariant
      ↓
@@ -129,118 +83,124 @@ Effect Repository
 Build Effect Resolver
      ↓
 Normalized Effects
-Critical rule
+```
 
-Do not create a second hard-coded effect dictionary.
+**Rule:** do not create a second competing hard-coded effect dictionary.
 
-The existing effect-resolution system remains authoritative.
+**Remaining:** broaden real-build effect detection and character-owned passive coverage while keeping conditional effects out of standing state.
 
-Exit criteria
+**Exit criteria:** a real build exposes the effects it actually provides, with unresolved/conditional behavior explicit.
 
-A real build can expose the effects it actually provides.
+---
 
-------------------------------------
+# PHASE 3 · Static Combat Rules Engine
+**Status: 🟢 Complete pending final real-DB closeout audit / full-suite confirmation**
 
-PHASE 3 · Static Combat Rules Engine
-Status: 🟢 foundation / 🟡 integration
+Phase 3 establishes one explainable static combat calculation with separate modifier stages rather than one giant multiplier bucket.
 
-This is where the math you've provided becomes useful.
+## Authoritative static damage path
 
-The authoritative path should be:
-
-Build
- ↓
-Skill / Morph
- ↓
-Scaling Resolution
- ↓
-Database Coefficient
- ↓
-Raw Skill Damage
- ↓
-Build / Stat Modifiers
- ↓
-Crit
- ↓
-Penetration
- ↓
-Target Mitigation
- ↓
+```text
+Database coefficient
+      ↓
+Raw component value
+      ↓
+Attacker Damage Done
+      ↓
+Critical eligibility / expected crit
+      ↓
 Target Critical Resistance
- ↓
-Final Damage
+      ↓
+Resistance / penetration mitigation
+      ↓
+Target Damage Taken
+      ↓
+Final damage
+```
 
-This is already the intended architecture documented in the project.
+## Completed Phase 3 foundations
 
-Required components
-Character stats
-Max Magicka
-Max Stamina
-Max Health
-Weapon Damage
-Spell Damage
-Critical Chance
-Critical Damage
-Penetration
-Recovery
-cost reduction
-Damage
-coefficients
-scaling
-raw damage
-damage type
-direct damage
-DoT
-mixed damage
-proc damage
-status damage
-Defense
-physical resistance
-spell resistance
-debuffs
-penetration
-mitigation
-critical resistance
-damage taken
-Modifier ordering
+### Shared character / healer / tank math
+- 🟢 standing primary/derived stat pipeline retained and audited
+- 🟢 Critical Healing represented separately
+- 🟢 Block Cost first-class calculator
+- 🟢 Block Mitigation first-class calculator
+- 🟢 ranged/projectile block-family routing for Deflect Bolts
+- 🟢 named CombatState buffs for major/minor offensive, defensive, recovery, healing, vulnerability/protection families
 
-This is important.
+### Damage routing
+- 🟢 Damage Done routed by generic, type, Direct/DoT, AoE/single-target categories
+- 🟢 Damage Taken kept target-side and later than mitigation
+- 🟢 Protection/Vulnerability do not leak into attacker stats
+- 🟢 target Critical Resistance modeled separately from armor resistance
+- 🟢 CP160+ Critical Resistance conversion: 66 rating removes 1 percentage point of crit bonus, floor at zero
 
-Penetration, mitigation, damage done, damage taken, critical modifiers, etc. cannot simply be dumped into one multiplier bucket.
+### Skill coefficients
+- 🟢 type-8 formula unified: `A * MaxStat + B * Power + C`
+- 🟢 UESP `r` retained as regression-fit metadata and never multiplied into game value
+- 🟢 only the exact UESP `-1/-1/-1/-1` coefficient sentinel is inactive
+- 🟢 valid negative coefficients are preserved
+- 🟢 duplicate legacy coefficient path reconciled with the verified Phase 3 implementation
 
-Known missing pieces
+### Per-component semantics
+- 🟢 canonical key: `skill_rank_id + coefficient_number`
+- 🟢 effect kind: damage / heal / shield / utility / unknown
+- 🟢 damage type, periodicity, target shape and crit eligibility stored independently
+- 🟢 normal skill damage and healing are crit-eligible by default
+- 🟢 shield / utility crit eligibility is not applicable (`NULL`)
+- 🟢 proc/set crit eligibility lives in a separate policy layer
+- 🟢 current proc policy foundation:
+  - offensive-stat-scaled proc → crit eligible
+  - Max-Health-scaled proc → cannot crit
+  - Oblivion damage → cannot crit
+  - escalating/modifier-style proc → cannot crit
+  - unresolved/flat proc → remains unknown until proven
 
-The current project audit already identified:
+### Component database coverage
+- Active coefficient rows audited: **3,208**
+- Persisted qualified classifications: **2,376**
+- Intentionally unresolved active rows: **824**
+- Missing fragments: **8**
+- Slot mismatches: **0**
 
-Damage Done → skill damage wiring
-Damage Taken → skill damage wiring
-Critical Resistance
+The unresolved rows are not a Phase 3 blocker. They remain explicit rather than being guessed from names or vague tooltip text.
 
-Exit criteria
+### Tooltip / healing validation
+Combat Prayer was used as a real saved-build downstream validation case.
 
-One authoritative static combat calculation.
+- observed tooltip: **9436**
+- closest auditable modeled scenario: **9444.014264**
+- residual: **8.014264 points ≈ 0.085%**
 
-No duplicate formulas living in random corners of the codebase.
+This residual is accepted for Phase 3. It is small enough to plausibly reflect hidden precision, tooltip rounding, exact live state, or saved-build drift. The formula will **not** be altered with an unexplained correction factor merely to force an exact historical match.
 
-------------------------------------
+## Phase 3 non-goals / deferred work
+- exhaustive resolution of all 824 ambiguous components
+- full proc/set temporal engine
+- sustain-over-time simulation
+- rotation engine
+- encounter simulation
+- ESO Logs as a canonical skill-math dependency
+- exact integer tooltip reproduction for every ESO ability
 
-PHASE 4 · Resource & Sustain Engine
-Status: 🔴
+Runtime/log observations may be used later as validation/corroboration, not as the normal source of static skill semantics.
 
-This gets promoted earlier because the math shows it isn't merely a character-sheet stat.
+## Phase 3 exit criteria
+- one authoritative static combat calculation
+- no competing coefficient formulas
+- modifier stages remain separated and explainable
+- unresolved evidence remains explicit
+- real classified database component can traverse the complete static damage path
+- full test suite green
 
-Sustain includes:
+---
 
-recovery
-cost reduction
-heavy attack restoration
-flat restoration
-external resource restoration
-resource costs
-resource consumption
+# PHASE 4 · Resource & Sustain Engine
+**Status: 🔴 Next major math phase**
 
-The engine needs to understand:
+Model recovery, cost reduction, skill costs, heavy-attack restoration, flat restoration, external restoration, and recovery restrictions over time.
 
+```text
 Resource State
 ├── Current
 ├── Maximum
@@ -250,522 +210,203 @@ Resource State
 ├── Heavy Attack Restoration
 ├── External Restoration
 └── Recovery Restrictions
-Eventually
-Resource
- ↓
-Combat Actions
- ↓
-Resource Consumption
- ↓
-Restoration
- ↓
-Resource Curve
-Exit criteria
+```
 
-BFF can determine whether a build can sustain its modeled activity rather than merely reporting recovery numbers.
+**Exit criteria:** BFF can determine whether a build sustains modeled activity rather than merely displaying recovery numbers.
 
-------------------------------------
+---
 
-PHASE 5 · Real Build Resolution
-Status: 🟡 CURRENT
+# PHASE 5 · Real Build Resolution
+**Status: 🟡**
 
-This is the immediate problem I'd prioritize.
+Prove the actual ESO database → effect resolver → build aggregation path across real saved builds.
 
-The abstraction works in tests, but the actual ESO database → effect resolver → build aggregation path has not yet been proven reliable.
-
-Debug path
+```text
 REAL DB
  ↓
-Skill / Morph
+Skill / Morph / Gear
  ↓
 EffectVariant
  ↓
-SkillEffectRepository
+Repositories
  ↓
-CharacterBuildSupportEffectResolver
- ↓
-Build Aggregation
+Build Resolver
  ↓
 Normalization
  ↓
 Coverage
-Rule
+```
 
-Trace the actual object at every stage.
+**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, and conditional effects without final-layer patching.
 
-Do not patch the final coverage layer because the test says everything is wonderful while the actual character says otherwise.
+---
 
-Exit criteria
+# PHASE 6 · Damage / Effect Components
+**Status: 🟢 Foundation delivered early in Phase 3 / 🟡 expansion later**
 
-A real database-backed character correctly reports:
+Per-coefficient component identity and independent damage routing now exist. Later expansion adds richer secondary damage, proc, status, execute, and utility relationships.
 
-buffs
-debuffs
-passives
-gear effects
-mythics
-arena effects
-skills
-conditional effects
+**Exit criteria:** BFF can explain each meaningful ability component and how it routes through combat math.
 
-------------------------------------
+---
 
-PHASE 6 · Damage / Effect Components
-Status: 🔴
+# PHASE 7 · Conditional Effects & Proc Engine
+**Status: 🔴**
 
-Turn abilities into meaningful components.
+Model triggers, conditions, chance, cooldown, duration, stacks, targets, status effects, proc sets, enchantments, and conditional buffs/debuffs.
 
-Ability
-├── Direct Damage
-├── DoT
-├── Secondary Damage
-├── Proc
-├── Status Effect
-├── Execute
-└── Utility
+Proc critical-eligibility policy exists as a static foundation, but temporal proc behavior belongs here.
 
-And every damage event carries:
+**Exit criteria:** BFF can calculate expected conditional effect behavior without treating procs as permanent sheet stats.
 
-DamageEvent
-├── Source
-├── Target
-├── Type
-├── Component
-├── Scaling
-├── Modifiers
-└── Result
+---
 
-This matters because direct damage and DoTs do not interact with every amplifier in the same way.
+# PHASE 8 · Combat State
+**Status: 🟢 Named-buff/static-state foundation / 🔴 temporal engine**
 
-Exit criteria
+Named active buffs and target states already route through static combat calculations. Full time-aware CombatState remains later work.
 
-BFF can explain what kind of damage an ability actually produces.
-
-------------------------------------
-
-PHASE 7 · Conditional Effects & Proc Engine
-Status: 🔴
-
-Now effects become temporal.
-
-Model:
-
-triggers
-conditions
-chance
-cooldown
-duration
-stacks
-targets
-status effects
-proc sets
-enchantments
-conditional buffs
-conditional debuffs
-
-Conceptually:
-
-Trigger
- ↓
-Condition Check
- ↓
-Probability
- ↓
-Effect
- ↓
-Duration
- ↓
-Expiration
-
-Status effects and proc sets belong here because their contribution depends on events rather than simply existing on the character sheet.
-
-Exit criteria
-
-BFF can calculate expected conditional effect behavior.
-
-------------------------------------
-
-PHASE 8 · Combat State
-Status: 🔴
-
-Now we introduce time.
-
+```text
 CombatState
-├── Time
-├── Phase
+├── Time / Phase
 ├── Target State
 ├── Player State
 ├── Resources
-├── Buffs
-├── Debuffs
-├── Cooldowns
-├── Stacks
+├── Buffs / Debuffs
+├── Cooldowns / Stacks
 ├── Position
 └── Active Mechanics
+```
 
-This becomes the bridge between static math and actual combat.
+**Exit criteria:** BFF can answer “what is true right now?” rather than only “what can this build theoretically provide?”
 
-Exit criteria
+---
 
-BFF can answer:
+# PHASE 9 · Encounter Model
+**Status: 🟡**
 
-"What is true right now?"
+Mature the existing encounter framework into structured phases, bosses, mechanics, requirements, positioning, timers, state transitions, targets, damage windows, and evidence.
 
-rather than only:
+**Exit criteria:** BFF understands what an encounter actually demands.
 
-"What does this build theoretically have?"
+---
 
-------------------------------------
+# PHASE 10 · Encounter Evaluation
+**Status: 🟡**
 
-PHASE 9 · Encounter Model
-Status: 🟡
+Combine Encounter + Requirements + Roster + Builds and produce covered, redundant, resilient, insufficient, missing, conflict, and unknown outcomes.
 
-The encounter framework already exists.
+**Exit criteria:** BFF reliably evaluates a real roster against a real encounter.
 
-It needs to mature into structured encounter requirements:
+---
 
-Encounter
-├── Phases
-├── Bosses
-├── Mechanics
-├── Requirements
-├── Positioning
-├── Timers
-├── State Transitions
-├── Targets
-├── Damage Windows
-└── Evidence
+# PHASE 11 · Provider Assignment
+**Status: 🔴**
 
-The encounter model already defines mechanics, requirements, state transitions, conditions, and evidence concepts.
+Move from “does the roster have Major Force?” to “who should provide it here?” using role, build, uptime, range, target, conditions, positioning, conflicts, stacking, redundancy, and player restrictions.
 
-Exit criteria
+**Exit criteria:** BFF chooses sensible providers instead of merely listing coverage.
 
-BFF understands what an encounter actually demands.
+---
 
-------------------------------------
+# PHASE 12 · Build Optimization
+**Status: 🔴**
 
-PHASE 10 · Encounter Evaluation
-Status: 🟡 Current Phase 5 finish line
+The optimizer varies gear, sets, mythics, weapons, traits, enchants, skills, morphs, ultimates, CP, Mundus, food, potions, and configuration. It does not contain ESO math itself; it asks the rules engine.
 
-Combine:
+**Exit criteria:** BFF can explain why one candidate build improves expected outcome while preserving required coverage and sustain.
 
-Encounter
-+
-Requirements
-+
-Roster
-+
-Builds
+---
 
-and produce:
+# PHASE 13 · Rotation Engine
+**Status: 🔴**
 
-Result	Meaning
-🟢 Covered	Requirement satisfied
-🔵 Redundant	Multiple valid providers
-🛡️ Resilient	Requirement has backup
-🟡 Insufficient	Partially satisfied
-🔴 Missing	Not satisfied
-⚔️ Conflict	Requirements compete
-❔ Unknown	Insufficient evidence
+Start with semi-static rotations, then add dynamic priorities, duration/recast windows, resource awareness, proc alignment, execute, movement, interruptions, and mechanic handling.
 
-This is the practical Phase 5 finish line already identified in the project state.
+**Exit criteria:** BFF can produce/evaluate a realistic rotation from verified skill behavior and resource constraints.
 
-Exit criteria
+---
 
-BFF can reliably evaluate a real roster against a real encounter.
+# PHASE 14 · Combat Simulation
+**Status: 🔴**
 
-------------------------------------
-
-PHASE 11 · Provider Assignment
-Status: 🔴
-
-Now we stop asking:
-
-"Does someone have Major Force?"
-
-and start asking:
-
-"Who should provide Major Force?"
-
-Consider:
-
-role
-build
-uptime
-range
-target
-conditions
-positioning
-conflicts
-stacking
-redundancy
-player restrictions
-12 Players
-    ↓
-Encounter Requirements
-    ↓
-Available Capabilities
-    ↓
-Candidate Providers
-    ↓
-Optimal Assignment
-
-This is the bridge between Coverage and Optimization.
-
-------------------------------------
-
-PHASE 12 · Build Optimization
-Status: 🔴
-
-Now the optimizer is finally allowed to touch things.
-
-Candidate variables include:
-
-gear
-set
-mythic
-monster set
-weapon
-trait
-enchant
-skill
-morph
-ultimate
-CP
-Mundus
-food
-potion
-configuration
-
-The optimizer itself does not know ESO math.
-
-It asks the rules engine.
-
-Current Build
-     ↓
-Change One Variable
-     ↓
-Evaluate
-     ↓
-Recalculate
-     ↓
-Compare
-     ↓
-Rank
-
-That separation is already explicitly called for in the project architecture.
-
-Exit criteria
-
-BFF can make a recommendation such as:
-
-Replace X with Y because it increases expected encounter damage by Z while preserving required coverage and sustain.
-
-------------------------------------
-
-PHASE 13 · Rotation Engine
-Status: 🔴
-
-Start with the thing you've actually been asking for recently:
-
-Semi-static rotations
-
-Rather than immediately attempting a perfect combat simulator.
-
-Priority
- ↓
-Skill Duration
- ↓
-Recast Window
- ↓
-Resource Cost
- ↓
-Proc Alignment
- ↓
-Ultimate
-
-Then expand into:
-
-dynamic priorities
-resource awareness
-proc alignment
-execute
-movement
-interruptions
-mechanic handling
-
-Rotations must account for skill duration, cost, damage, resource constraints, and utility.
-
-------------------------------------
-
-PHASE 14 · Combat Simulation
-Status: 🔴
-
-Only after the preceding pieces are trustworthy.
-
+```text
 CombatState
       ↓
 Action
       ↓
-Effect
-      ↓
-Damage
+Effect / Damage
       ↓
 Resource Change
       ↓
 State Change
       ↓
 Next Action
+```
 
-Eventually:
+**Exit criteria:** BFF can model combat over time.
 
-0s ─────────────────────────────── 180s
-│       │          │       │
-Cast    Proc       Move    Phase
-│       │          │       │
-Damage  Buff       Mechanic Transition
-Exit criteria
+---
 
-BFF can model an encounter over time.
+# PHASE 15 · Encounter-Aware Optimization
+**Status: 🔴**
 
-------------------------------------
+Compare builds across DPS, burst, sustained damage, execute, uptime, sustain, survivability, positioning, mechanic compliance, support contribution, phase compression, and execution complexity.
 
-PHASE 15 · Encounter-Aware Optimization
-Status: 🔴
+**Exit criteria:** BFF answers which build produces the better outcome in this encounter, not merely which one has the largest character-sheet number.
 
-This is where BFF becomes substantially more interesting than a build calculator.
+---
 
-The optimizer can finally compare:
+# PHASE 16 · Explanation Engine
+**Status: 🔴**
 
-Build A
-vs
-Build B
+Every recommendation should expose change, expected impact, reason, tradeoff, encounter effect, confidence, and evidence.
 
-across:
+**Exit criteria:** recommendations are inspectable and defensible.
 
-DPS
-burst
-sustained damage
-execute
-uptime
-sustain
-survivability
-positioning
-mechanic compliance
-support contribution
-phase compression
-complexity
+---
 
-The question becomes:
+# PHASE 17 · ESO Logs Validation
+**Status: 🔴**
 
-"Which build produces the better outcome in this encounter?"
+Use logs as a later validation feedback loop:
 
-not:
-
-"Which build has the biggest number on the character sheet?"
-
-That distinction is the entire point.
-
-------------------------------------
-
-PHASE 16 · Explanation Engine
-Status: 🔴
-
-Every recommendation should be explainable.
-
-RECOMMENDATION
-
-Change:
-     X → Y
-
-Expected Impact:
-     +4.7% encounter damage
-
-Why:
-     Better scaling during the primary damage window
-
-Tradeoff:
-     -8% sustain margin
-
-Encounter Effect:
-     Still sustainable
-
-Confidence:
-     High
-
-Evidence:
-     Database + validated combat model
-
-The existing project direction already envisions this level of explanation rather than simply displaying "Insufficient Major Force."
-
-------------------------------------
-
-PHASE 17 · ESO Logs Validation
-Status: 🔴
-
-Finally:
-
+```text
 MODEL
   ↓
 Expected Result
   ↓
-REAL ESO LOG
-  ↓
-Observed Result
+Observed Log Result
   ↓
 Difference
   ↓
 Diagnosis
   ↓
 Model Refinement
+```
 
-This becomes the feedback loop that keeps BFF honest.
+Logs are validation/corroboration, not a substitute for authoritative static rules when those rules can be sourced directly.
 
-------------------------------------
+---
 
-PHASE 18 · Strategy Engine
-Status: 🔴
+# PHASE 18 · Strategy Engine
+**Status: 🔴**
 
-Separate from raw optimization.
+Evaluate safe, balanced, aggressive, and experimental strategies against roster capability, encounter risk, execution difficulty, confidence, expected gain, and failure cost.
 
-The strategy layer decides things like:
+**Exit criteria:** BFF can prefer a slightly lower theoretical ceiling when it produces the better practical outcome for the actual group.
 
-Safe Push
-Balanced
-Aggressive
-Experimental
+---
 
-while considering:
+# PHASE 19 · Full Raid Optimizer
+**Status: 🔴**
 
-player preferences
-roster capability
-encounter risk
-execution difficulty
-confidence
-evidence
-expected gain
-failure cost
-
-This is where BFF can eventually say:
-
-"This is technically 2.3% better, but it requires perfect uptime during a mechanic your group currently struggles with. The safer option is probably better."
-
-Which is much more useful than worshipping the spreadsheet.
-
-------------------------------------
-
-PHASE 19 · Full Raid Optimizer
-Status: 🔴
-
-The final system becomes:
-
+```text
 12 CHARACTERS
        ↓
 12 BUILDS
        ↓
-ENCOUNTER
-       ↓
-REQUIREMENTS
+ENCOUNTER / REQUIREMENTS
        ↓
 CAPABILITY ANALYSIS
        ↓
@@ -779,82 +420,73 @@ EXPECTED OUTCOME
        ↓
 STRATEGY OPTIONS
        ↓
-RECOMMENDATION
-       ↓
-EXPLANATION
+RECOMMENDATION + EXPLANATION
+```
 
-And eventually:
+**Exit criteria:** BFF can recommend the strongest configuration for a specific roster, encounter, strategy, and execution level.
 
-"Here is the strongest configuration for this specific roster, encounter, strategy, and execution level."
+---
 
-🧭 Where We Actually Are
+# 🧭 Where We Actually Are
 
-Based on the material you've given me so far:
+| Area | Status |
+|---|---|
+| ESO database | 🟢 |
+| Skill / morph data | 🟢 |
+| Skill coefficients | 🟢 |
+| Type-8 coefficient semantics | 🟢 unified |
+| Skill scaling | 🟢 |
+| Raw skill damage | 🟢 |
+| Normal skill crit eligibility | 🟢 |
+| Crit calculation | 🟢 |
+| Critical Healing | 🟢 |
+| Critical Resistance | 🟢 |
+| Penetration | 🟢 |
+| Mitigation | 🟢 |
+| Damage Done → skills | 🟢 |
+| Damage Taken → skills | 🟢 |
+| Per-component damage routing | 🟢 foundation |
+| Component classification DB | 🟢 2,376 persisted / 824 explicit unresolved |
+| Block Cost | 🟢 |
+| Block Mitigation | 🟢 |
+| Named CombatState buffs | 🟢 foundation |
+| Proc crit eligibility | 🟢 policy foundation |
+| Combat Prayer tooltip validation | 🟢 ~0.085% residual accepted |
+| Gear → effects | 🟢 / 🟡 |
+| Build effect orchestration | 🟡 |
+| Real build effect detection | 🟡 |
+| Sustain model | 🔴 |
+| Full status/proc temporal engine | 🔴 |
+| Conditional uptime | 🔴 |
+| Temporal Combat State | 🔴 |
+| Encounter requirements | 🟡 |
+| Encounter evaluation | 🟡 |
+| Provider assignment | 🔴 |
+| Build optimization | 🔴 |
+| Rotation evaluation | 🔴 |
+| Combat simulation | 🔴 |
+| Encounter optimization | 🔴 |
+| Explanation engine | 🔴 |
+| Log validation | 🔴 |
+| Strategy engine | 🔴 |
 
-Area	Status
-ESO database	🟢
-Skill/morph data	🟢
-Skill coefficients	🟢
-Skill scaling	🟢
-Raw skill damage	🟢
-Crit calculation	🟢
-Penetration	🟢
-Mitigation	🟢
-External math validation	🟢
-Gear → effects	🟢/🟡
-Build effect orchestration	🟡
-Real build effect detection	🟡 Needs debugging
-Damage Done → skills	🔴
-Damage Taken → skills	🔴
-Critical Resistance	🔴
-Damage components	🔴
-Sustain model	🔴
-Status/proc engine	🔴
-Conditional uptime	🔴
-Combat State	🔴
-Encounter requirements	🟡
-Encounter evaluation	🟡
-Provider assignment	🔴
-Build optimization	🔴
-Rotation evaluation	🔴
-Combat simulation	🔴
-Encounter optimization	🔴
-Explanation engine	🔴
-Log validation	🔴
-Strategy engine	🔴
+---
 
-The important correction is that we are not starting from scratch. The underlying database-backed calculation path already exists, and the mitigation math has been externally validated under the tested assumptions. The remaining problem is connecting the islands and expanding them into a coherent rules engine.
+# 🎯 Immediate Development Order After Phase 3
 
-🎯 Immediate Development Order
+1. **Phase 3 closeout:** real-DB end-to-end classified damage audit + final full suite
+2. **Style / UX cleanup checkpoint** before the next large systems phase
+3. **Real build effect resolution** and shared Character → Build reuse
+4. **Resource / sustain engine**
+5. **Conditional effect / proc engine**
+6. **Temporal Combat State**
+7. **Encounter requirements and evaluation**
+8. **Provider assignment**
+9. **Build optimization**
+10. **Rotation / simulation**
+11. **Encounter-aware optimization**
+12. **Explanation**
+13. **Log validation**
+14. **Strategy engine**
 
-If I were directing the work from here, I would make the next sequence:
-
-1. REAL BUILD EFFECT RESOLUTION
-          ↓
-2. COMPLETE STATIC DAMAGE PIPELINE
-          ↓
-3. DAMAGE COMPONENT MODEL
-          ↓
-4. RESOURCE / SUSTAIN MODEL
-          ↓
-5. CONDITIONAL EFFECT / PROC ENGINE
-          ↓
-6. COMBAT STATE
-          ↓
-7. ENCOUNTER REQUIREMENTS
-          ↓
-8. ENCOUNTER EVALUATION
-          ↓
-9. PROVIDER ASSIGNMENT
-          ↓
-10. BUILD OPTIMIZATION
-          ↓
-11. ROTATION / SIMULATION
-          ↓
-12. ENCOUNTER-AWARE OPTIMIZATION
-          ↓
-13. EXPLANATION
-          ↓
-14. LOG VALIDATION
-          ↓
-15. STRATEGY
+The project is no longer a set of disconnected calculators. Phase 3 establishes a coherent, auditable static combat rules engine that later systems can consume without reimplementing ESO math.
