@@ -11,7 +11,14 @@ def test_bridge_loads_canonical_builds_when_catalog_exists(tmp_path: Path):
 
     roster = BuildRoster(
         Members=[
-            PlayerBuild(Name="Magrat", Gamertag="Jarakeen", BuildName="DF Healer", EsoClass="Warden")
+            PlayerBuild(
+                Name="Magrat",
+                Gamertag="Jarakeen",
+                BuildName="DF Healer",
+                EsoClass="Warden",
+                AttributeMagicka=64,
+                Mundus="The Ritual",
+            )
         ]
     )
     bridge.save(roster)
@@ -22,6 +29,8 @@ def test_bridge_loads_canonical_builds_when_catalog_exists(tmp_path: Path):
     assert len(loaded.Members) == 1
     assert loaded.Members[0].BuildName == "DF Healer"
     assert loaded.Members[0].Gamertag == "Jarakeen"
+    assert loaded.Members[0].AttributeMagicka == 64
+    assert loaded.Members[0].Mundus == "The Ritual"
 
 
 def test_bridge_save_keeps_legacy_mirror_and_canonical_catalog(tmp_path: Path):
