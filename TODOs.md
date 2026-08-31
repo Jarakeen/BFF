@@ -6,7 +6,7 @@ Tasks outside of the master roadmap
 - [ ] import Rumors and find a page to put them on
 - [ ] create a flow thru of buttons on the broadcast desk to make it more obvious that things are getting sent to OBS and sent to a report for Archive
 - [ ] add checkboxes - and a way to check off multiple at a time - on the row of Collectibles
-- [ ] import images for the collectibles and add to each corresponding Collectible (we wrote a tool/parser)
+- [X] import images for the collectibles and add to each corresponding Collectible (we wrote a tool/parser)
 - [ ] hook up the google sheets for the achievements page
 - [ ] add images to the Achievements?
 - [ ] redo Settings page to go with the Settings mockup in the Docs folder
@@ -16,4 +16,10 @@ Tasks outside of the master roadmap
 - [ ] add a "Pages On/Off" setting on the Settings tab that allows you to hide pages by main menu (Broadcast, Collectible, Acheivement, Raid Engine)
 - [ ] Achievement page - details box, make the text much larger - style it like the wireframe
 - [ ] Create a page for the Collections main menu button with circle and/or line graphs that shows your progress in each submenu category
-- [ ] 
+- [ ] | What it actually is                  | Current-ish name           | Better name                                                         |
+| ------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
+| ESO account achievements             | `collections_page.py`      | `achievements_page.py`                                              |
+| ESO collectibles, mounts, pets, etc. | `collectibles_page.py`     | `collectibles_page.py`                                              |
+| OBS achievement display/control desk | `achievement_desk_page.py` | `broadcast_achievements_page.py` or                   `achievement_broadcast_page.py` |
+
+- [ ] add collectible ownership checkboxes, Shift-range selection, pending changes, and batch save; then rename the confusing Achievements/Collections files and references safely.

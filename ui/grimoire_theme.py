@@ -1,11 +1,27 @@
 from __future__ import annotations
-
-from PySide6.QtWidgets import QApplication
-
+from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtCore import QObject, QEvent, Qt
+from PySide6.QtGui import QColor, QPainter
 from engine.config import get_resource_path
 
-
 THEME_DIR = ("assets", "themes", "bff", "grimoire")
+
+COLORS = {
+    "base": "#061315",
+    "shadow": "#081719",
+    "surface_1": "#0B2022",
+    "surface_2": "#10292B",
+    "surface_hover": "#153436",
+    "teal": "#164447",
+    "teal_bright": "#1B5154",
+    "gold": "#A1844F",
+    "gold_soft": "#C6A361",
+    "parchment": "#CBBB97",
+    "ink": "#241D16",
+    "text": "#E2DAC9",
+    "muted": "#9DA5A0",
+    "danger": "#402322",
+}
 
 
 UX_OVERRIDES = r"""
@@ -78,16 +94,27 @@ QFrame[parchment="true"] QTextEdit {
 """
 
 
+
+
 def load_grimoire_stylesheet() -> str:
     """Load the BFF Grimoire QSS and resolve bundled asset URLs."""
     qss_path = get_resource_path(*THEME_DIR, "grimoire.qss")
+
     if not qss_path.exists():
         return ""
 
     qss = qss_path.read_text(encoding="utf-8")
-    asset_dir = get_resource_path(*THEME_DIR, "assets").as_posix()
-    return qss.replace("@ASSET_PATH@", asset_dir) + "\n" + UX_OVERRIDES
+    asset_dir = get_resource_path(
+        *THEME_DIR,
+        "assets",
+    ).as_posix()
 
+    qss = qss.replace(
+        "@ASSET_PATH@",
+        asset_dir,
+    )
+
+    return qss + "\n" + UX_OVERRIDES
 
 def apply_grimoire_theme(app: QApplication) -> bool:
     """Apply the Grimoire theme globally. Returns False if its QSS is unavailable."""
@@ -97,3 +124,65 @@ def apply_grimoire_theme(app: QApplication) -> bool:
     app.setStyle("Fusion")
     app.setStyleSheet(qss)
     return True
+
+
+def set_role(widget, role: str) -> None:
+    widget.setProperty("role", role)
+    _repolish(widget)
+
+def make_book_panel(widget, raised: bool = False) -> None:
+    widget.setProperty("bookPanel", True)
+    widget.setProperty("raised", raised)
+    _repolish(widget)
+
+def make_parchment(widget, enabled: bool = True) -> None:
+    """
+    Give a widget a parchment surface.
+    Recommended for Observation, Archive Preview, and document-like Timeline views.
+    """
+    widget.setProperty("parchment", enabled)
+    _repolish(widget)
+
+def set_button_variant(button: QPushButton, variant: str = "primary") -> None:
+    button.setProperty("variant", variant)
+    _repolish(button)
+
+def _repolish(widget) -> None:
+    style = widget.style()
+    style.unpolish(widget)
+    style.polish(widget)
+    widget.update()
+
+class SubtleStudFilter(QObject):
+    """
+    Optional tiny burnished-gold 'book binding' dots on button edges.
+
+    It deliberately paints only two 1.0px dots, with very low opacity.
+    This is meant to read as depth/hardware, not decorative luggage.
+    """
+    def __init__(self, parent=None, opacity=0.22):
+        super().__init__(parent)
+        self.opacity = opacity
+
+    def eventFilter(self, obj, event):
+        if isinstance(obj, QPushButton) and event.type() == QEvent.Type.Paint:
+            # Let Qt finish the normal paint first, then overlay via a zero-delay update
+            # is unreliable; instead this filter is intended for use with StudButton below.
+            return False
+        return super().eventFilter(obj, event)
+
+class StudButton(QPushButton):
+    """Drop-in QPushButton with very subtle brass edge studs."""
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        c = QColor("#A1844F")
+        c.setAlphaF(0.22)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(c)
+        r = 1.0
+        y = self.height() / 2
+        painter.drawEllipse(5.0 - r, y - r, r * 2, r * 2)
+        painter.drawEllipse(self.width() - 5.0 - r, y - r, r * 2, r * 2)
+        painter.end()
