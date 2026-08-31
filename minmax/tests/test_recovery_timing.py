@@ -1,6 +1,7 @@
 from minmax.recovery_timing import (
     IN_COMBAT_RECOVERY_INTERVAL_SECONDS,
     RecoveryActivityState,
+    apply_scheduled_recovery_tick,
     resolve_in_combat_recovery_tick,
     schedule_in_combat_recovery_ticks,
 )
@@ -121,3 +122,65 @@ def test_recovery_schedule_rejects_invalid_time_window() -> None:
         assert "First recovery tick must be after time zero" in str(exc)
     else:
         raise AssertionError("Expected non-positive first tick to be rejected")
+
+
+def test_apply_recovery_tick_restores_resource_without_exceeding_maximum() -> None:
+    pool = _pool(ResourceType.MAGICKA, 1800)
+    event = schedule_in_combat_recovery_ticks(pool, duration_seconds=2.0)[0]
+
+    applied = apply_scheduled_recovery_tick(pool, 25000, event)
+
+    assert applied.before == 25000
+    assert applied.attempted_restore == 1800
+    assert applied.applied_restore == 1800
+    assert applied.after == 26800
+    assert applied.maximum == 30000
+
+
+def test_apply_recovery_tick_clamps_overheal_style_resource_waste_at_maximum() -> None:
+    pool = _pool(ResourceType.STAMINA, 1800)
+    event = schedule_in_combat_recovery_ticks(pool, duration_seconds=2.0)[0]
+
+    applied = apply_scheduled_recovery_tick(pool, 29500, event)
+
+    assert applied.attempted_restore == 1800
+    assert applied.applied_restore == 500
+    assert applied.after == 30000
+
+
+def test_apply_suppressed_recovery_tick_changes_nothing() -> None:
+    pool = _pool(ResourceType.STAMINA, 1600)
+    event = schedule_in_combat_recovery_ticks(
+        pool,
+        duration_seconds=2.0,
+        activity_at=lambda _time: RecoveryActivityState(blocking=True),
+    )[0]
+
+    applied = apply_scheduled_recovery_tick(pool, 20000, event)
+
+    assert applied.suppressed
+    assert applied.attempted_restore == 0
+    assert applied.applied_restore == 0
+    assert applied.after == 20000
+
+
+def test_apply_recovery_tick_rejects_resource_mismatch_and_invalid_current_amount() -> None:
+    magicka = _pool(ResourceType.MAGICKA, 1200)
+    stamina = _pool(ResourceType.STAMINA, 1200)
+    event = schedule_in_combat_recovery_ticks(stamina, duration_seconds=2.0)[0]
+
+    try:
+        apply_scheduled_recovery_tick(magicka, 20000, event)
+    except ValueError as exc:
+        assert "does not match pool" in str(exc)
+    else:
+        raise AssertionError("Expected resource mismatch to be rejected")
+
+    magicka_event = schedule_in_combat_recovery_ticks(magicka, duration_seconds=2.0)[0]
+    for invalid in (-1, 30001):
+        try:
+            apply_scheduled_recovery_tick(magicka, invalid, magicka_event)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"Expected invalid current amount {invalid} to be rejected")
