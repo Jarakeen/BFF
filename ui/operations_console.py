@@ -25,7 +25,34 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
-from ui.optimization_page import CORE_COVERAGE, EFFECT_ALIASES
+
+
+CORE_COVERAGE = (
+    "Major Courage",
+    "Major Berserk",
+    "Major Slayer",
+    "Minor Force",
+    "War Horn",
+    "Major Vulnerability",
+    "Major Breach",
+    "Crusher",
+    "Minor Maim",
+    "Minor Brittle",
+    "Orbs",
+    "Magickasteal",
+    "Minor Resolve",
+    "Minor Intellect",
+    "Purify",
+)
+
+EFFECT_ALIASES = {
+    "War Horn": ("war horn", "aggressive horn"),
+    "Orbs": ("orb", "necrotic orb", "energy orb", "shards"),
+    "Crusher": ("crusher", "crushing"),
+    "Magickasteal": ("magickasteal", "magicka steal", "restore magicka"),
+    "Purify": ("purify", "purifying"),
+    "Minor Brittle": ("minor brittle", "brittle"),
+}
 
 
 class OperationsConsole(FoundryPage):
