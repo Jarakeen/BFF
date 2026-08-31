@@ -25,20 +25,57 @@ def test_same_character_can_have_multiple_builds(tmp_path: Path):
     } == {catalog["characters"][0]["character_id"]}
 
 
-def test_character_identity_prefers_gamertag(tmp_path: Path):
+def test_same_gamertag_can_have_multiple_characters(tmp_path: Path):
     roster = BuildRoster(
         Members=[
             PlayerBuild(Name="Alice", Gamertag="AliceGT", BuildName="Parse"),
-            PlayerBuild(Name="Different Display Name", Gamertag="AliceGT", BuildName="Trial"),
+            PlayerBuild(Name="Different Character", Gamertag="AliceGT", BuildName="Trial"),
         ]
     )
 
     service = BuildCatalogService(tmp_path / "characters.json")
     catalog = service.import_legacy_roster(roster)
 
-    assert len(catalog["characters"]) == 1
+    assert len(catalog["characters"]) == 2
     assert len(catalog["builds"]) == 2
-    assert catalog["characters"][0]["gamertag"] == "AliceGT"
+    assert {character["name"] for character in catalog["characters"]} == {
+        "Alice",
+        "Different Character",
+    }
+    assert {character["gamertag"] for character in catalog["characters"]} == {
+        "AliceGT"
+    }
+    assert len({build["character_id"] for build in catalog["builds"]}) == 2
+
+
+def test_existing_character_id_is_preserved_for_same_account_and_character(tmp_path: Path):
+    service = BuildCatalogService(tmp_path / "characters.json")
+    catalog = service.new_catalog()
+    catalog["characters"].append(
+        {
+            "character_id": "existing-character-id",
+            "name": "Alice",
+            "gamertag": "AliceGT",
+            "owned_skill_lines": [],
+        }
+    )
+    service.save(catalog)
+
+    imported = service.import_legacy_roster(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Alice",
+                    Gamertag="AliceGT",
+                    BuildName="Healer",
+                )
+            ]
+        )
+    )
+
+    assert len(imported["characters"]) == 1
+    assert imported["characters"][0]["character_id"] == "existing-character-id"
+    assert imported["builds"][0]["character_id"] == "existing-character-id"
 
 
 def test_upsert_build_is_stable_for_same_character_and_name(tmp_path: Path):
@@ -145,3 +182,46 @@ def test_updating_owned_skill_lines_does_not_modify_build_payloads(tmp_path: Pat
         "BuildName": "Healer",
         "Mundus": "The Ritual",
     }
+
+
+def test_legacy_resync_preserves_existing_owned_skill_lines(tmp_path: Path):
+    service = BuildCatalogService(tmp_path / "characters.json")
+    initial = service.import_legacy_roster(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Alice",
+                    Gamertag="AliceGT",
+                    BuildName="Healer",
+                    EsoClass="Warden",
+                )
+            ]
+        )
+    )
+    service.save(initial)
+    character_id = initial["characters"][0]["character_id"]
+
+    service.set_owned_skill_lines(
+        character_id=character_id,
+        owned_skill_lines=["Undaunted", "Psijic Order"],
+    )
+
+    resynced = service.import_legacy_roster(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Alice",
+                    Gamertag="AliceGT",
+                    BuildName="Healer",
+                    EsoClass="Warden",
+                    Mundus="The Ritual",
+                )
+            ]
+        )
+    )
+
+    assert resynced["characters"][0]["character_id"] == character_id
+    assert resynced["characters"][0]["owned_skill_lines"] == [
+        "Undaunted",
+        "Psijic Order",
+    ]
