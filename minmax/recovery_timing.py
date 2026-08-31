@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from .conditional_recovery import TimedRecoveryModifier, additive_recovery_bonus_at
 from .resource_costs import ResourceType
 from .resource_state import StaticResourcePool
 
@@ -39,6 +40,8 @@ class RecoveryTick:
     resource: ResourceType
     interval_seconds: float
     displayed_recovery: int
+    additive_recovery_bonus: int
+    effective_recovery: int
     suppressed: bool
     restored_amount: int
 
@@ -71,24 +74,36 @@ RecoveryActivityResolver = Callable[[float], RecoveryActivityState]
 def resolve_in_combat_recovery_tick(
     pool: StaticResourcePool,
     activity: RecoveryActivityState = RecoveryActivityState(),
+    *,
+    additive_recovery_bonus: int = 0,
 ) -> RecoveryTick:
     """Resolve one ordinary in-combat ESO recovery tick.
 
     The character-sheet recovery value is the amount restored at the tick.
-    Ordinary in-combat recovery ticks occur every 2 seconds. Stamina recovery
-    is suppressed when blocking, sprinting, or sneaking at the tick instant.
-    Health and Magicka are not suppressed by those ordinary activity flags.
+    Temporary additive recovery modifiers are added before ordinary suppression
+    is evaluated. Ordinary in-combat recovery ticks occur every 2 seconds.
+    Stamina recovery is suppressed when blocking, sprinting, or sneaking at the
+    tick instant. Health and Magicka are not suppressed by those ordinary
+    activity flags.
 
-    Conditional effects that alter the resource affected by suppression are
-    deliberately outside this baseline contract.
+    Conditional effects that alter which resource is suppressed remain outside
+    this baseline contract.
     """
 
+    bonus = int(additive_recovery_bonus)
+    if bonus < 0:
+        raise ValueError(f"Additive recovery bonus cannot be negative: {bonus}")
+
+    displayed = int(pool.displayed_recovery)
+    effective = displayed + bonus
     suppressed = activity.suppresses(pool.resource)
-    restored = 0 if suppressed else int(pool.displayed_recovery)
+    restored = 0 if suppressed else effective
     return RecoveryTick(
         resource=pool.resource,
         interval_seconds=IN_COMBAT_RECOVERY_INTERVAL_SECONDS,
-        displayed_recovery=int(pool.displayed_recovery),
+        displayed_recovery=displayed,
+        additive_recovery_bonus=bonus,
+        effective_recovery=effective,
         suppressed=suppressed,
         restored_amount=restored,
     )
@@ -100,6 +115,7 @@ def schedule_in_combat_recovery_ticks(
     duration_seconds: float,
     first_tick_seconds: float = IN_COMBAT_RECOVERY_INTERVAL_SECONDS,
     activity_at: RecoveryActivityResolver | None = None,
+    recovery_modifiers: tuple[TimedRecoveryModifier, ...] = (),
 ) -> tuple[ScheduledRecoveryTick, ...]:
     """Schedule ordinary recovery ticks within one deterministic time window.
 
@@ -108,9 +124,10 @@ def schedule_in_combat_recovery_ticks(
     inventing a tick at time zero. A later combat timeline may pass a different
     first-tick offset when it already knows the resource recovery phase.
 
-    Activity is resolved independently at every tick instant. This matters for
-    Stamina because blocking, sprinting, or sneaking for one tick must not
-    suppress every other tick in the window.
+    Activity and timed recovery modifiers are resolved independently at every
+    tick instant. This matters because temporary effects may begin or expire
+    between ticks, and Stamina suppression for one tick must not suppress every
+    other tick in the window.
     """
 
     duration = float(duration_seconds)
@@ -133,10 +150,19 @@ def schedule_in_combat_recovery_ticks(
                 "Recovery activity resolver must return RecoveryActivityState; "
                 f"received {type(activity).__name__} at {time_seconds:g}s"
             )
+        bonus = additive_recovery_bonus_at(
+            recovery_modifiers,
+            resource=pool.resource,
+            time_seconds=time_seconds,
+        )
         scheduled.append(
             ScheduledRecoveryTick(
                 time_seconds=time_seconds,
-                tick=resolve_in_combat_recovery_tick(pool, activity),
+                tick=resolve_in_combat_recovery_tick(
+                    pool,
+                    activity,
+                    additive_recovery_bonus=bonus,
+                ),
             )
         )
         tick_index += 1
