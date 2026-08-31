@@ -20,6 +20,10 @@ DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 TABLE = "skill_component_classification"
 SOURCE = "ability.coef_description semantic extractor; upstream provenance unresolved"
 CONFIDENCE = 1.0
+NORMAL_SKILL_CRIT_RULE = (
+    "normal skill damage/healing components are crit-eligible; "
+    "proc/set and special-damage exceptions are modeled separately"
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +49,7 @@ class ClassificationCandidate:
     damage_type: str | None
     is_dot: bool | None
     is_aoe: bool | None
+    can_crit: bool | None
     evidence_fragment: str
     evidence: tuple[str, ...]
 
@@ -108,6 +113,21 @@ def _complete_for_import(evidence) -> bool:
     return False
 
 
+def _normal_skill_can_crit(effect_kind: str | None) -> bool | None:
+    """Apply the normal active-skill crit rule, not proc/set exception rules.
+
+    Ordinary skill damage and healing can critically strike/heal. Shields and
+    utility coefficients do not use critical eligibility. Proc sets, Oblivion
+    damage, Max-Health-scaled effects, and modifier/scaling proc exceptions are
+    intentionally outside this skill-coefficient rule and must be modeled by
+    their own source-specific evaluator.
+    """
+
+    if effect_kind in ("damage", "heal"):
+        return True
+    return None
+
+
 def _evaluate_candidates(
     database_path: str | Path,
     *,
@@ -147,6 +167,11 @@ def _evaluate_candidates(
             skipped_incomplete += 1
             continue
 
+        can_crit = _normal_skill_can_crit(evidence.effect_kind)
+        evidence_items = list(evidence.evidence)
+        if can_crit is True:
+            evidence_items.append(NORMAL_SKILL_CRIT_RULE)
+
         candidates.append(
             ClassificationCandidate(
                 skill_rank_id=int(row.skill_rank_id),
@@ -155,8 +180,9 @@ def _evaluate_candidates(
                 damage_type=evidence.damage_type,
                 is_dot=evidence.is_dot,
                 is_aoe=evidence.is_aoe,
+                can_crit=can_crit,
                 evidence_fragment=evidence.fragment,
-                evidence=tuple(evidence.evidence),
+                evidence=tuple(evidence_items),
             )
         )
 
@@ -225,7 +251,9 @@ def import_skill_component_classifications(
 
     Safety rules:
     - dry-run is the API default;
-    - ``can_crit`` remains NULL until a separate verified source exists;
+    - normal skill damage/healing rows store ``can_crit = True``;
+    - shield and utility rows keep ``can_crit = NULL``;
+    - proc/set and special-damage crit exceptions are not inferred here;
     - rebuilds delete only rows owned by this exact extractor ``SOURCE``;
     - rows owned by manual or other sources are never overwritten;
     - source wording does not claim provenance that ``skills_raw.json`` has not
@@ -299,7 +327,7 @@ def import_skill_component_classifications(
                     candidate.damage_type,
                     None if candidate.is_dot is None else int(candidate.is_dot),
                     None if candidate.is_aoe is None else int(candidate.is_aoe),
-                    None,
+                    None if candidate.can_crit is None else int(candidate.can_crit),
                     SOURCE,
                     CONFIDENCE,
                     candidate.evidence_fragment,
@@ -377,7 +405,8 @@ def main() -> int:
     print(f"Slot mismatches skipped:  {summary.skipped_slot_mismatch}")
     print(f"Missing fragments:        {summary.skipped_missing_fragment}")
     print(f"Incomplete semantics:     {summary.skipped_incomplete}")
-    print("Crit eligibility:         unresolved / stored NULL")
+    print("Crit eligibility:         normal skill damage/healing=True; shield/utility=NULL")
+    print("Crit exceptions:          proc/set and special-damage rules modeled separately")
     return 0
 
 
