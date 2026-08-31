@@ -13,6 +13,8 @@ def test_bridge_ignores_empty_legacy_builds_in_canonical_catalog(tmp_path: Path)
         EsoClass="Warden",
         Race="Breton",
         Role="Healer",
+        AttributeMagicka=64,
+        Mundus="The Ritual",
     )
     blank = PlayerBuild()
 
@@ -30,3 +32,5 @@ def test_bridge_ignores_empty_legacy_builds_in_canonical_catalog(tmp_path: Path)
     assert len(loaded.Members) == 1
     assert loaded.Members[0].BuildName == "DF Healer"
     assert loaded.Members[0].Gamertag == "Jarakeen"
+    assert loaded.Members[0].AttributeMagicka == 64
+    assert loaded.Members[0].Mundus == "The Ritual"
