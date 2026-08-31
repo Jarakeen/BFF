@@ -51,10 +51,9 @@ def _gap_reasons(evidence) -> tuple[str, ...]:
             reasons.append("periodicity")
         if evidence.is_aoe is None:
             reasons.append("target_shape")
-    elif evidence.effect_kind == "shield":
-        # Damage-routing fields are not applicable to a shield. A proven shield
-        # amount is therefore not considered unresolved merely because is_dot or
-        # is_aoe is NULL.
+    elif evidence.effect_kind in ("shield", "utility"):
+        # Damage-routing fields are not applicable to shields or explicit
+        # non-damage utility scalars/durations. NULL is therefore complete here.
         pass
     else:
         reasons.append("effect_kind")
@@ -215,7 +214,7 @@ def main() -> int:
         print(f"  {count:5}  {label}")
 
     print("\nNOTE: counts overlap when one component is missing multiple required fields.")
-    print("Non-applicable damage-routing fields are not counted as gaps for shields.")
+    print("Non-applicable damage-routing fields are not counted as gaps for shields/utilities.")
     print("Samples are round-robin across gap combinations, not raw database order.")
     print("This audit is read-only and does not populate skill_component_classification.")
 
