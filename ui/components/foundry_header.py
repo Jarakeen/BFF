@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QSizePolicy
 
+from engine.config import get_resource_path
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_path, semantic_icon
 
@@ -56,8 +57,31 @@ class FoundryHeader(QWidget):
         left.addWidget(self.subtitle)
 
         self.department = QLabel(department.upper())
-        self.department.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.department.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.department.setProperty("departmentLabel", True)
+
+        # A small, explicit north-star ornament beside the department label.
+        # Keeping it in the layout makes it visible and guarantees it never
+        # paints across the label text.
+        self.header_star = QLabel()
+        self.header_star.setProperty("headerStar", True)
+        self.header_star.setFixedSize(18, 18)
+        self.header_star.setScaledContents(True)
+        star_path = get_resource_path(
+            "assets", "themes", "bff", "grimoire", "assets", "header_star.svg"
+        )
+        if star_path.exists():
+            star = QPixmap(str(star_path))
+            if not star.isNull():
+                self.header_star.setPixmap(star)
+        self.header_star.setVisible(not self.header_star.pixmap().isNull())
+
+        department_row = QHBoxLayout()
+        department_row.setContentsMargins(0, 0, 0, 0)
+        department_row.setSpacing(5)
+        department_row.addStretch(1)
+        department_row.addWidget(self.department, 0, Qt.AlignmentFlag.AlignVCenter)
+        department_row.addWidget(self.header_star, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self.context_layout = QHBoxLayout()
         self.context_layout.setContentsMargins(0, 0, 0, 0)
@@ -66,7 +90,7 @@ class FoundryHeader(QWidget):
         right = QVBoxLayout()
         right.setContentsMargins(0, 0, 0, 0)
         right.setSpacing(3)
-        right.addWidget(self.department)
+        right.addLayout(department_row)
         right.addLayout(self.context_layout)
 
         layout = QHBoxLayout(self)
