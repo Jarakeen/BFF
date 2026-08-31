@@ -39,6 +39,20 @@ def main() -> int:
     app.setApplicationName("Black Feather Foundry Field Office")
     app.setOrganizationName("Black Feather Foundry")
 
+    # Set the application icon as early as possible so Windows does not briefly
+    # fall back to the generic Python/Qt icon during startup.
+    app_icon = get_resource_path("bff.ico")
+    if app_icon.exists():
+        app.setWindowIcon(QIcon(str(app_icon)))
+
+    # Show one static, motion-free startup screen before loading the heavier UI
+    # modules. The splash does not animate, blink, fade, or cycle text.
+    from ui.startup_splash import create_startup_splash
+
+    splash = create_startup_splash()
+    splash.show()
+    app.processEvents()
+
     # Import Qt-dependent modules AFTER QApplication exists.
     from ui.theme import ThemeManager
     from ui.grimoire_theme import apply_grimoire_theme
@@ -53,10 +67,6 @@ def main() -> int:
     from ui.main_window import MainWindow
 
     theme = ThemeManager()
-    app_icon = get_resource_path("bff.ico")
-
-    if theme.logo and app_icon.exists():
-        app.setWindowIcon(QIcon(str(app_icon)))
 
     # Grimoire is the current BFF visual skin. Keep the existing foundry.qss
     # as a safe fallback so a missing packaged texture cannot prevent startup.
@@ -67,6 +77,8 @@ def main() -> int:
 
     window = MainWindow()
     window.show()
+    app.processEvents()
+    splash.finish(window)
     return app.exec()
 
 
