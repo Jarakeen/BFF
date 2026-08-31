@@ -2,6 +2,7 @@ import json
 import sqlite3
 
 from importers.skill_component_classification_importer import (
+    NORMAL_SKILL_CRIT_RULE,
     SOURCE,
     import_skill_component_classifications,
 )
@@ -132,16 +133,18 @@ def test_importer_writes_only_complete_verified_active_components(tmp_path):
     db.close()
 
     assert len(rows) == 2
-    assert rows[0][0:7] == (10, 1, 'damage', 'flame', 0, 1, None)
-    assert rows[1][0:7] == (10, 2, 'damage', 'flame', 1, 1, None)
+    assert rows[0][0:7] == (10, 1, 'damage', 'flame', 0, 1, 1)
+    assert rows[1][0:7] == (10, 2, 'damage', 'flame', 1, 1, 1)
     assert rows[0][7] == SOURCE
     assert 'upstream provenance unresolved' in rows[0][7]
     assert rows[0][8] == 1.0
     assert '$1 Flame Damage' in rows[0][9]
-    assert 'placeholder explicitly precedes Flame Damage' in json.loads(rows[0][10])
+    evidence = json.loads(rows[0][10])
+    assert 'placeholder explicitly precedes Flame Damage' in evidence
+    assert NORMAL_SKILL_CRIT_RULE in evidence
 
 
-def test_imported_rows_are_readable_by_runtime_repository(tmp_path):
+def test_imported_damage_rows_are_complete_runtime_identities(tmp_path):
     path = tmp_path / 'eso.db'
     _make_db(path)
     import_skill_component_classifications(path, dry_run=False)
@@ -153,9 +156,45 @@ def test_imported_rows_are_readable_by_runtime_repository(tmp_path):
     assert components[0].damage_type == 'flame'
     assert components[0].is_dot is False
     assert components[0].is_aoe is True
-    assert components[0].can_crit is None
-    assert not components[0].is_complete_damage_identity
+    assert components[0].can_crit is True
+    assert components[0].is_complete_damage_identity
     assert components[1].is_dot is True
+    assert components[1].can_crit is True
+    assert components[1].is_complete_damage_identity
+
+
+def test_importer_marks_normal_skill_healing_crit_eligible(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+    db = sqlite3.connect(path)
+    db.execute(
+        "INSERT INTO skill_rank VALUES (40, 400, 'Healing Fixture', NULL, NULL, NULL, NULL)"
+    )
+    db.execute(
+        """
+        INSERT INTO ability (
+            ability_id, name, coef_description,
+            type1, a1, b1, c1, r1, avg1
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            400,
+            'Healing Fixture',
+            'Heal you and your allies in the area for $1 Health.',
+            8, .1, 1.0, 0, 1, 1000,
+        ),
+    )
+    db.execute("INSERT INTO skill_coefficient VALUES (40, 1, '8', .1, 1.0, 0, 1, 1000)")
+    db.commit()
+    db.close()
+
+    summary = import_skill_component_classifications(path, dry_run=False)
+    component = SkillComponentRepository(path).get_component(40, 1)
+
+    assert summary.qualified == 3
+    assert component is not None
+    assert component.effect_kind is SkillEffectKind.HEAL
+    assert component.can_crit is True
 
 
 def test_importer_persists_explicit_shield_without_fake_damage_routing_fields(tmp_path):
