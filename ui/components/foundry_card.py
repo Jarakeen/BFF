@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QColor, QPainter, QPixmap, QPen
 from PySide6.QtWidgets import (
     QWidget,
@@ -216,6 +216,9 @@ class FoundryCard(QFrame):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         parchment = bool(self.property("parchment") or self.property("foundryNoteCard"))
+
+        # Keep the original restrained corner marks. They frame the card without
+        # intruding into the content area.
         ornament = QColor("#6F5736" if parchment else "#9A794A")
         ornament.setAlpha(105 if parchment else 82)
         painter.setPen(QPen(ornament, 1.0))
@@ -232,6 +235,27 @@ class FoundryCard(QFrame):
         painter.drawLine(inset, h - inset, inset, h - inset - arm)
         painter.drawLine(w - inset, h - inset, w - inset - arm, h - inset)
         painter.drawLine(w - inset, h - inset, w - inset, h - inset - arm)
+
+        # Add quiet layered edge work to create the recessed, book-bound depth
+        # from the visual mockup. These strokes stay at the perimeter and never
+        # pass through labels, fields, tables, or other card content.
+        if self.width() > 16 and self.height() > 16:
+            inner_highlight = QColor("#B89A63" if not parchment else "#8A6B43")
+            inner_highlight.setAlpha(34 if not parchment else 30)
+            painter.setPen(QPen(inner_highlight, 1.0))
+            painter.drawRoundedRect(QRectF(2.5, 2.5, self.width() - 6, self.height() - 6), 3.0, 3.0)
+
+            inner_shadow = QColor("#02090A" if not parchment else "#3A2A1D")
+            inner_shadow.setAlpha(82 if not parchment else 48)
+            painter.setPen(QPen(inner_shadow, 1.0))
+            painter.drawLine(5, h - 2, w - 5, h - 2)
+            painter.drawLine(w - 2, 5, w - 2, h - 5)
+
+            top_glint = QColor("#C8A46A" if not parchment else "#8F7346")
+            top_glint.setAlpha(24)
+            painter.setPen(QPen(top_glint, 1.0))
+            painter.drawLine(6, 2, w - 6, 2)
+            painter.drawLine(2, 6, 2, h - 6)
 
         if self._watermark is not None and self.width() > 130 and self.height() > 110:
             target = min(92, max(52, min(self.width(), self.height()) // 3))
