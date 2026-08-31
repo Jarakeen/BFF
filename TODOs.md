@@ -25,4 +25,7 @@ Tasks outside of the master roadmap
 -[X] add collectible ownership checkboxes, Shift-range selection, pending changes, and batch save; then rename the confusing Achievements/Collections files and references safely.
 -[ ] Mechanics doesnt have an icon - can we add one
 -[ ] we've lost the app icon on the task bar when its running - fix that please
+-[ ] wherever there are timers in the app - plase make them functional
+-[ ] whereever there are "edit notes" cards on the app, please make that card a note app and editable
+-[ ] next to "Provides" card on the Overview page card, please change that to a "thumbs up"
 -[ ] 
