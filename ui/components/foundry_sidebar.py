@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_resource_path
 from ui.theme.fonts import Fonts
+from ui.ux_icons import icon_label, semantic_icon, set_button_icon
 
 
 NAV_SECTIONS = [
@@ -56,8 +57,8 @@ class FoundrySidebar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.buttons = {}
-        self.setMinimumWidth(205)
-        self.setMaximumWidth(235)
+        self.setMinimumWidth(215)
+        self.setMaximumWidth(248)
         self.build_ui()
 
     @staticmethod
@@ -165,7 +166,7 @@ class FoundrySidebar(QWidget):
         plaque_layout = QHBoxLayout(plaque)
         plaque_layout.setContentsMargins(8, 6, 8, 6)
         plaque_layout.setSpacing(6)
-        mark = QLabel("⚙")
+        mark = icon_label("gears", 20)
         mark.setProperty("sidebarPlaqueMark", True)
         plaque_layout.addWidget(mark, 0, Qt.AlignmentFlag.AlignTop)
         plaque_text = QLabel("THE FOUNDRY\nLeave better records.")
@@ -175,7 +176,8 @@ class FoundrySidebar(QWidget):
         layout.addWidget(plaque)
 
     def build_leaf_button(self, text, page, header_style=False):
-        button = self.make_nav_button(text.upper() if header_style else text, indent=False)
+        display = text.upper() if header_style else text
+        button = self.make_nav_button(display, indent=False, icon_name=semantic_icon(text))
         button.clicked.connect(lambda _, p=page: self.activate(p))
         self.buttons[page] = button
         return button
@@ -186,14 +188,15 @@ class FoundrySidebar(QWidget):
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
         wrapper_layout.setSpacing(1)
 
-        header = self.make_nav_button("▸  " + section["label"].upper(), indent=False)
+        label = section["label"]
+        header = self.make_nav_button("▸  " + label.upper(), indent=False, icon_name=semantic_icon(label))
         children_box = QWidget()
         children_layout = QVBoxLayout(children_box)
         children_layout.setContentsMargins(9, 0, 0, 0)
         children_layout.setSpacing(1)
 
-        for label, page in section["children"]:
-            child_button = self.make_nav_button(label, indent=True)
+        for child_label, page in section["children"]:
+            child_button = self.make_nav_button(child_label, indent=True, icon_name=semantic_icon(child_label))
             child_button.clicked.connect(lambda _, p=page: self.activate(p))
             self.buttons[page] = child_button
             children_layout.addWidget(child_button)
@@ -203,22 +206,24 @@ class FoundrySidebar(QWidget):
         def toggle(_checked=False):
             expanded = not children_box.isVisible()
             children_box.setVisible(expanded)
-            header.setText(("▾  " if expanded else "▸  ") + section["label"].upper())
+            header.setText(("▾  " if expanded else "▸  ") + label.upper())
 
         header.clicked.connect(toggle)
         wrapper_layout.addWidget(header)
         wrapper_layout.addWidget(children_box)
         return wrapper
 
-    def make_nav_button(self, text, indent):
+    def make_nav_button(self, text, indent, icon_name=""):
         button = QPushButton(text)
         button.setProperty("nav", True)
         button.setProperty("sidebarButton", True)
         button.setFont(Fonts.sidebar())
         button.setCheckable(True)
-        button.setMinimumHeight(24 if indent else 28)
-        button.setMaximumHeight(30 if indent else 32)
+        button.setMinimumHeight(25 if indent else 29)
+        button.setMaximumHeight(31 if indent else 33)
         button.setCursor(Qt.CursorShape.PointingHandCursor)
+        if icon_name:
+            set_button_icon(button, icon_name, 15 if indent else 16)
         return button
 
     def activate(self, page):
