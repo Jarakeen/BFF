@@ -155,7 +155,7 @@ def test_blood_craze_health_amount_is_heal_even_when_sentence_mentions_damage():
     assert evidence.is_aoe is False
 
 
-def test_elude_duration_coefficient_is_not_classified_as_damage():
+def test_elude_duration_coefficient_is_explicit_utility_not_damage():
     text = (
         "Shroud yourself in mist to gain Major Evasion, reducing damage taken from area "
         "attacks by 20% for |cffffff$1|r seconds."
@@ -163,7 +163,7 @@ def test_elude_duration_coefficient_is_not_classified_as_damage():
 
     evidence = extract_component_text_evidence(text, 1)
 
-    assert evidence.effect_kind is None
+    assert evidence.effect_kind == "utility"
     assert evidence.damage_type is None
     assert evidence.is_dot is None
     assert evidence.is_aoe is None
@@ -290,3 +290,63 @@ def test_soul_tether_siphoned_health_is_periodic_self_heal():
     assert evidence.damage_type is None
     assert evidence.is_dot is True
     assert evidence.is_aoe is False
+
+
+def test_decimal_tick_interval_is_not_mistaken_for_sentence_boundary():
+    text = (
+        "Breathe forth an unending torrent of draconic fire, dealing |cffffff$1|r "
+        "Flame Damage every 0.5 seconds to enemies in your path for 4 seconds."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert "0.5 seconds" in evidence.fragment
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "flame"
+    assert evidence.is_dot is True
+    assert evidence.is_aoe is True
+
+
+def test_dragonfire_breath_enemies_in_your_path_is_explicit_aoe_for_both_components():
+    text = (
+        "Exhale a blast of draconic fire in front of you, dealing |cffffff$1|r Flame Damage "
+        "and an additional |cffffff$2|r Flame Damage over 10 seconds to enemies in your path."
+    )
+
+    first = extract_component_text_evidence(text, 1)
+    second = extract_component_text_evidence(text, 2)
+
+    assert first.is_dot is False
+    assert first.is_aoe is True
+    assert second.is_dot is True
+    assert second.is_aoe is True
+
+
+def test_shadow_barrier_explicit_duration_is_utility():
+    evidence = extract_component_text_evidence("Current duration: |cffffff$1|r seconds.", 1)
+
+    assert evidence.effect_kind == "utility"
+    assert evidence.damage_type is None
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
+
+
+def test_immovable_explicit_percentage_scalar_is_utility():
+    text = (
+        "Also grants you immunity to knockback and disabling effects for 6 seconds, "
+        "but reduces your Movement Speed by |cffffff$1|r% for the duration."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "utility"
+    assert evidence.damage_type is None
+
+
+def test_vague_current_amount_remains_unresolved():
+    evidence = extract_component_text_evidence("Current amount: |cffffff$1|r", 1)
+
+    assert evidence.effect_kind is None
+    assert evidence.damage_type is None
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
