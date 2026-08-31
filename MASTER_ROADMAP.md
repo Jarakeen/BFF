@@ -94,7 +94,7 @@ Normalized Effects
 ---
 
 # PHASE 3 · Static Combat Rules Engine
-**Status: 🟢 Complete pending final real-DB closeout audit / full-suite confirmation**
+**Status: 🟢 Complete**
 
 Phase 3 establishes one explainable static combat calculation with separate modifier stages rather than one giant multiplier bucket.
 
@@ -174,6 +174,11 @@ Combat Prayer was used as a real saved-build downstream validation case.
 
 This residual is accepted for Phase 3. It is small enough to plausibly reflect hidden precision, tooltip rounding, exact live state, or saved-build drift. The formula will **not** be altered with an unexplained correction factor merely to force an exact historical match.
 
+### Final closeout evidence
+- 🟢 real `eso.db` classified component traversed the full static pipeline successfully
+- 🟢 audited sample: Corrosive Armor, ability `17878`, skill rank `4400`, coefficient `#1`
+- 🟢 full suite after closeout: **1305 passed**
+
 ## Phase 3 non-goals / deferred work
 - exhaustive resolution of all 824 ambiguous components
 - full proc/set temporal engine
@@ -190,8 +195,10 @@ Runtime/log observations may be used later as validation/corroboration, not as t
 - no competing coefficient formulas
 - modifier stages remain separated and explainable
 - unresolved evidence remains explicit
-- real classified database component can traverse the complete static damage path
+- real classified database component traverses the complete static damage path
 - full test suite green
+
+**Exit criteria met on 2026-08-31.**
 
 ---
 
@@ -452,6 +459,8 @@ RECOMMENDATION + EXPLANATION
 | Named CombatState buffs | 🟢 foundation |
 | Proc crit eligibility | 🟢 policy foundation |
 | Combat Prayer tooltip validation | 🟢 ~0.085% residual accepted |
+| Phase 3 real-DB audit | 🟢 passed |
+| Phase 3 final test suite | 🟢 1305 passed |
 | Gear → effects | 🟢 / 🟡 |
 | Build effect orchestration | 🟡 |
 | Real build effect detection | 🟡 |
@@ -474,19 +483,18 @@ RECOMMENDATION + EXPLANATION
 
 # 🎯 Immediate Development Order After Phase 3
 
-1. **Phase 3 closeout:** real-DB end-to-end classified damage audit + final full suite
-2. **Style / UX cleanup checkpoint** before the next large systems phase
-3. **Real build effect resolution** and shared Character → Build reuse
-4. **Resource / sustain engine**
-5. **Conditional effect / proc engine**
-6. **Temporal Combat State**
-7. **Encounter requirements and evaluation**
-8. **Provider assignment**
-9. **Build optimization**
-10. **Rotation / simulation**
-11. **Encounter-aware optimization**
-12. **Explanation**
-13. **Log validation**
-14. **Strategy engine**
+1. **Style / UX cleanup checkpoint** before the next large systems phase
+2. **Real build effect resolution** and shared Character → Build reuse
+3. **Resource / sustain engine**
+4. **Conditional effect / proc engine**
+5. **Temporal Combat State**
+6. **Encounter requirements and evaluation**
+7. **Provider assignment**
+8. **Build optimization**
+9. **Rotation / simulation**
+10. **Encounter-aware optimization**
+11. **Explanation**
+12. **Log validation**
+13. **Strategy engine**
 
 The project is no longer a set of disconnected calculators. Phase 3 establishes a coherent, auditable static combat rules engine that later systems can consume without reimplementing ESO math.
