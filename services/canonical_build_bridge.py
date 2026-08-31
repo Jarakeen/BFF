@@ -25,7 +25,19 @@ class CanonicalBuildBridge:
     def load(self) -> BuildRoster:
         catalog = self.catalog_service.load()
         if catalog["builds"]:
-            return self._roster_from_catalog(catalog)
+            canonical_roster = self._roster_from_catalog(catalog)
+            if canonical_roster.Members:
+                return canonical_roster
+
+            # Historical/placeholder canonical build rows must not shadow a
+            # populated compatibility mirror. Recover the real legacy roster
+            # and immediately resync it so the catalog becomes authoritative
+            # again on the same load.
+            roster = self._load_legacy()
+            if roster.Members:
+                self.sync_from_roster(roster)
+                return roster
+            return canonical_roster
 
         roster = self._load_legacy()
         if roster.Members:
