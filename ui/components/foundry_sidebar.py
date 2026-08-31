@@ -1,12 +1,6 @@
 # ==================================================
 # Black Feather Foundry
-#
-# File:
 # ui/components/foundry_sidebar.py
-#
-# Purpose:
-# Primary navigation and status panel.
-#
 # ==================================================
 
 from __future__ import annotations
@@ -35,7 +29,7 @@ NAV_SECTIONS = [
             ("Archive", "archive"),
         ],
     },
-    ("Achievements", "collections", "header"),
+    ("Achievements", "achievements", "header"),
     {
         "label": "Collections",
         "children": [
@@ -86,7 +80,6 @@ class FoundrySidebar(QWidget):
 
     def build_ui(self):
         self.setProperty("foundrySidebar", True)
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 20, 18, 20)
         layout.setSpacing(12)
@@ -114,13 +107,7 @@ class FoundrySidebar(QWidget):
             if isinstance(section, tuple):
                 text, page = section[0], section[1]
                 style = section[2] if len(section) > 2 else None
-                content_layout.addWidget(
-                    self.build_leaf_button(
-                        text,
-                        page,
-                        header_style=(style == "header"),
-                    )
-                )
+                content_layout.addWidget(self.build_leaf_button(text, page, header_style=(style == "header")))
             else:
                 content_layout.addWidget(self.build_category(section))
 
@@ -131,7 +118,6 @@ class FoundrySidebar(QWidget):
         self.status_title = QLabel("CURRENT EXPEDITION")
         self.status_title.setProperty("sidebarHeading", True)
         content_layout.addWidget(self.status_title)
-
         self.current_boss = QLabel("No Expedition")
         self.pull_count = QLabel("Pulls: 0")
         self.best_pull = QLabel("Best: --")
@@ -155,17 +141,14 @@ class FoundrySidebar(QWidget):
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
 
-        footer = QLabel("Black Feather Foundry\\nv1.0")
+        footer = QLabel("Black Feather Foundry\nv1.0")
         footer.setProperty("sidebarFooter", True)
         footer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         footer.setMinimumHeight(footer.sizeHint().height())
         layout.addWidget(footer)
 
     def build_leaf_button(self, text, page, header_style=False):
-        button = self.make_nav_button(
-            text.upper() if header_style else text,
-            indent=False,
-        )
+        button = self.make_nav_button(text.upper() if header_style else text, indent=False)
         button.clicked.connect(lambda _, p=page: self.activate(p))
         self.buttons[page] = button
         return button
@@ -176,17 +159,13 @@ class FoundrySidebar(QWidget):
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
         wrapper_layout.setSpacing(2)
 
-        header = self.make_nav_button(
-            "▸  " + section["label"].upper(),
-            indent=False,
-        )
+        header = self.make_nav_button("▸  " + section["label"].upper(), indent=False)
         children_box = QWidget()
         children_layout = QVBoxLayout(children_box)
         children_layout.setContentsMargins(14, 0, 0, 0)
         children_layout.setSpacing(2)
 
-        for child in section["children"]:
-            label, page = child
+        for label, page in section["children"]:
             child_button = self.make_nav_button(label, indent=True)
             child_button.clicked.connect(lambda _, p=page: self.activate(p))
             self.buttons[page] = child_button
