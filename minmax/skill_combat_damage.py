@@ -87,6 +87,7 @@ def calculate_skill_combat_damage(
     target_combat_state: CombatState | None = None,
     damage_done: DamageDoneModifiers | None = None,
     damage_taken: DamageTakenModifiers | None = None,
+    target_critical_resistance: float = 0.0,
 ) -> SkillCombatDamageResult:
     """Connect aggregate skill damage to the authoritative DD pipeline.
 
@@ -121,6 +122,7 @@ def calculate_skill_combat_damage(
         mitigation=mitigation,
         damage_done=resolved_damage_done,
         damage_taken=resolved_damage_taken,
+        target_critical_resistance=target_critical_resistance,
     )
 
     return SkillCombatDamageResult(
@@ -141,6 +143,7 @@ def calculate_classified_skill_combat_damage(
     target_combat_state: CombatState | None = None,
     damage_done: DamageDoneModifiers | None = None,
     damage_taken: DamageTakenModifiers | None = None,
+    target_critical_resistance: float = 0.0,
 ) -> ClassifiedSkillCombatDamageResult:
     """Evaluate only coefficient components with complete verified damage identity.
 
@@ -197,6 +200,7 @@ def calculate_classified_skill_combat_damage(
             mitigation=mitigation,
             damage_done=resolved_damage_done,
             damage_taken=resolved_damage_taken,
+            target_critical_resistance=target_critical_resistance,
         )
         results.append(
             SkillCombatComponentResult(
