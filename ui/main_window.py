@@ -37,6 +37,8 @@ from ui.collections_page import CollectionsPage
 from ui.collectibles_page import CollectiblesPage
 from ui.roster_page import RosterPage
 from ui.operations_console import OperationsConsole
+from ui.encounters_page import EncountersPage
+from ui.mechanics_page import MechanicsPage
 from ui.settings_page import SettingsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
@@ -101,8 +103,14 @@ class MainWindow(QMainWindow):
             "operations_console": OperationsConsole(
                 expedition=self.expedition_service
             ),
+            "console:1": EncountersPage(
+                expedition=self.expedition_service
+            ),
             "console:2": BuildsPage(),
             "console:3": CapabilitiesPage(),
+            "console:4": MechanicsPage(
+                expedition=self.expedition_service
+            ),
             "console:6": OptimizationPage(),
             "settings": SettingsPage(),
         }
