@@ -294,8 +294,8 @@ def test_soul_tether_siphoned_health_is_periodic_self_heal():
 
 def test_decimal_tick_interval_is_not_mistaken_for_sentence_boundary():
     text = (
-        "Breathe forth an unending torrent of draconic fire, dealing |cffffff$1|r "
-        "Flame Damage every 0.5 seconds to enemies in your path for 4 seconds."
+        "Breathe forth an unending torrent of draconic fire, dealing |cffffff$1|r Flame Damage "
+        "every 0.5 seconds in a channeled attack over 4.8 seconds to enemies in front of you."
     )
 
     evidence = extract_component_text_evidence(text, 1)
@@ -320,6 +320,20 @@ def test_dragonfire_breath_enemies_in_your_path_is_explicit_aoe_for_both_compone
     assert first.is_aoe is True
     assert second.is_dot is True
     assert second.is_aoe is True
+
+
+def test_cleave_enemies_in_front_of_you_is_explicit_aoe():
+    text = (
+        "Focus your strength into a mighty swing, dealing |cffffff$1|r Physical Damage "
+        "to enemies in front of you."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "damage"
+    assert evidence.damage_type == "physical"
+    assert evidence.is_dot is False
+    assert evidence.is_aoe is True
 
 
 def test_shadow_barrier_explicit_duration_is_utility():
