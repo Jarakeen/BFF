@@ -1,15 +1,6 @@
 # ==================================================
 # Black Feather Foundry
-#
-# File:
 # ui/mechanics_page.py
-#
-# Purpose:
-# Raid Engine mechanics / boss guide workspace.
-#
-# The structure intentionally mirrors the UX mockup.
-# Empty cards are placeholders for encounter data that
-# is not wired yet.
 # ==================================================
 
 from __future__ import annotations
@@ -23,7 +14,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTabWidget,
     QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -43,10 +33,6 @@ class MechanicsPage(FoundryPage):
         self.expedition = expedition
         self._build_ui()
         self.refresh_context()
-
-    # --------------------------------------------------
-    # UI helpers
-    # --------------------------------------------------
 
     @staticmethod
     def _placeholder(text: str, *, centered: bool = False) -> QLabel:
@@ -82,7 +68,6 @@ class MechanicsPage(FoundryPage):
         self.boss_combo = QComboBox()
         self.boss_combo.addItem("Current Objective")
         self.view_all_button = QPushButton("▤  View All Bosses")
-
         self.header.add_context_widget(self._context_field("TRIAL", self.trial_combo))
         self.header.add_context_widget(self._context_field("BOSS", self.boss_combo))
         self.header.add_context_widget(self.view_all_button)
@@ -90,13 +75,12 @@ class MechanicsPage(FoundryPage):
         workspace = QWidget()
         root = QVBoxLayout(workspace)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(12)
+        root.setSpacing(8)
 
-        # Hero / encounter summary -------------------------------------------------
         hero_row = QHBoxLayout()
-        hero_row.setSpacing(12)
+        hero_row.setSpacing(8)
 
-        boss_card = FoundryCard("Encounter")
+        boss_card = FoundryCard("Encounter", "♜").set_watermark("compass", 0.045)
         boss_card.setProperty("bossHeroCard", True)
         boss_body = QHBoxLayout()
         artwork = QLabel("BOSS ARTWORK")
@@ -116,14 +100,14 @@ class MechanicsPage(FoundryPage):
         self.boss_description.setWordWrap(True)
         identity.addWidget(self.boss_name)
         identity.addWidget(self.boss_subtitle)
-        identity.addSpacing(10)
+        identity.addSpacing(6)
         identity.addWidget(self.boss_description)
         identity.addStretch(1)
         boss_body.addLayout(identity, 3)
         boss_card.addLayout(boss_body)
         hero_row.addWidget(boss_card, 5)
 
-        facts = FoundryCard("Encounter Facts")
+        facts = FoundryCard("Encounter Facts", "☷").set_watermark("compass", 0.045)
         for title in ("Role", "Location", "Recommended", "Enrage", "Hard Mode"):
             row = QHBoxLayout()
             row.addWidget(QLabel(title))
@@ -132,8 +116,7 @@ class MechanicsPage(FoundryPage):
             facts.addLayout(row)
         hero_row.addWidget(facts, 2)
 
-        quick = FoundryCard("Quick Notes")
-        quick.setProperty("parchment", True)
+        quick = FoundryCard("Quick Notes", "✎").make_parchment().set_watermark("feather", 0.12)
         for note in (
             "• Portal control is critical.",
             "• Heavy damage in execute.",
@@ -144,12 +127,10 @@ class MechanicsPage(FoundryPage):
         hero_row.addWidget(quick, 2)
         root.addLayout(hero_row)
 
-        # Main workspace -----------------------------------------------------------
         main_row = QHBoxLayout()
-        main_row.setSpacing(12)
-
+        main_row.setSpacing(8)
         center_column = QVBoxLayout()
-        center_column.setSpacing(12)
+        center_column.setSpacing(8)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._abilities_tab(), "ABILITIES")
@@ -160,27 +141,24 @@ class MechanicsPage(FoundryPage):
         center_column.addWidget(self.tabs, 1)
 
         lower = QHBoxLayout()
-        lower.setSpacing(12)
-
-        strategy = FoundryCard("Strategy Overview")
+        lower.setSpacing(8)
+        strategy = FoundryCard("Strategy Overview", "⚑").set_watermark("compass", 0.04)
         strategy.addWidget(self._placeholder("Strategy overview placeholder.\n\nKEY FOCUS\nSurvive  •  Mechanics  •  Execute  •  Teamwork"))
         lower.addWidget(strategy, 3)
 
-        assignment = FoundryCard("Assignment Summary")
+        assignment = FoundryCard("Assignment Summary", "♟").set_watermark("compass", 0.035)
         assignment.addWidget(self._placeholder("Main Tank\t—\nOff Tank\t—\nHealers\t—\nPortal Team\t—\nSpecial Assignments\t—"))
         lower.addWidget(assignment, 2)
 
-        callouts = FoundryCard("Important Call Outs")
+        callouts = FoundryCard("Important Call Outs", "!").make_parchment().set_watermark("feather", 0.09)
         callouts.addWidget(self._placeholder("• Mechanic incoming!\n• Move / stack / spread.\n• Execute callout.\n• Custom raid-lead callouts."))
         lower.addWidget(callouts, 2)
-
         center_column.addLayout(lower)
         main_row.addLayout(center_column, 7)
 
         right = QVBoxLayout()
-        right.setSpacing(12)
-
-        timer = FoundryCard("Encounter Timer")
+        right.setSpacing(8)
+        timer = FoundryCard("Encounter Timer", "◷").set_watermark("compass", 0.045)
         timer_value = QLabel("00:00")
         timer_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         timer_value.setProperty("timerValue", True)
@@ -191,27 +169,23 @@ class MechanicsPage(FoundryPage):
         timer.addLayout(timer_buttons)
         right.addWidget(timer)
 
-        notes = FoundryCard("My Notes")
-        notes.setProperty("parchment", True)
+        notes = FoundryCard("My Notes", "✎").make_parchment().set_watermark("feather", 0.10)
         notes_box = QPlainTextEdit()
         notes_box.setPlaceholderText("Take notes here during the run…")
         notes_box.setMinimumHeight(180)
         notes.addWidget(notes_box)
         right.addWidget(notes, 1)
 
-        reminders = FoundryCard("Key Reminders")
-        reminders.setProperty("parchment", True)
+        reminders = FoundryCard("Key Reminders", "!").make_parchment().set_watermark("compass", 0.08)
         reminders.addWidget(self._placeholder("• Important threshold reminders\n• Positioning notes\n• Tank/healer warnings\n• Execute reminders"))
         right.addWidget(reminders)
 
-        history = FoundryCard("Historical Notes")
-        history.setProperty("parchment", True)
+        history = FoundryCard("Historical Notes", "⌁").make_parchment().set_watermark("feather", 0.08)
         history.addWidget(self._placeholder("• Pull history\n• Best attempt\n• Repeat failure points\n• Successful adjustments"))
         right.addWidget(history)
 
         main_row.addLayout(right, 2)
         root.addLayout(main_row, 1)
-
         self.add_workspace(workspace)
 
         self.status = FoundryStatusBar()
@@ -222,9 +196,9 @@ class MechanicsPage(FoundryPage):
         tab = QWidget()
         layout = QHBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
-        abilities = FoundryCard("Abilities")
+        abilities = FoundryCard("Abilities", "⚔")
         table = QTableWidget(0, 6)
         table.setHorizontalHeaderLabels(("Ability", "Type", "Description", "Damage", "Target", "Notes"))
         table.setAlternatingRowColors(True)
@@ -233,7 +207,7 @@ class MechanicsPage(FoundryPage):
         abilities.addWidget(table)
         layout.addWidget(abilities, 5)
 
-        phases = FoundryCard("Phase & Thresholds")
+        phases = FoundryCard("Phase & Thresholds", "⌛").set_watermark("compass", 0.055)
         phases.addWidget(self._placeholder("100%   Phase 1\n\n75%    Mechanic Threshold\n\n50%    Phase Change\n\n25%    Execute\n\n0%     Defeat"))
         layout.addWidget(phases, 2)
         return tab
@@ -243,6 +217,7 @@ class MechanicsPage(FoundryPage):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
         edit = QPlainTextEdit()
+        edit.setProperty("parchment", True)
         edit.setPlaceholderText("Encounter notes…")
         layout.addWidget(edit)
         return tab
@@ -250,20 +225,15 @@ class MechanicsPage(FoundryPage):
     def _empty_tab(self, text: str) -> QWidget:
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(8, 8, 8, 8)
         layout.addWidget(self._placeholder(text, centered=True), 1)
         return tab
-
-    # --------------------------------------------------
-    # Context
-    # --------------------------------------------------
 
     def refresh_context(self):
         current = self.expedition.expedition
         trial = current.Expedition or "No Active Expedition"
         difficulty = current.Difficulty or ""
         boss = current.Objective or "No Encounter Selected"
-
         trial_text = f"{trial}{f' ({difficulty})' if difficulty else ''}"
         self.trial_combo.setItemText(0, trial_text)
         self.boss_combo.setItemText(0, boss)
