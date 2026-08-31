@@ -50,7 +50,8 @@ def _make_db(path):
             (30, 300, 'Unknown Shape', NULL, NULL, NULL, NULL),
             (40, 400, 'No Fragment', NULL, NULL, NULL, NULL),
             (50, 500, 'Mismatch', NULL, NULL, NULL, NULL),
-            (60, 600, 'Known Shield', NULL, NULL, NULL, NULL);
+            (60, 600, 'Known Shield', NULL, NULL, NULL, NULL),
+            (70, 700, 'Known Utility', NULL, NULL, NULL, NULL);
 
         INSERT INTO ability (
             ability_id, name, coef_description,
@@ -61,7 +62,8 @@ def _make_db(path):
             (300, 'Unknown Shape', 'Inflict $1 Flame Damage.', 8, .1, 1, 0, 1, 1000),
             (400, 'No Fragment', 'No coefficient placeholder here.', 8, .1, 1, 0, 1, 1000),
             (500, 'Mismatch', 'Deal $1 Physical Damage to an enemy.', 8, .2, 1, 0, 1, 1000),
-            (600, 'Known Shield', 'Gain a damage shield that absorbs $1 damage for 6 seconds.', 8, .1, 1, 0, 1, 1000);
+            (600, 'Known Shield', 'Gain a damage shield that absorbs $1 damage for 6 seconds.', 8, .1, 1, 0, 1, 1000),
+            (700, 'Known Utility', 'Current duration: $1 seconds.', 8, .1, 1, 0, 1, 1000);
 
         INSERT INTO skill_coefficient VALUES
             (10, 1, '8', .1, 1, 0, 1, 1000),
@@ -69,7 +71,8 @@ def _make_db(path):
             (30, 1, '8', .1, 1, 0, 1, 1000),
             (40, 1, '8', .1, 1, 0, 1, 1000),
             (50, 1, '8', .1, 1, 0, 1, 1000),
-            (60, 1, '8', .1, 1, 0, 1, 1000);
+            (60, 1, '8', .1, 1, 0, 1, 1000),
+            (70, 1, '8', .1, 1, 0, 1, 1000);
         """
     )
     db.commit()
@@ -113,7 +116,7 @@ def test_gap_audit_counts_only_fields_required_for_effect_family(tmp_path):
     assert combination_counts[("target_shape",)] == 1
 
 
-def test_complete_component_and_known_shield_are_not_reported_as_gaps(tmp_path):
+def test_complete_component_shield_and_utility_are_not_reported_as_gaps(tmp_path):
     path = tmp_path / "eso.db"
     _make_db(path)
 
@@ -122,6 +125,7 @@ def test_complete_component_and_known_shield_are_not_reported_as_gaps(tmp_path):
     names = {row.name for row in gaps}
     assert "Complete" not in names
     assert "Known Shield" not in names
+    assert "Known Utility" not in names
 
 
 def test_gap_samples_round_robin_across_reason_combinations(tmp_path):
