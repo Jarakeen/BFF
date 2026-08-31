@@ -255,7 +255,7 @@ def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path)
     import_skill_component_classifications(path, dry_run=False)
 
     db = sqlite3.connect(path)
-    columns = {row[1] for row in db.execute('PRAGMA table_info(skill_component_classification')}
+    columns = {row[1] for row in db.execute('PRAGMA table_info(skill_component_classification)')}
     db.close()
 
     assert 'evidence_fragment' in columns
