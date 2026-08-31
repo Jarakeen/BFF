@@ -103,7 +103,7 @@ def _complete_for_import(evidence) -> bool:
         )
     if evidence.effect_kind == "heal":
         return evidence.is_dot is not None and evidence.is_aoe is not None
-    if evidence.effect_kind == "shield":
+    if evidence.effect_kind in ("shield", "utility"):
         return True
     return False
 
