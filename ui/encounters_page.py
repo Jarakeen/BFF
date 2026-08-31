@@ -6,14 +6,14 @@
 #
 # Purpose:
 # Raid Engine encounter planning workspace.
-#
-# Mirrors the positioning / assignments wireframe while
-# leaving unwired data regions as explicit placeholders.
 # ==================================================
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from services.expedition_service import ExpeditionService
+from ui.components.encounter_board import EncounterBoard
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -69,6 +70,7 @@ class EncountersPage(FoundryPage):
             title="Encounters",
             subtitle="Position the team. Track the phase. Keep the plan legible.",
             department="Raid Engine • Encounters",
+            icon="trial",
         )
         self.set_header(self.header)
 
@@ -85,13 +87,12 @@ class EncountersPage(FoundryPage):
         workspace = QWidget()
         root = QVBoxLayout(workspace)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(12)
+        root.setSpacing(8)
 
-        # Page-level tabs, matching the wireframe language.
         self.section_tabs = QTabWidget()
         self.section_tabs.addTab(self._overview_tab(), "OVERVIEW")
         self.section_tabs.addTab(self._assignments_tab(), "ASSIGNMENTS")
-        self.section_tabs.addTab(self._empty_section("Mechanics-specific encounter planning will appear here."), "MECHANICS")
+        self.section_tabs.addTab(self._mechanics_tab(), "MECHANICS")
         self.section_tabs.addTab(self._empty_section("Loot, rewards, and achievement targets will appear here."), "LOOT & REWARDS")
         self.section_tabs.addTab(self._empty_section("Encounter notes will appear here."), "NOTES")
         self.section_tabs.setCurrentIndex(1)
@@ -100,25 +101,24 @@ class EncountersPage(FoundryPage):
         self.add_workspace(workspace)
 
         self.status = FoundryStatusBar()
-        self.status.info("Encounter workspace ready. Placeholder cards can be filled as encounter data is wired.")
+        self.status.info("Encounter workspace ready. Mechanics includes the interactive positioning board.")
         self.set_status(self.status)
 
     def _overview_tab(self) -> QWidget:
         tab = QWidget()
         layout = QHBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
-        summary = FoundryCard("Encounter Overview")
+        summary = FoundryCard("Encounter Overview", "trial").set_watermark("compass", 0.04)
         summary.addWidget(self._placeholder("Trial summary, selected boss, progression state, and encounter notes."))
         layout.addWidget(summary, 2)
 
-        progression = FoundryCard("Progression")
+        progression = FoundryCard("Progression", "progression")
         progression.addWidget(self._placeholder("Best pull\nPull count\nCurrent phase\nRecent result"))
         layout.addWidget(progression, 1)
 
-        raid_notes = FoundryCard("Raid Lead Notes")
-        raid_notes.setProperty("parchment", True)
+        raid_notes = FoundryCard("Raid Lead Notes", "feather").make_parchment().set_watermark("feather", 0.10)
         raid_notes.addWidget(self._placeholder("High-level direction for tonight's work."))
         layout.addWidget(raid_notes, 1)
         return tab
@@ -127,16 +127,15 @@ class EncountersPage(FoundryPage):
         tab = QWidget()
         root = QVBoxLayout(tab)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(12)
+        root.setSpacing(8)
 
         upper = QHBoxLayout()
-        upper.setSpacing(12)
+        upper.setSpacing(8)
 
-        # Left: boss / phase selector + positioning map.
         left = QVBoxLayout()
-        left.setSpacing(12)
+        left.setSpacing(8)
 
-        controls = FoundryCard("Select Boss")
+        controls = FoundryCard("Select Boss", "boss")
         boss_row = QHBoxLayout()
         self.boss_combo = QComboBox()
         self.boss_combo.addItem("Current Objective")
@@ -151,23 +150,24 @@ class EncountersPage(FoundryPage):
         phase_list.setMaximumWidth(180)
         phase_row.addWidget(phase_list)
 
-        positioning = FoundryCard("Positioning")
-        map_placeholder = QLabel(
-            "POSITIONING MAP\n\n"
-            "          MT        BOSS        OT\n\n"
-            "        H1       DPS STACK       H2\n\n"
-            "      PORTAL 1   PORTAL 3   PORTAL 2\n\n"
-            "Safe zones, movement arrows, and role markers will render here."
+        self.positioning_card = FoundryCard("Positioning", "treasure-map").set_watermark("compass", 0.035)
+        self.positioning_preview = QLabel()
+        self.positioning_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.positioning_preview.setMinimumHeight(300)
+        self.positioning_preview.setProperty("positioningMap", True)
+        self.positioning_preview.setText(
+            "No positioning capture yet.\n\n"
+            "Build the encounter on the Mechanics tab, then use Capture Positioning."
         )
-        map_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        map_placeholder.setMinimumHeight(300)
-        map_placeholder.setProperty("positioningMap", True)
-        positioning.addWidget(map_placeholder)
-        phase_row.addWidget(positioning, 1)
+        self.positioning_card.addWidget(self.positioning_preview)
+        open_board = QPushButton("Open Mechanics Map")
+        open_board.clicked.connect(lambda: self.section_tabs.setCurrentIndex(2))
+        self.positioning_card.set_header_action(open_board)
+        phase_row.addWidget(self.positioning_card, 1)
         controls.addLayout(phase_row)
         left.addWidget(controls, 3)
 
-        assignments = FoundryCard("Player Assignments (Phase 1)")
+        assignments = FoundryCard("Player Assignments (Phase 1)", "assignment")
         filter_row = QHBoxLayout()
         for text in ("All Players", "Tanks", "Healers", "DPS", "Special"):
             button = QPushButton(text)
@@ -187,11 +187,10 @@ class EncountersPage(FoundryPage):
         left.addWidget(assignments, 2)
         upper.addLayout(left, 6)
 
-        # Middle: phase timeline + event details.
         middle = QVBoxLayout()
-        middle.setSpacing(12)
+        middle.setSpacing(8)
 
-        timeline = FoundryCard("Phase Timeline Overview")
+        timeline = FoundryCard("Phase Timeline Overview", "stopwatch")
         timeline.addWidget(self._placeholder(
             "0:00   Pull\n"
             "0:20   Portal Spawn\n"
@@ -205,17 +204,16 @@ class EncountersPage(FoundryPage):
         ))
         middle.addWidget(timeline, 3)
 
-        event = FoundryCard("Event Details")
+        event = FoundryCard("Event Details", "mechanics")
         event.addWidget(self._placeholder("Selected event details, assignment ownership, and handling notes will appear here."))
-        event.addWidget(QPushButton("＋  Add Custom Event"))
+        event.addWidget(QPushButton("Add Custom Event"))
         middle.addWidget(event, 2)
         upper.addLayout(middle, 3)
 
-        # Right: mechanic reference + details + quick notes.
         right = QVBoxLayout()
-        right.setSpacing(12)
+        right.setSpacing(8)
 
-        mechanics = FoundryCard("Mechanics Reference")
+        mechanics = FoundryCard("Mechanics Reference", "open-book")
         mechanic_search = QLineEdit()
         mechanic_search.setPlaceholderText("Search mechanics…")
         mechanics.addWidget(mechanic_search)
@@ -224,27 +222,70 @@ class EncountersPage(FoundryPage):
         mechanics.addWidget(mechanic_list)
         right.addWidget(mechanics, 2)
 
-        detail = FoundryCard("Mechanic Details")
+        detail = FoundryCard("Mechanic Details", "crossed-swords")
         detail.addWidget(self._placeholder(
             "Select a mechanic to show type, phase, priority, failure risk, handling notes, and responsible roles."
         ))
         right.addWidget(detail, 3)
 
-        notes = FoundryCard("Quick Notes")
-        notes.setProperty("parchment", True)
+        notes = FoundryCard("Quick Notes", "feather").make_parchment().set_watermark("feather", 0.12)
         notes.addWidget(self._placeholder("• Callout conventions\n• Phase reminders\n• Adjustment notes"))
-        notes.set_header_action(QPushButton("＋ Add Note"))
+        notes.set_header_action(QPushButton("Add Note"))
         right.addWidget(notes, 2)
 
         upper.addLayout(right, 3)
         root.addLayout(upper, 1)
         return tab
 
+    def _mechanics_tab(self) -> QWidget:
+        tab = QWidget()
+        root = QVBoxLayout(tab)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(8)
+
+        intro = FoundryCard("Mechanics Map", "crossed-swords").set_watermark("compass", 0.025)
+        intro.addWidget(QLabel(
+            "Build a clean tactical picture of the fight. Drag the boss, role markers, portals, AOEs, and stack points into place. "
+            "Use 2 Bosses for paired encounters such as twins."
+        ))
+        root.addWidget(intro)
+
+        board_card = FoundryCard("Interactive Positioning Board", "treasure-map")
+        self.encounter_board = EncounterBoard()
+        self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
+        board_card.addWidget(self.encounter_board)
+        root.addWidget(board_card, 1)
+
+        self._load_positioning_preview(self.encounter_board.snapshot_path)
+        return tab
+
+    def _positioning_snapshot_saved(self, path: str):
+        self._load_positioning_preview(Path(path))
+        if hasattr(self, "status"):
+            self.status.success("Positioning captured. Assignments preview updated.")
+
+    def _load_positioning_preview(self, path: Path):
+        if not hasattr(self, "positioning_preview"):
+            return
+        if not path.exists():
+            return
+        pixmap = QPixmap(str(path))
+        if pixmap.isNull():
+            return
+        scaled = pixmap.scaled(
+            760,
+            360,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.positioning_preview.setPixmap(scaled)
+        self.positioning_preview.setToolTip("Latest captured positioning from the Mechanics tactical board")
+
     def _empty_section(self, text: str) -> QWidget:
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
-        card = FoundryCard("Workspace")
+        card = FoundryCard("Workspace", "notebook").set_watermark("compass", 0.035)
         card.addWidget(self._placeholder(text, centered=True))
         layout.addWidget(card, 1)
         return tab
