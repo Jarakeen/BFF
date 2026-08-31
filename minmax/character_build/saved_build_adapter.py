@@ -12,6 +12,7 @@ from ..gear_set_repository import GearSetRepository
 from ..race_repository import RaceRepository
 from ..role import Role
 from ..skill_effect_repository import SkillEffectRepository
+from ..weapon_enchantment_repository import WeaponEnchantmentRepository
 from .bar import Bar
 from .character_build import CharacterBuild
 from .character_class import CharacterClass
@@ -134,8 +135,8 @@ class SavedBuildCharacterAdapter:
     """Convert the Builds UI PlayerBuild model into canonical CharacterBuild.
 
     The adapter resolves only identities that existing repositories can prove.
-    Unknown sets, races, abilities, or ambiguous legacy weapon aggregates are
-    returned as unresolved diagnostics instead of guessed.
+    Unknown sets, races, abilities, enchantments, or ambiguous legacy weapon
+    aggregates are returned as unresolved diagnostics instead of guessed.
 
     Static character-sheet effects such as armor glyph magnitude, food stats,
     Mundus magnitude, and Champion Point math remain owned by the existing
@@ -150,6 +151,7 @@ class SavedBuildCharacterAdapter:
         race_repository: RaceRepository | None = None,
         gear_set_repository: GearSetRepository | None = None,
         skill_effect_repository: SkillEffectRepository | None = None,
+        weapon_enchantment_repository: WeaponEnchantmentRepository | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.race_repository = race_repository or RaceRepository(self.database_path)
@@ -158,6 +160,10 @@ class SavedBuildCharacterAdapter:
         )
         self.skill_effect_repository = (
             skill_effect_repository or SkillEffectRepository(self.database_path)
+        )
+        self.weapon_enchantment_repository = (
+            weapon_enchantment_repository
+            or WeaponEnchantmentRepository(self.database_path)
         )
 
     def adapt(
@@ -216,9 +222,6 @@ class SavedBuildCharacterAdapter:
             character_name=_text(saved.Name) or None,
             vampire=bool(saved.Vampire),
             werewolf=bool(saved.Werewolf),
-            # These fields currently have no separate canonical repository id
-            # in CharacterBuild consumers; preserve the exact saved selection
-            # rather than inventing a surrogate identity.
             mundus_id=_text(saved.Mundus) or None,
             food_id=_text(saved.Food) or None,
             potion_id=_text(saved.Potion) or None,
@@ -436,17 +439,29 @@ class SavedBuildCharacterAdapter:
                 f"{label}: secondary set field is not canonicalized yet: {entry.Set2}"
             )
 
-        # Saved builds store enchantment labels, while the current support
-        # bridge requires the database item id. Do not fabricate that id here.
-        if _text(entry.Enchant):
-            unresolved.append(
-                f"{label}: weapon enchantment item id is not resolved from saved label yet: {entry.Enchant}"
+        enchantment_item_id: int | None = None
+        enchantment_label = _text(entry.Enchant)
+        if enchantment_label:
+            matches = self.weapon_enchantment_repository.find_item_ids_by_label(
+                enchantment_label
             )
+            if len(matches) == 1:
+                enchantment_item_id = matches[0]
+            elif not matches:
+                unresolved.append(
+                    f"{label}: weapon enchantment label not found in WeaponEnchantmentRepository: {enchantment_label}"
+                )
+            else:
+                unresolved.append(
+                    f"{label}: weapon enchantment label is ambiguous ({len(matches)} matches): {enchantment_label}"
+                )
 
         return (
             Weapon(
                 weapon_type=weapon_type,
                 trait=_text(entry.Trait) or None,
+                enchantment_id=_stable_skill_id(enchantment_label) if enchantment_label else None,
+                enchantment_item_id=enchantment_item_id,
                 set_id=set_id,
                 quality=_text(entry.Quality) or None,
             ),
