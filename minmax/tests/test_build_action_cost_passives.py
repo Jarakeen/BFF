@@ -56,6 +56,32 @@ def _armor(*weights: str) -> dict[str, dict[str, str]]:
     return result
 
 
+def _combat_prayer_cost(
+    tmp_path: Path,
+    *,
+    light_count: int,
+) -> int:
+    weights = ["Light"] * light_count + ["Medium"] * (7 - light_count)
+    build = PlayerBuild(Race="Breton", Armor=_armor(*weights))
+    progression = CharacterProgression(owned_skill_lines=("Light Armor",))
+    base_cost = resolve_base_action_cost(
+        ability_id=41189,
+        base_cost=4590,
+        base_mechanic=1,
+        rank=4,
+        morph=2,
+    )
+    result = BuildFinalActionCostResolver(_resolver(tmp_path)).resolve(
+        build,
+        base_cost,
+        skill_line="Restoration Staff",
+        progression=progression,
+    )
+    assert result.unresolved == ()
+    assert result.final_cost is not None
+    return result.final_cost.for_resource(ResourceType.MAGICKA).final_amount
+
+
 def test_breton_magicka_mastery_is_seven_percent_magicka_only(tmp_path: Path) -> None:
     result = _resolver(tmp_path).resolve(PlayerBuild(Race="Breton"))
 
@@ -106,9 +132,7 @@ def test_redguard_martial_training_is_scoped_to_weapon_skill_lines(tmp_path: Pat
 
 
 def test_evocation_requires_light_armor_skill_line_ownership(tmp_path: Path) -> None:
-    build = PlayerBuild(
-        Armor=_armor("Light", "Light", "Light", "Light", "Light", "Medium", "Heavy")
-    )
+    build = PlayerBuild(Armor=_armor("Light", "Light", "Medium", "Medium", "Medium", "Medium", "Medium"))
 
     without_owned = _resolver(tmp_path).resolve(build)
     assert without_owned.modifiers.modifiers == ()
@@ -116,40 +140,44 @@ def test_evocation_requires_light_armor_skill_line_ownership(tmp_path: Path) -> 
     progression = CharacterProgression(owned_skill_lines=("Light Armor",))
     with_owned = _resolver(tmp_path).resolve(build, progression=progression)
 
+    assert with_owned.unresolved == ()
     assert len(with_owned.modifiers.modifiers) == 1
     modifier = with_owned.modifiers.modifiers[0]
-    assert modifier.source == "Light Armor: Evocation (5 pieces)"
-    assert modifier.value == 0.10
+    assert modifier.source == "Light Armor: Evocation (2 pieces; live verified)"
+    assert modifier.value == 0.03
     assert modifier.resources == (ResourceType.MAGICKA,)
 
 
-def test_evocation_counts_only_equipped_light_pieces(tmp_path: Path) -> None:
+def test_evocation_live_one_piece_matches_combat_prayer_4223(tmp_path: Path) -> None:
+    assert _combat_prayer_cost(tmp_path, light_count=1) == 4223
+
+
+def test_evocation_live_two_pieces_matches_combat_prayer_4131(tmp_path: Path) -> None:
+    assert _combat_prayer_cost(tmp_path, light_count=2) == 4131
+
+
+def test_evocation_live_six_pieces_matches_combat_prayer_3764(tmp_path: Path) -> None:
+    assert _combat_prayer_cost(tmp_path, light_count=6) == 3764
+
+
+def test_unverified_evocation_piece_count_stays_explicitly_unresolved(tmp_path: Path) -> None:
     build = PlayerBuild(
-        Armor=_armor("Light", "Light", "Light", "Light", "Light", "Light", "Medium")
+        Race="Breton",
+        Armor=_armor("Light", "Light", "Light", "Medium", "Medium", "Medium", "Medium"),
     )
     progression = CharacterProgression(owned_skill_lines=("Light Armor",))
 
     result = _resolver(tmp_path).resolve(build, progression=progression)
 
-    assert result.modifiers.modifiers[0].value == 0.12
+    assert len(result.unresolved) == 1
+    assert "not live-verified for 3 equipped Light pieces" in result.unresolved[0]
+    assert [modifier.value for modifier in result.modifiers.modifiers] == [0.07]
 
 
-def test_breton_and_evocation_accumulate_as_percentage_reductions(tmp_path: Path) -> None:
+def test_build_final_cost_withholds_result_for_unverified_evocation_count(tmp_path: Path) -> None:
     build = PlayerBuild(
         Race="Breton",
-        Armor=_armor("Light", "Light", "Light", "Light", "Light", "Light", "Medium"),
-    )
-    progression = CharacterProgression(owned_skill_lines=("Light Armor",))
-
-    result = _resolver(tmp_path).resolve(build, progression=progression)
-
-    assert [modifier.value for modifier in result.modifiers.modifiers] == [0.07, 0.12]
-
-
-def test_build_final_cost_uses_racial_and_owned_armor_passives(tmp_path: Path) -> None:
-    build = PlayerBuild(
-        Race="Breton",
-        Armor=_armor("Light", "Light", "Light", "Light", "Light", "Light", "Medium"),
+        Armor=_armor("Light", "Light", "Light", "Medium", "Medium", "Medium", "Medium"),
     )
     progression = CharacterProgression(owned_skill_lines=("Light Armor",))
     base_cost = resolve_base_action_cost(
@@ -167,8 +195,5 @@ def test_build_final_cost_uses_racial_and_owned_armor_passives(tmp_path: Path) -
         progression=progression,
     )
 
-    assert result.unresolved == ()
-    assert result.final_cost is not None
-    magicka = result.final_cost.for_resource(ResourceType.MAGICKA)
-    assert magicka.percent_reduction == 0.19
-    assert magicka.final_amount == 3718
+    assert result.final_cost is None
+    assert len(result.unresolved) == 1
