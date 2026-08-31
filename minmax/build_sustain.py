@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
 
 from models.build_model import PlayerBuild
 
+from .ability_cost_repository import AbilityCostRepository
 from .build_action_cost_modifiers import BuildActionCostModifierResolver
 from .build_calculation_context import BuildCalculationContext
 from .conditional_recovery import TimedRecoveryModifier
@@ -43,6 +43,20 @@ class PlannedBuildAction:
 
 
 @dataclass(frozen=True)
+class NamedBuildAction:
+    """One saved skill name placed at an explicit time on a sustain plan."""
+
+    time_seconds: float
+    skill_name: str
+
+    def __post_init__(self) -> None:
+        if self.time_seconds < 0:
+            raise ValueError(f"Named action time cannot be negative: {self.time_seconds}")
+        if not str(self.skill_name or "").strip():
+            raise ValueError("Named action requires a skill name")
+
+
+@dataclass(frozen=True)
 class BuildSustainRun:
     """Auditable Phase 4 sustain evaluation for one saved build/resource."""
 
@@ -68,16 +82,18 @@ def evaluate_build_sustain(
     activity_at: RecoveryActivityResolver | None = None,
     starting_amount: int | None = None,
     first_recovery_tick_seconds: float = 2.0,
+    additional_unresolved: tuple[str, ...] = (),
 ) -> BuildSustainRun:
     """Run a saved build through the verified Phase 4 sustain pipeline.
 
     The saved build supplies build-specific cost modifiers while the immutable
     calculation context supplies the already-audited character sheet state and
-    progression. Actions must already have canonical ``BaseActionCost`` values;
-    name-to-ability lookup remains a separate repository concern.
+    progression. This lower-level entry point accepts already-canonical
+    ``BaseActionCost`` actions; ``evaluate_named_build_sustain`` owns the
+    name-to-ability lookup bridge.
 
     Only events for the requested resource enter the single-resource timeline.
-    Unsupported build cost modifiers remain explicit in ``unresolved``.
+    Unsupported cost or action resolution remains explicit in ``unresolved``.
     """
 
     duration = float(duration_seconds)
@@ -143,5 +159,70 @@ def evaluate_build_sustain(
         restoration_events=resource_restores,
         timeline=timeline,
         sustain=summarize_sustain(timeline),
-        unresolved=resolved_modifiers.unresolved,
+        unresolved=resolved_modifiers.unresolved + tuple(additional_unresolved),
+    )
+
+
+def evaluate_named_build_sustain(
+    *,
+    build: PlayerBuild,
+    context: BuildCalculationContext,
+    resource: ResourceType,
+    duration_seconds: float,
+    actions: tuple[NamedBuildAction, ...],
+    ability_cost_repository: AbilityCostRepository,
+    cost_modifier_resolver: BuildActionCostModifierResolver,
+    restoration_events: tuple[ResourceRestorationEvent, ...] = (),
+    recovery_modifiers: tuple[TimedRecoveryModifier, ...] = (),
+    activity_at: RecoveryActivityResolver | None = None,
+    starting_amount: int | None = None,
+    first_recovery_tick_seconds: float = 2.0,
+) -> BuildSustainRun:
+    """Resolve named saved skills and run them through the Phase 4 pipeline."""
+
+    resolved_actions: list[PlannedBuildAction] = []
+    unresolved: list[str] = []
+
+    for action in actions:
+        resolution = ability_cost_repository.resolve_name(action.skill_name)
+        if resolution.base_cost is None:
+            if resolution.unresolved:
+                unresolved.extend(
+                    f"{action.skill_name}: {message}" for message in resolution.unresolved
+                )
+            else:
+                unresolved.append(f"{action.skill_name}: action cost could not be resolved")
+            continue
+
+        # Coefficient absence is relevant to damage/healing evaluation but not
+        # to resource cost. Keep only cost-resolution failures here rather than
+        # turning a valid resource action into a false sustain warning.
+        cost_unresolved = tuple(
+            message
+            for message in resolution.unresolved
+            if not message.startswith("No coefficient rows found")
+        )
+        unresolved.extend(f"{action.skill_name}: {message}" for message in cost_unresolved)
+        resolved_actions.append(
+            PlannedBuildAction(
+                time_seconds=action.time_seconds,
+                source=resolution.name or action.skill_name,
+                base_cost=resolution.base_cost,
+                skill_line=resolution.skill_line,
+            )
+        )
+
+    return evaluate_build_sustain(
+        build=build,
+        context=context,
+        resource=resource,
+        duration_seconds=duration_seconds,
+        actions=tuple(resolved_actions),
+        cost_modifier_resolver=cost_modifier_resolver,
+        restoration_events=restoration_events,
+        recovery_modifiers=recovery_modifiers,
+        activity_at=activity_at,
+        starting_amount=starting_amount,
+        first_recovery_tick_seconds=first_recovery_tick_seconds,
+        additional_unresolved=tuple(unresolved),
     )
