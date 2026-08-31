@@ -130,6 +130,58 @@ def test_skill_damage_evaluates_all_active_components(
     database.close()
 
 
+def test_skill_damage_does_not_apply_r_as_multiplier(tmp_path):
+    database_path = tmp_path / "eso.db"
+    create_database(database_path)
+
+    connection = sqlite3.connect(database_path)
+    connection.execute(
+        "UPDATE skill_coefficient SET r = 0.5 WHERE skill_rank_id = 4410 AND coefficient_number = 1"
+    )
+    connection.commit()
+    connection.close()
+
+    database = EsoDatabase(database_path)
+    result = SkillDamageService(SkillCoefficientService(database)).evaluate(
+        4410,
+        max_stat=30000,
+        power=6000,
+    )
+
+    expected_first = 0.175015 * 30000 + 1.83764 * 6000 - 1.73373
+    assert result.components[0].raw_value == pytest.approx(expected_first)
+    assert result.components[0].scaled_value == pytest.approx(expected_first)
+    database.close()
+
+
+def test_skill_damage_keeps_valid_negative_a_component(tmp_path):
+    database_path = tmp_path / "eso.db"
+    create_database(database_path)
+
+    connection = sqlite3.connect(database_path)
+    connection.execute(
+        """
+        INSERT INTO skill_coefficient (
+            skill_rank_id, coefficient_number, type, a, b, c, r, avg
+        ) VALUES (4410, 4, '8', -0.0000693, 0.315553, -0.593874, 0.999998, NULL)
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    database = EsoDatabase(database_path)
+    result = SkillDamageService(SkillCoefficientService(database)).evaluate(
+        4410,
+        max_stat=30000,
+        power=6000,
+    )
+
+    assert [component.coefficient_number for component in result.components] == [1, 2, 4]
+    expected_fourth = -0.0000693 * 30000 + 0.315553 * 6000 - 0.593874
+    assert result.components[2].scaled_value == pytest.approx(expected_fourth)
+    database.close()
+
+
 def test_empty_skill_has_zero_damage(
     tmp_path,
 ):
@@ -153,4 +205,3 @@ def test_empty_skill_has_zero_damage(
     assert result.total_raw_damage == 0
 
     database.close()
-    
