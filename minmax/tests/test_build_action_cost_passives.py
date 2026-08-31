@@ -16,6 +16,9 @@ from minmax.resource_costs import ResourceType, resolve_base_action_cost
 
 def _database(tmp_path: Path) -> Path:
     path = tmp_path / "eso.db"
+    if path.exists():
+        return path
+
     with sqlite3.connect(path) as connection:
         connection.executescript(
             """
