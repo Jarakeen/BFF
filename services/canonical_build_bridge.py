@@ -17,6 +17,20 @@ class CanonicalBuildBridge:
     work during Phase 1.
     """
 
+    _LEGACY_IDENTITY_FIELDS = frozenset(
+        {
+            "Name",
+            "Gamertag",
+            "BuildName",
+            "Race",
+            "EsoClass",
+            "Role",
+            "Alliance",
+            "CharacterId",
+            "BuildId",
+        }
+    )
+
     def __init__(self, legacy_path: Path, catalog_path: Path | None = None):
         self.legacy_path = Path(legacy_path)
         self.catalog_path = catalog_path or self.legacy_path.with_name("characters.json")
@@ -92,8 +106,22 @@ class CanonicalBuildBridge:
 
     @classmethod
     def _is_valid_legacy_build(cls, legacy: Any) -> bool:
-        """Reject placeholder/empty legacy rows before reconstructing them."""
-        return isinstance(legacy, dict) and cls._has_meaningful_legacy_data(legacy)
+        """Reject identity-only placeholder rows before reconstructing them.
+
+        Character/build identity belongs in the canonical record itself and
+        does not prove that the embedded compatibility payload contains any
+        actual build selections. A legacy snapshot becomes authoritative only
+        when it contains meaningful non-identity state such as attributes,
+        gear, bars, mundus, consumables, or Champion Points.
+        """
+        if not isinstance(legacy, dict):
+            return False
+        build_state = {
+            key: value
+            for key, value in legacy.items()
+            if key not in cls._LEGACY_IDENTITY_FIELDS
+        }
+        return cls._has_meaningful_legacy_data(build_state)
 
     @classmethod
     def _roster_from_catalog(cls, catalog: dict[str, Any]) -> BuildRoster:
