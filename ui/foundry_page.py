@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy, QFrame
 
 
@@ -30,9 +31,8 @@ class FoundryPage(QWidget):
         self.workspace_scroll = QScrollArea()
         self.workspace_scroll.setWidgetResizable(True)
         self.workspace_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.workspace_scroll.setHorizontalScrollBarPolicy(
-            self.workspace_scroll.horizontalScrollBarPolicy()
-        )
+        self.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.workspace_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.workspace_scroll.setWidget(self.workspace_widget)
 
         self.root.addWidget(self.workspace_scroll, 1)
