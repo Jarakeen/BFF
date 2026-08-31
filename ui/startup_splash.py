@@ -46,15 +46,31 @@ def _draw_centered_text(
     )
 
 
-def create_startup_splash() -> QSplashScreen:
-    """Create the static, motion-free Black Feather Foundry startup screen.
+def _fantasy_splash_pixmap() -> QPixmap:
+    """Return the optional fantasy splash artwork when it is installed locally."""
+    for filename in ("fantasy_splash.png", "fantasy_splash.jpg", "fantasy_splash.jpeg"):
+        path = get_resource_path(
+            "assets", "themes", "bff", "grimoire", "assets", filename
+        )
+        if not path.exists():
+            continue
 
-    Accessibility rule: this splash intentionally contains no animation,
-    blinking, fades, cycling text, or progress effects. One startup line is
-    selected before the first paint and remains unchanged until the splash
-    closes.
-    """
+        pixmap = QPixmap(str(path))
+        if pixmap.isNull():
+            continue
 
+        if pixmap.width() > 1400:
+            pixmap = pixmap.scaledToWidth(
+                1400,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        return pixmap
+
+    return QPixmap()
+
+
+def _fallback_pixmap() -> QPixmap:
+    """Build the original static BFF splash if the fantasy artwork is absent."""
     width, height = 680, 400
     pixmap = QPixmap(width, height)
     pixmap.fill(QColor("#0C171B"))
@@ -62,13 +78,11 @@ def create_startup_splash() -> QSplashScreen:
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-    # Quiet brass frame.
     painter.setPen(QPen(QColor("#C8A46A"), 2))
     painter.drawRect(12, 12, width - 24, height - 24)
     painter.setPen(QPen(QColor("#2F7A80"), 1))
     painter.drawRect(20, 20, width - 40, height - 40)
 
-    # Feather watermark. It is deliberately still and low contrast.
     feather_path = get_resource_path(
         "assets", "themes", "bff", "grimoire", "assets", "feather_watermark.svg"
     )
@@ -102,7 +116,6 @@ def create_startup_splash() -> QSplashScreen:
         QColor("#59AEB3"),
     )
 
-    # A restrained divider keeps the splash feeling like a field-journal plate.
     painter.setPen(QPen(QColor("#C8A46A"), 1))
     painter.drawLine(188, 263, 492, 263)
 
@@ -125,6 +138,19 @@ def create_startup_splash() -> QSplashScreen:
     )
 
     painter.end()
+    return pixmap
+
+
+def create_startup_splash() -> QSplashScreen:
+    """Create a completely static, motion-free startup screen.
+
+    The fantasy artwork is preferred when present. The original BFF field-office
+    plate remains as a safe fallback. Neither version animates, blinks, fades,
+    cycles text, or displays a moving progress indicator.
+    """
+    pixmap = _fantasy_splash_pixmap()
+    if pixmap.isNull():
+        pixmap = _fallback_pixmap()
 
     splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
     splash.setAccessibleName("Black Feather Foundry startup screen")
