@@ -1,6 +1,6 @@
 # Phase 3 Static Combat Closeout
 
-Status: **closeout checkpoint on `phase3`**
+Status: **🟢 Complete on `phase3`**
 
 Purpose: record the verified rules, database coverage, accepted residuals, and deferred boundaries for the Phase 3 Static Combat Rules Engine.
 
@@ -246,6 +246,43 @@ real database coefficient
 
 The audit is intentionally a real-database command rather than a normal pytest dependency because `data/eso.db` is a mutable local data artifact.
 
+### Final local evidence
+
+The closeout audit passed against the real local database using:
+
+```text
+Skill:                    Corrosive Armor
+Ability ID:               17878
+Skill rank ID:            4400
+Coefficient:              #1 type 8
+Damage type:              flame
+DoT / AoE / can crit:     True / True / True
+Raw component:            5019.312006
+Final damage:             6008.989831
+```
+
+Injected audit state:
+
+```text
+Attacker: Major Berserk
+Target: Major Vulnerability
+Target resistance: 18200
+Penetration: 7000
+Target Critical Resistance: 1320
+```
+
+Result:
+
+```text
+PASS: one persisted real database component traversed the complete Phase 3 static damage pipeline.
+```
+
+Final full test suite after closeout:
+
+```text
+1305 passed in 13.41s
+```
+
 ---
 
 ## Deferred beyond Phase 3
@@ -281,7 +318,9 @@ Phase 3 is complete when all of the following are true:
 - [x] Block Cost / Block Mitigation first-class models exist
 - [x] named combat-state foundation exists
 - [x] Combat Prayer downstream validation accepted within ~0.085%
-- [ ] real `eso.db` end-to-end closeout audit passes locally
-- [ ] final full pytest suite passes after closeout commits
+- [x] real `eso.db` end-to-end closeout audit passes locally
+- [x] final full pytest suite passes after closeout commits
 
-Once the final two checks are green, Phase 3 can be marked complete and development can move to the planned style/UX makeover checkpoint before the next major systems phase.
+**Phase 3 completed on 2026-08-31.**
+
+The next planned checkpoint is the style/UX makeover before the next major systems phase.
