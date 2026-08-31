@@ -1,49 +1,42 @@
 # ==================================================
 # Black Feather Foundry
-#
-# File:
 # main_window.py
-#
-# Purpose:
-# Main application window.
-#
 # ==================================================
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QMainWindow,
-    QWidget,
     QHBoxLayout,
-    QStackedWidget,
+    QMainWindow,
+    QMessageBox,
     QScrollArea,
     QSizePolicy,
+    QStackedWidget,
+    QWidget,
 )
 
 from engine.config import get_data_dir
-from ui.components.foundry_sidebar import FoundrySidebar
-from services.eso_achievement_database_service import (
-    EsoAchievementDatabaseService,
-)
-
-from ui.broadcast_page import BroadcastPage
-from ui.field_notes_page import FieldNotesPage
-from ui.stream_elements_page import LiveOperationsPage
+from services.eso_achievement_database_service import EsoAchievementDatabaseService
+from services.expedition_service import ExpeditionService
+from ui.achievements_page import AchievementsPage
 from ui.archive_page import ArchivePage
-from ui.incident_page import IncidentPage
-# from ui.achievement_desk_page import AchievementPage
-from ui.collections_page import CollectionsPage
-from ui.collectibles_page import CollectiblesPage
-from ui.roster_page import RosterPage
-from ui.operations_console import OperationsConsole
-from ui.encounters_page import EncountersPage
-from ui.mechanics_page import MechanicsPage
-from ui.settings_page import SettingsPage
+from ui.broadcast_page import BroadcastPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
+from ui.collectibles_page import CollectiblesPage
+from ui.components.foundry_sidebar import FoundrySidebar
+from ui.coverage_page import CoveragePage
+from ui.encounters_page import EncountersPage
+from ui.field_notes_page import FieldNotesPage
+from ui.incident_page import IncidentPage
+from ui.mechanics_page import MechanicsPage
+from ui.operations_console import OperationsConsole
 from ui.optimization_page import OptimizationPage
-from services.expedition_service import ExpeditionService
+from ui.reference_data_page import ReferenceDataPage
+from ui.roster_page import RosterPage
+from ui.settings_page import SettingsPage
+from ui.stream_elements_page import LiveOperationsPage
 
 
 class MainWindow(QMainWindow):
@@ -51,89 +44,78 @@ class MainWindow(QMainWindow):
 
     def __init__(self, expedition=None):
         super().__init__()
-
         data_dir = get_data_dir()
-
-        self.eso_data_service = EsoAchievementDatabaseService(
-            data_dir / "eso.db"
-        )
-
-        self.expedition_service = (
-            expedition
-            if expedition is not None
-            else ExpeditionService()
-        )
-
+        self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
+        self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.setWindowTitle("Black Feather Foundry Field Office")
         self.resize(1700, 950)
-
         self.build_ui()
         self.connect_signals()
-
-    # --------------------------------------------------
-    # UI
-    # --------------------------------------------------
 
     def build_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
-
         layout = QHBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         self.sidebar = FoundrySidebar()
         layout.addWidget(self.sidebar)
-
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
-        # "collections" remains the existing Achievements workspace.
-        # "collectibles" is the shared page for every collectibles:<category> route.
         self.pages = {
             "broadcast": BroadcastPage(),
             "field_office": FieldNotesPage(),
             "live_operations": LiveOperationsPage(),
             "archive": ArchivePage(),
             "incident": IncidentPage(),
-            # "achievement": AchievementPage(),
-            "collections": CollectionsPage(),
+            "achievements": AchievementsPage(),
             "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
-            "operations_console": OperationsConsole(
-                expedition=self.expedition_service
-            ),
-            "console:1": EncountersPage(
-                expedition=self.expedition_service
-            ),
+            "operations_console": OperationsConsole(expedition=self.expedition_service),
+            "console:1": EncountersPage(expedition=self.expedition_service),
             "console:2": BuildsPage(),
             "console:3": CapabilitiesPage(),
-            "console:4": MechanicsPage(
-                expedition=self.expedition_service
-            ),
+            "console:4": MechanicsPage(expedition=self.expedition_service),
             "console:6": OptimizationPage(),
+            "console:7": CoveragePage(),
+            "console:8": ReferenceDataPage(),
             "settings": SettingsPage(),
         }
 
         self.page_containers = {}
-
         for name, page in self.pages.items():
             container = self.wrap_page(page)
             self.page_containers[name] = container
             self.stack.addWidget(container)
 
-    # --------------------------------------------------
-    # Signals
-    # --------------------------------------------------
-
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
 
-    # --------------------------------------------------
-    # Navigation
-    # --------------------------------------------------
+    def _confirm_collectible_navigation(self, target_page: str) -> bool:
+        collectibles_page = self.pages.get("collectibles")
+        if collectibles_page is None or not collectibles_page.has_pending_changes():
+            return True
+
+        current_container = self.stack.currentWidget()
+        if current_container is not self.page_containers.get("collectibles"):
+            return True
+
+        answer = QMessageBox.question(
+            self,
+            "Unsaved Collection Changes",
+            "You have collectible ownership changes waiting to be saved.\n\n"
+            "Leave this collection without saving them?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
 
     def show_page(self, page_name: str):
+        if not self._confirm_collectible_navigation(page_name):
+            return
+
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
             collectibles_page = self.pages["collectibles"]
@@ -151,17 +133,8 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        scroll.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
-
-        page.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Preferred,
-        )
-
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         scroll.setWidget(page)
         return scroll
