@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 from .resource_costs import ResourceType
 from .resource_state import StaticResourcePool
@@ -42,6 +43,17 @@ class RecoveryTick:
     restored_amount: int
 
 
+@dataclass(frozen=True)
+class ScheduledRecoveryTick:
+    """One recovery tick placed at an explicit time on a deterministic timeline."""
+
+    time_seconds: float
+    tick: RecoveryTick
+
+
+RecoveryActivityResolver = Callable[[float], RecoveryActivityState]
+
+
 def resolve_in_combat_recovery_tick(
     pool: StaticResourcePool,
     activity: RecoveryActivityState = RecoveryActivityState(),
@@ -66,3 +78,53 @@ def resolve_in_combat_recovery_tick(
         suppressed=suppressed,
         restored_amount=restored,
     )
+
+
+def schedule_in_combat_recovery_ticks(
+    pool: StaticResourcePool,
+    *,
+    duration_seconds: float,
+    first_tick_seconds: float = IN_COMBAT_RECOVERY_INTERVAL_SECONDS,
+    activity_at: RecoveryActivityResolver | None = None,
+) -> tuple[ScheduledRecoveryTick, ...]:
+    """Schedule ordinary recovery ticks within one deterministic time window.
+
+    ``first_tick_seconds`` makes recovery phase explicit. A fresh baseline
+    window therefore defaults to ticks at 2, 4, 6, ... seconds rather than
+    inventing a tick at time zero. A later combat timeline may pass a different
+    first-tick offset when it already knows the resource recovery phase.
+
+    Activity is resolved independently at every tick instant. This matters for
+    Stamina because blocking, sprinting, or sneaking for one tick must not
+    suppress every other tick in the window.
+    """
+
+    duration = float(duration_seconds)
+    first_tick = float(first_tick_seconds)
+    if duration < 0:
+        raise ValueError(f"Recovery schedule duration cannot be negative: {duration_seconds}")
+    if first_tick <= 0:
+        raise ValueError(f"First recovery tick must be after time zero: {first_tick_seconds}")
+
+    resolve_activity = activity_at or (lambda _time: RecoveryActivityState())
+    scheduled: list[ScheduledRecoveryTick] = []
+    tick_index = 0
+    while True:
+        time_seconds = first_tick + (tick_index * IN_COMBAT_RECOVERY_INTERVAL_SECONDS)
+        if time_seconds > duration:
+            break
+        activity = resolve_activity(time_seconds)
+        if not isinstance(activity, RecoveryActivityState):
+            raise ValueError(
+                "Recovery activity resolver must return RecoveryActivityState; "
+                f"received {type(activity).__name__} at {time_seconds:g}s"
+            )
+        scheduled.append(
+            ScheduledRecoveryTick(
+                time_seconds=time_seconds,
+                tick=resolve_in_combat_recovery_tick(pool, activity),
+            )
+        )
+        tick_index += 1
+
+    return tuple(scheduled)
