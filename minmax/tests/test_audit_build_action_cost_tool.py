@@ -41,9 +41,13 @@ def _database(tmp_path: Path) -> Path:
             );
             """
         )
-        connection.execute(
+        connection.executemany(
             "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (99, 41189, "Combat Prayer", 4, 2, 4590, 1, "Restoration Staff"),
+            [
+                (99, 41189, "Combat Prayer", 4, 2, 4590, 1, "Restoration Staff"),
+                (100, 1001, "Echoing Vigor", 1, 1, 3200, 4, "Assault"),
+                (101, 1004, "Echoing Vigor", 4, 1, 2980, 4, "Assault"),
+            ],
         )
         connection.execute(
             "INSERT INTO jewelry_glyph VALUES (?, ?)",
@@ -116,6 +120,34 @@ def test_tool_prints_modifier_breakdown_and_final_cost(tmp_path: Path) -> None:
     assert "Necklace: Glyph of Reduce Spell Cost" in result.stdout
     assert "magicka: base=4590 flat=203 percent=0.18" in result.stdout
     assert "final=3597" in result.stdout
+
+
+def test_tool_resolves_exact_name_to_unique_highest_rank(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(TOOL),
+            "--build",
+            "DF Healer",
+            "--name",
+            "Echoing Vigor",
+            "--database",
+            str(_database(tmp_path)),
+            "--builds",
+            str(_builds(tmp_path)),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Ability:        Echoing Vigor" in result.stdout
+    assert "Ability ID:     1004" in result.stdout
+    assert "Rank / morph:   4 / 1" in result.stdout
+    assert "Base cost:      2980" in result.stdout
+    assert "Resources:      stamina" in result.stdout
 
 
 def test_tool_fails_explicitly_for_missing_build(tmp_path: Path) -> None:
