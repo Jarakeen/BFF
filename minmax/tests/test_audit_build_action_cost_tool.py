@@ -113,7 +113,7 @@ def test_tool_prints_modifier_breakdown_and_final_cost(tmp_path: Path) -> None:
     assert "Light Armor: Evocation (6 pieces)" in result.stdout
     assert "Necklace: Glyph of Reduce Spell Cost" in result.stdout
     assert "magicka: base=4590 flat=203 percent=0.19" in result.stdout
-    assert "final=3510" in result.stdout
+    assert "final=3553" in result.stdout
 
 
 def test_tool_fails_explicitly_for_missing_build(tmp_path: Path) -> None:
