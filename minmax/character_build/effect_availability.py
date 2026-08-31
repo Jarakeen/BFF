@@ -37,6 +37,14 @@ def resolve_available_effects(
         for slot in bar.slots:
             for effect in slot.effects:
                 if effect.layer == EffectLayer.CAST:
+                    # Ultimate slots are resolved exclusively through
+                    # resolve_ultimate_cast_effects(). Imported ability
+                    # effects currently arrive as CAST-layer variants even
+                    # when the source ability is an ultimate, so allowing
+                    # them through this ordinary cast path would emit the
+                    # same ultimate result twice.
+                    if slot.is_ultimate:
+                        continue
                     if is_active_bar and slot.is_cast and effect.is_available_on(
                         active_bar
                     ):
