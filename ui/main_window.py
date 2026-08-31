@@ -29,6 +29,7 @@ from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
 from ui.encounters_page import EncountersPage
 from ui.field_notes_page import FieldNotesPage
+from ui.foundry_page import FoundryPage
 from ui.incident_page import IncidentPage
 from ui.mechanics_page import MechanicsPage
 from ui.operations_console import OperationsConsole
@@ -138,6 +139,12 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.page_containers[page_name])
 
     def wrap_page(self, page):
+        # FoundryPage already owns its scrolling workspace. Wrapping it in a
+        # second QScrollArea caused oversized cards and competing scrollbars.
+        if isinstance(page, FoundryPage):
+            page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            return page
+
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
