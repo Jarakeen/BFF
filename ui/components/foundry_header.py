@@ -6,13 +6,15 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QSizePolicy
 
 from ui.theme.fonts import Fonts
+from ui.ux_icons import icon_path, semantic_icon
 
 
 class FoundryHeader(QWidget):
-    """Compact page header with context controls docked to the right."""
+    """Compact page header with semantic asset icon and right-side context controls."""
 
     def __init__(
         self,
@@ -26,8 +28,12 @@ class FoundryHeader(QWidget):
         self.setProperty("foundryHeader", True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        self.icon = QLabel(icon)
+        self.icon = QLabel()
         self.icon.setProperty("headerIcon", True)
+        self.icon.setFixedSize(24, 24)
+        self.icon.setScaledContents(True)
+        self._set_icon(icon or semantic_icon(title))
+
         self.title = QLabel(title)
         self.title.setProperty("pageTitle", True)
         self.title.setFont(Fonts.page_title())
@@ -38,7 +44,7 @@ class FoundryHeader(QWidget):
 
         title_row = QHBoxLayout()
         title_row.setContentsMargins(0, 0, 0, 0)
-        title_row.setSpacing(6)
+        title_row.setSpacing(7)
         title_row.addWidget(self.icon)
         title_row.addWidget(self.title)
         title_row.addStretch()
@@ -68,6 +74,19 @@ class FoundryHeader(QWidget):
         layout.setSpacing(16)
         layout.addLayout(left, 1)
         layout.addLayout(right)
+
+    def _set_icon(self, name: str):
+        self.icon.clear()
+        self.icon.setVisible(bool(name))
+        if not name:
+            return
+        path = icon_path(name)
+        if path is None:
+            return
+        pixmap = QPixmap(str(path))
+        if not pixmap.isNull():
+            self.icon.setPixmap(pixmap)
+            self.icon.setToolTip(name.replace("-", " ").title())
 
     def add_context_widget(self, widget: QWidget):
         self.context_layout.addWidget(widget)
