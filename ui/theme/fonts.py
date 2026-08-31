@@ -10,62 +10,52 @@ class Fonts:
     """Central typography system for the Foundry UI."""
 
     @staticmethod
-    def application_title():
-        f = QFont("Cinzel", 22)
-        f.setBold(True)
+    def _font(family: str, size: float, *, bold: bool = False, italic: bool = False):
+        f = QFont(family)
+        f.setPointSizeF(size)
+        f.setBold(bold)
+        f.setItalic(italic)
         return f
+
+    @staticmethod
+    def application_title():
+        return Fonts._font("Cinzel", 22, bold=True)
 
     @staticmethod
     def page_title():
-        f = QFont("Cinzel", 17)
-        f.setBold(True)
-        return f
+        return Fonts._font("Cinzel", 17, bold=True)
 
     @staticmethod
     def section_title():
-        f = QFont("Cormorant Garamond", 13)
-        f.setBold(True)
-        return f
+        return Fonts._font("Cormorant Garamond", 13, bold=True)
 
     @staticmethod
     def statistic():
-        f = QFont("Cinzel", 16)
-        f.setBold(True)
-        return f
+        return Fonts._font("Cinzel", 16, bold=True)
 
     @staticmethod
     def logo():
-        f = QFont("Cinzel", 17)
-        f.setBold(True)
-        return f
+        return Fonts._font("Cinzel", 17, bold=True)
 
     @staticmethod
     def subtitle():
-        f = QFont("Cormorant Garamond", 12)
-        f.setItalic(True)
-        return f
+        return Fonts._font("Cormorant Garamond", 12, italic=True)
 
     @staticmethod
     def note():
-        f = QFont("Cormorant Garamond", 12)
-        f.setItalic(True)
-        return f
+        return Fonts._font("Cormorant Garamond", 12, italic=True)
 
     @staticmethod
     def status():
-        f = QFont("Cormorant Garamond", 10)
-        f.setItalic(True)
-        return f
+        return Fonts._font("Cormorant Garamond", 10.5, italic=True)
 
     @staticmethod
     def label():
-        f = QFont("Montserrat", 9)
-        f.setBold(True)
-        return f
+        return Fonts._font("Montserrat", 9.5, bold=True)
 
     @staticmethod
     def body():
-        return QFont("Montserrat", 9)
+        return Fonts._font("Montserrat", 9.5)
 
     @staticmethod
     def section():
@@ -73,30 +63,24 @@ class Fonts:
 
     @staticmethod
     def button():
-        f = QFont("Montserrat", 9)
-        f.setBold(True)
-        return f
+        return Fonts._font("Montserrat", 9.5, bold=True)
 
     @staticmethod
     def sidebar():
-        f = QFont("Montserrat", 9)
-        f.setBold(True)
-        return f
+        return Fonts._font("Montserrat", 9.5, bold=True)
 
     @staticmethod
     def table():
-        return QFont("Montserrat", 9)
+        return Fonts._font("Montserrat", 9.5)
 
     @staticmethod
     def small():
-        return QFont("Montserrat", 8)
+        return Fonts._font("Montserrat", 8.5)
 
     @staticmethod
     def metric():
-        f = QFont("Cascadia Code", 10)
-        f.setBold(True)
-        return f
+        return Fonts._font("Cascadia Code", 10.5, bold=True)
 
     @staticmethod
     def mono():
-        return QFont("Cascadia Code", 9)
+        return Fonts._font("Cascadia Code", 9.5)
