@@ -3,7 +3,16 @@ from __future__ import annotations
 import json
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QBrush, QFont, QImage, QPainter, QPen
+from PySide6.QtGui import (
+    QColor,
+    QBrush,
+    QFont,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPolygonF,
+)
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
@@ -43,20 +52,99 @@ class EncounterToken(QGraphicsObject):
         self.setZValue(10)
 
     def boundingRect(self) -> QRectF:
+        """Return the complete painted area so movement never leaves stale pixels."""
         r = self.radius
-        return QRectF(-60, -r - 4, 120, r * 2 + 31)
+        if self.kind == "boss":
+            outer = r + 22
+            top_extra = 12
+            label_h = 30
+            pad = 6
+            return QRectF(
+                -outer - pad,
+                -outer - top_extra - pad,
+                (outer + pad) * 2,
+                (outer + pad) * 2 + top_extra + label_h,
+            )
+
+        pad = 5
+        label_h = 24
+        return QRectF(
+            -60,
+            -r - pad,
+            120,
+            (r + pad) * 2 + label_h,
+        )
+
+    def shape(self) -> QPainterPath:
+        path = QPainterPath()
+        r = self.radius
+        if self.kind == "boss":
+            outer = r + 22
+            path.addEllipse(QPointF(0, 0), outer, outer)
+        else:
+            path.addEllipse(QPointF(0, 0), r, r)
+        return path
 
     def paint(self, painter: QPainter, option, widget=None):
         r = self.radius
         selected = self.isSelected()
-        edge = QColor("#E0B86A" if selected else "#A1844F")
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        if self.kind == "boss":
+            # Restrained danger ring around a more character-like boss marker.
+            painter.setPen(QPen(QColor(185, 52, 42, 120), 2.2))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(0, 0), r + 18, r + 18)
+
+            painter.setPen(
+                QPen(
+                    QColor("#E0B86A") if selected else QColor("#A1844F"),
+                    2.4 if selected else 1.6,
+                )
+            )
+            painter.setBrush(QBrush(QColor("#4A2420")))
+            painter.drawEllipse(QPointF(0, 0), r + 4, r + 4)
+
+            painter.setPen(QPen(QColor("#6E4D3E"), 1.0))
+            painter.setBrush(QBrush(QColor("#211715")))
+            painter.drawEllipse(QPointF(0, 0), r - 3, r - 3)
+
+            # Simple boss silhouette: head, shoulders, torso, and crown/horns.
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QBrush(QColor("#161110")))
+            painter.drawEllipse(QPointF(0, -11), 6.5, 6.5)
+
+            torso = QPainterPath()
+            torso.moveTo(0, -4)
+            torso.lineTo(-14, 8)
+            torso.lineTo(-10, 20)
+            torso.lineTo(10, 20)
+            torso.lineTo(14, 8)
+            torso.closeSubpath()
+            painter.drawPath(torso)
+
+            painter.setPen(QPen(QColor("#C6A361"), 1.2))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawLine(-9, -16, -3, -8)
+            painter.drawLine(9, -16, 3, -8)
+
+            label_font = QFont("Montserrat", 8)
+            label_font.setBold(True)
+            painter.setFont(label_font)
+            painter.setPen(QColor("#E7D7B3"))
+            painter.drawText(
+                QRectF(-58, r + 8, 116, 20),
+                Qt.AlignmentFlag.AlignHCenter,
+                self.label,
+            )
+            return
+
+        edge = QColor("#E0B86A" if selected else "#A1844F")
         painter.setPen(QPen(edge, 2.2 if selected else 1.4))
         painter.setBrush(QBrush(self.color))
         painter.drawEllipse(QPointF(0, 0), r, r)
 
         glyph = {
-            "boss": "B",
             "tank": "T",
             "healer": "H",
             "dps": "D",
@@ -71,7 +159,6 @@ class EncounterToken(QGraphicsObject):
         painter.drawText(QRectF(-r, -r, r * 2, r * 2), Qt.AlignmentFlag.AlignCenter, glyph)
 
         label_font = QFont("Montserrat", 8)
-        label_font.setBold(self.kind == "boss")
         painter.setFont(label_font)
         painter.setPen(QColor("#D8CFBE"))
         painter.drawText(QRectF(-58, r + 4, 116, 18), Qt.AlignmentFlag.AlignHCenter, self.label)
@@ -83,14 +170,15 @@ class EncounterToken(QGraphicsObject):
     def mouseReleaseEvent(self, event):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self._clamp_to_scene()
+        self.scene().update()
         super().mouseReleaseEvent(event)
 
     def _clamp_to_scene(self):
         p = self.pos()
-        margin = max(62, self.radius + 8)
+        margin = max(62, self.radius + 26 if self.kind == "boss" else self.radius + 8)
         self.setPos(
             max(margin, min(SCENE_W - margin, p.x())),
-            max(self.radius + 8, min(SCENE_H - self.radius - 28, p.y())),
+            max(margin, min(SCENE_H - margin - 24, p.y())),
         )
 
     def to_dict(self) -> dict:
@@ -114,6 +202,9 @@ class EncounterBoardView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        # The board is small enough that a full repaint while dragging is cheap,
+        # and it completely prevents ghost trails from complex antialiased tokens.
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
         self.setMinimumHeight(420)
         self.setFrameShape(QFrame.Shape.NoFrame)
         self.setBackgroundBrush(QColor("#061315"))
@@ -205,30 +296,111 @@ class EncounterBoard(QWidget):
         root.addWidget(self.view, 1)
 
     def _draw_arena(self):
+        """Draw a reusable dungeon-style tactical floor without encounter-specific art."""
         self.scene.clear()
-        floor = QColor("#0A1B1D")
+
+        shell = QColor("#081416")
+        stone_dark = QColor("#0E1A1B")
+        stone_mid = QColor("#122224")
+        stone_light = QColor("#163033")
+        seam = QColor("#2D3C3A")
         brass = QColor("#6F5A37")
-        faint = QColor("#16383A")
-        inner = QColor("#0E2628")
+        faint_brass = QColor("#5A4630")
 
-        self.scene.addRect(8, 8, SCENE_W - 16, SCENE_H - 16, QPen(brass, 2), QBrush(floor)).setZValue(-100)
-        self.scene.addEllipse(150, 42, 660, 456, QPen(brass, 2), QBrush(inner)).setZValue(-90)
-        self.scene.addEllipse(230, 96, 500, 348, QPen(QColor("#3A4E45"), 1), QBrush(Qt.BrushStyle.NoBrush)).setZValue(-80)
-        self.scene.addEllipse(335, 168, 290, 204, QPen(QColor("#5D4A2F"), 1), QBrush(Qt.BrushStyle.NoBrush)).setZValue(-80)
+        self.scene.addRect(
+            8,
+            8,
+            SCENE_W - 16,
+            SCENE_H - 16,
+            QPen(brass, 2),
+            QBrush(shell),
+        ).setZValue(-120)
 
-        for x in range(190, 771, 80):
-            self.scene.addLine(x, 270, 480, 270, QPen(faint, 0.8)).setZValue(-70)
-        for y in range(90, 451, 60):
-            self.scene.addLine(480, y, 480, 270, QPen(faint, 0.8)).setZValue(-70)
+        # Side platforms / alcoves give the board a dungeon-room silhouette.
+        self.scene.addRect(78, 184, 92, 172, QPen(seam, 1.2), QBrush(stone_mid)).setZValue(-112)
+        self.scene.addRect(790, 184, 92, 172, QPen(seam, 1.2), QBrush(stone_mid)).setZValue(-112)
 
-        for x, y in ((120, 70), (840, 70), (120, 470), (840, 470)):
-            self.scene.addEllipse(x - 7, y - 7, 14, 14, QPen(brass, 1), QBrush(QColor("#142D2F"))).setZValue(-60)
+        outer = QPolygonF([
+            QPointF(210, 62),
+            QPointF(750, 62),
+            QPointF(862, 160),
+            QPointF(862, 380),
+            QPointF(750, 478),
+            QPointF(210, 478),
+            QPointF(98, 380),
+            QPointF(98, 160),
+        ])
+        self.scene.addPolygon(outer, QPen(brass, 2), QBrush(stone_dark)).setZValue(-110)
+
+        inner = QPolygonF([
+            QPointF(260, 110),
+            QPointF(700, 110),
+            QPointF(790, 190),
+            QPointF(790, 350),
+            QPointF(700, 430),
+            QPointF(260, 430),
+            QPointF(170, 350),
+            QPointF(170, 190),
+        ])
+        self.scene.addPolygon(inner, QPen(QColor("#4A5A55"), 1.2), QBrush(stone_mid)).setZValue(-100)
+
+        self.scene.addEllipse(
+            318,
+            170,
+            324,
+            200,
+            QPen(faint_brass, 1.5),
+            QBrush(stone_light),
+        ).setZValue(-95)
+        self.scene.addEllipse(
+            382,
+            215,
+            196,
+            110,
+            QPen(QColor("#7A5C33"), 1.2),
+            QBrush(QColor("#112021")),
+        ).setZValue(-90)
+
+        # Stone/radial seams keep positioning readable without becoming a grid.
+        self.scene.addLine(480, 104, 480, 436, QPen(seam, 1.0)).setZValue(-88)
+        self.scene.addLine(178, 270, 782, 270, QPen(seam, 1.0)).setZValue(-88)
+        self.scene.addLine(250, 145, 710, 395, QPen(QColor("#243331"), 0.8)).setZValue(-88)
+        self.scene.addLine(710, 145, 250, 395, QPen(QColor("#243331"), 0.8)).setZValue(-88)
+
+        for x, y in (
+            (230, 140),
+            (480, 118),
+            (730, 140),
+            (198, 270),
+            (762, 270),
+            (230, 400),
+            (480, 422),
+            (730, 400),
+        ):
+            self.scene.addEllipse(
+                x - 9,
+                y - 9,
+                18,
+                18,
+                QPen(brass, 1.0),
+                QBrush(QColor("#142D2F")),
+            ).setZValue(-84)
+
+        for x, y in ((125, 88), (835, 88), (125, 452), (835, 452)):
+            self.scene.addEllipse(
+                x - 7,
+                y - 7,
+                14,
+                14,
+                QPen(brass, 1.0),
+                QBrush(QColor("#142D2F")),
+            ).setZValue(-82)
 
         title = self.scene.addText("ENCOUNTER ARENA")
-        title.setDefaultTextColor(QColor("#846A40"))
+        title.setDefaultTextColor(QColor("#9B7B49"))
         title.setFont(QFont("Cinzel", 10))
-        title.setPos(408, 18)
-        title.setZValue(-50)
+        title.setPos(410, 24)
+        title.setZValue(-70)
 
     def _seed_default_layout(self):
         self._set_boss_count(0)
@@ -275,6 +447,7 @@ class EncounterBoard(QWidget):
                 existing[1].label = "Boss B"
                 existing[1].setPos(540, 260)
                 existing[1].update()
+        self.scene.update()
 
     def add_token(self, kind: str):
         self._counts[kind] = self._counts.get(kind, 0) + 1
@@ -309,6 +482,7 @@ class EncounterBoard(QWidget):
         for item in list(self.scene.selectedItems()):
             if isinstance(item, EncounterToken) and item.kind != "boss":
                 self.scene.removeItem(item)
+        self.scene.update()
 
     def save_state(self):
         payload = {
@@ -340,6 +514,7 @@ class EncounterBoard(QWidget):
                     token.color = QColor(str(record["color"]))
                 if kind in self._counts:
                     self._counts[kind] += 1
+            self.scene.update()
             return True
         except Exception:
             return False
