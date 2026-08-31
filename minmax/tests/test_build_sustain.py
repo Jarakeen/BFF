@@ -1,0 +1,155 @@
+from minmax.base_character_state import BaseCharacterState
+from minmax.build_action_cost_modifiers import BuildActionCostModifiers
+from minmax.build_calculation_context import BuildCalculationContext
+from minmax.build_sustain import PlannedBuildAction, evaluate_build_sustain
+from minmax.character_progression import CharacterProgression
+from minmax.resource_cost_modifiers import (
+    ActionCostModifier,
+    ActionCostModifierSet,
+    CostModifierOperation,
+)
+from minmax.resource_costs import ResourceType, resolve_base_action_cost
+from minmax.restoration_events import ResourceRestorationEvent
+from models.build_model import PlayerBuild
+
+
+class _FakeCostModifierResolver:
+    def __init__(self, result: BuildActionCostModifiers):
+        self.result = result
+        self.calls = []
+
+    def resolve(self, build, *, progression=None):
+        self.calls.append((build, progression))
+        return self.result
+
+
+def _context() -> BuildCalculationContext:
+    return BuildCalculationContext(
+        character_id="character-1",
+        build_id="build-1",
+        progression=CharacterProgression(owned_skill_lines=("Restoration Staff",)),
+        character_state=BaseCharacterState(
+            max_health=20000,
+            max_magicka=10000,
+            max_stamina=9000,
+            health_recovery=300,
+            magicka_recovery=1000,
+            stamina_recovery=700,
+            traces={},
+        ),
+    )
+
+
+def _magicka_cost(amount: int = 2000):
+    return resolve_base_action_cost(
+        ability_id=12345,
+        base_cost=amount,
+        base_mechanic=1,
+        rank=4,
+        morph=1,
+    )
+
+
+def test_saved_build_sustain_uses_context_pool_build_modifiers_and_recovery() -> None:
+    build = PlayerBuild(Name="Test Healer", BuildName="Sustain")
+    resolver = _FakeCostModifierResolver(
+        BuildActionCostModifiers(
+            modifiers=ActionCostModifierSet(
+                (
+                    ActionCostModifier(
+                        source="Verified build reduction",
+                        operation=CostModifierOperation.PERCENT_REDUCTION,
+                        value=0.10,
+                        resources=(ResourceType.MAGICKA,),
+                    ),
+                )
+            )
+        )
+    )
+
+    run = evaluate_build_sustain(
+        build=build,
+        context=_context(),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=4.0,
+        actions=(
+            PlannedBuildAction(1.0, "Skill A", _magicka_cost(), "Restoration Staff"),
+            PlannedBuildAction(3.0, "Skill B", _magicka_cost(), "Restoration Staff"),
+        ),
+        cost_modifier_resolver=resolver,
+    )
+
+    assert [event.amount for event in run.action_cost_events] == [1800, 1800]
+    assert [event.time_seconds for event in run.recovery_ticks] == [2.0, 4.0]
+    assert run.timeline.starting_amount == 10000
+    assert run.timeline.ending_amount == 8400
+    assert run.sustain.sustains
+    assert run.sustain.total_cost_attempted == 3600
+    assert run.sustain.total_restoration_applied == 2000
+    assert resolver.calls == [(build, _context().progression)]
+
+
+def test_saved_build_sustain_applies_explicit_restoration_events_and_clamps() -> None:
+    resolver = _FakeCostModifierResolver(BuildActionCostModifiers())
+
+    run = evaluate_build_sustain(
+        build=PlayerBuild(),
+        context=_context(),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=2.0,
+        actions=(PlannedBuildAction(1.0, "Skill", _magicka_cost(4000)),),
+        cost_modifier_resolver=resolver,
+        restoration_events=(
+            ResourceRestorationEvent(1.5, ResourceType.MAGICKA, 5000, "Heavy attack"),
+            ResourceRestorationEvent(1.5, ResourceType.STAMINA, 5000, "Wrong resource"),
+        ),
+    )
+
+    assert len(run.restoration_events) == 1
+    assert run.restoration_events[0].source == "Heavy attack"
+    assert run.timeline.ending_amount == 10000
+    assert run.sustain.total_restoration_wasted == 2000
+
+
+def test_saved_build_sustain_preserves_unresolved_build_cost_mechanics() -> None:
+    resolver = _FakeCostModifierResolver(
+        BuildActionCostModifiers(unresolved=("Evocation not verified for 3 Light pieces",))
+    )
+
+    run = evaluate_build_sustain(
+        build=PlayerBuild(),
+        context=_context(),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=1.0,
+        actions=(),
+        cost_modifier_resolver=resolver,
+    )
+
+    assert run.unresolved == ("Evocation not verified for 3 Light pieces",)
+
+
+def test_saved_build_sustain_filters_actions_after_window_and_rejects_ultimate_pool() -> None:
+    resolver = _FakeCostModifierResolver(BuildActionCostModifiers())
+    run = evaluate_build_sustain(
+        build=PlayerBuild(),
+        context=_context(),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=2.0,
+        actions=(PlannedBuildAction(3.0, "Too late", _magicka_cost()),),
+        cost_modifier_resolver=resolver,
+    )
+    assert run.action_cost_events == ()
+
+    try:
+        evaluate_build_sustain(
+            build=PlayerBuild(),
+            context=_context(),
+            resource=ResourceType.ULTIMATE,
+            duration_seconds=2.0,
+            actions=(),
+            cost_modifier_resolver=resolver,
+        )
+    except ValueError as exc:
+        assert "primary resource pools only" in str(exc)
+    else:
+        raise AssertionError("Expected Ultimate sustain pool to be rejected")
