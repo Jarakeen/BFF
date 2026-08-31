@@ -1,11 +1,6 @@
 # ==================================================
 # Black Feather Foundry
-#
-# File:
 # ui/components/foundry_card.py
-#
-# Purpose:
-# Standard container used throughout the Foundry interface.
 # ==================================================
 
 from __future__ import annotations
@@ -26,7 +21,7 @@ from ui.theme.fonts import Fonts
 
 
 class FoundryCard(QFrame):
-    """Standard Foundry content card with a fixed-height book-panel header."""
+    """Dense book-panel card used throughout the Foundry UI."""
 
     def __init__(self, title: str = "", icon: str = "", parent=None):
         super().__init__(parent)
@@ -36,12 +31,12 @@ class FoundryCard(QFrame):
         self.header = QWidget()
         self.header.setProperty("cardHeader", True)
         self.header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.header.setMinimumHeight(38)
-        self.header.setMaximumHeight(44)
+        self.header.setMinimumHeight(30)
+        self.header.setMaximumHeight(34)
 
         header_layout = QHBoxLayout(self.header)
-        header_layout.setContentsMargins(10, 5, 10, 5)
-        header_layout.setSpacing(8)
+        header_layout.setContentsMargins(8, 3, 8, 3)
+        header_layout.setSpacing(6)
 
         self.icon_label = QLabel(icon)
         self.icon_label.setProperty("cardIcon", True)
@@ -64,14 +59,15 @@ class FoundryCard(QFrame):
 
         self.header_action_layout = QHBoxLayout()
         self.header_action_layout.setContentsMargins(0, 0, 0, 0)
+        self.header_action_layout.setSpacing(4)
         header_layout.addLayout(self.header_action_layout)
 
         self.body = QWidget()
         self.body.setProperty("cardBody", True)
         self.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.body_layout = QVBoxLayout(self.body)
-        self.body_layout.setContentsMargins(12, 10, 12, 10)
-        self.body_layout.setSpacing(7)
+        self.body_layout.setContentsMargins(10, 8, 10, 8)
+        self.body_layout.setSpacing(5)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -107,6 +103,13 @@ class FoundryCard(QFrame):
         self.body.setProperty("tableCardBody", True)
         self.set_body_margins(0, 0, 0, 0)
         self.set_body_spacing(0)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        return self
+
+    def make_parchment(self):
+        """Turn the whole card, including header/body, into one paper surface."""
+        self.setProperty("parchment", True)
         self.style().unpolish(self)
         self.style().polish(self)
         return self
