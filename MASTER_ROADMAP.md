@@ -203,28 +203,105 @@ Runtime/log observations may be used later as validation/corroboration, not as t
 ---
 
 # PHASE 4 · Resource & Sustain Engine
-**Status: 🔴 Next major math phase**
+**Status: 🟢 Complete**
 
-Model recovery, cost reduction, skill costs, heavy-attack restoration, flat restoration, external restoration, and recovery restrictions over time.
+Phase 4 models resource state, verified ability costs, ordinary recovery timing, temporary recovery modifiers, explicit restoration events, deterministic resource timelines, and sustain failure/margin interpretation.
 
 ```text
-Resource State
-├── Current
-├── Maximum
-├── Recovery
-├── Cost Reduction
-├── Flat Restoration
-├── Heavy Attack Restoration
-├── External Restoration
-└── Recovery Restrictions
+Saved Build
+   ↓
+Static Resource State
+   ↓
+Named Ability → Base Cost
+   ↓
+Verified Build Cost Modifiers
+   ↓
+Action Cost Events
+   ↓
+Recovery Ticks / Suppression
+   ↓
+Timed Recovery Modifiers
+   ↓
+Explicit Restoration Events
+   ↓
+Deterministic Timeline
+   ↓
+Sustain Result
 ```
 
-**Exit criteria:** BFF can determine whether a build sustains modeled activity rather than merely displaying recovery numbers.
+## Completed Phase 4 foundations
+
+- 🟢 static Health/Magicka/Stamina resource pools reuse the audited character-sheet state
+- 🟢 canonical ability `base_cost` and `base_mechanic` resolution
+- 🟢 compound resource costs remain independent per resource
+- 🟢 verified flat-before-percentage action-cost ordering
+- 🟢 nearest-half-up final action-cost rounding
+- 🟢 Breton Magicka Mastery and verified armor cost-passive behavior
+- 🟢 CP160 jewelry cost glyph integration
+- 🟢 2-second ordinary in-combat recovery cadence
+- 🟢 explicit Stamina suppression while blocking, sprinting, or sneaking
+- 🟢 Warden Flourish remains upstream in standing character-sheet recovery
+- 🟢 timed additive recovery modifiers such as Enlivening Overflow
+- 🟢 explicit flat restoration events with cap/waste accounting
+- 🟢 heavy-attack restoration contract with verified modifier ordering and caller-supplied verified base
+- 🟢 Restoration Staff Absorb and Warden Nature's Gift event foundations
+- 🟢 deterministic same-timestamp ordering: cost → recovery → restoration
+- 🟢 first-failure, shortfall, minimum resource, ending margin, total-cost, and wasted-restore diagnostics
+- 🟢 saved skill name → canonical rank → ability cost → saved-build modifier → timeline bridge
+- 🟢 deterministic saved-bar audit planner for real-build integration testing
+
+### Real saved-build validation
+
+Phase 4 was validated end-to-end against **Magrat → DF Healer** using the current local `eso.db` / saved build data.
+
+Audit snapshot:
+
+- Warden / Breton
+- front bar
+- Magicka
+- 20-second deterministic integration window
+- Max Magicka: **31,629**
+- Magicka Recovery: **2,533 per ordinary recovery tick**
+- resolved saved-skill Magicka costs:
+  - Budding Seeds: **1,993**
+  - Race Against Time: **3,100**
+  - Combat Prayer: **3,764**
+  - Illustrious Healing: **2,878**
+  - Energy Orb: **3,100**
+
+The synthetic one-cast-per-second audit does not claim to be a real healer rotation. It deliberately stress-tests the pipeline. In that modeled sequence, first failure occurred at **18.0s Combat Prayer**, with **2,295** Magicka available against a **3,764** cost, producing a **1,469** shortfall.
+
+The audit explicitly separates ordinary recovery from explicit restores and states that it does not automatically schedule heavy attacks, potion resource events, conditional recovery windows, or triggered restore procs.
+
+### Explicit Phase 4 boundaries
+
+The following remain deferred and explicit rather than guessed:
+
+- unverified percentage cost-increase ordering
+- unmeasured Light Armor Evocation piece counts
+- exact current heavy-attack base restore values where live precision is insufficient
+- automatic heavy-attack scheduling
+- potion resource events/effects
+- actual conditional-proc trigger/cooldown scheduling
+- Enlivening Overflow / Nature's Gift / Absorb trigger timing from combat events
+- exceptional recovery suppression/remapping such as Stormweaver's Cavort
+- dynamic/unmapped Champion Point behavior
+- canonical persisted character-level skill-line ownership
+
+These boundaries feed later real-build, conditional-effect, and temporal-combat phases. They are not hidden inside the Phase 4 calculation.
+
+### Final closeout evidence
+
+- 🟢 real saved build traversed the complete Phase 4 pipeline
+- 🟢 build-relevant unresolved mechanics remain explicit
+- 🟢 full regression suite at closeout: **1,444 passed**
+
+**Exit criteria met on 2026-08-31.**
 
 ---
 
 # PHASE 5 · Real Build Resolution
-**Status: 🟡**
+**Status: 🔴 Next active phase**
 
 Prove the actual ESO database → effect resolver → build aggregation path across real saved builds.
 
@@ -243,6 +320,17 @@ Normalization
  ↓
 Coverage
 ```
+
+Phase 5 now inherits a working real saved-build bridge from Phase 4. The focus shifts from “can this build sustain this modeled activity?” to “what does this actual build provide, require, and leave conditional/unresolved?”
+
+Immediate Phase 5 priorities:
+
+1. persist/resolve character-level progression and skill-line ownership authoritatively rather than relying on audit assumptions
+2. run real saved builds through the existing EffectVariant/effect repository path
+3. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection
+4. separate standing effects from conditional/triggered effects without promoting proc behavior to permanent sheet state
+5. produce an auditable real-build capability/coverage report with explicit unresolved evidence
+6. remove final-layer patches where the canonical repository/resolver should own the behavior
 
 **Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, and conditional effects without final-layer patching.
 
@@ -461,10 +549,13 @@ RECOMMENDATION + EXPLANATION
 | Combat Prayer tooltip validation | 🟢 ~0.085% residual accepted |
 | Phase 3 real-DB audit | 🟢 passed |
 | Phase 3 final test suite | 🟢 1305 passed |
+| Resource / sustain engine | 🟢 complete |
+| Saved-build sustain integration | 🟢 |
+| Phase 4 real-build audit | 🟢 passed |
+| Phase 4 final test suite | 🟢 1444 passed |
 | Gear → effects | 🟢 / 🟡 |
 | Build effect orchestration | 🟡 |
-| Real build effect detection | 🟡 |
-| Sustain model | 🔴 |
+| Real build effect detection | 🟡 next active work |
 | Full status/proc temporal engine | 🔴 |
 | Conditional uptime | 🔴 |
 | Temporal Combat State | 🔴 |
@@ -481,20 +572,19 @@ RECOMMENDATION + EXPLANATION
 
 ---
 
-# 🎯 Immediate Development Order After Phase 3
+# 🎯 Immediate Development Order After Phase 4
 
-1. **Style / UX cleanup checkpoint** before the next large systems phase
-2. **Real build effect resolution** and shared Character → Build reuse
-3. **Resource / sustain engine**
-4. **Conditional effect / proc engine**
-5. **Temporal Combat State**
-6. **Encounter requirements and evaluation**
-7. **Provider assignment**
-8. **Build optimization**
-9. **Rotation / simulation**
-10. **Encounter-aware optimization**
-11. **Explanation**
-12. **Log validation**
-13. **Strategy engine**
+1. **Phase 5: real saved-build effect resolution / coverage**
+2. **Finish canonical character-level progression and ownership persistence**
+3. **Conditional effect / proc engine**
+4. **Temporal Combat State**
+5. **Encounter requirements and evaluation**
+6. **Provider assignment**
+7. **Build optimization**
+8. **Rotation / simulation**
+9. **Encounter-aware optimization**
+10. **Explanation**
+11. **Log validation**
+12. **Strategy engine**
 
-The project is no longer a set of disconnected calculators. Phase 3 establishes a coherent, auditable static combat rules engine that later systems can consume without reimplementing ESO math.
+The project now has both a coherent static combat rules engine and a coherent resource/sustain engine. Phase 5 shifts attention to proving that real saved builds expose the effects and capabilities those engines are supposed to consume.
