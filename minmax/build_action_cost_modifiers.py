@@ -4,9 +4,15 @@ from dataclasses import dataclass
 
 from models.build_model import GearSlot, PlayerBuild
 
+from .character_progression import CharacterProgression
 from .jewelry_cost_modifier_repository import JewelryCostModifierRepository
 from .jewelry_trait_repository import JewelryTraitRepository
-from .resource_cost_modifiers import ActionCostModifier, ActionCostModifierSet
+from .resource_cost_modifiers import (
+    ActionCostModifier,
+    ActionCostModifierSet,
+    CostModifierOperation,
+)
+from .resource_costs import ResourceType
 
 
 _JEWELRY_COST_ENCHANT_TO_GLYPH = {
@@ -18,6 +24,22 @@ _JEWELRY_COST_ENCHANT_TO_GLYPH = {
     "reduce resource cost": "Glyph of Reduce Skill Cost",
 }
 
+# Verified max-rank standing passive values. These are build-cost events rather
+# than persistent character-sheet stats, so they live in the action-cost path.
+_BRETON_MAGICKA_MASTERY = 0.07
+_IMPERIAL_RED_DIAMOND = 0.06
+_REDGUARD_MARTIAL_TRAINING = 0.08
+_LIGHT_ARMOR_EVOCATION_PER_PIECE = 0.02
+
+_WEAPON_SKILL_LINES = (
+    "Two Handed",
+    "One Hand and Shield",
+    "Dual Wield",
+    "Bow",
+    "Destruction Staff",
+    "Restoration Staff",
+)
+
 
 @dataclass(frozen=True)
 class BuildActionCostModifiers:
@@ -26,12 +48,12 @@ class BuildActionCostModifiers:
 
 
 class BuildActionCostModifierResolver:
-    """Resolve static action-cost modifiers from one saved build.
+    """Resolve verified static action-cost modifiers from one saved build.
 
-    Phase 4 currently wires verified jewelry glyph reductions only. Other build
-    sources such as racial/armor passives will be added through the same
-    ActionCostModifier contract after their current values/activation rules are
-    verified.
+    Jewelry glyphs are read from the existing DB-backed glyph data. Standing
+    racial passives follow the same max-rank endgame assumption already used by
+    the racial stat pipeline. Armor passives remain explicitly gated by
+    CharacterProgression skill-line ownership.
     """
 
     def __init__(
@@ -41,6 +63,75 @@ class BuildActionCostModifierResolver:
     ) -> None:
         self.jewelry_cost_repository = jewelry_cost_repository
         self.jewelry_trait_repository = jewelry_trait_repository
+
+    @staticmethod
+    def _light_armor_count(build: PlayerBuild) -> int:
+        return sum(
+            1
+            for entry in build.Armor.values()
+            if str(entry.get("Weight", "") or "").strip().casefold() == "light"
+        )
+
+    @staticmethod
+    def _standing_passive_modifiers(
+        build: PlayerBuild,
+        progression: CharacterProgression | None,
+    ) -> tuple[ActionCostModifier, ...]:
+        modifiers: list[ActionCostModifier] = []
+        race = str(build.Race or "").strip().casefold()
+
+        if race == "breton":
+            modifiers.append(
+                ActionCostModifier(
+                    source="Breton: Magicka Mastery",
+                    operation=CostModifierOperation.PERCENT_REDUCTION,
+                    value=_BRETON_MAGICKA_MASTERY,
+                    resources=(ResourceType.MAGICKA,),
+                )
+            )
+        elif race == "imperial":
+            modifiers.append(
+                ActionCostModifier(
+                    source="Imperial: Red Diamond",
+                    operation=CostModifierOperation.PERCENT_REDUCTION,
+                    value=_IMPERIAL_RED_DIAMOND,
+                    resources=(
+                        ResourceType.HEALTH,
+                        ResourceType.MAGICKA,
+                        ResourceType.STAMINA,
+                        ResourceType.ULTIMATE,
+                    ),
+                )
+            )
+        elif race == "redguard":
+            modifiers.append(
+                ActionCostModifier(
+                    source="Redguard: Martial Training",
+                    operation=CostModifierOperation.PERCENT_REDUCTION,
+                    value=_REDGUARD_MARTIAL_TRAINING,
+                    resources=(
+                        ResourceType.HEALTH,
+                        ResourceType.MAGICKA,
+                        ResourceType.STAMINA,
+                        ResourceType.ULTIMATE,
+                    ),
+                    skill_lines=_WEAPON_SKILL_LINES,
+                )
+            )
+
+        if progression is not None and progression.owns_skill_line("Light Armor"):
+            light_count = BuildActionCostModifierResolver._light_armor_count(build)
+            if light_count:
+                modifiers.append(
+                    ActionCostModifier(
+                        source=f"Light Armor: Evocation ({light_count} pieces)",
+                        operation=CostModifierOperation.PERCENT_REDUCTION,
+                        value=_LIGHT_ARMOR_EVOCATION_PER_PIECE * light_count,
+                        resources=(ResourceType.MAGICKA,),
+                    )
+                )
+
+        return tuple(modifiers)
 
     def _jewelry_multiplier(
         self,
@@ -66,8 +157,15 @@ class BuildActionCostModifierResolver:
 
         return 1.0 + (percent / 100.0), f" (Infused +{percent:g}%)"
 
-    def resolve(self, build: PlayerBuild) -> BuildActionCostModifiers:
-        modifiers: list[ActionCostModifier] = []
+    def resolve(
+        self,
+        build: PlayerBuild,
+        *,
+        progression: CharacterProgression | None = None,
+    ) -> BuildActionCostModifiers:
+        modifiers: list[ActionCostModifier] = list(
+            self._standing_passive_modifiers(build, progression)
+        )
         unresolved: list[str] = []
         slots = (
             ("Necklace", build.Necklace),
