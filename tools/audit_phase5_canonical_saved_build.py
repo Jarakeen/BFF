@@ -48,7 +48,7 @@ def _bar_id(value: str) -> BarId:
 
 
 def _set_rows(build, active_bar: BarId, repository: GearSetRepository):
-    rows: list[tuple[str, int, str]] = []
+    rows: list[tuple[str, int, str, str]] = []
     for raw_set_id, count in sorted(
         equipped_gear_set_counts(build, active_bar=active_bar).items(),
         key=lambda item: int(item[0]) if str(item[0]).isdigit() else str(item[0]),
@@ -56,7 +56,7 @@ def _set_rows(build, active_bar: BarId, repository: GearSetRepository):
         try:
             numeric_id = int(raw_set_id)
         except (TypeError, ValueError):
-            rows.append((str(raw_set_id), count, "unknown canonical set id"))
+            rows.append((str(raw_set_id), count, "unknown canonical set id", "(unknown)"))
             continue
         record = repository.get_set_by_id(numeric_id)
         rows.append(
@@ -64,6 +64,34 @@ def _set_rows(build, active_bar: BarId, repository: GearSetRepository):
                 str(raw_set_id),
                 count,
                 record.name if record is not None else "unknown set",
+                str(record.category or "(empty)") if record is not None else "(unknown)",
+            )
+        )
+    return tuple(rows)
+
+
+def _canonical_piece_categories(build, repository: GearSetRepository):
+    rows: list[tuple[str, str, str, str]] = []
+    for piece in build.all_armor_pieces():
+        set_name = "(none)"
+        db_category = "(none)"
+        if piece.set_id is not None:
+            try:
+                record = repository.get_set_by_id(int(piece.set_id))
+            except (TypeError, ValueError):
+                record = None
+            if record is not None:
+                set_name = record.name
+                db_category = str(record.category or "(empty)")
+            else:
+                set_name = f"set_id={piece.set_id}"
+                db_category = "(unknown)"
+        rows.append(
+            (
+                piece.slot.value,
+                set_name,
+                db_category,
+                piece.category.value,
             )
         )
     return tuple(rows)
@@ -129,14 +157,28 @@ def audit_canonical_saved_build(
     gear_resolver = GearSetEffectVariantResolver(repository)
 
     print()
+    print("Canonical non-weapon piece categories:")
+    for slot, set_name, db_category, canonical_category in _canonical_piece_categories(
+        canonical,
+        repository,
+    ):
+        print(
+            f"  - {slot}: {set_name} | db_category={db_category} | "
+            f"canonical_category={canonical_category}"
+        )
+
+    print()
     print("Canonical active-bar set counts:")
     set_rows = _set_rows(canonical, bar_id, repository)
     if not set_rows:
         print("  (none)")
-    for set_id, count, name in set_rows:
+    for set_id, count, name, db_category in set_rows:
         variants = tuple(gear_resolver.resolve(int(set_id), count)) if set_id.isdigit() else ()
         effect_names = ", ".join(effect.name for effect in variants) or "no registered EffectVariant"
-        print(f"  - {name}: {count} pieces | set_id={set_id} | {effect_names}")
+        print(
+            f"  - {name}: {count} pieces | set_id={set_id} | "
+            f"db_category={db_category} | {effect_names}"
+        )
 
     print()
     print("Active canonical bar:")
