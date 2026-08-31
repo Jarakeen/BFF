@@ -26,10 +26,26 @@ class BuildCatalogService:
 
     @staticmethod
     def _identity(build: PlayerBuild, index: int) -> str:
+        """Stable character identity for one ESO character.
+
+        A gamertag/account can own many ESO characters, so gamertag alone must
+        never collapse those characters together. Character name is therefore
+        the primary identity inside the account namespace. Legacy rows that do
+        not have a character name fall back to the account, then their row.
+        """
+        name = build.Name.strip().casefold()
+        gamertag = build.Gamertag.strip().casefold()
+        if name:
+            return f"{gamertag or 'unknown-account'}:{name}"
+        if gamertag:
+            return f"{gamertag}:unnamed-{index + 1}"
+        return f"member-{index + 1}"
+
+    @staticmethod
+    def _character_match_key(name: object, gamertag: object) -> tuple[str, str]:
         return (
-            build.Gamertag.strip().casefold()
-            or build.Name.strip().casefold()
-            or f"member-{index + 1}"
+            str(gamertag or "").strip().casefold(),
+            str(name or "").strip().casefold(),
         )
 
     @staticmethod
@@ -119,7 +135,22 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create canonical records while excluding blank legacy placeholders."""
+        """Create canonical records while excluding blank legacy placeholders.
+
+        Existing character IDs and character-scoped ownership are preserved
+        when the same account + character-name pair is resynced from the legacy
+        compatibility mirror.
+        """
+        existing = self.load()
+        existing_by_character = {
+            self._character_match_key(
+                character.get("name"),
+                character.get("gamertag"),
+            ): character
+            for character in existing["characters"]
+            if isinstance(character, dict)
+        }
+
         catalog = self._normalize(None)
         characters: dict[str, dict[str, Any]] = {}
 
@@ -128,7 +159,10 @@ class BuildCatalogService:
                 continue
 
             identity = self._identity(member, index)
-            character_id = self._stable_id("character", identity)
+            match_key = self._character_match_key(member.Name, member.Gamertag)
+            previous = existing_by_character.get(match_key)
+            previous_id = str(previous.get("character_id", "")).strip() if previous else ""
+            character_id = previous_id or self._stable_id("character", identity)
             build_id = self._stable_id(
                 "build",
                 f"{character_id}:{member.BuildName.strip().casefold() or index}",
@@ -145,7 +179,9 @@ class BuildCatalogService:
                     "alliance": member.Alliance,
                     "vampire": member.Vampire,
                     "werewolf": member.Werewolf,
-                    "owned_skill_lines": [],
+                    "owned_skill_lines": self._normalize_owned_skill_lines(
+                        previous.get("owned_skill_lines") if previous else []
+                    ),
                 }
 
             legacy = member.to_dict()
