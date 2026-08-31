@@ -9,7 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from minmax.heavy_attack_restoration import HeavyAttackWeaponType, heavy_attack_resource
+from minmax.heavy_attack_restoration import (
+    HeavyAttackWeaponType,
+    resource_for_heavy_attack_weapon,
+)
 
 
 def _ratio(value: float, label: str) -> float:
@@ -58,7 +61,7 @@ def main() -> int:
     args = parser.parse_args()
 
     weapon = HeavyAttackWeaponType(args.weapon)
-    resource = heavy_attack_resource(weapon)
+    resource = resource_for_heavy_attack_weapon(weapon)
     inferred = infer_base_restore(
         observed_restore=args.observed_restore,
         cp_percent=args.cp_percent,
