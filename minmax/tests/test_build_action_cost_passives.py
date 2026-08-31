@@ -82,6 +82,32 @@ def _combat_prayer_cost(
     return result.final_cost.for_resource(ResourceType.MAGICKA).final_amount
 
 
+def _echoing_vigor_cost(
+    tmp_path: Path,
+    *,
+    medium_count: int,
+) -> int:
+    weights = ["Medium"] * medium_count + ["Light"] * (7 - medium_count)
+    build = PlayerBuild(Armor=_armor(*weights))
+    progression = CharacterProgression(owned_skill_lines=("Medium Armor",))
+    base_cost = resolve_base_action_cost(
+        ability_id=63247,
+        base_cost=2984,
+        base_mechanic=4,
+        rank=4,
+        morph=1,
+    )
+    result = BuildFinalActionCostResolver(_resolver(tmp_path)).resolve(
+        build,
+        base_cost,
+        skill_line="Assault",
+        progression=progression,
+    )
+    assert result.unresolved == ()
+    assert result.final_cost is not None
+    return result.final_cost.for_resource(ResourceType.STAMINA).final_amount
+
+
 def test_breton_magicka_mastery_is_seven_percent_magicka_only(tmp_path: Path) -> None:
     result = _resolver(tmp_path).resolve(PlayerBuild(Race="Breton"))
 
@@ -199,24 +225,34 @@ def test_build_final_cost_withholds_result_for_unverified_evocation_count(tmp_pa
     assert len(result.unresolved) == 1
 
 
-def test_wind_walker_is_explicitly_unresolved_when_owned_with_medium_armor(tmp_path: Path) -> None:
-    build = PlayerBuild(
-        Armor=_armor("Medium", "Medium", "Medium", "Medium", "Medium", "Medium", "Light")
-    )
+def test_wind_walker_requires_medium_armor_skill_line_ownership(tmp_path: Path) -> None:
+    build = PlayerBuild(Armor=_armor("Medium", "Medium", "Light", "Light", "Light", "Light", "Light"))
+
+    without_owned = _resolver(tmp_path).resolve(build)
+    assert without_owned.modifiers.modifiers == ()
+
     progression = CharacterProgression(owned_skill_lines=("Medium Armor",))
+    with_owned = _resolver(tmp_path).resolve(build, progression=progression)
 
-    result = _resolver(tmp_path).resolve(build, progression=progression)
+    assert with_owned.unresolved == ()
+    assert len(with_owned.modifiers.modifiers) == 1
+    modifier = with_owned.modifiers.modifiers[0]
+    assert modifier.source == "Medium Armor: Wind Walker (2 pieces; live verified)"
+    assert modifier.value == 0.04
+    assert modifier.resources == (ResourceType.STAMINA,)
 
-    assert result.modifiers.modifiers == ()
-    assert result.unresolved == (
-        "Medium Armor: Wind Walker action-cost behavior is not live-verified for 6 equipped Medium pieces",
-    )
 
+def test_wind_walker_live_sequence_matches_echoing_vigor(tmp_path: Path) -> None:
+    expected = {
+        0: 2984,
+        1: 2924,
+        2: 2865,
+        3: 2805,
+        4: 2745,
+        5: 2686,
+        6: 2626,
+        7: 2566,
+    }
 
-def test_wind_walker_is_not_claimed_without_medium_armor_skill_line_ownership(tmp_path: Path) -> None:
-    build = PlayerBuild(Armor=_armor("Medium", "Medium", "Medium", "Medium", "Medium", "Medium", "Light"))
-
-    result = _resolver(tmp_path).resolve(build)
-
-    assert result.modifiers.modifiers == ()
-    assert result.unresolved == ()
+    for medium_count, observed_cost in expected.items():
+        assert _echoing_vigor_cost(tmp_path, medium_count=medium_count) == observed_cost
