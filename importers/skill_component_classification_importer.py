@@ -257,8 +257,6 @@ def import_skill_component_classifications(
     with sqlite3.connect(path) as db:
         _create_table(db)
 
-        # Re-read ownership inside the write transaction in case the table was
-        # created or changed between preflight and mutation.
         current_rows = db.execute(
             f"SELECT skill_rank_id, coefficient_number, source FROM {TABLE}"
         ).fetchall()
@@ -333,10 +331,16 @@ def main() -> int:
     )
     parser.add_argument("--database", default=str(DEFAULT_DATABASE))
     parser.add_argument("--limit", type=int)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--write",
         action="store_true",
         help="Explicitly write qualified derived rows. Default is read-only dry-run.",
+    )
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Explicit read-only mode. This is also the default when no mode is supplied.",
     )
     parser.add_argument(
         "--append-derived",
