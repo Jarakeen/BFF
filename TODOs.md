@@ -5,21 +5,24 @@ Tasks outside of the master roadmap
 - [X] create a testing installer
 - [ ] import Rumors and find a page to put them on
 - [ ] create a flow thru of buttons on the broadcast desk to make it more obvious that things are getting sent to OBS and sent to a report for Archive
-- [ ] add checkboxes - and a way to check off multiple at a time - on the row of Collectibles
+- [X] add checkboxes - and a way to check off multiple at a time - on the row of Collectibles
 - [X] import images for the collectibles and add to each corresponding Collectible (we wrote a tool/parser)
 - [ ] hook up the google sheets for the achievements page
 - [ ] add images to the Achievements?
-- [ ] redo Settings page to go with the Settings mockup in the Docs folder
-- [ ] ?? can we rename the ui files safely to better align with what they are or is it just too late for that ??
-- [ ] create the Boss page from docs (on encounters or mechs?)
-- [ ] find a standard 'Boss' and 'Double Bosses' icon to use on the boss page
+- [X] redo Settings page to go with the Settings mockup in the Docs folder
+- [X] ?? can we rename the ui files safely to better align with what they are or is it just too late for that ??
+- [X] create the Boss page from docs (on encounters or mechs?)
+- [X] find a standard 'Boss' and 'Double Bosses' icon to use on the boss page
 - [ ] add a "Pages On/Off" setting on the Settings tab that allows you to hide pages by main menu (Broadcast, Collectible, Acheivement, Raid Engine)
 - [ ] Achievement page - details box, make the text much larger - style it like the wireframe
 - [ ] Create a page for the Collections main menu button with circle and/or line graphs that shows your progress in each submenu category
-- [ ] | What it actually is                  | Current-ish name           | Better name                                                         |
+- [X] | What it actually is                  | Current-ish name           | Better name                                                         |
 | ------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
 | ESO account achievements             | `collections_page.py`      | `achievements_page.py`                                              |
 | ESO collectibles, mounts, pets, etc. | `collectibles_page.py`     | `collectibles_page.py`                                              |
 | OBS achievement display/control desk | `achievement_desk_page.py` | `broadcast_achievements_page.py` or                   `achievement_broadcast_page.py` |
 
-- [ ] add collectible ownership checkboxes, Shift-range selection, pending changes, and batch save; then rename the confusing Achievements/Collections files and references safely.
+-[X] add collectible ownership checkboxes, Shift-range selection, pending changes, and batch save; then rename the confusing Achievements/Collections files and references safely.
+-[ ] Mechanics doesnt have an icon - can we add one
+-[ ] we've lost the app icon on the task bar when its running - fix that please
+-[ ] 
