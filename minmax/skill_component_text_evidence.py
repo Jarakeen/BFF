@@ -167,7 +167,7 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
     utility_patterns = (
         rf"\b(?:duration|for)\b[^.;]{{0,40}}?{placeholder}\s+seconds?\b",
         rf"\bcurrent\s+duration\s*:\s*{placeholder}\s+seconds?\b",
-        rf"{placeholder}\s*%\b",
+        rf"{placeholder}\s*%(?!\w)",
     )
     if any(re.search(pattern, lower) for pattern in utility_patterns):
         return "utility"
