@@ -196,6 +196,39 @@ def test_importer_persists_explicit_shield_without_fake_damage_routing_fields(tm
     assert not component.is_complete_damage_identity
 
 
+def test_importer_persists_explicit_utility_without_fake_damage_routing_fields(tmp_path):
+    path = tmp_path / 'eso.db'
+    _make_db(path)
+    db = sqlite3.connect(path)
+    db.execute(
+        "INSERT INTO skill_rank VALUES (40, 400, 'Utility Fixture', NULL, NULL, NULL, NULL)"
+    )
+    db.execute(
+        """
+        INSERT INTO ability (
+            ability_id, name, coef_description,
+            type1, a1, b1, c1, r1, avg1
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (400, 'Utility Fixture', 'Current duration: $1 seconds.', 8, .1, 1.0, 0, 1, 1000),
+    )
+    db.execute("INSERT INTO skill_coefficient VALUES (40, 1, '8', .1, 1.0, 0, 1, 1000)")
+    db.commit()
+    db.close()
+
+    summary = import_skill_component_classifications(path, dry_run=False)
+    component = SkillComponentRepository(path).get_component(40, 1)
+
+    assert summary.qualified == 3
+    assert component is not None
+    assert component.effect_kind is SkillEffectKind.UTILITY
+    assert component.damage_type is None
+    assert component.is_dot is None
+    assert component.is_aoe is None
+    assert component.can_crit is None
+    assert not component.is_complete_damage_identity
+
+
 def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path):
     path = tmp_path / 'eso.db'
     _make_db(path)
@@ -222,7 +255,7 @@ def test_importer_upgrades_existing_legacy_table_with_evidence_columns(tmp_path)
     import_skill_component_classifications(path, dry_run=False)
 
     db = sqlite3.connect(path)
-    columns = {row[1] for row in db.execute('PRAGMA table_info(skill_component_classification)')}
+    columns = {row[1] for row in db.execute('PRAGMA table_info(skill_component_classification')}
     db.close()
 
     assert 'evidence_fragment' in columns
