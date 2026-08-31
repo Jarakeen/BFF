@@ -30,6 +30,14 @@ def _folder_bytes(icon_dir: Path) -> int:
     return total
 
 
+def _image_files(icon_dir: Path) -> list[Path]:
+    return [
+        path
+        for path in icon_dir.iterdir()
+        if path.is_file() and path.suffix.casefold() in IMAGE_SUFFIXES
+    ]
+
+
 def _format_bytes(value: int) -> str:
     units = ("B", "KB", "MB", "GB")
     amount = float(value)
@@ -76,7 +84,20 @@ def dedupe(icon_dir: Path, *, dry_run: bool = False) -> dict[str, int]:
             f"First IDs: {sample}"
         )
 
-    before_bytes = _folder_bytes(icon_dir)
+    image_files = _image_files(icon_dir)
+    before_bytes = sum(path.stat().st_size for path in image_files)
+
+    # Safety invariant: a populated cache with zero manifest references is not
+    # a valid dedupe state. Without this guard the projected size would be zero,
+    # which is not compression, merely an unusable manifest. Refuse both dry-run
+    # and applied cleanup until the manifest has been repaired/rebuilt.
+    if image_files and not referenced_paths:
+        raise RuntimeError(
+            "Collectible icon cache contains "
+            f"{len(image_files):,} image files ({_format_bytes(before_bytes)}) but "
+            "manifest.json contains zero usable file references. Refusing dedupe. "
+            "Repair or rebuild the collectible icon manifest first."
+        )
 
     digest_to_paths: dict[str, list[Path]] = defaultdict(list)
     for path in sorted(set(referenced_paths.values())):
