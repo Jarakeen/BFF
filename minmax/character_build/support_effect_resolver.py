@@ -27,6 +27,21 @@ from .effect_relationship import (
     apply_relationships,
 )
 from .passive_grant import PassiveGrant
+from .weapon_type import WeaponType
+
+
+_TWO_PIECE_WEAPON_TYPES = frozenset(
+    {
+        WeaponType.GREATSWORD,
+        WeaponType.BATTLEAXE,
+        WeaponType.MAUL,
+        WeaponType.BOW,
+        WeaponType.RESTORATION_STAFF,
+        WeaponType.FROST_STAFF,
+        WeaponType.FLAME_STAFF,
+        WeaponType.LIGHTNING_STAFF,
+    }
+)
 
 
 def effect_variant_to_support_effect(
@@ -78,18 +93,44 @@ def effect_variant_to_support_effect(
     )
 
 
-def equipped_gear_set_counts(build: CharacterBuild) -> dict[str, int]:
-    """Count all simultaneously equipped gear pieces by stable set identity."""
+def _weapon_set_piece_count(weapon_type: WeaponType) -> int:
+    """Return the ESO set-piece contribution of one equipped weapon."""
+    return 2 if weapon_type in _TWO_PIECE_WEAPON_TYPES else 1
+
+
+def equipped_gear_set_counts(
+    build: CharacterBuild,
+    active_bar: BarId | None = None,
+) -> dict[str, int]:
+    """
+    Count equipped set pieces by stable set identity.
+
+    When `active_bar` is supplied, weapon pieces follow ESO's actual bar
+    rules: only the active bar contributes, and bows/two-handed weapons/
+    staves count as two set pieces. The no-bar form preserves the legacy
+    aggregate behavior for callers that are not performing active-bar
+    capability resolution.
+    """
     counts: Counter[str] = Counter()
 
     for piece in build.all_armor_pieces():
         if piece.set_id is not None:
             counts[piece.set_id] += 1
 
-    for bar in build.bars():
-        for weapon in (bar.main_hand, bar.off_hand):
-            if weapon is not None and weapon.set_id is not None:
-                counts[weapon.set_id] += 1
+    if active_bar is None:
+        for bar in build.bars():
+            for weapon in (bar.main_hand, bar.off_hand):
+                if weapon is not None and weapon.set_id is not None:
+                    counts[weapon.set_id] += 1
+        return dict(counts)
+
+    bar = build.front_bar if active_bar == BarId.FRONT else build.back_bar
+    if bar is None:
+        return dict(counts)
+
+    for weapon in (bar.main_hand, bar.off_hand):
+        if weapon is not None and weapon.set_id is not None:
+            counts[weapon.set_id] += _weapon_set_piece_count(weapon.weapon_type)
 
     return dict(counts)
 
@@ -237,7 +278,10 @@ class CharacterBuildSupportEffectResolver:
         # counts. These are derived effects and are deliberately not
         # written back onto ArmorPiece.effects.
         if self.gear_set_effect_variant_resolver is not None:
-            for set_id, piece_count in equipped_gear_set_counts(build).items():
+            for set_id, piece_count in equipped_gear_set_counts(
+                build,
+                active_bar=active_bar,
+            ).items():
                 try:
                     numeric_set_id = int(set_id)
                 except (TypeError, ValueError):
