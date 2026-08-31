@@ -91,7 +91,7 @@ class CoveragePage(FoundryPage):
         page = QWidget()
         root = QVBoxLayout(page)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(10)
+        root.setSpacing(8)
 
         filters = QHBoxLayout()
         self.effect_filter = QComboBox()
@@ -106,7 +106,7 @@ class CoveragePage(FoundryPage):
         filters.addStretch(1)
         filters.addWidget(self.search, 1)
 
-        table_card = FoundryCard("Coverage Plan")
+        table_card = FoundryCard("Coverage Plan", "◈")
         table_card.set_header_action(QPushButton("Edit Requirements"))
         table_card.addLayout(filters)
         self.table = QTableWidget(0, 9)
@@ -122,12 +122,15 @@ class CoveragePage(FoundryPage):
         root.addWidget(table_card, 4)
 
         lower = QHBoxLayout()
-        lower.setSpacing(10)
-        self.summary_card = FoundryCard("Coverage Summary")
-        self.providers_card = FoundryCard("Most Reliable Providers")
-        notes = FoundryCard("Coverage Notes")
-        notes.setProperty("parchment", True)
-        notes.addWidget(QLabel("• Encounter requirements can override the default watch list.\n• Planned provider is not the same thing as measured uptime.\n• Use this desk to decide who owns each effect before the pull."))
+        lower.setSpacing(8)
+        self.summary_card = FoundryCard("Coverage Summary", "✓").set_watermark("compass", 0.055)
+        self.providers_card = FoundryCard("Most Reliable Providers", "♜").set_watermark("compass", 0.045)
+        notes = FoundryCard("Coverage Notes", "✎").make_parchment().set_watermark("feather", 0.11)
+        notes.addWidget(QLabel(
+            "• Encounter requirements can override the default watch list.\n"
+            "• Planned provider is not the same thing as measured uptime.\n"
+            "• Decide who owns each required effect before the pull."
+        ))
         lower.addWidget(self.summary_card, 2)
         lower.addWidget(self.providers_card, 2)
         lower.addWidget(notes, 2)
@@ -137,7 +140,7 @@ class CoveragePage(FoundryPage):
     def _placeholder(self, title: str, text: str) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout(page)
-        card = FoundryCard(title)
+        card = FoundryCard(title).set_watermark("compass", 0.04)
         card.addWidget(QLabel(text))
         card.addStretch(1)
         layout.addWidget(card)
