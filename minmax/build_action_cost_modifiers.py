@@ -24,12 +24,29 @@ _JEWELRY_COST_ENCHANT_TO_GLYPH = {
     "reduce resource cost": "Glyph of Reduce Skill Cost",
 }
 
-# Verified max-rank standing passive values. These are build-cost events rather
-# than persistent character-sheet stats, so they live in the action-cost path.
+# Verified max-rank standing racial passive values. These are build-cost events
+# rather than persistent character-sheet stats, so they live in the action-cost
+# path.
 _BRETON_MAGICKA_MASTERY = 0.07
 _IMPERIAL_RED_DIAMOND = 0.06
 _REDGUARD_MARTIAL_TRAINING = 0.08
-_LIGHT_ARMOR_EVOCATION_PER_PIECE = 0.02
+
+# Current live Xbox/U50 ability-cost observations for Light Armor: Evocation.
+# Combat Prayer base cost 4590 on a Breton with Magicka Mastery (7%) produced:
+#   0 Light -> 4269 (0% Evocation)
+#   1 Light -> 4223 (1% Evocation)
+#   2 Light -> 4131 (3% Evocation)
+#   6 Light -> 3764 (11% Evocation)
+#
+# The displayed passive text suggests 2% per piece, but that model predicts the
+# wrong live costs. Do not extrapolate the apparent 2n-1 sequence to unobserved
+# piece counts. Phase 4 keeps unsupported counts explicit until live-verified.
+_VERIFIED_LIGHT_ARMOR_EVOCATION_COST_PERCENT = {
+    0: 0.00,
+    1: 0.01,
+    2: 0.03,
+    6: 0.11,
+}
 
 _WEAPON_SKILL_LINES = (
     "Two Handed",
@@ -76,8 +93,9 @@ class BuildActionCostModifierResolver:
     def _standing_passive_modifiers(
         build: PlayerBuild,
         progression: CharacterProgression | None,
-    ) -> tuple[ActionCostModifier, ...]:
+    ) -> tuple[tuple[ActionCostModifier, ...], tuple[str, ...]]:
         modifiers: list[ActionCostModifier] = []
+        unresolved: list[str] = []
         race = str(build.Race or "").strip().casefold()
 
         if race == "breton":
@@ -122,16 +140,23 @@ class BuildActionCostModifierResolver:
         if progression is not None and progression.owns_skill_line("Light Armor"):
             light_count = BuildActionCostModifierResolver._light_armor_count(build)
             if light_count:
-                modifiers.append(
-                    ActionCostModifier(
-                        source=f"Light Armor: Evocation ({light_count} pieces)",
-                        operation=CostModifierOperation.PERCENT_REDUCTION,
-                        value=_LIGHT_ARMOR_EVOCATION_PER_PIECE * light_count,
-                        resources=(ResourceType.MAGICKA,),
+                evocation_percent = _VERIFIED_LIGHT_ARMOR_EVOCATION_COST_PERCENT.get(light_count)
+                if evocation_percent is None:
+                    unresolved.append(
+                        "Light Armor: Evocation action-cost behavior is not live-verified "
+                        f"for {light_count} equipped Light pieces"
                     )
-                )
+                else:
+                    modifiers.append(
+                        ActionCostModifier(
+                            source=f"Light Armor: Evocation ({light_count} pieces; live verified)",
+                            operation=CostModifierOperation.PERCENT_REDUCTION,
+                            value=evocation_percent,
+                            resources=(ResourceType.MAGICKA,),
+                        )
+                    )
 
-        return tuple(modifiers)
+        return tuple(modifiers), tuple(unresolved)
 
     def _jewelry_multiplier(
         self,
@@ -163,10 +188,12 @@ class BuildActionCostModifierResolver:
         *,
         progression: CharacterProgression | None = None,
     ) -> BuildActionCostModifiers:
-        modifiers: list[ActionCostModifier] = list(
-            self._standing_passive_modifiers(build, progression)
+        standing_modifiers, standing_unresolved = self._standing_passive_modifiers(
+            build,
+            progression,
         )
-        unresolved: list[str] = []
+        modifiers: list[ActionCostModifier] = list(standing_modifiers)
+        unresolved: list[str] = list(standing_unresolved)
         slots = (
             ("Necklace", build.Necklace),
             ("Ring 1", build.Ring1),
