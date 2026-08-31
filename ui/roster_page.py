@@ -88,9 +88,9 @@ class RosterPage(FoundryPage):
         page = QWidget()
         root = QVBoxLayout(page)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(10)
+        root.setSpacing(8)
 
-        roster_card = FoundryCard("Player Assignments")
+        roster_card = FoundryCard("Player Assignments", "⚑")
         import_button = QPushButton("Import Roster")
         roster_card.set_header_action(import_button)
         self.assignment_table = QTableWidget(0, 9)
@@ -106,11 +106,10 @@ class RosterPage(FoundryPage):
         root.addWidget(roster_card, 4)
 
         lower = QHBoxLayout()
-        lower.setSpacing(10)
-        self.attention_card = FoundryCard("Needs Attention")
-        self.team_card = FoundryCard("Team Summary")
-        self.notes_card = FoundryCard("Assignment Notes")
-        self.notes_card.setProperty("parchment", True)
+        lower.setSpacing(8)
+        self.attention_card = FoundryCard("Needs Attention", "⚠").set_watermark("compass", 0.04)
+        self.team_card = FoundryCard("Team Summary", "◈").set_watermark("compass", 0.055)
+        self.notes_card = FoundryCard("Assignment Notes", "✎").make_parchment().set_watermark("feather", 0.12)
         self.notes_card.addWidget(QLabel(
             "• Everyone knows portal.\n"
             "• Focus on survival at 25%.\n"
@@ -128,14 +127,14 @@ class RosterPage(FoundryPage):
         page = QWidget()
         root = QVBoxLayout(page)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(10)
+        root.setSpacing(8)
 
         workspace = QHBoxLayout()
         self.table = RosterTable()
         self.record = RosterRecord()
-        left = FoundryCard("Roster")
+        left = FoundryCard("Roster", "☷")
         left.addWidget(self.table)
-        right = FoundryCard("Personnel Record")
+        right = FoundryCard("Personnel Record", "✎").set_watermark("feather", 0.045)
         right.addWidget(self.record)
         right.addStretch()
         workspace.addWidget(left, 3)
@@ -149,7 +148,7 @@ class RosterPage(FoundryPage):
     def _placeholder_tab(self, title: str, text: str) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout(page)
-        card = FoundryCard(title)
+        card = FoundryCard(title).set_watermark("compass", 0.045)
         card.addWidget(QLabel(text))
         card.addStretch(1)
         layout.addWidget(card)
