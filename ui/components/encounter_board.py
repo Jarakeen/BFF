@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QBrush, QFont, QImage, QPainter, QPen
 from PySide6.QtWidgets import (
     QComboBox,
+    QFrame,
     QGraphicsItem,
     QGraphicsObject,
     QGraphicsScene,
@@ -26,7 +26,7 @@ SCENE_H = 540.0
 
 
 class EncounterToken(QGraphicsObject):
-    """Small draggable encounter marker with a label beneath it."""
+    """Small draggable encounter marker with a readable label."""
 
     def __init__(self, kind: str, label: str, color: str, radius: float = 18.0, parent=None):
         super().__init__(parent)
@@ -44,7 +44,7 @@ class EncounterToken(QGraphicsObject):
 
     def boundingRect(self) -> QRectF:
         r = self.radius
-        return QRectF(-r - 3, -r - 3, (r + 3) * 2, r * 2 + 30)
+        return QRectF(-60, -r - 4, 120, r * 2 + 31)
 
     def paint(self, painter: QPainter, option, widget=None):
         r = self.radius
@@ -87,10 +87,10 @@ class EncounterToken(QGraphicsObject):
 
     def _clamp_to_scene(self):
         p = self.pos()
-        margin = self.radius + 8
+        margin = max(62, self.radius + 8)
         self.setPos(
             max(margin, min(SCENE_W - margin, p.x())),
-            max(margin, min(SCENE_H - margin - 22, p.y())),
+            max(self.radius + 8, min(SCENE_H - self.radius - 28, p.y())),
         )
 
     def to_dict(self) -> dict:
@@ -115,7 +115,7 @@ class EncounterBoardView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
         self.setMinimumHeight(420)
-        self.setFrameShape(QGraphicsView.Shape.NoFrame)
+        self.setFrameShape(QFrame.Shape.NoFrame)
         self.setBackgroundBrush(QColor("#061315"))
 
     def wheelEvent(self, event):
@@ -182,6 +182,10 @@ class EncounterBoard(QWidget):
             button.clicked.connect(lambda _=False, k=kind: self.add_token(k))
             toolbar.addWidget(button)
 
+        delete_button = QPushButton("Delete Selected")
+        delete_button.clicked.connect(self.delete_selected)
+        toolbar.addWidget(delete_button)
+
         toolbar.addStretch(1)
         fit_button = QPushButton("Fit Arena")
         fit_button.clicked.connect(self.view.fit_arena)
@@ -237,6 +241,7 @@ class EncounterBoard(QWidget):
         ]
         for kind, label, x, y in defaults:
             self._add_token(kind, label, x, y)
+            self._counts[kind] = self._counts.get(kind, 0) + 1
 
     def _token_items(self) -> list[EncounterToken]:
         return [item for item in self.scene.items() if isinstance(item, EncounterToken)]
@@ -244,7 +249,7 @@ class EncounterBoard(QWidget):
     def _boss_items(self) -> list[EncounterToken]:
         return [item for item in self._token_items() if item.kind == "boss"]
 
-    def _set_boss_count(self, index: int):
+    def _set_boss_count(self, _index: int):
         desired = 2 if self.boss_mode.currentIndex() == 1 else 1
         existing = self._boss_items()
         for item in existing[desired:]:
@@ -300,6 +305,11 @@ class EncounterBoard(QWidget):
         self.scene.addItem(token)
         return token
 
+    def delete_selected(self):
+        for item in list(self.scene.selectedItems()):
+            if isinstance(item, EncounterToken) and item.kind != "boss":
+                self.scene.removeItem(item)
+
     def save_state(self):
         payload = {
             "version": 1,
@@ -328,6 +338,8 @@ class EncounterBoard(QWidget):
                 token = self._add_token(kind, label, x, y, radius=radius)
                 if record.get("color"):
                     token.color = QColor(str(record["color"]))
+                if kind in self._counts:
+                    self._counts[kind] += 1
             return True
         except Exception:
             return False
