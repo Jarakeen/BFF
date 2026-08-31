@@ -3,13 +3,18 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import sys
 from collections import Counter
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from minmax.resource_cost_timing import CostTimingKind, resolve_action_cost_timing
 
 
-DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 
 
 def _positive_cost_rows(connection: sqlite3.Connection) -> list[sqlite3.Row]:
