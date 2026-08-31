@@ -2,33 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-@dataclass(frozen=True)
-class SkillCoefficient:
-    """
-    One ESO skill damage/healing coefficient.
-
-    For coefficient type 8, ESO uses the general
-    Max Stat + Power scaling model:
-
-        value = (a * max_stat) + (b * power) + c
-    """
-
-    coefficient_number: int
-    type: str
-
-    a: float
-    b: float
-    c: float
-
-    r: float = 1.0
-    avg: float | None = None
+from .skill_coefficients import (
+    SkillCoefficient,
+    UnsupportedSkillCoefficientType,
+    evaluate_skill_coefficient as evaluate_verified_skill_coefficient,
+)
 
 
 @dataclass(frozen=True)
 class SkillCoefficientResult:
-    """
-    Result of evaluating one skill coefficient.
+    """Compatibility result for one evaluated skill coefficient.
+
+    ``raw_value`` and ``scaled_value`` are intentionally identical for the
+    verified type-8 model. The UESP ``r`` field is regression-fit metadata,
+    not a game-side multiplier. This result shape is retained for existing
+    callers while the authoritative formula lives in ``skill_coefficients``.
     """
 
     coefficient_number: int
@@ -51,57 +39,36 @@ def evaluate_skill_coefficient(
     max_stat: float,
     power: float,
 ) -> SkillCoefficientResult:
-    """
-    Evaluate one ESO skill coefficient.
+    """Evaluate one coefficient using the verified Phase 3 implementation.
 
-    Type 8 currently represents the standard ESO
-    Max Stat + Power scaling model.
+    Type 8::
 
-    Formula:
+        value = (A * MaxStat) + (B * Power) + C
 
-        raw = (A * MaxStat) + (B * Power) + C
-
-        scaled = raw * R
-
-    R is applied after the base coefficient expression.
+    ``R`` is preserved on the source coefficient as regression metadata and is
+    deliberately not multiplied into the result. Unsupported coefficient types
+    remain explicit rather than being guessed.
     """
 
-    if max_stat < 0:
-        raise ValueError(
-            "max_stat cannot be negative."
+    try:
+        trace = evaluate_verified_skill_coefficient(
+            coefficient,
+            max_stat=max_stat,
+            power=power,
         )
-
-    if power < 0:
-        raise ValueError(
-            "power cannot be negative."
-        )
-
-    if coefficient.type != "8":
-        raise ValueError(
-            "Unsupported skill coefficient type: "
-            f"{coefficient.type!r}"
-        )
-
-    raw_value = (
-        coefficient.a * max_stat
-        + coefficient.b * power
-        + coefficient.c
-    )
-
-    scaled_value = (
-        raw_value * coefficient.r
-    )
+    except UnsupportedSkillCoefficientType as exc:
+        # Preserve the legacy public exception family (ValueError) while using
+        # the canonical evaluator as the sole formula implementation.
+        raise ValueError(str(exc)) from exc
 
     return SkillCoefficientResult(
-        coefficient_number=(
-            coefficient.coefficient_number
-        ),
-        coefficient_type=coefficient.type,
-        max_stat=max_stat,
-        power=power,
-        a=coefficient.a,
-        b=coefficient.b,
-        c=coefficient.c,
-        raw_value=raw_value,
-        scaled_value=scaled_value,
+        coefficient_number=trace.coefficient_number,
+        coefficient_type=trace.coefficient_type,
+        max_stat=trace.max_stat,
+        power=trace.power,
+        a=trace.a,
+        b=trace.b,
+        c=trace.c,
+        raw_value=trace.final_value,
+        scaled_value=trace.final_value,
     )
