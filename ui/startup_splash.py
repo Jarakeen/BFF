@@ -152,7 +152,8 @@ def create_startup_splash() -> QSplashScreen:
     if pixmap.isNull():
         pixmap = _fallback_pixmap()
 
-    splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
+    flags = Qt.WindowType.SplashScreen | Qt.WindowType.WindowStaysOnTopHint
+    splash = QSplashScreen(pixmap, flags)
     splash.setAccessibleName("Black Feather Foundry startup screen")
     splash.setAccessibleDescription(
         "Static startup screen with no flashing or animated content."
