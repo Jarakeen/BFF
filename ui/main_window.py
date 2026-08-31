@@ -97,20 +97,28 @@ class MainWindow(QMainWindow):
         collectibles_page = self.pages.get("collectibles")
         if collectibles_page is None or not collectibles_page.has_pending_changes():
             return True
-
-        current_container = self.stack.currentWidget()
-        if current_container is not self.page_containers.get("collectibles"):
+        if self.stack.currentWidget() is not self.page_containers.get("collectibles"):
             return True
 
-        answer = QMessageBox.question(
-            self,
-            "Unsaved Collection Changes",
-            "You have collectible ownership changes waiting to be saved.\n\n"
-            "Leave this collection without saving them?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+        box = QMessageBox(self)
+        box.setWindowTitle("Unsaved Collection Changes")
+        box.setText("You have collectible ownership changes waiting to be saved.")
+        box.setInformativeText("Save them before leaving this collection, discard them, or stay here.")
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
         )
-        return answer == QMessageBox.StandardButton.Yes
+        box.setDefaultButton(QMessageBox.StandardButton.Save)
+        answer = box.exec()
+
+        if answer == QMessageBox.StandardButton.Save:
+            collectibles_page.save_pending_changes()
+            return True
+        if answer == QMessageBox.StandardButton.Discard:
+            collectibles_page.discard_pending_changes()
+            return True
+        return False
 
     def show_page(self, page_name: str):
         if not self._confirm_collectible_navigation(page_name):
