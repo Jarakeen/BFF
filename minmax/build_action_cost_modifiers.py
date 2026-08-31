@@ -48,6 +48,20 @@ _VERIFIED_LIGHT_ARMOR_EVOCATION_COST_PERCENT = {
     6: 0.11,
 }
 
+# Current live Xbox/U50 ability-cost observations for Medium Armor: Wind Walker.
+# Echoing Vigor base cost 2984 produced the complete 0-7 Medium-piece sequence:
+#   0 -> 2984
+#   1 -> 2924
+#   2 -> 2865
+#   3 -> 2805
+#   4 -> 2745
+#   5 -> 2686
+#   6 -> 2626
+#   7 -> 2566
+# Every point matches a 2% Stamina ability-cost reduction per equipped Medium
+# Armor piece with the canonical final nearest-half-up action-cost rounding.
+_VERIFIED_MEDIUM_ARMOR_WIND_WALKER_PER_PIECE = 0.02
+
 _WEAPON_SKILL_LINES = (
     "Two Handed",
     "One Hand and Shield",
@@ -165,18 +179,16 @@ class BuildActionCostModifierResolver:
                         )
                     )
 
-        # Wind Walker is a standing Stamina ability-cost reduction source for
-        # Medium Armor. Its displayed current tooltip reports a per-piece value,
-        # but Light Armor live validation proved that tooltip text alone is not
-        # sufficient evidence for Phase 4 canonical cost math. Until Wind Walker
-        # is isolated with current live ability-cost observations, do not omit it
-        # and do not guess its numeric contribution.
         if progression is not None and progression.owns_skill_line("Medium Armor"):
             medium_count = BuildActionCostModifierResolver._medium_armor_count(build)
             if medium_count:
-                unresolved.append(
-                    "Medium Armor: Wind Walker action-cost behavior is not live-verified "
-                    f"for {medium_count} equipped Medium pieces"
+                modifiers.append(
+                    ActionCostModifier(
+                        source=f"Medium Armor: Wind Walker ({medium_count} pieces; live verified)",
+                        operation=CostModifierOperation.PERCENT_REDUCTION,
+                        value=_VERIFIED_MEDIUM_ARMOR_WIND_WALKER_PER_PIECE * medium_count,
+                        resources=(ResourceType.STAMINA,),
+                    )
                 )
 
         return tuple(modifiers), tuple(unresolved)
