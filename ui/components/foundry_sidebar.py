@@ -6,8 +6,19 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
+from engine.config import get_resource_path
 from ui.theme.fonts import Fonts
 
 
@@ -49,22 +60,55 @@ class FoundrySidebar(QWidget):
         self.setMaximumWidth(235)
         self.build_ui()
 
+    @staticmethod
+    def _asset_pixmap(filename: str, width: int, height: int) -> QPixmap:
+        path = get_resource_path("assets", "themes", "bff", "grimoire", "assets", filename)
+        pixmap = QPixmap(str(path)) if path.exists() else QPixmap()
+        if pixmap.isNull():
+            return pixmap
+        return pixmap.scaled(
+            width,
+            height,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+
     def build_ui(self):
         self.setProperty("foundrySidebar", True)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(7)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(6)
 
-        logo = QLabel("BLACK FEATHER FOUNDRY")
+        brand = QWidget()
+        brand_layout = QHBoxLayout(brand)
+        brand_layout.setContentsMargins(0, 0, 0, 0)
+        brand_layout.setSpacing(6)
+
+        feather = QLabel()
+        feather.setFixedSize(34, 54)
+        feather.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        feather.setProperty("sidebarFeather", True)
+        feather_pixmap = self._asset_pixmap("feather_watermark.svg", 28, 50)
+        if not feather_pixmap.isNull():
+            feather.setPixmap(feather_pixmap)
+        else:
+            feather.setText("❧")
+        brand_layout.addWidget(feather, 0, Qt.AlignmentFlag.AlignTop)
+
+        brand_text = QVBoxLayout()
+        brand_text.setContentsMargins(0, 0, 0, 0)
+        brand_text.setSpacing(0)
+        logo = QLabel("BLACK FEATHER\nFOUNDRY")
         logo.setFont(Fonts.logo())
         logo.setProperty("sidebarLogo", True)
         logo.setWordWrap(True)
         logo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        layout.addWidget(logo)
-
+        brand_text.addWidget(logo)
         office = QLabel("FIELD OFFICE")
         office.setProperty("sidebarOffice", True)
-        layout.addWidget(office)
+        brand_text.addWidget(office)
+        brand_layout.addLayout(brand_text, 1)
+        layout.addWidget(brand)
         layout.addWidget(self.divider())
 
         scroll = QScrollArea()
@@ -115,11 +159,20 @@ class FoundrySidebar(QWidget):
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
 
-        footer = QLabel("BLACK FEATHER FOUNDRY\nField records remain open.")
-        footer.setProperty("sidebarFooter", True)
-        footer.setWordWrap(True)
-        footer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        layout.addWidget(footer)
+        plaque = QFrame()
+        plaque.setProperty("parchment", True)
+        plaque.setProperty("sidebarPlaque", True)
+        plaque_layout = QHBoxLayout(plaque)
+        plaque_layout.setContentsMargins(8, 6, 8, 6)
+        plaque_layout.setSpacing(6)
+        mark = QLabel("⚙")
+        mark.setProperty("sidebarPlaqueMark", True)
+        plaque_layout.addWidget(mark, 0, Qt.AlignmentFlag.AlignTop)
+        plaque_text = QLabel("THE FOUNDRY\nLeave better records.")
+        plaque_text.setProperty("sidebarPlaqueText", True)
+        plaque_text.setWordWrap(True)
+        plaque_layout.addWidget(plaque_text, 1)
+        layout.addWidget(plaque)
 
     def build_leaf_button(self, text, page, header_style=False):
         button = self.make_nav_button(text.upper() if header_style else text, indent=False)
