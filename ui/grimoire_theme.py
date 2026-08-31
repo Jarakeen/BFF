@@ -25,7 +25,53 @@ COLORS = {
 
 
 UX_OVERRIDES = r"""
-/* UX branch: Settings / Encounters / Mechanics */
+/* UX branch: explicit grimoire surfaces and dense command-desk proportions. */
+QFrame[foundryCard="true"], QFrame[bookPanel="true"], QWidget[bookPanel="true"] {
+    background-color: #0B2022;
+    background-image: url("@ASSET_PATH@/leather_teal.png");
+    border: 1px solid #5E4A2E;
+    border-radius: 3px;
+}
+QWidget[cardHeader="true"] {
+    background-color: rgba(5, 16, 17, 150);
+    border: none;
+    border-bottom: 1px solid #5E4A2E;
+    min-height: 34px;
+    max-height: 44px;
+}
+QWidget[cardBody="true"] { background: transparent; }
+
+QFrame[parchment="true"], QWidget[parchment="true"],
+QFrame[foundryNoteCard="true"], QWidget[foundryNoteCard="true"] {
+    background-color: #CBBB97;
+    background-image: url("@ASSET_PATH@/parchment.png");
+    color: #241D16;
+    border: 1px solid #6E5838;
+    border-radius: 3px;
+}
+QFrame[parchment="true"] QWidget[cardHeader="true"],
+QFrame[foundryNoteCard="true"] QWidget[cardHeader="true"] {
+    background: rgba(203, 187, 151, 205);
+    border-bottom: 1px solid #6E5838;
+}
+QFrame[parchment="true"] QLabel,
+QWidget[parchment="true"] QLabel,
+QFrame[foundryNoteCard="true"] QLabel,
+QWidget[foundryNoteCard="true"] QLabel {
+    background: transparent;
+    color: #241D16;
+    font-family: "Georgia";
+}
+QFrame[parchment="true"] QPlainTextEdit,
+QFrame[parchment="true"] QTextEdit,
+QFrame[foundryNoteCard="true"] QPlainTextEdit,
+QFrame[foundryNoteCard="true"] QTextEdit {
+    background: transparent;
+    color: #241D16;
+    border: none;
+    font-family: "Georgia";
+}
+
 QFrame[settingsRail="true"] {
     background-color: #071517;
     border: 1px solid #4E402C;
@@ -47,9 +93,7 @@ QPushButton[settingsNav="true"]:checked {
     color: #F0D59A;
     border-color: #876C41;
 }
-QLabel[integrationState="true"] {
-    color: #9CCB82;
-}
+QLabel[integrationState="true"] { color: #9CCB82; }
 QLabel[heroTitle="true"] {
     color: #D0AD69;
     font-family: "Georgia";
@@ -61,63 +105,37 @@ QLabel[heroSubtitle="true"] {
     font-family: "Georgia";
     font-size: 14px;
 }
-QLabel[bossArtworkPlaceholder="true"],
-QLabel[positioningMap="true"] {
+QLabel[bossArtworkPlaceholder="true"], QLabel[positioningMap="true"] {
     background-color: #0A1718;
     border: 1px solid #5E4A2E;
     color: #7F7767;
     font-family: "Georgia";
 }
-QLabel[positioningMap="true"] {
-    font-size: 14px;
-    line-height: 1.35;
-}
+QLabel[positioningMap="true"] { font-size: 14px; }
 QLabel[timerValue="true"] {
     color: #D8C39C;
     font-family: "Georgia";
     font-size: 38px;
     padding: 8px;
 }
-QFrame[parchment="true"] QLabel,
-QWidget[parchment="true"] QLabel {
-    background: transparent;
-    color: #241D16;
-    font-family: "Georgia";
-}
-QFrame[parchment="true"] QPlainTextEdit,
-QFrame[parchment="true"] QTextEdit {
-    background: transparent;
-    color: #241D16;
-    border: none;
-    font-family: "Georgia";
-}
+QLabel[warningText="true"] { color: #D39B50; }
+QLabel[successText="true"] { color: #8FC0A5; }
+QLabel[criticalText="true"] { color: #C97D66; }
 """
 
 
-
-
 def load_grimoire_stylesheet() -> str:
-    """Load the BFF Grimoire QSS and resolve bundled asset URLs."""
+    """Load the BFF Grimoire QSS and resolve bundled asset URLs everywhere."""
     qss_path = get_resource_path(*THEME_DIR, "grimoire.qss")
-
     if not qss_path.exists():
         return ""
 
-    qss = qss_path.read_text(encoding="utf-8")
-    asset_dir = get_resource_path(
-        *THEME_DIR,
-        "assets",
-    ).as_posix()
+    qss = qss_path.read_text(encoding="utf-8") + "\n" + UX_OVERRIDES
+    asset_dir = get_resource_path(*THEME_DIR, "assets").as_posix()
+    return qss.replace("@ASSET_PATH@", asset_dir)
 
-    qss = qss.replace(
-        "@ASSET_PATH@",
-        asset_dir,
-    )
-
-    return qss + "\n" + UX_OVERRIDES
 
 def apply_grimoire_theme(app: QApplication) -> bool:
-    """Apply the Grimoire theme globally. Returns False if its QSS is unavailable."""
     qss = load_grimoire_stylesheet()
     if not qss:
         return False
@@ -130,22 +148,22 @@ def set_role(widget, role: str) -> None:
     widget.setProperty("role", role)
     _repolish(widget)
 
+
 def make_book_panel(widget, raised: bool = False) -> None:
     widget.setProperty("bookPanel", True)
     widget.setProperty("raised", raised)
     _repolish(widget)
 
+
 def make_parchment(widget, enabled: bool = True) -> None:
-    """
-    Give a widget a parchment surface.
-    Recommended for Observation, Archive Preview, and document-like Timeline views.
-    """
     widget.setProperty("parchment", enabled)
     _repolish(widget)
+
 
 def set_button_variant(button: QPushButton, variant: str = "primary") -> None:
     button.setProperty("variant", variant)
     _repolish(button)
+
 
 def _repolish(widget) -> None:
     style = widget.style()
@@ -153,23 +171,17 @@ def _repolish(widget) -> None:
     style.polish(widget)
     widget.update()
 
-class SubtleStudFilter(QObject):
-    """
-    Optional tiny burnished-gold 'book binding' dots on button edges.
 
-    It deliberately paints only two 1.0px dots, with very low opacity.
-    This is meant to read as depth/hardware, not decorative luggage.
-    """
+class SubtleStudFilter(QObject):
     def __init__(self, parent=None, opacity=0.22):
         super().__init__(parent)
         self.opacity = opacity
 
     def eventFilter(self, obj, event):
         if isinstance(obj, QPushButton) and event.type() == QEvent.Type.Paint:
-            # Let Qt finish the normal paint first, then overlay via a zero-delay update
-            # is unreliable; instead this filter is intended for use with StudButton below.
             return False
         return super().eventFilter(obj, event)
+
 
 class StudButton(QPushButton):
     """Drop-in QPushButton with very subtle brass edge studs."""
