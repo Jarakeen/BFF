@@ -29,6 +29,43 @@ def _set_windows_app_id() -> None:
         pass
 
 
+def _set_native_windows_icon(window, icon_path: Path) -> None:
+    """Force the Win32 top-level window icon used by Alt-Tab/taskbar surfaces."""
+    if sys.platform != "win32" or not icon_path.is_file():
+        return
+
+    try:
+        import ctypes
+
+        user32 = ctypes.windll.user32
+
+        IMAGE_ICON = 1
+        LR_LOADFROMFILE = 0x0010
+        LR_DEFAULTSIZE = 0x0040
+        WM_SETICON = 0x0080
+        ICON_SMALL = 0
+        ICON_BIG = 1
+
+        icon_handle = user32.LoadImageW(
+            None,
+            str(icon_path),
+            IMAGE_ICON,
+            0,
+            0,
+            LR_LOADFROMFILE | LR_DEFAULTSIZE,
+        )
+        if not icon_handle:
+            return
+
+        hwnd = int(window.winId())
+        user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, icon_handle)
+        user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, icon_handle)
+    except Exception:
+        # Qt's normal icon path remains the fallback on nonstandard Windows
+        # environments or if the native call is unavailable.
+        pass
+
+
 def main() -> int:
 
     _set_windows_app_id()
@@ -78,12 +115,15 @@ def main() -> int:
 
     window = MainWindow()
     if not foundry_icon.isNull():
-        # Explicitly assign the icon to the real top-level window as well as
-        # QApplication. Windows can otherwise retain the identity of the first
-        # visible startup window and show a generic taskbar icon.
         window.setWindowIcon(foundry_icon)
     window.show()
     app.processEvents()
+
+    # Windows occasionally ignores Qt's application/window icon assignment when
+    # a splash window is the first native top-level window. Apply the same ICO
+    # directly to the real Win32 window after it has an HWND.
+    _set_native_windows_icon(window, app_icon)
+
     splash.finish(window)
     return app.exec()
 
