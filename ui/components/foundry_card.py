@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_resource_path
+from ui.iconography import icon_path
 from ui.theme.fonts import Fonts
 
 
@@ -37,6 +38,7 @@ class FoundryCard(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._watermark: QPixmap | None = None
         self._watermark_opacity = 0.08
+        self._icon_name = ""
 
         self.header = QWidget()
         self.header.setProperty("cardHeader", True)
@@ -48,9 +50,11 @@ class FoundryCard(QFrame):
         header_layout.setContentsMargins(8, 3, 8, 3)
         header_layout.setSpacing(6)
 
-        self.icon_label = QLabel(icon)
+        self.icon_label = QLabel()
         self.icon_label.setProperty("cardIcon", True)
         self.icon_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.icon_label.setFixedSize(17, 17)
+        self.icon_label.setScaledContents(True)
 
         self.title_label = QLabel(title)
         self.title_label.setProperty("cardTitle", True)
@@ -85,10 +89,27 @@ class FoundryCard(QFrame):
         root.addWidget(self.header, 0)
         root.addWidget(self.body, 1)
 
+        self.set_icon(icon)
+
     def set_title(self, title: str):
         self.title_label.setText(title)
 
     def set_icon(self, icon: str):
+        self._icon_name = icon or ""
+        self.icon_label.clear()
+        self.icon_label.setVisible(bool(icon))
+        if not icon:
+            return
+
+        path = icon_path(icon)
+        if path is not None:
+            pixmap = QPixmap(str(path))
+            if not pixmap.isNull():
+                self.icon_label.setPixmap(pixmap)
+                self.icon_label.setToolTip(icon.replace("-", " ").title())
+                return
+
+        # Backward-compatible fallback for callers still passing a glyph.
         self.icon_label.setText(icon)
 
     def set_badge(self, text: str):
@@ -172,8 +193,6 @@ class FoundryCard(QFrame):
         pen = QPen(ornament, 1.0)
         painter.setPen(pen)
 
-        # Tiny binding-like corner marks. Deliberately restrained: they should
-        # register as craftsmanship, not announce a theme park.
         inset = 4
         arm = 8
         w = self.width() - 1
