@@ -35,7 +35,7 @@ UX_OVERRIDES = r"""
 
 QWidget {
     font-family: "Montserrat", "Segoe UI";
-    font-size: 12px;
+    font-size: 12.5px;
 }
 
 QMainWindow, QDialog { background-color: #061315; }
