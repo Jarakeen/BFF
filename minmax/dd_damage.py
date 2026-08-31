@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from .critical_resistance import CriticalResistanceResult, resolve_critical_resistance
 from .damage_done import DamageDoneBreakdown, DamageDoneModifiers, resolve_damage_done
 from .damage_taken import DamageTakenBreakdown, DamageTakenModifiers, resolve_damage_taken
 from .dd_damage_profile import get_dd_damage_profile
@@ -40,6 +41,13 @@ class DDDamageResult:
     damage_done_multiplier: float = 1.0
     damage_done_damage: float = 0.0
 
+    critical_resistance: CriticalResistanceResult = CriticalResistanceResult(
+        target_critical_resistance=0.0,
+        reduction_percent=0.0,
+        attacker_critical_damage_percent=0.0,
+        effective_critical_damage_percent=0.0,
+    )
+
     mitigation_multiplier: float = 1.0
     mitigated_damage: float = 0.0
 
@@ -55,6 +63,7 @@ def calculate_dd_damage(
     mitigation: DDMitigationResult | None = None,
     damage_done: DamageDoneModifiers = DamageDoneModifiers(),
     damage_taken: DamageTakenModifiers = DamageTakenModifiers(),
+    target_critical_resistance: float = 0.0,
 ) -> DDDamageResult:
     """Calculate expected damage for a modeled DD event.
 
@@ -62,41 +71,32 @@ def calculate_dd_damage(
 
         scaled event
         -> attacker Damage Done
-        -> expected critical damage
+        -> target Critical Resistance / expected critical damage
         -> target resistance mitigation
         -> target Damage Taken
         -> final damage
 
     Applicable Damage Done categories are additive inside one ESO event bucket:
-    generic + damage type + Direct/DoT + Single Target/AoE. Target Damage Taken
+    generic + damage type + Direct/DoT + Single Target/AoE. Target Critical
+    Resistance subtracts percentage points from the attacker's Critical Damage
+    bonus before expected critical damage is calculated. Target Damage Taken
     remains its own later bucket so Vulnerability/Protection never leak into
     attacker stats or the Damage Done calculation.
     """
 
     if event.base_value < 0:
-        raise ValueError(
-            "Base damage cannot be negative."
-        )
+        raise ValueError("Base damage cannot be negative.")
 
     if event.scaling_coefficient < 0:
-        raise ValueError(
-            "Scaling coefficient cannot be negative."
-        )
+        raise ValueError("Scaling coefficient cannot be negative.")
 
     if event.damage_type is None:
         offensive_stat = "combined_offensive_power"
-        offensive_power = (
-            stats.weapon_damage
-            + stats.spell_damage
-        )
+        offensive_power = stats.weapon_damage + stats.spell_damage
         penetration_stat = None
         penetration = 0.0
-
     else:
-        profile = get_dd_damage_profile(
-            event.damage_type
-        )
-
+        profile = get_dd_damage_profile(event.damage_type)
         offensive_stat = profile.offensive_stat
 
         if offensive_stat == "weapon_damage":
@@ -104,31 +104,17 @@ def calculate_dd_damage(
         elif offensive_stat == "spell_damage":
             offensive_power = stats.spell_damage
         else:
-            raise ValueError(
-                f"Unsupported offensive stat: "
-                f"{offensive_stat!r}"
-            )
+            raise ValueError(f"Unsupported offensive stat: {offensive_stat!r}")
 
         penetration_stat = profile.penetration_stat
-
         if penetration_stat == "physical_penetration":
-            penetration = (
-                stats.effective_physical_penetration
-            )
+            penetration = stats.effective_physical_penetration
         elif penetration_stat == "spell_penetration":
-            penetration = (
-                stats.effective_spell_penetration
-            )
+            penetration = stats.effective_spell_penetration
         else:
-            raise ValueError(
-                f"Unsupported penetration stat: "
-                f"{penetration_stat!r}"
-            )
+            raise ValueError(f"Unsupported penetration stat: {penetration_stat!r}")
 
-    scaled_damage = (
-        event.base_value
-        + offensive_power * event.scaling_coefficient
-    )
+    scaled_damage = event.base_value + offensive_power * event.scaling_coefficient
 
     damage_done_breakdown = resolve_damage_done(
         damage_done,
@@ -141,36 +127,24 @@ def calculate_dd_damage(
 
     if not event.can_crit:
         critical_chance = 0.0
+        critical_resistance = resolve_critical_resistance(0.0, target_critical_resistance)
         critical_damage = 0.0
         expected_damage = damage_done_damage
-
     else:
-        critical_chance = (
-            stats.effective_critical_chance / 100.0
+        critical_chance = stats.effective_critical_chance / 100.0
+        critical_resistance = resolve_critical_resistance(
+            stats.effective_critical_damage,
+            target_critical_resistance,
         )
-
-        critical_damage = (
-            stats.effective_critical_damage / 100.0
-        )
-
-        expected_damage = (
-            damage_done_damage
-            * (
-                1.0
-                + critical_chance * critical_damage
-            )
-        )
+        critical_damage = critical_resistance.effective_critical_damage_fraction
+        expected_damage = damage_done_damage * (1.0 + critical_chance * critical_damage)
 
     if mitigation is None:
         mitigation_multiplier = 1.0
     else:
-        mitigation_multiplier = (
-            mitigation.damage_multiplier
-        )
+        mitigation_multiplier = mitigation.damage_multiplier
 
-    mitigated_damage = (
-        expected_damage * mitigation_multiplier
-    )
+    mitigated_damage = expected_damage * mitigation_multiplier
 
     damage_taken_breakdown = resolve_damage_taken(damage_taken)
     damage_taken_multiplier = damage_taken_breakdown.multiplier
@@ -189,6 +163,7 @@ def calculate_dd_damage(
         damage_done=damage_done_breakdown,
         damage_done_multiplier=damage_done_multiplier,
         damage_done_damage=damage_done_damage,
+        critical_resistance=critical_resistance,
         mitigation_multiplier=mitigation_multiplier,
         mitigated_damage=mitigated_damage,
         damage_taken=damage_taken_breakdown,
