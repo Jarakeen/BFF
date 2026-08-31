@@ -75,6 +75,7 @@ class AbilitiesImporter:
         try:
 
             self._create_table(db)
+            self._ensure_phase4_cost_timing_columns(db)
             self._verify_schema(db)
             db.execute(
                 "DELETE FROM ability"
@@ -185,6 +186,8 @@ class AbilitiesImporter:
                 cost_time REAL,
                 base_cost REAL,
                 base_mechanic INTEGER,
+                base_is_cost_time INTEGER DEFAULT 0,
+                charge_freq_raw TEXT,
 
                 charge_freq REAL,
 
@@ -280,6 +283,23 @@ class AbilitiesImporter:
             """
         )
 
+    @staticmethod
+    def _ensure_phase4_cost_timing_columns(db: sqlite3.Connection) -> None:
+        """Add Phase 4 timing columns to an existing ability table safely."""
+
+        columns = {
+            row[1]
+            for row in db.execute("PRAGMA table_info(ability)").fetchall()
+        }
+        if "base_is_cost_time" not in columns:
+            db.execute(
+                "ALTER TABLE ability ADD COLUMN base_is_cost_time INTEGER DEFAULT 0"
+            )
+        if "charge_freq_raw" not in columns:
+            db.execute(
+                "ALTER TABLE ability ADD COLUMN charge_freq_raw TEXT"
+            )
+
     # ======================================================
     # INSERT
     # ======================================================
@@ -312,6 +332,8 @@ class AbilitiesImporter:
             "cost_time",
             "base_cost",
             "base_mechanic",
+            "base_is_cost_time",
+            "charge_freq_raw",
 
             "charge_freq",
 
@@ -461,6 +483,8 @@ class AbilitiesImporter:
             r.get("costTime"),
             self._float(r.get("baseCost")),
             self._int(r.get("baseMechanic")),
+            self._bool(r.get("baseIsCostTime")),
+            None if r.get("chargeFreq") is None else str(r.get("chargeFreq")),
 
             self._float(r.get("chargeFreq")),
 
@@ -676,6 +700,7 @@ class AbilitiesImporter:
             return 1
 
         return 0
+
     def _verify_schema(
         self,
         db: sqlite3.Connection,
@@ -706,6 +731,8 @@ class AbilitiesImporter:
             "cost_time",
             "base_cost",
             "base_mechanic",
+            "base_is_cost_time",
+            "charge_freq_raw",
             "charge_freq",
             "min_range",
             "max_range",
@@ -786,7 +813,8 @@ class AbilitiesImporter:
                 + "\n".join(
                     sorted(missing)
                 )
-            )    
+            )
+
 
 def main():
 
@@ -797,4 +825,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
