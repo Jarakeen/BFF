@@ -17,6 +17,7 @@ from services.encounter_promotion import (
 
 
 CANONICAL_MECHANIC_PRESENCE = "mechanic_presence"
+CANONICAL_MECHANIC_DETAIL = "mechanic_detail"
 CANONICAL_PHASE = "phase"
 CANONICAL_PHASE_TRANSITION = "phase_transition"
 CANONICAL_STATE = "encounter_state"
@@ -78,6 +79,21 @@ def map_candidate_to_canonical(
             lossless_in_current_schema=True,
             schema_note=_v3_note(
                 "encounter_canonical_fact stores the reviewed mechanic-presence fact"
+            ),
+        )
+
+    if fact_type == "mechanic_detail":
+        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
+        return EncounterCanonicalMapping(
+            encounter_id=fact.encounter_id,
+            fact_type=fact.fact_type,
+            fact_key=fact.fact_key,
+            canonical_kind=CANONICAL_MECHANIC_DETAIL,
+            payload=dict(value),
+            source_count=fact.distinct_sources,
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed mechanic detail without flattening its payload"
             ),
         )
 
