@@ -63,7 +63,29 @@ class CanonicalBuildBridge:
         self.sync_from_roster(roster)
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
+        """Resync builds without deleting canonical characters that have none.
+
+        Character identity and progression are independent of build ownership.
+        Rebuilding the compatibility roster must therefore be allowed to remove
+        every build for a character while preserving that character record.
+        """
+        existing = self.catalog_service.load()
         catalog = self.catalog_service.import_legacy_roster(roster)
+
+        represented_ids = {
+            str(character.get("character_id", "")).strip()
+            for character in catalog.get("characters", [])
+            if isinstance(character, dict)
+        }
+        for character in existing.get("characters", []):
+            if not isinstance(character, dict):
+                continue
+            character_id = str(character.get("character_id", "")).strip()
+            if not character_id or character_id in represented_ids:
+                continue
+            catalog["characters"].append(character)
+            represented_ids.add(character_id)
+
         self.catalog_service.save(catalog)
         return catalog
 
