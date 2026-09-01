@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from services.encounter_canonical_mapping import (
+    CANONICAL_MECHANIC_DETAIL,
     CANONICAL_MECHANIC_PRESENCE,
     CANONICAL_PHASE_TRANSITION,
     CANONICAL_STATE,
@@ -44,6 +45,40 @@ def test_maps_corroborated_mechanic_presence_losslessly_in_schema_v3():
     assert mapping.source_count == 2
     assert mapping.lossless_in_current_schema is True
     assert "encounter_fact_evidence" in mapping.schema_note
+
+
+def test_maps_corroborated_mechanic_detail_dict_losslessly_in_schema_v3():
+    mapping = map_candidate_to_canonical(
+        _candidate(
+            "mechanic_detail",
+            "acid_reflux_core_behavior",
+            {
+                "target": "taunt_target",
+                "leaves_acid_pools": True,
+                "applies_stacking_acid_vulnerability": True,
+            },
+        )
+    )
+
+    assert mapping is not None
+    assert mapping.canonical_kind == CANONICAL_MECHANIC_DETAIL
+    assert mapping.payload == {
+        "target": "taunt_target",
+        "leaves_acid_pools": True,
+        "applies_stacking_acid_vulnerability": True,
+    }
+    assert mapping.lossless_in_current_schema is True
+
+
+def test_maps_corroborated_mechanic_detail_scalar_losslessly_in_schema_v3():
+    mapping = map_candidate_to_canonical(
+        _candidate("mechanic_detail", "heartburn_duration_seconds", 60)
+    )
+
+    assert mapping is not None
+    assert mapping.canonical_kind == CANONICAL_MECHANIC_DETAIL
+    assert mapping.payload == {"value": 60}
+    assert mapping.lossless_in_current_schema is True
 
 
 def test_maps_corroborated_transition_thresholds_losslessly_in_schema_v3():
