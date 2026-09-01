@@ -43,6 +43,29 @@ def test_u50_catalog_deduplicates_formula_evidence():
     assert formula.source_files == ("spell_power.html", "spell_critical.html")
 
 
+def test_effect_page_name_is_primary_formula_evidence():
+    payload = {
+        "effects": [
+            {
+                "effect_name": "Restore Magicka",
+                "source_files": ["restore_magicka.html"],
+                "formulas": [
+                    {
+                        "ingredients": ["Corn Flower", "Lady's Smock"],
+                        "effects": ["Increase Spell Power"],
+                    }
+                ],
+            }
+        ]
+    }
+
+    catalog = AlchemyFormulaCatalog.from_processed_payload(payload, game_update=GameUpdate.U50)
+
+    assert catalog.unresolved == ()
+    assert len(catalog.formulas) == 1
+    assert set(catalog.formulas[0].traits) == {"Restore Magicka", "Increase Spell Power"}
+
+
 def test_u51_legacy_alias_migrates_power_and_critical_traits():
     catalog = AlchemyFormulaCatalog.from_processed_payload(
         _payload(),
@@ -70,14 +93,13 @@ def test_find_by_traits_supports_exact_and_subset_queries():
     assert len(catalog.find_by_traits("Spell Critical", exact=False)) == 1
 
 
-def test_malformed_formula_rows_remain_explicitly_unresolved():
+def test_primary_effect_can_stand_alone_when_secondary_effect_cells_are_blank():
     payload = {
         "effects": [
             {
                 "effect_name": "Timidity",
                 "source_files": ["timidity.html"],
                 "formulas": [
-                    {"ingredients": ["One Reagent"], "effects": ["Timidity"]},
                     {"ingredients": ["A", "B"], "effects": []},
                 ],
             }
@@ -86,5 +108,55 @@ def test_malformed_formula_rows_remain_explicitly_unresolved():
 
     catalog = AlchemyFormulaCatalog.from_processed_payload(payload, game_update=GameUpdate.U50)
 
+    assert catalog.unresolved == ()
+    assert len(catalog.formulas) == 1
+    assert catalog.formulas[0].traits == ("Timidity",)
+
+
+def test_malformed_formula_rows_remain_explicitly_unresolved():
+    payload = {
+        "effects": [
+            {
+                "effect_name": "Timidity",
+                "source_files": ["timidity.html"],
+                "formulas": [
+                    {"ingredients": ["One Reagent"], "effects": ["Timidity"]},
+                ],
+            }
+        ]
+    }
+
+    catalog = AlchemyFormulaCatalog.from_processed_payload(payload, game_update=GameUpdate.U50)
+
     assert catalog.formulas == ()
-    assert len(catalog.unresolved) == 2
+    assert len(catalog.unresolved) == 1
+    assert "fewer than two reagents" in catalog.unresolved[0]
+
+
+def test_non_trait_cells_from_malformed_uesp_table_are_rejected():
+    payload = {
+        "effects": [
+            {
+                "effect_name": "Restore Magicka",
+                "source_files": ["restore_magicka.html"],
+                "formulas": [
+                    {
+                        "ingredients": ["Corn Flower", "Lady's Smock", "Water Hyacinth"],
+                        "effects": [
+                            "Increase Spell Power",
+                            "Spell Critical",
+                            "Bugloss",
+                            "Main Ingredients",
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+    catalog = AlchemyFormulaCatalog.from_processed_payload(payload, game_update=GameUpdate.U50)
+
+    assert catalog.formulas == ()
+    assert len(catalog.unresolved) == 1
+    assert "non-trait source cells rejected" in catalog.unresolved[0]
+    assert "Bugloss" in catalog.unresolved[0]
