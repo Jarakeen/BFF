@@ -12,6 +12,7 @@ from ui.components.eligible_build_editor import EligibleBuildEditor, EligibleSki
 from services.skill_choice_service import load_skill_choices
 
 ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
+EDITOR_CARD_MAX_WIDTH = 1340
 
 
 def _configure_search(combo: QComboBox) -> None:
@@ -46,9 +47,6 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Keep the editor compact even when its dialog has a wide viewport.
-        # Without caps, QGridLayout distributes spare width across every combo,
-        # making the gear editor much wider than its contents require.
         self.set_combo.setMaximumWidth(220)
         self.set2_combo.setMaximumWidth(220)
         self.quality_combo.setFixedWidth(82)
@@ -108,11 +106,25 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
                 combo.setCurrentText(_compact_set_label(canonical))
 
 
+class SearchableCompactCPSlot(build_editor.CompactCPSlot):
+    """Compact CP picker that does not stretch across a wide editor."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.combo.setMaximumWidth(205)
+        self.points.setFixedWidth(44)
+        self.setMaximumWidth(260)
+
+
 class SearchableSkillBarRow(EligibleSkillBarRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             _configure_search(field)
+            field.setMaximumWidth(195)
+        row = self.layout()
+        if row is not None:
+            row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
 
 class SearchableBuildEditor(EligibleBuildEditor):
@@ -120,8 +132,23 @@ class SearchableBuildEditor(EligibleBuildEditor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._compact_editor_cards()
         self._compact_gear_grid()
+        self._compact_cp_grid()
         QTimer.singleShot(0, self._compact_host_dialog)
+
+    def _compact_editor_cards(self) -> None:
+        """Give the main editor sections one shared centered working width."""
+        root = self.layout()
+        if root is None:
+            return
+        for index in range(min(4, root.count())):
+            item = root.itemAt(index)
+            card = item.widget() if item is not None else None
+            if card is None:
+                continue
+            card.setMaximumWidth(EDITOR_CARD_MAX_WIDTH)
+            root.setAlignment(card, Qt.AlignmentFlag.AlignHCenter)
 
     def _compact_gear_grid(self) -> None:
         """Collapse legacy Set 2 and center the compact gear grid in its card."""
@@ -143,9 +170,6 @@ class SearchableBuildEditor(EligibleBuildEditor):
         if header is not None:
             header.setVisible(False)
 
-        # The old Set 2 column contributes no width. Keep every real gear
-        # column content-sized, then center the complete grid inside the card so
-        # spare viewport space is shared evenly on the left and right.
         grid.setColumnMinimumWidth(3, 0)
         for column in range(0, 12):
             grid.setColumnStretch(column, 0)
@@ -155,6 +179,19 @@ class SearchableBuildEditor(EligibleBuildEditor):
             if slot_widget is not None:
                 slot_widget.setMaximumWidth(150)
         grid.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+
+    def _compact_cp_grid(self) -> None:
+        """Keep CP labels and slots dense enough to match the gear section."""
+        root = self.layout()
+        if root is None or root.count() < 3:
+            return
+        cp_card = root.itemAt(2).widget()
+        cp_grid = getattr(self, "cp_grid", None)
+        if cp_card is None or cp_grid is None:
+            return
+        for heading in cp_grid.findChildren(build_editor.QLabel if hasattr(build_editor, "QLabel") else object):
+            if hasattr(heading, "width") and heading.width() >= 140:
+                heading.setFixedWidth(125)
 
     def _compact_host_dialog(self) -> None:
         """Use a practical default editor size instead of the legacy 1500px width."""
@@ -244,6 +281,7 @@ def _patch_optimization_skill_picker() -> None:
 def install() -> None:
     """Install shared selector behavior before pages construct BuildEditor."""
     build_editor.GearSlotRow = SearchableGearSlotRow
+    build_editor.CompactCPSlot = SearchableCompactCPSlot
     build_editor.SkillBarRow = SearchableSkillBarRow
     build_editor.BuildEditor = SearchableBuildEditor
     _patch_builds_page()
