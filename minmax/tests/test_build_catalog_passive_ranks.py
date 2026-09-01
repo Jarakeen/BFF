@@ -18,14 +18,15 @@ def _service_with_character(tmp_path: Path) -> tuple[BuildCatalogService, str]:
     return service, "character_alice"
 
 
-def test_character_defaults_to_no_passive_ranks(tmp_path: Path) -> None:
+def test_character_defaults_to_unknown_passive_ranks(tmp_path: Path) -> None:
     service, character_id = _service_with_character(tmp_path)
 
     character = service.get_character(character_id)
 
     assert character is not None
     assert character["passive_ranks"] == {}
-    assert service.get_passive_rank(character_id, "Medicinal Use") == 0
+    assert character["passive_cp_points"] == {}
+    assert service.get_passive_rank(character_id, "Medicinal Use") is None
     assert service.load()["schema_version"] == SCHEMA_VERSION == 3
 
 
@@ -53,23 +54,27 @@ def test_set_passive_rank_is_character_scoped_and_case_insensitive(tmp_path: Pat
     assert service.get_passive_rank(character_id, "Medicinal Use") == 2
 
 
-def test_rank_zero_removes_persisted_passive(tmp_path: Path) -> None:
+def test_rank_zero_is_explicit_known_unowned_and_clear_returns_unknown(tmp_path: Path) -> None:
     service, character_id = _service_with_character(tmp_path)
-    service.set_passive_rank(
-        character_id=character_id,
-        passive_name="Medicinal Use",
-        rank=3,
-    )
 
     updated = service.set_passive_rank(
         character_id=character_id,
-        passive_name="medicinal use",
+        passive_name="Medicinal Use",
         rank=0,
     )
 
     assert updated is not None
-    assert updated["passive_ranks"] == {}
+    assert updated["passive_ranks"] == {"Medicinal Use": 0}
     assert service.get_passive_rank(character_id, "Medicinal Use") == 0
+
+    cleared = service.clear_passive_rank(
+        character_id=character_id,
+        passive_name="medicinal use",
+    )
+
+    assert cleared is not None
+    assert cleared["passive_ranks"] == {}
+    assert service.get_passive_rank(character_id, "Medicinal Use") is None
 
 
 def test_passive_rank_update_does_not_modify_build_payload(tmp_path: Path) -> None:
@@ -92,7 +97,7 @@ def test_passive_rank_update_does_not_modify_build_payload(tmp_path: Path) -> No
     }
 
 
-def test_legacy_resync_preserves_character_passive_ranks(tmp_path: Path) -> None:
+def test_legacy_resync_preserves_character_progression_including_zero(tmp_path: Path) -> None:
     service = BuildCatalogService(tmp_path / "characters.json")
     initial = service.import_legacy_roster(
         BuildRoster(
@@ -111,8 +116,14 @@ def test_legacy_resync_preserves_character_passive_ranks(tmp_path: Path) -> None
     service.set_passive_rank(
         character_id=character_id,
         passive_name="Medicinal Use",
-        rank=3,
+        rank=0,
     )
+    data = service.load()
+    data["characters"][0]["passive_cp_points"] = {
+        "Boundless Vitality": 50,
+        "Fortification": 0,
+    }
+    service.save(data)
 
     resynced = service.import_legacy_roster(
         BuildRoster(
@@ -129,7 +140,11 @@ def test_legacy_resync_preserves_character_passive_ranks(tmp_path: Path) -> None
     )
 
     assert resynced["characters"][0]["character_id"] == character_id
-    assert resynced["characters"][0]["passive_ranks"] == {"Medicinal Use": 3}
+    assert resynced["characters"][0]["passive_ranks"] == {"Medicinal Use": 0}
+    assert resynced["characters"][0]["passive_cp_points"] == {
+        "Boundless Vitality": 50,
+        "Fortification": 0,
+    }
 
 
 def test_invalid_passive_rank_fails_closed(tmp_path: Path) -> None:
