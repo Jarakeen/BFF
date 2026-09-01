@@ -23,6 +23,12 @@ def main() -> int:
         type=Path,
         default=Path("data/encounter_evidence"),
     )
+    parser.add_argument(
+        "--source-root",
+        type=Path,
+        default=Path("data/uesp"),
+        help="Root containing tracked UESP content records with boss_ids",
+    )
     args = parser.parse_args()
 
     if not args.database.exists():
@@ -37,6 +43,7 @@ def main() -> int:
                 connection,
                 content_id=args.content_id,
                 packet_dir=args.packet_dir,
+                source_root=args.source_root,
             )
         except ValueError as exc:
             print(f"BLOCKED: {exc}")
@@ -50,9 +57,23 @@ def main() -> int:
     print(f"content:          {audit.content_name} [{audit.content_id}]")
     print(f"database:         {args.database}")
     print(f"packet directory: {args.packet_dir}")
+    print(f"source root:      {args.source_root}")
     print(f"encounters in DB: {len(audit.database_encounters)}")
     print(f"evidence packets: {len(audit.packet_gaps)}")
+    print(f"source boss_ids:  {len(audit.source_declared_encounters)}")
     print()
+
+    if audit.source_declared_encounters:
+        print("=== SOURCE-DECLARED ENCOUNTERS ===")
+        for encounter_id in audit.source_declared_encounters:
+            markers: list[str] = []
+            if encounter_id in audit.source_declared_missing_db:
+                markers.append("missing DB")
+            if encounter_id in audit.source_declared_missing_packets:
+                markers.append("missing packet")
+            suffix = f" | {', '.join(markers)}" if markers else ""
+            print(f"  - {encounter_id}{suffix}")
+        print()
 
     print("=== CANONICAL ENCOUNTERS ===")
     for row in audit.database_encounters:
@@ -119,6 +140,8 @@ def main() -> int:
     print(f"  blocked conflicting facts:        {blocked}")
     print(f"  single-source review backlog:     {review}")
     print(f"  encounters without NPC links:     {no_npcs}")
+    print(f"  source bosses missing DB rows:    {len(audit.source_declared_missing_db)}")
+    print(f"  source bosses missing packets:    {len(audit.source_declared_missing_packets)}")
     print(f"  DB encounters without packets:    {len(audit.encounters_without_packets)}")
     print(f"  packets without DB encounters:    {len(audit.packets_without_encounters)}")
     print()
