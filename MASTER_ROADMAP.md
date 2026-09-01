@@ -329,9 +329,9 @@ These later improvements do not change the historical Phase 4 closeout boundary;
 ---
 
 # PHASE 5 · Real Build Resolution
-**Status: 🟡 Active · advanced backend foundation**
+**Status: 🟢 Complete**
 
-Prove the actual ESO database → effect resolver → build aggregation path across real saved builds.
+Phase 5 proves the actual ESO database → canonical character/build → resolver → `EffectVariant` / capability path across authoritative saved builds while keeping temporal and conditional mechanics explicit.
 
 ```text
 REAL DB
@@ -346,254 +346,72 @@ Saved Build + Canonical Character
  ↓
 Build / Capability Resolver
  ↓
-Temporal Activation where required
+Explicit Boundaries for Deferred Temporal Mechanics
  ↓
-Coverage / Unresolved Evidence
+Auditable Coverage
 ```
-
-Phase 5 inherits the real saved-build bridge from Phase 4 and is now actively proving what an actual saved character/build provides, requires, and leaves conditional or unresolved.
 
 ## Completed Phase 5 foundations
 
-### Version-aware combat semantics
+- 🟢 stable canonical character/build identity and character-owned progression
+- 🟢 progression UI for owned skill lines, passive ranks, and passive Champion Points
+- 🟢 canonical potion/effect-family picker with legacy-label compatibility
+- 🟢 source-backed U50 Alchemy corpus and Potion/Poison EffectVariants
+- 🟢 explicit potion-use events, active windows, cooldown, and Medicinal Use cadence
+- 🟢 U50/U51 version-aware combat semantics and migration boundaries
+- 🟢 exact purchased racial passive rank resolution from canonical `skill_rank` + `ability` data
+- 🟢 aggregate race-stat shortcut removed from the Phase 5 canonical path
+- 🟢 saved-build capability service defaults to the Phase 5 canonical context
+- 🟢 active-bar gear set counting, including two-handed weapon set-slot semantics
+- 🟢 real skill, gear, mythic, consumable, buff/debuff, and conditional-effect capability reporting through `EffectVariant`
+- 🟢 standing availability kept separate from explicit activation/uptime
+- 🟢 dynamic/non-combat Champion Points classified as explicit deferred boundaries instead of false unresolved failures
+- 🟢 known template/sample builds excluded from authoritative closeout totals while remaining available for stress testing
+- 🟢 broader real-build resolution matrix with explicit boundary and unresolved reporting
 
-- 🟢 U50 remains reproducible as explicit historical/current semantics
-- 🟢 U51 is represented as a separate game-update vocabulary rather than mutating U50 evidence
-- 🟢 named combat buffs are update-aware
-- 🟢 U51 Brutality/Savagery consolidation semantics are versioned
-- 🟢 U51 Mundus changes are versioned
-- 🟢 Alchemy trait migrations are versioned
-- 🟢 strict U51 source resolution rejects obsolete U50 names unless a legacy saved-label migration explicitly opts in
+## Closeout evidence
 
-### Character-owned progression
+Authoritative saved build: **Magrat → DF Healer**
 
-- 🟢 stable canonical character/build identity bridge
-- 🟢 persisted character-owned skill-line ownership
-- 🟢 canonical catalog schema v3 with character-scoped passive ranks
-- 🟢 passive ranks survive build/legacy resync without contaminating build payloads
-- 🟢 `Medicinal Use` rank can flow from canonical character progression into potion cadence
+- canonical character ID resolved
+- canonical character progression resolved
+- racial passives resolved from exact purchased ranks
+- Spaulder of Ruin, Serpent's Disdain, Master Architect, Combat Prayer, Expansive Frost Cloak, Overflowing Altar, Aggressive Horn, and selected potion capability resolved through the production path
+- **11 unique resolved EffectVariants** in the closeout sample
+- **0 genuine unresolved items**
 
-### U50 Alchemy source recovery and database import
+Authoritative roster closeout:
 
-Recovered U50 Alchemy evidence now forms a canonical source-backed corpus rather than a hand-maintained potion list.
+- `DF Healer`: **0 genuine unresolved**
+- `YOUR TANK BUILD`: retained as a diagnostic/template sample and excluded from authoritative closeout totals
+- **TOTAL GENUINE UNRESOLVED: 0**
 
-- 🟢 **30** canonical U50 Alchemy effect names recovered
-- 🟢 **1,399** canonical U50 formulas represented
-- 🟢 source corpus rebuilt from recovered UESP pages with malformed/table-artifact rows quarantined rather than guessed
-- 🟢 all expected U50 effect names accounted for
-- 🟢 database import created/linked Potion and Poison `EffectVariant` rows without duplicating existing canonical effect names
-- 🟢 **60** Alchemy variants imported: **30 Potion + 30 Poison**
-- 🟢 source provenance attached to imported variants
-- 🟢 pre-import database backup retained
+Regression checkpoint:
 
-Canonical U50 vocabulary includes:
+- 🟢 template classifier tests green
+- 🟢 full regression suite: **1,619 passed** on **2026-09-01**
 
-`Breach, Cowardice, Defile, Detection, Enervation, Entrapment, Fracture, Heroism, Hindrance, Increase Armor, Increase Spell Power, Increase Spell Resist, Increase Weapon Power, Invisible, Lingering Health, Maim, Protection, Ravage Health, Ravage Magicka, Ravage Stamina, Restore Health, Restore Magicka, Restore Stamina, Speed, Spell Critical, Timidity, Uncertainty, Unstoppable, Vitality, Weapon Critical`.
+## Explicit Phase 5 deferrals
 
-Unsupported names such as `Vulnerability` are not promoted into the U50 Alchemy vocabulary without source evidence.
+The following remain intentionally outside Phase 5 rather than being guessed:
 
-### Crafted-potion identity and saved-build availability
+- automatic proc/cooldown scheduling
+- status-effect chance models, including Charged and related CP behavior
+- typed/attacker-specific incoming-damage mitigation
+- attack-damage-type conditional offensive modifiers
+- movement-speed and movement-state behavior
+- Bash / Break Free / Sprint / Roll Dodge utility-cost channels
+- incoming status-effect duration and resurrection-state mechanics
+- stealth-detection/PvP utility
+- conditional racial bonuses that require live combat state
+- general ability-cost channels not represented in standing stat state
+- U51 temporal Alchemy tier values until authoritative source data exists
 
-Potion architecture now separates effect family from reagent formula.
+These move forward to Phase 6 where they are component semantics, or to Phase 7/8 where they require conditional/temporal state.
 
-```text
-Saved human label
-      ↓
-Known legacy alias or canonical formula ID
-      ↓
-Canonical effect family
-      ↓
-One or more valid reagent formulas
-      ↓
-Potion EffectVariants
-      ↓
-CONSUMABLE capability
-```
+**Exit criteria met on 2026-09-01.**
 
-- 🟢 exact canonical formula IDs identify one specific recipe
-- 🟢 human legacy aliases identify an effect family and may resolve to multiple equivalent recipes
-- 🟢 ambiguous unknown labels fail closed instead of selecting an arbitrary recipe
-- 🟢 merchant/store names are compatibility aliases only, not the canonical potion catalog
-- 🟢 `spell power` resolves to the exact U50 family:
-  - Restore Magicka
-  - Increase Spell Power
-  - Spell Critical
-- 🟢 `spell power` has **2** equivalent validated reagent formulas
-- 🟢 legacy `Health Elixir` / `Elixir of Health` resolve to the Restore Health family without inventing tri-stat effects
-- 🟢 Restore Health family currently exposes **37** equivalent U50 reagent formulas
-
-A saved potion proves **availability only**. It is not applied to static/standing character stats.
-
-### Source-backed explicit potion-use event
-
-Potion activation now has its own temporal event model rather than being smuggled into standing state.
-
-For the max-tier U50 source rows:
-
-- 🟢 Essence of Magicka instant restore: **7,582 Magicka**
-- 🟢 Essence of Health instant restore: **8,369 Health**
-- 🟢 ordinary max-tier timed Alchemy duration: **36.6s**
-- 🟢 source `triple_duration` candidate retained separately: **40.6s**
-- 🟢 triple duration is **not** assumed unless formula evidence proves all three reagents carry the trait
-
-Potion use separates instant and timed behavior:
-
-```text
-PotionUseEvent
-├── Instant resource event
-│    ├── Restore Health
-│    ├── Restore Magicka
-│    └── Restore Stamina
-└── Timed named-buff grants
-```
-
-U50 named-buff routing now includes:
-
-- Restore Health → Major Fortitude
-- Restore Magicka → Major Intellect
-- Restore Stamina → Major Endurance
-- Increase Spell Power → Major Sorcery
-- Increase Weapon Power → Major Brutality
-- Spell Critical → Major Prophecy
-- Weapon Critical → Major Savagery
-
-These reuse the existing named-combat-buff semantics instead of duplicating stat percentages inside potion code.
-
-### Explicit active potion windows
-
-A caller can project one explicit potion-use event into a point-in-time combat snapshot.
-
-For the current 36.6s ordinary source duration:
-
-```text
-t =  0.0s → active
-t = 12.0s → active
-t = 36.5s → active
-t = 36.6s → expired
-```
-
-- 🟢 expiry is exact at the duration boundary
-- 🟢 potion buffs merge into an existing explicit `CombatState` without overwriting unrelated buffs
-- 🟢 instant resource restores are not repeated by the active-window projection
-- 🟢 selected potions are never treated as permanently active
-
-### Potion cooldown and Medicinal Use cadence
-
-Potion cadence is modeled separately from effect duration.
-
-- 🟢 base potion cooldown: **45.0s**
-- 🟢 Medicinal Use rank 0: ×1.00 duration
-- 🟢 Medicinal Use rank 1: ×1.10 duration
-- 🟢 Medicinal Use rank 2: ×1.20 duration
-- 🟢 Medicinal Use rank 3: ×1.30 duration
-- 🟢 floating-point boundary arithmetic normalized so public timing values remain deterministic
-
-For a 36.6s base buff:
-
-```text
-Medicinal Use rank 0
-  duration = 36.60s
-  cooldown = 45.00s
-  gap      =  8.40s
-
-Medicinal Use rank 3
-  duration = 47.58s
-  cooldown = 45.00s
-  overlap  =  2.58s
-```
-
-The cadence model does not infer that a character owns Medicinal Use. The rank must come from canonical character progression; absent rank resolves to 0 without guessing.
-
-### Real saved-build potion validation
-
-**Magrat → DF Healer**
-
-Saved potion: `spell power`
-
-- resolved formulas: **2**
-- instant Restore Magicka: **7,582**
-- timed Increase Spell Power: **36.6s** base
-- timed Spell Critical: **36.6s** base
-- named buffs:
-  - Major Intellect
-  - Major Sorcery
-  - Major Prophecy
-- explicit active-window audit:
-  - active at 36.5s
-  - expired at 36.6s without Medicinal Use
-
-**YOUR TANK BUILD**
-
-Saved potion: `Health Elixir`
-
-- resolved formulas: **37**
-- instant Restore Health: **8,369**
-- named buff: Major Fortitude
-- active at 36.5s and expired at 36.6s without Medicinal Use
-
-### Latest verified regression checkpoint
-
-- 🟢 targeted canonical catalog tests green
-- 🟢 character passive-rank persistence tests green
-- 🟢 potion availability/use/window/cadence tests green
-- 🟢 production saved-build potion audits resolve without unresolved potion errors
-- 🟢 full regression suite: **1,586 passed** on **2026-09-01**
-
-## Update 51 combat-semantics migration
-
-Update 51 changes shared combat semantics across multiple source families, so this remains a Phase 5 architecture dependency rather than a potion-only patch.
-
-**Canonical rule:** version the combat-effect meaning, not just the source label. Skills, buffs, Alchemy, Mundus, class passives, gear, and saved-build aliases must resolve through the same update-aware effect vocabulary.
-
-Confirmed U51 migration targets from the current PTS evidence:
-
-- Major/Minor Brutality provide both Weapon and Spell Damage; Sorcery is removed/replaced by Brutality.
-- Major/Minor Savagery provide both Weapon and Spell Critical Chance; Prophecy is removed/replaced by Savagery.
-- Exploitation replaces Minor Prophecy with a unique 2974 Offensive Penetration group buff.
-- Illuminate replaces Minor Sorcery with a unique 2974 Armor group buff.
-- The Warrior grants both Weapon and Spell Damage.
-- The Apprentice stops granting Spell Damage and instead grants 8% Experience and Inspiration gain.
-- Alchemy Weapon/Spell Power traits consolidate into Increase Power.
-- Alchemy Weapon/Spell Critical traits consolidate into Critical.
-- Alchemy gains Mending, Vexation, Damage Shield, Heal Absorption, and Force.
-- Alchemy Maim is removed/replaced by Cowardice, including previously crafted potions.
-
-Potion architecture therefore models **trait combinations / formulas**, not a fixed merchant-potion list. Merchant/Crown equivalents remain aliases/evidence only.
-
-```text
-saved legacy label
-       ↓
-version-aware alias
-       ↓
-canonical potion formula / trait combination
-       ↓
-versioned Alchemy trait definitions
-       ↓
-EffectVariant / temporal combat-state effects
-```
-
-**Migration safety rules:**
-
-1. Preserve U50 evidence and aliases for historical/current-build reproducibility until U51 is live.
-2. Do not silently reinterpret old source rows as U51 mechanics; record the active game update/provenance.
-3. Prefer canonical shared effects over source-specific hard-coding.
-4. Keep selected potion availability separate from timed potion activation/uptime.
-5. Derive legal crafted potions from Alchemy trait/reagent compatibility rather than hand-maintaining a short named-potion catalog.
-6. U51 temporal potion values must fail closed until a U51 tier-value source corpus exists.
-
-## Remaining Phase 5 priorities
-
-1. expose/edit character-owned skill lines and passive ranks in the Builds/character UI
-2. replace free-text potion entry with a canonical crafted-potion/effect-family picker while preserving legacy aliases
-3. continue running real saved builds through the production `EffectVariant` / capability path
-4. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection across broader saved-build samples
-5. integrate consumable availability into build capability reporting without accidentally promoting `potion_use` effects to permanent/standing support
-6. keep standing effects separate from conditional/triggered effects and hand temporal proc mechanics to Phase 7/8
-7. import/verify U51 Alchemy tier values when authoritative source data exists
-8. produce a broader auditable real-build capability/coverage report with explicit unresolved evidence
-9. remove remaining final-layer patches where the canonical repository/resolver should own the behavior
-
-**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, potions, and conditional effects through the active game-update semantics without final-layer patching or guessed temporal uptime.
+Detailed closeout: `docs/phase5_real_build_resolution_closeout.md`.
 
 ---
 
