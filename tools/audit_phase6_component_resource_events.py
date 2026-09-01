@@ -24,6 +24,8 @@ class ResourceEventAuditRow:
     ability_id: int
     ability_name: str
     resource_type: str
+    amount_basis: str
+    amount_fraction: float | None
     evidence: str
 
 
@@ -47,6 +49,8 @@ def load_component_resource_events(
                     ability_id=slot.ability_id,
                     ability_name=slot.name,
                     resource_type=event.resource_type.value,
+                    amount_basis=event.amount_basis.value,
+                    amount_fraction=event.amount_fraction,
                     evidence=event.evidence,
                 )
             )
@@ -55,6 +59,10 @@ def load_component_resource_events(
 
 def summarize(rows: tuple[ResourceEventAuditRow, ...]) -> Counter[str]:
     return Counter(row.resource_type for row in rows)
+
+
+def summarize_bases(rows: tuple[ResourceEventAuditRow, ...]) -> Counter[str]:
+    return Counter(row.amount_basis for row in rows)
 
 
 def main() -> int:
@@ -75,6 +83,9 @@ def main() -> int:
     print("\nRESOURCE TYPES")
     for resource, count in summarize(rows).most_common():
         print(f"  {resource:28} {count}")
+    print("\nAMOUNT BASES")
+    for basis, count in summarize_bases(rows).most_common():
+        print(f"  {basis:28} {count}")
     print("\nNOTE: explicit coefficient-local gains only; cadence and sustain-rate math are not inferred.")
 
     for row in rows[: max(0, args.samples)]:
@@ -84,6 +95,9 @@ def main() -> int:
             f"ability={row.ability_id} name={row.ability_name}"
         )
         print(f"resource={row.resource_type}")
+        print(f"amount_basis={row.amount_basis}")
+        if row.amount_fraction is not None:
+            print(f"amount_fraction={row.amount_fraction * 100:.1f}%")
         print(f"evidence={row.evidence}")
     return 0
 
