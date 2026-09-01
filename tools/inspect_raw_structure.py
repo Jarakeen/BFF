@@ -1,10 +1,17 @@
 from pathlib import Path
 import json
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from services.paths import RAW_DATA
 
 
 FILES = [
-    Path("data/raw/esologs_probe.json"),
-    Path("data/raw/esologs_night2.json"),
+    RAW_DATA / "esologs_probe.json",
+    RAW_DATA / "esologs_night2.json",
 ]
 
 
