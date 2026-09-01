@@ -14,6 +14,7 @@ from services.encounter_promotion import (
     PROMOTION_REVIEW_REQUIRED,
     build_encounter_promotion_preview,
 )
+from services.paths import ESO_INFO
 from tools.reconcile_encounter_evidence import _load_packet
 
 
@@ -170,7 +171,7 @@ def audit_content_encounters(
     *,
     content_id: str,
     packet_dir: Path,
-    source_root: Path = Path("data/eso_info"),
+    source_root: Path = ESO_INFO,
 ) -> EncounterContentGapAudit:
     content_row = connection.execute(
         "SELECT name FROM content WHERE id=?",
