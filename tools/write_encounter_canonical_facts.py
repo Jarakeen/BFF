@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 import sqlite3
 import sys
@@ -12,40 +11,17 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.encounter_canonical_mapping import build_encounter_canonical_mapping_preview
-from services.encounter_evidence import EncounterEvidence, reconcile_encounter_evidence
+from services.encounter_evidence import reconcile_encounter_evidence
 from services.encounter_persistence_plan import build_persistence_plan
 from services.encounter_persistence_writer import (
     persist_encounter_plans,
     validate_persistence_target,
 )
 from services.encounter_promotion import build_encounter_promotion_preview
+from tools.reconcile_encounter_evidence import _load_packet
 
 
-def _load_packet(path: Path) -> tuple[dict, list[EncounterEvidence]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    encounter_id = str(payload.get("encounter_id", "")).strip()
-    rows: list[EncounterEvidence] = []
-    for raw in payload.get("evidence", []):
-        rows.append(
-            EncounterEvidence(
-                encounter_id=str(raw.get("encounter_id") or encounter_id),
-                fact_type=str(raw["fact_type"]),
-                fact_key=str(raw["fact_key"]),
-                value=raw.get("value"),
-                source_type=str(raw["source_type"]),
-                source_name=str(raw["source_name"]),
-                source_locator=str(raw.get("source_locator", "")),
-                source_revision=str(raw.get("source_revision", "")),
-                game_update=str(raw.get("game_update", "")),
-                patch_version=str(raw.get("patch_version", "")),
-                confidence=str(raw.get("confidence", "medium")),
-                notes=str(raw.get("notes", "")),
-            )
-        )
-    return payload, rows
-
-
-def _build_plans(rows: list[EncounterEvidence]):
+def _build_plans(rows):
     facts = reconcile_encounter_evidence(rows)
     candidates = build_encounter_promotion_preview(facts)
     # Force canonical mapping construction as an additional validation step.
