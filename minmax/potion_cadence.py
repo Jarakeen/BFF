@@ -20,6 +20,12 @@ _MEDICINAL_USE_BONUS_BY_RANK = {
     2: 0.20,
     3: 0.30,
 }
+_SECONDS_PRECISION = 9
+
+
+def _seconds(value: float) -> float:
+    """Normalize human-facing second arithmetic across binary-float noise."""
+    return round(float(value), _SECONDS_PRECISION)
 
 
 def medicinal_use_duration_multiplier(rank: int) -> float:
@@ -41,7 +47,7 @@ class PotionCadence:
     def __post_init__(self) -> None:
         rank = int(self.medicinal_use_rank)
         medicinal_use_duration_multiplier(rank)
-        cooldown = float(self.cooldown_seconds)
+        cooldown = _seconds(self.cooldown_seconds)
         if cooldown <= 0.0:
             raise ValueError("Potion cooldown must be positive")
         object.__setattr__(self, "medicinal_use_rank", rank)
@@ -52,7 +58,7 @@ class PotionCadence:
         return medicinal_use_duration_multiplier(self.medicinal_use_rank)
 
     def effective_duration(self, grant: PotionBuffGrant) -> float:
-        return float(grant.duration) * self.duration_multiplier
+        return _seconds(float(grant.duration) * self.duration_multiplier)
 
     def window(self, elapsed_seconds: float) -> PotionActiveWindow:
         return PotionActiveWindow(
@@ -78,14 +84,14 @@ class PotionCadence:
         duration = self.minimum_buff_duration
         if duration is None:
             return None
-        return max(0.0, duration - self.cooldown_seconds)
+        return _seconds(max(0.0, duration - self.cooldown_seconds))
 
     @property
     def guaranteed_gap_seconds(self) -> float | None:
         duration = self.minimum_buff_duration
         if duration is None:
             return None
-        return max(0.0, self.cooldown_seconds - duration)
+        return _seconds(max(0.0, self.cooldown_seconds - duration))
 
     def can_refresh_before_all_buffs_expire(self) -> bool:
         duration = self.minimum_buff_duration
