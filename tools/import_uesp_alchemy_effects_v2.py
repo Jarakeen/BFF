@@ -12,10 +12,10 @@ Stage 1 importer: HTML -> normalized JSON.
 - Does NOT modify eso.db.
 
 Expected input:
-    data/raw/uesp/alchemy_effects/*.htm
+    research/raw/uesp/alchemy_effects/*.htm
 
 Output:
-    data/processed/uesp_alchemy_effects.json
+    research/processed/uesp_alchemy_effects.json
 """
 
 from __future__ import annotations
@@ -23,13 +23,19 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 from bs4 import BeautifulSoup, Tag
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = ROOT / "data" / "raw" / "uesp" / "alchemy_effects"
-DEFAULT_OUTPUT = ROOT / "data" / "processed" / "uesp_alchemy_effects.json"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from services.paths import PROCESSED, RAW_DATA
+
+DEFAULT_INPUT = RAW_DATA / "uesp" / "alchemy_effects"
+DEFAULT_OUTPUT = PROCESSED / "uesp_alchemy_effects.json"
 
 
 def clean(value: str | None) -> str:
@@ -48,7 +54,6 @@ def normalize(value: str) -> str:
 def link_name(cell: Tag | None) -> str:
     if cell is None:
         return ""
-    # Prefer visible wiki link text over icon alt text.
     links = cell.find_all("a")
     for link in links:
         text = clean(link.get_text(" ", strip=True))
