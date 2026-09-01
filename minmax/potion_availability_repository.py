@@ -38,19 +38,13 @@ class PotionAvailability:
 class PotionAvailabilityRepository:
     """Resolve a saved potion selection to source-backed Potion EffectVariants.
 
-    This repository models *availability*, not uptime. A selected potion proves
-    the build can use that effect family/formula. It does not apply its effects
-    to standing character stats and it does not infer cooldown, Medicinal Use,
-    or use timing.
+    A selected potion proves availability only. It does not imply activation,
+    standing uptime, cooldown use, or Medicinal Use ownership.
     """
 
     LEGACY_ALIASES: dict[str, tuple[str, ...]] = {
         "spell power": ("Restore Magicka", "Increase Spell Power", "Spell Critical"),
         "spell power potion": ("Restore Magicka", "Increase Spell Power", "Spell Critical"),
-        # Older Builds UI values used human tier-name wording rather than a
-        # canonical formula identity. These aliases mean only the single
-        # Restore Health effect family; they do not imply tri-stat or another
-        # multi-effect crafted formula.
         "health elixir": ("Restore Health",),
         "elixir of health": ("Restore Health",),
     }
@@ -73,6 +67,11 @@ class PotionAvailabilityRepository:
     @staticmethod
     def _slug(value: str) -> str:
         return "_".join(PotionAvailabilityRepository._norm(value).replace("-", " ").split())
+
+    @classmethod
+    def _family_id(cls, formula: AlchemyFormula) -> str:
+        trait_key = "+".join(sorted(cls._slug(value) for value in formula.traits))
+        return f"alchemy_family:{formula.game_update.value.casefold()}:{trait_key}"
 
     @staticmethod
     def _category(value: str | None) -> SupportEffectCategory:
@@ -107,9 +106,6 @@ class PotionAvailabilityRepository:
         if not catalog.formulas:
             return (), catalog.unresolved or ("Alchemy formula catalog is empty",)
 
-        # Canonical formula IDs are a durable identity for one specific recipe.
-        # Legacy aliases identify an effect family and may therefore have more
-        # than one equivalent reagent formula.
         if clean.casefold().startswith("alchemy_formula:"):
             matches = tuple(
                 formula
@@ -120,10 +116,20 @@ class PotionAvailabilityRepository:
                 return (), (f"Potion formula not found for selection: {clean}",)
             return matches, ()
 
+        if clean.casefold().startswith("alchemy_family:"):
+            matches = tuple(
+                formula
+                for formula in catalog.formulas
+                if self._family_id(formula).casefold() == clean.casefold()
+            )
+            if not matches:
+                return (), (f"Potion effect family not found for selection: {clean}",)
+            return matches, ()
+
         traits = self.LEGACY_ALIASES.get(self._norm(clean))
         if traits is None:
             return (), (
-                f"Potion selection is not an exact canonical formula or known legacy alias: {clean}",
+                f"Potion selection is not an exact canonical formula, canonical family, or known legacy alias: {clean}",
             )
         if self.game_update is GameUpdate.U51:
             traits = tuple(
@@ -185,9 +191,6 @@ class PotionAvailabilityRepository:
         if not formulas:
             return PotionAvailability(clean, (), (), unresolved)
 
-        # Equivalent formulas in one family have the same canonical trait set.
-        # Use that effect identity once; reagent alternatives remain inspectable
-        # through `formulas` rather than duplicating EffectVariants.
         traits = formulas[0].traits
         if any(set(formula.traits) != set(traits) for formula in formulas[1:]):
             return PotionAvailability(
