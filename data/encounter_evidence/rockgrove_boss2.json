@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "content_id": "rockgrove",
+  "encounter_id": "flame_herald_bahsei",
+  "encounter_name": "Flame-Herald Bahsei",
+  "evidence": [
+    {"fact_type":"mechanic","fact_key":"carve","value":{"name":"Carve","damage_type":"physical","role":"basic_melee"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Carve","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"slice","value":{"name":"Slice","damage_type":"physical","role":"basic_melee"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Slice","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic","fact_key":"rend_flesh","value":{"name":"Rend Flesh","damage_type":"physical","blockable":true,"stagger_on_block":true},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Rend Flesh","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"skull_salvo_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Skull Salvo","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"skull_salvo_exists","value":true,"source_type":"combat_addon","source_name":"Qcell's Rockgrove Helper","source_locator":"ESOUI feature list - Bahsei's Salvo interrupt alert","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"skull_salvo_interruptible","value":{"interruptible":true},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Skull Salvo","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"skull_salvo_interruptible","value":{"interruptible":true},"source_type":"combat_addon","source_name":"Qcell's Rockgrove Helper","source_locator":"ESOUI feature list - Bahsei's Salvo interrupt alert","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"cursed_ground_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Cursed Ground/Unholy Spike","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"cursed_ground_exists","value":true,"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 Flame-Herald Bahsei - Cursed Ground","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"cursed_ground_targeting","value":{"target_count":2,"targets_farthest_players":true},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Cursed Ground/Unholy Spike","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"cursed_ground_targeting","value":{"target_count":2,"targets_farthest_players":true},"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 Flame-Herald Bahsei - Cursed Ground","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"death_touch_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Death Touch/Kiss of Death","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"death_touch_exists","value":true,"source_type":"combat_addon","source_name":"Qcell's Rockgrove Helper","source_locator":"ESOUI Death Touch self-debuff timer / curse tracking","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"death_touch_spread_behavior","value":{"explodes_on_expiry":true,"can_spread_curse":true},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Death Touch/Kiss of Death","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"death_touch_spread_behavior","value":{"explodes_on_expiry":true,"can_spread_curse":true},"source_type":"combat_addon","source_name":"Qcell's Rockgrove Helper","source_locator":"ESOUI Death Touch timer description: at 0 explode and spread curse","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"sickle_strike_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Sickle Strike","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"sickle_strike_exists","value":true,"source_type":"combat_addon","source_name":"Qcell's Rockgrove Helper","source_locator":"ESOUI changelog - Next Sickle / rolldodge Bahsei's sickle","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sickle_strike_applies_death_touch","value":{"applies_death_touch":true},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Sickle Strike","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"flesh_abomination_summons_exist","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summoning Runes","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"flesh_abomination_summons_exist","value":true,"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 - Flesh Abomination Monsters","confidence":"high"},
+    {"fact_type":"transition","fact_key":"flesh_abomination_spawn_thresholds","value":{"thresholds":["90%","85%","80%","75%","70%","65%","60%"]},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summoning Runes","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"transition","fact_key":"flesh_abomination_spawn_thresholds","value":{"thresholds":["90%","85%","80%","75%","70%","65%","60%"]},"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 - Flesh Abomination Monsters","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"fire_behemoth_summons_exist","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summon Behemoth","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"fire_behemoth_summons_exist","value":true,"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 - Fire Behemoth Monster","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"fire_behemoth_begins_at_50_percent","value":{"starts_at":"50%"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summon Behemoth","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"fire_behemoth_begins_at_50_percent","value":{"starts_at":"50%"},"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Boss 2 - Fire Behemoth Monster","confidence":"high"},
+    {"fact_type":"transition","fact_key":"fire_behemoth_spawn_thresholds_uesp","value":{"thresholds":["50%","40%","25%","20%","10%"]},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summon Behemoth","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"burning_specter_summons_exist","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summon Specters","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"transition_state","fact_key":"burning_specters_begin_at_55_percent","value":{"starts_at":"55%"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Summon Specters","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"dagons_wrath_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Dagon's Wrath","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"transition_state","fact_key":"dagons_wrath_begins_at_55_percent","value":{"starts_at":"55%"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Dagon's Wrath","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"meteor_swarm_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Meteor Swarm","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"transition","fact_key":"meteor_swarm_phase_thresholds_uesp","value":{"meteor_swarm_starts":"50%","execute_intensifies":"30%"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Abilities - Meteor Swarm","source_revision":"3450945","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"hardmode_creeping_eye_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei dialogue","source_locator":"If Hard Mode is activated, Bahsei will call forth the Creeping Eye","source_revision":"3450945","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"hardmode_creeping_eye_exists","value":true,"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Flame-Herald Bahsei Hardmode - Bitter Marrow (Eye of Death)","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"hardmode_eye_requires_three_players_downstairs_alcast","value":{"players_downstairs":3,"simultaneous_eye_beams":3},"source_type":"guide","source_name":"AlcastHQ Rockgrove Trial Guide","source_family":"alcast_eso_hub","source_locator":"Bitter Marrow (Eye of Death) Mechanic","confidence":"medium"},
+
+    {"fact_type":"mechanic_detail","fact_key":"health_by_difficulty_uesp","value":{"normal":"21,812,840","veteran":"65,201,356","hardmode":"123,882,576"},"source_type":"uesp","source_name":"UESP Online:Flame-Herald Bahsei","source_locator":"Health","source_revision":"3450945","confidence":"high"}
+  ]
+}
