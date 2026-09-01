@@ -5,7 +5,7 @@ UESP Alchemy Effects DB Importer
 
 Imports the validated UESP alchemy dataset:
 
-    data/processed/alchemy_effects.json
+    research/processed/alchemy_effects.json
 
 into:
 
@@ -35,7 +35,7 @@ Commit:
     python importers/import_uesp_alchemy_effects_db.py --commit
 
 Optional:
-    --input data/processed/alchemy_effects.json
+    --input research/processed/alchemy_effects.json
     --db data/eso.db
 """
 
@@ -50,10 +50,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = ROOT / "data" / "processed" / "alchemy_effects.json"
-DEFAULT_DB = ROOT / "data" / "eso.db"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from services.paths import DATA, PROCESSED
+
+DEFAULT_INPUT = PROCESSED / "alchemy_effects.json"
+DEFAULT_DB = DATA / "eso.db"
 
 
 def clean(value: Any) -> str:
@@ -278,12 +282,6 @@ def add_source(
 
 
 def variant_description(effect: dict[str, Any], kind: str) -> str:
-    """
-    Build a compact description without inventing game text.
-
-    The source pages do not provide a dedicated description field in the
-    normalized V3 schema, so this identifies what the variant contains.
-    """
     tiers = effect.get(f"{kind}_tiers", [])
     if not isinstance(tiers, list):
         tiers = []
@@ -299,12 +297,6 @@ def variant_description(effect: dict[str, Any], kind: str) -> str:
 
 
 def variant_payload(effect: dict[str, Any], kind: str) -> dict[str, Any]:
-    """
-    Keep the entire effect record available from the variant.
-
-    This deliberately stores the source structure instead of trying to
-    squeeze reagent/formula data into effect_source.raw_text.
-    """
     payload = {
         "source": "UESP",
         "source_kind": "alchemy_effect_page",
@@ -442,7 +434,6 @@ def main() -> None:
     print(f"Source effects: {len(effects)}")
     print()
 
-    # Sanity check the schema before touching anything.
     db = sqlite3.connect(db_path)
 
     try:
@@ -466,7 +457,6 @@ def main() -> None:
             print("Backup created:", backup)
             print()
 
-        # One transaction for the whole import.
         db.execute("BEGIN")
 
         stats = import_effects(db, effects, commit=args.commit)
