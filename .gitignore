@@ -63,6 +63,26 @@ data/uesp
 /data/processed/
 # Local Foundry databases
 /data/*.db
+
+# Developer research layout
+/research/raw/
+/research/normalized/
+/research/processed/
+/research/strats/
+/research/eso_info/.cache/
+/research/eso_info/README.md
+/research/eso_info/import_log.jsonl
+/research/eso_info/index.json
+/research/eso_info/*
+!/research/eso_info/arenas/
+!/research/eso_info/arenas/**
+!/research/eso_info/bosses/
+!/research/eso_info/bosses/**
+!/research/eso_info/dungeons/
+!/research/eso_info/dungeons/**
+!/research/eso_info/trials/
+!/research/eso_info/trials/**
+
 # ============================================================
 # Local configuration
 # ============================================================
@@ -117,13 +137,3 @@ TODOs.md
 /Launch Foundry.bat
 /Launch Foundry.vbs
 /Launch Foundry (debug).bat
-
-
-!data/eso_info/arenas/
-!data/eso_info/arenas/**
-!data/eso_info/bosses/
-!data/eso_info/bosses/**
-!data/eso_info/dungeons/
-!data/eso_info/dungeons/**
-!data/eso_info/trials/
-!data/eso_info/trials/**
