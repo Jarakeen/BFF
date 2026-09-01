@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "content_id": "rockgrove",
+  "encounter_id": "oaxiltso",
+  "encounter_name": "Oaxiltso",
+  "evidence": [
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "noxious_sludge_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Noxious Sludge",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "noxious_sludge_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Noxious Sludge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "noxious_sludge_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Xynode Gaming Rockgrove Mechanics Guide",
+      "source_locator": "Oaxiltso - sludge / cleanse mechanic",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "noxious_sludge_core_behavior",
+      "value": {
+        "target_count": 2,
+        "requires_cleanse_pool": true,
+        "uncleansed_targets_drop_poison_aoe": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Noxious Sludge",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "noxious_sludge_core_behavior",
+      "value": {
+        "target_count": 2,
+        "requires_cleanse_pool": true,
+        "uncleansed_targets_drop_poison_aoe": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Noxious Sludge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "noxious_sludge_core_behavior",
+      "value": {
+        "target_count": 2,
+        "requires_cleanse_pool": true,
+        "uncleansed_targets_drop_poison_aoe": true
+      },
+      "source_type": "guide",
+      "source_name": "Xynode Gaming Rockgrove Mechanics Guide",
+      "source_locator": "Oaxiltso - sludge / cleanse mechanic",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "savage_blitz_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Savage Blitz",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "savage_blitz_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Charge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "savage_blitz_targeting",
+      "value": {
+        "targets_farthest_player": true,
+        "avoidable_by_dodge": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Savage Blitz",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "savage_blitz_targeting",
+      "value": {
+        "targets_farthest_player": true,
+        "avoidable_by_dodge": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Charge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "fiery_stomp_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Fiery Stomp",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "fiery_stomp_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Stomp",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "fiery_stomp_fire_waves",
+      "value": {
+        "releases_fire_waves": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Fiery Stomp",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "fiery_stomp_fire_waves",
+      "value": {
+        "releases_fire_waves": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Stomp",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "havocrel_annihilator_summons_exist",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Summon Havocrel Annihilators",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "havocrel_annihilator_summons_exist",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Havocrel Annihilator Monster",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "proximity_enrage_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Summon Havocrel Annihilators",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "proximity_enrage_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Enrage",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "havocrel_annihilator_spawn_thresholds",
+      "value": {
+        "thresholds": ["90%", "75%", "50%", "25%"]
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Summon Havocrel Annihilators",
+      "source_revision": "3304340",
+      "confidence": "high",
+      "notes": "Current local UESP record retrieved 2026-09-01."
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "havocrel_annihilator_spawn_thresholds",
+      "value": {
+        "thresholds": ["95%", "75%", "50%", "25%"]
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Boss 1 Oaxiltso - Havocrel Annihilator Monster",
+      "confidence": "high",
+      "notes": "Conflicts with current local UESP record on first threshold; preserve for review."
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "marsh_masher",
+      "value": {
+        "name": "Marsh Masher",
+        "damage_type": "physical",
+        "role": "basic_melee"
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Marsh Masher",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "ravenous_chomp",
+      "value": {
+        "name": "Ravenous Chomp",
+        "damage_type": "physical",
+        "blockable": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Ravenous Chomp",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "blistering_smash_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Blistering Smash",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "blistering_smash_core_behavior",
+      "value": {
+        "initial_physical_hit": true,
+        "lingering_flame_hazard": true,
+        "persistent_hazard": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Blistering Smash",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "death_hopper_summons_exist",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Oaxiltso",
+      "source_locator": "Abilities - Summon Death Hoppers",
+      "source_revision": "3304340",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "hardmode_double_charge_alcast",
+      "value": {
+        "charge_count": 2
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Oaxiltso Hardmode",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "hardmode_magma_sludge_disables_cleanse_pools_alcast",
+      "value": {
+        "magma_sludge_disables_cleanse_pools": true
+      },
+      "source_type": "guide",
+      "source_name": "AlcastHQ Rockgrove Trial Guide",
+      "source_locator": "Oaxiltso Hardmode",
+      "confidence": "medium"
+    }
+  ]
+}
