@@ -1,0 +1,211 @@
+from __future__ import annotations
+
+import sqlite3
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
+
+from minmax.character_build.effect_instance import EffectVariant
+from minmax.character_build.effect_layer import BarId
+from minmax.context_factory import BuildCalculationContextFactory
+from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
+from minmax.gear_set_repository import GearSetRepository
+from minmax.potion_availability_repository import PotionAvailabilityRepository
+from minmax.skill_effect_repository import SkillEffectRepository
+from models.build_model import GearSlot, PlayerBuild
+from services.build_service import BuildService
+from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
+
+
+@dataclass(frozen=True)
+class SavedBuildCapabilityAudit:
+    character_name: str
+    build_name: str
+    character_id: str
+    resolved_effects: tuple[EffectVariant, ...] = ()
+    resolved_sources: tuple[str, ...] = ()
+    conditional_sources: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return bool(self.character_id) and not self.unresolved
+
+
+class SavedBuildCapabilityService:
+    """Audit one real saved build through Phase 5 production resolvers.
+
+    This service intentionally reports evidence rather than inventing uptime.
+    Skill, gear-set and potion EffectVariants remain distinct. Character
+    progression is resolved from the canonical character catalog, while
+    static build math is evaluated on both bars so unresolved mechanics are
+    visible to callers.
+    """
+
+    TWO_PIECE_WEAPON_MARKERS = (
+        "staff",
+        "bow",
+        "two-handed",
+        "greatsword",
+        "battle axe",
+        "maul",
+    )
+
+    def __init__(self, build_service: BuildService, database_path: str | Path) -> None:
+        self.build_service = build_service
+        self.database_path = Path(database_path)
+        self.progression = MinmaxCharacterProgressionAdapter(
+            build_service.canonical.catalog_service
+        )
+        self.gear_repository = GearSetRepository(self.database_path)
+        self.gear_effects = GearSetEffectVariantResolver(self.gear_repository)
+        self.skill_effects = SkillEffectRepository(self.database_path)
+        self.potions = PotionAvailabilityRepository(self.database_path)
+        self.context_factory = BuildCalculationContextFactory(
+            gear_set_repository=self.gear_repository
+        )
+
+    @staticmethod
+    def _clean(value: object) -> str:
+        return " ".join(str(value or "").strip().split())
+
+    @classmethod
+    def _weapon_piece_count(cls, slot: GearSlot) -> int:
+        weapon_type = cls._clean(slot.WeaponType).casefold()
+        return 2 if any(marker in weapon_type for marker in cls.TWO_PIECE_WEAPON_MARKERS) else 1
+
+    @classmethod
+    def _active_set_counts(cls, build: PlayerBuild, active_bar: str) -> Counter[str]:
+        counts: Counter[str] = Counter()
+        for entry in build.Armor.values():
+            name = cls._clean(entry.get("Set"))
+            if name:
+                counts[name] += 1
+        for slot in (build.Necklace, build.Ring1, build.Ring2):
+            name = cls._clean(slot.Set)
+            if name:
+                counts[name] += 1
+        main, offhand = build.active_weapon_slots(active_bar)
+        for slot in (main, offhand):
+            name = cls._clean(slot.Set)
+            if name:
+                counts[name] += cls._weapon_piece_count(slot)
+        return counts
+
+    def _ability_id(self, name: str, class_name: str) -> int | None:
+        if not self.database_path.exists():
+            return None
+        with sqlite3.connect(self.database_path) as db:
+            columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)")}
+            if not {"ability_id", "name"}.issubset(columns):
+                return None
+            clauses = ["lower(trim(name)) = lower(trim(?))"]
+            params: list[object] = [name]
+            if class_name and "class_type" in columns:
+                clauses.append("(trim(coalesce(class_type,'')) = '' OR lower(trim(class_type)) = lower(trim(?)))")
+                params.append(class_name)
+            order = "rank DESC, morph DESC, ability_id DESC" if {"rank", "morph"}.issubset(columns) else "ability_id DESC"
+            row = db.execute(
+                f"SELECT ability_id FROM ability WHERE {' AND '.join(clauses)} ORDER BY {order} LIMIT 1",
+                params,
+            ).fetchone()
+        return int(row[0]) if row else None
+
+    def _skill_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
+        skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
+        variants: list[EffectVariant] = []
+        for raw_name in skills:
+            name = self._clean(raw_name)
+            if not name:
+                continue
+            ability_id = self._ability_id(name, build.EsoClass)
+            if ability_id is None:
+                unresolved.append(f"{active_bar} skill not found in canonical ability data: {name}")
+                continue
+            variants.extend(self.skill_effects.resolve(ability_id))
+        return variants
+
+    def _gear_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
+        variants: list[EffectVariant] = []
+        for set_name, count in self._active_set_counts(build, active_bar).items():
+            gear_set = self.gear_repository.get_set(set_name)
+            if gear_set is None:
+                unresolved.append(f"{active_bar} gear set not found in canonical data: {set_name}")
+                continue
+            variants.extend(self.gear_effects.resolve(gear_set.id, count))
+        return variants
+
+    def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
+        unresolved: list[str] = []
+        sources: list[str] = []
+        effects: list[EffectVariant] = []
+
+        progression = self.progression.resolve(build)
+        unresolved.extend(progression.unresolved)
+
+        for active_bar in ("front", "back"):
+            try:
+                context = self.context_factory.build(
+                    character_id=progression.character_id or "unresolved-character",
+                    build_id=self._clean(getattr(build, "BuildId", "")) or build.BuildName or "saved-build",
+                    build=build,
+                    progression=progression.progression,
+                    active_bar=active_bar,
+                )
+                unresolved.extend(context.unresolved_gear_effects)
+            except Exception as exc:
+                unresolved.append(f"{active_bar} static build resolution failed: {exc}")
+
+            bar_skill_effects = self._skill_variants(build, active_bar, unresolved)
+            if bar_skill_effects:
+                sources.append(f"{active_bar}:skills")
+                effects.extend(bar_skill_effects)
+
+            bar_gear_effects = self._gear_variants(build, active_bar, unresolved)
+            if bar_gear_effects:
+                sources.append(f"{active_bar}:gear")
+                effects.extend(bar_gear_effects)
+
+        potion_name = self._clean(build.Potion)
+        if potion_name:
+            potion = self.potions.resolve(potion_name)
+            unresolved.extend(potion.unresolved)
+            if potion.effects:
+                sources.append("potion:availability")
+                effects.extend(potion.effects)
+
+        deduped: list[EffectVariant] = []
+        seen: set[tuple[str, str, str, str]] = set()
+        for effect in effects:
+            key = (
+                effect.name,
+                str(effect.layer),
+                str(effect.source),
+                str(effect.condition or ""),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(effect)
+
+        conditional = tuple(
+            sorted({effect.source for effect in deduped if effect.condition or effect.trigger})
+        )
+        unresolved = list(dict.fromkeys(message for message in unresolved if message))
+        return SavedBuildCapabilityAudit(
+            character_name=build.Name,
+            build_name=build.BuildName,
+            character_id=progression.character_id,
+            resolved_effects=tuple(deduped),
+            resolved_sources=tuple(dict.fromkeys(sources)),
+            conditional_sources=conditional,
+            unresolved=tuple(unresolved),
+        )
+
+    def audit_roster(self) -> tuple[SavedBuildCapabilityAudit, ...]:
+        roster = self.build_service.load()
+        return tuple(
+            self.audit_build(build)
+            for build in roster.Members
+            if self._clean(build.Name) or self._clean(build.Gamertag) or self._clean(build.BuildName)
+        )
