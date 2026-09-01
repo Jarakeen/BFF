@@ -5,12 +5,7 @@ from pathlib import Path
 
 
 class SkillLineRepository:
-    """Resolve a saved active ability name to its canonical ESO skill line.
-
-    The passive stat resolver uses this only to count slotted abilities by
-    skill line. It deliberately does not infer passive ownership or apply any
-    effect by itself.
-    """
+    """Resolve canonical skill-line and passive metadata from eso.db."""
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
@@ -49,3 +44,35 @@ class SkillLineRepository:
         if len(lines) != 1:
             return None
         return lines[0]
+
+    def passive_max_rank(self, passive_name: str) -> int | None:
+        """Return the highest canonical rank recorded for one player passive."""
+        name = str(passive_name or "").strip()
+        if not name or not self.database_path.exists():
+            return None
+
+        with sqlite3.connect(self.database_path) as db:
+            skill_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill)").fetchall()}
+            rank_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
+            if not {"id", "name", "is_passive"}.issubset(skill_columns):
+                return None
+            if not {"skill_id", "rank"}.issubset(rank_columns):
+                return None
+            row = db.execute(
+                """
+                SELECT MAX(sr.rank)
+                FROM skill s
+                JOIN skill_rank sr ON sr.skill_id = s.id
+                WHERE COALESCE(s.is_passive, 0) = 1
+                  AND LOWER(TRIM(s.name)) = LOWER(TRIM(?))
+                """,
+                (name,),
+            ).fetchone()
+
+        if row is None or row[0] is None:
+            return None
+        try:
+            value = int(row[0])
+        except (TypeError, ValueError):
+            return None
+        return value if value > 0 else None
