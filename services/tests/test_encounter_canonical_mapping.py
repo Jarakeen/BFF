@@ -33,7 +33,7 @@ def _candidate(fact_type: str, fact_key: str, value):
     return classify_encounter_fact_for_promotion(fact)
 
 
-def test_maps_corroborated_mechanic_presence_without_claiming_lossless_schema():
+def test_maps_corroborated_mechanic_presence_losslessly_in_schema_v3():
     mapping = map_candidate_to_canonical(
         _candidate("mechanic_state", "rapid_deluge_exists", True)
     )
@@ -42,10 +42,11 @@ def test_maps_corroborated_mechanic_presence_without_claiming_lossless_schema():
     assert mapping.canonical_kind == CANONICAL_MECHANIC_PRESENCE
     assert mapping.payload == {"name": "Rapid Deluge", "present": True}
     assert mapping.source_count == 2
-    assert mapping.lossless_in_current_schema is False
+    assert mapping.lossless_in_current_schema is True
+    assert "encounter_fact_evidence" in mapping.schema_note
 
 
-def test_maps_corroborated_transition_thresholds():
+def test_maps_corroborated_transition_thresholds_losslessly_in_schema_v3():
     mapping = map_candidate_to_canonical(
         _candidate("transition", "bridge_thresholds", {"thresholds": ["50%", "35%", "20%"]})
     )
@@ -53,7 +54,7 @@ def test_maps_corroborated_transition_thresholds():
     assert mapping is not None
     assert mapping.canonical_kind == CANONICAL_PHASE_TRANSITION
     assert mapping.payload == {"thresholds": ["50%", "35%", "20%"]}
-    assert mapping.lossless_in_current_schema is False
+    assert mapping.lossless_in_current_schema is True
 
 
 def test_maps_corroborated_encounter_state():
@@ -64,6 +65,7 @@ def test_maps_corroborated_encounter_state():
     assert mapping is not None
     assert mapping.canonical_kind == CANONICAL_STATE
     assert mapping.payload == {"key": "both_brothers_active", "value": True}
+    assert mapping.lossless_in_current_schema is True
 
 
 def test_single_source_candidate_is_not_mapped():
