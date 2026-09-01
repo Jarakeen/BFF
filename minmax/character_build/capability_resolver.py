@@ -5,8 +5,8 @@ from collections.abc import Iterable
 from ..build_support_effect_service import BuildSupportEffectService
 from ..role import Role
 from ..support_effect_registry import SupportEffectRegistry
-from .bar import Bar
 from .character_build import CharacterBuild
+from .effect_instance import EffectVariant
 from .effect_layer import BarId
 from .effect_relationship import ConditionContext, EffectRelationship
 from .passive_grant import PassiveGrant
@@ -14,21 +14,7 @@ from .support_effect_resolver import CharacterBuildSupportEffectResolver
 
 
 class CharacterCapabilityResolver:
-    """
-    Public entry point for resolving everything a CharacterBuild can provide.
-
-    This is intentionally a thin orchestration layer. It does not create a
-    second capability model and does not reinterpret effects.
-
-    CharacterBuildSupportEffectResolver remains responsible for resolving
-    the actual sources:
-        - cast/slotted/passive/proc/ultimate effects
-        - gear-set effects
-        - weapon-enchantment effects
-
-    The returned SupportEffectRegistry preserves the existing distinctions
-    between SELF, ALLY, GROUP, and ENEMY effects.
-    """
+    """Public entry point for resolving everything a CharacterBuild can provide."""
 
     def __init__(
         self,
@@ -48,28 +34,24 @@ class CharacterCapabilityResolver:
         *,
         passives: Iterable[PassiveGrant] = (),
         relationships: Iterable[EffectRelationship] = (),
+        consumable_effects: Iterable[EffectVariant] = (),
         ultimate_trigger: str | None = None,
         role_relevance: frozenset[Role] = frozenset(),
         condition_context: ConditionContext | None = None,
     ) -> SupportEffectRegistry:
-        """
-        Resolve the complete capability set available to `build` while
-        `active_bar` is active.
+        """Resolve the complete capability set available to ``build``.
 
-        No capability is merged, evaluated, or scored here. The registry
-        contains the effects the build can provide, with their original
-        source, target, trigger, duration, range, scaling, and other
-        mechanical metadata intact. `condition_context` (optional) is
-        forwarded to relationship/condition resolution; effects whose
-        conditions or REQUIRES prerequisites aren't met against it are
-        excluded from the returned registry rather than treated as
-        capabilities.
+        Consumables are availability evidence only. Their original SELF target,
+        ``potion_use`` trigger, and activation condition are preserved by the
+        shared EffectVariant -> SupportEffect conversion; they are not promoted
+        to standing or group support.
         """
         return self._resolver.resolve(
             build,
             active_bar,
             passives=passives,
             relationships=relationships,
+            consumable_effects=consumable_effects,
             ultimate_trigger=ultimate_trigger,
             role_relevance=role_relevance,
             condition_context=condition_context,
