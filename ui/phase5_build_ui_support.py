@@ -48,6 +48,31 @@ def _int(value: object, default: int = 0) -> int:
         return default
 
 
+def _racial_skill_line_race(skill_line: object, race_names) -> str | None:
+    """Return the normalized race named by a racial skill-line label.
+
+    Imported ESO data does not consistently name a racial skill line with the
+    bare race name. Labels such as ``Breton Skills`` or ``High Elf Racial``
+    must still be recognized as belonging to exactly one race.
+    """
+    line = _clean(skill_line).casefold().replace("_", " ").replace("-", " ")
+    line = " ".join(line.split())
+    if not line:
+        return None
+
+    padded = f" {line} "
+    races = {
+        _clean(name).casefold()
+        for name in race_names
+        if _clean(name)
+    }
+    for race in sorted(races, key=len, reverse=True):
+        normalized = " ".join(race.replace("_", " ").replace("-", " ").split())
+        if line == normalized or f" {normalized} " in padded:
+            return race
+    return None
+
+
 class CharacterProgressionDialog(QDialog):
     """Edit permanent progression owned by one canonical character."""
 
@@ -149,7 +174,8 @@ class CharacterProgressionDialog(QDialog):
             if not line or not name:
                 continue
             line_key = line.casefold()
-            if line_key in self._race_skill_lines and line_key != selected_race:
+            line_race = _racial_skill_line_race(line, self._race_skill_lines)
+            if line_race is not None and line_race != selected_race:
                 continue
             key = (line_key, name.casefold())
             if key in seen:
@@ -181,7 +207,8 @@ class CharacterProgressionDialog(QDialog):
 
             owner_values = {_clean(row.get("class_type")) for row in rows if _clean(row.get("class_type"))}
             class_line = bool(owner_values) and self.eso_class in owner_values
-            racial_line = bool(self.race) and line.casefold() == self.race.casefold() and line.casefold() in self._race_skill_lines
+            line_race = _racial_skill_line_race(line, self._race_skill_lines)
+            racial_line = bool(self.race) and line_race == self.race.casefold()
             intrinsic_line = class_line or racial_line
 
             header = QHBoxLayout()
