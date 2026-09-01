@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Read-only repository for canonical Phase 6 skill-component conditions."""
 
+import re
 import sqlite3
 from pathlib import Path
 
@@ -15,6 +16,13 @@ from .skill_component_text_evidence import extract_component_text_evidence
 
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+_COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+
+
+def _normalize_source_text(value: object) -> str:
+    text = str(value or "").replace("\r", " ").replace("\n", " ")
+    text = _COLOR_TAG_RE.sub("", text)
+    return " ".join(text.split())
 
 
 class SkillComponentConditionRepository:
@@ -57,7 +65,7 @@ class SkillComponentConditionRepository:
             if row is None:
                 return ()
 
-        source_text = str(row[0] or "")
+        source_text = _normalize_source_text(row[0])
         ordinal_owner = explicit_ordinal_condition_owner(source_text)
         if ordinal_owner is not None:
             if ordinal_owner != int(coefficient_number):
