@@ -29,7 +29,13 @@ def test_audit_promotes_missing_health_healing_candidate(tmp_path):
         CREATE TABLE ability (
             ability_id INTEGER PRIMARY KEY,
             name TEXT,
-            coef_description TEXT
+            coef_description TEXT,
+            type1 INTEGER,
+            a1 REAL,
+            b1 REAL,
+            c1 REAL,
+            r1 REAL,
+            avg1 REAL
         );
         CREATE TABLE skill_component_classification (
             skill_rank_id INTEGER NOT NULL,
@@ -47,7 +53,8 @@ def test_audit_promotes_missing_health_healing_candidate(tmp_path):
         INSERT INTO ability VALUES (
             100,
             'Drain Example',
-            'Siphon away your enemies vitality, dealing $1 Magic Damage and healing you for 25% of your missing Health every 1 second for 3 seconds.'
+            'Siphon away your enemies vitality, dealing $1 Magic Damage and healing you for 25% of your missing Health every 1 second for 3 seconds.',
+            1, 1, 1, 1, 1, 1
         );
         INSERT INTO skill_component_classification VALUES (
             10, 1, 'damage', 'magical', 1, 0, NULL, 'test', 1.0
