@@ -2,9 +2,20 @@ from pathlib import Path
 from engine.config import get_resource_path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QAbstractSpinBox, QFrame, QHBoxLayout, QLabel
+from PySide6.QtWidgets import (
+    QAbstractSpinBox,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+)
 from widgets import build_editor
 from services.skill_bar_eligibility import filter_skill_choices
+from ui.components.foundry_button import ButtonRole, FoundryButton
 
 ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
 
@@ -161,8 +172,73 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addWidget(self.mundus)
             identity_card.addLayout(row)
 
+        self._install_armor_set_button()
         self.eso_class.currentTextChanged.connect(self._on_class_changed)
         self._sync_skill_state()
+
+    def _install_armor_set_button(self):
+        """Add the armor-set helper to the left of existing Gear-card actions."""
+        layout = self.layout()
+        if layout is None or layout.count() < 2:
+            return
+        gear_card = layout.itemAt(1).widget()
+        header_actions = getattr(gear_card, "header_action_layout", None)
+        if header_actions is None:
+            return
+
+        self.add_armor_set_button = FoundryButton(
+            "+ Armor Set",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+        self.add_armor_set_button.clicked.connect(self._assign_armor_set)
+        header_actions.insertWidget(0, self.add_armor_set_button)
+
+    def _assign_armor_set(self):
+        """Assign one set name to selected physical armor pieces."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add Armor Set")
+        dialog.setMinimumWidth(420)
+
+        outer = QVBoxLayout(dialog)
+        outer.setSpacing(10)
+        prompt = QLabel("Choose a set, then select the armor pieces that use it.")
+        prompt.setWordWrap(True)
+        outer.addWidget(prompt)
+
+        set_combo = QComboBox()
+        set_combo.setEditable(True)
+        set_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        set_combo.addItems(self.set_choices)
+        set_combo.setCurrentText("")
+        outer.addWidget(set_combo)
+
+        slot_boxes: dict[str, QCheckBox] = {}
+        for slot in build_editor.ARMOR_SLOTS:
+            box = QCheckBox(slot)
+            slot_boxes[slot] = box
+            outer.addWidget(box)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Apply
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.rejected.connect(dialog.reject)
+
+        def apply_assignment():
+            set_name = set_combo.currentText().strip()
+            selected = [slot for slot, box in slot_boxes.items() if box.isChecked()]
+            if not set_name or not selected:
+                return
+            for slot in selected:
+                row = self.gear_rows.get(slot)
+                if row is not None:
+                    row.set_combo.setCurrentText(set_name)
+            dialog.accept()
+
+        buttons.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(apply_assignment)
+        outer.addWidget(buttons)
+        dialog.exec()
 
     def _update_attribute_limits(self):
         super()._update_attribute_limits()
