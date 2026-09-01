@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "reef_guardian",
+  "encounter_name": "Reef Guardian",
+  "evidence": [
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "claw_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Reef Guardian abilities",
+      "source_locator": "Claw",
+      "source_revision": "3618074",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "claw_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Claw",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "claw_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY[166020]",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "claw_combat_event",
+      "value": {"name": "Claw", "ability_id": 166020, "evidence_kind": "timer_alert"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "acid_reflux_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Reef Guardian abilities",
+      "source_locator": "Acid Reflux",
+      "source_revision": "3618074",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "acid_reflux_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Acid Reflux",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_behavior",
+      "value": {
+        "target": "taunt_target",
+        "duration_seconds_approx": 11,
+        "leaves_acid_pools": true,
+        "acid_pool_radius_m": 3,
+        "acid_pool_interval_seconds": 1.75,
+        "applies_stacking_acid_vulnerability": true
+      },
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Acid Reflux",
+      "confidence": "high",
+      "notes": "Veteran guide detail; guide explicitly states it does not document hard mode mechanics."
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "acid_pool_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Reef Heart Abilities - Acidic Pool / Acid Reflux",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "acid_pool_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:AOE_ALERTS[165987]",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "acid_pool_combat_event",
+      "value": {"name": "Acid Pool", "ability_id": 165987, "evidence_kind": "aoe_alert", "exclude_tanks": true},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:AOE_ALERTS",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "replication_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "replication_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "replication_combat_event",
+      "value": {"name": "Replication", "ability_id": 163701, "evidence_kind": "combat_event"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:replication / ACTION_RESULT_BEGIN",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "main_guardian_replication_thresholds",
+      "value": {"thresholds": ["80%", "50%"], "result": "medium_clone"},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "medium_guardian_replication_threshold",
+      "value": {"threshold": "50%", "result": "small_clone"},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "heartburn_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Geyser Blast / Charge / Heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "heartburn_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "heartburn_combat_event",
+      "value": {"name": "Heartburn", "ability_id": 170481, "evidence_kind": "encounter_state"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:heartburn / effect duration tracking",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "heartburn_result_events",
+      "value": {
+        "success_ability_id": 166031,
+        "success_name": "Heartburn Vulnerability",
+        "failure_ability_id": 166032,
+        "failure_name": "Heartburn Empowerment"
+      },
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:heartburnResult",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "reef_heart_timeout",
+      "value": {"timeout_seconds": 60, "result": "group_wipe", "ability": "Empowered Rockfall"},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Empowered Rockfall",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crush_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Crush",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crush_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY[166019]",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "crush_combat_event",
+      "value": {"name": "Crush", "ability_id": 166019, "evidence_kind": "timer_alert"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "uesp_pulverise",
+      "value": {"name": "Pulverise", "response": "block", "stagger_negated_by_block": true},
+      "source_type": "uesp",
+      "source_name": "UESP Online:Reef Guardian abilities",
+      "source_locator": "Pulverise",
+      "source_revision": "3618074",
+      "confidence": "high",
+      "notes": "Kept distinct from Combat Alerts 'Crush'; no identity equivalence asserted."
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "uesp_crushing_limbs",
+      "value": {"name": "Crushing Limbs", "response": "block", "stun_seconds": 1, "blocking_staggers_guardian": true},
+      "source_type": "uesp",
+      "source_name": "UESP Online:Reef Guardian abilities",
+      "source_locator": "Crushing Limbs",
+      "source_revision": "3618074",
+      "confidence": "high",
+      "notes": "Kept distinct from Combat Alerts 'Crush'; no identity equivalence asserted."
+    },
+    {
+      "fact_type": "area_structure",
+      "fact_key": "reef_heart_arena",
+      "value": {"edge_holes": 6, "center_hole": 1, "edge_holes_symbol_marked": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Area Mechanics",
+      "confidence": "high"
+    }
+  ]
+}
