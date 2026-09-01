@@ -34,7 +34,6 @@ _NON_COMBAT_DIALOGUE_CUES = (
     "group wipe",
     "group wipes",
     "group is defeated",
-    "group is defeated",
     "if the group is defeated",
     "when she's defeated",
     "when shes defeated",
@@ -109,7 +108,7 @@ def _conservative_dialogue_ability_match(trigger: str, abilities) -> str | None:
         if word not in _GENERIC_TRIGGER_WORDS and len(word) >= 4
     }
 
-    strong_matches: list[tuple[int, str]] = []
+    strong_matches: list[tuple[int, int, str]] = []
     for ability in abilities:
         name_words = {
             word
@@ -117,13 +116,22 @@ def _conservative_dialogue_ability_match(trigger: str, abilities) -> str | None:
             if word not in _GENERIC_TRIGGER_WORDS and len(word) >= 4
         }
         overlap = trigger_words & name_words
-        if overlap:
-            strong_matches.append((len(overlap), ability.name))
+        if not overlap:
+            continue
+
+        # Two shared meaningful words are strong evidence. A single shared word
+        # is accepted only when it is distinctive enough to avoid thematic-noun
+        # false positives such as "Summoning Flesh Abominations" -> "Rend Flesh".
+        overlap_count = len(overlap)
+        distinctive_single = overlap_count == 1 and len(next(iter(overlap))) >= 6
+        if overlap_count >= 2 or distinctive_single:
+            longest = max(len(word) for word in overlap)
+            strong_matches.append((overlap_count, longest, ability.name))
 
     if strong_matches:
-        strong_matches.sort(key=lambda row: (-row[0], row[1].casefold()))
-        best_score = strong_matches[0][0]
-        best = [name for score, name in strong_matches if score == best_score]
+        strong_matches.sort(key=lambda row: (-row[0], -row[1], row[2].casefold()))
+        best_score = strong_matches[0][:2]
+        best = [name for count, longest, name in strong_matches if (count, longest) == best_score]
         if len(best) == 1:
             return best[0]
         return None
