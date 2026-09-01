@@ -95,6 +95,7 @@ def main() -> int:
     from ui.phase5_racial_filter_fix import install as install_phase5_racial_filter_fix
     from ui.phase5_build_delete_support import install as install_phase5_build_delete_support
     from ui.phase5_operations_progression_support import install as install_phase5_operations_progression_support
+    from ui.phase5_racial_context_support import install as install_phase5_racial_context_support
     from ui.phase5_potion_picker_support import install as install_phase5_potion_picker_support
 
     install_searchable_selectors()
@@ -104,6 +105,7 @@ def main() -> int:
     install_phase5_racial_filter_fix()
     install_phase5_build_delete_support()
     install_phase5_operations_progression_support()
+    install_phase5_racial_context_support()
     install_phase5_potion_picker_support()
 
     from ui.main_window import MainWindow
