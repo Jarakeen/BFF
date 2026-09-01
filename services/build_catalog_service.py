@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import copy
 import json
 from pathlib import Path
@@ -26,13 +27,6 @@ class BuildCatalogService:
 
     @staticmethod
     def _identity(build: PlayerBuild, index: int) -> str:
-        """Stable character identity for one ESO character.
-
-        A gamertag/account can own many ESO characters, so gamertag alone must
-        never collapse those characters together. Character name is therefore
-        the primary identity inside the account namespace. Legacy rows that do
-        not have a character name fall back to the account, then their row.
-        """
         name = build.Name.strip().casefold()
         gamertag = build.Gamertag.strip().casefold()
         if name:
@@ -50,13 +44,12 @@ class BuildCatalogService:
 
     @staticmethod
     def _normalize_owned_skill_lines(value: Any) -> list[str]:
-        """Return a stable, duplicate-free character skill-line ownership list."""
         if not isinstance(value, (list, tuple, set)):
             return []
         seen: set[str] = set()
         normalized: list[str] = []
         for entry in value:
-            name = str(entry or "").strip()
+            name = " ".join(str(entry or "").strip().split())
             key = name.casefold()
             if not name or key in seen:
                 continue
@@ -65,31 +58,39 @@ class BuildCatalogService:
         return normalized
 
     @staticmethod
-    def _normalize_passive_ranks(value: Any) -> dict[str, int]:
-        """Return stable character-owned passive ranks keyed by display name.
+    def _normalize_named_nonnegative_ints(value: Any) -> dict[str, int]:
+        """Normalize explicit character progression values.
 
-        Rank zero means the passive is not owned and is therefore omitted.
-        Individual passive maximum ranks remain domain data rather than a
-        persistence-layer assumption.
+        Zero is intentionally preserved. It means the player explicitly
+        recorded that the passive/CP node is not purchased. An absent key means
+        the value is unknown and must not be silently treated as zero.
         """
         if not isinstance(value, dict):
             return {}
         normalized: dict[str, int] = {}
         seen: set[str] = set()
-        for raw_name, raw_rank in value.items():
+        for raw_name, raw_value in value.items():
             name = " ".join(str(raw_name or "").strip().split())
             key = name.casefold()
             if not name or key in seen:
                 continue
             try:
-                rank = int(raw_rank)
+                number = int(raw_value)
             except (TypeError, ValueError):
                 continue
-            if rank <= 0:
+            if number < 0:
                 continue
             seen.add(key)
-            normalized[name] = rank
+            normalized[name] = number
         return normalized
+
+    @classmethod
+    def _normalize_passive_ranks(cls, value: Any) -> dict[str, int]:
+        return cls._normalize_named_nonnegative_ints(value)
+
+    @classmethod
+    def _normalize_passive_cp_points(cls, value: Any) -> dict[str, int]:
+        return cls._normalize_named_nonnegative_ints(value)
 
     @classmethod
     def _normalize_character(cls, value: Any) -> dict[str, Any]:
@@ -100,16 +101,13 @@ class BuildCatalogService:
         character["passive_ranks"] = cls._normalize_passive_ranks(
             character.get("passive_ranks")
         )
+        character["passive_cp_points"] = cls._normalize_passive_cp_points(
+            character.get("passive_cp_points")
+        )
         return character
 
     @classmethod
     def _has_meaningful_value(cls, value: Any) -> bool:
-        """Return whether a value contains meaningful user-entered data.
-
-        Numeric zero is a default/empty value. This matters because the
-        character model contains persistent counters such as the 64-point
-        attribute allocation, whose blank state is represented by 0.
-        """
         if value is None:
             return False
         if isinstance(value, bool):
@@ -126,7 +124,6 @@ class BuildCatalogService:
 
     @classmethod
     def _is_empty_member(cls, build: PlayerBuild) -> bool:
-        """Return True for blank placeholder rows in the legacy Builds UI."""
         return not cls._has_meaningful_value(build.to_dict())
 
     @classmethod
@@ -165,12 +162,7 @@ class BuildCatalogService:
         temp.replace(self.catalog_path)
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Create canonical records while excluding blank legacy placeholders.
-
-        Existing character IDs and character-scoped ownership are preserved
-        when the same account + character-name pair is resynced from the legacy
-        compatibility mirror.
-        """
+        """Create canonical records while preserving character-owned state."""
         existing = self.load()
         existing_by_character = {
             self._character_match_key(
@@ -215,18 +207,23 @@ class BuildCatalogService:
                     "passive_ranks": self._normalize_passive_ranks(
                         previous.get("passive_ranks") if previous else {}
                     ),
+                    "passive_cp_points": self._normalize_passive_cp_points(
+                        previous.get("passive_cp_points") if previous else {}
+                    ),
                 }
 
             legacy = member.to_dict()
             legacy["CharacterId"] = character_id
             legacy["BuildId"] = build_id
-            catalog["builds"].append({
-                "build_id": build_id,
-                "character_id": character_id,
-                "name": member.BuildName,
-                "legacy": legacy,
-                "payload": copy.deepcopy(legacy),
-            })
+            catalog["builds"].append(
+                {
+                    "build_id": build_id,
+                    "character_id": character_id,
+                    "name": member.BuildName,
+                    "legacy": legacy,
+                    "payload": copy.deepcopy(legacy),
+                }
+            )
 
         catalog["characters"] = list(characters.values())
         return catalog
@@ -258,12 +255,6 @@ class BuildCatalogService:
         character_id: str,
         owned_skill_lines: list[str] | tuple[str, ...] | set[str],
     ) -> dict[str, Any] | None:
-        """Persist non-class skill-line ownership for one character.
-
-        Class skill lines are inferred from the character's class and therefore
-        should not be stored here. This list is for progression-dependent lines
-        such as Undaunted, guild, Alliance War, armor, and weapon skill lines.
-        """
         catalog = self.load()
         for index, character in enumerate(catalog["characters"]):
             if character.get("character_id") != character_id:
@@ -282,7 +273,7 @@ class BuildCatalogService:
         passive_name: str,
         rank: int,
     ) -> dict[str, Any] | None:
-        """Persist one character-owned passive rank without touching builds."""
+        """Persist one known passive rank without touching build payloads."""
         name = " ".join(str(passive_name or "").strip().split())
         if not name:
             raise ValueError("Passive name must be non-empty")
@@ -305,28 +296,53 @@ class BuildCatalogService:
             )
             if existing_name is not None:
                 ranks.pop(existing_name)
-            if normalized_rank > 0:
-                ranks[name] = normalized_rank
+            ranks[name] = normalized_rank
             updated["passive_ranks"] = ranks
             catalog["characters"][index] = updated
             self.save(catalog)
             return copy.deepcopy(updated)
         return None
 
-    def get_passive_rank(self, character_id: str, passive_name: str) -> int:
-        """Return one persisted passive rank, or zero when absent."""
+    def clear_passive_rank(
+        self,
+        *,
+        character_id: str,
+        passive_name: str,
+    ) -> dict[str, Any] | None:
+        """Return a passive to unknown/unrecorded state."""
         name = " ".join(str(passive_name or "").strip().split()).casefold()
         if not name:
-            return 0
+            raise ValueError("Passive name must be non-empty")
+        catalog = self.load()
+        for index, character in enumerate(catalog["characters"]):
+            if character.get("character_id") != character_id:
+                continue
+            updated = copy.deepcopy(character)
+            ranks = self._normalize_passive_ranks(updated.get("passive_ranks"))
+            updated["passive_ranks"] = {
+                stored_name: rank
+                for stored_name, rank in ranks.items()
+                if stored_name.casefold() != name
+            }
+            catalog["characters"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
+        return None
+
+    def get_passive_rank(self, character_id: str, passive_name: str) -> int | None:
+        """Return a known passive rank; absent means unknown, not rank zero."""
+        name = " ".join(str(passive_name or "").strip().split()).casefold()
+        if not name:
+            return None
         character = self.get_character(character_id)
         if character is None:
-            return 0
+            return None
         for stored_name, rank in self._normalize_passive_ranks(
             character.get("passive_ranks")
         ).items():
             if stored_name.casefold() == name:
                 return rank
-        return 0
+        return None
 
     def get_build(self, build_id: str) -> dict[str, Any] | None:
         catalog = self.load()
@@ -342,30 +358,24 @@ class BuildCatalogService:
         build_name: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
-        """Insert or replace one build without duplicating character identity."""
         catalog = self.load()
         name = build_name.strip() or "Default"
-
         build_id = self._stable_id(
             "build",
             f"{character_id}:{name.casefold()}",
         )
-
         record = {
             "build_id": build_id,
             "character_id": character_id,
             "name": name,
             "payload": copy.deepcopy(payload),
-            # Keep Phase 2F's legacy bridge available to older consumers.
             "legacy": copy.deepcopy(payload),
         }
-
         for index, existing in enumerate(catalog["builds"]):
             if existing.get("build_id") == build_id:
                 catalog["builds"][index] = record
                 self.save(catalog)
                 return copy.deepcopy(record)
-
         catalog["builds"].append(record)
         self.save(catalog)
         return copy.deepcopy(record)
