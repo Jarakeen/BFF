@@ -45,6 +45,18 @@ def _unique(values: Iterable[str]) -> tuple[str, ...]:
     return tuple(output)
 
 
+def _normalize_source_trait_cell(value: str, *, game_update: GameUpdate) -> str:
+    """Remove source-table annotations only when the underlying trait is known."""
+
+    clean = _clean(value)
+    suffix = " (triple)"
+    if clean.casefold().endswith(suffix):
+        candidate = clean[: -len(suffix)].strip()
+        if is_known_alchemy_trait(candidate, game_update=game_update):
+            return candidate
+    return clean
+
+
 @dataclass(frozen=True)
 class AlchemyFormula:
     reagents: tuple[str, ...]
@@ -117,17 +129,18 @@ class AlchemyFormulaCatalog:
                 canonical_traits: list[str] = []
                 removed_traits: list[str] = []
                 unknown_traits: list[str] = []
-                for raw_trait in raw_traits:
+                for source_trait in raw_traits:
+                    raw_trait = _normalize_source_trait_cell(source_trait, game_update=update)
                     resolved = resolve_alchemy_trait_name(
                         raw_trait,
                         game_update=update,
                         allow_legacy_alias=allow_legacy_alias,
                     )
                     if resolved is None:
-                        removed_traits.append(raw_trait)
+                        removed_traits.append(source_trait)
                         continue
                     if not is_known_alchemy_trait(resolved, game_update=update):
-                        unknown_traits.append(raw_trait)
+                        unknown_traits.append(source_trait)
                         continue
                     canonical_traits.append(resolved)
 
