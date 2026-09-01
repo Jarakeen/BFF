@@ -18,6 +18,20 @@ CHAMPION_SKILL_TYPE_NORMAL = 0
 CHAMPION_SKILL_TYPE_NORMAL_SLOTTABLE = 1
 CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE = 2
 
+# These stars intentionally have no standing-sheet Effect here. Their runtime
+# behavior is resolved by dedicated Phase 5 dynamic-effect paths instead.
+# Keeping the names here prevents the static layer from reporting a false
+# "not yet modeled" warning while still leaving every other unsupported CP
+# fail-closed and explicit.
+EXTERNALLY_MODELED_DYNAMIC_CP_NAMES = frozenset(
+    {
+        "from the brink",
+        "rejuvenator",
+        "soothing tide",
+        "swift renewal",
+    }
+)
+
 
 @dataclass(frozen=True)
 class ChampionPointRecord:
@@ -151,8 +165,11 @@ class ChampionPointStaticRepository:
         if stages <= 0:
             return [], []
 
-        first_line = record.description.splitlines()[0].strip()
         source = record.name
+        if source.strip().casefold() in EXTERNALLY_MODELED_DYNAMIC_CP_NAMES:
+            return [], []
+
+        first_line = record.description.splitlines()[0].strip()
 
         patterns: tuple[tuple[str, tuple[StatId, ...], EffectUnit], ...] = (
             (rf"^(?:Grants|Increases(?: your)?) {_VALUE} Max Health per stage\.$", (StatId.MAX_HEALTH,), EffectUnit.FLAT),
