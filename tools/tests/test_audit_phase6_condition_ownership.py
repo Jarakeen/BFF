@@ -17,12 +17,27 @@ def _make_db(path):
             coef_type2 INTEGER,
             coef_type3 INTEGER
         );
+        CREATE TABLE skill_coefficient (
+            id INTEGER PRIMARY KEY,
+            skill_rank_id INTEGER NOT NULL,
+            coefficient_number INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            a REAL NOT NULL,
+            b REAL NOT NULL,
+            c REAL NOT NULL,
+            r REAL NOT NULL,
+            avg REAL
+        );
         CREATE TABLE ability (
             ability_id INTEGER PRIMARY KEY,
             name TEXT,
             coef_description TEXT
         );
         INSERT INTO skill_rank VALUES (10, 100, 1.0, 1.0, 1.0, 0, 0, 0);
+        INSERT INTO skill_coefficient VALUES
+            (1, 10, 1, '0', 1.0, 0.0, 0.0, 0.0, NULL),
+            (2, 10, 2, '0', 1.0, 0.0, 0.0, 0.0, NULL),
+            (3, 10, 3, '0', 1.0, 0.0, 0.0, 0.0, NULL);
         INSERT INTO ability VALUES (
             100,
             'Fixture Skill',
