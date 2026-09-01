@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QComboBox, QCompleter, QDialog
+from PySide6.QtWidgets import QComboBox, QCompleter, QDialog, QLabel
 
 from engine.config import get_resource_path
 from widgets import build_editor
@@ -189,8 +189,8 @@ class SearchableBuildEditor(EligibleBuildEditor):
         cp_grid = getattr(self, "cp_grid", None)
         if cp_card is None or cp_grid is None:
             return
-        for heading in cp_grid.findChildren(build_editor.QLabel if hasattr(build_editor, "QLabel") else object):
-            if hasattr(heading, "width") and heading.width() >= 140:
+        for heading in cp_grid.findChildren(QLabel):
+            if heading.width() >= 140:
                 heading.setFixedWidth(125)
 
     def _compact_host_dialog(self) -> None:
