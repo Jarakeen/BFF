@@ -67,6 +67,39 @@ def test_repository_links_current_restore_to_bounded_resource_rule_context(tmp_p
     assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
 
 
+def test_repository_uses_raw_tooltip_to_define_current_restore(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT,
+            raw_tooltip TEXT
+        );
+        INSERT INTO skill_rank VALUES (25, 250);
+        INSERT INTO ability VALUES (
+            250,
+            'Current Restore: $2 While slotted you gain Major Vitality.',
+            'You also restore 12% Stamina, increasing by up to 100% based on how high your current Health is.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    events = SkillComponentResourceEventRepository(path).resolve(25, 2)
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.resource_type is SkillComponentResourceType.STAMINA
+    assert event.amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert event.amount_fraction == 0.12
+    assert event.max_bonus_fraction == 1.0
+    assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+
 def test_current_restore_window_does_not_borrow_earlier_unrelated_resource_sentence(tmp_path):
     path = tmp_path / "eso.db"
     db = sqlite3.connect(path)
@@ -105,6 +138,31 @@ def test_current_restore_window_requires_current_health_scaling_evidence(tmp_pat
     db.close()
 
     assert SkillComponentResourceEventRepository(path).resolve(40, 2) == ()
+
+
+def test_raw_current_restore_definition_also_requires_scaling_evidence(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT,
+            raw_description TEXT
+        );
+        INSERT INTO skill_rank VALUES (45, 450);
+        INSERT INTO ability VALUES (
+            450,
+            'Current Restore: $2 While slotted you gain Major Vitality.',
+            'You also restore 12% Stamina when the effect ends.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    assert SkillComponentResourceEventRepository(path).resolve(45, 2) == ()
 
 
 def test_repository_returns_empty_for_unknown_rank(tmp_path):
