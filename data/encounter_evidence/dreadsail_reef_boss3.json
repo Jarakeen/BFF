@@ -1,0 +1,444 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "tideborn_taleria",
+  "encounter_name": "Tideborn Taleria",
+  "evidence": [
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "rapid_deluge_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Rapid Deluge/Deluge Eruption",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "rapid_deluge_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Rapid Deluge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "rapid_deluge_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:deluge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "rapid_deluge_difficulty_events",
+      "value": {
+        "start_ability_id": 167124,
+        "normal_effect_id": 174959,
+        "veteran_effect_id": 174960,
+        "hardmode_effect_id": 174961,
+        "normal_damage_id": 174964,
+        "veteran_damage_id": 174966,
+        "hardmode_damage_id": 174969
+      },
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:deluge",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "rapid_deluge_veteran_behavior",
+      "value": {
+        "target_count": 5,
+        "detonation_seconds_approx": 6,
+        "eruption_radius_m": 19,
+        "swimming_mitigates_blast": true
+      },
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Rapid Deluge",
+      "confidence": "high",
+      "notes": "Veteran guide detail; guide explicitly states it does not document hard mode mechanics."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "rapid_deluge_target_count_by_difficulty",
+      "value": {"normal_or_veteran": 5, "hardmode": 6},
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria ability description",
+      "source_locator": "Rapid Deluge/Deluge Eruption",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "response_state",
+      "fact_key": "rapid_deluge_swimming_checked",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:IsUnitSwimming / delugeBlame / delugeSwim",
+      "confidence": "high",
+      "notes": "Addon explicitly polls affected units for swimming state and displays a Swim response alert."
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crashing_wave_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Crashing Wave",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crashing_wave_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Crashing Wave",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "crashing_wave_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:wave",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "crashing_wave_combat_events",
+      "value": {"start_ability_id": 166353, "target_ability_id": 174943, "damage_ability_id": 174948},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:wave",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "crashing_wave_response",
+      "value": {"directions": 4, "one_tracks_taunt_target": true, "responses": ["dodge", "block"], "unblocked_can_be_fatal": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Crashing Wave",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_behemoth_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Summon Behemoth",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_behemoth_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Summon Behemoth",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_behemoth_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:banners_begin[166928]",
+      "confidence": "medium",
+      "notes": "Addon maps ability 166928 to Summon Behemoth in the Dreadsail module; retained as event evidence rather than encounter completeness evidence."
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "summon_behemoth_event",
+      "value": {"name": "Summon Behemoth", "ability_id": 166928},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:banners_begin",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "behemoth_spawn_interval",
+      "value": {"seconds_approx_min": 60, "seconds_approx_max": 70, "time_driven": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Summon Behemoth",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_siren_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Summon Siren",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_siren_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Summon Siren",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "summon_siren_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:banners_begin[166929]",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "siren_start_threshold",
+      "value": {"threshold": "~75%", "approximate": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Summon Siren",
+      "confidence": "medium"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "maelstrom_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Maelstrom",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "maelstrom_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:maelstrom",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "maelstrom_combat_event",
+      "value": {"name": "Maelstrom", "ability_id": 166292},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:maelstrom",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "maelstrom_veteran_behavior",
+      "value": {"duration_seconds": 6, "tick_interval_seconds": 0.3, "damage_ramps": true, "heal_check": true, "cooldown_seconds": 20},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Maelstrom",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "coral_slam_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Coral Slam/Rising Tide",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "coral_slam_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Coral Slam",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "coral_slam_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY[163987]",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "coral_slam_combat_event",
+      "value": {"name": "Coral Slam", "ability_id": 163987, "evidence_kind": "timer_alert"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "arcing_slash_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria abilities",
+      "source_locator": "Arcing Slash/Arcing Cleave/Soaked Wound",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "arcing_slash_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Arcing Slash",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "arcing_slash_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:AOE_ALERTS[175172]",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "arcing_slash_combat_event",
+      "value": {"name": "Arcing Slash", "ability_id": 175172, "evidence_kind": "aoe_alert"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:AOE_ALERTS",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "bridge_thresholds",
+      "value": {"thresholds": ["50%", "35%", "20%"]},
+      "source_type": "uesp",
+      "source_name": "UESP Online:Tideborn Taleria ability description",
+      "source_locator": "Summon Bridge/Mage(?)",
+      "source_revision": "3582555",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "bridge_thresholds",
+      "value": {"thresholds": ["50%", "35%", "20%"]},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Bridges",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "bridge_thresholds",
+      "value": {"thresholds": ["50%", "35%", "20%"]},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.summons",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "bridge_summon_events",
+      "value": {"50_percent_ability_id": 166479, "35_percent_ability_id": 175279, "20_percent_ability_id": 175291},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.summons",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "bridge_mage_timeout",
+      "value": {"timeout_seconds": 60, "result": "group_wipe", "ability": "Dreadsail Ascension"},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Bridges",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "sweltering_heat_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Bridges - Yellow (Sweltering Heat)",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "sweltering_heat_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.channelers/channels",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "nematocyst_cloud_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Bridges - Green (Nematocyst Cloud)",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "nematocyst_cloud_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.channelers/channels",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "suffocating_waves_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Final Boss - Bridges - Purple (Suffocating Waves)",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "suffocating_waves_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.channelers/channels",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "bridge_channeler_events",
+      "value": {
+        "sweltering_heat_effect_id": 175134,
+        "sweltering_heat_channel_id": 165994,
+        "nematocyst_cloud_effect_id": 175132,
+        "nematocyst_cloud_channel_id": 166042,
+        "suffocating_waves_effect_id": 175136,
+        "suffocating_waves_channel_id": 166044
+      },
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:bridge.channelers/bridge.channels",
+      "confidence": "high"
+    }
+  ]
+}
