@@ -97,3 +97,33 @@ def test_shared_update_and_patch_are_carried_to_canonical_fact():
 
     assert plan.fact.valid_from_update == "U51"
     assert plan.fact.valid_from_patch == "11.1.0"
+
+
+def test_source_family_is_preserved_in_schema_v3_evidence_notes():
+    rows = [
+        EncounterEvidence(
+            encounter_id="taleria",
+            fact_type="mechanic_state",
+            fact_key="rapid_deluge_exists",
+            value=True,
+            source_type="guide",
+            source_name="ESO-Hub",
+            source_family="alcast_eso_hub",
+            confidence="high",
+            notes="published guide record",
+        ),
+        EncounterEvidence(
+            encounter_id="taleria",
+            fact_type="mechanic_state",
+            fact_key="rapid_deluge_exists",
+            value=True,
+            source_type="combat_addon",
+            source_name="Combat Alerts",
+            confidence="high",
+        ),
+    ]
+
+    plan = build_persistence_plan([_candidate(rows)])[0]
+    guide = next(row for row in plan.evidence if row.source_name == "ESO-Hub")
+
+    assert guide.notes == "source_family=alcast_eso_hub\npublished guide record"
