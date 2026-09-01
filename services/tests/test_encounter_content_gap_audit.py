@@ -118,3 +118,38 @@ def test_content_gap_audit_recognizes_persisted_eligible_fact(tmp_path):
     assert "mechanic_state:storm_exists" in gap.persisted
     assert audit.encounters_without_packets == ()
     assert audit.packets_without_encounters == ()
+
+
+def test_content_gap_audit_reports_source_declared_bosses_missing_downstream(tmp_path):
+    packet_dir = tmp_path / "packets"
+    packet_dir.mkdir()
+    _packet(packet_dir / "boss_one.json")
+
+    source_root = tmp_path / "uesp"
+    trials_dir = source_root / "trials"
+    trials_dir.mkdir(parents=True)
+    (trials_dir / "trial_one.json").write_text(
+        json.dumps(
+            {
+                "id": "trial_one",
+                "name": "Trial One",
+                "boss_ids": ["boss_one", "boss_two"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    connection = _db()
+    try:
+        audit = audit_content_encounters(
+            connection,
+            content_id="trial_one",
+            packet_dir=packet_dir,
+            source_root=source_root,
+        )
+    finally:
+        connection.close()
+
+    assert audit.source_declared_encounters == ("boss_one", "boss_two")
+    assert audit.source_declared_missing_db == ("boss_two",)
+    assert audit.source_declared_missing_packets == ("boss_two",)
