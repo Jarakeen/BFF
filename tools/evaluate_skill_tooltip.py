@@ -14,11 +14,8 @@ from minmax.character_progression import AttributeAllocation, CharacterProgressi
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
-from minmax.skill_coefficient_repository import (
-    SkillCoefficientRepository,
-    ability_entity_id,
-)
-from minmax.skill_tooltip_calculator import SkillTooltipCalculator
+from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
+from minmax.skill_coefficient_repository import ability_entity_id
 from minmax.skill_tooltip_rounding import matching_rounding_policies
 from minmax.source_provenance import SourceProvenanceError, load_source_provenance
 from models.build_model import PlayerBuild
@@ -130,10 +127,12 @@ def evaluate_saved_build(
     )
 
     canonical_entity_id = ability_entity_id(entity_id)
-    calculator = SkillTooltipCalculator(
-        SkillCoefficientRepository(database_path)
+    service = SavedBuildSkillTooltipService(database_path)
+    result = service.evaluate_entity_id(
+        build=build,
+        context=context,
+        entity_id=canonical_entity_id,
     )
-    result = calculator.evaluate_entity_id(canonical_entity_id, context)
 
     slotted = {
         "front": tuple(
@@ -155,7 +154,7 @@ def evaluate_saved_build(
 
     print()
     print("========================================")
-    print(" PHASE 3 SAVED-BUILD SKILL TOOLTIP")
+    print(" PHASE 5 SAVED-BUILD SKILL EVALUATION")
     print("========================================")
     print(f"Database:       {database_path}")
     print(f"Saved builds:   {builds_path}")
@@ -229,6 +228,22 @@ def evaluate_saved_build(
         )
 
     print()
+    print("Actual-effect component modifiers:")
+    if not result.component_actual_effect_trace:
+        print("  (none)")
+    for trace in result.component_actual_effect_trace:
+        sources = ", ".join(trace.sources) if trace.sources else "(unspecified)"
+        print(
+            f"  #{trace.coefficient_number}: base_power={trace.base_power:.6f} | "
+            f"power_bonus={trace.power_bonus:.6f} | effective_power={trace.effective_power:.6f}"
+        )
+        print(
+            f"     coefficient={trace.coefficient_value:.6f} | "
+            f"additive={trace.additive_percent:.6f}% | actual={trace.output_value:.6f} | "
+            f"sources={sources}"
+        )
+
+    print()
     print("Inactive source coefficient slots:")
     if not result.inactive_components:
         print("  (none)")
@@ -244,6 +259,10 @@ def evaluate_saved_build(
         print("Raw tooltip total: unresolved")
     else:
         print(f"Raw tooltip total: {result.raw_total:.6f}")
+        if result.tooltip_value is not None and result.tooltip_value != result.raw_total:
+            print(f"Tooltip candidate after verified modifiers: {result.tooltip_value:.6f}")
+        if result.actual_effect_value is not None:
+            print(f"Actual-effect candidate: {result.actual_effect_value:.6f}")
         rounding = result.rounding_candidates
         if rounding is not None:
             print("Tooltip rounding candidates (ESO policy unresolved):")
@@ -258,13 +277,13 @@ def evaluate_saved_build(
                 print(f"Observed ESO tooltip: {observed_tooltip}")
                 if matches:
                     print(
-                        "Observed value matches raw rounding: "
+                        "Observed value matches tooltip rounding: "
                         + ", ".join(matches)
                     )
                 else:
                     print(
-                        "Observed value is not produced by raw rounding alone; "
-                        "an additional modifier or unresolved rule is present"
+                        "Observed value is not produced by tooltip rounding alone; "
+                        "an additional tooltip-visible modifier or unresolved rule is present"
                     )
 
     unresolved = tuple(context.unresolved_gear_effects) + tuple(result.unresolved)
@@ -284,7 +303,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Evaluate one canonical skill entity against a real saved build "
-            "through the Phase 2 character-sheet pipeline."
+            "through the saved-build character-sheet and component-effect pipeline."
         )
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
