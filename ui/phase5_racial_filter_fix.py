@@ -2,10 +2,11 @@ from __future__ import annotations
 
 """Fail-closed racial passive filtering for Phase 5 character progression.
 
-The imported skill rows use a generic ``Racial`` skill-line label, so the
-selected race cannot be inferred from ``skill_line`` alone. This patch keeps
-rank/max data database-backed while using a narrow passive-name crosswalk only
-to classify which race owns a generic racial passive.
+Imported ESO skill rows are not consistent enough to trust ``skill_line`` as
+the sole race discriminator. This patch therefore treats a known racial
+passive name as authoritative race identity, regardless of how the importer
+labels its skill line. Rank/max data remain database-backed; the crosswalk is
+used only to decide whether a passive belongs to the selected character race.
 """
 
 from collections import defaultdict
@@ -103,26 +104,32 @@ def _filtered_passive_rows_by_line(self) -> dict[str, list[dict]]:
         if phase5._int(skill.get("is_player")) != 1 or phase5._int(skill.get("is_passive")) != 1:
             continue
 
-        owner = phase5._clean(skill.get("class_type"))
-        if owner and owner.casefold() != self.eso_class.casefold():
-            continue
-
         line = phase5._clean(skill.get("skill_line"))
         name = phase5._clean(skill.get("name"))
         if not line or not name:
             continue
 
-        display_line = line
-        if _generic_racial_line(line):
-            passive_race = _generic_racial_passive_race(name)
-            # Generic Racial rows without a known race identity fail closed.
-            if passive_race is None or passive_race != selected_race:
+        passive_race = _generic_racial_passive_race(name)
+        if passive_race is not None:
+            if passive_race != selected_race:
                 continue
             display_line = f"{self.race} Skills"
         else:
-            line_race = phase5._racial_skill_line_race(line, self._race_skill_lines)
-            if line_race is not None and _normalize_race(line_race) != selected_race:
+            owner = phase5._clean(skill.get("class_type"))
+            if owner and owner.casefold() != self.eso_class.casefold():
                 continue
+
+            line_race = phase5._racial_skill_line_race(line, self._race_skill_lines)
+            if line_race is not None:
+                if _normalize_race(line_race) != selected_race:
+                    continue
+                display_line = f"{self.race} Skills"
+            elif _generic_racial_line(line):
+                # A racial-looking row whose passive is not in the verified
+                # crosswalk has no safe owner identity, so fail closed.
+                continue
+            else:
+                display_line = line
 
         line_key = display_line.casefold()
         key = (line_key, name.casefold())
