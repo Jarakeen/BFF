@@ -24,7 +24,7 @@ def test_under_health_wording_is_supported():
     conditions = extract_explicit_component_conditions(
         skill_rank_id=11,
         coefficient_number=1,
-        component_text="This attack is empowered while the target is under 50% Health.",
+        component_text="Deal $1 Magic Damage while the target is under 50% Health.",
     )
 
     assert len(conditions) == 1
