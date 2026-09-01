@@ -17,6 +17,7 @@ def _catalog(tmp_path):
                     "eso_class": "Warden",
                     "owned_skill_lines": [],
                     "passive_ranks": {},
+                    "passive_cp_points": {},
                 }
             ],
             "builds": [
@@ -67,7 +68,7 @@ def test_progression_persists_on_character_not_builds(tmp_path):
     assert "passive_cp_points" not in data["builds"][1]
 
 
-def test_progression_zero_values_are_not_treated_as_purchased(tmp_path):
+def test_progression_preserves_explicit_zero_values(tmp_path):
     catalog = _catalog(tmp_path)
     service = CharacterProgressionService(catalog)
 
@@ -81,8 +82,8 @@ def test_progression_zero_values_are_not_treated_as_purchased(tmp_path):
     saved = service.get("char-1")
     assert saved is not None
     assert saved.owned_skill_lines == ("Light Armor",)
-    assert saved.passive_ranks == {"Flourish": 2}
-    assert saved.passive_cp_points == {"Boundless Vitality": 50}
+    assert saved.passive_ranks == {"Medicinal Use": 0, "Flourish": 2}
+    assert saved.passive_cp_points == {"Fortification": 0, "Boundless Vitality": 50}
 
 
 def test_progression_finds_character_by_account_and_name(tmp_path):
