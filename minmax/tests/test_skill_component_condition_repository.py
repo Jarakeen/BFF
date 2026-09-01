@@ -59,3 +59,29 @@ def test_repository_fails_closed_when_required_tables_are_missing(tmp_path):
     sqlite3.connect(path).close()
 
     assert SkillComponentConditionRepository(path).resolve(10, 1) == ()
+
+
+def test_repository_prefers_explicit_second_hit_over_nearby_third_placeholder(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (ability_id INTEGER PRIMARY KEY, coef_description TEXT);
+        INSERT INTO skill_rank VALUES (20, 200);
+        INSERT INTO ability VALUES (
+            200,
+            'Deal $1 Physical Damage and $2 Bleed Damage. The second hit deals up to 125% more damage to enemies with less than 25% Health and heals you for $3 Health.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    repository = SkillComponentConditionRepository(path)
+    second = repository.resolve(20, 2)
+    third = repository.resolve(20, 3)
+
+    assert len(second) == 1
+    assert second[0].threshold == 0.25
+    assert third == ()
