@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from enum import Enum
 
 
+_ANY_PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
+
+
 class SkillComponentConditionType(str, Enum):
     TARGET_HEALTH_BELOW_PERCENT = "target_health_below_percent"
 
@@ -42,24 +45,59 @@ _HEALTH_THRESHOLD_RE = re.compile(
 )
 
 
+def _component_segment(text: str, coefficient_number: int) -> str:
+    """Return the forward clause owned by ``$coefficient_number``.
+
+    Single-placeholder fragments keep their full local sentence so conditions
+    written before the scalar remain available. Multi-placeholder fragments are
+    stricter: each component owns wording from its own placeholder forward until
+    the next placeholder, preventing one coefficient from inheriting another
+    component's condition.
+    """
+
+    placeholders = list(_ANY_PLACEHOLDER_RE.finditer(text))
+    matches = [
+        (index, match)
+        for index, match in enumerate(placeholders)
+        if int(match.group(1)) == int(coefficient_number)
+    ]
+    if not matches:
+        return ""
+    if len(placeholders) == 1:
+        return text
+
+    current_index, current = matches[0]
+    start = current.start()
+    end = (
+        len(text)
+        if current_index + 1 >= len(placeholders)
+        else placeholders[current_index + 1].start()
+    )
+    return text[start:end].strip()
+
+
 def extract_explicit_component_conditions(
     *,
     skill_rank_id: int,
     coefficient_number: int,
     component_text: str,
 ) -> tuple[SkillComponentCondition, ...]:
-    """Extract only explicit, normalized component-local conditions.
+    """Extract only explicit, normalized coefficient-owned conditions.
 
-    The caller must supply text already scoped to the coefficient component.
-    This function deliberately does not interpret generic words such as ``if``
-    or ``after`` without a supported mechanical condition pattern.
+    Generic words such as ``if`` or ``after`` are not interpreted without a
+    supported mechanical condition pattern. In multi-placeholder source text,
+    condition ownership is scoped to the current coefficient's forward clause.
     """
 
     text = " ".join(str(component_text or "").split())
     if not text:
         return ()
 
-    match = _HEALTH_THRESHOLD_RE.search(text)
+    segment = _component_segment(text, int(coefficient_number))
+    if not segment:
+        return ()
+
+    match = _HEALTH_THRESHOLD_RE.search(segment)
     if match is None:
         return ()
 
