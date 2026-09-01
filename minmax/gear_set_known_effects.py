@@ -45,23 +45,98 @@ class GearSetKnownEffect:
 
 MASTER_ARCHITECT_SET_ID = 332
 MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID = 1493
+MAGMA_INCARNATE_SET_ID = 609
+MAGMA_INCARNATE_TWO_PIECE_BONUS_ID = 1680
+SPAULDER_OF_RUIN_SET_ID = 627
+SPAULDER_OF_RUIN_ONE_PIECE_BONUS_ID = 1602
+SERPENTS_DISDAIN_SET_ID = 641
+SERPENTS_DISDAIN_FIVE_PIECE_BONUS_ID = 1700
 
-_KNOWN_EFFECTS: dict[int, GearSetKnownEffect] = {
-    MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID: GearSetKnownEffect(
-        bonus_id=MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID,
-        set_id=MASTER_ARCHITECT_SET_ID,
-        piece_count=5,
-        name="major_slayer",
-        magnitude=10.0,
-        duration=1.0,
-        target_count=5,
-        range=28.0,
-        scaling="1 second per 10 Ultimate spent",
-        trigger="ultimate_activation_in_combat",
-        target_type=SupportTargetType.GROUP,
-        category=SupportEffectCategory.BUFF,
-        stacking=StackingBehavior.UNIQUE,
-        exclusivity_group="major_slayer",
+
+_KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
+    MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID: (
+        GearSetKnownEffect(
+            bonus_id=MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID,
+            set_id=MASTER_ARCHITECT_SET_ID,
+            piece_count=5,
+            name="major_slayer",
+            magnitude=10.0,
+            duration=1.0,
+            target_count=5,
+            range=28.0,
+            scaling="1 second per 10 Ultimate spent",
+            trigger="ultimate_activation_in_combat",
+            target_type=SupportTargetType.GROUP,
+            category=SupportEffectCategory.BUFF,
+            stacking=StackingBehavior.UNIQUE,
+            exclusivity_group="major_slayer",
+        ),
+    ),
+    MAGMA_INCARNATE_TWO_PIECE_BONUS_ID: (
+        GearSetKnownEffect(
+            bonus_id=MAGMA_INCARNATE_TWO_PIECE_BONUS_ID,
+            set_id=MAGMA_INCARNATE_SET_ID,
+            piece_count=2,
+            name="minor_courage",
+            magnitude=215.0,
+            duration=10.0,
+            target_count=4,
+            range=28.0,
+            scaling="initial target plus up to 3 nearby group-member bounces within 8 meters",
+            trigger="single_target_heal_self_or_group_member",
+            target_type=SupportTargetType.GROUP,
+            category=SupportEffectCategory.BUFF,
+            stacking=StackingBehavior.UNIQUE,
+            exclusivity_group="minor_courage",
+        ),
+        GearSetKnownEffect(
+            bonus_id=MAGMA_INCARNATE_TWO_PIECE_BONUS_ID,
+            set_id=MAGMA_INCARNATE_SET_ID,
+            piece_count=2,
+            name="minor_resolve",
+            magnitude=2974.0,
+            duration=10.0,
+            target_count=4,
+            range=28.0,
+            scaling="initial target plus up to 3 nearby group-member bounces within 8 meters",
+            trigger="single_target_heal_self_or_group_member",
+            target_type=SupportTargetType.GROUP,
+            category=SupportEffectCategory.BUFF,
+            stacking=StackingBehavior.UNIQUE,
+            exclusivity_group="minor_resolve",
+        ),
+    ),
+    SPAULDER_OF_RUIN_ONE_PIECE_BONUS_ID: (
+        GearSetKnownEffect(
+            bonus_id=SPAULDER_OF_RUIN_ONE_PIECE_BONUS_ID,
+            set_id=SPAULDER_OF_RUIN_SET_ID,
+            piece_count=1,
+            name="weapon_spell_damage",
+            magnitude=260.0,
+            target_count=6,
+            range=12.0,
+            condition="aura_of_pride_active",
+            trigger="crouch_or_prowl_toggle",
+            target_type=SupportTargetType.GROUP,
+            category=SupportEffectCategory.BUFF,
+            stacking=StackingBehavior.UNIQUE,
+            exclusivity_group="spauld er_of_ruin_aura_of_pride".replace(" ", ""),
+        ),
+    ),
+    SERPENTS_DISDAIN_FIVE_PIECE_BONUS_ID: (
+        GearSetKnownEffect(
+            bonus_id=SERPENTS_DISDAIN_FIVE_PIECE_BONUS_ID,
+            set_id=SERPENTS_DISDAIN_SET_ID,
+            piece_count=5,
+            name="status_effect_duration_increase",
+            layer=EffectLayer.PASSIVE,
+            magnitude=16.0,
+            scaling="adds 16 seconds to Status Effects applied by the wearer",
+            target_type=SupportTargetType.SELF,
+            category=SupportEffectCategory.OTHER,
+            stacking=StackingBehavior.UNIQUE,
+            exclusivity_group="serpents_disdain_status_duration",
+        ),
     ),
 }
 
@@ -120,7 +195,36 @@ _KNOWN_EFFECTS_BY_SET: tuple[GearSetKnownEffect, ...] = (
 
 def known_effect_for_bonus(bonus_id: int) -> GearSetKnownEffect | None:
     """Legacy exact-bonus-id lookup retained for existing callers/tests."""
-    return _KNOWN_EFFECTS.get(bonus_id)
+    matches = _KNOWN_EFFECTS.get(bonus_id, ())
+    return matches[0] if matches else None
+
+
+def known_effects_for_bonus_row(
+    bonus_id: int,
+    set_id: int,
+    set_name: str,
+    piece_count: int,
+) -> tuple[GearSetKnownEffect, ...]:
+    """Resolve every verified effect for one bonus row without tooltip guessing."""
+    exact = _KNOWN_EFFECTS.get(bonus_id, ())
+    if exact:
+        if all(
+            effect.set_id == set_id and effect.piece_count == piece_count
+            for effect in exact
+        ):
+            return exact
+        return ()
+
+    normalized_name = set_name.strip().casefold()
+    return tuple(
+        known
+        for known in _KNOWN_EFFECTS_BY_SET
+        if (
+            known.set_name is not None
+            and known.set_name.strip().casefold() == normalized_name
+            and known.piece_count == piece_count
+        )
+    )
 
 
 def known_effect_for_bonus_row(
@@ -129,20 +233,11 @@ def known_effect_for_bonus_row(
     set_name: str,
     piece_count: int,
 ) -> GearSetKnownEffect | None:
-    """Resolve a verified mapping without guessing from tooltip prose."""
-    exact = _KNOWN_EFFECTS.get(bonus_id)
-    if exact is not None:
-        if exact.set_id == set_id and exact.piece_count == piece_count:
-            return exact
-        return None
-
-    normalized_name = set_name.strip().casefold()
-    for known in _KNOWN_EFFECTS_BY_SET:
-        if (
-            known.set_name is not None
-            and known.set_name.strip().casefold() == normalized_name
-            and known.piece_count == piece_count
-        ):
-            return known
-
-    return None
+    """Backward-compatible singular lookup for older callers."""
+    matches = known_effects_for_bonus_row(
+        bonus_id,
+        set_id,
+        set_name,
+        piece_count,
+    )
+    return matches[0] if matches else None
