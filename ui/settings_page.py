@@ -49,6 +49,7 @@ class SettingsPage(QWidget):
         ("♢", "Notifications"),
         ("⌁", "Appearance"),
         ("⚒", "Advanced"),
+        ("ⓘ", "About & Credits"),
     )
 
     def __init__(self, parent=None):
@@ -101,6 +102,7 @@ class SettingsPage(QWidget):
             self._notifications_page,
             self._appearance_page,
             self._advanced_page,
+            self._about_page,
         )
 
         for index, ((icon, label), builder) in enumerate(zip(self.SECTIONS, page_builders)):
@@ -152,6 +154,14 @@ class SettingsPage(QWidget):
         layout.addWidget(edit, 1)
         layout.addWidget(button)
         return widget
+
+    @staticmethod
+    def _muted_note(text: str) -> QLabel:
+        note = QLabel(text)
+        note.setWordWrap(True)
+        note.setProperty("muted", True)
+        note.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        return note
 
     def _general_page(self) -> QWidget:
         page, layout = self._page_shell("General Settings")
@@ -256,6 +266,54 @@ class SettingsPage(QWidget):
         form.addRow("Achievement Data", self._browse_row(self.achievement_data, self.achievement_data_browse))
         form.addRow("Achievement Progress", self._browse_row(self.achievement_progress, self.progress_browse))
         layout.addLayout(form)
+        return page
+
+    def _about_page(self) -> QWidget:
+        page, layout = self._page_shell("About & Credits")
+
+        identity = FoundryCard("BLACK FEATHER FOUNDRY")
+        identity.addWidget(
+            self._muted_note(
+                "Foundry Dock is an independent companion application built for personal ESO "
+                "research, planning, recordkeeping, and broadcast workflows."
+            )
+        )
+        copyright_label = QLabel("© 2026 Jarakeen. All rights reserved.")
+        copyright_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        identity.addWidget(copyright_label)
+        layout.addWidget(identity)
+
+        independence = FoundryCard("INDEPENDENT PROJECT")
+        independence.addWidget(
+            self._muted_note(
+                "Black Feather Foundry is not affiliated with, endorsed by, sponsored by, or "
+                "approved by ZeniMax Media Inc. or Bethesda Softworks. The Elder Scrolls Online "
+                "and related names, marks, characters, artwork, and game content remain the "
+                "property of their respective owners."
+            )
+        )
+        layout.addWidget(independence)
+
+        sources = FoundryCard("DATA & SOURCES")
+        sources.addWidget(
+            self._muted_note(
+                "Game facts and third-party reference material retain their original ownership "
+                "and licensing. Foundry Dock records source provenance where available and does "
+                "not claim ownership of ESO game data or third-party authored material."
+            )
+        )
+        sources.addWidget(
+            self._muted_note(
+                "Original application code, interface design, documentation, workflows, and "
+                "original written material are part of the Black Feather Foundry project."
+            )
+        )
+        layout.addWidget(sources)
+
+        closing = QLabel("Leave better records.")
+        closing.setProperty("muted", True)
+        closing.setAlignment(Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(closing)
         return page
 
     def _integration_status_card(self) -> FoundryCard:
