@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from minmax.champion_point_skill_repository import ChampionPointSkillRepository
 from models.build_model import PlayerBuild
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
@@ -54,10 +55,10 @@ def _stage_count(points: int) -> int:
     return sum(1 for threshold in (10, 20, 30, 40, 50) if points >= threshold)
 
 
-def _skill_rank_id(db: sqlite3.Connection, name: str) -> int | None:
+def _skill_identity(db: sqlite3.Connection, name: str) -> tuple[int, int] | None:
     row = db.execute(
         """
-        SELECT sr.id
+        SELECT sr.id, sr.skill_id
         FROM ability a
         JOIN skill_rank sr ON sr.ability_id = a.ability_id
         WHERE LOWER(TRIM(a.name)) = LOWER(TRIM(?))
@@ -66,7 +67,7 @@ def _skill_rank_id(db: sqlite3.Connection, name: str) -> int | None:
         """,
         (name,),
     ).fetchone()
-    return int(row[0]) if row is not None else None
+    return (int(row[0]), int(row[1])) if row is not None else None
 
 
 def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
@@ -101,6 +102,14 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
     print(f"  Soothing Tide: {cp.get('Soothing Tide', 0)} points -> +{soothing}% AoE Healing Done")
     print(f"  Rejuvenator:   {cp.get('Rejuvenator', 0)} points -> +{rejuvenator} healing-ability Weapon/Spell Damage")
 
+    relationship_repository = ChampionPointSkillRepository(database_path)
+    if not relationship_repository.available():
+        print()
+        print("Explicit CP -> skill applicability:")
+        print("  champion_point_skill table unavailable")
+        print("  No CP -> skill relationships will be inferred from component semantics.")
+        return 4
+
     skill_names = [
         str(name).strip()
         for name in tuple(saved.FrontBarSkills) + tuple(saved.BackBarSkills)
@@ -116,13 +125,14 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
         }
         if "skill_component_classification" not in tables:
             print("  skill_component_classification table unavailable")
-            return 4
+            return 5
 
         found = 0
         for name in skill_names:
-            skill_rank_id = _skill_rank_id(db, name)
-            if skill_rank_id is None:
+            identity = _skill_identity(db, name)
+            if identity is None:
                 continue
+            skill_rank_id, skill_id = identity
             rows = db.execute(
                 """
                 SELECT coefficient_number, effect_kind, is_dot, is_aoe, can_crit,
@@ -136,29 +146,70 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
             heal_rows = [row for row in rows if str(row[1] or "").strip().casefold() == "heal"]
             if not heal_rows:
                 continue
+
+            relationships = relationship_repository.get_for_skill_id(skill_id)
+            explicit = {
+                relationship.champion_point_name.casefold(): relationship
+                for relationship in relationships
+            }
             found += 1
             print()
-            print(f"  {name} | skill_rank_id={skill_rank_id}")
+            print(f"  {name} | skill_id={skill_id} | skill_rank_id={skill_rank_id}")
+            relevant_relationships = [
+                relationship
+                for relationship in relationships
+                if relationship.champion_point_name in _CP_NAMES
+            ]
+            if relevant_relationships:
+                print("    ESO-Hub explicit CP links:")
+                for relationship in relevant_relationships:
+                    condition = f" | condition={relationship.condition}" if relationship.condition else ""
+                    source = f" | source={relationship.source}" if relationship.source else ""
+                    print(
+                        f"      - {relationship.champion_point_name}{condition}{source}"
+                    )
+            else:
+                print("    ESO-Hub explicit CP links: none of the audited healing CPs")
+
             for coefficient_number, _kind, is_dot, is_aoe, can_crit, source, confidence in heal_rows:
                 hot = None if is_dot is None else bool(is_dot)
                 aoe = None if is_aoe is None else bool(is_aoe)
-                applies: list[str] = ["Rejuvenator"] if rejuvenator else []
-                if hot is True and swift:
+                applies: list[str] = []
+
+                has_rejuvenator = "rejuvenator" in explicit
+                has_swift = "swift renewal" in explicit
+                has_soothing = "soothing tide" in explicit
+
+                if rejuvenator and has_rejuvenator:
+                    applies.append("Rejuvenator")
+                if swift and has_swift and hot is True:
                     applies.append("Swift Renewal")
-                if aoe is True and soothing:
+                if soothing and has_soothing and aoe is True:
                     applies.append("Soothing Tide")
-                if hot is None:
+
+                if swift and has_swift and hot is None:
                     applies.append("Swift Renewal unresolved: periodicity unknown")
-                if aoe is None:
+                if soothing and has_soothing and aoe is None:
                     applies.append("Soothing Tide unresolved: target shape unknown")
+
+                rejected: list[str] = []
+                if rejuvenator and not has_rejuvenator:
+                    rejected.append("Rejuvenator: no explicit ESO-Hub link")
+                if swift and not has_swift:
+                    rejected.append("Swift Renewal: no explicit ESO-Hub link")
+                if soothing and not has_soothing:
+                    rejected.append("Soothing Tide: no explicit ESO-Hub link")
+
                 print(
                     "    - coef #{coef} | periodicity={periodicity} | target_shape={shape} | "
-                    "can_crit={crit} | applies={applies} | source={source} | confidence={confidence}".format(
+                    "can_crit={crit} | applies={applies} | rejected={rejected} | "
+                    "component_source={source} | confidence={confidence}".format(
                         coef=coefficient_number,
                         periodicity="hot" if hot is True else "direct" if hot is False else "unknown",
                         shape="aoe" if aoe is True else "single_target" if aoe is False else "unknown",
                         crit="yes" if can_crit else "no" if can_crit == 0 else "unknown",
                         applies=", ".join(applies) or "none",
+                        rejected=", ".join(rejected) or "none",
                         source=source or "(none)",
                         confidence=confidence if confidence is not None else "(none)",
                     )
@@ -169,16 +220,17 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
 
     print()
     print("Interpretation boundary:")
-    print("  - Rejuvenator applies only to healing ability calculations, not the standing Weapon/Spell Damage sheet stat.")
-    print("  - Swift Renewal requires a classified healing-over-time component.")
-    print("  - Soothing Tide requires a classified AoE healing component.")
+    print("  - champion_point_skill is the hard CP -> skill applicability gate.")
+    print("  - skill_component_classification may narrow an explicit relationship to qualifying components.")
+    print("  - Component semantics never invent a CP -> skill relationship absent from the ESO-Hub harvest.")
+    print("  - Rejuvenator changes healing-ability coefficient power, not standing Weapon/Spell Damage.")
     print("  - This audit does not alter calculations or database rows.")
     return 0
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Audit saved healing CP applicability against persisted Phase 3 skill-component semantics."
+        description="Audit saved healing CP applicability through explicit ESO-Hub skill links and Phase 3 component semantics."
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
