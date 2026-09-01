@@ -20,10 +20,12 @@ from .passive_math import (
 
 
 class ArmorPassiveInputResolver:
-    """Apply verified standing armor passives to shared inputs.
+    """Apply verified standing armor effects to shared inputs.
 
-    Ownership is explicit. Equipped armor weight alone does not prove the
-    character has purchased/maxed the passive ranks.
+    The generic armor block bonuses/penalties follow equipped armor. Purchased
+    skill passives are gated individually when production progression supplies
+    explicit ownership. Legacy line-level booleans remain as compatibility
+    defaults for direct callers.
     """
 
     @staticmethod
@@ -47,11 +49,20 @@ class ArmorPassiveInputResolver:
         light_armor_passives_owned: bool = False,
         medium_armor_passives_owned: bool = False,
         heavy_armor_passives_owned: bool = False,
+        evocation_owned: bool | None = None,
+        concentration_owned: bool | None = None,
+        spell_warding_owned: bool | None = None,
+        prodigy_owned: bool | None = None,
+        wind_walker_owned: bool | None = None,
+        agility_owned: bool | None = None,
+        dexterity_owned: bool | None = None,
     ) -> GearCalculationInputs:
         light_count, medium_count, heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
 
-        if light_armor_passives_owned and light_count:
+        # Armor-category bonuses/penalties are inherent to wearing that armor,
+        # not proof that any purchasable passive was bought.
+        if light_count:
             block_cost = replace(
                 result.core.block_cost,
                 sequential_modifiers=result.core.block_cost.sequential_modifiers
@@ -60,6 +71,33 @@ class ArmorPassiveInputResolver:
             result = replace(result, core=replace(result.core, block_cost=block_cost))
             applied += 1
 
+        if medium_count:
+            block_cost = replace(
+                result.core.block_cost,
+                sequential_modifiers=result.core.block_cost.sequential_modifiers
+                + (BlockCostModifier("Medium Armor: Block Cost Bonus", -0.03 * medium_count),),
+            )
+            result = replace(result, core=replace(result.core, block_cost=block_cost))
+            applied += 1
+
+        if heavy_count:
+            mitigation = replace(
+                result.core.block_mitigation,
+                direct_points=result.core.block_mitigation.direct_points
+                + (("Heavy Armor: Block Mitigation Bonus", 0.01 * heavy_count),),
+            )
+            result = replace(result, core=replace(result.core, block_mitigation=mitigation))
+            applied += 1
+
+        evocation = light_armor_passives_owned if evocation_owned is None else evocation_owned
+        concentration = light_armor_passives_owned if concentration_owned is None else concentration_owned
+        spell_warding = light_armor_passives_owned if spell_warding_owned is None else spell_warding_owned
+        prodigy = light_armor_passives_owned if prodigy_owned is None else prodigy_owned
+        wind_walker = medium_armor_passives_owned if wind_walker_owned is None else wind_walker_owned
+        agility = medium_armor_passives_owned if agility_owned is None else agility_owned
+        dexterity = medium_armor_passives_owned if dexterity_owned is None else dexterity_owned
+
+        if evocation and light_count:
             magicka_recovery = light_armor_magicka_recovery_percent(light_count)
             if magicka_recovery:
                 source = PercentContribution("Light Armor: Evocation", magicka_recovery)
@@ -72,6 +110,7 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 1
 
+        if concentration and light_count:
             penetration = light_armor_penetration(light_count)
             if penetration:
                 contribution = StatContribution("Light Armor: Concentration", penetration)
@@ -89,6 +128,7 @@ class ArmorPassiveInputResolver:
                 result = replace(result, core=core)
                 applied += 2
 
+        if spell_warding and light_count:
             spell_resistance = light_armor_spell_resistance(light_count)
             if spell_resistance:
                 contribution = StatContribution("Light Armor: Spell Warding", spell_resistance)
@@ -104,6 +144,7 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 1
 
+        if prodigy and light_count:
             critical_rating = light_armor_critical_rating(light_count)
             if critical_rating:
                 critical_ratio = GearStatInputResolver.critical_rating_to_ratio(critical_rating)
@@ -124,15 +165,7 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 2
 
-        if medium_armor_passives_owned and medium_count:
-            block_cost = replace(
-                result.core.block_cost,
-                sequential_modifiers=result.core.block_cost.sequential_modifiers
-                + (BlockCostModifier("Medium Armor: Block Cost Bonus", -0.03 * medium_count),),
-            )
-            result = replace(result, core=replace(result.core, block_cost=block_cost))
-            applied += 1
-
+        if wind_walker and medium_count:
             stamina_recovery = medium_armor_stamina_recovery_percent(medium_count)
             if stamina_recovery:
                 source = PercentContribution("Medium Armor: Wind Walker", stamina_recovery)
@@ -145,6 +178,7 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 1
 
+        if agility and medium_count:
             weapon_spell_damage = medium_armor_weapon_spell_damage_percent(medium_count)
             if weapon_spell_damage:
                 contribution = StatContribution("Medium Armor: Agility", weapon_spell_damage)
@@ -164,6 +198,7 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 2
 
+        if dexterity and medium_count:
             critical = medium_armor_crit_damage_healing_percent(medium_count)
             if critical:
                 damage_contribution = StatContribution("Medium Armor: Dexterity (Critical Damage)", critical)
@@ -184,16 +219,4 @@ class ArmorPassiveInputResolver:
                 )
                 applied += 2
 
-        if heavy_armor_passives_owned and heavy_count:
-            mitigation = replace(
-                result.core.block_mitigation,
-                direct_points=result.core.block_mitigation.direct_points
-                + (("Heavy Armor: Block Mitigation Bonus", 0.01 * heavy_count),),
-            )
-            result = replace(result, core=replace(result.core, block_mitigation=mitigation))
-            applied += 1
-
-        return replace(
-            result,
-            applied_effect_count=applied,
-        )
+        return replace(result, applied_effect_count=applied)
