@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 import sqlite3
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
@@ -220,6 +220,61 @@ CREATE TABLE IF NOT EXISTS content_section (
     UNIQUE(content_id, section_name)
 );
 
+-- Schema v3: reviewed canonical facts are kept separate from their supporting
+-- evidence so one fact can retain multiple independent sources losslessly.
+CREATE TABLE IF NOT EXISTS encounter_canonical_fact (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    encounter_id TEXT NOT NULL,
+    canonical_kind TEXT NOT NULL,
+    fact_type TEXT NOT NULL,
+    fact_key TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    review_status TEXT NOT NULL DEFAULT 'reviewed',
+    valid_from_update TEXT DEFAULT '',
+    valid_to_update TEXT DEFAULT '',
+    valid_from_patch TEXT DEFAULT '',
+    valid_to_patch TEXT DEFAULT '',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (encounter_id) REFERENCES encounter(id) ON DELETE CASCADE,
+    UNIQUE(encounter_id, fact_type, fact_key, valid_from_update, valid_from_patch)
+);
+
+CREATE INDEX IF NOT EXISTS idx_encounter_canonical_fact_encounter
+    ON encounter_canonical_fact(encounter_id);
+CREATE INDEX IF NOT EXISTS idx_encounter_canonical_fact_kind
+    ON encounter_canonical_fact(canonical_kind);
+
+CREATE TABLE IF NOT EXISTS encounter_fact_evidence (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    canonical_fact_id INTEGER NOT NULL,
+    source_type TEXT NOT NULL,
+    source_name TEXT NOT NULL,
+    source_locator TEXT DEFAULT '',
+    source_revision TEXT DEFAULT '',
+    game_update TEXT DEFAULT '',
+    patch_version TEXT DEFAULT '',
+    confidence TEXT NOT NULL DEFAULT 'medium',
+    source_value_json TEXT NOT NULL,
+    notes TEXT DEFAULT '',
+    retrieved_at TEXT DEFAULT '',
+    FOREIGN KEY (canonical_fact_id) REFERENCES encounter_canonical_fact(id) ON DELETE CASCADE,
+    UNIQUE(
+        canonical_fact_id,
+        source_type,
+        source_name,
+        source_locator,
+        source_revision,
+        game_update,
+        patch_version
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_encounter_fact_evidence_fact
+    ON encounter_fact_evidence(canonical_fact_id);
+CREATE INDEX IF NOT EXISTS idx_encounter_fact_evidence_source
+    ON encounter_fact_evidence(source_type, source_name);
+
 CREATE TABLE IF NOT EXISTS encounter_schema_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -228,7 +283,7 @@ CREATE TABLE IF NOT EXISTS encounter_schema_meta (
 
 
 def ensure_encounter_schema(connection: sqlite3.Connection) -> None:
-    """Create the encounter layer without deleting or replacing existing data."""
+    """Create or extend the encounter layer without deleting or replacing data."""
     connection.execute("PRAGMA foreign_keys = ON")
     connection.executescript(SCHEMA_SQL)
     connection.execute(
@@ -249,8 +304,8 @@ def ensure_encounter_schema_file(database: Path) -> None:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Create the FoundryDock encounter schema")
+    parser = argparse.ArgumentParser(description="Create or extend the FoundryDock encounter schema")
     parser.add_argument("database", type=Path)
     args = parser.parse_args()
     ensure_encounter_schema_file(args.database)
-    print(f"Encounter schema ready: {args.database}")
+    print(f"Encounter schema ready: {args.database} (v{SCHEMA_VERSION})")
