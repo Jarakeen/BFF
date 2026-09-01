@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.character_progression import CharacterProgression
+from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
+from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
 
@@ -37,6 +39,15 @@ def test_intentional_potion_static_warning_is_not_a_genuine_gap():
     assert boundaries == [
         "Potion selected; activation/uptime is not part of static build state: spell power"
     ]
+
+
+def test_service_defaults_to_phase5_canonical_context_factory(tmp_path):
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+    )
+
+    assert isinstance(service.context_factory, Phase5BuildCalculationContextFactory)
 
 
 class _Progression:
