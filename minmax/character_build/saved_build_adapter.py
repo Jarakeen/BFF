@@ -501,7 +501,6 @@ class SavedBuildCharacterAdapter:
             Weapon(
                 weapon_type=weapon_type,
                 trait=_text(entry.Trait) or None,
-                enchantment_id=_stable_skill_id(enchantment_label) if enchantment_label else None,
                 enchantment_item_id=enchantment_item_id,
                 set_id=set_id,
                 quality=_text(entry.Quality) or None,
