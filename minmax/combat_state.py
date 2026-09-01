@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .combat_effect_semantics import GameUpdate, normalize_game_update
 from .named_combat_buffs import canonical_buff_name
 
 
@@ -13,12 +14,18 @@ class CombatState:
     potions, or Champion Points. Callers opt into combat-state effects
     deliberately. Named buffs are canonicalized and deduplicated at the state
     boundary so downstream resolvers do not need to guess aliases.
+
+    ``game_update`` versions the meaning of those named effects. U50 remains the
+    default until Update 51 is live; callers may explicitly evaluate U51/PTS
+    semantics without rewriting historical source data.
     """
 
     in_combat: bool = False
     active_buffs: tuple[str, ...] = ()
+    game_update: GameUpdate | str = GameUpdate.U50
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "game_update", normalize_game_update(self.game_update))
         seen: set[str] = set()
         normalized: list[str] = []
         for value in self.active_buffs:
