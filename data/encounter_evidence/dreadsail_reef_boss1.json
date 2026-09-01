@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "content_id": "dreadsail_reef",
+  "encounter_id": "lylanar_turlassil",
+  "encounter_name": "Lylanar and Turlassil",
+  "evidence": [
+    {
+      "fact_type": "phase",
+      "fact_key": "phase_1",
+      "value": {"label": "Hounds", "order": 1},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 1 - Hounds",
+      "confidence": "high",
+      "notes": "User-supplied guide copy; veteran encounter structure. Guide explicitly states it does not document hard mode mechanics."
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "phase_2",
+      "value": {"label": "The First Brother", "order": 2},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 2 - The First Brother",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "phase_3",
+      "value": {"label": "The Second Brother", "order": 3},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 3 - The Second Brother",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase",
+      "fact_key": "phase_4",
+      "value": {"label": "Brothers Reunited", "order": 4, "both_brothers_active": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Brothers Reunited",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "both_brothers_active",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Lylanar dialogue",
+      "source_locator": "When both brothers are out in the arena",
+      "source_revision": "3282525",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "both_brothers_active",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Turlassil dialogue",
+      "source_locator": "When both brothers are out in the arena",
+      "source_revision": "3282527",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "first_brother_teleport",
+      "value": {"threshold": "65%", "approximate": false},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Teleport Phase",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "second_brother_teleport",
+      "value": {"threshold": "70%", "approximate": false},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 3 / Teleport Phase",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition_state",
+      "fact_key": "teleport_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Lylanar dialogue",
+      "source_locator": "Swapping out with Turlassil / Teleport",
+      "source_revision": "3282525",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition_state",
+      "fact_key": "teleport_exists",
+      "value": true,
+      "source_type": "uesp",
+      "source_name": "UESP Online:Turlassil dialogue",
+      "source_locator": "Swapping out with Lylanar / Teleport",
+      "source_revision": "3282527",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "destructive_ember",
+      "value": {"name": "Destructive Ember", "ability_id": 166210, "element": "fire", "role": "dome"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:dome",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "piercing_hailstone",
+      "value": {"name": "Piercing Hailstone", "ability_id": 166192, "element": "ice", "role": "dome"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:dome",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "imminent_blister",
+      "value": {"name": "Imminent Blister", "ability_id": 166522},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:imminent",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "imminent_chill",
+      "value": {"name": "Imminent Chill", "ability_id": 166527},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:imminent",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "blistering_fragility",
+      "value": {"name": "Blistering Fragility", "ability_id": 166525},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:fragility",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "chilling_fragility",
+      "value": {"name": "Chilling Fragility", "ability_id": 166529},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:fragility",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "scalding_swell",
+      "value": {"name": "Scalding Swell", "ability_id": 169587, "element": "fire"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:waves",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "biting_billow",
+      "value": {"name": "Biting Billow", "ability_id": 169594, "element": "ice"},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:waves",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "summon_iron_atronach",
+      "value": {"name": "Summon Iron Atronach", "begin_ability_id": 167763, "effect_ability_id": 168713},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:summon_atroBegin/summon_atroEffect",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "summon_frost_atronach",
+      "value": {"name": "Summon Frost Atronach", "begin_ability_id": 167900, "effect_ability_id": 168722},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:summon_atroBegin/summon_atroEffect",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "charred_constriction",
+      "value": {"name": "Charred Constriction", "cast_ability_id": 167466, "effect_ability_id": 167491},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:rescueCast/rescueEffect",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "frigidarium",
+      "value": {"name": "Frigidarium", "cast_ability_id": 167545, "effect_ability_id": 167563},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:rescueCast/rescueEffect",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "firebrand",
+      "value": {"name": "Firebrand", "ability_id": 166358},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:brands",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic",
+      "fact_key": "frostbrand",
+      "value": {"name": "Frostbrand", "ability_id": 166445},
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:brands",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_mechanic",
+      "fact_key": "phase_4_brands",
+      "value": {"phase": "Brothers Reunited", "mechanics": ["Firebrand", "Frostbrand"]},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Brothers Reunited",
+      "confidence": "high"
+    }
+  ]
+}
