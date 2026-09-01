@@ -149,27 +149,42 @@ class SavedBuildCapabilityService:
         except sqlite3.Error:
             return None
 
-    def _partition_context_messages(self, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
+    @classmethod
+    def _partition_context_messages(cls, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
+        """Partition context messages without requiring repository access.
+
+        This remains callable at class level for compatibility with existing
+        callers/tests. Database-aware CP discipline classification is layered
+        on separately by ``_partition_context_messages_with_cp``.
+        """
         unresolved: list[str] = []
         boundaries: list[str] = []
         for message in messages:
-            if any(message.startswith(prefix) for prefix in self.INTENTIONAL_BOUNDARY_PREFIXES):
+            if any(message.startswith(prefix) for prefix in cls.INTENTIONAL_BOUNDARY_PREFIXES):
                 boundaries.append(message)
                 continue
             if message.endswith("requires status-effect chance model"):
                 boundaries.append(message)
                 continue
-            if message.startswith(self.CP_DYNAMIC_PREFIX):
-                cp_name = self._clean(message[len(self.CP_DYNAMIC_PREFIX):])
-                # The Thief/Craft tree is utility/economy/QoL progression, not
-                # a Phase 5 combat-capability failure. Keep it visible as an
-                # intentional non-combat boundary instead of inflating the
-                # genuine unresolved count.
-                if self._cp_discipline(cp_name) == 3:
-                    boundaries.append(f"Non-combat Champion Point outside combat capability audit: {cp_name}")
-                    continue
             unresolved.append(message)
         return unresolved, boundaries
+
+    def _partition_context_messages_with_cp(
+        self,
+        messages: tuple[str, ...],
+    ) -> tuple[list[str], list[str]]:
+        unresolved, boundaries = self._partition_context_messages(messages)
+        remaining: list[str] = []
+        for message in unresolved:
+            if message.startswith(self.CP_DYNAMIC_PREFIX):
+                cp_name = self._clean(message[len(self.CP_DYNAMIC_PREFIX):])
+                if self._cp_discipline(cp_name) == 3:
+                    boundaries.append(
+                        f"Non-combat Champion Point outside combat capability audit: {cp_name}"
+                    )
+                    continue
+            remaining.append(message)
+        return remaining, boundaries
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
         unresolved: list[str] = []
@@ -189,7 +204,7 @@ class SavedBuildCapabilityService:
                     progression=progression.progression,
                     active_bar=active_bar,
                 )
-                context_unresolved, context_boundaries = self._partition_context_messages(
+                context_unresolved, context_boundaries = self._partition_context_messages_with_cp(
                     context.unresolved_gear_effects
                 )
                 unresolved.extend(context_unresolved)
