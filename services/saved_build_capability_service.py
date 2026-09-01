@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
-from minmax.character_build.effect_layer import BarId
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
@@ -25,6 +24,7 @@ class SavedBuildCapabilityAudit:
     resolved_effects: tuple[EffectVariant, ...] = ()
     resolved_sources: tuple[str, ...] = ()
     conditional_sources: tuple[str, ...] = ()
+    boundaries: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -35,11 +35,8 @@ class SavedBuildCapabilityAudit:
 class SavedBuildCapabilityService:
     """Audit one real saved build through Phase 5 production resolvers.
 
-    This service intentionally reports evidence rather than inventing uptime.
-    Skill, gear-set and potion EffectVariants remain distinct. Character
-    progression is resolved from the canonical character catalog, while
-    static build math is evaluated on both bars so unresolved mechanics are
-    visible to callers.
+    This service reports evidence rather than inventing uptime. Intentional
+    static/temporal boundaries are separated from genuine unresolved evidence.
     """
 
     TWO_PIECE_WEAPON_MARKERS = (
@@ -49,6 +46,9 @@ class SavedBuildCapabilityService:
         "greatsword",
         "battle axe",
         "maul",
+    )
+    INTENTIONAL_BOUNDARY_PREFIXES = (
+        "Potion selected; activation/uptime is not part of static build state:",
     )
 
     def __init__(self, build_service: BuildService, database_path: str | Path) -> None:
@@ -135,8 +135,20 @@ class SavedBuildCapabilityService:
             variants.extend(self.gear_effects.resolve(gear_set.id, count))
         return variants
 
+    @classmethod
+    def _partition_context_messages(cls, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
+        unresolved: list[str] = []
+        boundaries: list[str] = []
+        for message in messages:
+            if any(message.startswith(prefix) for prefix in cls.INTENTIONAL_BOUNDARY_PREFIXES):
+                boundaries.append(message)
+            else:
+                unresolved.append(message)
+        return unresolved, boundaries
+
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
         unresolved: list[str] = []
+        boundaries: list[str] = []
         sources: list[str] = []
         effects: list[EffectVariant] = []
 
@@ -152,7 +164,11 @@ class SavedBuildCapabilityService:
                     progression=progression.progression,
                     active_bar=active_bar,
                 )
-                unresolved.extend(context.unresolved_gear_effects)
+                context_unresolved, context_boundaries = self._partition_context_messages(
+                    context.unresolved_gear_effects
+                )
+                unresolved.extend(context_unresolved)
+                boundaries.extend(context_boundaries)
             except Exception as exc:
                 unresolved.append(f"{active_bar} static build resolution failed: {exc}")
 
@@ -173,6 +189,9 @@ class SavedBuildCapabilityService:
             if potion.effects:
                 sources.append("potion:availability")
                 effects.extend(potion.effects)
+                boundaries.append(
+                    f"Potion availability resolved without standing uptime: {potion_name}"
+                )
 
         deduped: list[EffectVariant] = []
         seen: set[tuple[str, str, str, str]] = set()
@@ -191,7 +210,6 @@ class SavedBuildCapabilityService:
         conditional = tuple(
             sorted({effect.source for effect in deduped if effect.condition or effect.trigger})
         )
-        unresolved = list(dict.fromkeys(message for message in unresolved if message))
         return SavedBuildCapabilityAudit(
             character_name=build.Name,
             build_name=build.BuildName,
@@ -199,7 +217,8 @@ class SavedBuildCapabilityService:
             resolved_effects=tuple(deduped),
             resolved_sources=tuple(dict.fromkeys(sources)),
             conditional_sources=conditional,
-            unresolved=tuple(unresolved),
+            boundaries=tuple(dict.fromkeys(message for message in boundaries if message)),
+            unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
 
     def audit_roster(self) -> tuple[SavedBuildCapabilityAudit, ...]:
