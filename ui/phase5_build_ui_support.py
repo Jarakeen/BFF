@@ -73,6 +73,18 @@ def _racial_skill_line_race(skill_line: object, race_names) -> str | None:
     return None
 
 
+def _set_progression_spins(spins: list[QSpinBox], mode: str) -> None:
+    """Apply one bulk progression choice to a group of rank/point controls."""
+    normalized = _clean(mode).casefold()
+    for spin in spins:
+        if normalized == "max":
+            spin.setValue(spin.maximum())
+        elif normalized == "zero":
+            spin.setValue(0)
+        elif normalized == "unknown":
+            spin.setValue(-1)
+
+
 class CharacterProgressionDialog(QDialog):
     """Edit permanent progression owned by one canonical character."""
 
@@ -258,16 +270,13 @@ class CharacterProgressionDialog(QDialog):
             def buy_line(*_args, spins=line_spins, skill_line=line, intrinsic=intrinsic_line) -> None:
                 if not intrinsic and skill_line in self._line_checks:
                     self._line_checks[skill_line].setChecked(True)
-                for spin in spins:
-                    spin.setValue(spin.maximum())
+                _set_progression_spins(spins, "max")
 
             def clear_line(*_args, spins=line_spins) -> None:
-                for spin in spins:
-                    spin.setValue(0)
+                _set_progression_spins(spins, "zero")
 
             def unknown_line(*_args, spins=line_spins) -> None:
-                for spin in spins:
-                    spin.setValue(-1)
+                _set_progression_spins(spins, "unknown")
 
             buy_all.clicked.connect(buy_line)
             clear.clicked.connect(clear_line)
@@ -285,6 +294,7 @@ class CharacterProgressionDialog(QDialog):
 
         note = QLabel(
             "Only non-slottable Champion stars appear here. Unknown means unrecorded; zero means explicitly unpurchased. "
+            "Buy All sets every passive in one Champion discipline to its database-backed maximum. "
             "The 12 slotted stars remain build-specific in the normal Champion Points editor."
         )
         note.setWordWrap(True)
@@ -301,10 +311,24 @@ class CharacterProgressionDialog(QDialog):
         toolbox = QToolBox()
         for discipline in sorted(grouped):
             page = QWidget()
-            grid = QGridLayout(page)
-            grid.setContentsMargins(12, 10, 12, 10)
+            page_layout = QVBoxLayout(page)
+            page_layout.setContentsMargins(12, 10, 12, 10)
+            page_layout.setSpacing(6)
+
+            header = QHBoxLayout()
+            header.addStretch()
+            buy_all = FoundryButton("Buy All", role=ButtonRole.SECONDARY, compact=True)
+            clear = FoundryButton("Clear", role=ButtonRole.GHOST, compact=True)
+            unknown = FoundryButton("Unknown", role=ButtonRole.GHOST, compact=True)
+            header.addWidget(buy_all)
+            header.addWidget(clear)
+            header.addWidget(unknown)
+            page_layout.addLayout(header)
+
+            grid = QGridLayout()
             grid.setHorizontalSpacing(12)
             grid.setVerticalSpacing(5)
+            discipline_spins: list[QSpinBox] = []
             rows = sorted(grouped[discipline], key=lambda value: _clean(value.get("name")).casefold())
             for row_index, cp in enumerate(rows):
                 name = _clean(cp.get("name"))
@@ -319,7 +343,19 @@ class CharacterProgressionDialog(QDialog):
                 grid.addWidget(label, row_index, 0)
                 grid.addWidget(spin, row_index, 1)
                 self._cp_spins[name.casefold()] = (name, spin)
+                discipline_spins.append(spin)
             grid.setColumnStretch(0, 1)
+            page_layout.addLayout(grid)
+
+            buy_all.clicked.connect(
+                lambda *_args, spins=discipline_spins: _set_progression_spins(spins, "max")
+            )
+            clear.clicked.connect(
+                lambda *_args, spins=discipline_spins: _set_progression_spins(spins, "zero")
+            )
+            unknown.clicked.connect(
+                lambda *_args, spins=discipline_spins: _set_progression_spins(spins, "unknown")
+            )
             toolbox.addItem(page, _DISCIPLINE_NAMES.get(discipline, f"Discipline {discipline}"))
 
         layout.addWidget(toolbox)
