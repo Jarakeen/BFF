@@ -4,51 +4,61 @@ from dataclasses import replace
 
 from .character_progression import CharacterProgression
 from .context_factory import BuildCalculationContextFactory
+from .racial_passive_stat_repository import RacialPassiveStatRepository
 
 
 class Phase5BuildCalculationContextFactory(BuildCalculationContextFactory):
     """Canonical Phase 5 context factory with explicit progression ownership.
 
-    The legacy ``race_stat`` table stores aggregate max-rank racial bonuses and
-    does not identify which individual purchased racial passive produced each
-    stat. Canonical character progression therefore must not receive that whole
-    package merely because a race is selected.
-
-    Legacy callers that do not supply an individual passive map retain the old
-    aggregate behavior for compatibility. Canonical callers with explicit
-    passive progression fail closed until racial passive formulas/provenance are
-    modeled individually.
+    Legacy callers without individual passive progression retain the historical
+    aggregate ``race_stat`` behavior. Canonical callers resolve racial stats
+    from the exact purchased passive rank stored in character progression and
+    the corresponding canonical ability tooltip in ``eso.db``.
     """
 
-    RACIAL_AGGREGATE_PREFIX = (
-        "Racial aggregate stats are not applied because individual racial passive "
-        "ownership cannot be resolved from canonical data:"
-    )
+    def __init__(self, *args, racial_passive_repository=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        database_path = getattr(self.race_repository, "database_path", None)
+        self.racial_passive_repository = racial_passive_repository or (
+            RacialPassiveStatRepository(database_path) if database_path else None
+        )
+        self._phase5_progression = None
+        self._phase5_racial_messages: tuple[str, ...] = ()
 
     def build(self, *, progression: CharacterProgression, build, **kwargs):
         self._phase5_progression = progression
+        self._phase5_racial_messages = ()
         try:
             context = super().build(progression=progression, build=build, **kwargs)
-        finally:
-            self._phase5_progression = None
-
-        race_name = str(getattr(build, "Race", "") or "").strip()
-        if (
-            race_name
-            and progression.passive_ranks is not None
-            and self.race_repository is not None
-            and self.race_repository.get_stat_map_by_name(race_name)
-        ):
-            message = f"{self.RACIAL_AGGREGATE_PREFIX} {race_name}"
-            if message not in context.unresolved_gear_effects:
+            if self._phase5_racial_messages:
                 context = replace(
                     context,
-                    unresolved_gear_effects=context.unresolved_gear_effects + (message,),
+                    unresolved_gear_effects=context.unresolved_gear_effects
+                    + tuple(
+                        message
+                        for message in self._phase5_racial_messages
+                        if message not in context.unresolved_gear_effects
+                    ),
                 )
-        return context
+            return context
+        finally:
+            self._phase5_progression = None
+            self._phase5_racial_messages = ()
 
     def _race_stats(self, race_name: str) -> dict[str, float]:
-        progression = getattr(self, "_phase5_progression", None)
-        if progression is not None and progression.passive_ranks is not None:
+        progression = self._phase5_progression
+        if progression is None or progression.passive_ranks is None:
+            return super()._race_stats(race_name)
+
+        race = str(race_name or "").strip()
+        if not race:
             return {}
-        return super()._race_stats(race_name)
+        if self.racial_passive_repository is None:
+            self._phase5_racial_messages = (
+                f"Canonical racial passive resolver is unavailable: {race}",
+            )
+            return {}
+
+        resolution = self.racial_passive_repository.resolve(race, progression)
+        self._phase5_racial_messages = resolution.boundaries + resolution.unresolved
+        return dict(resolution.stats)
