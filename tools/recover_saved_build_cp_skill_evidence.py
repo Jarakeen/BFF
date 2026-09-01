@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -72,6 +73,18 @@ def _output_path(build_name: str, output_dir: Path) -> Path:
     return output_dir / f"skill_champion_points.partial.{slug}.json"
 
 
+def _eso_hub_slug(value: str) -> str:
+    """Match ESO-Hub route slugs without changing global name normalization.
+
+    ESO-Hub collapses English possessives rather than tokenizing the apostrophe:
+    ``Winter's Embrace`` -> ``winters-embrace`` and
+    ``Winter's Revenge`` -> ``winters-revenge``.
+    """
+    text = normalize_text(str(value or "")).replace("’", "'")
+    text = re.sub(r"'s\b", "s", text, flags=re.IGNORECASE)
+    return slugify_name(text)
+
+
 def _base_skills_by_id() -> dict[int, dict]:
     return {int(skill["id"]): skill for skill in load_skills()}
 
@@ -133,8 +146,8 @@ def _verified_class_skill_url(skill: dict, rank_name: str) -> str | None:
         return None
 
     candidate = (
-        f"{BASE_URL}/en/skills/{slugify_name(class_name)}/"
-        f"{slugify_name(skill_line)}/{slugify_name(rank_name)}"
+        f"{BASE_URL}/en/skills/{_eso_hub_slug(class_name)}/"
+        f"{_eso_hub_slug(skill_line)}/{_eso_hub_slug(rank_name)}"
     )
     html = fetch_html(candidate)
     if not html:
