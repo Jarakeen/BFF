@@ -233,6 +233,204 @@
       "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
       "source_locator": "Boss 1 - Phase 4 - Brothers Reunited",
       "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "solo_boss_order_random",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 2 - The First Brother",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "solo_boss_order_random",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 encounter structure - solo phases can happen in any order",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "boss_elemental_alignment",
+      "value": {"lylanar": "fire", "turlassil": "ice"},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 introduction / Dome Mechanics",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "boss_elemental_alignment",
+      "value": {"lylanar": "fire", "turlassil": "ice"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 elemental assignments",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "opposite_element_dome_required",
+      "value": {"fire_enemies_require": "ice_dome", "ice_enemies_require": "fire_dome", "otherwise_damage_reduced": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Dome Mechanics",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "opposite_element_dome_required",
+      "value": {"fire_enemies_require": "ice_dome", "ice_enemies_require": "fire_dome", "otherwise_damage_reduced": true},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - Dome Mechanics - elemental damage resistance",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "opposite_element_dome_attacker_rule_alcast_family",
+      "value": {"enemy_must_be_inside_correct_dome": true, "attacker_must_be_inside_same_dome": true, "otherwise_damage_reduced": true},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - Dome Mechanics - attacker and enemy positioning",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "dome_carrier_increasing_damage_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Dome Mechanics - Piercing Hailstone / Destructive Ember",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "dome_carrier_increasing_damage_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - Dome Mechanics - sphere carrier damage",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "opposing_dome_contact_overload",
+      "value": {"trigger": "fire_and_ice_domes_touch", "explodes": true, "damages_players": true, "domes_dissipate": true},
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Dome Mechanics",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "opposing_dome_contact_overload",
+      "value": {"trigger": "fire_and_ice_domes_touch", "explodes": true, "damages_players": true, "domes_dissipate": true},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - Dome Mechanics - Ember Overload / Hailstone Overload",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high",
+      "notes": "Qcell describes a massive explosion and likely group wipe; shared canonical value retains only the behavior corroborated by both guides."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "atronach_elemental_alignment_alcast_family",
+      "value": {"iron_atronach": "fire", "frost_atronach": "ice"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - Dome Mechanics - enemy elemental assignments",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "solo_phase_atronach_summons_exist",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 2 - two atronachs summoned around 80% and 75%",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "solo_phase_atronach_summons_exist",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:summon_atroBegin/summon_atroEffect",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "final_phase_atronachs_summoned",
+      "value": false,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Brothers Reunited",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "firebrand_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Firebrand",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "firebrand_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:brands / Firebrand 166358",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "frostbrand_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Frostbrand",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "frostbrand_exists",
+      "value": true,
+      "source_type": "combat_addon",
+      "source_name": "Combat Alerts 2.6.2",
+      "source_locator": "modules/u34.lua:brands / Frostbrand 166445",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "brands_final_phase_only_veteran",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 1 - Phase 4 - Frostbrand/Firebrand",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "phase_state",
+      "fact_key": "brands_final_phase_only_veteran",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_locator": "Boss 1 - final both-boss phase - Firebrand/Frostbrand",
+      "source_family": "alcast_eso_hub",
+      "confidence": "high"
     }
   ]
 }
