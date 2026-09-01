@@ -80,7 +80,7 @@ def test_skill_repository_resolves_linked_effect(tmp_path):
     assert effects[0].layer.value == 'cast'
     assert effects[0].category.value == 'buff'
     assert effects[0].target_type.value == 'group'
-    assert effects[0].duration == 12000.0
+    assert effects[0].duration == 12.0
 
 
 def test_skill_repository_does_not_invent_missing_linkage(tmp_path):
