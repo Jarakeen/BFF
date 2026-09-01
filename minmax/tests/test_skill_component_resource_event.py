@@ -43,6 +43,18 @@ def test_explicit_ultimate_gain_is_supported():
     assert events[0].resource_type is SkillComponentResourceType.ULTIMATE
 
 
+def test_joined_placeholder_and_resource_is_supported():
+    events = extract_explicit_component_resource_events(
+        skill_rank_id=15,
+        coefficient_number=2,
+        component_text="Restores $1 Magicka and $2Stamina when it activates.",
+    )
+
+    assert len(events) == 1
+    assert events[0].resource_type is SkillComponentResourceType.STAMINA
+    assert events[0].amount_basis is SkillComponentResourceAmountBasis.COEFFICIENT
+
+
 def test_percent_of_missing_resource_is_supported():
     events = extract_explicit_component_resource_events(
         skill_rank_id=13,
