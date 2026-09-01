@@ -92,6 +92,7 @@ def main() -> int:
     from ui.scribing_support import install as install_scribing_support
     from ui.scribing_editor_compat import install as install_scribing_editor_compat
     from ui.phase5_build_ui_support import install as install_phase5_build_ui_support
+    from ui.phase5_racial_filter_fix import install as install_phase5_racial_filter_fix
     from ui.phase5_operations_progression_support import install as install_phase5_operations_progression_support
     from ui.phase5_potion_picker_support import install as install_phase5_potion_picker_support
 
@@ -99,6 +100,7 @@ def main() -> int:
     install_scribing_support()
     install_scribing_editor_compat()
     install_phase5_build_ui_support()
+    install_phase5_racial_filter_fix()
     install_phase5_operations_progression_support()
     install_phase5_potion_picker_support()
 
