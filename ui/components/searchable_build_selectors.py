@@ -45,7 +45,19 @@ def _compact_set_label(value: str) -> str:
 class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Keep the editor compact even when its dialog has a wide viewport.
+        # Without caps, QGridLayout distributes spare width across every combo,
+        # making the gear editor much wider than its contents require.
+        self.set_combo.setMaximumWidth(220)
+        self.set2_combo.setMaximumWidth(220)
         self.quality_combo.setFixedWidth(82)
+        self.trait_combo.setMaximumWidth(150)
+        self.type_combo.setMaximumWidth(170)
+        self.enchant_combo.setMaximumWidth(180)
+        self.enchant_tier_combo.setMaximumWidth(150)
+        self.level_combo.setMaximumWidth(100)
+
         self.set2_combo.setVisible(False)
         for combo in (self.set_combo, self.set2_combo):
             self._compact_set_combo(combo)
