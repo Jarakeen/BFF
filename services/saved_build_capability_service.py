@@ -50,6 +50,7 @@ class SavedBuildCapabilityService:
     INTENTIONAL_BOUNDARY_PREFIXES = (
         "Potion selected; activation/uptime is not part of static build state:",
     )
+    CP_DYNAMIC_PREFIX = "Champion Point is dynamic or not yet stat-mapped:"
 
     def __init__(self, build_service: BuildService, database_path: str | Path) -> None:
         self.build_service = build_service
@@ -135,15 +136,39 @@ class SavedBuildCapabilityService:
             variants.extend(self.gear_effects.resolve(gear_set.id, count))
         return variants
 
-    @classmethod
-    def _partition_context_messages(cls, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
+    def _cp_discipline(self, cp_name: str) -> int | None:
+        if not self.database_path.exists():
+            return None
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                row = db.execute(
+                    "SELECT discipline_id FROM champion_point WHERE lower(trim(name)) = lower(trim(?)) LIMIT 1",
+                    (cp_name,),
+                ).fetchone()
+            return int(row[0]) if row and row[0] is not None else None
+        except sqlite3.Error:
+            return None
+
+    def _partition_context_messages(self, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
         unresolved: list[str] = []
         boundaries: list[str] = []
         for message in messages:
-            if any(message.startswith(prefix) for prefix in cls.INTENTIONAL_BOUNDARY_PREFIXES):
+            if any(message.startswith(prefix) for prefix in self.INTENTIONAL_BOUNDARY_PREFIXES):
                 boundaries.append(message)
-            else:
-                unresolved.append(message)
+                continue
+            if message.endswith("requires status-effect chance model"):
+                boundaries.append(message)
+                continue
+            if message.startswith(self.CP_DYNAMIC_PREFIX):
+                cp_name = self._clean(message[len(self.CP_DYNAMIC_PREFIX):])
+                # The Thief/Craft tree is utility/economy/QoL progression, not
+                # a Phase 5 combat-capability failure. Keep it visible as an
+                # intentional non-combat boundary instead of inflating the
+                # genuine unresolved count.
+                if self._cp_discipline(cp_name) == 3:
+                    boundaries.append(f"Non-combat Champion Point outside combat capability audit: {cp_name}")
+                    continue
+            unresolved.append(message)
         return unresolved, boundaries
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
