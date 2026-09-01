@@ -1,8 +1,15 @@
 import json
 from pathlib import Path
 from collections import Counter
+import sys
 
-PATH = Path("data/processed/uesp_collectibles.json")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from services.paths import PROCESSED
+
+PATH = PROCESSED / "uesp_collectibles.json"
 
 with PATH.open("r", encoding="utf-8") as f:
     data = json.load(f)
