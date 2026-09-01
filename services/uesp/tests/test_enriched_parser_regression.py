@@ -120,6 +120,37 @@ def test_dialogue_match_keeps_distinctive_single_word_and_exact_name_evidence():
     ) == "Creeping Manifold"
 
 
+def test_zelvraak_dialogue_links_only_strong_mechanic_evidence():
+    abilities = [
+        SimpleNamespace(
+            name="Terrified",
+            description="Zelvraak channels a massive fear spell across the room.",
+        ),
+        SimpleNamespace(
+            name="The Afterlife/Banished",
+            description="At 50% health Zelvraak becomes invincible and sends players into the other realm.",
+        ),
+        SimpleNamespace(
+            name="Drowning Waters",
+            description="Sea Orbs fall from the ceiling and must be kept aloft.",
+        ),
+    ]
+
+    assert _conservative_dialogue_ability_match(
+        "When he is casting his terrify spell", abilities
+    ) == "Terrified"
+
+    for trigger in (
+        "Engaging him",
+        "Killing him",
+        "At the first secret",
+        "Whenever you touch the lasers",
+        "The Side Boss is summoned",
+        "Unsorted",
+    ):
+        assert _conservative_dialogue_ability_match(trigger, abilities) is None
+
+
 def test_slugify_behavior_remains_unchanged():
     assert slugify("Online:Xalvakka") == "xalvakka"
     assert slugify("Online:Ash Titan (Rockgrove)") == "ash_titan_rockgrove"
