@@ -52,8 +52,9 @@ _AMBIGUOUS_RESTORE_RE = re.compile(
 
 def unresolved_category(fragment: str, coefficient_number: int) -> str:
     text = " ".join(str(fragment or "").split())
-    if _MODIFIER_MENTION_RE.search(text):
-        return "modifier_mention"
+    ambiguous = _AMBIGUOUS_RESTORE_RE.search(text)
+    if ambiguous is not None and int(ambiguous.group("number")) == int(coefficient_number):
+        return "ambiguous_restore_shorthand"
     if _DAMAGE_LINKED_HEAL_RE.search(text):
         return "damage_linked_healing"
     if _MISSING_HEALTH_HEAL_RE.search(text):
@@ -63,9 +64,8 @@ def unresolved_category(fragment: str, coefficient_number: int) -> str:
     }
     if heal_placeholders and int(coefficient_number) not in heal_placeholders:
         return "neighboring_heal_component"
-    ambiguous = _AMBIGUOUS_RESTORE_RE.search(text)
-    if ambiguous is not None and int(ambiguous.group("number")) == int(coefficient_number):
-        return "ambiguous_restore_shorthand"
+    if _MODIFIER_MENTION_RE.search(text):
+        return "modifier_mention"
     return "other"
 
 
