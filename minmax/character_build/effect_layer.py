@@ -20,6 +20,8 @@ class EffectLayer(str, Enum):
       skill line being owned and (sometimes) represented on the active bar.
     - PROC: produced by a set/item/enchantment under a trigger condition.
     - ULTIMATE: produced specifically by casting an ultimate ability.
+    - CONSUMABLE: available from a selected potion/consumable but not assumed
+      active until the temporal combat-state layer schedules its use.
     """
 
     CAST = "cast"
@@ -27,3 +29,4 @@ class EffectLayer(str, Enum):
     PASSIVE = "passive"
     PROC = "proc"
     ULTIMATE = "ultimate"
+    CONSUMABLE = "consumable"
