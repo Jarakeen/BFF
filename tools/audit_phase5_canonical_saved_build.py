@@ -12,9 +12,9 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.character_build.effect_layer import BarId
 from minmax.character_build.saved_build_adapter import SavedBuildCharacterAdapter
-from minmax.character_build.support_effect_resolver import (
-    CharacterBuildSupportEffectResolver,
-    equipped_gear_set_counts,
+from minmax.character_build.support_effect_resolver import equipped_gear_set_counts
+from minmax.character_build.support_effect_resolver_factory import (
+    build_db_backed_support_effect_resolver,
 )
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
@@ -186,8 +186,12 @@ def audit_canonical_saved_build(
         print("  (unresolved / absent)")
     else:
         print(f"  Weapon: {active.main_hand.weapon_type.value}")
+        if active.main_hand.enchantment_item_id is not None:
+            print(f"  Weapon enchant item id: {active.main_hand.enchantment_item_id}")
         if active.off_hand is not None:
             print(f"  Off hand: {active.off_hand.weapon_type.value}")
+            if active.off_hand.enchantment_item_id is not None:
+                print(f"  Off-hand enchant item id: {active.off_hand.enchantment_item_id}")
         for index, slot in enumerate(active.slots, start=1):
             kind = "ultimate" if slot.is_ultimate else "skill"
             effects = ", ".join(effect.name for effect in slot.effects) or "no EffectVariant"
@@ -195,9 +199,7 @@ def audit_canonical_saved_build(
                 f"  {index}. {slot.skill_id} | {kind} | line={slot.skill_line_id} | {effects}"
             )
 
-    support_resolver = CharacterBuildSupportEffectResolver(
-        gear_set_effect_variant_resolver=gear_resolver,
-    )
+    support_resolver = build_db_backed_support_effect_resolver(database_path)
     print()
     print("Canonical support effects on active bar:")
     if active is None or not canonical.is_valid():
@@ -208,7 +210,10 @@ def audit_canonical_saved_build(
         if not effects:
             print("  (none resolved)")
         for effect in effects:
-            print(f"  - {effect.name} | source={effect.source}")
+            print(
+                f"  - {effect.name} | source={effect.source} | "
+                f"type={effect.effect_type} | magnitude={effect.magnitude}"
+            )
 
     print()
     print("Adapter unresolved diagnostics:")
