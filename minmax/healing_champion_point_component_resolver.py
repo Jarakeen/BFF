@@ -11,6 +11,7 @@ from .champion_point_static_repository import (
     ChampionPointStaticRepository,
 )
 from .character_build.champion_points import ChampionPointAllocation
+from .skill_component_actual_effect_modifiers import SkillComponentActualEffectModifier
 from .skill_component_classification import SkillEffectKind
 from .skill_component_repository import SkillComponentRepository
 
@@ -228,3 +229,36 @@ class HealingChampionPointComponentResolver:
             applied=tuple(applied),
             unresolved=tuple(unresolved),
         )
+
+    def resolve_for_skill(
+        self,
+        *,
+        allocations: Iterable[ChampionPointAllocation],
+        skill_rank_id: int,
+        coefficient_numbers: Iterable[int],
+        is_slotted: bool,
+    ) -> tuple[tuple[SkillComponentActualEffectModifier, ...], tuple[str, ...]]:
+        """Bridge verified CP rules to the generic tooltip calculator input."""
+
+        stable_allocations = tuple(allocations)
+        modifiers: list[SkillComponentActualEffectModifier] = []
+        unresolved: list[str] = []
+        for coefficient_number in coefficient_numbers:
+            resolved = self.resolve(
+                allocations=stable_allocations,
+                skill_rank_id=skill_rank_id,
+                coefficient_number=int(coefficient_number),
+                is_slotted=is_slotted,
+            )
+            unresolved.extend(resolved.unresolved)
+            if not resolved.applied:
+                continue
+            modifiers.append(
+                SkillComponentActualEffectModifier(
+                    coefficient_number=int(coefficient_number),
+                    power_bonus=resolved.power_bonus,
+                    additive_percent=resolved.healing_done_percent,
+                    sources=resolved.applied,
+                )
+            )
+        return tuple(modifiers), tuple(unresolved)
