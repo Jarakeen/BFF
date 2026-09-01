@@ -27,6 +27,7 @@ class EncounterEvidence:
     source_name: str
     source_locator: str = ""
     source_revision: str = ""
+    source_family: str = ""
     game_update: str = ""
     patch_version: str = ""
     confidence: str = "medium"
@@ -50,8 +51,18 @@ class EncounterEvidence:
             )
 
     @property
-    def source_identity(self) -> tuple[str, str, str, str]:
+    def source_identity(self) -> tuple[str, ...]:
+        """Identity used for independent-source corroboration.
+
+        A declared source_family intentionally collapses multiple records from
+        the same editorial/data lineage into one corroboration vote while the
+        individual source records remain preserved in evidence provenance.
+        """
+        family = self.source_family.strip().casefold()
+        if family:
+            return ("family", family)
         return (
+            "record",
             self.source_type.strip().casefold(),
             self.source_name.strip().casefold(),
             self.source_locator.strip(),
@@ -95,10 +106,12 @@ def reconcile_encounter_evidence(
     """Group source evidence into reviewable encounter facts.
 
     Rules are deliberately conservative:
-      * one distinct source + one value -> single_source
-      * two or more distinct sources agreeing -> corroborated
+      * one distinct source family/record + one value -> single_source
+      * two or more independent source families/records agreeing -> corroborated
       * any disagreement in values -> conflicting
 
+    Multiple records that declare the same source_family count as one source for
+    corroboration but remain separately attributable in the evidence tuple.
     This function never chooses a winner when sources disagree and never writes
     to the canonical encounter database.
     """
