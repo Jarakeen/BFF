@@ -2,19 +2,24 @@ from __future__ import annotations
 
 """Canonical, update-aware Alchemy formula catalog.
 
-The source corpus already exposes explicit formula rows.  This module treats
+The source corpus already exposes explicit formula rows. This module treats
 those rows as evidence instead of trying to re-derive ESO's reagent interaction
 rules from names or folklore.
 
 A formula is identified by its reagent set plus its canonical trait set for a
-specific game update.  Duplicate appearances across per-effect UESP pages are
+specific game update. Duplicate appearances across per-effect UESP pages are
 merged into one formula while retaining source evidence.
 """
 
 from dataclasses import dataclass
 from typing import Any, Iterable
 
-from .combat_effect_semantics import GameUpdate, normalize_game_update, resolve_alchemy_trait_name
+from .combat_effect_semantics import (
+    GameUpdate,
+    is_known_alchemy_trait,
+    normalize_game_update,
+    resolve_alchemy_trait_name,
+)
 
 
 def _clean(value: Any) -> str:
@@ -92,12 +97,17 @@ class AlchemyFormulaCatalog:
                     continue
 
                 reagents = _unique(formula.get("ingredients", []) or ())
-                raw_traits = _unique(formula.get("effects", []) or ())
+                explicit_traits = _unique(formula.get("effects", []) or ())
                 if len(reagents) < 2:
                     unresolved.append(
                         f"{effect_name or 'Alchemy effect'} formula #{index}: fewer than two reagents"
                     )
                     continue
+
+                # Every formula row is evidence on a specific per-effect page.
+                # The page's own effect is therefore part of the formula even
+                # when the table only lists secondary effects in its cells.
+                raw_traits = _unique((effect_name, *explicit_traits))
                 if not raw_traits:
                     unresolved.append(
                         f"{effect_name or 'Alchemy effect'} formula #{index}: no explicit effects"
@@ -106,6 +116,7 @@ class AlchemyFormulaCatalog:
 
                 canonical_traits: list[str] = []
                 removed_traits: list[str] = []
+                unknown_traits: list[str] = []
                 for raw_trait in raw_traits:
                     resolved = resolve_alchemy_trait_name(
                         raw_trait,
@@ -115,7 +126,17 @@ class AlchemyFormulaCatalog:
                     if resolved is None:
                         removed_traits.append(raw_trait)
                         continue
+                    if not is_known_alchemy_trait(resolved, game_update=update):
+                        unknown_traits.append(raw_trait)
+                        continue
                     canonical_traits.append(resolved)
+
+                if unknown_traits:
+                    unresolved.append(
+                        f"{effect_name or 'Alchemy effect'} formula #{index}: "
+                        f"non-trait source cells rejected: {', '.join(unknown_traits)}"
+                    )
+                    continue
 
                 if removed_traits:
                     unresolved.append(
