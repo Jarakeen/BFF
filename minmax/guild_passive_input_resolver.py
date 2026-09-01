@@ -16,12 +16,7 @@ from .skill_line_repository import SkillLineRepository
 
 
 class GuildPassiveInputResolver:
-    """Apply verified standing guild passives using active-bar slot counts.
-
-    Ownership is explicit and supplied by CharacterProgression. Only passive
-    effects whose values and activation rules are verified enter shared standing
-    stats here. Triggered/event and guild-ability-specific effects stay out.
-    """
+    """Apply verified max-rank guild passives using active-bar slot counts."""
 
     MAGES_GUILD = "mages guild"
     FIGHTERS_GUILD = "fighters guild"
@@ -49,14 +44,18 @@ class GuildPassiveInputResolver:
         active_bar: str = "front",
         mages_guild_passives_owned: bool = False,
         fighters_guild_passives_owned: bool = False,
+        magicka_controller_owned: bool | None = None,
+        slayer_owned: bool | None = None,
     ) -> GearCalculationInputs:
-        if not (mages_guild_passives_owned or fighters_guild_passives_owned):
+        mages_owned = mages_guild_passives_owned if magicka_controller_owned is None else magicka_controller_owned
+        fighters_owned = fighters_guild_passives_owned if slayer_owned is None else slayer_owned
+        if not (mages_owned or fighters_owned):
             return result
 
         counts = self._active_skill_line_counts(build, active_bar=active_bar)
         applied = result.applied_effect_count
 
-        if mages_guild_passives_owned:
+        if mages_owned:
             bonus = mages_guild_magicka_controller_percent(counts[self.MAGES_GUILD])
             if bonus:
                 max_magicka_source = PercentContribution("Mages Guild: Magicka Controller", bonus)
@@ -74,7 +73,7 @@ class GuildPassiveInputResolver:
                 )
                 applied += 2
 
-        if fighters_guild_passives_owned:
+        if fighters_owned:
             bonus = fighters_guild_slayer_weapon_spell_damage_percent(counts[self.FIGHTERS_GUILD])
             if bonus:
                 source = StatContribution("Fighters Guild: Slayer", bonus)
