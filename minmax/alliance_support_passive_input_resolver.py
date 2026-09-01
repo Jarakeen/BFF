@@ -12,12 +12,7 @@ from .skill_line_repository import SkillLineRepository
 
 
 class AllianceSupportPassiveInputResolver:
-    """Apply verified standing Alliance War Support passives.
-
-    Only Magicka Aid belongs in generic standing stats. Combat Medic depends on
-    keep proximity and Battle Resurrection depends on PvP resurrection state,
-    so both remain outside this layer.
-    """
+    """Apply verified standing Alliance War Support passives."""
 
     SUPPORT = "support"
 
@@ -43,8 +38,10 @@ class AllianceSupportPassiveInputResolver:
         *,
         active_bar: str = "front",
         support_passives_owned: bool = False,
+        magicka_aid_owned: bool | None = None,
     ) -> GearCalculationInputs:
-        if not support_passives_owned:
+        owned = support_passives_owned if magicka_aid_owned is None else magicka_aid_owned
+        if not owned:
             return result
 
         counts = self._active_skill_line_counts(build, active_bar=active_bar)
