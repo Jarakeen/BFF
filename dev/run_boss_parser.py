@@ -1,12 +1,11 @@
 # dev/run_boss_parser.py
-from pathlib import Path
-
 from builders.boss_builder import BossBuilder
+from services.paths import PROCESSED, RAW_DATA
 
 
 builder = BossBuilder(
-    raw_folder=Path("data/raw/bosses"),
-    output_file=Path("data/processed/bosses.json"),
+    raw_folder=RAW_DATA / "bosses",
+    output_file=PROCESSED / "bosses.json",
 )
 
 builder.build()
