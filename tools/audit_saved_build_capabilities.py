@@ -30,11 +30,20 @@ def _parser() -> argparse.ArgumentParser:
         help="ESO reference database.",
     )
     parser.add_argument(
+        "--build",
+        default="",
+        help="Audit only the saved build whose build name or character name matches this value.",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="Return non-zero when genuine unresolved evidence remains.",
     )
     return parser
+
+
+def _clean(value: object) -> str:
+    return " ".join(str(value or "").strip().split())
 
 
 def main() -> int:
@@ -45,12 +54,28 @@ def main() -> int:
     )
     audits = service.audit_roster()
 
+    requested = _clean(args.build).casefold()
+    if requested:
+        audits = tuple(
+            audit
+            for audit in audits
+            if _clean(audit.build_name).casefold() == requested
+            or _clean(audit.character_name).casefold() == requested
+        )
+
     print("=" * 72)
     print(" PHASE 5 SAVED-BUILD CAPABILITY AUDIT")
     print("=" * 72)
     print(f"Builds:   {args.builds}")
     print(f"Database: {args.database}")
+    if requested:
+        print(f"Filter:   {args.build}")
     print(f"Builds audited: {len(audits)}")
+
+    if requested and not audits:
+        print()
+        print(f"No saved build matched: {args.build}")
+        return 2
 
     unresolved_total = 0
     for audit in audits:
