@@ -14,41 +14,58 @@ from .skill_component_text_evidence import extract_component_text_evidence
 
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
-_CURRENT_RESTORE_RE = re.compile(r"\bcurrent\s+restore\s*:\s*\$(?P<number>\d+)(?!\d)", re.IGNORECASE)
+_CURRENT_RESTORE_RE = re.compile(
+    r"\bcurrent\s+restore\s*:\s*\$(?P<number>\d+)(?!\d)",
+    re.IGNORECASE,
+)
+_PERCENT_RESOURCE_CONTEXT_RE = re.compile(
+    r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b"
+    r"[^.;]{0,60}?\d+(?:\.\d+)?\s*%\s+(?:magicka|stamina|ultimate)\b",
+    re.IGNORECASE,
+)
+_CURRENT_HEALTH_CONTEXT_RE = re.compile(
+    r"\bincreas(?:e|es|ed|ing)\s+by\s+up\s+to\s+\d+(?:\.\d+)?\s*%"
+    r"[^.;]{0,100}?\bbased\s+on\s+how\s+high\s+(?:your|their)\s+current\s+health\s+is\b",
+    re.IGNORECASE,
+)
 
 
 def _current_restore_evidence_window(text: str | None, coefficient_number: int) -> str | None:
-    """Return the defining sentence plus ``Current Restore: $N`` sentence.
+    """Return tightly bounded defining context for ``Current Restore: $N``.
 
-    Some ESO coefficient descriptions place the actual resource rule immediately
-    before the sentence that contains the coefficient placeholder, for example
-    ``restore 12% Stamina ... current Health. Current Restore: $2``. For that
-    explicit display shape only, preserve the immediately preceding sentence so
-    the coefficient can be linked to its stated resource basis without opening
-    broad backward semantic leakage.
+    ESO/Uesp source formatting is not guaranteed to preserve clean sentence
+    boundaries around runtime-display lines. For this explicit display shape,
+    inspect only a short prefix before ``Current Restore: $N`` and retain it only
+    when that prefix itself proves both a named percentage resource restore and
+    current-Health scaling. This avoids broad backward semantic borrowing while
+    tolerating missing punctuation/newline normalization.
     """
 
     normalized = " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
     if not normalized:
         return None
 
-    matches = [
-        match
-        for match in _CURRENT_RESTORE_RE.finditer(normalized)
-        if int(match.group("number")) == int(coefficient_number)
-    ]
-    if not matches:
+    match = next(
+        (
+            item
+            for item in _CURRENT_RESTORE_RE.finditer(normalized)
+            if int(item.group("number")) == int(coefficient_number)
+        ),
+        None,
+    )
+    if match is None:
         return None
 
-    match = matches[0]
-    prior_period = normalized.rfind(".", 0, match.start())
-    if prior_period == -1:
-        return normalized
-    prior_prior_period = normalized.rfind(".", 0, prior_period)
-    start = prior_prior_period + 1 if prior_prior_period != -1 else 0
+    prefix_start = max(0, match.start() - 320)
+    prefix = normalized[prefix_start:match.start()].strip()
+    if not _PERCENT_RESOURCE_CONTEXT_RE.search(prefix):
+        return None
+    if not _CURRENT_HEALTH_CONTEXT_RE.search(prefix):
+        return None
+
     following_period = normalized.find(".", match.end())
-    end = following_period + 1 if following_period != -1 else len(normalized)
-    return normalized[start:end].strip()
+    suffix_end = following_period + 1 if following_period != -1 else len(normalized)
+    return normalized[prefix_start:suffix_end].strip()
 
 
 class SkillComponentResourceEventRepository:
