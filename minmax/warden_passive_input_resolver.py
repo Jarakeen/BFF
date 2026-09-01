@@ -19,9 +19,9 @@ from .skill_line_repository import SkillLineRepository
 class WardenPassiveInputResolver:
     """Apply verified standing Warden passives to shared character inputs.
 
-    Only effects whose value and activation rule are verified enter this layer.
-    Triggered effects and ability-family-specific output modifiers stay out of
-    the shared standing stat pipeline.
+    The math in passive_math.py is max-rank math. Explicit ownership flags let
+    production character progression activate only passives known to be maxed.
+    ``None`` preserves the historical direct-call behavior for compatibility.
     """
 
     ANIMAL_COMPANIONS = "animal companions"
@@ -46,17 +46,12 @@ class WardenPassiveInputResolver:
             name = str(raw_name or "").strip()
             if not name:
                 continue
-
-            # Resolve globally so ordinary weapon/guild/alliance skills do not
-            # become false Warden-math warnings. Only Warden class lines matter
-            # to the passives handled by this resolver.
             skill_line = self.skill_line_repository.skill_line_for_ability_name(name)
             if skill_line is None:
                 unresolved.append(
                     f"Warden passive math: could not resolve canonical skill line for slotted ability {name!r} on {active_bar} bar"
                 )
                 continue
-
             key = skill_line.casefold()
             if key in self.WARDEN_LINES:
                 counts[key] += 1
@@ -69,9 +64,23 @@ class WardenPassiveInputResolver:
         build: PlayerBuild,
         *,
         active_bar: str = "front",
+        flourish_owned: bool | None = None,
+        advanced_species_owned: bool | None = None,
+        frozen_armor_owned: bool | None = None,
     ) -> GearCalculationInputs:
         if str(build.EsoClass or "").strip().casefold() != "warden":
             return result
+
+        # Historical callers did not provide per-passive ownership. Keep that
+        # behavior only when all three flags are omitted. Production saved-build
+        # progression supplies explicit booleans.
+        legacy_assumption = all(
+            value is None
+            for value in (flourish_owned, advanced_species_owned, frozen_armor_owned)
+        )
+        flourish_owned = legacy_assumption if flourish_owned is None else flourish_owned
+        advanced_species_owned = legacy_assumption if advanced_species_owned is None else advanced_species_owned
+        frozen_armor_owned = legacy_assumption if frozen_armor_owned is None else frozen_armor_owned
 
         counts, passive_unresolved = self._active_skill_line_counts(build, active_bar=active_bar)
         unresolved = result.unresolved + passive_unresolved
@@ -80,52 +89,55 @@ class WardenPassiveInputResolver:
         animal_count = counts[self.ANIMAL_COMPANIONS]
         winter_count = counts[self.WINTERS_EMBRACE]
 
-        flourish = warden_flourish_recovery_percent(animal_count)
-        if flourish:
-            source = PercentContribution("Warden: Flourish", flourish)
-            result = replace(
-                result,
-                magicka_recovery=replace(
-                    result.magicka_recovery,
-                    skill_percent_contributions=result.magicka_recovery.skill_percent_contributions + (source,),
-                ),
-                stamina_recovery=replace(
-                    result.stamina_recovery,
-                    skill_percent_contributions=result.stamina_recovery.skill_percent_contributions + (source,),
-                ),
-            )
-            applied += 2
+        if flourish_owned:
+            flourish = warden_flourish_recovery_percent(animal_count)
+            if flourish:
+                source = PercentContribution("Warden: Flourish", flourish)
+                result = replace(
+                    result,
+                    magicka_recovery=replace(
+                        result.magicka_recovery,
+                        skill_percent_contributions=result.magicka_recovery.skill_percent_contributions + (source,),
+                    ),
+                    stamina_recovery=replace(
+                        result.stamina_recovery,
+                        skill_percent_contributions=result.stamina_recovery.skill_percent_contributions + (source,),
+                    ),
+                )
+                applied += 2
 
-        advanced_species = warden_advanced_species_crit_damage(animal_count)
-        if advanced_species:
-            contribution = StatContribution("Warden: Advanced Species", advanced_species)
-            critical_damage = replace(
-                result.core.critical_damage,
-                additive_after_percent=result.core.critical_damage.additive_after_percent + (contribution,),
-            )
-            result = replace(result, core=replace(result.core, critical_damage=critical_damage))
-            applied += 1
+        if advanced_species_owned:
+            advanced_species = warden_advanced_species_crit_damage(animal_count)
+            if advanced_species:
+                contribution = StatContribution("Warden: Advanced Species", advanced_species)
+                critical_damage = replace(
+                    result.core.critical_damage,
+                    additive_after_percent=result.core.critical_damage.additive_after_percent + (contribution,),
+                )
+                result = replace(result, core=replace(result.core, critical_damage=critical_damage))
+                applied += 1
 
-        frozen_armor = warden_frozen_armor_resistance(winter_count)
-        if frozen_armor:
-            contribution = StatContribution("Warden: Frozen Armor", frozen_armor)
-            physical = replace(
-                result.core.physical_resistance,
-                flat=result.core.physical_resistance.flat + (contribution,),
-            )
-            spell = replace(
-                result.core.spell_resistance,
-                flat=result.core.spell_resistance.flat + (contribution,),
-            )
-            result = replace(
-                result,
-                core=replace(
-                    result.core,
-                    physical_resistance=physical,
-                    spell_resistance=spell,
-                ),
-            )
-            applied += 2
+        if frozen_armor_owned:
+            frozen_armor = warden_frozen_armor_resistance(winter_count)
+            if frozen_armor:
+                contribution = StatContribution("Warden: Frozen Armor", frozen_armor)
+                physical = replace(
+                    result.core.physical_resistance,
+                    flat=result.core.physical_resistance.flat + (contribution,),
+                )
+                spell = replace(
+                    result.core.spell_resistance,
+                    flat=result.core.spell_resistance.flat + (contribution,),
+                )
+                result = replace(
+                    result,
+                    core=replace(
+                        result.core,
+                        physical_resistance=physical,
+                        spell_resistance=spell,
+                    ),
+                )
+                applied += 2
 
         return replace(
             result,
