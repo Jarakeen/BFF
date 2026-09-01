@@ -9,8 +9,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
-from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
-from minmax.race_repository import RaceRepository
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
@@ -23,6 +21,36 @@ def _has_identity(build) -> bool:
     return bool(_clean(build.Name) or _clean(build.Gamertag) or _clean(build.BuildName))
 
 
+def _is_template_build(build) -> bool:
+    """Identify obvious bundled/sample build rows without mutating them.
+
+    Explicit --build selection may still audit these rows. The automatic
+    roster-wide closeout path excludes them so sample/template residue does not
+    count as unresolved evidence for authoritative user builds.
+    """
+    labels = {
+        _clean(getattr(build, "Name", "")).casefold(),
+        _clean(getattr(build, "BuildName", "")).casefold(),
+    }
+    labels.discard("")
+    if not labels:
+        return False
+    known = {
+        "your tank build",
+        "your healer build",
+        "your dd build",
+        "your dps build",
+    }
+    if labels & known:
+        return True
+    return any(
+        label.startswith("template ")
+        or label.endswith(" template")
+        or (label.startswith("your ") and label.endswith(" build"))
+        for label in labels
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Trace real saved builds through the current Phase 5 resolution matrix."
@@ -32,7 +60,12 @@ def _parser() -> argparse.ArgumentParser:
     selection.add_argument(
         "--all",
         action="store_true",
-        help="Audit every non-empty saved build without mutating the roster.",
+        help="Audit every authoritative non-empty saved build without mutating the roster.",
+    )
+    parser.add_argument(
+        "--include-templates",
+        action="store_true",
+        help="With --all, include obvious sample/template builds in diagnostic totals.",
     )
     parser.add_argument("--builds", type=Path, default=get_data_dir() / "builds.json")
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
@@ -161,10 +194,18 @@ def main() -> int:
     build_service = BuildService(args.builds)
     roster = build_service.load()
 
+    skipped_templates = []
     if args.all:
-        builds = [build for build in roster.Members if _has_identity(build)]
+        candidates = [build for build in roster.Members if _has_identity(build)]
+        if args.include_templates:
+            builds = candidates
+        else:
+            builds = [build for build in candidates if not _is_template_build(build)]
+            skipped_templates = [build for build in candidates if _is_template_build(build)]
         if not builds:
-            print("No non-empty saved builds found.")
+            print("No authoritative non-empty saved builds found.")
+            if skipped_templates:
+                print(f"Template/sample builds excluded: {len(skipped_templates)}")
             return 2
     else:
         requested = _clean(args.build).casefold()
@@ -179,10 +220,6 @@ def main() -> int:
             return 2
 
     service = SavedBuildCapabilityService(build_service, args.database)
-    service.context_factory = Phase5BuildCalculationContextFactory(
-        race_repository=RaceRepository(args.database),
-        gear_set_repository=service.gear_repository,
-    )
 
     unresolved_by_build: list[tuple[str, str, int]] = []
     for index, build in enumerate(builds):
@@ -204,6 +241,12 @@ def main() -> int:
             total += unresolved_count
             label = f"{character_name or '(unnamed)'} | {build_name or '(unnamed build)'}"
             print(f"  {label}: genuine unresolved={unresolved_count}")
+        if skipped_templates:
+            print("  EXCLUDED TEMPLATE/SAMPLE BUILDS:")
+            for build in skipped_templates:
+                label = f"{build.Name or '(unnamed)'} | {build.BuildName or '(unnamed build)'}"
+                print(f"    • {label}")
+            print("  Re-run with --include-templates to include those diagnostic samples.")
         print(f"  TOTAL GENUINE UNRESOLVED: {total}")
         print("#" * 88)
         return 1 if total else 0
