@@ -81,7 +81,12 @@ def _normalize_words(value: str) -> list[str]:
     words = re.findall(r"[a-z0-9]+", value.casefold())
     normalized: list[str] = []
     for word in words:
-        if len(word) > 4 and word.endswith("s"):
+        # Conservative morphology only where it helps match the same mechanic
+        # word across a trigger and an ability name. Example: "terrified" and
+        # "terrify" should compare equal without introducing broad stemming.
+        if len(word) > 5 and word.endswith("ied"):
+            word = word[:-3] + "y"
+        elif len(word) > 4 and word.endswith("s"):
             word = word[:-1]
         normalized.append(word)
     return normalized
