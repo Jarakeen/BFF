@@ -47,8 +47,8 @@ eso.db.pre_gear_customizationq
 *.sqlite
 *.sqlite3
 \YOUR_DB_PATH
-# Generated/raw data that should not be committed
 
+# Legacy data locations retained during the research-layout migration.
 /data/raw/
 data/cache/
 data/tmp/
@@ -59,10 +59,28 @@ data/backup/*
 data/normalized/*large files*
 data/processed
 data/uesp
-# Generated Python output
 /data/processed/
-# Local Foundry databases
 /data/*.db
+
+# Developer-only research material in the canonical layout.
+/research/raw/
+/research/normalized/
+/research/processed/
+/research/strats/
+/research/uesp_cache/
+/local_backups/
+
+# Only the structured ESO encounter source corpus is versioned.
+/research/eso_info/*
+!/research/eso_info/arenas/
+!/research/eso_info/arenas/**
+!/research/eso_info/bosses/
+!/research/eso_info/bosses/**
+!/research/eso_info/dungeons/
+!/research/eso_info/dungeons/**
+!/research/eso_info/trials/
+!/research/eso_info/trials/**
+
 # ============================================================
 # Local configuration
 # ============================================================
@@ -118,7 +136,7 @@ TODOs.md
 /Launch Foundry.vbs
 /Launch Foundry (debug).bat
 
-
+# Legacy whitelist retained until tracked eso_info files are physically moved.
 !data/eso_info/arenas/
 !data/eso_info/arenas/**
 !data/eso_info/bosses/
