@@ -7,7 +7,9 @@ answers the narrower temporal question: which named buffs from that event are
 still active after a caller-supplied elapsed time?
 
 Nothing here assumes automatic use, cooldown cadence, Medicinal Use, or standing
-uptime. Callers must supply the elapsed time deliberately.
+uptime. Callers must supply the elapsed time deliberately. A duration multiplier
+may be supplied explicitly by a higher-level cadence/passive layer; the default
+remains the ordinary sourced duration.
 """
 
 from dataclasses import dataclass
@@ -20,21 +22,29 @@ from .potion_use_event import PotionBuffGrant, PotionUseEvent
 class PotionActiveWindow:
     event: PotionUseEvent
     elapsed_seconds: float = 0.0
+    duration_multiplier: float = 1.0
 
     def __post_init__(self) -> None:
         elapsed = float(self.elapsed_seconds)
+        multiplier = float(self.duration_multiplier)
         if elapsed < 0.0:
             raise ValueError("PotionActiveWindow.elapsed_seconds cannot be negative")
+        if multiplier <= 0.0:
+            raise ValueError("PotionActiveWindow.duration_multiplier must be positive")
         object.__setattr__(self, "elapsed_seconds", elapsed)
+        object.__setattr__(self, "duration_multiplier", multiplier)
+
+    def effective_duration(self, grant: PotionBuffGrant) -> float:
+        return float(grant.duration) * self.duration_multiplier
 
     @property
     def active_buff_grants(self) -> tuple[PotionBuffGrant, ...]:
-        """Return grants whose ordinary sourced duration has not expired."""
+        """Return grants whose explicitly adjusted duration has not expired."""
 
         return tuple(
             grant
             for grant in self.event.buff_grants
-            if self.elapsed_seconds < float(grant.duration)
+            if self.elapsed_seconds < self.effective_duration(grant)
         )
 
     @property
