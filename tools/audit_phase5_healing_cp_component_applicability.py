@@ -23,7 +23,6 @@ def _load_saved_build(path: Path, requested: str) -> PlayerBuild:
     members = payload.get("Members") if isinstance(payload, dict) else None
     if not isinstance(members, list):
         raise ValueError(f"Unsupported saved-build format in {path}; expected Members")
-
     key = requested.strip().casefold()
     matches = [
         PlayerBuild.from_dict(entry)
@@ -32,9 +31,7 @@ def _load_saved_build(path: Path, requested: str) -> PlayerBuild:
         and str(entry.get("BuildName", "")).strip().casefold() == key
     ]
     if len(matches) != 1:
-        raise ValueError(
-            f"Expected exactly one saved build named {requested!r}; found {len(matches)}"
-        )
+        raise ValueError(f"Expected exactly one saved build named {requested!r}; found {len(matches)}")
     return matches[0]
 
 
@@ -106,7 +103,7 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
     if not relationship_repository.available():
         print()
         print("Explicit CP -> skill applicability:")
-        print("  champion_point_skill table unavailable")
+        print("  champion_point_skill tables unavailable")
         print("  No CP -> skill relationships will be inferred from component semantics.")
         return 4
 
@@ -147,7 +144,7 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
             if not heal_rows:
                 continue
 
-            relationships = relationship_repository.get_for_skill_id(skill_id)
+            relationships = relationship_repository.get_for_skill_rank(skill_rank_id)
             explicit = {
                 relationship.champion_point_name.casefold(): relationship
                 for relationship in relationships
@@ -163,11 +160,10 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
             if relevant_relationships:
                 print("    ESO-Hub explicit CP links:")
                 for relationship in relevant_relationships:
+                    scope = "rank-specific" if relationship.skill_rank_id is not None else "legacy base-skill fallback"
                     condition = f" | condition={relationship.condition}" if relationship.condition else ""
                     source = f" | source={relationship.source}" if relationship.source else ""
-                    print(
-                        f"      - {relationship.champion_point_name}{condition}{source}"
-                    )
+                    print(f"      - {relationship.champion_point_name} | scope={scope}{condition}{source}")
             else:
                 print("    ESO-Hub explicit CP links: none of the audited healing CPs")
 
@@ -186,7 +182,6 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
                     applies.append("Swift Renewal")
                 if soothing and has_soothing and aoe is True:
                     applies.append("Soothing Tide")
-
                 if swift and has_swift and hot is None:
                     applies.append("Swift Renewal unresolved: periodicity unknown")
                 if soothing and has_soothing and aoe is None:
@@ -220,7 +215,8 @@ def audit(*, database_path: Path, builds_path: Path, build_name: str) -> int:
 
     print()
     print("Interpretation boundary:")
-    print("  - champion_point_skill is the hard CP -> skill applicability gate.")
+    print("  - Rank/morph-specific ESO-Hub links win when available.")
+    print("  - Legacy base-skill links are fallback evidence only.")
     print("  - skill_component_classification may narrow an explicit relationship to qualifying components.")
     print("  - Component semantics never invent a CP -> skill relationship absent from the ESO-Hub harvest.")
     print("  - Rejuvenator changes healing-ability coefficient power, not standing Weapon/Spell Damage.")
@@ -240,10 +236,4 @@ def _parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     args = _parser().parse_args()
-    raise SystemExit(
-        audit(
-            database_path=args.database,
-            builds_path=args.builds,
-            build_name=args.build,
-        )
-    )
+    raise SystemExit(audit(database_path=args.database, builds_path=args.builds, build_name=args.build))
