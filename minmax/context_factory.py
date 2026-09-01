@@ -196,7 +196,12 @@ class BuildCalculationContextFactory:
         )
         gear = self.block_item_resolver.apply(gear, build)
         gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
-        gear = self.static_build_resolver.apply(gear, build, active_bar=active_bar)
+        gear = self.static_build_resolver.apply(
+            gear,
+            build,
+            active_bar=active_bar,
+            progression=progression,
+        )
         gear = self.combat_state_resolver.apply(gear, build, combat_state=combat_state)
         if self.warden_passive_resolver is not None:
             gear = self.warden_passive_resolver.apply(gear, build, active_bar=active_bar)
