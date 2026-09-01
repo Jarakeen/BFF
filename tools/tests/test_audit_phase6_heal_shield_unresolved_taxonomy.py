@@ -34,3 +34,10 @@ def test_current_restore_shorthand_remains_ambiguous():
         "Current Restore: $2 While slotted you gain Major Vitality.",
         2,
     ) == "ambiguous_restore_shorthand"
+
+
+def test_current_restore_shorthand_wins_over_vitality_modifier_mentions():
+    assert unresolved_category(
+        "Current Restore: $2 While slotted you gain Major Vitality, increasing healing received and damage shield strength by 12%.",
+        2,
+    ) == "ambiguous_restore_shorthand"
