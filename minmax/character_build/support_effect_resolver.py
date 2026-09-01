@@ -83,6 +83,7 @@ def effect_variant_to_support_effect(
         magnitude=effect.magnitude or 0.0,
         target_count=effect.target_count,
         duration=effect.duration,
+        cooldown=effect.cooldown,
         range=effect.range,
         scaling=effect.scaling,
         stacking=effect.stacking or StackingBehavior.UNIQUE,
