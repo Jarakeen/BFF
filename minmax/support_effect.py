@@ -61,6 +61,9 @@ class SupportEffect:
     duration: float | None = None
     """How long a single application lasts, in seconds. None means passive/permanent."""
 
+    cooldown: float | None = None
+    """How long before the source can apply this effect again, in seconds."""
+
     scaling: str | None = None
     """
     Structural description of how this effect's magnitude/duration scale
@@ -132,6 +135,11 @@ class SupportEffect:
         if self.duration is not None and self.duration < 0:
             raise ValueError(
                 "SupportEffect duration cannot be negative."
+            )
+
+        if self.cooldown is not None and self.cooldown < 0:
+            raise ValueError(
+                "SupportEffect cooldown cannot be negative."
             )
 
     def contributes_to_group(self) -> bool:
