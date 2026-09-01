@@ -59,13 +59,17 @@ def canonical_effect_identity(name: str) -> str:
 
 
 def _component_segment(fragment: str, coefficient_number: int) -> str:
-    """Return only the clause span owned by ``$coefficient_number``.
+    """Return the conservative clause span owned by ``$coefficient_number``.
 
-    A coefficient-aware sentence can contain more than one placeholder. In that
-    case, component semantics must not borrow wording that appears after the next
-    placeholder. The span starts after the previous placeholder (if present) and
-    ends before the next placeholder (if present), matching the same conservative
-    ownership rule used by the Phase 3 text-evidence extractor.
+    If a sentence contains one placeholder, the whole sentence is available so
+    wording immediately before the value (for example ``inflicts Chilled and
+    deals $2 Frost Damage``) can still describe that sole component.
+
+    If a sentence contains multiple placeholders, ownership becomes directional:
+    a component may use wording from its own placeholder forward until the next
+    placeholder, but it may not borrow wording from the span after the previous
+    placeholder. This prevents an application written after ``$1`` and before
+    ``$2`` from being attributed to both components.
     """
 
     placeholders = list(_ANY_PLACEHOLDER_RE.finditer(fragment))
@@ -80,7 +84,10 @@ def _component_segment(fragment: str, coefficient_number: int) -> str:
     if current_index is None:
         return ""
 
-    start = 0 if current_index == 0 else placeholders[current_index - 1].end()
+    if len(placeholders) == 1:
+        return fragment.strip()
+
+    start = placeholders[current_index].start()
     end = (
         len(fragment)
         if current_index + 1 >= len(placeholders)
