@@ -36,11 +36,62 @@ def _icon_for_skill(skill: dict) -> QIcon:
     return QIcon(str(local)) if local.exists() else QIcon()
 
 
+def _compact_set_label(value: str) -> str:
+    """Shorten Perfected in gear selectors without changing canonical set names."""
+    text = str(value or "")
+    return "Perf. " + text[len("Perfected "):] if text.startswith("Perfected ") else text
+
+
 class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for combo in (self.set_combo, self.set2_combo):
+            self._compact_set_combo(combo)
         for combo in (self.set_combo, self.trait_combo, self.enchant_combo):
             _configure_search(combo)
+
+    @staticmethod
+    def _compact_set_combo(combo: QComboBox) -> None:
+        current = combo.currentText().strip()
+        for index in range(combo.count()):
+            canonical = combo.itemText(index)
+            combo.setItemData(index, canonical, Qt.UserRole)
+            combo.setItemText(index, _compact_set_label(canonical))
+        if current:
+            canonical_index = combo.findData(current, Qt.UserRole)
+            if canonical_index >= 0:
+                combo.setCurrentIndex(canonical_index)
+
+    @staticmethod
+    def _canonical_set_text(combo: QComboBox) -> str:
+        text = combo.currentText().strip()
+        index = combo.currentIndex()
+        if index >= 0 and combo.itemText(index).strip() == text:
+            canonical = combo.itemData(index, Qt.UserRole)
+            if canonical is not None:
+                return str(canonical).strip()
+        if text.startswith("Perf. "):
+            return "Perfected " + text[len("Perf. "):]
+        return text
+
+    @property
+    def value(self):
+        slot = super().value
+        slot.Set = self._canonical_set_text(self.set_combo)
+        slot.Set2 = self._canonical_set_text(self.set2_combo)
+        return slot
+
+    def load(self, slot):
+        super().load(slot)
+        for combo, canonical in (
+            (self.set_combo, slot.Set or ""),
+            (self.set2_combo, getattr(slot, "Set2", "") or ""),
+        ):
+            match = combo.findData(canonical, Qt.UserRole)
+            if match >= 0:
+                combo.setCurrentIndex(match)
+            else:
+                combo.setCurrentText(_compact_set_label(canonical))
 
 
 class SearchableSkillBarRow(EligibleSkillBarRow):
