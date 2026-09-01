@@ -29,6 +29,7 @@ def _load_packet(path: Path) -> tuple[dict, list[EncounterEvidence]]:
                 source_name=str(raw["source_name"]),
                 source_locator=str(raw.get("source_locator", "")),
                 source_revision=str(raw.get("source_revision", "")),
+                source_family=str(raw.get("source_family", "")),
                 game_update=str(raw.get("game_update", "")),
                 patch_version=str(raw.get("patch_version", "")),
                 confidence=str(raw.get("confidence", "medium")),
@@ -91,8 +92,9 @@ def main() -> int:
             for row in fact.evidence:
                 locator = f" | {row.source_locator}" if row.source_locator else ""
                 revision = f" | rev {row.source_revision}" if row.source_revision else ""
+                family = f" | family {row.source_family}" if row.source_family else ""
                 print(
-                    f"    - {row.source_type}: {row.source_name}{locator}{revision} "
+                    f"    - {row.source_type}: {row.source_name}{locator}{revision}{family} "
                     f"[{row.confidence}] -> {_display_value(row.value)}"
                 )
 
