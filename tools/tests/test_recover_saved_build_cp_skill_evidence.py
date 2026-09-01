@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from models.build_model import PlayerBuild
+import tools.recover_saved_build_cp_skill_evidence as recovery
 from tools.recover_saved_build_cp_skill_evidence import (
     _output_path,
     _saved_skill_names,
@@ -24,3 +25,23 @@ def test_partial_output_path_is_build_scoped_and_not_full_harvest(tmp_path):
 
     assert path.name == "skill_champion_points.partial.df_healer.json"
     assert path.name != "skill_champion_points.json"
+
+
+def test_verified_class_skill_url_accepts_only_matching_skill_heading(monkeypatch):
+    skill = {"class_type": "Warden", "skill_line": "Green Balance"}
+    monkeypatch.setattr(
+        recovery,
+        "fetch_html",
+        lambda url: "<html><h1>Budding Seeds Skill - ESO</h1></html>",
+    )
+
+    assert recovery._verified_class_skill_url(skill, "Budding Seeds") == (
+        "https://eso-hub.com/en/skills/warden/green-balance/budding-seeds"
+    )
+
+    monkeypatch.setattr(
+        recovery,
+        "fetch_html",
+        lambda url: "<html><h1>Healing Seed Skill - ESO</h1></html>",
+    )
+    assert recovery._verified_class_skill_url(skill, "Budding Seeds") is None
