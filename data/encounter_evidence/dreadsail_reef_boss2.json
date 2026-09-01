@@ -8,16 +8,6 @@
       "fact_type": "mechanic_state",
       "fact_key": "claw_exists",
       "value": true,
-      "source_type": "uesp",
-      "source_name": "UESP Online:Reef Guardian abilities",
-      "source_locator": "Claw",
-      "source_revision": "3618074",
-      "confidence": "high"
-    },
-    {
-      "fact_type": "mechanic_state",
-      "fact_key": "claw_exists",
-      "value": true,
       "source_type": "guide",
       "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
       "source_locator": "Boss 2 - Boss/Mini Abilities - Claw",
@@ -45,10 +35,9 @@
       "fact_type": "mechanic_state",
       "fact_key": "acid_reflux_exists",
       "value": true,
-      "source_type": "uesp",
-      "source_name": "UESP Online:Reef Guardian abilities",
-      "source_locator": "Acid Reflux",
-      "source_revision": "3618074",
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Acid Reflux",
       "confidence": "high"
     },
     {
@@ -56,13 +45,67 @@
       "fact_key": "acid_reflux_exists",
       "value": true,
       "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Boss Mechanics - Acid Reflux",
+      "confidence": "high",
+      "notes": "Same editorial/data lineage as ESO-Hub for corroboration counting."
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "acid_reflux_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss Mechanics - Acid Reflux",
+      "confidence": "high",
+      "notes": "Same editorial/data lineage as AlcastHQ/Qcell for corroboration counting."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_core_behavior",
+      "value": {
+        "target": "taunt_target",
+        "leaves_acid_pools": true,
+        "applies_stacking_acid_vulnerability": true
+      },
+      "source_type": "guide",
       "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
       "source_locator": "Boss 2 - Boss/Mini Abilities - Acid Reflux",
       "confidence": "high"
     },
     {
       "fact_type": "mechanic_detail",
-      "fact_key": "acid_reflux_behavior",
+      "fact_key": "acid_reflux_core_behavior",
+      "value": {
+        "target": "taunt_target",
+        "leaves_acid_pools": true,
+        "applies_stacking_acid_vulnerability": true
+      },
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Boss Mechanics - Acid Reflux",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_core_behavior",
+      "value": {
+        "target": "taunt_target",
+        "leaves_acid_pools": true,
+        "applies_stacking_acid_vulnerability": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss Mechanics - Acid Reflux",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_behavior_nilandia",
       "value": {
         "target": "taunt_target",
         "duration_seconds_approx": 11,
@@ -75,7 +118,37 @@
       "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
       "source_locator": "Boss 2 - Boss/Mini Abilities - Acid Reflux",
       "confidence": "high",
-      "notes": "Veteran guide detail; guide explicitly states it does not document hard mode mechanics."
+      "notes": "Veteran guide detail; kept source-specific because timing differs slightly from the Alcast/ESO-Hub lineage."
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_timing_alcast_family",
+      "value": {
+        "duration_seconds_approx": 10,
+        "acid_pool_interval_seconds_approx": 2,
+        "acid_pool_count": 5,
+        "extra_players_create_additional_pools": true
+      },
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Boss Mechanics - Acid Reflux",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "acid_reflux_timing_alcast_family",
+      "value": {
+        "duration_seconds_approx": 10,
+        "acid_pool_interval_seconds_approx": 2,
+        "acid_pool_count": 5,
+        "extra_players_create_additional_pools": true
+      },
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss Mechanics - Acid Reflux",
+      "confidence": "high"
     },
     {
       "fact_type": "mechanic_state",
@@ -123,6 +196,26 @@
       "confidence": "high"
     },
     {
+      "fact_type": "mechanic_state",
+      "fact_key": "replication_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Boss Mechanics - Replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "replication_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss Mechanics - Replication",
+      "confidence": "high"
+    },
+    {
       "fact_type": "mechanic",
       "fact_key": "replication_combat_event",
       "value": {"name": "Replication", "ability_id": 163701, "evidence_kind": "combat_event"},
@@ -142,11 +235,91 @@
     },
     {
       "fact_type": "transition",
+      "fact_key": "main_guardian_replication_thresholds",
+      "value": {"thresholds": ["80%", "50%"], "result": "medium_clone"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Replication - Large",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "main_guardian_replication_thresholds",
+      "value": {"thresholds": ["80%", "50%"], "result": "medium_clone"},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Replication - Large",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
       "fact_key": "medium_guardian_replication_threshold",
       "value": {"threshold": "50%", "result": "small_clone"},
       "source_type": "guide",
       "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
       "source_locator": "Boss 2 - Boss/Mini Abilities - Replication",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "medium_guardian_replication_threshold",
+      "value": {"threshold": "50%", "result": "small_clone"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Replication - Medium",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "medium_guardian_replication_threshold",
+      "value": {"threshold": "50%", "result": "small_clone"},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Replication - Medium",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "hardmode_main_guardian_replication_thresholds",
+      "value": {"thresholds": ["100%", "80%"], "result": "medium_clone"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Replication - Large - Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "hardmode_main_guardian_replication_thresholds",
+      "value": {"thresholds": ["100%", "80%"], "result": "medium_clone"},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Replication - Large - Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "hardmode_medium_guardian_replication_threshold",
+      "value": {"threshold": "80%", "result": "small_clone"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Replication - Medium - Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "transition",
+      "fact_key": "hardmode_medium_guardian_replication_threshold",
+      "value": {"threshold": "80%", "result": "small_clone"},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Replication - Medium - Hardmode",
       "confidence": "high"
     },
     {
@@ -165,6 +338,55 @@
       "source_type": "combat_addon",
       "source_name": "Combat Alerts 2.6.2",
       "source_locator": "modules/u34.lua:heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "heartburn_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Reef Heart - Heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "heartburn_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Reef Heart - Heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "heartburn_duration_seconds",
+      "value": 60,
+      "source_type": "guide",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "source_locator": "Boss 2 - Boss/Mini Abilities - Empowered Rockfall",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "heartburn_duration_seconds",
+      "value": 60,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Reef Heart - Heartburn",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "heartburn_duration_seconds",
+      "value": 60,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Reef Heart - Heartburn",
       "confidence": "high"
     },
     {
@@ -200,6 +422,166 @@
       "confidence": "high"
     },
     {
+      "fact_type": "failure_condition",
+      "fact_key": "reef_heart_failure_sequence_alcast_family",
+      "value": {"heartburn_seconds": 60, "then_enrage": true, "kill_window_seconds": 10, "failure_result": "group_wipe"},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Reef Heart",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "failure_condition",
+      "fact_key": "reef_heart_failure_sequence_alcast_family",
+      "value": {"heartburn_seconds": 60, "then_enrage": true, "kill_window_seconds": 10, "failure_result": "group_wipe"},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Reef Heart",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "hardmode_dreadsail_incendiary_after_heartburn",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian - Reef Heart / Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "hardmode_dreadsail_incendiary_after_heartburn",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Reef Heart / Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "reef_heart_health_by_difficulty_alcast_family",
+      "value": {"veteran_approx": 800000, "hardmode_approx": 2600000},
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Portals",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "reef_heart_health_by_difficulty_alcast_family",
+      "value": {"veteran_approx": 800000, "hardmode_approx": 2600000},
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portals",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "portal_reentry_lockout_seconds_alcast_family",
+      "value": 40,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Portals - parasite debuff",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "portal_reentry_lockout_seconds_alcast_family",
+      "value": 40,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Portals - parasite debuff",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "building_static_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Environmental Damage - Building Static",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "building_static_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Environmental Damage - Building Static",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "volatile_residue_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Environmental Damage - Volatile Residue",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "volatile_residue_exists",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Environmental Damage - Volatile Residue",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "environmental_stack_reset_seconds_alcast_family",
+      "value": 5,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Environmental Damage",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_detail",
+      "fact_key": "environmental_stack_reset_seconds_alcast_family",
+      "value": 5,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Environmental Damage",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "hardmode_lightning_is_aoe",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "Qcell Dreadsail Reef Trial Guide (AlcastHQ)",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Boss 2 Reef Guardian Hardmode",
+      "confidence": "high"
+    },
+    {
+      "fact_type": "mechanic_state",
+      "fact_key": "hardmode_lightning_is_aoe",
+      "value": true,
+      "source_type": "guide",
+      "source_name": "ESO-Hub Dreadsail Reef Guide - Boss 2 Reef Guardian",
+      "source_family": "alcast_eso_hub",
+      "source_locator": "Hardmode",
+      "confidence": "high"
+    },
+    {
       "fact_type": "mechanic_state",
       "fact_key": "crush_exists",
       "value": true,
@@ -225,28 +607,6 @@
       "source_name": "Combat Alerts 2.6.2",
       "source_locator": "modules/u34.lua:TIMER_ALERTS_LEGACY",
       "confidence": "high"
-    },
-    {
-      "fact_type": "mechanic",
-      "fact_key": "uesp_pulverise",
-      "value": {"name": "Pulverise", "response": "block", "stagger_negated_by_block": true},
-      "source_type": "uesp",
-      "source_name": "UESP Online:Reef Guardian abilities",
-      "source_locator": "Pulverise",
-      "source_revision": "3618074",
-      "confidence": "high",
-      "notes": "Kept distinct from Combat Alerts 'Crush'; no identity equivalence asserted."
-    },
-    {
-      "fact_type": "mechanic",
-      "fact_key": "uesp_crushing_limbs",
-      "value": {"name": "Crushing Limbs", "response": "block", "stun_seconds": 1, "blocking_staggers_guardian": true},
-      "source_type": "uesp",
-      "source_name": "UESP Online:Reef Guardian abilities",
-      "source_locator": "Crushing Limbs",
-      "source_revision": "3618074",
-      "confidence": "high",
-      "notes": "Kept distinct from Combat Alerts 'Crush'; no identity equivalence asserted."
     },
     {
       "fact_type": "area_structure",
