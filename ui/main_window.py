@@ -19,16 +19,14 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
+from services.optional_modules import broadcast_enabled
 from ui.achievements_page import AchievementsPage
-from ui.archive_page import ArchivePage
-from ui.broadcast_page import BroadcastPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from ui.collectibles_page import CollectiblesPage
 from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
 from ui.encounters_page import EncountersPage
-from ui.field_notes_page import FieldNotesPage
 from ui.foundry_page import FoundryPage
 from ui.incident_page import IncidentPage
 from ui.mechanics_page import MechanicsPage
@@ -37,7 +35,6 @@ from ui.optimization_page import OptimizationPage
 from ui.reference_data_page import ReferenceDataPage
 from ui.roster_page import RosterPage
 from ui.settings_page import SettingsPage
-from ui.stream_elements_page import LiveOperationsPage
 
 
 class MainWindow(QMainWindow):
@@ -48,6 +45,7 @@ class MainWindow(QMainWindow):
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
+        self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
         self.resize(1700, 950)
         self.build_ui()
@@ -60,17 +58,12 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.sidebar = FoundrySidebar()
+        self.sidebar = FoundrySidebar(include_broadcast=self.broadcast_enabled)
         layout.addWidget(self.sidebar)
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
-        self.pages = {
-            "broadcast": BroadcastPage(),
-            "field_office": FieldNotesPage(),
-            "live_operations": LiveOperationsPage(),
-            "archive": ArchivePage(),
-            "incident": IncidentPage(),
+        core_pages = {
             "achievements": AchievementsPage(),
             "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
@@ -83,7 +76,27 @@ class MainWindow(QMainWindow):
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
             "settings": SettingsPage(),
+            "incident": IncidentPage(),
         }
+
+        broadcast_pages = {}
+        if self.broadcast_enabled:
+            # Keep optional UI imports out of core startup when Broadcast is
+            # disabled. This is the first boundary needed for a separately
+            # installable Broadcast Desk module.
+            from ui.archive_page import ArchivePage
+            from ui.broadcast_page import BroadcastPage
+            from ui.field_notes_page import FieldNotesPage
+            from ui.stream_elements_page import LiveOperationsPage
+
+            broadcast_pages = {
+                "broadcast": BroadcastPage(),
+                "field_office": FieldNotesPage(),
+                "live_operations": LiveOperationsPage(),
+                "archive": ArchivePage(),
+            }
+
+        self.pages = {**broadcast_pages, **core_pages}
 
         self.page_containers = {}
         for name, page in self.pages.items():
