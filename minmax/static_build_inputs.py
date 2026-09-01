@@ -6,6 +6,7 @@ from models.build_model import PlayerBuild
 
 from .base_character_state import ResourceInputs
 from .champion_point_static_repository import ChampionPointStaticRepository
+from .character_progression import CharacterProgression
 from .derived_stats import StatContribution
 from .effects import Effect, EffectOperation, EffectUnit
 from .gear_stat_inputs import CORE_FIELDS, RESOURCE_STATS, RATIO_POINT_STATS, GearCalculationInputs
@@ -204,20 +205,50 @@ class StaticBuildInputResolver:
             result = self._apply_effect(result, effect, resource_bucket="mundus")
         return replace(result, unresolved=tuple(unresolved))
 
-    def _apply_non_slottable_champion_points(self, result: GearCalculationInputs) -> GearCalculationInputs:
-        """Apply the temporary profile assumption that passive CP stars are maxed when CP data is available."""
-
+    def _apply_non_slottable_champion_points(
+        self,
+        result: GearCalculationInputs,
+        progression: CharacterProgression | None,
+    ) -> GearCalculationInputs:
         if self.champion_point_repository is None:
             return result
 
+        # Compatibility path for direct/legacy resolver callers. Production
+        # BuildCalculationContext always supplies CharacterProgression and thus
+        # never reaches this max-all assumption.
+        if progression is None:
+            unresolved = list(result.unresolved)
+            effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
+            unresolved.extend(passive_unresolved)
+            for effect in effects:
+                result = self._apply_effect(result, effect, resource_bucket="champion")
+            return replace(result, unresolved=tuple(unresolved))
+
         unresolved = list(result.unresolved)
-        effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
-        unresolved.extend(passive_unresolved)
-        for effect in effects:
-            result = self._apply_effect(result, effect, resource_bucket="champion")
+        allocations = progression.passive_cp_points
+        if allocations is None:
+            unresolved.append("Passive Champion Point allocations are not recorded for this character")
+            return replace(result, unresolved=tuple(unresolved))
+
+        for name, points in allocations.items():
+            record = self.champion_point_repository.get(name)
+            if record is None:
+                unresolved.append(f"Passive Champion Point not found: {name}")
+                continue
+            if not record.is_non_slottable:
+                unresolved.append(f"Character passive CP entry is slottable and belongs to the build: {name}")
+                continue
+            effects, cp_unresolved = self.champion_point_repository.resolve(name, points)
+            unresolved.extend(cp_unresolved)
+            for effect in effects:
+                result = self._apply_effect(result, effect, resource_bucket="champion")
         return replace(result, unresolved=tuple(unresolved))
 
-    def _apply_champion_points(self, result: GearCalculationInputs, build: PlayerBuild) -> GearCalculationInputs:
+    def _apply_champion_points(
+        self,
+        result: GearCalculationInputs,
+        build: PlayerBuild,
+    ) -> GearCalculationInputs:
         entries = [entry for entry in build.ChampionPoints if str(entry.Name or "").strip()]
         if not entries:
             return result
@@ -229,8 +260,9 @@ class StaticBuildInputResolver:
         for entry in entries:
             record = self.champion_point_repository.get(entry.Name)
             if record is not None and record.is_non_slottable:
-                # Passive stars were already applied at max rank above. Ignore a
-                # legacy saved entry so the same passive cannot be counted twice.
+                # Non-slottable CP belongs to the character progression record.
+                # Ignore legacy build-level entries so the same node cannot be
+                # counted twice.
                 continue
             try:
                 points = int(str(entry.Points or "0").strip() or 0)
@@ -267,11 +299,14 @@ class StaticBuildInputResolver:
             return result
         return replace(result, unresolved=result.unresolved + (message,))
 
-    def apply(self, result: GearCalculationInputs, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
-        # BaseItemStatResolver predates the DB-backed Mundus layer and emits a
-        # placeholder warning for Divines. Divines itself has no sheet effect
-        # without a Mundus; with one selected, this resolver applies it below.
-        # Either way that old placeholder no longer represents unresolved math.
+    def apply(
+        self,
+        result: GearCalculationInputs,
+        build: PlayerBuild,
+        *,
+        active_bar: str = "front",
+        progression: CharacterProgression | None = None,
+    ) -> GearCalculationInputs:
         result = replace(
             result,
             unresolved=tuple(
@@ -280,7 +315,7 @@ class StaticBuildInputResolver:
                 if self._RESOLVED_DIVINES_WARNING not in message
             ),
         )
-        result = self._apply_non_slottable_champion_points(result)
+        result = self._apply_non_slottable_champion_points(result, progression)
         result = self._apply_champion_points(result, build)
         result = self._apply_mundus(result, build, active_bar)
         result = self._apply_food(result, build)
