@@ -17,6 +17,13 @@ from dataclasses import dataclass
 from .combat_state import CombatState
 from .potion_use_event import PotionBuffGrant, PotionUseEvent
 
+_SECONDS_PRECISION = 9
+
+
+def _seconds(value: float) -> float:
+    """Normalize human-facing second arithmetic across binary-float noise."""
+    return round(float(value), _SECONDS_PRECISION)
+
 
 @dataclass(frozen=True)
 class PotionActiveWindow:
@@ -25,7 +32,7 @@ class PotionActiveWindow:
     duration_multiplier: float = 1.0
 
     def __post_init__(self) -> None:
-        elapsed = float(self.elapsed_seconds)
+        elapsed = _seconds(self.elapsed_seconds)
         multiplier = float(self.duration_multiplier)
         if elapsed < 0.0:
             raise ValueError("PotionActiveWindow.elapsed_seconds cannot be negative")
@@ -35,7 +42,7 @@ class PotionActiveWindow:
         object.__setattr__(self, "duration_multiplier", multiplier)
 
     def effective_duration(self, grant: PotionBuffGrant) -> float:
-        return float(grant.duration) * self.duration_multiplier
+        return _seconds(float(grant.duration) * self.duration_multiplier)
 
     @property
     def active_buff_grants(self) -> tuple[PotionBuffGrant, ...]:
