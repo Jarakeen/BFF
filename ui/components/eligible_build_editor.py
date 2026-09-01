@@ -96,12 +96,16 @@ class EligibleBuildEditor(build_editor.BuildEditor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Reuse the canonical fields created by BuildEditor. Recreating build_name
-        # here used to sever the visible control from the base model, while the
-        # grid cleanup also discarded the base Mundus selector entirely.
+        # Keep the identity controls proportional to the compact gear editor.
+        self.name.setMaximumWidth(360)
+        self.gamertag.setMaximumWidth(360)
         self.build_name.setPlaceholderText("Build name")
-        self.build_name.setFixedWidth(500)
-        self.mundus.setMinimumWidth(180)
+        self.build_name.setFixedWidth(360)
+        self.race.setMaximumWidth(150)
+        self.eso_class.setMaximumWidth(150)
+        self.role.setMaximumWidth(110)
+        self.alliance.setMaximumWidth(190)
+        self.mundus.setMaximumWidth(180)
 
         identity_card = self.layout().itemAt(0).widget()
         if identity_card is not None and hasattr(identity_card, "body_layout"):
@@ -140,8 +144,6 @@ class EligibleBuildEditor(build_editor.BuildEditor):
             row.addWidget(self.werewolf)
             row.addWidget(self.vampire)
 
-            # Treat attributes as one compact visual island rather than letting
-            # them bleed into the affiliation and Mundus controls.
             row.addSpacing(18)
             row.addWidget(_vertical_separator())
             row.addSpacing(18)
