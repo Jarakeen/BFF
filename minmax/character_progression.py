@@ -53,19 +53,43 @@ class ChampionPointState:
             raise ValueError(f"no CP tree may have more than {MAX_SLOTTED_PER_TREE} slotted abilities")
 
 
+def _normalize_progression_map(value: dict[str, int] | None) -> dict[str, int] | None:
+    if value is None:
+        return None
+    normalized: dict[str, int] = {}
+    seen: set[str] = set()
+    for raw_name, raw_rank in value.items():
+        name = " ".join(str(raw_name or "").strip().split())
+        key = name.casefold()
+        if not name or key in seen:
+            continue
+        try:
+            rank = int(raw_rank)
+        except (TypeError, ValueError):
+            continue
+        if rank < 0:
+            continue
+        seen.add(key)
+        normalized[name] = rank
+    return normalized
+
+
 @dataclass(frozen=True)
 class CharacterProgression:
     """Character-owned progression state used by MinMax calculations.
 
-    Skill-line ownership belongs to the character rather than any individual
-    build. A build still has to satisfy equipment/bar requirements before an
-    owned passive can contribute to the shared stat pipeline.
+    ``passive_ranks`` and ``passive_cp_points`` distinguish legacy/unknown
+    state from explicit character facts. ``None`` means the caller has not
+    supplied character-level progression. A mapping may contain zero, which is
+    an explicit known-unpurchased value rather than an absence of evidence.
     """
 
     level: int = 50
     attributes: AttributeAllocation = AttributeAllocation()
     champion_points: ChampionPointState = ChampionPointState()
     owned_skill_lines: tuple[str, ...] = ()
+    passive_ranks: dict[str, int] | None = None
+    passive_cp_points: dict[str, int] | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.level, bool) or not isinstance(self.level, int):
@@ -83,9 +107,37 @@ class CharacterProgression:
             seen.add(key)
             normalized.append(name)
         object.__setattr__(self, "owned_skill_lines", tuple(normalized))
+        object.__setattr__(self, "passive_ranks", _normalize_progression_map(self.passive_ranks))
+        object.__setattr__(self, "passive_cp_points", _normalize_progression_map(self.passive_cp_points))
 
     def owns_skill_line(self, skill_line: str) -> bool:
         requested = str(skill_line or "").strip().casefold()
         return bool(requested) and any(
             owned.casefold() == requested for owned in self.owned_skill_lines
         )
+
+    @staticmethod
+    def _lookup(mapping: dict[str, int] | None, name: str) -> int | None:
+        if mapping is None:
+            return None
+        requested = " ".join(str(name or "").strip().split()).casefold()
+        if not requested:
+            return None
+        for stored_name, value in mapping.items():
+            if stored_name.casefold() == requested:
+                return value
+        return None
+
+    def passive_rank(self, passive_name: str) -> int | None:
+        return self._lookup(self.passive_ranks, passive_name)
+
+    def passive_cp_allocation(self, cp_name: str) -> int | None:
+        return self._lookup(self.passive_cp_points, cp_name)
+
+    @property
+    def has_explicit_passive_progression(self) -> bool:
+        return self.passive_ranks is not None
+
+    @property
+    def has_explicit_passive_cp_progression(self) -> bool:
+        return self.passive_cp_points is not None
