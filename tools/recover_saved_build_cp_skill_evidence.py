@@ -10,12 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from crawlers.eso_hub_cp_section_parser import extract_current_cp_section
 from crawlers.eso_hub_skill_cp_crawler import (
     BASE_URL,
     INDEX_URL,
     choose_skill_url,
     discover_skill_urls,
-    extract_cp_section,
     fetch_html,
     load_champion_points,
     load_skills,
@@ -126,6 +126,31 @@ def _urls_for_skill_line(skill: dict, index_urls: list[dict], cache: dict[str, l
     return cache[key]
 
 
+def _verified_class_skill_url(skill: dict, rank_name: str) -> str | None:
+    class_name = str(skill.get("class_type") or "").strip()
+    skill_line = str(skill.get("skill_line") or "").strip()
+    if not class_name or not skill_line:
+        return None
+
+    candidate = (
+        f"{BASE_URL}/en/skills/{slugify_name(class_name)}/"
+        f"{slugify_name(skill_line)}/{slugify_name(rank_name)}"
+    )
+    html = fetch_html(candidate)
+    if not html:
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    expected = normalize_name(rank_name)
+    h1 = soup.find("h1")
+    if h1 is None:
+        return None
+    heading = normalize_name(h1.get_text(" ", strip=True))
+    if heading == expected or heading.startswith(expected + " skill"):
+        return candidate
+    return None
+
+
 def recover(
     *,
     database_path: Path,
@@ -191,19 +216,19 @@ def recover(
         skill["name"] = rank.name
         urls = _urls_for_skill_line(skill, index_urls, line_url_cache)
         match = choose_skill_url(skill, urls)
-        if match is None:
-            print(f"[{number}/{len(requested_names)}] {saved_name} -> no unique ESO-Hub URL")
-            failures.append(f"{saved_name}: no unique ESO-Hub URL")
+        url = str(match["url"]) if match is not None else _verified_class_skill_url(skill, rank.name)
+        if not url:
+            print(f"[{number}/{len(requested_names)}] {saved_name} -> no verified ESO-Hub URL")
+            failures.append(f"{saved_name}: no verified ESO-Hub URL")
             continue
 
-        url = str(match["url"])
         print(f"[{number}/{len(requested_names)}] {saved_name} -> {url}")
         html = fetch_html(url)
         if not html:
             failures.append(f"{saved_name}: page fetch failed")
             continue
 
-        cp_entries, error = extract_cp_section(
+        cp_entries, error = extract_current_cp_section(
             BeautifulSoup(html, "html.parser"),
             rank.name,
             cp_vocab,
