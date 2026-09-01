@@ -97,10 +97,12 @@ def main() -> int:
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
     from ui.scribing_support import install as install_scribing_support
     from ui.scribing_editor_compat import install as install_scribing_editor_compat
+    from ui.phase5_build_ui_support import install as install_phase5_build_ui_support
 
     install_searchable_selectors()
     install_scribing_support()
     install_scribing_editor_compat()
+    install_phase5_build_ui_support()
 
     from ui.main_window import MainWindow
 
