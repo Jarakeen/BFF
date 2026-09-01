@@ -24,6 +24,11 @@ class SkillComponentResourceType(str, Enum):
 class SkillComponentResourceAmountBasis(str, Enum):
     COEFFICIENT = "coefficient"
     PERCENT_MISSING = "percent_missing"
+    PERCENT_RESOURCE = "percent_resource"
+
+
+class SkillComponentResourceScalingDriver(str, Enum):
+    CURRENT_HEALTH = "current_health"
 
 
 @dataclass(frozen=True)
@@ -35,6 +40,8 @@ class SkillComponentResourceEvent:
     amount_basis: SkillComponentResourceAmountBasis
     evidence: str
     amount_fraction: float | None = None
+    max_bonus_fraction: float | None = None
+    scaling_driver: SkillComponentResourceScalingDriver | None = None
     source: str = "coef_description"
 
     def __post_init__(self) -> None:
@@ -42,11 +49,22 @@ class SkillComponentResourceEvent:
             raise ValueError("skill_rank_id must be positive")
         if self.coefficient_number <= 0:
             raise ValueError("coefficient_number must be positive")
-        if self.amount_basis is SkillComponentResourceAmountBasis.PERCENT_MISSING:
+        if self.amount_basis in (
+            SkillComponentResourceAmountBasis.PERCENT_MISSING,
+            SkillComponentResourceAmountBasis.PERCENT_RESOURCE,
+        ):
             if self.amount_fraction is None or not (0.0 < self.amount_fraction <= 1.0):
-                raise ValueError("percent-missing resource events require amount_fraction in (0, 1]")
+                raise ValueError("percentage resource events require amount_fraction in (0, 1]")
         elif self.amount_fraction is not None:
             raise ValueError("coefficient resource events do not carry amount_fraction")
+        if self.max_bonus_fraction is not None and not (0.0 < self.max_bonus_fraction <= 1.0):
+            raise ValueError("max_bonus_fraction must be in (0, 1]")
+        if (self.max_bonus_fraction is None) != (self.scaling_driver is None):
+            raise ValueError("resource scaling requires both max_bonus_fraction and scaling_driver")
+        if self.amount_basis is not SkillComponentResourceAmountBasis.PERCENT_RESOURCE and (
+            self.max_bonus_fraction is not None or self.scaling_driver is not None
+        ):
+            raise ValueError("only percent-resource events carry dynamic scaling metadata")
         if not self.evidence:
             raise ValueError("evidence must preserve the source wording")
 
@@ -63,6 +81,17 @@ _PERCENT_MISSING_RESOURCE_EVENT_RE = re.compile(
     r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b"
     r"[^.;]{0,45}?(?P<percent>\d+(?:\.\d+)?)\s*%\s+of\s+(?:your|their|the\s+target(?:'s)?)?\s*missing\s+"
     r"(?P<resources>magicka|stamina|ultimate)(?:\s+and\s+(?P<resource2>magicka|stamina|ultimate))?\b",
+    flags=re.IGNORECASE,
+)
+_PERCENT_RESOURCE_EVENT_RE = re.compile(
+    r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b"
+    r"[^.;]{0,45}?(?P<percent>\d+(?:\.\d+)?)\s*%\s+"
+    r"(?P<resource>magicka|stamina|ultimate)\b",
+    flags=re.IGNORECASE,
+)
+_CURRENT_HEALTH_SCALING_RE = re.compile(
+    r"\bincreas(?:e|es|ed|ing)\s+by\s+up\s+to\s+(?P<percent>\d+(?:\.\d+)?)\s*%"
+    r"[^.;]{0,80}?\bbased\s+on\s+how\s+high\s+(?:your|their)\s+current\s+health\s+is\b",
     flags=re.IGNORECASE,
 )
 _PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
@@ -101,10 +130,15 @@ def extract_explicit_component_resource_events(
 ) -> tuple[SkillComponentResourceEvent, ...]:
     """Extract explicit coefficient-local Magicka/Stamina/Ultimate gains.
 
-    Two amount shapes are canonical in Phase 6:
+    Canonical Phase 6 amount shapes:
     - ``$N Magicka`` / Stamina / Ultimate, where the coefficient is the amount;
-    - ``15% of your missing Magicka``, where the percentage is explicit source
-      data co-located with the current coefficient-bearing component.
+    - ``15% of your missing Magicka``, where the percentage is of the missing resource;
+    - ``12% Stamina``, where the source explicitly states a percentage resource gain.
+
+    Percentage-of-resource events may also preserve an explicit maximum bonus and
+    scaling driver such as ``increasing by up to 100% based on how high your
+    current Health is``. Phase 6 records that relationship but does not evaluate
+    the current-state multiplier.
 
     Health is deliberately excluded because Health restoration belongs to
     healing semantics. Percentage events require the current ``$N`` placeholder
@@ -154,5 +188,39 @@ def extract_explicit_component_resource_events(
                     evidence=match.group(0),
                 )
             )
+
+    current_health_scaling = _CURRENT_HEALTH_SCALING_RE.search(text)
+    max_bonus_fraction: float | None = None
+    scaling_driver: SkillComponentResourceScalingDriver | None = None
+    if current_health_scaling is not None:
+        bonus_percent = float(current_health_scaling.group("percent"))
+        if 0.0 < bonus_percent <= 100.0:
+            max_bonus_fraction = bonus_percent / 100.0
+            scaling_driver = SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+    for match in _PERCENT_RESOURCE_EVENT_RE.finditer(text):
+        # ``15% of your missing Stamina`` belongs to the more specific basis above.
+        prefix = text[max(0, match.start() - 20):match.end()].casefold()
+        if "missing" in prefix:
+            continue
+        percent = float(match.group("percent"))
+        if not (0.0 < percent <= 100.0):
+            continue
+        evidence = match.group(0)
+        if current_health_scaling is not None:
+            evidence = f"{evidence}; {current_health_scaling.group(0)}"
+        results.append(
+            SkillComponentResourceEvent(
+                skill_rank_id=int(skill_rank_id),
+                coefficient_number=int(coefficient_number),
+                event_type=SkillComponentResourceEventType.GAINS_RESOURCE,
+                resource_type=_resource_type(match.group("resource")),
+                amount_basis=SkillComponentResourceAmountBasis.PERCENT_RESOURCE,
+                amount_fraction=percent / 100.0,
+                max_bonus_fraction=max_bonus_fraction,
+                scaling_driver=scaling_driver,
+                evidence=evidence,
+            )
+        )
 
     return tuple(results)
