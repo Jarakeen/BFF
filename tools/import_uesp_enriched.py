@@ -34,15 +34,56 @@ def _boss_links(parser: EnrichedUespParser, page) -> list[str]:
     return result
 
 
+
+def _merge_boss_titles(discovered: list[str], explicit: list[str] | None) -> list[str]:
+    """Merge discovered and operator-supplied boss page titles deterministically.
+
+    Explicit titles are a recovery mechanism for content pages where UESP does
+    not expose bosses through the section shape understood by find_boss_links().
+    They are never inferred from prose.
+    """
+    result: list[str] = []
+    seen: set[str] = set()
+    for title in [*discovered, *(explicit or [])]:
+        clean = title.strip()
+        if not clean:
+            continue
+        key = clean.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(clean)
+    return result
+
+
+
 def _get_page(client: UespClient, title: str, refresh: bool):
     return client.get_page(title, use_cache=not refresh)
 
 
-def import_content(*, client, store, parser, title: str, content_type: str, force: bool) -> None:
+
+def import_content(
+    *,
+    client,
+    store,
+    parser,
+    title: str,
+    content_type: str,
+    force: bool,
+    explicit_boss_titles: list[str] | None = None,
+) -> None:
     page = _get_page(client, title, force)
     content = parser.parse_content(page, content_type)
-    boss_titles = _boss_links(parser, page)
+    discovered_titles = _boss_links(parser, page)
+    boss_titles = _merge_boss_titles(discovered_titles, explicit_boss_titles)
     boss_ids: list[str] = []
+
+    if explicit_boss_titles:
+        print(
+            "BOSS RECOVERY OVERRIDE: "
+            f"{len(explicit_boss_titles)} explicit title(s); "
+            f"{len(discovered_titles)} discovered title(s)"
+        )
 
     for boss_title in boss_titles:
         page = _get_page(client, boss_title, force)
@@ -64,6 +105,7 @@ def import_content(*, client, store, parser, title: str, content_type: str, forc
         print(f"SKIP    {content.name} (up to date)")
 
 
+
 def import_boss(*, client, store, parser, title: str, force: bool) -> None:
     page = _get_page(client, title, force)
     boss = parser.parse_boss(page)
@@ -75,6 +117,7 @@ def import_boss(*, client, store, parser, title: str, force: bool) -> None:
         print(f"SKIP {boss.name} (up to date)")
 
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Safe enriched UESP encounter crawler")
     group = ap.add_mutually_exclusive_group(required=True)
@@ -84,7 +127,20 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="Re-fetch UESP pages and re-write structured records.")
     ap.add_argument("--rate-limit", type=float, default=2.0)
     ap.add_argument("--data-root", type=Path, default=Path("data/uesp"))
+    ap.add_argument(
+        "--boss-title",
+        action="append",
+        default=[],
+        help=(
+            "Explicit UESP boss page title to include while importing --content. "
+            "Repeat for multiple bosses. Used only as a deterministic recovery "
+            "override when section-based boss discovery is incomplete."
+        ),
+    )
     args = ap.parse_args()
+
+    if args.boss and args.boss_title:
+        ap.error("--boss-title is only valid together with --content")
 
     store = UespStore(args.data_root)
     client = UespClient(
@@ -102,6 +158,7 @@ def main() -> int:
                 title=args.content,
                 content_type=args.content_type,
                 force=args.force,
+                explicit_boss_titles=args.boss_title,
             )
         else:
             import_boss(
