@@ -2,7 +2,7 @@
   "schema_version": 1,
   "sources": {
     "skill_coefficients": {
-      "artifact": "data/raw/skill_coef_raw.json",
+      "artifact": "research/raw/skill_coef_raw.json",
       "source_system": "UESP ESO Log Collector",
       "source_kind": "derived_virtual_view_export",
       "export_url": "https://esolog.uesp.net/exportJson.php?table=skillCoef",
@@ -23,7 +23,7 @@
       ]
     },
     "provisioning_food": {
-      "artifact": "data/raw/food.json",
+      "artifact": "research/raw/food.json",
       "source_system": "UESP ESO Log Collector",
       "source_kind": "filtered_minedItemSummary_export",
       "export_url": "https://esolog.uesp.net/exportJson.php?table=minedItemSummary",
@@ -42,7 +42,7 @@
       ]
     },
     "provisioning_drink": {
-      "artifact": "data/raw/drink.json",
+      "artifact": "research/raw/drink.json",
       "source_system": "UESP ESO Log Collector",
       "source_kind": "filtered_minedItemSummary_export",
       "export_url": "https://esolog.uesp.net/exportJson.php?table=minedItemSummary",
@@ -62,3 +62,4 @@
     }
   }
 }
+
