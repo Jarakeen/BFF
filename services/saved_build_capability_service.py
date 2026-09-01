@@ -52,6 +52,31 @@ class SavedBuildCapabilityService:
     )
     CP_DYNAMIC_PREFIX = "Champion Point is dynamic or not yet stat-mapped:"
 
+    # These purchased CP stars are verified by canonical tooltip text but do
+    # not belong in the Phase 5 standing/core-stat layer. Keep them explicit as
+    # capability boundaries instead of pretending their conditional/runtime
+    # semantics are unresolved defects in saved-build persistence.
+    CP_DEFERRED_BOUNDARY_REASONS = {
+        "battle mastery": "status-effect chance model",
+        "flawless ritual": "status-effect chance model",
+        "elemental aegis": "typed incoming-damage mitigation model",
+        "hardy": "typed incoming-damage mitigation model",
+        "preparation": "attacker-type incoming-damage mitigation model",
+        "mighty": "attack-damage-type conditional offensive model",
+        "war mage": "attack-damage-type conditional offensive model",
+        "bashing brutality": "bash-damage combat utility channel",
+        "defiance": "Break Free cost combat utility channel",
+        "savage defense": "Bash cost combat utility channel",
+        "sprinter": "Sprint cost combat utility channel",
+        "tumbling": "Roll Dodge cost combat utility channel",
+        "hasty": "conditional movement-speed model",
+        "nimble protector": "conditional movement-speed model",
+        "celerity": "movement-speed model",
+        "mystic tenacity": "incoming status-effect duration model",
+        "tempered soul": "resurrection-state model",
+        "piercing gaze": "stealth-detection/PvP utility model",
+    }
+
     def __init__(self, build_service: BuildService, database_path: str | Path) -> None:
         self.build_service = build_service
         self.database_path = Path(database_path)
@@ -181,6 +206,12 @@ class SavedBuildCapabilityService:
                 if self._cp_discipline(cp_name) == 3:
                     boundaries.append(
                         f"Non-combat Champion Point outside combat capability audit: {cp_name}"
+                    )
+                    continue
+                reason = self.CP_DEFERRED_BOUNDARY_REASONS.get(cp_name.casefold())
+                if reason:
+                    boundaries.append(
+                        f"Deferred Champion Point capability ({reason}): {cp_name}"
                     )
                     continue
             remaining.append(message)
