@@ -60,7 +60,7 @@ def test_condition_ownership_audit_keeps_all_active_components_for_conditioned_a
     assert {row.effect_kind for row in rows} >= {"damage", "heal"}
 
 
-def test_condition_ownership_audit_marks_current_owner_without_reassigning(tmp_path):
+def test_condition_ownership_audit_marks_explicit_ordinal_owner(tmp_path):
     path = tmp_path / "eso.db"
     _make_db(path)
 
@@ -68,5 +68,5 @@ def test_condition_ownership_audit_marks_current_owner_without_reassigning(tmp_p
     owners = [row for row in rows if row.owns_condition]
 
     assert len(owners) == 1
-    assert owners[0].coefficient_number == 3
+    assert owners[0].coefficient_number == 2
     assert owners[0].thresholds == (0.25,)
