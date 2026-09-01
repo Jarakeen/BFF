@@ -20,21 +20,28 @@ DEFAULT_PROCESSED = ROOT / "data" / "processed" / "alchemy_effects.json"
 @dataclass(frozen=True)
 class PotionAvailability:
     selected_label: str
-    formula: AlchemyFormula | None
+    formulas: tuple[AlchemyFormula, ...] = ()
     effects: tuple[EffectVariant, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
     def resolved(self) -> bool:
-        return self.formula is not None and bool(self.effects) and not self.unresolved
+        return bool(self.formulas) and bool(self.effects) and not self.unresolved
+
+    @property
+    def canonical_traits(self) -> tuple[str, ...]:
+        if not self.formulas:
+            return ()
+        return self.formulas[0].traits
 
 
 class PotionAvailabilityRepository:
     """Resolve a saved potion selection to source-backed Potion EffectVariants.
 
     This repository models *availability*, not uptime. A selected potion proves
-    the build can use that formula. It does not apply its effects to standing
-    character stats and it does not infer cooldown, Medicinal Use, or use timing.
+    the build can use that effect family/formula. It does not apply its effects
+    to standing character stats and it does not infer cooldown, Medicinal Use,
+    or use timing.
     """
 
     LEGACY_ALIASES: dict[str, tuple[str, ...]] = {
@@ -85,48 +92,55 @@ class PotionAvailabilityRepository:
             allow_legacy_alias=allow_legacy_alias,
         )
 
-    def _formula_for_selection(self, selected_label: str) -> tuple[AlchemyFormula | None, tuple[str, ...]]:
+    def _formulas_for_selection(self, selected_label: str) -> tuple[tuple[AlchemyFormula, ...], tuple[str, ...]]:
         clean = " ".join(str(selected_label or "").strip().split())
         if not clean:
-            return None, ()
+            return (), ()
 
         catalog = self._catalog(allow_legacy_alias=self.game_update is GameUpdate.U51)
         if not catalog.formulas:
-            return None, catalog.unresolved or ("Alchemy formula catalog is empty",)
+            return (), catalog.unresolved or ("Alchemy formula catalog is empty",)
 
-        # Canonical IDs are the durable saved identity for arbitrary crafted
-        # formulas. Legacy aliases exist only for old saved-build compatibility.
+        # Canonical formula IDs are a durable identity for one specific recipe.
+        # Legacy aliases identify an effect family and may therefore have more
+        # than one equivalent reagent formula.
         if clean.casefold().startswith("alchemy_formula:"):
-            matches = tuple(formula for formula in catalog.formulas if formula.canonical_id.casefold() == clean.casefold())
-        else:
-            traits = self.LEGACY_ALIASES.get(self._norm(clean))
-            if traits is None:
-                return None, (
-                    f"Potion selection is not an exact canonical formula or known legacy alias: {clean}",
-                )
-            if self.game_update is GameUpdate.U51:
-                traits = tuple(
-                    {"Increase Spell Power": "Increase Power", "Spell Critical": "Critical"}.get(value, value)
-                    for value in traits
-                )
-            matches = catalog.find_by_traits(*traits, exact=True)
+            matches = tuple(
+                formula
+                for formula in catalog.formulas
+                if formula.canonical_id.casefold() == clean.casefold()
+            )
+            if not matches:
+                return (), (f"Potion formula not found for selection: {clean}",)
+            return matches, ()
 
-        if len(matches) == 1:
-            return matches[0], ()
+        traits = self.LEGACY_ALIASES.get(self._norm(clean))
+        if traits is None:
+            return (), (
+                f"Potion selection is not an exact canonical formula or known legacy alias: {clean}",
+            )
+        if self.game_update is GameUpdate.U51:
+            traits = tuple(
+                {"Increase Spell Power": "Increase Power", "Spell Critical": "Critical"}.get(value, value)
+                for value in traits
+            )
+        matches = catalog.find_by_traits(*traits, exact=True)
         if not matches:
-            return None, (f"Potion formula not found for selection: {clean}",)
-        return None, (
-            f"Potion selection resolves to {len(matches)} formulas and must be saved by canonical formula ID: {clean}",
-        )
+            return (), (f"Potion effect family not found for selection: {clean}",)
+        return matches, ()
 
-    def _effect_variants(self, formula: AlchemyFormula, selected_label: str) -> tuple[tuple[EffectVariant, ...], tuple[str, ...]]:
+    def _effect_variants(
+        self,
+        traits: tuple[str, ...],
+        selected_label: str,
+    ) -> tuple[tuple[EffectVariant, ...], tuple[str, ...]]:
         if not self.database_path.exists():
             return (), (f"Alchemy database missing: {self.database_path}",)
 
         variants: list[EffectVariant] = []
         unresolved: list[str] = []
         with sqlite3.connect(self.database_path) as db:
-            for trait in formula.traits:
+            for trait in traits:
                 row = db.execute(
                     """
                     SELECT ev.id, e.name, e.category, ev.type
@@ -159,11 +173,23 @@ class PotionAvailabilityRepository:
     def resolve(self, selected_label: str) -> PotionAvailability:
         clean = " ".join(str(selected_label or "").strip().split())
         if not clean:
-            return PotionAvailability(selected_label="", formula=None)
+            return PotionAvailability(selected_label="")
 
-        formula, unresolved = self._formula_for_selection(clean)
-        if formula is None:
-            return PotionAvailability(clean, None, (), unresolved)
+        formulas, unresolved = self._formulas_for_selection(clean)
+        if not formulas:
+            return PotionAvailability(clean, (), (), unresolved)
 
-        effects, db_unresolved = self._effect_variants(formula, clean)
-        return PotionAvailability(clean, formula, effects, db_unresolved)
+        # Equivalent formulas in one family have the same canonical trait set.
+        # Use that effect identity once; reagent alternatives remain inspectable
+        # through `formulas` rather than duplicating EffectVariants.
+        traits = formulas[0].traits
+        if any(set(formula.traits) != set(traits) for formula in formulas[1:]):
+            return PotionAvailability(
+                clean,
+                formulas,
+                (),
+                (f"Potion formula family has inconsistent effect traits: {clean}",),
+            )
+
+        effects, db_unresolved = self._effect_variants(traits, clean)
+        return PotionAvailability(clean, formulas, effects, db_unresolved)
