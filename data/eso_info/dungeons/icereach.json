@@ -1,0 +1,41 @@
+{
+    "id": "icereach",
+    "name": "Icereach",
+    "content_type": "dungeon",
+    "summary": "The Icereach is a group dungeon on an island in the Sea of Ghosts, accessed by boat from Wrothgar's northern shore. The Icereach Coven, of which a sole member was responsible for the destruction of Direfrost Keep in Eastmarch, makes a return. The boat used to travel to the island is parked just east of Jehanna Docks in Wrothgar. It is part of the Harrowstorm dungeon pack DLC, along with the Unhallowed Grave. Fleshflies, rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [
+        "kjarg_the_tuskscraper",
+        "giant",
+        "sister_gohlla",
+        "sister_skelga",
+        "hagraven",
+        "sister_hiti",
+        "vearogh_the_shambler",
+        "flesh_atronach",
+        "sister_bani",
+        "stormborn_revenant",
+        "reachmen",
+        "sister_maefyn",
+        "icereach_coven_boss",
+        "mother_ciannait"
+    ],
+    "achievements": [
+        {
+            "id": "harrowstorm_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Icereach",
+        "page_title": "Online:Icereach",
+        "revision_id": 3607993,
+        "retrieved_at": "2026-08-12T21:25:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

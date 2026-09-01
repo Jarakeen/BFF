@@ -1,0 +1,99 @@
+{
+    "id": "harvester",
+    "name": "Harvester",
+    "content_id": "vaults_of_madness",
+    "content_name": "Vaults of Madness",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Harvester",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Harvester",
+            "line": "Did you come here to be processed, mortal? We will indulge you!",
+            "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+            "ability": null
+        },
+        {
+            "speaker": "Harvester",
+            "line": "You'll regret coming here, mortal!",
+            "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+            "ability": null
+        },
+        {
+            "speaker": "Harvester",
+            "line": "You have such curious eyes. I'll eat them!",
+            "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.": [
+            {
+                "speaker": "Harvester",
+                "line": "Did you come here to be processed, mortal? We will indulge you!",
+                "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+                "ability": null
+            },
+            {
+                "speaker": "Harvester",
+                "line": "You'll regret coming here, mortal!",
+                "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+                "ability": null
+            },
+            {
+                "speaker": "Harvester",
+                "line": "You have such curious eyes. I'll eat them!",
+                "trigger": "Sometimes the Harvesters in the Imperial City Prison will call out threats to you as they are fought.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The harvesters in the Orchard become neutral after completing the quest The Harvest Heart, regardless of which side was picked.",
+        "Massive harvesters can be seen in the background of the Atoll of Immolation, the Deadlands zone, and Doomchar Plateau, slithering along in the lava. Some can also be seen fighting against similarly massive Ruinachs."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Anchors from the Harbour: Find two Guild members who were investigating Dark Anchors.",
+        "Bastion Nymic - Fallen Hues: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Writhing Wastes: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Final Assault: Launch an assault on the Endless Stair and destroy the Planar Vortex.",
+        "The Fires of Dune: Stop the Daedric invasion of Dune.",
+        "The Gates of Adamant: Defeat a Daedric terror and depart from Balfiera. (disabled since Update 46)",
+        "Getting the Band Together: Liven up the Jester's Festival with a Daedric concert.",
+        "God of Schemes: Use the power of the Amulet of Kings to defeat Molag Bal.",
+        "A Guild in Crisis: Discover who is attacking Fighters Guild halls by tracking Guildmaster Merric at-Aswala.",
+        "Halls of Torment: Save the missing companion from the Halls of Torment.",
+        "The Harvest Heart: Eliminate or ally with the enslaved vampires of the Orchard.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "Valley of Blades: Retrieve the Ring of Stendarr's Mercy from the Valley of Blades.",
+        "The Waking Darkness: Discover why the dead have risen from St. Pelin's Graveyard.",
+        "The Weight of Three Crowns: Convince all three alliances to invade Coldharbour.",
+        "Will of the Council: Enter Coldharbour and destroy the Mortuum Vivicus."
+    ],
+    "summary": "Arlimahera's Grip, Dark Anchors, Dark Fissures, Fist of Stone, Hall of Heroes, Honrich Tower, The Orchard, The Reaver Citadel, The Valley of Blades\nLambent Passage\nAshalmawia\nThe Land Sundered from Tamriel\nDestruction's Solace, The Sever\nGorne, Near Rectory Corporea\nNorth of Caterwaul Cove Wayshrine, Deetra Grotto, Worm Cult camp west of Gristmung Hold Harvesters are powerful Daedra most commonly found serving Molag Bal, although they serve Hircine and Sanguine too. Mehrunes Dagon has his own variant of Harvesters that can be encountered in the Deadlands and Rockgrove.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Harvester",
+        "page_title": "Online:Harvester",
+        "revision_id": 3607410,
+        "retrieved_at": "2026-08-12T21:37:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

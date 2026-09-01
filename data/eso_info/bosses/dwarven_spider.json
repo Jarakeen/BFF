@@ -1,0 +1,83 @@
+{
+    "id": "dwarven_spider",
+    "name": "Dwarven Spider",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Dwemer Ruins",
+    "species": "Dwarven Spider",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "31,364",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shocking Touch",
+            "description": "A basic melee attack that does minor shock damage."
+        },
+        {
+            "name": "Double Strike",
+            "description": "A charged melee attack that does moderate physical damage twice. This attack can be blocked to set the spider off balance and makes it only hit once."
+        },
+        {
+            "name": "Static Field",
+            "description": "The spider charges up, emitting a shock aura around itself. Standing in it deals continuous shock damage over time to all targets as indicated by a red circle. Other Dwarven automatons may also attempt to charge up by being near the spider, although this can be interrupted. When an automaton is charged, it glows blue and deals more damage."
+        },
+        {
+            "name": "Overcharge",
+            "description": "If the spider is destroyed while charged, an explosion occurs, dealing moderate shock damage to all targets around it as indicated by a red circle."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "There are several Dwarven Spider pets available for acquisition, including Dwarven Spider, Razak's Opus, Icebound Dwarven Spider, Pedlar Pack Spider, Solar Arc Dwarven Spider, Infernium Dwarven Spiderling, and Energetic Dwarven Shock-Spider.",
+        "There are also Dwarven Spider mounts: the Dwarven Spider, Baandari Dwarven Spider, Chroma-Blue Dwarven Spider, Coral Crawler Dwarven Spider, Duo-Dynamo Argent Spider, Duo-Dynamo Burnished Spider, Duo-Dynamo Dwarven Spider, Ebon Steel Dwarven Spider, Ebony Dwarven Spider, Frost Atronach Dwarven Spider, and Infernium Dwarven Spider.",
+        "Dwarven Spiders in Rkundzelft look like and act like Swarming Dwarven Spiders."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Assisting the Assistant: Gather some parts to repair an Argonian's pet Dwemer construct.",
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Buried Secrets: Help discover some secrets of the Dwemer.",
+        "The Dangerous Past: Search a Dwemer ruin for signs of an ancient weapon.",
+        "Discarded Treasures: Gather scrap metal discarded by a Dwemer construct.",
+        "Dissonant Commands: Learn about a mysterious Dwemer rod.",
+        "The Dungeon Delvers: Help two adventurers investigate a Dwemer ruin.",
+        "Dwarven Relics of Stonefalls: Gather dwarven relics for a pair of interested patrons.",
+        "Dwemer Disassembly: Help a researcher gather Dwemer items from the Scraps.",
+        "Guides to the Deep: Destroy a massive Dwarven construct in Blackreach.",
+        "The Light Fantastic: Help two adventurers recover a Dwemer relic to present to the Shad Astula Arch-Mage.",
+        "Mechanical Murder: Find out why Dwemer constructs attacked a Hlaalu caravan.",
+        "Mine All Mine: Investigate a disturbance in Deshaan's largest kwama mine.",
+        "Molten Pearls of Alik'r Desert: Gather a molten pearl from a Dwemer ruin and prove your bravery.",
+        "The Mystery of Razak: Discover what the Imperials are searching for at Razak's Wheel.",
+        "Parts of the Whole: Collect data on the constructs of Zthenganaz.",
+        "Pledge: Darkshade Caverns I: Explore Darkshade Caverns I and return Undaunted.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell.",
+        "Problem Growth: Clear Blackreach of a dangerous self-repairing Dwarven Colossus.",
+        "Proving the Deed: Investigate the circumstances surrounding Jofnir's death.",
+        "The Scholar's Request: Conduct an experiment on Dwarven spiders at Sentinel Point.",
+        "Scraps Matter: Help a Dwemeric Scholar find parts for his new experiment.",
+        "The Seal of Three: Prevent the Maulborn from completing their scheme inside the Tribunal Temple.",
+        "Snow and Steam: Deal with some dangerous Dwarven machines.",
+        "The Soul-Meld Mage: Help separate the souls of Gadris and Zur.",
+        "Veteran Darkshade Pledge: Prove you are truly Undaunted by clearing Veteran Darkshade Caverns. (disabled since Patch 2.6.4)",
+        "What Was Lost: Help Shatasha investigate Dwemer ruins."
+    ],
+    "achievements": [],
+    "summary": "This article is about the creature. For the mount, see Dwarven Spider (mount). Dwarven Spiders are hostile, spider-like Dwarven automatons that can be found in Dwemer ruins. They can be encountered individually as well as in swarms.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dwarven_Spider",
+        "page_title": "Online:Dwarven Spider",
+        "revision_id": 3461631,
+        "retrieved_at": "2026-08-12T05:32:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

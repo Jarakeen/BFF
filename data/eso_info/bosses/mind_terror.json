@@ -1,0 +1,44 @@
+{
+    "id": "mind_terror",
+    "name": "Mind Terror",
+    "content_id": "bedlam_veil",
+    "content_name": "Bedlam Veil",
+    "location": "Cenotaph of the Remnants, Chroma Incognito, Rectory Corporea",
+    "species": "Mind Terror",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "When engaged in combant, a discordant violin sound effect is played.",
+        "Despite being Elite enemies, Mind Terrors summoned by Aramril are vulnerable to Minor Mangle."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Bastion Nymic - Fallen Hues: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Writhing Wastes: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Tracking Nightmares: Recover notes from the den of the Walking Nightmare.",
+        "An Unhealthy Fate: Find and banish Vaermina from Apocrypha."
+    ],
+    "summary": "Mind Terrors are daedric servants of Vaermina that have insect-like legs and eyeless skulls. They are described as attacking in \"stop motion\".[1] They are said to be made of warped dreams incarnate, with some being likened to the dreams of a Daedric Prince made manifest. Some Mind Terrors are larger and have a different facial structure, often with horns. They can walk around using either their pincers or crawl using their hands. They can be summoned by Herald's Seekers and Aramril when they are fought.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mind_Terror",
+        "page_title": "Online:Mind Terror",
+        "revision_id": 3608303,
+        "retrieved_at": "2026-08-12T21:14:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

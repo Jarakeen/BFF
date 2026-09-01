@@ -1,0 +1,18 @@
+{
+    "id": "glister_vale",
+    "name": "Glister Vale",
+    "content_type": "dungeon",
+    "summary": "Glister Vale is a small, secluded vale and fortified tower in central Auridon, due west of the town of Mathiisen. The vale is home to a great number of wolves, who seem to be guarding the entrance to a single tower. Some of the Queen's entourage were camping just outside the Vale during their grand tour of Auridon when they were abducted by a mad mage.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Glister_Vale",
+        "page_title": "Online:Glister Vale",
+        "revision_id": 3598275,
+        "retrieved_at": "2026-08-12T21:23:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

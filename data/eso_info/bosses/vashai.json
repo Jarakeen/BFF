@@ -1,0 +1,77 @@
+{
+    "id": "vashai",
+    "name": "Vashai",
+    "content_id": "maw_of_lorkhaj",
+    "content_name": "Maw of Lorkhaj",
+    "location": "Maw of Lorkhaj",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shadow Slash",
+            "description": "Basic melee attack dealing high physical damage to the target and applies/refreshes \"Hemorrhage\"."
+        },
+        {
+            "name": "Shield Bash",
+            "description": "Vashai will charge up a heavy attack, dealing extremely high physical damage, knocking down and applies/refreshes \"Hemorrhage\". Blocking will reduce the damage taken and prevent the knockdown."
+        },
+        {
+            "name": "Hemorrhage",
+            "description": "Deals ticks of moderate physical damage over time."
+        },
+        {
+            "name": "Shadow Vortex",
+            "description": "Vashai will drop negate on a player, indicated by a red circle. Players inside will be silenced, slowed and take moderate magical damage over time. Silenced players cannot cast spells that cost Health, Magicka, Ultimate or have no cost at all."
+        },
+        {
+            "name": "Shadow Aspect",
+            "description": "Vashai will always have a dark aura around his head (as visible in the image above), and shortly after the beginning of the fight he will grant Shadow Aspect to the six nearest players. DPS players are advised to not attack him while you share the dark aura with him, as all damage you do will be greatly reduced. Instead, the tanks will switch bosses. The tank with Shadow Aspect will pull S'kinrai and vice versa."
+        },
+        {
+            "name": "Infernal Combustion",
+            "description": "Likewise, players near S'kinrai will gain a bright aura around them. If two players of opposite auras get near each other, both players will explode for high magical damage in a large radius. Thus players of opposite colors should stay separate from each other. The aura persists through death, so if a bright aura player dies, the corpse will be bright. If a dark aura player revives that player, both will explode the moment the bright player gets up. To minimize this, players should only revive players of the same aura as them."
+        },
+        {
+            "name": "Color Change",
+            "description": "An additional mechanic that only appears in vet mode, Vashai will randomly select three players near him that are bright and switch their auras to dark. S'kinrai will also do the same but reversed. The players affected will have a yellowish circle appear around them warning them of the incoming color swap, and those players have to quickly move away from others to prevent Infernal Combustion. Players who have their auras switched to dark will have to move across the room to the other side to attack S'kinrai and vice versa."
+        },
+        {
+            "name": "Explosion",
+            "description": "Vashai and S'kinrai will eventually teleport to opposite ends of the room, dividing the room into a dark and a bright half down the middle. Vashai's half will have a bright floor and vice versa. After a short time both bosses will explode for high magical damage. Players must avoid this by standing on the half with the floor color matching your own aura. After the explosion, all auras are removed from all players. The bosses will then reapply the auras as mentioned above and the fight repeats. A common strategy for this encounter is to divide the trial group into two subgroups of six each. Each subgroup has a tank holding one boss. After the auras are applied, the tanks use Inner Fire to taunt the boss that has the opposite aura as the one of their subgroup, causing the correct boss to come over to their side."
+        },
+        {
+            "name": "Summon Rage of S'kinrai",
+            "description": "He also is able to summon a Rage of S'kinrai to aid him. The boss the enemy summoned will have a bright aura, and only dark aura players will be able to kill it. The enemy should be killed quickly to simplify the fight. These enemies, like S'kinrai, can use Radiant Oppression, and are especially annoying because of it."
+        },
+        {
+            "name": "Shadow Blaze",
+            "description": "Both Vashai and S'kinrai have to be killed at roughly the same time, as once one dies the other will begin casting Shadow Blaze. This uninterruptible spell takes a while to cast and players must kill the remaining boss before it fires. Failure to do so will likely result in instant death for the whole group. Most groups will coordinate DPS between the two subgroups to ensure that the remaining boss can be finished off quickly once his twin dies."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Maw: Stop the dro-m'Athra from flooding into Tamriel."
+    ],
+    "achievements": [],
+    "summary": "Vashai is a large Dro-m'Athra found within the Maw of Lorkhaj. Together with S'kinrai, he serves as the second boss that must be defeated to progress. He wears Dro-m'Athra Style armor with a Daedric Style axe and shield. According to Adara'hai, he and S'kinrai are twins, and used the Sanctuary as a dojo before falling to the Bent Dance.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vashai",
+        "page_title": "Online:Vashai",
+        "revision_id": 3582189,
+        "retrieved_at": "2026-08-12T05:33:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

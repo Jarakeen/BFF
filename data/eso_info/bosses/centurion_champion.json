@@ -1,0 +1,36 @@
+{
+    "id": "centurion_champion",
+    "name": "Centurion Champion",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Maelstrom Arena, Seht's Balcony",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "148,011",
+        "veteran": "395,748",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Centurion Champions are a set of three dwarven centurions serving as the final boss trio of Stage 2: Seht's Balcony in Maelstrom Arena. They appear one by one, after enough damage is dealt to the first and second centurion, who will turtle up and become invulnerable to all incoming damage when the next summoning occurs. Once all three centurions are present in the arena, this mechanic will persist, with the centurions taking turns turtling up, forcing you to shift your attention between all three until they are all destroyed.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Centurion_Champion",
+        "page_title": "Online:Centurion Champion",
+        "revision_id": 2991959,
+        "retrieved_at": "2026-08-19T03:20:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

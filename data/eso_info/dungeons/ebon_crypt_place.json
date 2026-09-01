@@ -1,0 +1,28 @@
+{
+    "id": "ebon_crypt_place",
+    "name": "Ebon Crypt (place)",
+    "content_type": "dungeon",
+    "summary": "The Ebon Crypt is a tomb west of Cath Bedraud in Glenumbra containing Bloodthorn cultists. The dungeon consists of a simple loop, with the boss, a bone colossus called The Ebon Lord, in the large chamber at the far end. Take the northern passageway to activate the delve's skyshard. The note Bloodthorn Orders: Ebon Crypt lies at the entrance and in the hall just south of the boss chamber. Rats and torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Reading the eponymous letter will mark Ebon Crypt on your map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ebon_Crypt_(place)",
+        "page_title": "Online:Ebon Crypt (place)",
+        "revision_id": 3475597,
+        "retrieved_at": "2026-08-12T21:20:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

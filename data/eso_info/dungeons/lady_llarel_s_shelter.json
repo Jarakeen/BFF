@@ -1,0 +1,26 @@
+{
+    "id": "lady_llarel_s_shelter",
+    "name": "Lady Llarel's Shelter",
+    "content_type": "dungeon",
+    "summary": "Lady Llarel's Shelter is a kwama mine in western Deshaan, just northeast of the town of Narsis. A dead Dark Elf and a note can be found near the entrance. You have no choice but to head west to traverse the tunnels. A chest can be found beside the wall near the first cluster of kwama eggs on the right at the mouth of the western chamber. Lady Llarel's Journal is beneath a large root on the north side of this chamber. A Kwama Warrior walks among a nest of eggs near the journal. If you kill the warrior, three Kwama Scribs will emerge from the soil. The boss can be found in the southwest corner of the southern chamber, and the skyshard is located north of her. If you're on the delve's quest, you'll find a Bag of Kwama Eggs beside a standing torch near the boss.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lady_Llarel%27s_Shelter",
+        "page_title": "Online:Lady Llarel's Shelter",
+        "revision_id": 3336581,
+        "retrieved_at": "2026-08-12T21:27:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

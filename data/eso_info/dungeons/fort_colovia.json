@@ -1,0 +1,28 @@
+{
+    "id": "fort_colovia",
+    "name": "Fort Colovia",
+    "content_type": "dungeon",
+    "summary": "Fort Colovia is a fort located southeast of Valente Vineyards Wayshrine, in northern West Weald. It is a training post for Legion recruits, but was recently overrun by Dark Company deserters led by Marius Gallo. He can be found in the southwest. The remaining Legionnaires are gathered outside by the river, near a not-so-secret entrance. They need help getting back inside to ring the distress bell, which they hope will summon help to retake the fort from the Dark Company. Butterflies, Centipedes, Rabbits, Rats, Squirrels, Torchbugs are found in numbers within. Hazards include bear traps. The fort has also had the misfortune of holding dozens of misprinted gala invitations deriding Count Calantius, which could cause an uproar if they are not destroyed.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "It is found at roughly the same grounds as Lord Vlindrel's Tower in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fort_Colovia",
+        "page_title": "Online:Fort Colovia",
+        "revision_id": 3567113,
+        "retrieved_at": "2026-08-12T21:22:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

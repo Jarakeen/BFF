@@ -1,0 +1,48 @@
+{
+    "id": "cadaverous_guar",
+    "name": "Cadaverous Guar",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "Guar",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "392,930",
+        "veteran": "935,060",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Belch of Bile",
+            "description": "The guar spits many poison pools in front of itself as indicated by red circles. It will usually do this after reviving."
+        },
+        {
+            "name": "Spit",
+            "description": "A basic ranged attack that does minor poison damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "The Cadaverous Guar is a large skeletal guar found in Fang Lair alongside the Cadaverous Bear, Senche-Tiger, it makes up the Cadaverous Menagerie, the second boss fight of the dungeon. Additionally it will be supported by Cadaverous Dire Wolves.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cadaverous_Guar",
+        "page_title": "Online:Cadaverous Guar",
+        "revision_id": 3353339,
+        "retrieved_at": "2026-08-12T21:21:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,67 @@
+{
+    "id": "count_ryelaz",
+    "name": "Count Ryelaz",
+    "content_id": "lucent_citadel",
+    "content_name": "Lucent Citadel",
+    "location": "Lucent Citadel — Mirror of Opposition",
+    "species": "Grievous Twilight",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Rend",
+            "description": "A double strike melee attack dealing moderate physical damage twice."
+        },
+        {
+            "name": "Swipe",
+            "description": "Count Ryelaz swipes its target with both hands at the same time, dealing high physical damage."
+        },
+        {
+            "name": "Twinstrike Sunder",
+            "description": "Count Ryelaz throws a blue orb at all targets in from of him, each dealing 1 tick of moderate magic damage over time."
+        },
+        {
+            "name": "Shear/Gloomy Impact",
+            "description": "Count Ryelaz charges a heavy attack with its wings which deals extreme physical damage and stuns. This can be blocked to stagger Count Ryelaz instead (Shear). Then meteors fall on all players in his side of the mirror after 2 seconds as indicated by ring indicators in the order they will hit, which deal very high magic damage and stun. All players must block this and not stack with each other as you take damage from every meteor. In Hard Mode a second wave of meteor fall a few seconds after the first one (Gloomy Impact)."
+        },
+        {
+            "name": "Summon",
+            "description": "When Count Ryelaz reaches 90% Health, he periodically summons adds. In Normal and Veteran Mode, one Gloomy Blackguard and two or three Mirrormoor Bone Flayers are summoned every 60 seconds. In Hard Mode, one Gloomy Blackguard is summoned every 40 seconds and two-three Mirrormoor Bone Flayers are summoned every 20 seconds. The Mirrormoor Bone Flayers can only spawn if a Gloomy Blackguard is alive."
+        },
+        {
+            "name": "Bleak Pulse/Bleak Annihilation",
+            "description": "Every 60 seconds (and at 80% and 35% Health in Hard Mode), Count Ryelaz casts this. You must look through the mirror in the center to see which of the three pads is lighted up then go to the symmetrical one on your side of the mirror. Successfully standing on the good pad teleports you to the other side and deals moderate frost damage (Bleak Pulse). Otherwise, you are one-shot with frost damage (Bleak Annihilation). If Zilyesset dies first, you have a set time to kill Count Ryelaz before he casts \"Bleak Annihilation\" but without any way to escape, guaranting a group wipe."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "When you activate the hard mode banners:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Knot Awaits: Enter Lucent Citadel and steal the Arcane Knot."
+    ],
+    "achievements": [],
+    "summary": "Count Ryelaz is a Grievous Twilight that can be encountered in Lucent Citadel, where it and Zilyesset serve as the first bosses.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Count_Ryelaz",
+        "page_title": "Online:Count Ryelaz",
+        "revision_id": 3453540,
+        "retrieved_at": "2026-08-12T05:33:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

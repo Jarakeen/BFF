@@ -1,0 +1,99 @@
+{
+    "id": "earthen_heart_knight",
+    "name": "Earthen Heart Knight",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 4: The Slave Pit",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,065,121",
+        "veteran": "5,413,936",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Power Bash",
+            "description": "A heavy shield bash that does moderate damage and stuns if it hits the player. This attack can be blocked to knock the enemy off balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Block",
+            "description": "The enemy may also briefly block with its shield, reducing damage taken greatly. Players who attempt heavy attacks on the enemy while it is blocking will be set off balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Cinder Storm",
+            "description": "Earthen Heart Knight casts Eruption under itself which is an area that snares and deals damage over time to players inside.",
+            "damage_type": null
+        },
+        {
+            "name": "Stone Giant",
+            "description": "Earthen Heart Knight casts a Stone Giant-like ability, dealing damage and knocking the target down. If it hits its target, Earthen Heart Knight gains armor that reduces her damage taken.",
+            "damage_type": null
+        },
+        {
+            "name": "Igneous Shield",
+            "description": "Earthen Heart Knight casts an Igneous Shield-like ability, gaining a small shield for herself.",
+            "damage_type": null
+        },
+        {
+            "name": "Fossilize",
+            "description": "Earthen Heart Knight casts a Fossilize-like ability, an unblockable stun towards a target.",
+            "damage_type": null
+        },
+        {
+            "name": "Molten Armaments",
+            "description": "Earthen Heart Knight casts a Molten Armaments-like ability, increasing both its and its allies' damage done.",
+            "damage_type": null
+        },
+        {
+            "name": "Corrosive Armor",
+            "description": "When low health, Earthen Heart Knight casts a Corrosive Armor-like ability, which caps the damage every hit does to her to a percent of her health while doing poison damage over time to targets near her. Also reduces the Weapon/Spell damage of nearby targets.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Earthen Heart Knight casts Eruption under itself which is an area that snares and deals damage over time to players inside.",
+            "name": "Cinder Storm",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Earthen Heart Knight is a Dark Elf member of House Dres encountered in the Dragonstar Arena. She makes use of the Earthen Heart skill line in combat. She will initially be encountered as the boss of the Slave Pit, the fourth round of the arena. You'll be forced to fight her a second time in the Champion's Arena at round ten, when Hiath the Battlemaster summons her and Pishna Longshot after reaching 25% health in Normal Mode only.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Earthen_Heart_Knight",
+        "page_title": "Online:Earthen Heart Knight",
+        "revision_id": 3541130,
+        "retrieved_at": "2026-08-19T03:20:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

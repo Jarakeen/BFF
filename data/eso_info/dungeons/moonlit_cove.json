@@ -1,0 +1,26 @@
+{
+    "id": "moonlit_cove",
+    "name": "Moonlit Cove",
+    "content_type": "dungeon",
+    "summary": "Moonlit Cove is a Khajiiti temple and delve found along the southwestern coast of Southern Elsweyr, containing Ruddy Fangs. This religious site is known for its sacred waters and diverse flora and fungi. However, the waters have become tainted since the bandits moved in and turned the site into a skooma distillery. As discovered as part of the zone's main quest's epilogue, Moonlit Cove contains the hidden tomb of the famous Khajiiti hero, Khunzar-ri. Passive Moon-Kissed Jellies can be found floating around the caverns. Sacred Waters of the Shining Sea can be found on some crates by the entrance. A copy of The Favored Daughter of Fadomai can be found on the wooden middle-height platforms in the open cavern full of rivers and waterfalls. A copy of Khunzar-ri and the Lost Alfiq can be found in the Tigershark's skooma den, exit-side. The Marriage of Moon and Tide can be found on a rock surface jutting out from the waterfall in the room near Bahzahar's Hideout. Elsweyr My Love, Page 5 can be found on a marked crate in the lower southeastern corridor.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dragonhold_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Moonlit_Cove",
+        "page_title": "Online:Moonlit Cove",
+        "revision_id": 3548077,
+        "retrieved_at": "2026-08-12T21:29:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

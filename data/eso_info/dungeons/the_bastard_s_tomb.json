@@ -1,0 +1,26 @@
+{
+    "id": "the_bastard_s_tomb",
+    "name": "The Bastard's Tomb",
+    "content_type": "dungeon",
+    "summary": "The Bastard's Tomb is an ancient Nordic tomb in southeastern Eastmarch, north-northeast of the Rift gate containing draugr and Stormfist soldiers. The soldiers are led by Agnenor the Blade.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Bastard%27s_Tomb",
+        "page_title": "Online:The Bastard's Tomb",
+        "revision_id": 3598157,
+        "retrieved_at": "2026-08-12T21:14:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

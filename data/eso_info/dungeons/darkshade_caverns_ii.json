@@ -1,0 +1,37 @@
+{
+    "id": "darkshade_caverns_ii",
+    "name": "Darkshade Caverns II",
+    "content_type": "dungeon",
+    "summary": "Darkshade Caverns II is a group dungeon found in southeastern Deshaan. As Deshaan's largest kwama mine, the caverns' ownership remains hotly contested. The caverns also contain the hidden Dwemer ruin of Rkugamz. The storyline continues from the event of Darkshade Caverns I. In this version, a Mages Guild researcher named Shatasha needs your help destroying a dangerous Dwemer mechanism within Rkugamz, before it corrupts Deshaan above. You can learn about its location from Mad Zebba outside Elden Root, Lady Blade outside Wayrest, or Hranir Icy-Mane outside Mournhold. Its dungeon sets are Armor of Truth, Netch's Touch, and Strength of the Automaton. Darkshade Caverns II is accessible starting at level 42.",
+    "location": "",
+    "boss_ids": [
+        "transmuted_hive_lord",
+        "draining_scrib",
+        "sedating_scrib",
+        "grobull_the_transmuted",
+        "netch",
+        "the_engine_guardian",
+        "dwemer_spider"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Darkshade Caverns was designed for Levels 20–23, and Veteran Darkshade Caverns was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Darkshade Caverns I was only available in Normal mode, and Darkshade Caverns II was only available in Veteran mode. These were named Darkshade Caverns and Veteran Darkshade Caverns respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Darkshade_Caverns_II",
+        "page_title": "Online:Darkshade Caverns II",
+        "revision_id": 3139401,
+        "retrieved_at": "2026-08-12T21:19:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

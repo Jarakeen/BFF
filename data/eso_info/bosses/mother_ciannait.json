@@ -1,0 +1,443 @@
+{
+    "id": "mother_ciannait",
+    "name": "Mother Ciannait",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Ramparts — Courtyard",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,178,790",
+        "veteran": "",
+        "hardmode": "5,413,504"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sister Hiti",
+            "line": "They killed Skelga! Right in front of me!",
+            "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+            "ability": null
+        },
+        {
+            "speaker": "Sister Gohlla",
+            "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+            "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+            "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Mother Ciannait \"Ah, the castaways. Pity you had to come all this way only to die at our hands. Come sisters. Let's put an end to their sad tale.\"",
+            "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You came all this way, only to hesitate now? Pitiful.",
+            "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Come now, dears. Do you really intend to make us wait?",
+            "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Having second thoughts? I certainly would.",
+            "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Look, dears. They linger on our threshold like babes in a basket. Adorable, aren't they?",
+            "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Gohlla, cool down our guests, won't you?",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Scatter them to the winds, Gohlla!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Send them to an icy grave, Gohlla.\"",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Gohlla! Chill them to the bone!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Leave nothing but ashes, Hiti!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Hiti! Set a fire in their soul!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Hiti! Burn them all!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Set them ablaze, Hiti!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "They seek death, Bani. Give it to them.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Bani, give these fools a taste of the Dark Arts.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Looking for new playthings, Bani? They'll be dead soon enough.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Bani, their flesh is yours.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Call down the lightning, Maefyn!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Shock them to submission, Maefyn!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Show them the storm's fury, Maefyn!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Maefyn! Unleash your thunderbolts!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Lend me your strength, sisters!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Sisters! Let me wield the Coven's wrath!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Icereach sisters, give me strength!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Gohlla, Hiti, Bani, Maefyn, your power flows through me!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Unite behind me, sisters! Let me channel your power!",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This island belongs to the Coven. You never had a chance.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Is that all? Hmph. It seems we overestimated them, dears.",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Like plucking weeds from a garden ….",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "That settles that. Honestly, dears, was that really so hard?",
+            "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.": [
+            {
+                "speaker": "Sister Hiti",
+                "line": "They killed Skelga! Right in front of me!",
+                "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+                "ability": null
+            },
+            {
+                "speaker": "Sister Gohlla",
+                "line": "Settle, Hiti. You'll disturb the ritual! It must be perfect. Isn't that right, mother?",
+                "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Mother Ciannait \"It is, dear one. Our patron's terms were fair, Hiti. If we wish to reap the reward, we must deliver what he desires.\"",
+                "trigger": "As you approach the courtyard where the ritual is being performed, you will overhear the surviving coven members talk among themselves.",
+                "ability": null
+            }
+        ],
+        "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.": [
+            {
+                "speaker": "",
+                "line": "Mother Ciannait \"Ah, the castaways. Pity you had to come all this way only to die at our hands. Come sisters. Let's put an end to their sad tale.\"",
+                "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You came all this way, only to hesitate now? Pitiful.",
+                "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Come now, dears. Do you really intend to make us wait?",
+                "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Having second thoughts? I certainly would.",
+                "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Look, dears. They linger on our threshold like babes in a basket. Adorable, aren't they?",
+                "trigger": "Once you arrive in the courtyard, Cainnait and her fellow witches will be looking down at you from the stone ledge.",
+                "ability": null
+            }
+        ],
+        "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.": [
+            {
+                "speaker": "",
+                "line": "Gohlla, cool down our guests, won't you?",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Scatter them to the winds, Gohlla!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Send them to an icy grave, Gohlla.\"",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Gohlla! Chill them to the bone!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Leave nothing but ashes, Hiti!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Hiti! Set a fire in their soul!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Hiti! Burn them all!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Set them ablaze, Hiti!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "They seek death, Bani. Give it to them.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Bani, give these fools a taste of the Dark Arts.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Looking for new playthings, Bani? They'll be dead soon enough.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Bani, their flesh is yours.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Call down the lightning, Maefyn!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Shock them to submission, Maefyn!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Show them the storm's fury, Maefyn!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Maefyn! Unleash your thunderbolts!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Lend me your strength, sisters!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Sisters! Let me wield the Coven's wrath!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Icereach sisters, give me strength!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Gohlla, Hiti, Bani, Maefyn, your power flows through me!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Unite behind me, sisters! Let me channel your power!",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "This island belongs to the Coven. You never had a chance.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Is that all? Hmph. It seems we overestimated them, dears.",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Like plucking weeds from a garden ….",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "That settles that. Honestly, dears, was that really so hard?",
+                "trigger": "The four sisters will teleport down and the fight will begin. Mother Cainnait will shout out orders to whichever sister is active.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "This article is about the creature. For the item set, see Mother Ciannait (set). Mother Ciannait is the leader of the Icereach Coven who have been performing powerful and complex storm rituals on the Island on the behalf of a mysterious patron. She is the final boss of the dungeon and is supported by the surviving sisters who have been encountered through the keep: Gohlla, Hiti, Bani and Maefyn. She is also the namesake of the Mother Ciannait set and the basis of a trophy and bust.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mother_Ciannait",
+        "page_title": "Online:Mother Ciannait",
+        "revision_id": 3608021,
+        "retrieved_at": "2026-08-12T21:26:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

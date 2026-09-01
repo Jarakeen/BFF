@@ -1,0 +1,131 @@
+{
+    "id": "taskmaster_viccia",
+    "name": "Taskmaster Viccia",
+    "content_id": "the_cauldron",
+    "content_name": "The Cauldron",
+    "location": "The Cauldron, Howling Cavern",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,736,815",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "Taskmaster Viccia winds up her hammer and strikes hard, dealing massive physical damage and knocking you back. This attack can be blocked to stagger Taskmaster Viccia instead."
+        },
+        {
+            "name": "Lashing Chains",
+            "description": "If you are far from her, Taskmaster Viccia pulls to her all players in the direction she is facing which deals moderate-high physical damage. This can be blocked to negate to pull. Additionally, be aware of the placement of Taskmaster Snares to avoid being pulled through them."
+        },
+        {
+            "name": "Discharge",
+            "description": "Taskmaster Viccia rakes her hammer across the floor then slams it into the ground, causing a massive shockwave, dealing very high shock damage and knocking you back, indicated by a growing circular AoE. The area of the slam remains charged with electricity for a duration, dealing continuous high shock damage."
+        },
+        {
+            "name": "Capture",
+            "description": "Taskmaster Viccia raises her hammer to the sky, causing four (in normal mode) or six (in veteran mode) Taskmaster Snares to be applied in various spots of the arena, indicated by circular AoEs. Stepping in them causes an explosion that deals very high shock damage (Jolt). These can linger long enough that they will still exist when the next application occurs."
+        },
+        {
+            "name": "Execute",
+            "description": "Taskmaster Viccia channels a lightning attack at a player that stuns them and they cannot break free of it. If this isn't interrupted, the target is always dealt lethal shock damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Taskmaster Viccia",
+            "line": "Escapees? Not on my watch.",
+            "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+            "ability": "Discharge"
+        },
+        {
+            "speaker": "Drathas",
+            "line": "Tell me where to find my father, monster!",
+            "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+            "ability": "Discharge"
+        },
+        {
+            "speaker": "Taskmaster Viccia",
+            "line": "Father? Do you expect me to see any mortals as individuals? You're just flesh and muscle.",
+            "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+            "ability": "Discharge"
+        },
+        {
+            "speaker": "Drathas",
+            "line": "Let's take this monster down! I can help!",
+            "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+            "ability": "Discharge"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you": [
+            {
+                "speaker": "Taskmaster Viccia",
+                "line": "Escapees? Not on my watch.",
+                "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+                "ability": "Discharge"
+            },
+            {
+                "speaker": "Drathas",
+                "line": "Tell me where to find my father, monster!",
+                "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+                "ability": "Discharge"
+            },
+            {
+                "speaker": "Taskmaster Viccia",
+                "line": "Father? Do you expect me to see any mortals as individuals? You're just flesh and muscle.",
+                "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+                "ability": "Discharge"
+            },
+            {
+                "speaker": "Drathas",
+                "line": "Let's take this monster down! I can help!",
+                "trigger": "As you enter the Howling Caverns along with Drathas, the Taskmaster will notice you",
+                "ability": "Discharge"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "bosses",
+            "name": "boss",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Deep: Help Lyranth recover a map from a group of cultists.",
+        "Pledge: The Cauldron: Enter the Cauldron and return Undaunted."
+    ],
+    "summary": "Taskmaster Viccia is a Xivilai found in the Howling Cavern section of the Cauldron. She serves as the second boss of the dungeon. She wields a maul in combat. During the fight you will also need to avoid her traps.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Taskmaster_Viccia",
+        "page_title": "Online:Taskmaster Viccia",
+        "revision_id": 3566866,
+        "retrieved_at": "2026-08-12T21:16:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

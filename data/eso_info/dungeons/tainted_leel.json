@@ -1,0 +1,26 @@
+{
+    "id": "tainted_leel",
+    "name": "Tainted Leel",
+    "content_type": "dungeon",
+    "summary": "The Tainted Leel is a cursed and haunted Argonian settlement located on an islet, far west of Solstice. This place is a delve and the rocky and mountainous islet can be seen in the distance when standing on the western shore and is accessible by a canoe. An Argonian stone city was built on the hidden western side of islet, with tunnels built into the rock to the northeast. Thatched huts and the remains of an egg nursery can be found on the southwestern shore of the islet. Once it was the home of the Zaman-Tla, a group of Shell-Tide Argonians who migrated to the remote islet to get away from the Corelanyan Elves. Sometime later, an unknown event caused the village to become cursed and its inhabitants to die and become undead. Nowadays, the islet is the domain of a Lich, and the village ruins are overgrown and filled with shambling undead Argonians. The ruins are also filled with traps such as, Flamethrowers, Poisoned Darts, Spike Wall and Spinning Blades. Other than the undead, other hostile creatures include hackwings, voriplasms and the remaining Voskrona Guardians. On the shoreline, numbers of Hadolid and Haj Mota can be found in the shallow waters. Smaller animals found on the islet include Dragonflies, fleshflies, frogs, hermit crabs, lesser sea adders, lizards, rats, snakes and torchbugs. You can come to the aid of a wandering spirit and learn what the truth of what happened to the islet in the past.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tainted_Leel",
+        "page_title": "Online:Tainted Leel",
+        "revision_id": 3598033,
+        "retrieved_at": "2026-08-12T21:35:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

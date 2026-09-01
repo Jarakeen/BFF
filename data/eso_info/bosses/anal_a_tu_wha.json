@@ -1,0 +1,105 @@
+{
+    "id": "anal_a_tu_wha",
+    "name": "Anal'a Tu'wha",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 5: The Celestial Ring",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,157,740",
+        "veteran": "5,800,646",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Uppercut",
+            "description": "A melee attack that deals moderate physical damage and knocks you back if it connects. This attack can be blocked to knock Anal'a Tu'wha off balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Cleave",
+            "description": "Anal'a Tu'wha swings their weapon around, dealing minor physical damage to all enemies in front of them. This attack has no red cone indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Flames of Oblivion",
+            "description": "During combat, Anal'a Tu'wha summons a large fire field around in the form of a circular AoE, dealing continuous high flame damage. The field lingers for a long time.",
+            "damage_type": null
+        },
+        {
+            "name": "Standard of Might",
+            "description": "The attack is a circular AoE and causes flame damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Engulfing Flames",
+            "description": "Anal'a Tu'wha breathes fire as indicated by a red cone. This attack does moderate flame damage over time and snares all enemies within the cone. This attack can be blocked to reduce damage or simply avoided.",
+            "damage_type": null
+        },
+        {
+            "name": "Unstable Flame",
+            "description": "Anal'a Tu'wha casts a Venomous Claw-like ability to a target that deal both instant damage and damage over time.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "During combat, Anal'a Tu'wha summons a large fire field around in the form of a circular AoE, dealing continuous high flame damage. The field lingers for a long time.",
+            "name": "Flames of Oblivion",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The attack is a circular AoE and causes flame damage over time.",
+            "name": "Standard of Might",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Anal'a Tu'wha is an undead Anka-Ra warrior encountered in the Dragonstar Arena. He is the boss of the fifth round, the Celestial Ring.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Anal%27a_Tu%27wha",
+        "page_title": "Online:Anal'a Tu'wha",
+        "revision_id": 3173238,
+        "retrieved_at": "2026-08-19T03:20:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

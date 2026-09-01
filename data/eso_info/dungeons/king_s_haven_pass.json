@@ -1,0 +1,29 @@
+{
+    "id": "king_s_haven_pass",
+    "name": "King's Haven Pass",
+    "content_type": "dungeon",
+    "summary": "King's Haven Pass is a delve running through Eton Nir with two entrances, one east of the Illumination Academy, and the other north of Eton Nir Grotto. It contains Coral-Splitter goblins and wildlife. This mountain pass was once, long ago, the site of amicable relations between the Altmer and the goblins, though it was relatively short-lived. The following letters can be found here: The Tale of Syrabane, Praise Be, Restoring the Welwas.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This location previously appeared in Arena, as Kings Haven.",
+        "Both entrances of the this delve have their own icon on the zone map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:King%27s_Haven_Pass",
+        "page_title": "Online:King's Haven Pass",
+        "revision_id": 3450040,
+        "retrieved_at": "2026-08-12T21:26:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

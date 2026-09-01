@@ -1,0 +1,26 @@
+{
+    "id": "varen_s_watch",
+    "name": "Varen's Watch",
+    "content_type": "dungeon",
+    "summary": "Varen's Watch is a fort located north of Frontier's Cradle, in western West Weald. The fort has recently been overrun by the Recollection and their daedra allies. Centipedes and Torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Varen%27s_Watch",
+        "page_title": "Online:Varen's Watch",
+        "revision_id": 3383897,
+        "retrieved_at": "2026-08-12T21:37:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

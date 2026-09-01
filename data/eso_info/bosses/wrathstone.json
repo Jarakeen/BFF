@@ -1,0 +1,39 @@
+{
+    "id": "wrathstone",
+    "name": "Wrathstone",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "During the Imperial Simulacrum in the late Third Era, the Temple of Agamanus was occupied by a group of warrior-priests led by Sir Galandir. This group would attack the Mages Guild in Corinthe, taking a tablet that contained a key to decipher an Elder Scroll. Knowing this, Sir Galandir orchestrated the attack and took the tablet to the Temple of Agamanus. The loremaster of the Guild, Turamane ap' Kolthis, had tasked the Eternal Champion with returning the tablet to the Mages Guild, in exchange, Kolthis would decipher the location of the Halls of Colossus. In the end, the Mages Guild received the tablet, and the champion ventured to the Halls of Colossus.[13]",
+        "Various influential members of the ESO community were given Wrathstone tablet props which hinted towards the Season of the Dragon content releases. The prop was later made available as merchandise purchasable by the public."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Wrathstone is a powerful, mythical artifact that has been coveted by many people for thousands of years. It consists of a small, carved stone tablet with elaborate symbols and a bas-relief of a dragon's head, and it has a connection to the ancient Demon Weapon hidden within the Halls of Colossus in southern Elsweyr. At one point in time, the Wrathstone was split into two pieces, with the left side initially coming into the possession of the Dwemer of Kagrenzel, and the right side entrusted to the Ayleids of Garlas Malatar by the Daedric Prince Meridia.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Lore:Wrathstone",
+        "page_title": "Lore:Wrathstone",
+        "revision_id": 3609340,
+        "retrieved_at": "2026-08-12T21:23:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

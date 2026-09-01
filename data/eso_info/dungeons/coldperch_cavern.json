@@ -1,0 +1,28 @@
+{
+    "id": "coldperch_cavern",
+    "name": "Coldperch Cavern",
+    "content_type": "dungeon",
+    "summary": "Coldperch Cavern is a cave northeast of Orsinium, containing Winterborn and harpies. It is the lair of the hagraven Kraala Birdsong and her flocks of birds. After she entered into a relationship with a Winterborn leader, they have also moved into the cave, much to her displeasure. The book, Birds of Wrothgar, and the note Letter to Mairrna can be found here. Birds of Wrothgar is sitting next to the corpse of its author, Haenelisse. Kraala's Journal is located upon Kraala Birdsong's altar in the southeastern chamber.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The Black Quill, one of the trophies for the House of Orsimer Glories, is found in Coldperch Cavern. It is on a bench near a cooking fire in the southwest part of the map, opposite a wooden cage. It looks like a waterskin."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Coldperch_Cavern",
+        "page_title": "Online:Coldperch Cavern",
+        "revision_id": 3549563,
+        "retrieved_at": "2026-08-12T21:17:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

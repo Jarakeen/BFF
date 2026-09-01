@@ -1,0 +1,18 @@
+{
+    "id": "vandacia_s_deadlands_keep",
+    "name": "Vandacia's Deadlands Keep",
+    "content_type": "dungeon",
+    "summary": "Vandacia's Deadlands Keep is a Daedric fortress granted to Councilor Vandacia by Mehrunes Dagon. It can be reached by ship aboard the Calamity during the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vandacia%27s_Deadlands_Keep",
+        "page_title": "Online:Vandacia's Deadlands Keep",
+        "revision_id": 3561645,
+        "retrieved_at": "2026-08-12T21:37:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

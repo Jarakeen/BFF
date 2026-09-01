@@ -1,0 +1,44 @@
+{
+    "id": "the_blighted_carapace",
+    "name": "The Blighted Carapace",
+    "content_id": "spire_of_the_crimson_coin",
+    "content_name": "Spire of the Crimson Coin",
+    "location": "Spire of the Crimson Coin",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Blighted Carapace is a powerful soulrazer knight boss of the Spire of the Crimson Coin public dungeon. It functions exactly like the common Soulrazer Knight Sentinel.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Blighted_Carapace",
+        "page_title": "Online:The Blighted Carapace",
+        "revision_id": 3293211,
+        "retrieved_at": "2026-08-12T21:34:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

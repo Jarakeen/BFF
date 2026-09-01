@@ -1,0 +1,81 @@
+{
+    "id": "gatekeeper_gruzo",
+    "name": "Gatekeeper Gruzo",
+    "content_id": "gorne",
+    "content_name": "Gorne",
+    "location": "Gorne",
+    "species": "Flesh Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Raking Swipe",
+            "description": "Basic melee attack with the arm or the foot dealing moderate-high physical damage."
+        },
+        {
+            "name": "Crypt Smash",
+            "description": "Gatekeeper Gruzo slams its mace fist on its target, dealing very high physical damage, stunning them, and applying \"Devitalized\" for six seconds which debuffs the target in three ways: Armor reduced by 6,000, damage taken increased and damage shields decreased. This attack can be blocked to prevent the stun and \"Devitalized\", and to stagger the flesh atronach instead but the target instead gets \"Hindered\" and \"Rattled\" for six seconds. \"Hindered\" gives you more than 1,5 times your Max Health in Heal Absorption and \"Rattled\" makes you take more damage and deal less. \"Devitalized\", \"Hindered\" and \"Rattled\" cannot be purged. If instead Gatekeeper Gruzo misses this attack, it gains \"Seethe\" which increases its damage done for a moment."
+        },
+        {
+            "name": "Fetid Fireband",
+            "description": "Gatekeeper Gruzo swings its torch hand, as indicated by a red cone, dealing very high flame damage and applying \"Fetid Firebrand\" for six seconds, dealing high flame damage over time and creating an exploding area under the target every two seconds dealing high flame damage."
+        },
+        {
+            "name": "Burning Ground",
+            "description": "Gatekeeper Gruzo creates two brief flaming areas dealing continuous direct moderate-high flame damage, snaring and applying a stack of \"Burning\" which greatly increases the damage taken by those flaming areas."
+        },
+        {
+            "name": "35% Boss Speed Buff",
+            "description": "Gatekeeper Gruzo enrages which slows it but greatly increases its damage done."
+        },
+        {
+            "name": "Fear the Flesh",
+            "description": "It loudly growls which fears all players and forces them to slowly walk to it, though you can break free of this. During this Gatekeeper Gruzo slowly charges a devastating punch on the ground, as indicated by a slow growing area under it, which deals very high physical damage."
+        },
+        {
+            "name": "Searing Fountain",
+            "description": "Gatekeeper Gruzo shoots many firebolts from its torch arm, each creating a small flaming area dealing moderate flame damage."
+        },
+        {
+            "name": "Skeleton Fury",
+            "description": "Gatekeeper Gruzo summons five Skeletal Berserkers."
+        },
+        {
+            "name": "Blazing Whirlwind",
+            "description": "When reaching 50% Health, Gatekeeper Gruzo creates a permanent flame tornado dealing very fast hits of moderate flame damage and many smaller tornadoes throughout the arena dealing continuous direct moderate flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Gatekeepr Gruzo is a Flesh Atronach who will emerge from a portal in the central battlefield of Gorne. He serves as the group event of the Gorne public dungeon. He can only be fought after defeating the initial wave of monsters, and then the generals, Grakendo Bragcus and Aurig Ydea. Based on his name, it's likely that he is intended to be a Gatekeeper of the Fringe, a powerful form of Flesh Atronach tasked with protecting Sheogorath's realm from intruders.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gatekeeper_Gruzo",
+        "page_title": "Online:Gatekeeper Gruzo",
+        "revision_id": 3536661,
+        "retrieved_at": "2026-08-12T21:24:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

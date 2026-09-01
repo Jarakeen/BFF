@@ -1,0 +1,36 @@
+{
+    "id": "lamia_queen",
+    "name": "Lamia Queen",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Lamia Queen may refer to three NPCs:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lamia_Queen",
+        "page_title": "Online:Lamia Queen",
+        "revision_id": 3606666,
+        "retrieved_at": "2026-08-19T03:20:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

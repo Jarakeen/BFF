@@ -1,0 +1,47 @@
+{
+    "id": "glenmoril_wyrd",
+    "name": "Glenmoril Wyrd",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Cut dialogue implies that Hircine and the Glenmoril Wyrd may have originally planned to be the antagonists in Stormhaven, instead of Vaermina and her Supernal Dreamers. For more info, please see the Cut Content article."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Beyond the Call: Discover what the Dark Witnesses have been cultivating in Northglen.",
+        "Dark Wings: Convince a former wyress to leave the city.",
+        "Destroying the Dark Witnesses: Meet the Glenmoril Wyrd at Jackdaw Cove.",
+        "The Heart of the Beast: Help the Glenmoril Wyrd recover their temple from the Reachmen.",
+        "Heart of Evil: Drive the hagraven and her Dark Witnesses out of Mournoth.",
+        "Sojourn of the Druid King: Help Druid Laurel stop a Firesong archdruid's plans on the mainland.",
+        "The Will of the Woods: Help the Sentinel of Viridian Woods.",
+        "The Last Spriggan: Try to prevent a spriggan from becoming a lurcher."
+    ],
+    "summary": "The Glenmoril Wyrd is a coven of nature-witches mainly found in northern Bangkorai. They worship Hircine and have knowledge of how to cure both lycanthropy and vampirism. Their willingness to cure lycanthropy puts them at conflict with the Reachmen who revere all aspects of Hircine and view lycanthropy as a blessing. They also have the knowledge of polymorphism. Members have been known to polymorph into ravens, while permanent polymorphism into hagravens and lamias is rarer and thus these hybrids are venerated by the Wyrd. They are not to be confused with the Beldama Wyrd, who commune with Jephre, the Forest God of the Bretons. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Glenmoril_Wyrd",
+        "page_title": "Online:Glenmoril Wyrd",
+        "revision_id": 3197247,
+        "retrieved_at": "2026-08-12T21:28:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

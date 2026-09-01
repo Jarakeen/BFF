@@ -1,0 +1,87 @@
+{
+    "id": "oxblood_the_depraved",
+    "name": "Oxblood the Depraved",
+    "content_id": "the_cauldron",
+    "content_name": "The Cauldron",
+    "location": "The Cauldron — Oxblood's Menagerie",
+    "species": "Ogrim",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "4,736,815",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slug",
+            "description": "Oxblood punches its target, dealing major physical damage."
+        },
+        {
+            "name": "Butcher",
+            "description": "Oxblood summons a chain shrouded in green mist from the ground every two seconds three consecutive times in a row. Each chain explodes to deal damage at the end of its lifespan, and each of the three consecutive explosions is larger than the previous one. You'll take moderate physical damage if the chain is allowed to explode on you."
+        },
+        {
+            "name": "Noxious Release",
+            "description": "Oxblood belches clouds of green poison out in front of him, which fans out in five directions around him. If you stand in the poison, you'll take major poison damage."
+        },
+        {
+            "name": "Bludgeon",
+            "description": "Oxblood takes two seconds to raise his meaty arms and pounds the ground in front of him, dealing devastating physical damage to anyone who stands within range of this attack."
+        },
+        {
+            "name": "Vomit",
+            "description": "Oxblood vomits, sending seven globs flying to the edge of the arena, which then animate. The green Bile Globs slowly crawl towards the boss, while the red Gore Globs spew projectiles at you."
+        },
+        {
+            "name": "Deviant Consumption",
+            "description": "Oxblood runs over to the nearest Gore or Bile Glob and eats it, dealing moderate poison damage to you if you're nearby.. If he eats a Bile Glob, he'll restore some health. If he eats a Gore Glob, he becomes enraged, and his attacks deal more damage."
+        },
+        {
+            "name": "Gore Rush",
+            "description": "While Enraged, Oxblood may charge at you, dealing moderate physical damage. This can be interrupted."
+        },
+        {
+            "name": "Encaged",
+            "description": "In Veteran, Oxblood will occasionally point at a player before throwing an Iron Maiden over them, incapacitating them, and dealing a moderate amount of (?) damage until the cage is destroyed by other party members, or (?) seconds have passed, after which it disappears."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "creatures",
+            "name": "creature",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Deep: Help Lyranth recover a map from a group of cultists.",
+        "Pledge: The Cauldron: Enter the Cauldron and return Undaunted."
+    ],
+    "summary": "Oxblood the Depraved is a giant armored Ogrim and the first boss of the Cauldron.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Oxblood_the_Depraved",
+        "page_title": "Online:Oxblood the Depraved",
+        "revision_id": 3608155,
+        "retrieved_at": "2026-08-12T21:16:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

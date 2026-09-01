@@ -1,0 +1,28 @@
+{
+    "id": "broken_helm_hollow",
+    "name": "Broken Helm Hollow",
+    "content_type": "dungeon",
+    "summary": "Broken Helm Hollow is a small cave in the southeastern Rift, east of Forelhost containing wildlife. The troll Skullcrusher can be found in the southern chamber.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Broken Helm Hollow also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Broken_Helm_Hollow",
+        "page_title": "Online:Broken Helm Hollow",
+        "revision_id": 3598180,
+        "retrieved_at": "2026-08-12T21:15:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

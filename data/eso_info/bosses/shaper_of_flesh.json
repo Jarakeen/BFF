@@ -1,0 +1,34 @@
+{
+    "id": "shaper_of_flesh",
+    "name": "Shaper of Flesh",
+    "content_id": "ossein_cage",
+    "content_name": "Ossein Cage",
+    "location": "Ossein Cage",
+    "species": "Voriplasm",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "achievements": [],
+    "summary": "Shapers of Flesh are six Voriplasm-like masses which are the first main boss encounter in the Ossein Cage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shaper_of_Flesh",
+        "page_title": "Online:Shaper of Flesh",
+        "revision_id": 3424956,
+        "retrieved_at": "2026-08-12T05:33:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

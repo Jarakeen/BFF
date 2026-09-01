@@ -1,0 +1,29 @@
+{
+    "id": "sunhold",
+    "name": "Sunhold",
+    "content_type": "dungeon",
+    "summary": "Sunhold is a city and public dungeon in the southern part of Summerset. It has been taken over by Storm Sharks invaders, led by Admiral Viscarne, who has a personal vendetta against the ruling family of the city. Falordilmo the traveling merchant walks along the road between Sunhold and the Eldbur Sanctuary. The seven fragments for the Psijic Glowglobe emote and achievement are randomly dropped from enemies in this zone.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Sunhold previously appeared in Arena.",
+        "During the development of South Summerset as a starter zone for Dominion players, Sunhold was located on an island known as \"Sunhold Isle\" in the region of Varyllis."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sunhold",
+        "page_title": "Online:Sunhold",
+        "revision_id": 3392961,
+        "retrieved_at": "2026-08-12T21:35:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

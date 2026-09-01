@@ -1,0 +1,68 @@
+{
+    "id": "ulfnor",
+    "name": "Ulfnor",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "3,321,181",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Cleave",
+            "description": "The boss swings its sword around dealing moderate physical damage in a cone in front of it."
+        },
+        {
+            "name": "Uppercut",
+            "description": "The boss swings its sword upward dealing massive physical damage. This must be blocked by the tank or dodged by all other group members."
+        },
+        {
+            "name": "Fire Bloom",
+            "description": "The boss releases flame along the ground towards players as indicated by red circles."
+        },
+        {
+            "name": "Draconic Smash",
+            "description": "The boss lights its sword on fire and swings it, releasing 3 flaming whirlwinds out from itself as indicated by red circles."
+        },
+        {
+            "name": "Flaming Whirlwind",
+            "description": "These whirlwinds deal high flame damage over time and must be blocked or dodged if possible."
+        },
+        {
+            "name": "Engulfing Flames",
+            "description": "The boss breathes fire dealing moderate flame damage over time to all targets in front of itself."
+        },
+        {
+            "name": "Execute(?)",
+            "description": "Once a player is pulled by Sabina Cedus' Spectral Chains, Ulfnor will slowly walk over to them. If the player is not freed in time, Ulfnor will stab that player resulting in a one hit kill."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "Ulfnor is a Skeleton found in Fang Lair. He is the fourth boss of the dungeon, and is assisted by Sabina Cedus during battle. He has a chance to drop a sample of Dragon Bone. He was originally a Nord adventurer who slew the dragon Thurvokun in the First Era, along with Caluurion and Sabina. In undeath, he has been bound to serve the necromancer Orryn the Black, and after being defeated his spirit can be spoken to throughout the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ulfnor",
+        "page_title": "Online:Ulfnor",
+        "revision_id": 3606988,
+        "retrieved_at": "2026-08-12T21:22:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

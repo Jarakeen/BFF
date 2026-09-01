@@ -1,0 +1,31 @@
+{
+    "id": "isle_of_balfiera",
+    "name": "Isle of Balfiera",
+    "content_type": "dungeon",
+    "summary": "The Isle of Balfiera (also called Balfiera Island) is an island in the Iliac Bay, off the coasts of Stormhaven and Glenumbra. All characters created after the release of Blackwood were placed in this zone to go through a quest that serves as a tutorial over the game's systems. However, after the release of Update 44, characters instead start in The Wailing Prison. Like all other tutorial areas that are no longer accessible, their quests could still be completed if a character was still inside the area after its removal, until this too was removed in Update 46. Any character in Balfiera was moved to the Wailing Prison following the update, regardless of whether they'd completed the quest or not. It is the home of the Adamantine Tower, the oldest structure in Tamrielic history, as well as the Direnni Clan. For more information, see the main lore article.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The island is not intended to be reached as it is surrounded by slaughterfish-infested waters, although it exists in the worldspaces of both Glenumbra and Stormhaven. The tower is visible in the distance from Alcaire Dolmen in Stormhaven, and from Hag Fen Wayshrine in Glenumbra.",
+        "Morrowind's Broken Bonds",
+        "Summerset's The Mind Trap",
+        "Elsweyr's Bright Moons, Warm Sands",
+        "Greymoor's Bound in Blood",
+        "At the end of The Gates of Adamant quest, you must leave Balferia and choose your own starter zone to begin your adventure in, though you will not be able to do their respective tutorials. This effectively renders the following content deprecated:",
+        "Skipping the tutorial will just drop you off in the zone from the most recent Chapter release you own.",
+        "There were originally unimplemented plans for Balfiera to be an instanced location in the initial Main Quest storyline, and later as a Battleground.",
+        "The tutorial was first announced in ESO 2021 Global Reveal Event - Gates of Oblivion by Pete Hines and Rich Lambert. The placeholder model originally had White-Gold Tower.",
+        "Balfiera Herbal Tonic is named after the island.",
+        "In the room where you choose your weapon, you can look to your right into a cell to find a reference to the game Dark Souls. For more information, see the Easter Eggs page.",
+        "Initially there was no re-entry once you exited the Forgotten Cells, though this was later changed in a patch, allowing you to re-enter the room at any time and pick out another weapon. The only area not re-accessible after leaving was the cell you initially start out in."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Isle_of_Balfiera",
+        "page_title": "Online:Isle of Balfiera",
+        "revision_id": 3550265,
+        "retrieved_at": "2026-08-12T21:26:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

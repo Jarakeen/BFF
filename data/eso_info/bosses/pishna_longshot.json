@@ -1,0 +1,132 @@
+{
+    "id": "pishna_longshot",
+    "name": "Pishna Longshot",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 6: The Grove",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,250,359",
+        "veteran": "6,200,000",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Shot",
+            "description": "A basic ranged attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Lethal Arrow",
+            "description": "Pishna casts Lethal Arrow, a slower ranged attack that does moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Acid Spray",
+            "description": "Pishna fires a volley of poison-coated arrows in a direction facing her, as indicated by a thin long cone AoE, dealing high physical damage followed by high poison damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Poison Injection",
+            "description": "Pishna fires an arrow coated with a deadly poison, dealing moderate physical damage and applying a unique, very-high damaging poison effect that must be cleansed over time by standing in green pools left by slain lurchers, werewolves and spriggans in the arena.",
+            "damage_type": null
+        },
+        {
+            "name": "Drain Resource",
+            "description": "Pishna fires a glowing blue arrow with applies Draining Poison which deals damage over time and drains your Stamina and Magicka over 15 seconds, if it hits. You must dodge in order to avoid being afflicted.",
+            "damage_type": null
+        },
+        {
+            "name": "Taking Aim",
+            "description": "A powerful sniping bow attack that takes time to charge up and can one-shot those at low health. Can be interrupted or dodged.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Pishna fires a volley of poison-coated arrows in a direction facing her, as indicated by a thin long cone AoE, dealing high physical damage followed by high poison damage over time.",
+            "name": "Acid Spray",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "poison",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Pishna fires an arrow coated with a deadly poison, dealing moderate physical damage and applying a unique, very-high damaging poison effect that must be cleansed over time by standing in green pools left by slain lurchers, werewolves and spriggans in the arena.",
+            "name": "Poison Injection",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Pishna fires a glowing blue arrow with applies Draining Poison which deals damage over time and drains your Stamina and Magicka over 15 seconds, if it hits. You must dodge in order to avoid being afflicted.",
+            "name": "Drain Resource",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "A powerful sniping bow attack that takes time to charge up and can one-shot those at low health. Can be interrupted or dodged.",
+            "name": "Taking Aim",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Pishna Longshot is a Wood Elf member of The Pacthunters, a group of Bosmer competing at the Dragonstar Arena. You'll be forced to fight her a second time in the Champion's Arena at round ten, when Hiath the Battlemaster summons her and the Earthen Heart Knight after reaching 25% health in Normal Mode only.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pishna_Longshot",
+        "page_title": "Online:Pishna Longshot",
+        "revision_id": 3175182,
+        "retrieved_at": "2026-08-19T03:20:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

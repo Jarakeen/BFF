@@ -1,0 +1,20 @@
+{
+    "id": "festival_arena",
+    "name": "Festival Arena",
+    "content_type": "arena",
+    "summary": "Festival Arena is an underground fighting arena open during holiday events. Bargo Hammerdeath rents it out to various groups during these festivals and various fights will be held within it.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Festival Arena was first active during the 2021 Jester's Festival Event."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Festival_Arena",
+        "page_title": "Online:Festival Arena",
+        "revision_id": 3137147,
+        "retrieved_at": "2026-08-12T21:46:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

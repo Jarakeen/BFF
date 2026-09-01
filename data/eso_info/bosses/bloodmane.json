@@ -1,0 +1,85 @@
+{
+    "id": "bloodmane",
+    "name": "Bloodmane",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "Tharriker",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Crush",
+            "description": "Upon landing in the area, Bloodmane deals very high physical damage in its landing area."
+        },
+        {
+            "name": "Bat",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Claw Strike",
+            "description": "Basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Tear",
+            "description": "Charged melee attack dealing high physical damage and very briefly snaring. This can be blocked to stagger Bloodmane."
+        },
+        {
+            "name": "Pounce",
+            "description": "Bloodmane jumps on a target, dealing high physical damage in a area."
+        },
+        {
+            "name": "Tail Swipe",
+            "description": "Bloodmane swipes its tail in front of them, snaring, dealing moderate physical damage instantly and moderate poison damage over 4 seconds."
+        },
+        {
+            "name": "Smoke Breath",
+            "description": "Bloodmane breaths a smoke mist on the ground that slowly chases a target, dealing continuous moderate magic damage and snaring."
+        },
+        {
+            "name": "Surround",
+            "description": "Bloodmane jumps backwards."
+        },
+        {
+            "name": "Charging Strike",
+            "description": "Bloodmane charges towards an enemy, dealing very-high physical damage. If blocked it staggers Bloodmane."
+        },
+        {
+            "name": "Enrage",
+            "description": "When Spitetooth dies first, Bloodmane enrages for a moment which greatly increases its damage output and reduces its damage taken."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Bloodmane and Spitetooth are a pair of tharrikers acting as one of the bosses of Silorn. Bloodmane will jump down from its ledge and join the fight when Spitetooth reaches 50% percentage of its health.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bloodmane",
+        "page_title": "Online:Bloodmane",
+        "revision_id": 3427732,
+        "retrieved_at": "2026-08-12T21:34:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

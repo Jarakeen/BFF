@@ -1,0 +1,34 @@
+{
+    "id": "leftwheal_trading_post",
+    "name": "Leftwheal Trading Post",
+    "content_type": "dungeon",
+    "summary": "The Leftwheal Trading Post is a public dungeon found north of the Centurion's Watch Wayshrine. All creatures here have a chance to drop Remnant of Cruelty. Centipedes, mirrorworms and torchbugs are found in number within. Hazards include crystaljack cocoons, falling rocks/deadfall, lightning strikes, and shard tornadoes.",
+    "location": "",
+    "boss_ids": [
+        "hrakkzur",
+        "klynklaynk",
+        "olashyn_the_twisted",
+        "ranishyn_the_marred",
+        "swarmkeeper_xvarcon",
+        "zvartek_the_weapon_master",
+        "yrrkkyyn"
+    ],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Leftwheal_Trading_Post",
+        "page_title": "Online:Leftwheal Trading Post",
+        "revision_id": 3567060,
+        "retrieved_at": "2026-08-12T21:27:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

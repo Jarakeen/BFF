@@ -1,0 +1,956 @@
+{
+    "id": "turlassil",
+    "name": "Turlassil",
+    "content_id": "dreadsail_reef",
+    "content_name": "Dreadsail Reef",
+    "location": "Dreadsail Reef",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "10,906,420",
+        "veteran": "27,943,440",
+        "hardmode": "55,886,880 (Hard Mode)"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lylanar",
+            "line": "What've we got here? An audience?",
+            "trigger": "When you enter the Bloodsport Arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Fresh challengers more like.",
+            "trigger": "When you enter the Bloodsport Arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Shame the usual crowd isn't here to watch us slaughter them.",
+            "trigger": "When you enter the Bloodsport Arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Their screams will have to substitute for cheering.",
+            "trigger": "When you enter the Bloodsport Arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Let's put on a show!",
+            "trigger": "When you enter the Bloodsport Arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "That's the spirit! Let's make this a grand melee!",
+            "trigger": "Activating the Challenge Banner (Hardmode Only):",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Oh, look, they're grandstanding. We'll have to humble them.",
+            "trigger": "Activating the Challenge Banner (Hardmode Only):",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Care to wager how long they last?",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I wager half will be dead before three beats of a drum.",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "If memory serves me, there's typically more fighting involved when defending against an invasion, correct?",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You down there. Puny one. Go on and jump off the platform. You won't do.",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "If you can't manage this, we won't bother getting up.",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "They're a bore, brother. I don't think we're even going to get a warmup out of this.",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Ly, I believe they're frozen with fright.",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Let the games begin!",
+            "trigger": "Starting the battle:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You pass. Barely.",
+            "trigger": "After defeating the first wave of wolves:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You looked a little too eager to kill our hounds for my taste.",
+            "trigger": "After defeating the first wave of wolves:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "That was just a taste of what's to come.",
+            "trigger": "After defeating the first wave of wolves:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Don't get up, Ly. This will just be a moment.",
+            "trigger": "If he's the first one to face:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I'll take the first round, Ly.",
+            "trigger": "If he's the first one to face:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You're not prepared to wield my power.",
+            "trigger": "Picking up the Piecing Hailstone:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "How dare you tap into my power.",
+            "trigger": "Picking up the Piecing Hailstone:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Letting the cold in will only see you freeze.",
+            "trigger": "Picking up the Piecing Hailstone:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You shouldn't have taken what wasn't yours.",
+            "trigger": "Turlassil taking the Piecing Hailstone in Frigidarium (Hard Mode only):",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Ice and frost, obey my command.",
+            "trigger": "Summoning Ice Atronarch:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "How do you like my ice sculpture?",
+            "trigger": "Summoning Ice Atronarch:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Your turn, atronach. Liven up the show. Well, the opposite of that.",
+            "trigger": "Summoning Ice Atronarch:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I may be down, but not out.",
+            "trigger": "Summoning Ice Atronarch to aid Lylanar (Hard Mode only):",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Chilling, isn't it?",
+            "trigger": "Applying fragility:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Just about ready to shatter.",
+            "trigger": "Applying fragility:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You'll be quick to freeze like that.",
+            "trigger": "Applying fragility:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You're ready to learn what piercing cold really means.",
+            "trigger": "Applying fragility:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Don't think I won't exploit such an obvious weakness.",
+            "trigger": "Applying fragility:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "My hounds are as cold-hearted as I am.",
+            "trigger": "Summoning Hounds:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Hounds! Earn your dinner!",
+            "trigger": "Summoning Hounds:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Let my hounds icey teeth numb the pain!",
+            "trigger": "Summoning Hounds:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "A few more hounds should spice up this fight.",
+            "trigger": "Summoning Hounds:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Keep these rats from nipping at my heels for a moment Ly.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "I thought you'd never ask.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Enough! Tie and anchor to these vermin Ly.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Of course. But you owe me.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I don't want to finish them off before you get a crack at them Ly.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Allow me to demonstrate what winning looks like.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "That was a limp performance, Turli. I'll show them what true power is.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "You'll be crying for my help soon enough.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Make good use of this warm up. You'll need it.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Watch me, Turli. This is how it's done!",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I may be down, but not out!",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "One good spark should set you off.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Whew, I might have underestimated them a tad.",
+            "trigger": "Swapping out with Lylanar / Teleport:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "I'm always cleaning up after you Ly.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Clip their wings for me, Turli! I'll handle the rest.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Anything for my dear brother.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Boooring! I'll add to the side show.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "You're stronger than you look, but this ends now! Slow them down, Turli.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "It warms me to feed needed.",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "I don't wish to hog all the excitement. Turli, why don't you get in on the action?",
+            "trigger": "Swapping in from Lylanar:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "It would seem my bad luck has rubbed off on you, Ly.",
+            "trigger": "When both brothers are out in the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Enough heckling from the stands! Let's put an end to this together.",
+            "trigger": "When both brothers are out in the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Now, Ly!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "A duet of death!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Join me, brother!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Combined might!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Join me, brother!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Time for the finale!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Let's team up a while",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Lylanar",
+            "line": "Let's finish this!",
+            "trigger": "When the brothers combining their attacks:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Shame there wasn't an audience for this victory.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Undefeated versus Undaunted. This outcome was inevitable.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Another victory for the reigning champions!",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "An easy kill.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Turlassil",
+            "line": "Your skills are weak.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"At least we go together ….\"",
+            "trigger": "Upon Defeat:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you enter the Bloodsport Arena:": [
+            {
+                "speaker": "Lylanar",
+                "line": "What've we got here? An audience?",
+                "trigger": "When you enter the Bloodsport Arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Fresh challengers more like.",
+                "trigger": "When you enter the Bloodsport Arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Shame the usual crowd isn't here to watch us slaughter them.",
+                "trigger": "When you enter the Bloodsport Arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Their screams will have to substitute for cheering.",
+                "trigger": "When you enter the Bloodsport Arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Let's put on a show!",
+                "trigger": "When you enter the Bloodsport Arena:",
+                "ability": null
+            }
+        ],
+        "Activating the Challenge Banner (Hardmode Only):": [
+            {
+                "speaker": "Turlassil",
+                "line": "That's the spirit! Let's make this a grand melee!",
+                "trigger": "Activating the Challenge Banner (Hardmode Only):",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Oh, look, they're grandstanding. We'll have to humble them.",
+                "trigger": "Activating the Challenge Banner (Hardmode Only):",
+                "ability": null
+            }
+        ],
+        "Idling before the fight:": [
+            {
+                "speaker": "Lylanar",
+                "line": "Care to wager how long they last?",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "I wager half will be dead before three beats of a drum.",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "If memory serves me, there's typically more fighting involved when defending against an invasion, correct?",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "You down there. Puny one. Go on and jump off the platform. You won't do.",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "If you can't manage this, we won't bother getting up.",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "They're a bore, brother. I don't think we're even going to get a warmup out of this.",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Ly, I believe they're frozen with fright.",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            }
+        ],
+        "Starting the battle:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Let the games begin!",
+                "trigger": "Starting the battle:",
+                "ability": null
+            }
+        ],
+        "After defeating the first wave of wolves:": [
+            {
+                "speaker": "Turlassil",
+                "line": "You pass. Barely.",
+                "trigger": "After defeating the first wave of wolves:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "You looked a little too eager to kill our hounds for my taste.",
+                "trigger": "After defeating the first wave of wolves:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "That was just a taste of what's to come.",
+                "trigger": "After defeating the first wave of wolves:",
+                "ability": null
+            }
+        ],
+        "If he's the first one to face:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Don't get up, Ly. This will just be a moment.",
+                "trigger": "If he's the first one to face:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "I'll take the first round, Ly.",
+                "trigger": "If he's the first one to face:",
+                "ability": null
+            }
+        ],
+        "Picking up the Piecing Hailstone:": [
+            {
+                "speaker": "Turlassil",
+                "line": "You're not prepared to wield my power.",
+                "trigger": "Picking up the Piecing Hailstone:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "How dare you tap into my power.",
+                "trigger": "Picking up the Piecing Hailstone:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Letting the cold in will only see you freeze.",
+                "trigger": "Picking up the Piecing Hailstone:",
+                "ability": null
+            }
+        ],
+        "Turlassil taking the Piecing Hailstone in Frigidarium (Hard Mode only):": [
+            {
+                "speaker": "Turlassil",
+                "line": "You shouldn't have taken what wasn't yours.",
+                "trigger": "Turlassil taking the Piecing Hailstone in Frigidarium (Hard Mode only):",
+                "ability": null
+            }
+        ],
+        "Summoning Ice Atronarch:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Ice and frost, obey my command.",
+                "trigger": "Summoning Ice Atronarch:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "How do you like my ice sculpture?",
+                "trigger": "Summoning Ice Atronarch:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Your turn, atronach. Liven up the show. Well, the opposite of that.",
+                "trigger": "Summoning Ice Atronarch:",
+                "ability": null
+            }
+        ],
+        "Summoning Ice Atronarch to aid Lylanar (Hard Mode only):": [
+            {
+                "speaker": "Turlassil",
+                "line": "I may be down, but not out.",
+                "trigger": "Summoning Ice Atronarch to aid Lylanar (Hard Mode only):",
+                "ability": null
+            }
+        ],
+        "Applying fragility:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Chilling, isn't it?",
+                "trigger": "Applying fragility:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Just about ready to shatter.",
+                "trigger": "Applying fragility:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "You'll be quick to freeze like that.",
+                "trigger": "Applying fragility:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "You're ready to learn what piercing cold really means.",
+                "trigger": "Applying fragility:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Don't think I won't exploit such an obvious weakness.",
+                "trigger": "Applying fragility:",
+                "ability": null
+            }
+        ],
+        "Summoning Hounds:": [
+            {
+                "speaker": "Turlassil",
+                "line": "My hounds are as cold-hearted as I am.",
+                "trigger": "Summoning Hounds:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Hounds! Earn your dinner!",
+                "trigger": "Summoning Hounds:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Let my hounds icey teeth numb the pain!",
+                "trigger": "Summoning Hounds:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "A few more hounds should spice up this fight.",
+                "trigger": "Summoning Hounds:",
+                "ability": null
+            }
+        ],
+        "Swapping out with Lylanar / Teleport:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Keep these rats from nipping at my heels for a moment Ly.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "I thought you'd never ask.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Enough! Tie and anchor to these vermin Ly.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Of course. But you owe me.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "I don't want to finish them off before you get a crack at them Ly.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Allow me to demonstrate what winning looks like.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "That was a limp performance, Turli. I'll show them what true power is.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "You'll be crying for my help soon enough.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Make good use of this warm up. You'll need it.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Watch me, Turli. This is how it's done!",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "I may be down, but not out!",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "One good spark should set you off.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Whew, I might have underestimated them a tad.",
+                "trigger": "Swapping out with Lylanar / Teleport:",
+                "ability": null
+            }
+        ],
+        "Swapping in from Lylanar:": [
+            {
+                "speaker": "Turlassil",
+                "line": "I'm always cleaning up after you Ly.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Clip their wings for me, Turli! I'll handle the rest.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Anything for my dear brother.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Boooring! I'll add to the side show.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "You're stronger than you look, but this ends now! Slow them down, Turli.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "It warms me to feed needed.",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "I don't wish to hog all the excitement. Turli, why don't you get in on the action?",
+                "trigger": "Swapping in from Lylanar:",
+                "ability": null
+            }
+        ],
+        "When both brothers are out in the arena:": [
+            {
+                "speaker": "Turlassil",
+                "line": "It would seem my bad luck has rubbed off on you, Ly.",
+                "trigger": "When both brothers are out in the arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Enough heckling from the stands! Let's put an end to this together.",
+                "trigger": "When both brothers are out in the arena:",
+                "ability": null
+            }
+        ],
+        "When the brothers combining their attacks:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Now, Ly!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "A duet of death!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Join me, brother!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Combined might!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Join me, brother!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Time for the finale!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Let's team up a while",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            },
+            {
+                "speaker": "Lylanar",
+                "line": "Let's finish this!",
+                "trigger": "When the brothers combining their attacks:",
+                "ability": null
+            }
+        ],
+        "Group wipe:": [
+            {
+                "speaker": "Turlassil",
+                "line": "Shame there wasn't an audience for this victory.",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Undefeated versus Undaunted. This outcome was inevitable.",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Another victory for the reigning champions!",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "An easy kill.",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Turlassil",
+                "line": "Your skills are weak.",
+                "trigger": "Group wipe:",
+                "ability": null
+            }
+        ],
+        "Upon Defeat:": [
+            {
+                "speaker": "",
+                "line": "\"At least we go together ….\"",
+                "trigger": "Upon Defeat:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He wears the Rainsiren Nereid skin and Cracked Mud Tattoos body markings.",
+        "He is referred to as \"meaty\" by a Bosmer who wishes to eat him.",
+        "He is nicknamed \"Turli\" by Lylanar."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Reavers of the Reef: Drive the Dreadsail pirates from the Systres."
+    ],
+    "summary": "Turlassil (or Turli) is a blue striped Maormer found in Dreadsail Reef. He is the twin brother of Lylanar and both serve as the first boss of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Turlassil",
+        "page_title": "Online:Turlassil",
+        "revision_id": 3282527,
+        "retrieved_at": "2026-09-01T02:06:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

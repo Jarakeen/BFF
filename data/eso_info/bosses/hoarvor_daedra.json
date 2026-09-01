@@ -1,0 +1,59 @@
+{
+    "id": "hoarvor_daedra",
+    "name": "Hoarvor Daedra",
+    "content_id": "cradle_of_shadows",
+    "content_name": "Cradle of Shadows",
+    "location": "College of Sapiarchs, The Spiral Skein",
+    "species": "Hoarvor Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lunging Slash",
+            "description": "Basic melee attack dealing minor physical damage."
+        },
+        {
+            "name": "Spider Bite",
+            "description": "The Hoarvor Daedra bites you which deals low poison damage."
+        },
+        {
+            "name": "Mangle",
+            "description": "Charged melee attack dealing low physical damage and knocks back the target. This can be blocked to set the Hoarvor Daedra off-balance."
+        },
+        {
+            "name": "Gout of Bile",
+            "description": "When far from the Hoarvor Daedra, it spits a glob of bile at you, dealing minor poison damage and heavily snares you for 4 seconds (Infectious Glob)."
+        },
+        {
+            "name": "Summon Hoarvor",
+            "description": "The Hoarvor Daedra summons a Necrotic Hoarvor as seen by a red smoke. The Necrotic Hoarvor spawns with 10% of the summoner's Max Health and only uses its \"Necrotic Explosion\" attack which deals low poison damage around it but kills it in the process."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The creature's name formerly did not appear in-game, although it was found in the game data and was mentioned on an episode of ESO Live. With the release of the Summerset chapter however, generic Hoarvor Daedra were added to the game."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Hoarvor Daedra are grotesque hoarvor-like Daedra associated with Mephala.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hoarvor_Daedra",
+        "page_title": "Online:Hoarvor Daedra",
+        "revision_id": 3532317,
+        "retrieved_at": "2026-08-12T21:18:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

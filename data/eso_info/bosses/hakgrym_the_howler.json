@@ -1,0 +1,442 @@
+{
+    "id": "hakgrym_the_howler",
+    "name": "Hakgrym the Howler",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "The Accursed Canyon",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,273,381",
+        "veteran": "3,654,115",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Hakgrym the Howler",
+            "line": "You lost? No, I wager you're just where you want to be. Ha! Well, come on then!",
+            "trigger": "Entering the arena",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I'm right here, runts. Any time you're ready.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You going to make me wait?",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "The longer you make me wait, the sharper my swords get.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You're right on time, runts. The lads here are starving!",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I'll try to make this quick. Heh. No promises.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I won't lie to you. This is going to hurt.",
+            "trigger": "Idling before battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Ha! You have no idea what you're up against.",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Let's see what you've got!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Finally. I've been itching for a scrap!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "We're going to do this, eh? All right, let's go!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Time for the harvest!",
+            "trigger": "Using Reaping Scythe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This is going to hurt!",
+            "trigger": "Using Reaping Scythe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You think you know pain? Ha!",
+            "trigger": "Using Reaping Scythe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Like grain before the scythe.",
+            "trigger": "Using Reaping Scythe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This should keep you busy.",
+            "trigger": "Summoning a Woeful Totem",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Go fetch, mongrels!",
+            "trigger": "Summoning a Woeful Totem",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This should liven things up a bit.",
+            "trigger": "Summoning a Woeful Totem",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You've got nowhere to run.",
+            "trigger": "Using Curse Ground",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Dance for me, eh?",
+            "trigger": "Using Curse Ground",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I knew these things would come in handy.",
+            "trigger": "Releasing a flesh abomination",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Let's get these chains off you, eh? Time to play.",
+            "trigger": "Releasing a flesh abomination",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You hungry, boy? Eh? 'Course you are. Go get them!",
+            "trigger": "Releasing a flesh abomination",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You're pretty good! I guess it's time to call in the muscle.",
+            "trigger": "Releasing a flesh abomination",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Enough appetizers. Time for the main course!",
+            "trigger": "Turning into a werewolf",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You've got me bleeding all right. Let me return the favor!",
+            "trigger": "Turning into a werewolf",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You want a real fight, eh? Here it comes!",
+            "trigger": "Turning into a werewolf",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Too easy.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Orkey's blood, I thought you'd give me a challenge! Too bad.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Don't worry, I'll make good use of your corpses.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "What lies beyond the door? Ha! Guess you'll never know.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Least you died in a graveyard, eh? Convenient.",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering the arena": [
+            {
+                "speaker": "Hakgrym the Howler",
+                "line": "You lost? No, I wager you're just where you want to be. Ha! Well, come on then!",
+                "trigger": "Entering the arena",
+                "ability": null
+            }
+        ],
+        "Idling before battle": [
+            {
+                "speaker": "",
+                "line": "I'm right here, runts. Any time you're ready.",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You going to make me wait?",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "The longer you make me wait, the sharper my swords get.",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You're right on time, runts. The lads here are starving!",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I'll try to make this quick. Heh. No promises.",
+                "trigger": "Idling before battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I won't lie to you. This is going to hurt.",
+                "trigger": "Idling before battle",
+                "ability": null
+            }
+        ],
+        "Entering battle": [
+            {
+                "speaker": "",
+                "line": "Ha! You have no idea what you're up against.",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Let's see what you've got!",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Finally. I've been itching for a scrap!",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "We're going to do this, eh? All right, let's go!",
+                "trigger": "Entering battle",
+                "ability": null
+            }
+        ],
+        "Using Reaping Scythe": [
+            {
+                "speaker": "",
+                "line": "Time for the harvest!",
+                "trigger": "Using Reaping Scythe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "This is going to hurt!",
+                "trigger": "Using Reaping Scythe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You think you know pain? Ha!",
+                "trigger": "Using Reaping Scythe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Like grain before the scythe.",
+                "trigger": "Using Reaping Scythe",
+                "ability": null
+            }
+        ],
+        "Summoning a Woeful Totem": [
+            {
+                "speaker": "",
+                "line": "This should keep you busy.",
+                "trigger": "Summoning a Woeful Totem",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Go fetch, mongrels!",
+                "trigger": "Summoning a Woeful Totem",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "This should liven things up a bit.",
+                "trigger": "Summoning a Woeful Totem",
+                "ability": null
+            }
+        ],
+        "Using Curse Ground": [
+            {
+                "speaker": "",
+                "line": "You've got nowhere to run.",
+                "trigger": "Using Curse Ground",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Dance for me, eh?",
+                "trigger": "Using Curse Ground",
+                "ability": null
+            }
+        ],
+        "Releasing a flesh abomination": [
+            {
+                "speaker": "",
+                "line": "I knew these things would come in handy.",
+                "trigger": "Releasing a flesh abomination",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Let's get these chains off you, eh? Time to play.",
+                "trigger": "Releasing a flesh abomination",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You hungry, boy? Eh? 'Course you are. Go get them!",
+                "trigger": "Releasing a flesh abomination",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You're pretty good! I guess it's time to call in the muscle.",
+                "trigger": "Releasing a flesh abomination",
+                "ability": null
+            }
+        ],
+        "Turning into a werewolf": [
+            {
+                "speaker": "",
+                "line": "Enough appetizers. Time for the main course!",
+                "trigger": "Turning into a werewolf",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You've got me bleeding all right. Let me return the favor!",
+                "trigger": "Turning into a werewolf",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You want a real fight, eh? Here it comes!",
+                "trigger": "Turning into a werewolf",
+                "ability": null
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Too easy.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Orkey's blood, I thought you'd give me a challenge! Too bad.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Don't worry, I'll make good use of your corpses.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "What lies beyond the door? Ha! Guess you'll never know.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Least you died in a graveyard, eh? Convenient.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unhallowed Grave: Help the last Pyre Watch Sentinel and a vampire investigator in the Unhallowed Grave."
+    ],
+    "summary": "Hakgrym the Howler is a Nord and a lieutenant of the Draugrkin. He acts as the first boss of Unhallowed Grave and is accompanied by two Skeletal Werewolves and flesh abominations at the beginning of battle. During the fight he will reveal himself to be a werewolf behemoth once the odds go against him.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hakgrym_the_Howler",
+        "page_title": "Online:Hakgrym the Howler",
+        "revision_id": 3339546,
+        "retrieved_at": "2026-08-12T21:36:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "calindvale_gardens",
+    "name": "Calindvale Gardens",
+    "content_type": "dungeon",
+    "summary": "The Calindvale Gardens are an abandoned botanical garden of the Corelanya Clan in Eastern Solstice to the southeast of Gristmung Hold. The garden is filled with animated stone statues of High Elves and animals, along with stranglers and spriggans in several forms. However, the garden has recently become filled with Worm Cult and daedra from Coldharbour, who seek to capture the fleeing Shadow Walkers and open portals within its walls. Any of the enemies within the public dungeon have chance of dropping a Worm-touched Soul Gem, 25 of which can be used to unlock the Soul Trap, Wormwrithe style. Additionally, any of the bosses within this location have a chance of dropping the Lead: Cultsmith's Water Trough needed for the Cult Blacksmithing Station. Passive creatures such as Beetles, butterflies, centipedes, lizards, monkeys, rabbits, rats, squirrels and torchbugs are found in number within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Calindvale_Gardens",
+        "page_title": "Online:Calindvale Gardens",
+        "revision_id": 3505172,
+        "retrieved_at": "2026-08-12T21:16:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

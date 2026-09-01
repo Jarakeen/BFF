@@ -1,0 +1,145 @@
+{
+    "id": "valkyn_tephra",
+    "name": "Valkyn Tephra",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Maelstrom Arena, Igneous Cistern",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "169,776",
+        "veteran": "548,772",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flaming Slash",
+            "description": "A basic melee attack that deals moderate physical damage and moderate flame damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Flaming Cleave",
+            "description": "Valkyn Tephra cleaves you with her red-hot sword, dealing high physical damage and moderate flame damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Chain Pull",
+            "description": "Valkyn Tephra shoots a fiery chain at you and uses it to pull herself to you.",
+            "damage_type": null
+        },
+        {
+            "name": "Mouth Burst",
+            "description": "Valkyn Tephra inhales air for a moment before spewing out flames with force, dealing high flame damage and knocking you back.",
+            "damage_type": null
+        },
+        {
+            "name": "Annihilation",
+            "description": "Upon recovering from her ward removal stun, Valkyn Tephra follows with this attack. She will recoil into herself, charging a powerful spell, before releasing a gigantic wave of fire all around her, dealing massive flame damage and stunning you. This attack can be interrupted.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Upon recovering from her ward removal stun, Valkyn Tephra follows with this attack. She will recoil into herself, charging a powerful spell, before releasing a gigantic wave of fire all around her, dealing massive flame damage and stunning you. This attack can be interrupted.",
+            "name": "Annihilation",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Give up! My flames will devour you!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Soon you'll be soot and ash!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I'll fry you like a fish!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Fire will consume you!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I'll boil your eyes in your head!\"",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"Give up! My flames will devour you!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Soon you'll be soot and ash!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I'll fry you like a fish!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Fire will consume you!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I'll boil your eyes in your head!\"",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Valkyn Tephra is a Dremora and the boss of the eighth round of the Maelstrom Arena, the Igneous Cistern. Once she spawns, all three Warding Stones will close, granting her immunity from all damage until you have destroyed them. While warded, Valkyn Tephra walks at a very slow pace. Once destroyed, she will be stunned for a short time, until the Warding Stones close again.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valkyn_Tephra",
+        "page_title": "Online:Valkyn Tephra",
+        "revision_id": 3576002,
+        "retrieved_at": "2026-08-19T03:21:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

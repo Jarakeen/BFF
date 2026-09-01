@@ -1,0 +1,68 @@
+{
+    "id": "ilambris_athor",
+    "name": "Ilambris-Athor",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "Central chamber of Crypt of Hearts II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "5,879,660",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Cleaving Swing",
+            "description": "A basic melee attack that does minor shock damage."
+        },
+        {
+            "name": "Axe Strike",
+            "description": "A heavy melee attack that does high physical damage while knocking the target down. This should be blocked or dodged if possible."
+        },
+        {
+            "name": "Electric Prison",
+            "description": "The boss summons a pool of lightning (called a Lightning Rod) on top of a player that lasts for a long time and deals moderate shock damage. Players should ensure they have enough damage to kill the boss before the entire arena fills up with AOEs."
+        },
+        {
+            "name": "Call Lightning",
+            "description": "If Ilambris-Zaven is killed first, Ilambris-Athor will start summoning many lightning bolts that deal moderate shock damage as indicated by red circles. Simply keep moving to avoid being hit."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His axe is in the Orc Style."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I.",
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Pledge: Crypt of Hearts II: Prove you are truly Undaunted by clearing the Crypt of Hearts II."
+    ],
+    "summary": "This article is about the creature. For the item set, see Ilambris. Ilambris-Athor is a Xivilai shock mage found in the Crypt of Hearts I. Together with his twin Ilambris-Zaven, he was summoned by Nerien'eth to torture Alanwe and keep the shards of her soul from reuniting. He is one of the final bosses of this dungeon, and killing him and his brother dispels their magic, allowing Alanwe to reform, completing the dungeon. He has a chance to drop the Thirsting Girdle antiquity lead for the Bloodlord's Embrace. Ilambris-Athor and Zaven reappear in Crypt of Hearts II at a suspected ritual site. Early into the fight, they merge together to become the Ilambris Amalgam.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ilambris-Athor",
+        "page_title": "Online:Ilambris-Athor",
+        "revision_id": 3139203,
+        "retrieved_at": "2026-08-12T21:18:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

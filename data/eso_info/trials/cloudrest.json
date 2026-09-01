@@ -1,0 +1,183 @@
+{
+    "id": "cloudrest",
+    "name": "Cloudrest",
+    "content_type": "trial",
+    "summary": "Cloudrest is a city found on the mountain of Eton Nir in Summerset, east of Ebon Stadmont. It serves as the home base for the Welkynar Gryphon Knights and their Aerie. Due to an unforeseen catastrophe, the once-thriving city stands cloaked in a toxic, purple mist. To ensure that the corruption does not spread to the rest of the island, the city is under quarantine by the Divine Prosecution, who were forced to evacuate the city and barricade the main gate. A cart from Alinor can be taken to get there, and a side entrance lies straight to the west: there is a note found next to it. You will receive a Crest of the Welkynar for completing this trial on hard mode.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "shade_of_galenwe",
+        "shade_of_falarielle",
+        "galenwe",
+        "gryphon",
+        "falarielle",
+        "shade_of_relequen",
+        "shade_of_belanaril",
+        "relequen",
+        "belanaril",
+        "shade_of_siroria",
+        "shade_of_silaeda",
+        "siroria",
+        "silaeda",
+        "z_maja",
+        "sea_sload",
+        "shade_of_z_maja"
+    ],
+    "achievements": [
+        {
+            "id": "welkynar_style_master",
+            "name": "Welkynar Style Master",
+            "description": "Learn every chapter in the Welkynar style book, occasionally found as rewards for completing the Cloudrest Trial.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "cloudrest_savior",
+            "name": "Cloudrest Savior",
+            "description": "Complete the listed achievements for Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "cloudrest_completed",
+            "name": "Cloudrest Completed",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe in Cloudrest.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "cloudrest_conqueror",
+            "name": "Cloudrest Conqueror",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "cloudrest_vanquisher",
+            "name": "Cloudrest Vanquisher",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe in the same fight in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "speedy_sload_slayer",
+            "name": "Speedy Sload Slayer",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe within a time limit of 15 minutes in Veteran Cloudrest. Timer starts when players enter the Cloudrest Aerie.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "surviving_the_shadows",
+            "name": "Surviving the Shadows",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe without suffering a group member death in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "one_core_no_more",
+            "name": "One Core, No More",
+            "description": "Defeat Z'Maja with each group member picking up and destroying only one Malevolent Core in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "misery_loves_company",
+            "name": "Misery Loves Company",
+            "description": "While battling Z'Maja with all three of the Welkynars' shades by her side, a player with the Hoarfrost affliction and two other players with the Voltaic Overload affliction share the damage of the Roaring Flare eruption in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "flares_and_deadly_shadows",
+            "name": "Flares and Deadly Shadows",
+            "description": "While battling Z'Maja with Siroria's shade by her side, utilize a Roaring Flare attack and achieve 20 killing blows against Shadows of the Fallen in Veteran Cloudrest.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "core_coordination",
+            "name": "Core Coordination",
+            "description": "While battling Z'Maja, after activating a single Welkynar's Light, activate two more Welkynar's Lights and destroy three Malevolent Cores within the next 6 seconds in Veteran Cloudrest.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "yaghra_blockade",
+            "name": "Yaghra Blockade",
+            "description": "While battling Z'Maja during a single Shadow World event, prevent all yaghra from entering the gateway and crossing into the mortal realm on 15 separate occasions in Cloudrest.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "cloudrest_contender",
+            "name": "Cloudrest Contender",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe in the same fight in Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "valorous_combustion",
+            "name": "Valorous Combustion",
+            "description": "While battling Siroria's shade by itself, every Roaring Flare throughout the entire encounter must be split between at least 6 players in Cloudrest.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "shocking_instinct",
+            "name": "Shocking Instinct",
+            "description": "While battling Relequen's shade by itself, no player is hit by Voltaic Overload and no player spreads Voltaic Current to other players throughout the entire encounter in Cloudrest.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "the_mystic_s_ice",
+            "name": "The Mystic's Ice",
+            "description": "Have Galenwe's shade destroy 20 roaming Hoarfrost cyclones with his Spiked Ice attack in Cloudrest.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "a_sload_and_her_shadow",
+            "name": "A Sload and Her Shadow",
+            "description": "Defeat Z'Maja with one Welkynar shade fighting by her side in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "three_s_deadly_company",
+            "name": "Three's Deadly Company",
+            "description": "Defeat Z'Maja with two Welkynar shades fighting by her side in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "the_path_to_alaxon",
+            "name": "The Path to Alaxon",
+            "description": "Defeat Z'Maja, Siroria, Relequen, and Galenwe in the same battle without suffering a group member death within 15 minutes of entering the Cloudrest Aerie in Veteran Cloudrest.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "aegis_of_galenwe",
+        "perfect_aegis_of_galenwe",
+        "arms_of_relequen",
+        "perfect_arms_of_relequen",
+        "mantle_of_siroria",
+        "perfect_mantle_of_siroria",
+        "vestment_of_olorime",
+        "perfect_vestment_of_olorime"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "Cloudrest also appears in Arena."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cloudrest",
+        "page_title": "Online:Cloudrest",
+        "revision_id": 3608508,
+        "retrieved_at": "2026-08-18T18:52:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

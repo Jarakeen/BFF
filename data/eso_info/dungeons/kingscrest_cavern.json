@@ -1,0 +1,29 @@
+{
+    "id": "kingscrest_cavern",
+    "name": "Kingscrest Cavern",
+    "content_type": "dungeon",
+    "summary": "Kingscrest Cavern is a cave in northeastern Cyrodiil, southeast of Kingscrest Keep containing spiders and spriggans.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Kingscrest Cavern also appeared in Oblivion.",
+        "The loading sceen art depicts a Kwama hive while this location has no relation to such a thing."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kingscrest_Cavern",
+        "page_title": "Online:Kingscrest Cavern",
+        "revision_id": 3598797,
+        "retrieved_at": "2026-08-12T21:26:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "id": "iskra_the_omen",
+    "name": "Iskra the Omen",
+    "content_id": "vaults_of_madness",
+    "content_name": "Vaults of Madness",
+    "location": "Vaults of Madness",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Monstrous Claw",
+            "description": "A basic melee attack causing moderate physical damage."
+        },
+        {
+            "name": "Falling Sky",
+            "description": "Iskra the Omen flies up a short distance into the air before crashing back down onto the ground as indicated by a wide, red circle growing in size, causing high physical damage and knocking those hit backwards. Leads into Ethereal Flame."
+        },
+        {
+            "name": "Ethereal Flame",
+            "description": "After recovering from Falling Sky, Iskra the Omen turns to face a player before breathing a long line of blue flames across the arena, in the form of multiple overlapping AoEs, causing very high flame damage when standing inside. The AoEs linger for a long time, long enough that two lines of fire can be active at the same time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "It is one of the few daedric titans that by default is grounded on all four legs."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness."
+    ],
+    "summary": "Iskra the Omen is a daedric titan found in the Vaults of Madness, of which it is a boss. Its unique loot is Ill Omen, Omen's Edge, or Ruin.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Iskra_the_Omen",
+        "page_title": "Online:Iskra the Omen",
+        "revision_id": 3139240,
+        "retrieved_at": "2026-08-12T21:37:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

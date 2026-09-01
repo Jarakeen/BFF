@@ -1,0 +1,101 @@
+{
+    "id": "bor",
+    "name": "Bor",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Rink of Frozen Blood, Maelstrom Arena",
+    "species": "Giant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "137,943",
+        "veteran": "227,952",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Kick",
+            "description": "A basic melee attack that does moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Sweep",
+            "description": "A basic melee attack that does moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Shatter",
+            "description": "The giant swings its club, sending three shockwaves along the ground in front of him. This attack does moderate physical damage to all enemies hit by it.",
+            "damage_type": null
+        },
+        {
+            "name": "Obliterate",
+            "description": "The giant smashes the ground with its club, doing high physical damage as well as stunning all enemies as indicated by a red cone.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Agag gor yarg!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Yar gor garag!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Gorag gar!\"",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"Agag gor yarg!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Yar gor garag!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Gorag gar!\"",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His dialogue is in an unknown language, possibly Giantish."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Bor is a giant serving as the mini-boss of the third wave of enemies during Stage 5: Rink of Frozen Blood in Maelstrom Arena. He fights beside Auroral Guardians.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bor",
+        "page_title": "Online:Bor",
+        "revision_id": 3341108,
+        "retrieved_at": "2026-08-19T03:21:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

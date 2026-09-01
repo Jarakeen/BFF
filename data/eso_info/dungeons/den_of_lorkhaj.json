@@ -1,0 +1,18 @@
+{
+    "id": "den_of_lorkhaj",
+    "name": "Den of Lorkhaj",
+    "content_type": "dungeon",
+    "summary": "The Den of Lorkhaj is a shadowy realm created from the decaying corpse of Lorkhaj. It is at the end of the Two Moons Path, the journey that a Khajiit must take to become the Mane. This realm is said to be a third moon, a \"Dark Moon\" which governs the fate of the dro-m'Athra as Jone and Jode govern the fate of the Khajiit. Javad Tharn and his Dark Mane await the Lunar Champion in this plane. Depending on your choice during Motes in the Moonlight, you will face either Shazah or Khali in combat, assisted by the living twin.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Den_of_Lorkhaj",
+        "page_title": "Online:Den of Lorkhaj",
+        "revision_id": 3550233,
+        "retrieved_at": "2026-08-12T21:19:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

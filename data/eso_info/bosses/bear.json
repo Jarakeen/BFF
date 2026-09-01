@@ -1,0 +1,79 @@
+{
+    "id": "bear",
+    "name": "Bear",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Bear",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "Basic melee attack dealing physical damage."
+        },
+        {
+            "name": "Savage Blow/Savage Bleeding",
+            "description": "The bear swipes its target with its front paws, dealing low physical damage twice, staggering (Savage Blow) and dealing minor direct bleed damage for 8 seconds (Savage Bleeding). This can be blocked to set the bear off-balance instead, though it won't negate the bleeding."
+        },
+        {
+            "name": "Crushing Swipe",
+            "description": "The bear gets up on its hind legs and crashes down on its target, indicated by a red cone, dealing moderate physical damage and knocking down."
+        },
+        {
+            "name": "Ferocity",
+            "description": "After the bear gets free from a crowd control, it roars loudly, granting itself a buff that unknown, no increase in damage"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "According to the Bearclaw Mine loading screen, the Black Bears of High Rock are much larger than their brown or white cousins."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Azura's Aid: Cleanse the Shrine of Azura and pray for guidance.",
+        "Beasts of Falinesti: Track down a Falinesti Faithful who broke her pact with Y'ffre.",
+        "A Diamond in the Root: Find and deliver a bandit's diamond to a Riften fence.",
+        "Ending the Ogre Threat: Stop the Ironhand ogres from using a mountain cavern to attack Shinji's Scarp.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "A Friend in Mead: Clear the Stormfists out of the meadery.",
+        "Gods Save the King: Rescue the king from his nightmares.",
+        "The Grip of Madness: Discover why a town's citizens are killing each other.",
+        "The Heart of the Beast: Help the Glenmoril Wyrd recover their temple from the Reachmen.",
+        "The Judgment of Garth: Sooth a bear to ensure Tamriel lasts another year.",
+        "Knowledge Gained: Help guide a Mages Guild expedition through a dangerous forest.",
+        "Merriment and Mystery: Join in a celebration with the Eastmarch royal workers.",
+        "Nature's Accord: Find the Sigil of Nature's Accord and keep it away from the Stormfist Clan.",
+        "Nobles' Rest: Release an ancient fortress from the grasp of a witch.",
+        "Ogre Teeth: Help a Murtag clan captain gather components for a war trophy.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Pledge: Direfrost Keep: Prove you are truly Undaunted by clearing Direfrost Keep.",
+        "Pledge: Selene's Web: Prove you are truly Undaunted by clearing Selene's Web.",
+        "Purifying the Wyrd Tree: Destroy the corruption of the Beldama Wyrd Tree.",
+        "Reclaiming the Elements: Help the wyrd sisters reclaim the Beldama Wyrd.",
+        "Silent Village: Dispel the Daedric influence in the woods of Shattered Grove.",
+        "Storming the Hall: Help retake an ancient site from the Rageclaw Clan.",
+        "A Village Awakened: Restore the people and creatures of Shattered Grove."
+    ],
+    "summary": "Auridon, Bangkorai, Bleakrock Isle, Broken Helm Hollow, Fallen Grotto, Fallowstone Hall, The Frigid Grotto, Frostwater Tundra, Gavaudon, Giant's Run, Glenumbra, Glister Vale's Despair Realm, Menevia, Orkey's Hollow, Shattered Grove, Shinji's Scarp, Snapleg Cave, The Rift, Three Tribes Camp Bears are large, hostile creatures found across Tamriel. They will attack if you are infringing on their territory, and will always roar or growl in an effort to intimidate potential threats before attacking. Bear carcasses can sometimes be harvested for cloth scraps that can be refined for use in crafting. Bears in the wild can sometimes be seen scratching their backs against trees in the wilderness to mark their territory. A bear without nameplate is found in a cage at the Shimmerene docks.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bear",
+        "page_title": "Online:Bear",
+        "revision_id": 3598506,
+        "retrieved_at": "2026-08-12T21:33:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,775 @@
+{
+    "id": "flame_herald_bahsei",
+    "name": "Flame-Herald Bahsei",
+    "content_id": "rockgrove",
+    "content_name": "Rockgrove",
+    "location": "Rockgrove, Xanmeer Pinnacle",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "21,812,840",
+        "veteran": "65,201,356",
+        "hardmode": "123,882,576 (Hard Mode)"
+    },
+    "abilities": [
+        {
+            "name": "Carve",
+            "description": "A double-hitting basic melee attack, dealing moderate physical damage twice.",
+            "damage_type": null
+        },
+        {
+            "name": "Slice",
+            "description": "A double-hitting basic melee attack, dealing slightly more damage than \"Carve\".",
+            "damage_type": null
+        },
+        {
+            "name": "Rend Flesh",
+            "description": "Flame-Herald Bahsei strikes a pose with her dual blades, before delivering a powerful overhead blow with her left blade, dealing massive physical damage. This can be blocked to stagger Flame-Herald Bahsei instead.",
+            "damage_type": null
+        },
+        {
+            "name": "Skull Salvo",
+            "description": "Flame-Herald Bahsei raises her sword up and very rapidly shoots blue skulls at all players in order, each dealing high frost damage. This can be interrupted to stagger Flame-Herald Bahsei.",
+            "damage_type": null
+        },
+        {
+            "name": "Cursed Ground/Unholy Spike",
+            "description": "Flame-Herald Bahsei targets the two farthest players and summons lich crystals at their feet, creating an area on the ground dealing moderate frost damage, snaring and applying \"Death Touch\" anyone caught in the area around those crystals (Cursed Ground) before exploding, dealing extreme frost damage in an area (Unholy Spike).",
+            "damage_type": null
+        },
+        {
+            "name": "Death Touch/Kiss of Death",
+            "description": "More commonly called the \"Curse\", deals continuous high frost damage over 10 seconds (Death Touch), then sends two magical swirls away from the affected player on a counter-clockwise curved trajectory. These swirls, if touched, will apply the same curse, and also explode, dealing high frost damage to other players nearby (Kiss of Death).",
+            "damage_type": null
+        },
+        {
+            "name": "Sickle Strike",
+            "description": "Flame-Herald Bahsei swings with her magical scythe at the taunted target, sending three tornadoes of corrupted magic their way dealing high physical damage, staggering and applying \"Death Touch\".",
+            "damage_type": null
+        },
+        {
+            "name": "Meteor Swarm",
+            "description": "When Flame-Herald Bahsei reaches 50% Health, she triggers this ability where she calls on a rain of meteors onto the arena, indicated by several large red circles, each dealing very high flame damage. When she reaches 30% Health, this becomes an execute-phase as more meteors are landing and occasionally one of them turns into Prime Meteor after landing, and if it isn't destroyed within ten seconds, it explodes, one-shotting with flame damage nearby targets.",
+            "damage_type": null
+        },
+        {
+            "name": "Summoning Runes",
+            "description": "Before the battle, Flame-Herald Bahsei will place six runes around the arena. During the fight, Forgotten Archers are occasionally summoned from the runes. Also, at Health thresholds of 90% / 85% / 80% / 75% / 70% / 65% / 60%, Bahsei will summon a Flesh Abomination at one of the runes. Following the 55% Health threshold, these summons cease, in favor of the three following summons.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Behemoth",
+            "description": "At health thresholds of 50% / 40% / 25% / 20% / 10%, a Fire Behemoth will rush out of the Oblivion portal.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Specters",
+            "description": "From 55% Health threshold and onward, occasionally, Burning Specters will be summoned from the lava surrounding the arena.",
+            "damage_type": null
+        },
+        {
+            "name": "Dagon's Wrath",
+            "description": "From 55% Health threshold and onward, moving walls of flames will occasionally run through the arena, starting from the lava surrounding the arena, each dealing very high flame damage and knocking back. These don't have AoE indicators.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Flame-Herald Bahsei raises her sword up and very rapidly shoots blue skulls at all players in order, each dealing high frost damage. This can be interrupted to stagger Flame-Herald Bahsei.",
+            "name": "Skull Salvo",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Flame-Herald Bahsei targets the two farthest players and summons lich crystals at their feet, creating an area on the ground dealing moderate frost damage, snaring and applying \"Death Touch\" anyone caught in the area around those crystals (Cursed Ground) before exploding, dealing extreme frost damage in an area (Unholy Spike).",
+            "name": "Cursed Ground/Unholy Spike",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": 2,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "More commonly called the \"Curse\", deals continuous high frost damage over 10 seconds (Death Touch), then sends two magical swirls away from the affected player on a counter-clockwise curved trajectory. These swirls, if touched, will apply the same curse, and also explode, dealing high frost damage to other players nearby (Kiss of Death).",
+            "name": "Death Touch/Kiss of Death",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Flame-Herald Bahsei swings with her magical scythe at the taunted target, sending three tornadoes of corrupted magic their way dealing high physical damage, staggering and applying \"Death Touch\".",
+            "name": "Sickle Strike",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "When Flame-Herald Bahsei reaches 50% Health, she triggers this ability where she calls on a rain of meteors onto the arena, indicated by several large red circles, each dealing very high flame damage. When she reaches 30% Health, this becomes an execute-phase as more meteors are landing and occasionally one of them turns into Prime Meteor after landing, and if it isn't destroyed within ten seconds, it explodes, one-shotting with flame damage nearby targets.",
+            "name": "Meteor Swarm",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Before the battle, Flame-Herald Bahsei will place six runes around the arena. During the fight, Forgotten Archers are occasionally summoned from the runes. Also, at Health thresholds of 90% / 85% / 80% / 75% / 70% / 65% / 60%, Bahsei will summon a Flesh Abomination at one of the runes. Following the 55% Health threshold, these summons cease, in favor of the three following summons.",
+            "name": "Summoning Runes",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "At health thresholds of 50% / 40% / 25% / 20% / 10%, a Fire Behemoth will rush out of the Oblivion portal.",
+            "name": "Summon Behemoth",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "From 55% Health threshold and onward, occasionally, Burning Specters will be summoned from the lava surrounding the arena.",
+            "name": "Summon Specters",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "From 55% Health threshold and onward, moving walls of flames will occasionally run through the arena, starting from the lava surrounding the arena, each dealing very high flame damage and knocking back. These don't have AoE indicators.",
+            "name": "Dagon's Wrath",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [
+        {
+            "label": "Abomination Phase",
+            "threshold": "",
+            "description": "End of abomination phase (enter behemot phase"
+        },
+        {
+            "label": "Behemot Phase",
+            "threshold": "",
+            "description": "End of abomination phase (enter behemot phase"
+        }
+    ],
+    "dialogue": [
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "I wonder if your souls are even worth the effort of tearing open your flesh?",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Waiting only hastens Xalvakka's arrival!",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Xalvakka is only the first. Soon our lord's power shall cover the land!",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Feel honored! You bear witness to the spark that will ignite it all.",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "You have come so far. Attack! Let me tear soul from meat.",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Destruction waits for you. Either now, or once Xalvakka arrives.",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "The time of Xalvakka draws near!",
+            "trigger": "Starting combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "I bring forth an unstoppable army!",
+            "trigger": "Starting combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "I will feed your souls to Xalvakka myself!",
+            "trigger": "Starting combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "None will be spared from her hunger!",
+            "trigger": "Starting combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Come forth abomination!",
+            "trigger": "Summoning Flesh Abominations:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "The power of my lord brings forth abominations!",
+            "trigger": "Summoning Flesh Abominations:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Flesh and bone, muscle and sinew! Fight for me!",
+            "trigger": "Summoning Flesh Abominations:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Abominable strength with no equal!",
+            "trigger": "Summoning Flesh Abominations:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "There's no hiding from the eye of the inevitable.",
+            "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Death's eye pierces your hearts!",
+            "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Gaze into my eye and welcome the end.",
+            "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "The eye of death falls upon you.",
+            "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Marvelous! Xalvakka sends her reinforcements!",
+            "trigger": "Summoning Fire Behemoths:",
+            "ability": "Summon Behemoth"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Xalvakka favors me with gifts!",
+            "trigger": "Summoning Fire Behemoths:",
+            "ability": "Summon Behemoth"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Arrivals from the other side! Attack!",
+            "trigger": "Summoning Fire Behemoths:",
+            "ability": "Summon Behemoth"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "The armies of Xalvakka are endless!",
+            "trigger": "Summoning Fire Behemoths:",
+            "ability": "Summon Behemoth"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Burn the sky! Burn it all!",
+            "trigger": "Fire meteors attack:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Let the burning fires consume you!",
+            "trigger": "Fire meteors attack:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Succumb to my lord's burning flame!",
+            "trigger": "Fire meteors attack:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Your flesh shall burn away!",
+            "trigger": "Fire meteors attack:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Let flames rain down and burn the land!",
+            "trigger": "Fire meteors attack:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "I shall take your skull as a keepsake!",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Fire consume you!",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "The wrath of Mehrunes Dagon melts away the unworthy!",
+            "trigger": "End of abomination phase (enter behemot phase",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Mehrunes Dagon's fiery might will crush you from above!",
+            "trigger": "Summoning her Prime Meteors at 25% Health:",
+            "ability": "Meteor Swarm"
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "I happily offer my soul to Xalvakka ….",
+            "trigger": "When she's defeated:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Fire consume you!",
+            "trigger": "When a player in group dies:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Such insignificant creatures.",
+            "trigger": "When a player in group dies:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "You were doomed from the start.",
+            "trigger": "When a player in group dies:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "You pose no threat to what awaits.",
+            "trigger": "When a player in group dies:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Xalvakka feasts on your soul!",
+            "trigger": "When a player in group dies:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "As expected. Nothing matches the power of destruction.",
+            "trigger": "When the group wipes:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Ha. Merely ashes in the wind.",
+            "trigger": "When the group wipes:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Feed, great Xalvakka! Drink deep!",
+            "trigger": "When the group wipes:",
+            "ability": null
+        },
+        {
+            "speaker": "Flame-Herald Bahsei",
+            "line": "Such weakness. Your souls are merely a snack for Xalvakka.",
+            "trigger": "When the group wipes:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before combat:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "I wonder if your souls are even worth the effort of tearing open your flesh?",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Waiting only hastens Xalvakka's arrival!",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Xalvakka is only the first. Soon our lord's power shall cover the land!",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Feel honored! You bear witness to the spark that will ignite it all.",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "You have come so far. Attack! Let me tear soul from meat.",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Destruction waits for you. Either now, or once Xalvakka arrives.",
+                "trigger": "Idling before combat:",
+                "ability": null
+            }
+        ],
+        "Starting combat:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "The time of Xalvakka draws near!",
+                "trigger": "Starting combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "I bring forth an unstoppable army!",
+                "trigger": "Starting combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "I will feed your souls to Xalvakka myself!",
+                "trigger": "Starting combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "None will be spared from her hunger!",
+                "trigger": "Starting combat:",
+                "ability": null
+            }
+        ],
+        "Summoning Flesh Abominations:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Come forth abomination!",
+                "trigger": "Summoning Flesh Abominations:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "The power of my lord brings forth abominations!",
+                "trigger": "Summoning Flesh Abominations:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Flesh and bone, muscle and sinew! Fight for me!",
+                "trigger": "Summoning Flesh Abominations:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Abominable strength with no equal!",
+                "trigger": "Summoning Flesh Abominations:",
+                "ability": null
+            }
+        ],
+        "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "There's no hiding from the eye of the inevitable.",
+                "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Death's eye pierces your hearts!",
+                "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Gaze into my eye and welcome the end.",
+                "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "The eye of death falls upon you.",
+                "trigger": "If Hard Mode is activated, Bashei will call forth the Creeping Eye in the center of the arena:",
+                "ability": null
+            }
+        ],
+        "Summoning Fire Behemoths:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Marvelous! Xalvakka sends her reinforcements!",
+                "trigger": "Summoning Fire Behemoths:",
+                "ability": "Summon Behemoth"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Xalvakka favors me with gifts!",
+                "trigger": "Summoning Fire Behemoths:",
+                "ability": "Summon Behemoth"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Arrivals from the other side! Attack!",
+                "trigger": "Summoning Fire Behemoths:",
+                "ability": "Summon Behemoth"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "The armies of Xalvakka are endless!",
+                "trigger": "Summoning Fire Behemoths:",
+                "ability": "Summon Behemoth"
+            }
+        ],
+        "Fire meteors attack:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Burn the sky! Burn it all!",
+                "trigger": "Fire meteors attack:",
+                "ability": "Meteor Swarm"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Let the burning fires consume you!",
+                "trigger": "Fire meteors attack:",
+                "ability": "Meteor Swarm"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Succumb to my lord's burning flame!",
+                "trigger": "Fire meteors attack:",
+                "ability": "Meteor Swarm"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Your flesh shall burn away!",
+                "trigger": "Fire meteors attack:",
+                "ability": "Meteor Swarm"
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Let flames rain down and burn the land!",
+                "trigger": "Fire meteors attack:",
+                "ability": "Meteor Swarm"
+            }
+        ],
+        "(?)": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "I shall take your skull as a keepsake!",
+                "trigger": "(?)",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Fire consume you!",
+                "trigger": "(?)",
+                "ability": null
+            }
+        ],
+        "End of abomination phase (enter behemot phase": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "The wrath of Mehrunes Dagon melts away the unworthy!",
+                "trigger": "End of abomination phase (enter behemot phase",
+                "ability": null
+            }
+        ],
+        "Summoning her Prime Meteors at 25% Health:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Mehrunes Dagon's fiery might will crush you from above!",
+                "trigger": "Summoning her Prime Meteors at 25% Health:",
+                "ability": "Meteor Swarm"
+            }
+        ],
+        "When she's defeated:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "I happily offer my soul to Xalvakka ….",
+                "trigger": "When she's defeated:",
+                "ability": null
+            }
+        ],
+        "When a player in group dies:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Fire consume you!",
+                "trigger": "When a player in group dies:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Such insignificant creatures.",
+                "trigger": "When a player in group dies:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "You were doomed from the start.",
+                "trigger": "When a player in group dies:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "You pose no threat to what awaits.",
+                "trigger": "When a player in group dies:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Xalvakka feasts on your soul!",
+                "trigger": "When a player in group dies:",
+                "ability": null
+            }
+        ],
+        "When the group wipes:": [
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "As expected. Nothing matches the power of destruction.",
+                "trigger": "When the group wipes:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Ha. Merely ashes in the wind.",
+                "trigger": "When the group wipes:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Feed, great Xalvakka! Drink deep!",
+                "trigger": "When the group wipes:",
+                "ability": null
+            },
+            {
+                "speaker": "Flame-Herald Bahsei",
+                "line": "Such weakness. Your souls are merely a snack for Xalvakka.",
+                "trigger": "When the group wipes:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Bahsei's Mania and Perfected Bahsei's Mania sets are named after her."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Of Stone and Steam: Save the souls of Rockgrove's fallen and drive back the Dagonite invaders."
+    ],
+    "summary": "Flame-Herald Bahsei is a Naga warrior-mage and member of the Sul-Xan tribe who can be found atop the Xanmeer Pinnacle in Rockgrove. She is the second boss of the trial. She is the leader of the forces that attacked Rockgrove. Bahsei is a worshipper of Mehrunes Dagon and has opened an Oblivion Gate in an effort to summon Xalvakka to Tamriel. She has used her magic to harvest the souls of all who have died in the attack on the settlement, to be sacrificed to Xalvakka. When you confront her, she will transform into a Bone Goliath before the fight starts.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Flame-Herald_Bahsei",
+        "page_title": "Online:Flame-Herald Bahsei",
+        "revision_id": 3450945,
+        "retrieved_at": "2026-09-01T01:54:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

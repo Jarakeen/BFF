@@ -1,0 +1,41 @@
+{
+    "id": "bal_sunnar",
+    "name": "Bal Sunnar",
+    "content_type": "dungeon",
+    "summary": "Bal Sunnar is a group dungeon in Stonefalls. It is a remote Telvanni settlement found in the mountains south of Senie and was established several centuries prior to the Second Era by Matriarch Lladi Telvanni. However the area is subject to a temporal anomaly causing multiple eras of Bal Sunnar to be accessible. It is included in the Scribes of Fate DLC alongside Scrivener's Hall. Ash hoppers and wasps can be found in the present, while centipedes, shroom beetles and wormmouths in the past, fiendroths, fleshflies and rats reside in the future. Hazards include bottomless pits, meteorites, pus pools and pus sacks.",
+    "location": "",
+    "boss_ids": [
+        "kovan_giryon",
+        "house_telvanni",
+        "urvel_drath",
+        "roksa_the_warped",
+        "matriarch_lladi_telvanni"
+    ],
+    "achievements": [
+        {
+            "id": "scribes_of_fate_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The name translates to \"Stone's Blessing\" in Dark Elvish."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bal_Sunnar",
+        "page_title": "Online:Bal Sunnar",
+        "revision_id": 3585487,
+        "retrieved_at": "2026-08-12T21:13:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

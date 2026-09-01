@@ -1,0 +1,91 @@
+{
+    "id": "spiderkith_captain",
+    "name": "Spiderkith Captain",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Spiral Shadows, Maelstrom Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "137,943",
+        "veteran": "227,952",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lightning Form",
+            "description": "Surrounds the enemy in lightning, creating an AoE. Deals lightning damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Surrounds the enemy in lightning, creating an AoE. Deals lightning damage.",
+            "name": "Lightning Form",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Now you shall taste the lightning!\"",
+            "trigger": "When he is summoned he will say one of several things:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Ready to die, mortal?\"",
+            "trigger": "When he is summoned he will say one of several things:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When he is summoned he will say one of several things:": [
+            {
+                "speaker": "",
+                "line": "\"Now you shall taste the lightning!\"",
+                "trigger": "When he is summoned he will say one of several things:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Ready to die, mortal?\"",
+                "trigger": "When he is summoned he will say one of several things:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His appearance is randomly generated. If one dies before killing him, the next time he respawns his appearance will vary."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "The Spiderkith Captain is a Spiderkith warrior serving as the mini-boss of the third wave of enemies during Stage 6: Spiral Shadows in Maelstrom Arena. He uses a mix of nullifier and thundermaul class abilities.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Spiderkith_Captain",
+        "page_title": "Online:Spiderkith Captain",
+        "revision_id": 3513323,
+        "retrieved_at": "2026-08-19T03:21:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

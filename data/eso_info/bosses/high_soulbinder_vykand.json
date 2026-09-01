@@ -1,0 +1,257 @@
+{
+    "id": "high_soulbinder_vykand",
+    "name": "High Soulbinder Vykand",
+    "content_id": "black_gem_foundry",
+    "content_name": "Black Gem Foundry",
+    "location": "Black Gem Foundry",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "6,314,947",
+        "veteran": "12,829,988",
+        "hardmode": "25,659,976"
+    },
+    "abilities": [
+        {
+            "name": "Acute Enervation",
+            "description": "Vykand casts a DoT on a player and summons four Anguished Refracted Souls. One soul will appear green to the affected player. The other group members must kill this soul to cleanse the DoT."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "This lot's good for nothing. They couldn't move slower if they trudged through azure plasm.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "And whose fault is that, quarrymaster? Don't tell me you grew soft on these elementals like that pathetic summoner.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "I'm not—! I'll make use of them. Every last bit of them. You'll see.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Prisoner",
+            "line": "No more. Please!",
+            "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "The pain's not nearly enough if you can speak through it.",
+            "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "Let's see what these other mortals make of what I've done to you.",
+            "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Dalenor the Summoner",
+            "line": "What did she do to that prisoner?",
+            "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Dalenor the Summoner",
+            "line": "My healing doesn't work on him like it should. I'll keep trying. You keep going.",
+            "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "There. A refraction refined for withering and pestilence.",
+            "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "And someone to test it on! How fortunate.",
+            "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "A refraction of wrath. Another glorious creation.",
+            "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "But here comes my next experiment. Contend with them while I go make preparations.",
+            "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Dalenor the Summoner",
+            "line": "High Soulbinder Vykand! I never should have bargained with you!",
+            "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "I thought your summons were your only friends, Dalenor.",
+            "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Dalenor the Summoner",
+            "line": "Even if they are, your cruel plans for mortals and atronachs end here.",
+            "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "Such noble spirit! I can't wait to break it.",
+            "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+            "ability": "Acute Enervation"
+        },
+        {
+            "speaker": "Dalenor the Summoner",
+            "line": "I'm not running from you this time.",
+            "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+            "ability": "Acute Enervation"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.": [
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "This lot's good for nothing. They couldn't move slower if they trudged through azure plasm.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "And whose fault is that, quarrymaster? Don't tell me you grew soft on these elementals like that pathetic summoner.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "I'm not—! I'll make use of them. Every last bit of them. You'll see.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "Acute Enervation"
+            }
+        ],
+        "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.": [
+            {
+                "speaker": "Prisoner",
+                "line": "No more. Please!",
+                "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "The pain's not nearly enough if you can speak through it.",
+                "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "Let's see what these other mortals make of what I've done to you.",
+                "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "Dalenor the Summoner",
+                "line": "What did she do to that prisoner?",
+                "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "Dalenor the Summoner",
+                "line": "My healing doesn't work on him like it should. I'll keep trying. You keep going.",
+                "trigger": "After the Black Gem Monstrosity, you will come across a prisoner who Vykand has experimented on.",
+                "ability": "Acute Enervation"
+            }
+        ],
+        "As you progress through the area, you'll encounter more refracted souls.": [
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "There. A refraction refined for withering and pestilence.",
+                "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "And someone to test it on! How fortunate.",
+                "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "A refraction of wrath. Another glorious creation.",
+                "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "But here comes my next experiment. Contend with them while I go make preparations.",
+                "trigger": "As you progress through the area, you'll encounter more refracted souls.",
+                "ability": "Acute Enervation"
+            }
+        ],
+        "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.": [
+            {
+                "speaker": "Dalenor the Summoner",
+                "line": "High Soulbinder Vykand! I never should have bargained with you!",
+                "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "I thought your summons were your only friends, Dalenor.",
+                "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "Dalenor the Summoner",
+                "line": "Even if they are, your cruel plans for mortals and atronachs end here.",
+                "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "Such noble spirit! I can't wait to break it.",
+                "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+                "ability": "Acute Enervation"
+            },
+            {
+                "speaker": "Dalenor the Summoner",
+                "line": "I'm not running from you this time.",
+                "trigger": "When you reach High Soulbinder Vykand, she will trade banter with Dalenor.",
+                "ability": "Acute Enervation"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Armaments: A regretful summoner needs help destroying arms and armor for the Worm Cult invasion of Solstice."
+    ],
+    "summary": "High Soulbinder Vykand is a Soulbinder Dremora in charge of Black Gem Foundry, and serves as the final boss. She oversees the production of weapons and armor affixed with black soul gems, and intends to supply the Worm Cult with these armaments for their invasion of Solstice. She is also experimenting with the process of refracting souls through black soul gems. While Vykand is the current leader of the clan, there are signs that her underlings want to overthrow her.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:High_Soulbinder_Vykand",
+        "page_title": "Online:High Soulbinder Vykand",
+        "revision_id": 3610289,
+        "retrieved_at": "2026-08-12T21:14:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,258 @@
+{
+    "id": "high_kinlord_rilis_banished_cells_ii",
+    "name": "High Kinlord Rilis (Banished Cells II)",
+    "content_id": "the_banished_cells_ii",
+    "content_name": "The Banished Cells II",
+    "location": "The Banished Cells II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5702217",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Daedric Bolt",
+            "description": "A basic ranged attack that deals minor magic damage."
+        },
+        {
+            "name": "Daedric Tempest",
+            "description": "The boss causes lightning to strike two random players, dealing moderate flame damage and causing flame AoEs to appear under them for a short time, dealing moderate flame damage as indicated by red circles."
+        },
+        {
+            "name": "Summmon Daedroth",
+            "description": "At regular intervals throughout the fight, the boss summons Daedroth and Feast orbs from the altar. Killing the Feast orbs is necessary to prevent him from healing, while killing the Daedroth will simplify the fight. Having three or more Daedroth alive at the time the boss is defeated will net players the hard mode achievement on Veteran."
+        },
+        {
+            "name": "Curse of Suffering and Curse of Dominance",
+            "description": "The boss will levitate a random player in the air. When the player lands, they will be inflicted with a random curse as indicated by red or blue runes around them, dealing moderate magical damage over time. The damage can only be removed by going to the cleanse pads of the corresponding color at the side of the room."
+        },
+        {
+            "name": "Teleport",
+            "description": "The boss teleports around to avoid your attacks."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Poor Cirion. You don't want to play with your fellow Keepers?",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "They are not Keepers. Not any longer.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "They selected an intelligent course of action. What better way to keep rickety old Rilis in check than a few Daedra? Ha ha ha!",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "I will find a way to silence you, Rilis. You've become too dangerous to imprison.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "If you want to silence me, you'll need power like mine. Daedric magic. What is there to fear?",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "I was a mere Kinlord. You are a Keeper. Surely you can resist corruption where I fell.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "Stop!",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Your oath is to keep me imprisoned, Keeper. What does it matter how you do it?",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "Be silent.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "You could accomplish so much. The enemies of Auridon brought low by the power of the Keepers.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "Were that I could lay my hands on you and choke the life out of you all over again.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Ah, here come some new friends. Let's see if I've still got the touch.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Slaughter. Still delightful after all these years.",
+            "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "Hold nothing back. I break my oath as Keeper to see Rilis finished, and if he escapes, all of Tamriel will pay for our folly.",
+            "trigger": "Cirion approaches the binding stone.",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "",
+            "line": "<The binding crystal is broken and the Daedric High Kinlord Rilis emerges, merging his spirit with Cirion's body.>",
+            "trigger": "Cirion approaches the binding stone.",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        },
+        {
+            "speaker": "High Kindlord Rilis",
+            "line": "I've wanted this for so very long. Now get out of the way. All of Tamriel will learn I am free when I set the land ablaze.",
+            "trigger": "Cirion approaches the binding stone.",
+            "ability": "Curse of Suffering and Curse of Dominance"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis": [
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Poor Cirion. You don't want to play with your fellow Keepers?",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "They are not Keepers. Not any longer.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "They selected an intelligent course of action. What better way to keep rickety old Rilis in check than a few Daedra? Ha ha ha!",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "I will find a way to silence you, Rilis. You've become too dangerous to imprison.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "If you want to silence me, you'll need power like mine. Daedric magic. What is there to fear?",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "I was a mere Kinlord. You are a Keeper. Surely you can resist corruption where I fell.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "Stop!",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Your oath is to keep me imprisoned, Keeper. What does it matter how you do it?",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "Be silent.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "You could accomplish so much. The enemies of Auridon brought low by the power of the Keepers.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "Were that I could lay my hands on you and choke the life out of you all over again.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Ah, here come some new friends. Let's see if I've still got the touch.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Slaughter. Still delightful after all these years.",
+                "trigger": "Once you enter the dungeon, you'll hear the following exchange between Keeper Cirion and High Kinlord Rilis",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            }
+        ],
+        "Cirion approaches the binding stone.": [
+            {
+                "speaker": "Keeper Cirion",
+                "line": "Hold nothing back. I break my oath as Keeper to see Rilis finished, and if he escapes, all of Tamriel will pay for our folly.",
+                "trigger": "Cirion approaches the binding stone.",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "",
+                "line": "<The binding crystal is broken and the Daedric High Kinlord Rilis emerges, merging his spirit with Cirion's body.>",
+                "trigger": "Cirion approaches the binding stone.",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            },
+            {
+                "speaker": "High Kindlord Rilis",
+                "line": "I've wanted this for so very long. Now get out of the way. All of Tamriel will learn I am free when I set the land ablaze.",
+                "trigger": "Cirion approaches the binding stone.",
+                "ability": "Curse of Suffering and Curse of Dominance"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Plan: Return to the Banished Cells and free its keepers from Daedric servitude.",
+        "Pledge: Banished Cells II: Explore The Banished Cells II and return Undaunted."
+    ],
+    "summary": "This article is about the final boss in Banished Cells II. For the other variant seen in Banished Cells I, see High Kinlord Rilis (Banished Cells I). For the spirit seen at Castle Rilis, see High Kinlord Rilis XII. High Kinlord Rilis is the spirit of an ancient Altmer found in the Banished Cells I, of which he is the final boss. For all intents and purposes, he is actually a Xivilai, the form he takes when he possesses Keeper Cirion. He has a chance of dropping two unique items: the Staff of the Banished and the Corruptor's Maul. He also has a rare chance to drop the antiquity lead for the Silverthread Stitching mythic item fragment for Syrabane's Ward.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:High_Kinlord_Rilis_(Banished_Cells_II)",
+        "page_title": "Online:High Kinlord Rilis (Banished Cells II)",
+        "revision_id": 2911986,
+        "retrieved_at": "2026-08-12T21:14:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "id": "sunspire",
+    "name": "Sunspire",
+    "content_type": "dungeon",
+    "summary": "Sunspire is an ancient temple of Alkosh found in Northern Elsweyr. Omu-dar the traveling merchant travels between Sunspire and the Prowl's Edge Dragonscour. Sunspire has been overrun by dragons. Legend has it that this is the place where Alkosh shouted down Pelinal Whitestrake, leaving behind a timewound. Each boss in this trial will have a unique hardmode. A golden-scaled dragon, Nahviintaas, has come to the Spire and proclaims himself to be Alkosh. With him are two other dragons: Lokkestiiz, a white dragon, and Yolnahkriin, a red dragon. These two claim to be avatars of the two moons, Jone and Jode, respectively. You are tasked with ending the tyrannical reign of these false-gods. You must kill Lokkestiiz and Yolnahkriin in order to reach Nahviintaas. You can kill them in either order, and their deaths break the seal that blocks the way to the false-god of time. In order to engage Nahviintaas on hard mode, the other two bosses must first be fought in hard mode before him. Activating hard mode for Lokkestiz and Yolnahkriin will induce Nahviintaas into flying down from his place at the spire to aid them. Completing the trial on veteran will earn you a skin, and completion of a challenger-like achievement will earn you a Senche mount that wears the veteran skin. You will receive a Pristine Dragon Heartscale with your other rewards for completing this trial on Hard Mode.",
+    "location": "",
+    "boss_ids": [
+        "lokkestiiz",
+        "yolnahkriin",
+        "nahviintaas"
+    ],
+    "achievements": [
+        {
+            "id": "elsweyr_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sunspire",
+        "page_title": "Online:Sunspire",
+        "revision_id": 3548059,
+        "retrieved_at": "2026-08-12T05:34:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

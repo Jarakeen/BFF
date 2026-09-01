@@ -1,0 +1,38 @@
+{
+    "id": "skeleton",
+    "name": "Skeleton",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "You are transformed into a skeleton for a section of the quests The Thin Ones and The Endless War. You can also be transformed into a skeleton during the boss fight with Captain Blackheart."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "This article is about the race. For the individual enemy, see Skeleton (NPC). For the quest-related skeleton in Grahtwood, see Phantom Guilt. Skeletons are a common type of undead found in dungeons and crypts throughout Tamriel. They originally belonged to different races in life, but only Argonian, Khajiit, and Orc skeletons can be told apart by their skulls and tails. Players can play as a skeleton with the Skeleton Polymorph and Cadaverous Assassin item. Some NPCs, such as the Stillrise Kothringi and the Blackheart Haven Pirates, can change between their normal race and being skeletons. A variety of skeletal animals also exist, but will use the same animation rig as their living counterparts.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Skeleton",
+        "page_title": "Online:Skeleton",
+        "revision_id": 3540823,
+        "retrieved_at": "2026-08-12T21:15:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

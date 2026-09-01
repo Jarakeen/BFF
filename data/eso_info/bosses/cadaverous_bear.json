@@ -1,0 +1,56 @@
+{
+    "id": "cadaverous_bear",
+    "name": "Cadaverous Bear",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Fang Lair",
+    "species": "Bear",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lunge",
+            "description": "A basic attack that does moderate physical damage."
+        },
+        {
+            "name": "Bite",
+            "description": "A basic attack that does moderate physical damage."
+        },
+        {
+            "name": "Slam",
+            "description": "The bear rears up and slams the ground dealing high physical damage as indicated by a red cone in front of it."
+        },
+        {
+            "name": "Blighted Aura",
+            "description": "The bear occasionally shoots bolts of magic at all nearby enemies dealing minor magical damage. This is indicated by the bear's body glowing with a teal tint."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Casting the Bones: Investigate a necromancer cult searching for a long-dead Dragon.",
+        "Pledge: Fang Lair: Prove you are truly Undaunted by clearing Fang Lair."
+    ],
+    "summary": "The Cadaverous Bear is a powerful undead skeletal bear in Fang Lair. Along with the weaker Cadaverous Guar and Senche-Tiger, it makes up the Cadaverous Menagerie, the second boss fight of the dungeon. Players should focus damage on the Cadaverous Bear when convenient, as once it is defeated the rest of the Undead Menagerie will immediately die. Cadaverous Dire Wolves will also spawn during the fight and spontaneously combust when in close proximity to a player.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cadaverous_Bear",
+        "page_title": "Online:Cadaverous Bear",
+        "revision_id": 3353338,
+        "retrieved_at": "2026-08-12T21:21:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "id": "the_five_finger_dance",
+    "name": "The Five Finger Dance",
+    "content_type": "dungeon",
+    "summary": "The Five Finger Dance is the realm of Baan Dar, who hosts an eternal party for bandits, pranksters, and merrymakers. It is accessed by a portal from Thormar opened during Baan Dar's Boast, which leads to the Khajiiti manor on the south side of the realm. The realm is centered around a shallow lake, with many docks, palm trees, and tents surrounding it. A stage for bards and dancers is found northeast of the lake, and a bar for food and drinks is found in the southeast.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Golden Claw from its eponymous quest can be seen on the bottom floor of the manor.",
+        "Pariah's Hand and Subtle Knife members only appear when revisiting following the completion of the related quest."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Five_Finger_Dance",
+        "page_title": "Online:The Five Finger Dance",
+        "revision_id": 3550235,
+        "retrieved_at": "2026-08-12T21:22:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

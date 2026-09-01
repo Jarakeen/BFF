@@ -1,0 +1,44 @@
+{
+    "id": "the_guardian_s_spark",
+    "name": "The Guardian's Spark",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "Volenfell, The Eye's Chamber",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "471,516",
+        "veteran": "1,258,098",
+        "hardmode": "1,446,813"
+    },
+    "abilities": [
+        {
+            "name": "Barrage Function",
+            "description": "The boss stands still and shoots balls of lightning that land on top of players dealing high shock damage as indicated by red circles."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell."
+    ],
+    "summary": "The Guardian's Spark is a blue Dwarven Centurion that, along with The Guardian's Soul and The Guardian's Strength, makes up the Guardian Council, serving as the final bosses of Volenfell. It is found in The Eye's Chamber, in front of the Guardian's Eye. During the fight, it will stay in the same spot shooting out lightning energy.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Guardian%27s_Spark",
+        "page_title": "Online:The Guardian's Spark",
+        "revision_id": 3404586,
+        "retrieved_at": "2026-08-12T21:37:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

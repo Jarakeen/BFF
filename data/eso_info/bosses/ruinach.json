@@ -1,0 +1,66 @@
+{
+    "id": "ruinach",
+    "name": "Ruinach",
+    "content_id": "the_dread_cellar",
+    "content_name": "The Dread Cellar",
+    "location": "Deadlands: The Ashen Forest, Doomvault Vulpinaz, Oblivion Portals\nArdent Hope, The Blood Pit, The Deadlands, Deadlight Citadel, Destruction's Solace, Fort Sundercliff\nThe Feral Gallery",
+    "species": "Ruinach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slice",
+            "description": "Basic melee attack dealing minor physical damage."
+        },
+        {
+            "name": "Blade Toss",
+            "description": "A double-hitting basic ranged attack dealing low physical damage each. Red Ruinachs have an added effect on this ability that causes flaming orbs to be dropped once the blades reach its target, indicated by red circles, dealing low flame damage each."
+        },
+        {
+            "name": "Frenzy",
+            "description": "The Ruinarch delivers two initial swings, dealing low physical damage each, and ends with a stronger cross swipe with all of its blades, dealing moderate physical damage. The last strike can be blocked to set the Ruinach off-balance."
+        },
+        {
+            "name": "Reave",
+            "description": "The Ruinach moves forward while spinning both itself and its weapons around, indicated by a red circle around them, dealing moderate physical damage, snaring and knocking down affected targets."
+        },
+        {
+            "name": "Inferno",
+            "description": "The Ruinach infuses two of its blades, making them levitate in the air briefly, before slamming them down, conjuring two flaming tornadoes that then spin around the Ruinach for a duration, indicated by red circles, dealing continuous low flame damage each."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In the book The Truth in Sequence: Volume 8, beings matching their believed origin are referred to as \"Sarmissonays'um ghoul-things\".",
+        "They were named \"Harbingers\" internally and had their models added to the game in Patch 6.2.0. In ESO Live's timeline of future events to expect regarding information of the chapter, their name is spelled \"Ruinoch\".",
+        "A preview of their High quality models can be found at Chris Sulzbach's ArtStation.",
+        "Massive Ruinachs can be seen in the background of the Atoll of Immolation, Doomchar Plateau, and The Deadlands zone, walking along the lava. Some can also be seen fighting against similarly massive harvesters."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Against All Hope: Launch an attack on the citadel of Ardent Hope and take on Valkynaz Nokvroz.",
+        "Call of the Ruinach: Defeat Ghemvas the Harbinger and anoint the bodies of its victims with sanctifying oil.",
+        "Deadlight: Invade a lost realm of Oblivion that serves as Sister Celdina's headquarters."
+    ],
+    "summary": "Ruinachs are a brutish race of four-armed Daedra that serve as Mehrunes Dagon's elite marauders. Historians and mages believe they were grown from Mehrunes Dagon's flesh after his battle against Almalexia in Mournhold. The Ruinachs believe this story wholeheartedly, and refer to themselves as \"Dagon's Fifth Hand\". They are fanatic followers of their lord and believe themselves an extension of his will. Ruinachs have been sighted around Blackwood and the accessible areas of the Deadlands.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ruinach",
+        "page_title": "Online:Ruinach",
+        "revision_id": 3532324,
+        "retrieved_at": "2026-08-12T21:20:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

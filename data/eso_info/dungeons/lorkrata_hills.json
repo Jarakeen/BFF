@@ -1,0 +1,18 @@
+{
+    "id": "lorkrata_hills",
+    "name": "Lorkrata Hills",
+    "content_type": "dungeon",
+    "summary": "The Lorkrata Hills are the site of a ruined fortress located in central Rivenspire, east-northeast of Shornhelm. The fortress was built by King Berthulic, one of the first free Breton rulers, following the decline of the Direnni Hegemony. The fortress was built on top of an ancient Ayleid ruin.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lorkrata_Hills",
+        "page_title": "Online:Lorkrata Hills",
+        "revision_id": 3598239,
+        "retrieved_at": "2026-08-12T21:27:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,319 @@
+{
+    "id": "lady_minara",
+    "name": "Lady Minara",
+    "content_id": "blackrose_prison",
+    "content_name": "Blackrose Prison",
+    "location": "Blackrose Prison; Vampire's Pen, Mess Hall of Misery",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "6,353,341",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Low Slash",
+            "description": "Lady Minara slashes the target's shins, dealing moderate-high physical damage and snaring. Blocking will reduce the damage taken, but not the snare."
+        },
+        {
+            "name": "Explosive Bash",
+            "description": "A small area will crawl from beneath her, and she will shield bash whoever has her taunted, dealing massive physical damage to the target while the area deals very high magic damage. It is likely that anyone who is not a tank will die standing in that circle, so stand clear of the tank and make sure that nobody else has the taunt on Lady Minara."
+        },
+        {
+            "name": "Bat Swarm",
+            "description": "Lady Minara will release a swarm of bats that follows the player that is furthest away from her, dealing continuous high physical damage to targets in the area."
+        },
+        {
+            "name": "Drain Essence",
+            "description": "The Vampire grabs a target with a beam of blood magic, stunning them and draining their health to heal themselves. Every tick deals moderate direct magic damage and heals the Vampire for 2% of their Max Health, except the first tick which heals half that amount."
+        },
+        {
+            "name": "Minara's Curse",
+            "description": "Lady Minara will channel a beam of blue energy on one player, cursing them. While cursed, you must make your way to one of the blue swirling pools of magic on the ground in the arena as the curse deals continuous high magic damage; take too long, and you will be killed instantly. Stepping into the pool of magic dispels the curse but traps you into the ground for a duration, while summoning Skeletal Mages and Skeletal Soldiers nearby."
+        },
+        {
+            "name": "Summon Infuser/Summon Colossus",
+            "description": "At certain health percentages, she will summon allies to aid her. At 80%, she summons an Infuser, who will enrage all the surrounding enemies if allowed to channel his attack. At 60%, she will summon a Bone Colossus. The boss becomes immune to damage while the bone colossus is alive. At 40%, she will summon an Infuser and a Bone Colossus. Again, the boss becomes immune to all damage while the colossus lives, and the Infuser will channel an ability that will empower and enrage the colossus. Focus damage on the Colossus and then kill the Infuser, then turn your attention towards Lady Minara. At 20%, she will summon yet another Bone Colossus and Infuser, whom you will have to kill in order to damage the boss and prevent her from becoming enraged respectively."
+        },
+        {
+            "name": "Invulnerability",
+            "description": "When a Bone Colossus spawns, a blue beam will connect it and Lady Minara, and the boss will become immune to all damage. The colossus must be killed in order to progress further through the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lady Minara",
+            "line": "The challengers today look absolutely delicious.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "These challengers of yours are so fascinating to watch, Drakeeh.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "I always do love watching a little bloodshed.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "My, my. Such marvelous brutality today.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Wherever did you find these challengers, Drakeeh? They're so … amusing.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Finally, some real entertainment. I was starting to grow bored.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Why, our challengers are putting up quite the fight, aren't they?",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "It seems these challengers are actually able to hold their own. How exciting.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "What a clever strike, challenger!",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "A lovely blow! How exciting.",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Bravo, challengers! Bravo!",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "What a thrilling fight!",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Well done, challengers! Bravo!",
+            "trigger": "While watching the fights",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Look how the challengers bleed. Such a lovely sight.",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Oh, my. Did that hurt?",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "You'll have to move much quicker than that, dears!",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Oh. That certainly looked like it smarts.",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Ah, I can smell the blood from here. How tempting ....",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "It looks like the challengers are having a spot of trouble.",
+            "trigger": "While organizing her round",
+            "ability": "Explosive Bash"
+        },
+        {
+            "speaker": "Lady Minara",
+            "line": "Fine, you heathens! I yield.",
+            "trigger": "When she's defeated",
+            "ability": "Minara's Curse"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "While watching the fights": [
+            {
+                "speaker": "Lady Minara",
+                "line": "The challengers today look absolutely delicious.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "These challengers of yours are so fascinating to watch, Drakeeh.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "I always do love watching a little bloodshed.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "My, my. Such marvelous brutality today.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Wherever did you find these challengers, Drakeeh? They're so … amusing.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Finally, some real entertainment. I was starting to grow bored.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Why, our challengers are putting up quite the fight, aren't they?",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "It seems these challengers are actually able to hold their own. How exciting.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "What a clever strike, challenger!",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "A lovely blow! How exciting.",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Bravo, challengers! Bravo!",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "What a thrilling fight!",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Well done, challengers! Bravo!",
+                "trigger": "While watching the fights",
+                "ability": "Explosive Bash"
+            }
+        ],
+        "While organizing her round": [
+            {
+                "speaker": "Lady Minara",
+                "line": "Look how the challengers bleed. Such a lovely sight.",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Oh, my. Did that hurt?",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "You'll have to move much quicker than that, dears!",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Oh. That certainly looked like it smarts.",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "Ah, I can smell the blood from here. How tempting ....",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            },
+            {
+                "speaker": "Lady Minara",
+                "line": "It looks like the challengers are having a spot of trouble.",
+                "trigger": "While organizing her round",
+                "ability": "Explosive Bash"
+            }
+        ],
+        "When she's defeated": [
+            {
+                "speaker": "Lady Minara",
+                "line": "Fine, you heathens! I yield.",
+                "trigger": "When she's defeated",
+                "ability": "Minara's Curse"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Black Gauntlet: Enter a deadly gauntlet held by the Blackguards of Blackrose Prison."
+    ],
+    "summary": "Lady Minara is a Dark Elf vampire and an elite member of the Blackguards who can be found in Blackrose Prison. She excels in the art of necromancy. She acts as the boss of Round 3: Vampire's Pen and one of the bosses in Round 4: Mess Hall of Misery.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lady_Minara",
+        "page_title": "Online:Lady Minara",
+        "revision_id": 3550754,
+        "retrieved_at": "2026-08-12T22:11:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

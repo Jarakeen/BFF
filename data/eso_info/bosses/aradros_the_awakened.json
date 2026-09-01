@@ -1,0 +1,276 @@
+{
+    "id": "aradros_the_awakened",
+    "name": "Aradros the Awakened",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "Oathsworn Pit, Malacath's Belly",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,610,178",
+        "veteran": "7,954,593",
+        "hardmode": "17,897,834"
+    },
+    "abilities": [
+        {
+            "name": "Slice/Serrated Wound",
+            "description": "A basic melee attack dealing moderate physical damage and physical damage over time."
+        },
+        {
+            "name": "Emblazoned Strike",
+            "description": "Aradros the Awakened performs a powerful strike with his dual swords, dealing very high physical damage and staggering. This can be blocked."
+        },
+        {
+            "name": "Twin Fires",
+            "description": "Adraros holds his swords in front of him briefly, as a wide red cone fills up, and performs a fanning strike, sending a fiery shockwave forward, dealing high flame damage and knocking targets back."
+        },
+        {
+            "name": "Magma Eruption",
+            "description": "Aradros the Awakened channels a spell that causes a pillar of flame to erupt at a target's location, indicated by a slowly growing red circle, dealing high flame damage."
+        },
+        {
+            "name": "Fracturing Strike",
+            "description": "Aradros points one of his swords up, causing a flaming boulder to fall at somewhere in the arena, indicated by a red circle, either at a target's location or nearby trying to catch them moving and avoiding the flaming tiles, dealing extreme flame damage."
+        },
+        {
+            "name": "Wildfire",
+            "description": "massive numbers of low flame damage ticks, not often on the tank"
+        },
+        {
+            "name": "Furnace",
+            "description": "When Aradros the Awakened reaches 65% health, the floor grate in the center of the arena erupts. Standing on the grate during the initial blast deals massive flame damage. This occurs again when resuming the fight after defeating the mini-boss following \"Firestep\"."
+        },
+        {
+            "name": "Molten Tile",
+            "description": "After effect of \"Magma Eruption\" and \"Furnace\". For \"Magma Eruption\", floor tiles of the arena covered by the flame pillar now glow red-hot, dealing continuous high flame damage if stood on, for some time. For \"Furnace\" the same principle occurs, but this time a lot more tiles are affected, and it can be any of them, in increasing amounts over time, until only some tiles are left unscorched. In Hard Mode, the tiles are scorched permanently."
+        },
+        {
+            "name": "Brimstone",
+            "description": "At any given moment, a \"Molten Tile\" can detonate, as indicated by a \"+\" shaped AoE, dealing massive flame damage to affected targets."
+        },
+        {
+            "name": "Firestep",
+            "description": "When Aradros the Awakened reaches 50% health, he teleports to the center of the arena and engulfs himself in flames, rendering himself invulnerable. A gate opens on the side of the arena, leading to either Faenalir, Maerolor, or Nilborwen (or all three at the same time on Hard Mode) who must be defeated to progress the fight."
+        },
+        {
+            "name": "Awaken Fire",
+            "description": "Occasionally during the fight, flaming Nixad named Awakened Fires will enter the arena to assist Aradros the Awakened."
+        },
+        {
+            "name": "Fiery Cowardice",
+            "description": "Flames appear at the base of the walls of the main arena. If a player touches them, they are instantly dealt lethal oblivion damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "You think this place intimidates me? I am the forge's fire.",
+            "trigger": "At the beginning of combat",
+            "ability": "Magma Eruption"
+        },
+        {
+            "speaker": "King Bazrag / Chief Bazrag",
+            "line": "We don't need to intimidate you to kill you.",
+            "trigger": "At the beginning of combat",
+            "ability": "Magma Eruption"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "The Recollection will not fall to the likes of you!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "My fires forge pain.",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "I will crush you.",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "Roast in the belly of the pit!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "I will bring about your downfall!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "You'll be a layer of ash.",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "The fire burns all around us.",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "The fires will turn you to ashes!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "The pit will claim your bones.",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "Destruction! You will fall to me!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "You will taste fire!",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "Can you withstand the heat?",
+            "trigger": "During combat",
+            "ability": "Awaken Fire"
+        },
+        {
+            "speaker": "Aradros the Awakened",
+            "line": "I defeated the Oathsworn!",
+            "trigger": "When he is near defeat",
+            "ability": "Firestep"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "At the beginning of combat": [
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "You think this place intimidates me? I am the forge's fire.",
+                "trigger": "At the beginning of combat",
+                "ability": "Magma Eruption"
+            },
+            {
+                "speaker": "King Bazrag / Chief Bazrag",
+                "line": "We don't need to intimidate you to kill you.",
+                "trigger": "At the beginning of combat",
+                "ability": "Magma Eruption"
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "The Recollection will not fall to the likes of you!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "My fires forge pain.",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "I will crush you.",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "Roast in the belly of the pit!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "I will bring about your downfall!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "You'll be a layer of ash.",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "The fire burns all around us.",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "The fires will turn you to ashes!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "The pit will claim your bones.",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "Destruction! You will fall to me!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "You will taste fire!",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            },
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "Can you withstand the heat?",
+                "trigger": "During combat",
+                "ability": "Awaken Fire"
+            }
+        ],
+        "When he is near defeat": [
+            {
+                "speaker": "Aradros the Awakened",
+                "line": "I defeated the Oathsworn!",
+                "trigger": "When he is near defeat",
+                "ability": "Firestep"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Victory Through Strife: Repel the Recollection from the Oathsworn Pit.",
+        "Pledge: Oathsworn Pit: Explore Oathsworn Pit and return Undaunted."
+    ],
+    "summary": "Aradros the Awakened is a Wood Elf pyromaster and member of the Recollection who serves as the last boss of Oathsworn Pit.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Aradros_the_Awakened",
+        "page_title": "Online:Aradros the Awakened",
+        "revision_id": 3496628,
+        "retrieved_at": "2026-08-12T21:30:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

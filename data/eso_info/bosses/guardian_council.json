@@ -1,0 +1,42 @@
+{
+    "id": "guardian_council",
+    "name": "Guardian Council",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "This boss fight used to be named the \"Guardian Trinity\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell.",
+        "Volenfell Pledge: Explore Volenfell and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "The Guardian Council refers to three Dwarven Centurions in The Eye's Chamber section of Volenfell: Together they make up the final boss fight of the dungeon. They have a chance to drop the Antiquity lead for the Dwarven Leather Saddle Seat and Volenfell Etching Tools. In Veteran mode, they will drop a Tremorscale set helmet.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Guardian_Council",
+        "page_title": "Online:Guardian Council",
+        "revision_id": 3124704,
+        "retrieved_at": "2026-08-12T21:37:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

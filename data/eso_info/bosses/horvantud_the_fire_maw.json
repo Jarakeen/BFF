@@ -1,0 +1,79 @@
+{
+    "id": "horvantud_the_fire_maw",
+    "name": "Horvantud the Fire Maw",
+    "content_id": "city_of_ash_ii",
+    "content_name": "City of Ash II",
+    "location": "City of Ash II, Knives of Discord",
+    "species": "Daedroth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Jagged Claw",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Fiery Jaws",
+            "description": "The daedroth bites the player, doing moderate physical damage. This attack also applies the \"Burning\" effect, which does minor flame damage over time."
+        },
+        {
+            "name": "Fiery Breath",
+            "description": "The daedroth breathes fire, doing moderate flame damage over time to all players in front of it as indicated by a red cone."
+        },
+        {
+            "name": "Ground Quake",
+            "description": "The boss pounds the ground causing quakes to appear under the player's feet and around the arena, dealing moderate physical damage as indicated by red circles."
+        },
+        {
+            "name": "Tremor",
+            "description": "The boss stomps, causing shockwaves to travel out from itself dealing moderate physical damage and staggering all players hit."
+        },
+        {
+            "name": "Summon Dremora",
+            "description": "Throughout the fight as its health drops, various Dremora will jump down to attack the group. They will disappear once the boss dies. The group should balance damaging the boss and killing the Dremora summoned. Alternatively, if damage is high enough, the group can choose to focus the boss only before the damage from the adds becomes overwhelming."
+        },
+        {
+            "name": "Shield",
+            "description": "At 20% health, the boss summons a shield around itself that must be broken by damaging it."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Most daedroth in ESO's base game are blue due to their affiliation with Molag Bal: before Elsweyr, Horvantud and Hrelvesuu were the only green daedroth in the game.",
+        "Horvantud's Ground Quake ability does less damage as of Patch 3.1.5."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Return to Ash: Enter the Deadlands to rescue a failed invasion force.",
+        "Pledge: City of Ash II: Prove you are truly Undaunted by clearing the City of Ash II."
+    ],
+    "summary": "Horvantud the Fire Maw is a gigantic armored Daedroth found in City of Ash II. Horvantud has a chance to drop the unique item Fire Maw's Fang. During the fight, Dremora Beldakyn, Harstryls, Kynlurkers, Kynval, and Morikyn will drop down in the arena to assist him it the fight.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Horvantud_the_Fire_Maw",
+        "page_title": "Online:Horvantud the Fire Maw",
+        "revision_id": 3136817,
+        "retrieved_at": "2026-08-12T21:17:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

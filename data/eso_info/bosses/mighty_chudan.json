@@ -1,0 +1,80 @@
+{
+    "id": "mighty_chudan",
+    "name": "Mighty Chudan",
+    "content_id": "ruins_of_mazzatun",
+    "content_name": "Ruins of Mazzatun",
+    "location": "Ruins of Mazzatun",
+    "species": "Haj Mota",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,007,499",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Crushing Claws",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Chomp",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Raging Gore",
+            "description": "A charged heavy melee attack that deals high physical damage to all players in front of the boss. This attack should be blocked or dodged if possible. Do not stand in front of the boss if you are not the tank."
+        },
+        {
+            "name": "Mucous Spray",
+            "description": "Chudan barrages whoever she's targeting with a flurry of poisonous spit dealing high poison damage over time. The tank must block this ability, and the healer should focus heals on the tank when this ability is being used."
+        },
+        {
+            "name": "Mucous Pool",
+            "description": "After Mucous Spray is used, the boss leaves behind poisonous pools that deal moderate poison damage over time as indicated by red circles."
+        },
+        {
+            "name": "Bog Rush",
+            "description": "Chudan targets one player digs towards them. She does this when an Argonian Shellbinder spawns. The Shellbinder prods Chudan with lightning in an attempt to control the beast. They throw lightning at your group in the process, dealing more and more damage the longer the Shellbinder is left alive. The indication that you have been targeted comes to you in the form of an aoe that spreads out from your feet and follows you everywhere. This means you have to run between Chudan and the Shellbinder (in other words, make sure Chudan \"has line of sight\" on them), and evade her charge when she digs towards you so she kills the Shellbinder that's tossing out lightning. Once Chudan begins to charge, she will not change directions; she will charge in a straight line without deviating from that path."
+        },
+        {
+            "name": "Summon Haj Mota",
+            "description": "Two smaller Haj Mota will arrive to assist the boss in battle. They can use Swamp Spit to apply a toxic green AoE on the ground. They have high health but do not deal much damage and will respawn if killed, and hence can be ignored safely."
+        },
+        {
+            "name": "Summon Xit-Xaht Trapper",
+            "description": "Throughout the fight, Xit-Xaht Trappers will attack the party, and should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: Ruins of Mazzatun: Prove you are truly Undaunted by conquering the Ruins of Mazzatun.",
+        "Sap and Stone: Eliminate the Xit-Xaht threat in the Ruins of Mazzatun."
+    ],
+    "summary": "This article is about the enemy. For the set, see Mighty Chudan (set). Mighty Chudan is a giant female haj mota found in the Ruins of Mazzatun. She is the tree-minder's pet. Chudan is the namesake of the Mighty Chudan monster helm set, but doesn't actually drop any of the pieces.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mighty_Chudan",
+        "page_title": "Online:Mighty Chudan",
+        "revision_id": 3388168,
+        "retrieved_at": "2026-08-12T21:31:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

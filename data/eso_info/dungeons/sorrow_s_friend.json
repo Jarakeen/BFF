@@ -1,0 +1,26 @@
+{
+    "id": "sorrow_s_friend",
+    "name": "Sorrow's Friend",
+    "content_type": "dungeon",
+    "summary": "Sorrow's Friend is a district of the Night Market that lies in perpetual shadow. It is reached by going through the eastern gate of the Starlit Plaza, and while the market is open it can be explored to earn favor for your chosen faction. The darkness is almost alive here and requires a network of wards to hold the dark back from overwhelming the place. There are several places where the Baleful Dark will kill you unless you have the relic of Sorrow's Friend. On the western edge of the map is the Mournful Catacomb, which is home to the Gilded Fateline's Knell. Throughout the district you may hear the continuous weeping of Calamitous Wailing Bedina as she wanders the streets.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sorrow%27s_Friend",
+        "page_title": "Online:Sorrow's Friend",
+        "revision_id": 3563707,
+        "retrieved_at": "2026-08-12T21:34:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "id": "changeling",
+    "name": "Changeling",
+    "content_id": "selene_s_web",
+    "content_name": "Selene's Web",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The infamous Alessian general Faolchu was also frequently referred to as Faolchu the Changeling, although he was seemingly just a powerful werewolf.[13]",
+        "In cut content from ESO, it was suggested that Changelings lived undetected among regular people, assuming the identities of others.[UOL 1]"
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Changelings are rare nature spirits[1] with the ability to shapeshift. They were once prevalent in Valenwood until Y'ffre introduced the Green Pact, resulting in many of them giving up their formlessness to become Bosmer, with those who refused it becoming known as Oathbreakers.[2] Although usually humanoid, a Changeling's powers allow them to assume the forms of many other creatures at will and take on their characteristics.[3]",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Lore:Changeling",
+        "page_title": "Lore:Changeling",
+        "revision_id": 3251441,
+        "retrieved_at": "2026-08-12T21:33:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

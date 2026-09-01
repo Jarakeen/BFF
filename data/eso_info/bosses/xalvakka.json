@@ -1,0 +1,470 @@
+{
+    "id": "xalvakka",
+    "name": "Xalvakka",
+    "content_id": "rockgrove",
+    "content_name": "Rockgrove",
+    "location": "Rockgrove, Tower of the Five Crimes",
+    "species": "Harvester",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "25,084,768",
+        "veteran": "53,558,256",
+        "hardmode": "214,233,024 (Hard Mode)"
+    },
+    "abilities": [
+        {
+            "name": "Scathing Evisceration",
+            "description": "Xalvakka performs five claw swipes back to back, dealing a massive combined amount of flame damage. This can be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Deadstar",
+            "description": "Xalvakka conjures three meteors, one after the other, that fall at a target's location, indicated by a large red circle, dealing very high flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Creeping Manifold",
+            "description": "Xalvakka conjures a spell that envelops several targets with a ring of fire, indicated by a small red ring around them, dealing continuous and unavoidable high flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon",
+            "description": "Xalvakka shrieks, summoning allies to her side. These include Clannfear, Corrupted Azureplasms, Daedroth, Flame Atronachs, Flame Watchers, Iron Atronachs, and Scamps.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Wraiths",
+            "description": "Xalvakka summons Wraiths, which slowly move towards her. If allowed to reach her, she absorbs the wraiths, gaining a damage shield portion for each one. If too many empower her, her shield becomes unbreakable and she wipes the party.",
+            "damage_type": null
+        },
+        {
+            "name": "Corrupted Blast",
+            "description": "If Xalvakka has a damage shield up and wraiths are absorbed, this spell is flung at targets, dealing high magical damage. The more wraiths are allowed to be absorbed, the stronger this attack becomes.",
+            "damage_type": null
+        },
+        {
+            "name": "Soul Resonance",
+            "description": "Slain wraith die in a blast that apply the \"Soul Resonance\" debuff on nearby targets, dealing high magical damage over time and slowing them down. Affected targets appear with blue mist around them. The \"Soul Purge\" synergy can be used to get rid of this effect, which results in Corrupted Azureplasm to be put on the ground at the location where the synergy was used. However, anyone standing in this glob will be dramatically slowed, so be careful of where the synergy is performed. After a short while, the glob explodes, dealing very high physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Retreat",
+            "description": "At 70% and 40% health, Xalvakka slithers away and flees the current floor of the tower she is on. She must be chased up a stairwell, which is lined with flame spout traps, each dealing high flame damage, and while in the stairwell, there is also a damage over time effect applied on top. Lava rises from below, and stepping into it causes a one-shot.",
+            "damage_type": null
+        },
+        {
+            "name": "Split",
+            "description": "This ability starts being used once on the second floor. Xalvakka splits herself into three copies, all spread out across the arena, which also becomes engulfed in flames completely at that time, which deals continuous high flame damage. These copies appear as Volatile Shells, and to make Xalvakka reappear, the real her must be found and attacked. The way to discern the real Xalvakka is that the clones will appear see-through (when standing very close to them in melee range only).",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Goliath",
+            "description": "If Xalvakka isn't damaged to make her retreat fast enough, a red portal opens in the arena, which releases a powerful Havocrel Goliath. The goliath's most noteworthy attack is that he will raise his weapon up and fill most of the arena, except for a small safe zone in the center, with lava, which will quickly kill any target that ventures into it.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Xalvakka conjures three meteors, one after the other, that fall at a target's location, indicated by a large red circle, dealing very high flame damage.",
+            "name": "Deadstar",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Xalvakka summons Wraiths, which slowly move towards her. If allowed to reach her, she absorbs the wraiths, gaining a damage shield portion for each one. If too many empower her, her shield becomes unbreakable and she wipes the party.",
+            "name": "Summon Wraiths",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "If Xalvakka has a damage shield up and wraiths are absorbed, this spell is flung at targets, dealing high magical damage. The more wraiths are allowed to be absorbed, the stronger this attack becomes.",
+            "name": "Corrupted Blast",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Slain wraith die in a blast that apply the \"Soul Resonance\" debuff on nearby targets, dealing high magical damage over time and slowing them down. Affected targets appear with blue mist around them. The \"Soul Purge\" synergy can be used to get rid of this effect, which results in Corrupted Azureplasm to be put on the ground at the location where the synergy was used. However, anyone standing in this glob will be dramatically slowed, so be careful of where the synergy is performed. After a short while, the glob explodes, dealing very high physical damage.",
+            "name": "Soul Resonance",
+            "links": [],
+            "mechanic_type": "cleanse",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": true,
+            "persistent_hazard": null,
+            "failure_is_fatal": true,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "This ability starts being used once on the second floor. Xalvakka splits herself into three copies, all spread out across the arena, which also becomes engulfed in flames completely at that time, which deals continuous high flame damage. These copies appear as Volatile Shells, and to make Xalvakka reappear, the real her must be found and attacked. The way to discern the real Xalvakka is that the clones will appear see-through (when standing very close to them in melee range only).",
+            "name": "Split",
+            "links": [],
+            "mechanic_type": "spread",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [
+        {
+            "label": "Phase 2",
+            "threshold": "70%",
+            "description": "The fight has three phases, each based on how low Xalvakka's health is. When one such health threshold is reached, Xalvakka will retreat up the tower, forcing your group to follow her up a booby-trapped spiral staircase to avoid being consumed by the rising lava, which will flood the previous arena. Phase 2 starts when Xalvakka's health reaches 70%, and the final phase starts when she hits 40%. Phase 3 takes place at the pinnacle of the Tower, where a sigil stone maintains the Oblivion Gate to Rockgrove. During phase 2, Xalvakka will set the floor on fire and split in three. Each copy of Xalvakka is surrounded by a limited section of ground that isn't on fire and is thus safe to stand on. Two of the three Harvesters on the field are dummies: striking a false copy will cause it to appear a translucent orange and will not harm the boss; these copies can also transform into Volatile Shells. The group will need to deal damage to Xalvakka until her damage shield dissipates."
+        },
+        {
+            "label": "Phase 3",
+            "threshold": "40%",
+            "description": "The fight has three phases, each based on how low Xalvakka's health is. When one such health threshold is reached, Xalvakka will retreat up the tower, forcing your group to follow her up a booby-trapped spiral staircase to avoid being consumed by the rising lava, which will flood the previous arena. Phase 2 starts when Xalvakka's health reaches 70%, and the final phase starts when she hits 40%. Phase 3 takes place at the pinnacle of the Tower, where a sigil stone maintains the Oblivion Gate to Rockgrove. There's a hole in the middle of the third floor, so watch your step during phase 3. In addition to the previous mechanics, flaming meteors called Deadstars are present within the arena during phase 3. There's a hole in the middle of the third floor, so watch your step during phase 3. In addition to the previous mechanics, flaming meteors called Deadstars are present within the arena during phase 3."
+        }
+    ],
+    "dialogue": [
+        {
+            "speaker": "Xalvakka",
+            "line": "I am satiated. Now is my time! Come, bugs, meet the great Xalvakka!",
+            "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+            "ability": null
+        },
+        {
+            "speaker": "Dust-On-Scales",
+            "line": "Xuth! Look how Xalvakka pulls the souls of my kin through the gate.",
+            "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+            "ability": null
+        },
+        {
+            "speaker": "Dust-On-Scales",
+            "line": "With Bahsei dead, I do not know how to close the portal. We are still at great risk.",
+            "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+            "ability": null
+        },
+        {
+            "speaker": "Dust-On-Scales",
+            "line": "Please, you must enter the gate and end this threat.",
+            "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Every moment you delay, I drink more souls and grow stronger.",
+            "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "There is nowhere to run, small mortals. Face your death with courage.",
+            "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "I am but the first. While you wait, hordes prepare.",
+            "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Your courage wanes? Such is the way of mortals.",
+            "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "You cannot win! Drown in fire!",
+            "trigger": "During combat, Xalvakka will occasionally speak. As the fight starts:",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Yes! Give chase, my morsels! Deliver yourselves to me!",
+            "trigger": "Xalvakka will run off to climb the tower at certain health intervals. At 70%",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "I am but a herald! A horde awaits behind me!",
+            "trigger": "At 40%:",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Drown beneath the flames!",
+            "trigger": "Some ability",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Watch as your companions burn!",
+            "trigger": "Casting Creeping Manifold:",
+            "ability": "Creeping Manifold"
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "The might of Xalvakka overwhelms you!",
+            "trigger": "Casting Scathing Evisceration:",
+            "ability": "Scathing Evisceration"
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "Yes. Yes! Such delicious morsels!",
+            "trigger": "If the group is defeated:",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "This is the best that the mortals have to offer?",
+            "trigger": "If the group is defeated:",
+            "ability": null
+        },
+        {
+            "speaker": "Xalvakka",
+            "line": "My forces shall enter your world and wipe out all you know.",
+            "trigger": "If the group is defeated:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"<Xalvakka's grotesque head lays lifeless on the ground. I should bring it to Dust-On-Scales as evidence of her death.>\"",
+            "trigger": "Normally, you'll take Xalvakka's Head:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I should bring Xalvakka's head to Dust-On-Scales.",
+            "trigger": "Normally, you'll take Xalvakka's Head:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"<Xalvakka's bloody heart no longer pumps the noxious ichor that once kept her alive. I should bring it to Dust-On-Scales as evidence of her death.>\"",
+            "trigger": "If hard mode was completed while on Veteran difficulty, you'll receive Xalvakka's Heart instead.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I should bring Xalvakka's heart to Dust-On-Scales.",
+            "trigger": "If hard mode was completed while on Veteran difficulty, you'll receive Xalvakka's Heart instead.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "I am satiated. Now is my time! Come, bugs, meet the great Xalvakka!",
+                "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+                "ability": null
+            },
+            {
+                "speaker": "Dust-On-Scales",
+                "line": "Xuth! Look how Xalvakka pulls the souls of my kin through the gate.",
+                "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+                "ability": null
+            },
+            {
+                "speaker": "Dust-On-Scales",
+                "line": "With Bahsei dead, I do not know how to close the portal. We are still at great risk.",
+                "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+                "ability": null
+            },
+            {
+                "speaker": "Dust-On-Scales",
+                "line": "Please, you must enter the gate and end this threat.",
+                "trigger": "Once Bahsei has been defeated, Xalvakka will feel satisfied with the amount of souls she consumed and will goad your group to fight her in her lair with the Oblivion gate opening:",
+                "ability": null
+            }
+        ],
+        "If you wait a while in front of her without fighting, she'll occasionally say something.": [
+            {
+                "speaker": "Xalvakka",
+                "line": "Every moment you delay, I drink more souls and grow stronger.",
+                "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+                "ability": null
+            },
+            {
+                "speaker": "Xalvakka",
+                "line": "There is nowhere to run, small mortals. Face your death with courage.",
+                "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+                "ability": null
+            },
+            {
+                "speaker": "Xalvakka",
+                "line": "I am but the first. While you wait, hordes prepare.",
+                "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+                "ability": null
+            },
+            {
+                "speaker": "Xalvakka",
+                "line": "Your courage wanes? Such is the way of mortals.",
+                "trigger": "If you wait a while in front of her without fighting, she'll occasionally say something.",
+                "ability": null
+            }
+        ],
+        "During combat, Xalvakka will occasionally speak. As the fight starts:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "You cannot win! Drown in fire!",
+                "trigger": "During combat, Xalvakka will occasionally speak. As the fight starts:",
+                "ability": null
+            }
+        ],
+        "Xalvakka will run off to climb the tower at certain health intervals. At 70%": [
+            {
+                "speaker": "Xalvakka",
+                "line": "Yes! Give chase, my morsels! Deliver yourselves to me!",
+                "trigger": "Xalvakka will run off to climb the tower at certain health intervals. At 70%",
+                "ability": null
+            }
+        ],
+        "At 40%:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "I am but a herald! A horde awaits behind me!",
+                "trigger": "At 40%:",
+                "ability": null
+            }
+        ],
+        "Some ability": [
+            {
+                "speaker": "Xalvakka",
+                "line": "Drown beneath the flames!",
+                "trigger": "Some ability",
+                "ability": null
+            }
+        ],
+        "Casting Creeping Manifold:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "Watch as your companions burn!",
+                "trigger": "Casting Creeping Manifold:",
+                "ability": "Creeping Manifold"
+            }
+        ],
+        "Casting Scathing Evisceration:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "The might of Xalvakka overwhelms you!",
+                "trigger": "Casting Scathing Evisceration:",
+                "ability": "Scathing Evisceration"
+            }
+        ],
+        "If the group is defeated:": [
+            {
+                "speaker": "Xalvakka",
+                "line": "Yes. Yes! Such delicious morsels!",
+                "trigger": "If the group is defeated:",
+                "ability": null
+            },
+            {
+                "speaker": "Xalvakka",
+                "line": "This is the best that the mortals have to offer?",
+                "trigger": "If the group is defeated:",
+                "ability": null
+            },
+            {
+                "speaker": "Xalvakka",
+                "line": "My forces shall enter your world and wipe out all you know.",
+                "trigger": "If the group is defeated:",
+                "ability": null
+            }
+        ],
+        "Normally, you'll take Xalvakka's Head:": [
+            {
+                "speaker": "",
+                "line": "\"<Xalvakka's grotesque head lays lifeless on the ground. I should bring it to Dust-On-Scales as evidence of her death.>\"",
+                "trigger": "Normally, you'll take Xalvakka's Head:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I should bring Xalvakka's head to Dust-On-Scales.",
+                "trigger": "Normally, you'll take Xalvakka's Head:",
+                "ability": null
+            }
+        ],
+        "If hard mode was completed while on Veteran difficulty, you'll receive Xalvakka's Heart instead.": [
+            {
+                "speaker": "",
+                "line": "\"<Xalvakka's bloody heart no longer pumps the noxious ichor that once kept her alive. I should bring it to Dust-On-Scales as evidence of her death.>\"",
+                "trigger": "If hard mode was completed while on Veteran difficulty, you'll receive Xalvakka's Heart instead.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I should bring Xalvakka's heart to Dust-On-Scales.",
+                "trigger": "If hard mode was completed while on Veteran difficulty, you'll receive Xalvakka's Heart instead.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "You will receive a Cinder Ash Plate for defeating Xalvakka with Hard Mode active."
+        ]
+    },
+    "strategy_notes": [
+        "The fight has three phases, each based on how low Xalvakka's health is. When one such health threshold is reached, Xalvakka will retreat up the tower, forcing your group to follow her up a booby-trapped spiral staircase to avoid being consumed by the rising lava, which will flood the previous arena. Phase 2 starts when Xalvakka's health reaches 70%, and the final phase starts when she hits 40%. Phase 3 takes place at the pinnacle of the Tower, where a sigil stone maintains the Oblivion Gate to Rockgrove.",
+        "Xalvakka will summon adds during the fight. These enemies should ideally be pulled in close to the boss so the damage dealers can melt them with AoEs. The Wraiths are one of the most important of the spawned adds. They will spawn on the edge of the arena and move in towards Xalvakka. If they are allowed to reach her, she'll gain a damage shield and the strength of her attacks will rise. If too many wraiths are allowed to reach Xalvakka, the shield will become unbreakable, and she'll one-shot members of the group.",
+        "Occasionally, a Havocrel Goliath will spawn and set down a massive ring of fire around himself. He should be defeated as soon as possible so attention can be turned back towards Xalvakka. If left up, the group will have to avoid the fire on top of everything else Xalvakka is throwing at them.",
+        "Occasionally, players will be prompted to use the Purge Soul synergy. If activated, a Corrupted Azureplasm will spawn at the player's feet and deal damage to anyone around it. Group members afflicted with the synergy should drop their Corrupted Azureplasm outside the group to prevent the damage from accumulating. The plasms may form a larger mass if many of them are placed within the same area.",
+        "During phase 2, Xalvakka will set the floor on fire and split in three. Each copy of Xalvakka is surrounded by a limited section of ground that isn't on fire and is thus safe to stand on. Two of the three Harvesters on the field are dummies: striking a false copy will cause it to appear a translucent orange and will not harm the boss; these copies can also transform into Volatile Shells. The group will need to deal damage to Xalvakka until her damage shield dissipates.",
+        "There's a hole in the middle of the third floor, so watch your step during phase 3. In addition to the previous mechanics, flaming meteors called Deadstars are present within the arena during phase 3."
+    ],
+    "notes": [
+        "Xalvakka's corpse will appear outside the Oblivion Gate if you don't get time to loot her before someone smashes the sigil stone.",
+        "You will receive a Cinder Ash Plate for defeating Xalvakka with Hard Mode active.",
+        "Xalvakka's name translates to \"Sacred Sun\" in the Argonian language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Of Stone and Steam: Save the souls of Rockgrove's fallen and drive back the Dagonite invaders."
+    ],
+    "summary": "Xalvakka is a large Dagonic harvester found in the Tower of the Five Crimes inside the Oblivion Gate in Rockgrove. She serves as the final boss of the trial. The Sul-Xan attacked Rockgrove and sacrificed the souls of its inhabitants to Xalvakka in an effort to summon her into Tamriel. In Veteran mode, you can activate Hard Mode for this fight by activating the Challenge Banner at the end of the bridge leading to her tower, on the left as you approach.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xalvakka",
+        "page_title": "Online:Xalvakka",
+        "revision_id": 3300355,
+        "retrieved_at": "2026-09-01T01:54:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

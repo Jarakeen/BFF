@@ -1,0 +1,18 @@
+{
+    "id": "emeric_s_dream",
+    "name": "Emeric's Dream",
+    "content_type": "dungeon",
+    "summary": "Emeric's Dream is a nightmare realm encountered only in the Daggerfall Covenant quest Vaermina's Gambit. It is a mockery of Wayrest populated by the spirits of Supernal Dreamer cultists. Vaermina, the Daedric Prince of Nightmares, has trapped High King Emeric in this place of torment, with Emeric's torture personally overseen by a being known as the Night Terror.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Emeric%27s_Dream",
+        "page_title": "Online:Emeric's Dream",
+        "revision_id": 3598209,
+        "retrieved_at": "2026-08-12T21:21:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "pothole_caverns",
+    "name": "Pothole Caverns",
+    "content_type": "dungeon",
+    "summary": "Pothole Caverns is a cave in southern Cyrodiil, between Castles Black Boot and Faregyl containing Shadowed Path necromancers.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Pothole Caverns also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pothole_Caverns",
+        "page_title": "Online:Pothole Caverns",
+        "revision_id": 3598803,
+        "retrieved_at": "2026-08-12T21:31:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

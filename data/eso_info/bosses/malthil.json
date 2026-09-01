@@ -1,0 +1,68 @@
+{
+    "id": "malthil",
+    "name": "Malthil",
+    "content_id": "oathsworn_pit",
+    "content_name": "Oathsworn Pit",
+    "location": "Oathsworn Pit",
+    "species": "Wolf",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,189,182",
+        "veteran": "3,518,777",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Bite",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Gnash",
+            "description": "A basic double-hitting melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Nip",
+            "description": "A basic melee attack that deals moderate physical damage then bleed damage over time."
+        },
+        {
+            "name": "Ravage",
+            "description": "Charged melee attack dealing high physical damage, knocking back and stunning. This can be blocked to only be staggered instead and to stagger Malthil."
+        },
+        {
+            "name": "Scent",
+            "description": "Malthil howls then glows red, and a mark is placed on a nearby target for a short moment, causing the wolf to focus on them specifically and dealing way more damage. During this Malthil cannot be taunted but moves slightly slower and is shortly stunned when this ability ends."
+        },
+        {
+            "name": "Blood Ties",
+            "description": "Packmaster Rethelros and Malthil must be kept away from each other, or else they'll empower each other's strikes. This is indicated by massive red circles around both of them. The tank should pull the wolf away while the group deals with the archer."
+        },
+        {
+            "name": "Backstab",
+            "description": "Malthil has a passive ability that causes it to deal 20% more damage when attacking the target's back."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Victory Through Strife: Repel the Recollection from the Oathsworn Pit.",
+        "Pledge: Oathsworn Pit: Explore Oathsworn Pit and return Undaunted."
+    ],
+    "summary": "Malthil is a massive dire wolf and loyal companion to Packmaster Rethelros. They are fought as a duo in the first boss fight of Oathsworn Pit.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Malthil",
+        "page_title": "Online:Malthil",
+        "revision_id": 3422989,
+        "retrieved_at": "2026-08-12T21:30:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

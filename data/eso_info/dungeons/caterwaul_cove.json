@@ -1,0 +1,20 @@
+{
+    "id": "caterwaul_cove",
+    "name": "Caterwaul Cove",
+    "content_type": "dungeon",
+    "summary": "Caterwaul Cove is a sheltered bay found in northern Solstice. It shares its name with the Caterwaul which crashed down into Nirn while chasing the Bonnie Spriggan. The cove is reached by entering the Seaside Caves, but they are currently occupied by the Caterwaul Crew led by Captain Velehk Sain. You will need to help Captain One-Eye get her crew and ship back in working order to prevent Captain Sain from hunting in Nirn's seas.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The maps for the Seaside Caves and Spacious Cavern were originally missing from the game."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Caterwaul_Cove",
+        "page_title": "Online:Caterwaul Cove",
+        "revision_id": 3540291,
+        "retrieved_at": "2026-08-12T21:16:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

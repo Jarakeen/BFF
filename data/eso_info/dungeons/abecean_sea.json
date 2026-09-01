@@ -1,0 +1,18 @@
+{
+    "id": "abecean_sea",
+    "name": "Abecean Sea",
+    "content_type": "dungeon",
+    "summary": "The Abecean Sea is a pirate-ridden sea within the Eltheric Ocean. You will set sail to this area aboard The Prowler from Seaside Sanctuary to chase down Vicereeve Pelidil and his Sea Viper allies during the related quest. Hazards include Maormer fire.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Abecean_Sea",
+        "page_title": "Online:Abecean Sea",
+        "revision_id": 3567080,
+        "retrieved_at": "2026-08-12T21:12:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

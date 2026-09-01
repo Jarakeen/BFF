@@ -1,0 +1,54 @@
+{
+    "id": "opulent_ordeal",
+    "name": "Opulent Ordeal",
+    "content_type": "trial",
+    "summary": "The Opulent Ordeal is a trial created by the enigmatic Opulent entities of the Night Market to test newcomers. To enter the trial, you will need all three relics from the districts, as well as Opulent keys that drop from the Gilded enemies of the district dungeons. Once you enter the trial, the Opulent trio will taunt you, and you can start the fight by burning your faction banner. You can find the bloodstained book, Slumbering Danger: Who are the Opulent? near the banners by the entrance.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "opulent_arid_varlet",
+        "opulent_knightshade",
+        "opulent_web_eater"
+    ],
+    "achievements": [
+        {
+            "id": "bedlam_across_the_planes",
+            "name": "Bedlam Across the Planes",
+            "description": "Acquire the following achievements by defeating all of the powerful foes lurking in the Night Market's districts.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "opulent_eradicator",
+            "name": "Opulent Eradicator",
+            "description": "Defeat Opulent Arid Varlet, Opulent Web Eater, and Opulent Knightshade in the Opulent Ordeal in the Night Market.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "affinity_for_everything",
+            "name": "Affinity for Everything",
+            "description": "As an individual in separate encounters, defeat the Opulent Web Eater, Opulent Arid Varlet, and Opulent Knightshade while having the Cobweb, Drylands, and Eclipse Affinities in the Night Market's Opulent Ordeal.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "essence_of_war",
+            "name": "Essence of War",
+            "description": "Defeat the Opulent Web Eater, Opulent Arid Varlet, and Opulent Knightshade without suffering a group member death in the Night Market's Opulent Ordeal.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Opulent_Ordeal",
+        "page_title": "Online:Opulent Ordeal",
+        "revision_id": 3574373,
+        "retrieved_at": "2026-08-18T18:54:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

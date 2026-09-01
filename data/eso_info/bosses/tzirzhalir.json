@@ -1,0 +1,67 @@
+{
+    "id": "tzirzhalir",
+    "name": "Tzirzhalir",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "Unhallowed Grave, Pit of Sorrows",
+    "species": "Bone Colossus",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Freezing Breath",
+            "description": "Tzirzhalir opens its maw and releases a wide cloud of freezing air, dealing very high frost damage. This attack has no indicator and covers most of the arena."
+        },
+        {
+            "name": "Blistering Brimstone",
+            "description": "Tzirzhalir spits out a large fiery boulder at your location which explodes on impact, indicated by a circular AoE, dealing very high flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "The time has come. Rise, Tzirzhalir. I call you by name! Rise!",
+            "trigger": "When you catch up to Kjalnar Tombskald, he will be at near the edge of a deep crevasse with multiple summoning circles drawn. Midway through the fight, he will complete his summoning.",
+            "ability": "Freezing Breath"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you catch up to Kjalnar Tombskald, he will be at near the edge of a deep crevasse with multiple summoning circles drawn. Midway through the fight, he will complete his summoning.": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "The time has come. Rise, Tzirzhalir. I call you by name! Rise!",
+                "trigger": "When you catch up to Kjalnar Tombskald, he will be at near the edge of a deep crevasse with multiple summoning circles drawn. Midway through the fight, he will complete his summoning.",
+                "ability": "Freezing Breath"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Tzirzhalir is first mentioned in Kjalnar's Research Notes.",
+        "His head is used for the Undaunted trophy and bust of the dungeon.",
+        "Tzirzhalir shares some resemblance to Mzrelnir which can be encountered in the Lucent Citadel and Gauztuul the Terror in the Writhing Fortress."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Unhallowed Grave: Help the last Pyre Watch Sentinel and a vampire investigator in the Unhallowed Grave."
+    ],
+    "summary": "Tzirzhalir is a powerful and ancient creature resembling a giant Bone Colossus found in the heart of the Unhallowed Grave. It was there before the place was used to the store the ashes of the Gray Host. The creature has gone by many names throughout history and has been described as a \"harbinger of shrieking fates that will usher in an age of torment\". Tzirzhalir's summoning is the ultimate goal of Kjalnar Tombskald and he must be stopped from completing it.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tzirzhalir",
+        "page_title": "Online:Tzirzhalir",
+        "revision_id": 3456203,
+        "retrieved_at": "2026-08-12T21:37:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

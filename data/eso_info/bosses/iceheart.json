@@ -1,0 +1,56 @@
+{
+    "id": "iceheart",
+    "name": "Iceheart",
+    "content_id": "direfrost_keep",
+    "content_name": "Direfrost Keep",
+    "location": "Direfrost Keep",
+    "species": "Frost Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Uppercut",
+            "description": "A basic melee attack that does moderate frost damage."
+        },
+        {
+            "name": "Freezing Stomp",
+            "description": "The boss stomps dealing moderate frost damage around itself and staggering players as indicated by a red circle."
+        },
+        {
+            "name": "Clobber",
+            "description": "The boss swings its fist dealing high frost damage and knocking players back as indicated by a red cone in front of itself."
+        },
+        {
+            "name": "Arctic Awakening",
+            "description": "The boss jabs its fist in the ground, causing icicles to erupt under the player's feet dealing moderate frost damage as indicated by red circles. After a while, the icicles explode to summon ice skeletons. These should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Nobles' Rest: Release an ancient fortress from the grasp of a witch.",
+        "Pledge: Direfrost Keep: Prove you are truly Undaunted by clearing Direfrost Keep."
+    ],
+    "summary": "This article is about the creature. For the item set, see Iceheart (set). Iceheart, a Frost Atronach, is one of the bosses of Direfrost Keep. He has a chance of dropping the Shard of Iceheart. This boss is not required to complete the dungeon but is required for the associated pledge. It is also the namesake of the Iceheart set and style, and the basis of a trophy and bust. Iceheart also has an equivalent Opal Undaunted style.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Iceheart",
+        "page_title": "Online:Iceheart",
+        "revision_id": 3023843,
+        "retrieved_at": "2026-08-12T21:20:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "id": "werewolf_lord",
+    "name": "Werewolf Lord",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Vykosa the Ascendant is a female Khajiit Werewolf Lord that can be encountered in-game.",
+        "Pontius Remus is a male Imperial Werewolf Lord that can be encountered in-game."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Werewolf Lord polymorph allows your character to turn into a Werewolf Lord. It's usually sold in the Crown Store during the month of October for 012001,200 .",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Werewolf_Lord",
+        "page_title": "Online:Werewolf Lord",
+        "revision_id": 3581107,
+        "retrieved_at": "2026-08-12T21:29:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

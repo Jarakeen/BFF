@@ -1,0 +1,544 @@
+{
+    "id": "dranos_velador",
+    "name": "Dranos Velador",
+    "content_id": "cradle_of_shadows",
+    "content_name": "Cradle of Shadows",
+    "location": "Cradle of Shadows\nInfinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,214,120",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Carve",
+            "description": "Dranos slashes at the player with his dagger dealing moderate physical damage."
+        },
+        {
+            "name": "Bleed",
+            "description": "A moderate physical damage over time applied by Carve."
+        },
+        {
+            "name": "Blade Weaver",
+            "description": "Dranos will spin around after a short windup, doing damage around him as indicated by a small red circle. Even though the block telegraph comes up it is recommended for all players especially non-tanks to dodge this attack, as it deals a massive amount of damage to tanks even when blocked."
+        },
+        {
+            "name": "Searing Seal",
+            "description": "Dranos teleports to each player and places a fiery glyph on the ground under their feet as indicated by red circles. This deals moderate magical damage over time."
+        },
+        {
+            "name": "Fangs of Mephala",
+            "description": "Immediately after Searing Seal, Dranos will teleport to a player (usually the tank) and two Gloom Wraiths will appear and stun that player. Other players must interrupt these NPCs as soon as possible to free the player, and the targeted player has to block the incoming heavy attack. Again, this attack deals massive damage, and non-tanks are likely to die even if they block. Rolling at the moment he swings may help you avoid death."
+        },
+        {
+            "name": "Summon Shade of Dranos[verification needed]",
+            "description": "At approximately 66% and 33% health Dranos will become invincible and four Shades of Dranos will appear around the room to attack the group. Killing the Shades will cause them to drop an Essence of Dranos. Touching the Essence will return it to the boss, and once all four Essences are collected the boss will be stunned momentarily, after which he will be vulnerable again. The boss will continue to attack the group as per normal, so this phase has to be dealt with quickly. If the boss himself touches the Shades they will return to him, this may allow the group to quickly bypass this phase if the tank uses Fiery Grip or similar abilities to pull all the adds towards the boss. Killing Dranos without killing the Shades will award an achievement."
+        },
+        {
+            "name": "Orb of Spite",
+            "description": "The Statue of Mephala in the center will release orbs of magic that explode in a large area as indicated by a red circle, dealing high magical damage. This has to be avoided at all costs."
+        },
+        {
+            "name": "Wrath of Mephala",
+            "description": "When the boss is low on health, the Statue of Mephala will instead emit constant waves of magic, dealing moderately high magical damage. Players are advised to stay near the edges of the room to avoid being hit by these waves."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Hides-the-Ashes",
+            "line": "I heard screeching. Giant spiders? No surprise there... wait.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "<She notices a grate. You can see into the room below through it; the room behind the door you unlocked with the lever.>",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Hides-the-Ashes",
+            "line": "It's the Ring's field captain, Dranos Velador and... no. No, no, no.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "<She sees Tsatva-Lan standing before Dranos Velador, surrounded by his dead fellow Shadowscales. Dranos is flanked on both sides by four Spiderkith.>",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Tsatva-Lan",
+            "line": "It is done, Velador. The remaining Shadowscales are dealt with.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Dranos Velador",
+            "line": "I'm afraid you're mistaken, my friend. Another member of your tribe has breached the gates.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Tsatva-Lan",
+            "line": "Hides-the-Ashes. If she is here, she will die like the rest. Now, you wanted proof of my loyalty? Bear witness.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Geel-Ma",
+            "line": "Tsatva-Lan, what are you—? You do not need to do this!",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Geel-Ma",
+            "line": "No!",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "<Tsatva-Lan stabs Geel-Ma, killing him instantly. His corpse glows with an ominous red aura, and the Spiderkith begin channeling that energy.>",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Dranos Velador",
+            "line": "Well done, my scaled friend. You have cast off your old skin, and the Silken Ring welcomes you as a brother. Seek out Velidreth and receive your blessing.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "Hides-the-Ashes",
+            "line": "\"I need a moment to... sort this out. Kill that smoke-skin bastard, Dranos, and we'll regroup afterward.",
+            "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "You've worn out your welcome.",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Sorry, this affair is invitation only.",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Kindly die now.",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "This should be refreshing!",
+            "trigger": "Beginning combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Care to dance?",
+            "trigger": "Casting Blade Weaver",
+            "ability": "Blade Weaver"
+        },
+        {
+            "speaker": "",
+            "line": "You think I'm surrounded? How cute.",
+            "trigger": "Casting Blade Weaver",
+            "ability": "Blade Weaver"
+        },
+        {
+            "speaker": "",
+            "line": "Time to sweep you away.",
+            "trigger": "Casting Blade Weaver",
+            "ability": "Blade Weaver"
+        },
+        {
+            "speaker": "",
+            "line": "Hope you've practiced your guard.",
+            "trigger": "Casting Blade Weaver",
+            "ability": "Blade Weaver"
+        },
+        {
+            "speaker": "",
+            "line": "And who will die next?",
+            "trigger": "Casting Searing Seal",
+            "ability": "Searing Seal"
+        },
+        {
+            "speaker": "",
+            "line": "Boo.",
+            "trigger": "Casting Searing Seal",
+            "ability": "Searing Seal"
+        },
+        {
+            "speaker": "",
+            "line": "Nowhere to run, nowhere to hide.",
+            "trigger": "Casting Searing Seal",
+            "ability": "Searing Seal"
+        },
+        {
+            "speaker": "",
+            "line": "Who will be the weak link?",
+            "trigger": "Casting Searing Seal",
+            "ability": "Searing Seal"
+        },
+        {
+            "speaker": "",
+            "line": "Too slow.",
+            "trigger": "Casting Fangs of Mephala",
+            "ability": "Fangs of Mephala"
+        },
+        {
+            "speaker": "",
+            "line": "Goodbye now.",
+            "trigger": "Casting Fangs of Mephala",
+            "ability": "Fangs of Mephala"
+        },
+        {
+            "speaker": "",
+            "line": "Don't keep our lady waiting.",
+            "trigger": "Casting Fangs of Mephala",
+            "ability": "Fangs of Mephala"
+        },
+        {
+            "speaker": "",
+            "line": "You won't suffer too long.",
+            "trigger": "Casting Fangs of Mephala",
+            "ability": "Fangs of Mephala"
+        },
+        {
+            "speaker": "",
+            "line": "I don't die that easy.",
+            "trigger": "Casting Summon Shade of Dranos",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Mephala! Lend me your power!",
+            "trigger": "Casting Summon Shade of Dranos",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Did you really think you could kill me?",
+            "trigger": "Casting Summon Shade of Dranos",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Who's outnumbered now?",
+            "trigger": "Casting Summon Shade of Dranos",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Hmm, I should have toyed with them a little longer.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Don't fight it. You never stood a chance.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "The Lady's will be done.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "Death is my domain. I won't be bested at it.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shade of Dranos[verification needed]"
+        },
+        {
+            "speaker": "",
+            "line": "The Lady will toy with you, and you will beg for death before it's over.",
+            "trigger": "Death",
+            "ability": "Fangs of Mephala"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room": [
+            {
+                "speaker": "Hides-the-Ashes",
+                "line": "I heard screeching. Giant spiders? No surprise there... wait.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "<She notices a grate. You can see into the room below through it; the room behind the door you unlocked with the lever.>",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Hides-the-Ashes",
+                "line": "It's the Ring's field captain, Dranos Velador and... no. No, no, no.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "<She sees Tsatva-Lan standing before Dranos Velador, surrounded by his dead fellow Shadowscales. Dranos is flanked on both sides by four Spiderkith.>",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Tsatva-Lan",
+                "line": "It is done, Velador. The remaining Shadowscales are dealt with.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Dranos Velador",
+                "line": "I'm afraid you're mistaken, my friend. Another member of your tribe has breached the gates.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Tsatva-Lan",
+                "line": "Hides-the-Ashes. If she is here, she will die like the rest. Now, you wanted proof of my loyalty? Bear witness.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Geel-Ma",
+                "line": "Tsatva-Lan, what are you—? You do not need to do this!",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Geel-Ma",
+                "line": "No!",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "<Tsatva-Lan stabs Geel-Ma, killing him instantly. His corpse glows with an ominous red aura, and the Spiderkith begin channeling that energy.>",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Dranos Velador",
+                "line": "Well done, my scaled friend. You have cast off your old skin, and the Silken Ring welcomes you as a brother. Seek out Velidreth and receive your blessing.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "Hides-the-Ashes",
+                "line": "\"I need a moment to... sort this out. Kill that smoke-skin bastard, Dranos, and we'll regroup afterward.",
+                "trigger": "After defeating the Votary of Velidreth, Hides-the-Ashes enters the room",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            }
+        ],
+        "Beginning combat": [
+            {
+                "speaker": "",
+                "line": "You've worn out your welcome.",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Sorry, this affair is invitation only.",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Kindly die now.",
+                "trigger": "Beginning combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "This should be refreshing!",
+                "trigger": "Beginning combat",
+                "ability": null
+            }
+        ],
+        "Casting Blade Weaver": [
+            {
+                "speaker": "",
+                "line": "Care to dance?",
+                "trigger": "Casting Blade Weaver",
+                "ability": "Blade Weaver"
+            },
+            {
+                "speaker": "",
+                "line": "You think I'm surrounded? How cute.",
+                "trigger": "Casting Blade Weaver",
+                "ability": "Blade Weaver"
+            },
+            {
+                "speaker": "",
+                "line": "Time to sweep you away.",
+                "trigger": "Casting Blade Weaver",
+                "ability": "Blade Weaver"
+            },
+            {
+                "speaker": "",
+                "line": "Hope you've practiced your guard.",
+                "trigger": "Casting Blade Weaver",
+                "ability": "Blade Weaver"
+            }
+        ],
+        "Casting Searing Seal": [
+            {
+                "speaker": "",
+                "line": "And who will die next?",
+                "trigger": "Casting Searing Seal",
+                "ability": "Searing Seal"
+            },
+            {
+                "speaker": "",
+                "line": "Boo.",
+                "trigger": "Casting Searing Seal",
+                "ability": "Searing Seal"
+            },
+            {
+                "speaker": "",
+                "line": "Nowhere to run, nowhere to hide.",
+                "trigger": "Casting Searing Seal",
+                "ability": "Searing Seal"
+            },
+            {
+                "speaker": "",
+                "line": "Who will be the weak link?",
+                "trigger": "Casting Searing Seal",
+                "ability": "Searing Seal"
+            }
+        ],
+        "Casting Fangs of Mephala": [
+            {
+                "speaker": "",
+                "line": "Too slow.",
+                "trigger": "Casting Fangs of Mephala",
+                "ability": "Fangs of Mephala"
+            },
+            {
+                "speaker": "",
+                "line": "Goodbye now.",
+                "trigger": "Casting Fangs of Mephala",
+                "ability": "Fangs of Mephala"
+            },
+            {
+                "speaker": "",
+                "line": "Don't keep our lady waiting.",
+                "trigger": "Casting Fangs of Mephala",
+                "ability": "Fangs of Mephala"
+            },
+            {
+                "speaker": "",
+                "line": "You won't suffer too long.",
+                "trigger": "Casting Fangs of Mephala",
+                "ability": "Fangs of Mephala"
+            }
+        ],
+        "Casting Summon Shade of Dranos": [
+            {
+                "speaker": "",
+                "line": "I don't die that easy.",
+                "trigger": "Casting Summon Shade of Dranos",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "Mephala! Lend me your power!",
+                "trigger": "Casting Summon Shade of Dranos",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "Did you really think you could kill me?",
+                "trigger": "Casting Summon Shade of Dranos",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "Who's outnumbered now?",
+                "trigger": "Casting Summon Shade of Dranos",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            }
+        ],
+        "Party wiped": [
+            {
+                "speaker": "",
+                "line": "Hmm, I should have toyed with them a little longer.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "Don't fight it. You never stood a chance.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "The Lady's will be done.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            },
+            {
+                "speaker": "",
+                "line": "Death is my domain. I won't be bested at it.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shade of Dranos[verification needed]"
+            }
+        ],
+        "Death": [
+            {
+                "speaker": "",
+                "line": "The Lady will toy with you, and you will beg for death before it's over.",
+                "trigger": "Death",
+                "ability": "Fangs of Mephala"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is the author of Dranos's Diary and From the Journal of Dranos Velador, Field Captain of the Silken Ring."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Silk and Shadow: Help a former Shadowscale destroy a dangerous new group of assassins.",
+        "Pledge: Cradle of Shadows: Prove you are truly Undaunted by clearing the Cradle of Shadows."
+    ],
+    "summary": "Dranos Velador is a rogue Dark Elf assassin who founded the Silken Ring in service to Mephala. He can be found in the Cradle of Shadows, where he acts as the fourth boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dranos_Velador",
+        "page_title": "Online:Dranos Velador",
+        "revision_id": 3563759,
+        "retrieved_at": "2026-08-12T21:18:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

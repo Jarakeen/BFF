@@ -1,0 +1,114 @@
+{
+    "id": "investigator_garron",
+    "name": "Investigator Garron",
+    "content_id": "wayrest_sewers_i",
+    "content_name": "Wayrest Sewers I",
+    "location": "Wayrest Sewers I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Death's Embrace",
+            "description": "A basic ranged attack that does moderate magical damage."
+        },
+        {
+            "name": "Dark Lance",
+            "description": "A ranged attack that does moderate magical damage and knocks the target back if not blocked."
+        },
+        {
+            "name": "Summon Necrotic Orb",
+            "description": "The boss summons a necrotic orb that follows the party around dealing moderate magical damage over time as indicated by a red circle."
+        },
+        {
+            "name": "Teleport",
+            "description": "The boss teleports around to avoid your attacks."
+        },
+        {
+            "name": "Summon Restless Souls",
+            "description": "The boss summons Restless Souls from the altars around the arena to attack the party. They should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Investigator Garron",
+            "line": "Have you come to meddle, as well? I could always use more corpses!",
+            "trigger": "Entering combat",
+            "ability": null
+        },
+        {
+            "speaker": "Investigator Garron",
+            "line": "Your bones will make an excellent throne.",
+            "trigger": "If your group wipes",
+            "ability": "Teleport"
+        },
+        {
+            "speaker": "Investigator Garron",
+            "line": "Tormented souls of the dead arise and kill these interlopers!",
+            "trigger": "When he summons Restless Souls",
+            "ability": "Summon Restless Souls"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering combat": [
+            {
+                "speaker": "Investigator Garron",
+                "line": "Have you come to meddle, as well? I could always use more corpses!",
+                "trigger": "Entering combat",
+                "ability": null
+            }
+        ],
+        "If your group wipes": [
+            {
+                "speaker": "Investigator Garron",
+                "line": "Your bones will make an excellent throne.",
+                "trigger": "If your group wipes",
+                "ability": "Teleport"
+            }
+        ],
+        "When he summons Restless Souls": [
+            {
+                "speaker": "Investigator Garron",
+                "line": "Tormented souls of the dead arise and kill these interlopers!",
+                "trigger": "When he summons Restless Souls",
+                "ability": "Summon Restless Souls"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Investigator Garron appears to be immune to taunting effects."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Deception in the Dark: Prevent an underground invasion of Wayrest.",
+        "Pledge: Wayrest Sewers I: Explore Wayrest Sewers I and return Undaunted."
+    ],
+    "summary": "Investigator Garron is a Breton necromancer and a former officer of the Lion Guard who turned on his partners while they were looking for bandits located inside the Wayrest Sewers I. He has a chance to drop the unique item Garron's Cold Betrayal. In Wayrest Sewers II, he comes back as a Lich named Garron the Returned.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Investigator_Garron",
+        "page_title": "Online:Investigator Garron",
+        "revision_id": 3139208,
+        "retrieved_at": "2026-08-12T21:38:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

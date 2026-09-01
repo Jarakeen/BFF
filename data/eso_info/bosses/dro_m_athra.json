@@ -1,0 +1,63 @@
+{
+    "id": "dro_m_athra",
+    "name": "Dro-m'Athra",
+    "content_id": "maw_of_lorkhaj",
+    "content_name": "Maw of Lorkhaj",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "There is a skin and a crafting style based on them.",
+        "A pet and mount themed after the dro-m'Athra are available for players to equip: the Dro-m'Athra Senche and Dro-m'Athra Senche Cub.",
+        "A Rahd-m'Athra (dro-m'Athra horse) mount was also previously available.",
+        "An Ahz-m'Athra mount resembling a senche-raht is available from Unfeathered Crown Crates.",
+        "Dro-m'Athra used to look more like shadows than substantial beings in early versions of the game and used Barbaric Style armor and weapons. With the release of the Maw of Lorkhaj as part of the Thieves Guild DLC in Update 9, the new shader was introduced. However, it was not immediately applied to all previously-existing dro-m'Athra, some of whom (such as the Dark Mane or Elder Sa-m'Athra) still use the old appearance.",
+        "They are similar to shades, dark spirits which also serve Namira."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Beyond a Veil of Twilight: Help Cantor Krin'ze look for her friend Izalgo.",
+        "Chiaroscuro Crossroads: Help a Twilight Cantor perform an exorcism.",
+        "The Dark Behind the World: Face Ravith-morna before she can summon a moon beast.",
+        "The Dark Moon's Jaws: Venture into the Maw of Lorkhaj.",
+        "The Den of Lorkhaj: Help the Lunar Champion walk the final, dark path.",
+        "On the Doorstep: Investigate the evil strangers in Greenhill.",
+        "The Golden Claw: Ensure the Golden Claw's protection.",
+        "Grim Situation: Defeat the spirit invasion in Fort Grimwatch.",
+        "Grimmer Still: Cleanse the temple and Fort Grimwatch.",
+        "Into the Maw: Stop the dro-m'Athra from flooding into Tamriel.",
+        "A Moonlit Shadow: Investigate a fallen star at the Moonmont on behalf of a Twilight Cantor.",
+        "Motes in the Moonlight: Cleanse Moonmont and subdue the Dark Mane.",
+        "The Moonlight Blade: With the help of the Moonlight Blade, destroy the Dro-m'Athra, Arum-Khal.",
+        "Path of the Hidden Moon: Discover the secrets of an ancient Khajiiti order in the ruins of the Ashen Scar.",
+        "Paths Out Of Darkness: Gain the High Cantor's trust and find out Ravith-morna's plan.",
+        "Shattering Mirror: Banish the dark spirits plaguing the plantation.",
+        "Stonefire Machinations: Defeat the Stonefire Cult and the Dark Mane.",
+        "Test of Faith: Tell Kala about her brother's fate.",
+        "An Unwanted Twin: Unravel the mystery of the silent soldiers of Sathram.",
+        "A Waking Nightmare: Vanquish a powerful dro-m'Athra and return ancient urns to their resting places.",
+        "The Witch of Azurah: Help a friendly necromancer investigate the rise of undead in the Ashen Scar."
+    ],
+    "achievements": [],
+    "summary": "The dro-m'Athra are former Khajiit whose spirits were corrupted by the Bent Dance, the drumming of the Dark Heart of Lorkhaj. They serve Namiira, the Great Darkness, and reside within the Dark Behind the World. It is considered bad for the humors to even think about the dro-m'Athra for too long, lest these dark spirits have a foothold from which to corrupt an individual. The Twilight Cantors usually arrive in their wake to drive them back. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dro-m%27Athra",
+        "page_title": "Online:Dro-m'Athra",
+        "revision_id": 3526947,
+        "retrieved_at": "2026-08-12T05:33:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

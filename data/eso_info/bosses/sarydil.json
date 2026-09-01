@@ -1,0 +1,549 @@
+{
+    "id": "sarydil",
+    "name": "Sarydil",
+    "content_id": "coral_aerie",
+    "content_name": "Coral Aerie",
+    "location": "Coral Aerie, Crumbling Foyer",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,449,673",
+        "veteran": "3,680,975",
+        "hardmode": "9,570,536"
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Teleport Strike",
+            "description": "Sarydil teleports to your location and strikes you with her daggers, dealing high physical damage."
+        },
+        {
+            "name": "Fanning Strike",
+            "description": "Sarydil puts her daggers in front of herself, before fanning them out at you, dealing very high physical damage and knocking you down. This attack can be blocked."
+        },
+        {
+            "name": "Dash",
+            "description": "Sarydil begins to glow with pink mist, before she dashes away from you in the arena, throwing magical daggers on her way there, leaving lingering pools of magic where they land, indicated by a large amount of lingering circular AoEs, dealing continuous high magical damage. This attack is always followed by Dagger Throw."
+        },
+        {
+            "name": "Dagger Throw",
+            "description": "Sarydil empties her arsenal daggers at you throwing a large amount back to back, dealing high physical damage each. This attack can be interrupted."
+        },
+        {
+            "name": "Magic Dagger Throw",
+            "description": "An alternate version of the above ability. Instead of throwing the daggers directly at you, she throws them near your location, creating similar lingering magical fields as in the Dash ability."
+        },
+        {
+            "name": "Fire Bomb",
+            "description": "Sarydil lobs a fire bomb at you. The explosion is indicated by a large circular AoE and deals very high flame damage. After the explosion, four smaller circular AoEs appear, marking lingering fire fields around the blast radius, dealing continuous high flame damage."
+        },
+        {
+            "name": "Aerial Fire Bomb",
+            "description": "An alternate version of the above ability. Instead of throwing the fire bomb directly at you, Sarydil jumps into the air and spins around as she throws several smaller fire bombs all over the arena, creating similar lingering fire fields as in the regular Fire Bomb ability. This attack is always followed by Flame Wave."
+        },
+        {
+            "name": "Flame Wave",
+            "description": "Sarydil winds up her dagger before planting it into the ground, causing a massive wave of fire to erupt from it, indicated by a quickly growing very large circular AoE, dealing very high flame damage."
+        },
+        {
+            "name": "Roll Dodge",
+            "description": "Sarydil can perform a dodge to avoid a singular attack."
+        },
+        {
+            "name": "Retreat",
+            "description": "At 75% and 45% health, Sarydil retreats to the upper level of the arena and calls in Ascendant reinforcements to come down and fight you in her stead. During this time, she will continue to use the Magic Dagger Throw ability while she is up above. The second wave at 45% is led by an Ascendant Bulwark."
+        },
+        {
+            "name": "Shadow Leap",
+            "description": "After the reinforcements are defeated, Sarydil returns to the arena, in the form of a leap preceded by shadow pools appearing all over the arena before exploding, indicated by growing and overlapping circular AoEs, dealing high magical damage each."
+        },
+        {
+            "name": "Clone Split",
+            "description": "A new ability gained after the 75% threshold. Sarydil splits into around a dozen clones spaced out all along the edge of the arena, who then proceed to use the Dagger Throw ability all at the same time against you. While they are all displayed with the same amount of health and same rank as the boss, the clones will die in one hit. Any remaining clones are dispelled if the real Sarydil is hit."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Sarydil",
+            "line": "Again. Who hired you to deliver this?",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Jakarn",
+            "line": "You know, I can't recall. Must have been those knocks to the head.",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Perhaps a few more will jog your memory?",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Varallion",
+            "line": "The longer you stall, Jakarn, the more likely I take what I have and leave you chained up for the yaghra. Think on that.",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "<Sarydil and Varallion leave.>",
+            "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Well, well. Look what washed into our yaghra trap. You can surrender, or you can become bait. Choose.",
+            "trigger": "After you have freed Jakarn you will need to find Sarydil and Varallion as the have taken the letter and medallion Jakarn was transporting. Sarydil will be waiting for you in the Crumbling Foyer.",
+            "ability": "Clone Split"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "You should have stayed out of Altmeri lands. You don't belong here.",
+            "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "You might still escape, if you flee now. You aren't worth chasing.",
+            "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "If you put up a fight, I'll make every effort to make sure you live long enough to dangle in front of those yaghra.",
+            "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "I have been eager to fight an opponent that doesn't reek of brine, but it seems you've been soaking in cowardice instead.",
+            "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Did you come to correct that courier's mistake? You fools. He, at least, wasn't aware of the trap he walked into.",
+            "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Can you breathe fire yet?",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Went up like the dung-heap you are!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Hope the yaghra like you crispy.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Think you're safe back there?",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Where you going now?",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "I have you now.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "I'm going to wipe the floor with you lot.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "You'll make a nice pin cushion.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "You'll spinier than the yaghra before it's over.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Gotcha!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "You're just leaving more for your friends to step on.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "A little pitch for you, coward.",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Let's see how you dance!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Try dodging this!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Archers! Let fly!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "You're tougher than you look. Soldiers! Soften them up for me!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "You really think you're winning? Soldiers! Full assault!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Over here!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Something wrong with your eyes?",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "",
+            "line": "Catch me if you can!",
+            "trigger": "During the fight she has various lines for her different attacks",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "I'll gift Varallion your heads and leave the rest to the yaghra.",
+            "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "A new era is upon us. You can't fight it.",
+            "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "You're going to die in Jakarn's place. How utterly tragic.",
+            "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "You idiots don't even know what you've gotten yourselves into. And you never will!",
+            "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Wretched pawns. You'll die in ignorance.",
+            "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+            "ability": "Retreat"
+        },
+        {
+            "speaker": "Sarydil",
+            "line": "Varallion, I have failed ….",
+            "trigger": "When Sarydil is killed",
+            "ability": "Dash"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.": [
+            {
+                "speaker": "Sarydil",
+                "line": "Again. Who hired you to deliver this?",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Jakarn",
+                "line": "You know, I can't recall. Must have been those knocks to the head.",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "Perhaps a few more will jog your memory?",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Varallion",
+                "line": "The longer you stall, Jakarn, the more likely I take what I have and leave you chained up for the yaghra. Think on that.",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "<Sarydil and Varallion leave.>",
+                "trigger": "When you arrive at the Coral Aerie, Captain Kaleen will ask you to help her retrieve a Breton called Jakarn and the documents he was carrying when he was abducted. Within the Aldmeri Ruins you will find Jakarn being interrogated by Sarydil and Varallion.",
+                "ability": "Retreat"
+            }
+        ],
+        "After you have freed Jakarn you will need to find Sarydil and Varallion as the have taken the letter and medallion Jakarn was transporting. Sarydil will be waiting for you in the Crumbling Foyer.": [
+            {
+                "speaker": "Sarydil",
+                "line": "Well, well. Look what washed into our yaghra trap. You can surrender, or you can become bait. Choose.",
+                "trigger": "After you have freed Jakarn you will need to find Sarydil and Varallion as the have taken the letter and medallion Jakarn was transporting. Sarydil will be waiting for you in the Crumbling Foyer.",
+                "ability": "Clone Split"
+            }
+        ],
+        "Before you begin fighting her, she may shout out threats and taunts to you": [
+            {
+                "speaker": "Sarydil",
+                "line": "You should have stayed out of Altmeri lands. You don't belong here.",
+                "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "You might still escape, if you flee now. You aren't worth chasing.",
+                "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "If you put up a fight, I'll make every effort to make sure you live long enough to dangle in front of those yaghra.",
+                "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "I have been eager to fight an opponent that doesn't reek of brine, but it seems you've been soaking in cowardice instead.",
+                "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "Did you come to correct that courier's mistake? You fools. He, at least, wasn't aware of the trap he walked into.",
+                "trigger": "Before you begin fighting her, she may shout out threats and taunts to you",
+                "ability": "Retreat"
+            }
+        ],
+        "During the fight she has various lines for her different attacks": [
+            {
+                "speaker": "",
+                "line": "Can you breathe fire yet?",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Went up like the dung-heap you are!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Hope the yaghra like you crispy.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Think you're safe back there?",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Where you going now?",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "I have you now.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "I'm going to wipe the floor with you lot.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "You'll make a nice pin cushion.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "You'll spinier than the yaghra before it's over.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Gotcha!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "You're just leaving more for your friends to step on.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "A little pitch for you, coward.",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Let's see how you dance!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Try dodging this!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Archers! Let fly!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "You're tougher than you look. Soldiers! Soften them up for me!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "You really think you're winning? Soldiers! Full assault!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Over here!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Something wrong with your eyes?",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "",
+                "line": "Catch me if you can!",
+                "trigger": "During the fight she has various lines for her different attacks",
+                "ability": "Retreat"
+            }
+        ],
+        "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines": [
+            {
+                "speaker": "Sarydil",
+                "line": "I'll gift Varallion your heads and leave the rest to the yaghra.",
+                "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "A new era is upon us. You can't fight it.",
+                "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "You're going to die in Jakarn's place. How utterly tragic.",
+                "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "You idiots don't even know what you've gotten yourselves into. And you never will!",
+                "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+                "ability": "Retreat"
+            },
+            {
+                "speaker": "Sarydil",
+                "line": "Wretched pawns. You'll die in ignorance.",
+                "trigger": "While the soldiers attack, Sarydil will be up above you and will be ranting at you the following lines",
+                "ability": "Retreat"
+            }
+        ],
+        "When Sarydil is killed": [
+            {
+                "speaker": "Sarydil",
+                "line": "Varallion, I have failed ….",
+                "trigger": "When Sarydil is killed",
+                "ability": "Dash"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "An Order Gone Awry: A secretive society named the Ascendant Order has set up operations on Coral Aerie."
+    ],
+    "summary": "Sarydil is a High Elf member of the Ascendant Order. She is second in command for the group that can be found in the Coral Aerie. She serves as the second boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sarydil",
+        "page_title": "Online:Sarydil",
+        "revision_id": 3514602,
+        "retrieved_at": "2026-08-12T21:17:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "castle_kvatch",
+    "name": "Castle Kvatch",
+    "content_type": "dungeon",
+    "summary": "Castle Kvatch is a castle in the northwest portion of Kvatch. Its courtyard borders the city. An Underground Tunnel connects into the complex, and can be accessed from the shores of the castle's moat. A second entrance can be found inside the Castle Kvatch Gatehouse.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Castle Kvatch also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Castle_Kvatch",
+        "page_title": "Online:Castle Kvatch",
+        "revision_id": 3549761,
+        "retrieved_at": "2026-08-12T21:16:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

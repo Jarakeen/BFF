@@ -1,0 +1,274 @@
+{
+    "id": "high_kinlord_rilis_banished_cells_i",
+    "name": "High Kinlord Rilis (Banished Cells I)",
+    "content_id": "the_banished_cells_i",
+    "content_name": "The Banished Cells I",
+    "location": "The Banished Cells I",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,993,959",
+        "hardmode": "4,593,053"
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that does moderate physical damage. If taunted, the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Crushing Blow",
+            "description": "A heavy melee attack that does high physical damage as well as knocking down the target. This attack can be blocked to reduce the damage taken, as well as preventing the knockback. If taunted, the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Soul Blast",
+            "description": "The boss will fire an orb at a random player, doing high magic damage and knocking the player back. This attack can be blocked or dodged to prevent the knockback."
+        },
+        {
+            "name": "Daedric Tempest",
+            "description": "The boss will raise his sword in the air, and pools of blue fire will appear under each player's feet. The fire does high flame damage over time, and should be avoided by stepping out of the red circle."
+        },
+        {
+            "name": "The Feast",
+            "description": "Feast orbs will appear from the altar where he first spawns and move towards him. If they touch him, he will be substantially healed. When an orb appears, the party should focus on it to destroy it quickly. To prevent them from reaching Rilis before they are destroyed, either Rilis should be kited to the opposite wall or a DPS should immediately destroy them. They are not immune to knockback or crowd control effects, which should be used on them if they are not destroyed before reaching Rilis."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "What delightful folly is this?\nThe Keepers have enlisted an outsider to face me? You fools have fallen so low.",
+            "trigger": "After you pressed the buttons in the chamber which summons Shadowrend",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "There are easier ways to prove your bravery, mortal. Turn back, or you'll share the Keepers' fate.",
+            "trigger": "After you pressed the buttons in the chamber which summons Shadowrend",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Is that you, Cirion? I don't know how you defeated those banekin but I'll be glad to send more.",
+            "trigger": "After you defeat the enemies in his cell, the Kinlord appears at the altar.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Ah. It's the outsiders. So the Keepers are afraid to face me. Very well. You'll die in their stead.",
+            "trigger": "After you defeat the enemies in his cell, the Kinlord appears at the altar.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "I'm going to enjoy this!",
+            "trigger": "Once you engage him in combat",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "You think you've beaten me? How amusing. Haven't you noticed that the pact I've made protects me from death?",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "Ignore his words, Keepers. Begin the preparations.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keeper Voranil",
+            "line": "I'm not confident this will work, Cirion!",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "\"Ha ha ha! What are you lot doing? Oh, I do so love to see magic. Is that what this is? This isn't as grand as the spells I learn from the Daedra, but I don't expect much from mortal Altmer.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Remember, children—you'll never keep me here of your own accord. Not when the Daedra fight for me.\nPerhaps you'd fare better if you had Daedra on your side! Ha ha ha!",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "His madness nears delirium. Ignore him, Keepers. Bind the High Kinlord!",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "",
+            "line": "<The Keepers start the ritual, channeling Rilis' powers away from him. The High Kinlord is engulfed in a beam of golden light. He flails about, but still mocks them.>",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keepers Imiril, Voranil, and Areldur",
+            "line": "By the Light Empyrean, the Keepers of the Banished Cells hereby condemn Rilis XII to imprisonment unending.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "High Kinlord Rilis",
+            "line": "Oh, my. It looks like you've won. Old Rilis' days of freedom are over, it seems.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "",
+            "line": "<Rilis' spirit disappears.>",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keeper Imiril",
+            "line": "I thought you said this bastard wouldn't be able to speak.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        },
+        {
+            "speaker": "Keeper Cirion",
+            "line": "He shouldn't be able to achieve coherent thought. We'll have to watch him carefully.",
+            "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+            "ability": "The Feast"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After you pressed the buttons in the chamber which summons Shadowrend": [
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "What delightful folly is this?\nThe Keepers have enlisted an outsider to face me? You fools have fallen so low.",
+                "trigger": "After you pressed the buttons in the chamber which summons Shadowrend",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "There are easier ways to prove your bravery, mortal. Turn back, or you'll share the Keepers' fate.",
+                "trigger": "After you pressed the buttons in the chamber which summons Shadowrend",
+                "ability": "The Feast"
+            }
+        ],
+        "After you defeat the enemies in his cell, the Kinlord appears at the altar.": [
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Is that you, Cirion? I don't know how you defeated those banekin but I'll be glad to send more.",
+                "trigger": "After you defeat the enemies in his cell, the Kinlord appears at the altar.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Ah. It's the outsiders. So the Keepers are afraid to face me. Very well. You'll die in their stead.",
+                "trigger": "After you defeat the enemies in his cell, the Kinlord appears at the altar.",
+                "ability": "The Feast"
+            }
+        ],
+        "Once you engage him in combat": [
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "I'm going to enjoy this!",
+                "trigger": "Once you engage him in combat",
+                "ability": "The Feast"
+            }
+        ],
+        "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.": [
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "You think you've beaten me? How amusing. Haven't you noticed that the pact I've made protects me from death?",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "Ignore his words, Keepers. Begin the preparations.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keeper Voranil",
+                "line": "I'm not confident this will work, Cirion!",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "\"Ha ha ha! What are you lot doing? Oh, I do so love to see magic. Is that what this is? This isn't as grand as the spells I learn from the Daedra, but I don't expect much from mortal Altmer.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Remember, children—you'll never keep me here of your own accord. Not when the Daedra fight for me.\nPerhaps you'd fare better if you had Daedra on your side! Ha ha ha!",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "His madness nears delirium. Ignore him, Keepers. Bind the High Kinlord!",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "",
+                "line": "<The Keepers start the ritual, channeling Rilis' powers away from him. The High Kinlord is engulfed in a beam of golden light. He flails about, but still mocks them.>",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keepers Imiril, Voranil, and Areldur",
+                "line": "By the Light Empyrean, the Keepers of the Banished Cells hereby condemn Rilis XII to imprisonment unending.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "High Kinlord Rilis",
+                "line": "Oh, my. It looks like you've won. Old Rilis' days of freedom are over, it seems.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "",
+                "line": "<Rilis' spirit disappears.>",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keeper Imiril",
+                "line": "I thought you said this bastard wouldn't be able to speak.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            },
+            {
+                "speaker": "Keeper Cirion",
+                "line": "He shouldn't be able to achieve coherent thought. We'll have to watch him carefully.",
+                "trigger": "After High Kinlord Rilis' body has been destroyed, his spirit will project itself from his crystal to taunt the keepers.",
+                "ability": "The Feast"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Banishing the Banished: Help imprison the spirit of an evil Altmer.",
+        "Pledge: Banished Cells I: Explore the Banished Cells I and return Undaunted."
+    ],
+    "summary": "This article is about the final boss in Banished Cells I. For the other variant seen in Banished Cells II, see High Kinlord Rilis (Banished Cells II). For the spirit seen at Castle Rilis, see High Kinlord Rilis XII. High Kinlord Rilis is the spirit of an ancient Altmer found in the Banished Cells I, of which he is the final boss. He has a chance to drop two unique items, Guilehammer, and High Kinlord's Revenge.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:High_Kinlord_Rilis_(Banished_Cells_I)",
+        "page_title": "Online:High Kinlord Rilis (Banished Cells I)",
+        "revision_id": 3302191,
+        "retrieved_at": "2026-08-12T21:13:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

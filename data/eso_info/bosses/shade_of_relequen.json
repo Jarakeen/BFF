@@ -1,0 +1,57 @@
+{
+    "id": "shade_of_relequen",
+    "name": "Shade of Relequen",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Southwest platform of Cloudrest Aerie, Cloudrest",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flux Burst and Static Diffusion",
+            "description": "Relequen will jump to the furthest player away. Unlike the other two riders, this happens instantly. He will leave behind a large shock AoE that does moderate damage. If a player is too far away, this ability can be out-ranged and Relequen will jump to the second furthest player in radius."
+        },
+        {
+            "name": "Shocking Smash",
+            "description": "Relequen will spin his staff and then slam it onto his target, or if dodged onto the ground. This impact will cause several small lightning AoEs to fan out in a starburst from the impact point. Players hit by these AoEs will take moderate damage and be stunned."
+        },
+        {
+            "name": "Direct Current",
+            "description": "Relequen will channel and several lightning bolts will form a line to random players. After a brief duration, these lightning bolts will stun and do severe AoE damage to the players targeted. If the AoEs around players overlap, they may be one-shot."
+        },
+        {
+            "name": "Shockwave",
+            "description": "A long conical attack will extend out from Relequen and knock back any player who is not blocking. If a player is blocking, they will be staggered."
+        },
+        {
+            "name": "Mage's Wrath",
+            "description": "If a player is low on health, Relequen may target them with the Sorcerer execute Mage's Wrath. There is a five second grace period to heal the target to full, otherwise it will deal the full execute damage to a target, even if healed above the normal threshold for an execute mechanic."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "The Shade of Relequen is the shadow clone of the Welkynar, Relequen. He uses his lightning staff to attack and fights alongside the shade of Belanaril, his mortal counterpart's gryphon companion.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shade_of_Relequen",
+        "page_title": "Online:Shade of Relequen",
+        "revision_id": 3396453,
+        "retrieved_at": "2026-08-12T05:31:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

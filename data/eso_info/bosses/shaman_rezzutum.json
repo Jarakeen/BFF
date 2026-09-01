@@ -1,0 +1,61 @@
+{
+    "id": "shaman_rezzutum",
+    "name": "Shaman Rezzutum",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Coiled Lash",
+            "description": "A basic ranged attack that does moderate-high magic damage."
+        },
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does moderate-high physical damage."
+        },
+        {
+            "name": "Summon Aura of Protection",
+            "description": "Shaman Rezzutum summons an Aura of Protection totem that gives nearby allies increased resistance to damage. The totem can be destroyed in five hits from any source or one heavy attack. Destroying the totem will stun all enemies nearby and it bypasses crowd control immunities."
+        },
+        {
+            "name": "Protective Barrier",
+            "description": "When Bone-Breaker casts his \"Ground Pound/Falling Rocks\" ability, Shaman Rezzutum shields itself which renders him invincible but unable to attack during Bone-Breaker's ability."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Shaman Rezzutum is a goblin shaman of the Rotbreath Tribe and serves alongside Bone-Breaker as one of the champions of Silorn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shaman_Rezzutum",
+        "page_title": "Online:Shaman Rezzutum",
+        "revision_id": 3262991,
+        "retrieved_at": "2026-08-12T21:34:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

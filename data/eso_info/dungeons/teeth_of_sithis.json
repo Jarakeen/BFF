@@ -1,0 +1,28 @@
+{
+    "id": "teeth_of_sithis",
+    "name": "Teeth of Sithis",
+    "content_type": "dungeon",
+    "summary": "Teeth of Sithis is an ancient temple of Sithis found in Murkmire, located near the Deepmire, containing vampires, their thralls and swamp wildlife. This temple was maintained by the Clutch of Nisswo until most of the custodians were either murdered or held captive for blood rituals at the hands of Shuxaltsei and her Sun-Eaters coven. The temple complex consists of two large xanmeers which are connected to each other via both an underground tunnel and a bridge above. The inside of the xanmeers are filled with various traps: Bottomless Pits, Gas Blossoms, Flamethrowers, spike walls, swinging blades and poisoned darts traps while the outside part only has a Bottomless Pit and Gas Blossoms. Centipedes, Dragonflies, Frogs, Mud Hoppers, Shroom Beetles, Spiders and Torchbugs can be found throughout the ruins. Two Tamed Vine-Tongues are found in the underground section of the delve.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "murkmire_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "In his quest dialogue for Tools of Slaughter, Varo Hosidias states that the Blackguards are the main occupants of the temple. However, other than the former Blackguards now serving as bloodfiends for the clan, no others are found there."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Teeth_of_Sithis",
+        "page_title": "Online:Teeth of Sithis",
+        "revision_id": 3598024,
+        "retrieved_at": "2026-08-12T21:35:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

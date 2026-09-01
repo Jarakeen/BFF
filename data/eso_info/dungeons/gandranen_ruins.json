@@ -1,0 +1,26 @@
+{
+    "id": "gandranen_ruins",
+    "name": "Gandranen Ruins",
+    "content_type": "dungeon",
+    "summary": "The Gandranen Ruins are an Ayleid ruin in central Shadowfen, southwest of the Hatching Pools containing Ayleid mummies. The Ayleid Fenlords, practitioners of necromancy, made the halls the place where they would go on to live in undeath. The bodies of some Blackguards can also be found here, along with their map piece. The exterior of the delve is surrounded by wasps and swarming wasps. Inside the delve you will meet Zahra, a Khajiit treasure hunter, who needs your help retrieving an Ayleid artifact. A fragment of a note can be found west from the delve's entrance. Parts of an Argonian journal can be found in the northern part of the last room. There is a skyshard located rather close to the entrance, just outside the one-way exit from the delve's last room.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gandranen_Ruins",
+        "page_title": "Online:Gandranen Ruins",
+        "revision_id": 3598139,
+        "retrieved_at": "2026-08-12T21:23:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

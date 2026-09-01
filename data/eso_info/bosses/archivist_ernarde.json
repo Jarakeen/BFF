@@ -1,0 +1,150 @@
+{
+    "id": "archivist_ernarde",
+    "name": "Archivist Ernarde",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "Moon Hunter Keep",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shock",
+            "description": "A basic ranged attack that deals minor shock damage."
+        },
+        {
+            "name": "Shock Blast",
+            "description": "The boss channels a lightning beam on a random player dealing moderate shock damage over time."
+        },
+        {
+            "name": "Shock Pulse",
+            "description": "The targeted player will explode after a moment, dealing moderate shock damage around themselves as indicated by a red circle. Keep away from group members if you are targeted."
+        },
+        {
+            "name": "Implosive Sphere",
+            "description": "Archivist Ernarde will cast a Crushing Bubble around a random player. The bubble needs to be broken through damage, otherwise it will kill the target after a moment."
+        },
+        {
+            "name": "Summon Werewolves",
+            "description": "At 80, 60, 40 and 20% health, two Moon Hunter Cleavers or Strikers will accompany Ernarde. They are on a timer and will transform into Werewolf Behemoths if they are not burned down. Focus on the adds and kill them before they transform to simplify the fight. The adds will also enrage if they are brought near the boss, so keep them separate."
+        },
+        {
+            "name": "Sigil Reflection",
+            "description": "Standing outside the circles when Symbols of Xarxes is cast will deal minor magical damage over time to you."
+        },
+        {
+            "name": "Symbols of Xarxes",
+            "description": "The boss summons circles marked with colored Symbols of Xarxes around the room. The boss will then cycle through and select one color. Whichever color he eventually lands on will glow bright gold. When he picks a color, each group member must run to a circle which is glowing gold, as it will shield them from his spell. After a short moment the boss releases a huge burst of magic that deals very high (lethal on veteran) amounts of magical damage to anyone outside the safe spots. There are always four circles with this colored symbol hovering above them. Coordinate with group members to determine which direction each person will go to avoid overlapping circles with your group mates."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "I'll make sure to properly document this battle. After your defeat, of course.",
+            "trigger": "He can be found standing calmly on a dais at the opposite end to the library entrance. When you first enter he will say",
+            "ability": "Symbols of Xarxes"
+        },
+        {
+            "speaker": "",
+            "line": "I've heard you killed quite a few of my packmates. No matter. We can always rebuild.",
+            "trigger": "If you stand around and not engage him, he will speak occasionally",
+            "ability": "Symbols of Xarxes"
+        },
+        {
+            "speaker": "",
+            "line": "The Silver Dawn was foolish. Weak. Just like you.",
+            "trigger": "If you stand around and not engage him, he will speak occasionally",
+            "ability": "Symbols of Xarxes"
+        },
+        {
+            "speaker": "",
+            "line": "The Silver Dawn fell, but not I. I became something greater.",
+            "trigger": "If you stand around and not engage him, he will speak occasionally",
+            "ability": "Symbols of Xarxes"
+        },
+        {
+            "speaker": "",
+            "line": "You may have won against fang and fury, but my magic is stronger than you can imagine.",
+            "trigger": "If you stand around and not engage him, he will speak occasionally",
+            "ability": "Symbols of Xarxes"
+        },
+        {
+            "speaker": "",
+            "line": "You must be quite powerful to have made it this far. Pity I must kill you.",
+            "trigger": "If you stand around and not engage him, he will speak occasionally",
+            "ability": "Symbols of Xarxes"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He can be found standing calmly on a dais at the opposite end to the library entrance. When you first enter he will say": [
+            {
+                "speaker": "",
+                "line": "I'll make sure to properly document this battle. After your defeat, of course.",
+                "trigger": "He can be found standing calmly on a dais at the opposite end to the library entrance. When you first enter he will say",
+                "ability": "Symbols of Xarxes"
+            }
+        ],
+        "If you stand around and not engage him, he will speak occasionally": [
+            {
+                "speaker": "",
+                "line": "I've heard you killed quite a few of my packmates. No matter. We can always rebuild.",
+                "trigger": "If you stand around and not engage him, he will speak occasionally",
+                "ability": "Symbols of Xarxes"
+            },
+            {
+                "speaker": "",
+                "line": "The Silver Dawn was foolish. Weak. Just like you.",
+                "trigger": "If you stand around and not engage him, he will speak occasionally",
+                "ability": "Symbols of Xarxes"
+            },
+            {
+                "speaker": "",
+                "line": "The Silver Dawn fell, but not I. I became something greater.",
+                "trigger": "If you stand around and not engage him, he will speak occasionally",
+                "ability": "Symbols of Xarxes"
+            },
+            {
+                "speaker": "",
+                "line": "You may have won against fang and fury, but my magic is stronger than you can imagine.",
+                "trigger": "If you stand around and not engage him, he will speak occasionally",
+                "ability": "Symbols of Xarxes"
+            },
+            {
+                "speaker": "",
+                "line": "You must be quite powerful to have made it this far. Pity I must kill you.",
+                "trigger": "If you stand around and not engage him, he will speak occasionally",
+                "ability": "Symbols of Xarxes"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Archivist Ernarde reappears in spirit form during the hard mode fight against Vykosa once she reaches 30% health, where he cannot be targeted but will carry out his Symbol of Xarxes mechanic to add a layer of complexity to the fight."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "According to research journal, he purposefully infected his commander's husband with lycanthropy so he could get permission to capture Vykosa to create his werewolf cure. This suggests the fall of Moon Hunter Keep can be traced back to him.",
+        "His experiment log suggests he has been looking for a way to free himself from Vykosa's will and his latest subject may have the answer."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Moonlight Ascent: Explore an old Silver Dawn stronghold and deal with the werewolves controlling it."
+    ],
+    "summary": "Archivist Ernarde is an Imperial member of the Moon hunter Pack and the penultimate boss of Moon Hunter Keep, who can be found in the keep's extensive library. Originally, he was part of the Silver Dawn and served as their chief archivist. He came close to finding a cure for Lycanthropy, but Moon Hunter Keep was overrun and he was forcibly turned by Vykosa. He is now compelled to turn his talents towards the enhancement of werewolves, no matter how many of the pack die to horrific experimentation for Vykosa's vision of a werewolf army. Archivist Ernarde reappears in spirit form during the hard mode fight against Vykosa once she reaches 30% health, where he cannot be targeted but will carry out his Symbol of Xarxes mechanic to add a layer of complexity to the fight.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archivist_Ernarde",
+        "page_title": "Online:Archivist Ernarde",
+        "revision_id": 3347825,
+        "retrieved_at": "2026-08-12T21:29:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

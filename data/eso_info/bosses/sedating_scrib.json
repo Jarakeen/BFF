@@ -1,0 +1,56 @@
+{
+    "id": "sedating_scrib",
+    "name": "Sedating Scrib",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "Darkshade Caverns II",
+    "species": "Kwama Scrib",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "903,739",
+        "veteran": "2,389,595",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slam",
+            "description": "The scrib throws itself at you, dealing low physical damage."
+        },
+        {
+            "name": "Spit",
+            "description": "A basic ranged attack dealing minor poison damage."
+        },
+        {
+            "name": "Narcotic Spray",
+            "description": "The scrib spits a sedative poison at a target which causes them to fall over and convulse for a moment. This makes the target unable to move and perform any action, including breaking-free."
+        },
+        {
+            "name": "Cave In",
+            "description": "While the Transmuted Hive Lord performs its \"Cave In\" attack the Sedating Scrib burrows underground out of reach for the duration of the attack."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "What Was Lost: Help Shatasha investigate Dwemer ruins.",
+        "Pledge: Darkshade II: Explore Darkshade Caverns II and return Undaunted."
+    ],
+    "summary": "The Sedating Scrib is a kwama scrib that accompanies and supports the Transmuted Hive Lord in Darkshade Caverns II.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sedating_Scrib",
+        "page_title": "Online:Sedating Scrib",
+        "revision_id": 3451087,
+        "retrieved_at": "2026-08-12T21:19:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

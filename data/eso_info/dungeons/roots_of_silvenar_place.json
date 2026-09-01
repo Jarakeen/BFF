@@ -1,0 +1,26 @@
+{
+    "id": "roots_of_silvenar_place",
+    "name": "Roots of Silvenar (place)",
+    "content_type": "dungeon",
+    "summary": "The Roots of Silvenar are a set of caves in eastern Malabal Tor, south of Silvenar containing Ebonheart Pact soldiers and lamias. They are led by Adavos Dren. A note hinting at their motives can be found inside. Centipedes, rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Roots_of_Silvenar_(place)",
+        "page_title": "Online:Roots of Silvenar (place)",
+        "revision_id": 3598323,
+        "retrieved_at": "2026-08-12T21:31:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

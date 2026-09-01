@@ -1,0 +1,154 @@
+{
+    "id": "rockgrove",
+    "name": "Rockgrove",
+    "content_type": "trial",
+    "summary": "Rockgrove, known to the locals as Krona-Konu, is an Argonian settlement and trial located in the southeastern reaches of Blackwood. Rockgrove was recently attacked and taken over by the hostile Sul-Xan tribe, who are now working on a ritual to bring in powerful Daedra from The Deadlands to cross over into Tamriel. Frogs, torchbugs and wasps are found in numbers within. Hazards include flames, hot springs, and lava pools.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "oaxiltso",
+        "flame_herald_bahsei",
+        "xalvakka"
+    ],
+    "achievements": [
+        {
+            "id": "sul_xan_style_master",
+            "name": "Sul-Xan Style Master",
+            "description": "Learn every chapter in the Sul-Xan style book, acquired by defeating the final boss in Rockgrove.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "xalvakka_s_bane",
+            "name": "Xalvakka's Bane",
+            "description": "Complete the listed achievements for Rockgrove.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "rockgrove_vanquisher",
+            "name": "Rockgrove Vanquisher",
+            "description": "Defeat Oaxiltso, Flame-Herald Bahsei, and Xalvakka in Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "rockgrove_conqueror",
+            "name": "Rockgrove Conqueror",
+            "description": "Defeat Oaxiltso, Flame-Herald Bahsei, and Xalvakka in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "xanmeer_s_protector",
+            "name": "Xanmeer's Protector",
+            "description": "Defeat Oaxiltso, Flame-Herald Bahsei, and Xalvakka after raising the challenge banner in Veteran Rockgrove, in one run.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "rockgrove_sprinter",
+            "name": "Rockgrove Sprinter",
+            "description": "Defeat all encounters in addition to Oaxiltso, Flame-Herald Bahsei, and Xalvakka within 30 minutes of entering Veteran Rockgrove. Your timer starts when you engage the first group of enemies. Defeating Basks-In-Snakes and the injured Sul-Xan Militants is not required for the completion.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "soul_savior",
+            "name": "Soul Savior",
+            "description": "Defeat Oaxiltso, Flame-Herald Bahsei, and Xalvakka along with all their hostile followers after raising the challenge banner for each of them, without suffering a group member death, within 30 minutes of entering Veteran Rockgrove. Defeating Basks-In-Snakes and the injured Sul-Xan Militants is not required for completion.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sul_xan_slayer",
+            "name": "Sul-Xan Slayer",
+            "description": "Defeat 300 Sul-Xan in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "havocrel_slayer",
+            "name": "Havocrel Slayer",
+            "description": "Defeat 100 Havocrel in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "turtle_soup",
+            "name": "Turtle Soup",
+            "description": "Sacrifice the haj mota to the Grand Geyser in Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "light_stepper",
+            "name": "Light Stepper",
+            "description": "Complete Rockgrove without a single party member triggering a deadly plant or a trap.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "what_is_this_filth",
+            "name": "What is this Filth?",
+            "description": "For every time that Noxious Sludge is cleansed, use all 4 cleansing pools to simultaneously remove it from 4 different infected party members, then defeat Oaxiltso in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "keep_your_distance",
+            "name": "Keep Your Distance",
+            "description": "Avoid infecting any party member with Death Touch by a separate party member, then defeat Flame-Herald Bahsei in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "soul_bombardier",
+            "name": "Soul Bombardier",
+            "description": "Use Purge Soul to feed 15 Corrupted Azureplasms until they explode during the fight with Xalvakka in Veteran Rockgrove.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "behemoth_beleaguerer",
+            "name": "Behemoth Beleaguerer",
+            "description": "Defeat Oaxiltso after raising the challenge banner in Veteran Rockgrove.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "slay_the_messenger",
+            "name": "Slay the Messenger",
+            "description": "Defeat Flame-Herald Bahsei after raising the challenge banner in Veteran Rockgrove.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "will_of_stone",
+            "name": "Will of Stone",
+            "description": "Defeat all encounters in addition to Oaxiltso, Flame-Herald Bahsei, and Xalvakka in Veteran Rockgrove without suffering a group member death. Defeating Basks-In-Snakes and the injured Sul-Xan Militants is not required for the completion.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "bahsei_s_mania",
+        "perfected_bahsei_s_mania",
+        "saxhleel_champion",
+        "perfected_saxhleel_champion",
+        "stone_talker_s_oath",
+        "perfected_stone_talker_s_oath",
+        "sul_xan_s_torment",
+        "perfected_sul_xan_s_torment"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rockgrove",
+        "page_title": "Online:Rockgrove",
+        "revision_id": 3576354,
+        "retrieved_at": "2026-09-01T01:54:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

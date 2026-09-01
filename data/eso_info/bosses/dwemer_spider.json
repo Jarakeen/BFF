@@ -1,0 +1,36 @@
+{
+    "id": "dwemer_spider",
+    "name": "Dwemer Spider",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Redirect to:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dwemer_Spider",
+        "page_title": "Online:Dwemer Spider",
+        "revision_id": 1318341,
+        "retrieved_at": "2026-08-12T21:19:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

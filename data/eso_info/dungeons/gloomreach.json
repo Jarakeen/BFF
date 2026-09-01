@@ -1,0 +1,28 @@
+{
+    "id": "gloomreach",
+    "name": "Gloomreach",
+    "content_type": "dungeon",
+    "summary": "Gloomreach is a cave with entrances in the Reach and Blackreach: Arkthzand Cavern, containing Falmer and wildlife. Volatile tonal energies are disturbing the cave, following the arrival of two Psijic Order members and a relic they brought with them. Multiple passive critters, most of them Blackreach-themed, can be found inside, consisting of; Blackreach Jelly, Centipede, Glow Bug, Nixad, Rat, Spider, Torchbug, Vale Deer Buck, and Vale Deer Doe. When you enter the delve, you'll end up in the central-northern chamber. In this room, the entrance from the Reach lies to the west, and the entrance from Blackreach lies to the south. Calis's Journal is located on a slope beside a tree in the center of this room. The eastern half of the delve is full of Falmer and chaurus. The southern-central chamber contains animals, and the southwestern chambers are where gloomspore creatures reside. Master Pythis's Journal is located upon a table in the southwestern chamber.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "markarth_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Gloomreach previously appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gloomreach",
+        "page_title": "Online:Gloomreach",
+        "revision_id": 3335024,
+        "retrieved_at": "2026-08-12T21:24:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

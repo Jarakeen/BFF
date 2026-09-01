@@ -1,0 +1,49 @@
+{
+    "id": "nerien_eth",
+    "name": "Nerien'eth",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "Crypt of Hearts II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,993,959",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "The hard mode requirement requires 4 wraiths to be alive when the boss picks up the sword at 35% health."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Pledge: Crypt of Hearts II: Prove you are truly Undaunted by clearing the Crypt of Hearts II."
+    ],
+    "summary": "This article is about the creature. For the item set, see Nerien'eth (set). Nerien'eth is a High Elf lich found inside the Crypt of Hearts II. The chamber he is in contains the Ebony Blade and is accessed from a portal guarded by Mezeluth. He has a chance to drop Nerien'eth's Forsaken Staff.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nerien%27eth",
+        "page_title": "Online:Nerien'eth",
+        "revision_id": 3422550,
+        "retrieved_at": "2026-08-12T21:18:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

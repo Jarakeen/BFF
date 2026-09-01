@@ -1,0 +1,73 @@
+{
+    "id": "chillspine",
+    "name": "Chillspine",
+    "content_id": "spire_of_the_crimson_coin",
+    "content_name": "Spire of the Crimson Coin",
+    "location": "Spire of the Crimson Coin",
+    "species": "Wraith",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Bolt",
+            "description": "Basic ranged attack dealing moderate frost damage."
+        },
+        {
+            "name": "Ice Pillar/Ice Pillar Chill",
+            "description": "Chillspine summons an Ice Pillar on a target, dealing minor frost damage on summon and slowing targets in a small area around it as long as it stands. Staying more than a second in the area will also immobilize you."
+        },
+        {
+            "name": "Frost Wave",
+            "description": "Chillspine channels a spell launching many icy whirlwinds in an arc in front of it, dealing high frost damage and snaring targets hit. This can be interrupted to stagger Chillspine."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Chillspine",
+            "line": "Feel the icy touch of death!",
+            "trigger": "When you begin combat with it",
+            "ability": "Ice Pillar/Ice Pillar Chill"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you begin combat with it": [
+            {
+                "speaker": "Chillspine",
+                "line": "Feel the icy touch of death!",
+                "trigger": "When you begin combat with it",
+                "ability": "Ice Pillar/Ice Pillar Chill"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Chillspine is a wraith boss who specializes in icy attacks in the Spire of the Crimson Coin near the water mill.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Chillspine",
+        "page_title": "Online:Chillspine",
+        "revision_id": 3507991,
+        "retrieved_at": "2026-08-12T21:34:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,72 @@
+{
+    "id": "scorion_broodlord",
+    "name": "Scorion Broodlord",
+    "content_id": "the_dread_cellar",
+    "content_name": "The Dread Cellar",
+    "location": "The Dread Cellar",
+    "species": "Scorion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "4,511,248",
+        "hardmode": "7,714,243"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Crush",
+            "description": "A charged melee attack that deals very high physical damage. This can be blocked, ideally by the tank."
+        },
+        {
+            "name": "Turmoil",
+            "description": "The Scorion Broodlord spews at its targets, indicated by a red cone, dealing continuous high poison damage. It can adjust where it spews on the go, so make sure the tank points the boss away and DPS/Healer are behind."
+        },
+        {
+            "name": "Torrent of Turmoil",
+            "description": "The Scorion Broodlord releases swirls of corrupted energies from underneath itself, indicated by red circles, which shoot out in all directions, each dealing high magical damage. It can use this ability passively while performing other abilities."
+        },
+        {
+            "name": "Excruciating Expectoration",
+            "description": "The Scorion Broodlord pulls a random target to itself using a red magical beam, and stuns them on the ground, then savagely stabs at the trapped target with its pincers, dealing continuous high physical damage. Can be interrupted but not broken free from."
+        },
+        {
+            "name": "Agonymium Stone",
+            "description": "The Scorion Broodlord opens up a portal overhead and enters it, and re-emerges far away in the arena. Then, it conjures up an Agonymium Stone, from which it will draw energy from, granting itself a damage shield increasing in size until the stone is destroyed."
+        },
+        {
+            "name": "Summon",
+            "description": "Xivilai Ravagers and Xivilai Shockslayers are summoned in the arena throughout the fight."
+        },
+        {
+            "name": "Pull & Explode",
+            "description": "Leaving the arena during the fight causes a pull effect, bringing everyone back in and severely damaging them."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Quaking Dread: Assist a contingent of Imperial Battlemages sent to investigate Daedric activity within an abandoned prison.",
+        "Pledge: The Dread Cellar: Enter The Dread Cellar and return Undaunted."
+    ],
+    "summary": "The Scorion Broodlord is a Scorion found in the Dread Cellar. It acts as the first boss of the dungeon. In Veteran mode, it has more frequent additional enemy spawns. You can stack up the boss along with the adds on top of the Agonymium Stone to make it easier, but be prepared for constant enemies and damage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Scorion_Broodlord",
+        "page_title": "Online:Scorion Broodlord",
+        "revision_id": 3511403,
+        "retrieved_at": "2026-08-12T21:20:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

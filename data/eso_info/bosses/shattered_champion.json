@@ -1,0 +1,65 @@
+{
+    "id": "shattered_champion",
+    "name": "Shattered Champion",
+    "content_id": "bedlam_veil",
+    "content_name": "Bedlam Veil",
+    "location": "Bedlam Veil",
+    "species": "Crystal Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,413,503",
+        "hardmode": "8,120,255"
+    },
+    "abilities": [
+        {
+            "name": "Crunch",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Crushing Shards",
+            "description": "The atronach punches at a target's location dealing very high physical damage and staggering. This can be blocked."
+        },
+        {
+            "name": "Shard Glass",
+            "description": "The atronach stomps the ground, causing glass shards to erupt at targets' locations, indicated by red circle tracking them, dealing moderate physical damage, and more if targets overlap. The shards then linger, and deal continuous low physical damage."
+        },
+        {
+            "name": "Razor Glass",
+            "description": "Once the atronach reaches 70% health, it summons a ring of sharp glass along the outer edge of the arena, and at 50%, it summons one in a circular shape in the center of the arena. Touching the glass deals continuous moderate physical damage."
+        },
+        {
+            "name": "Gaping Wound",
+            "description": "Additional damage over time effect applied when touched by \"Shard Glass\" and \"Razor Glass\"."
+        },
+        {
+            "name": "Summon Fragment",
+            "description": "After every 10% health lost, the atronach summons a Glass Fragment."
+        },
+        {
+            "name": "Summon Glaziers",
+            "description": "At 80%/60%/40% health, the atronach summons two Blind Path Glaziers, which can make the boss and its summons go invulnerable by channeling their spell."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Shattered Champion is a Crystal Atronach that is summoned by the Blind in Bedlam Veil. It acts as the first boss of this dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shattered_Champion",
+        "page_title": "Online:Shattered Champion",
+        "revision_id": 3277281,
+        "retrieved_at": "2026-08-12T21:14:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

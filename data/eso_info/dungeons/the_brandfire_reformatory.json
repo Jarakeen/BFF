@@ -1,0 +1,26 @@
+{
+    "id": "the_brandfire_reformatory",
+    "name": "The Brandfire Reformatory",
+    "content_type": "dungeon",
+    "summary": "The Brandfire Reformatory is a Daedric fortress in the northwest of the Deadlands, containing Daedra and Order of the Waking Flame cultists. It is currently being used by the cult as their main stronghold in the plane, as well as a brainwashing facility, where they bring mortals they capture to force them to join up after torturing and breaking them. Spiddal Sticks plants can be encountered in the exterior section",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "the_deadlands_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Brandfire_Reformatory",
+        "page_title": "Online:The Brandfire Reformatory",
+        "revision_id": 3548266,
+        "retrieved_at": "2026-08-12T21:15:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

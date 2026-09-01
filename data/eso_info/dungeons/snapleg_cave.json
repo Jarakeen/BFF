@@ -1,0 +1,28 @@
+{
+    "id": "snapleg_cave",
+    "name": "Snapleg Cave",
+    "content_type": "dungeon",
+    "summary": "Snapleg Cave is a cave in the northern Rift, far north-northeast of Nimalten containing bandits.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Snapleg Cave also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Snapleg_Cave",
+        "page_title": "Online:Snapleg Cave",
+        "revision_id": 3598174,
+        "retrieved_at": "2026-08-12T21:34:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "rkhardahrk",
+    "name": "Rkhardahrk",
+    "content_type": "dungeon",
+    "summary": "Rkhardahrk is a Dwemer ruin found in central Craglorn, northeast of the Seeker's Archive. It is inhabited by dreugh and the Dusteater Tribe. The Last Sentinel must be killed to clear the delve. Skavengers are found in numbers within. Steam Vents act as hazard throughout the delve.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rkhardahrk",
+        "page_title": "Online:Rkhardahrk",
+        "revision_id": 3598818,
+        "retrieved_at": "2026-08-12T21:31:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "id": "sanity_s_edge",
+    "name": "Sanity's Edge",
+    "content_type": "dungeon",
+    "summary": "Sanity's Edge is the dreamworld of Warlock Vanton. It is a trial and can be entered via Vanton's wizard tower on the Telvanni Peninsula, southwest of Alavelis. You will receive a Crystallized Memory with your other rewards for completing this trial on Hard Mode.",
+    "location": "",
+    "boss_ids": [
+        "exarchanic_yaseyla",
+        "archwizard_twelvane",
+        "chimera_sanity_s_edge",
+        "ansuul_the_tormentor"
+    ],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanity%27s_Edge",
+        "page_title": "Online:Sanity's Edge",
+        "revision_id": 3608289,
+        "retrieved_at": "2026-08-12T05:34:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

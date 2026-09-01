@@ -1,0 +1,46 @@
+{
+    "id": "ogre",
+    "name": "Ogre",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Ogre",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Ogres are considered \"Giants\" for the Giant-kin part of the Master Monster Slayer achievement."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Bastion Nymic - Fungal Downs: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Glasscrag: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Ending the Ogre Threat: Stop the Ironhand ogres from using a mountain cavern to attack Shinji's Scarp.",
+        "General Godrun's Orders: Help the Murtag Clan reclaim Shinji's Scarp.",
+        "Ogre Teeth: Help a Murtag clan captain gather components for a war trophy.",
+        "Repairing the Cage: Restore the Ayleid bindings to contain a dangerous Daedra.",
+        "An Unhealthy Fate: Find and banish Vaermina from Apocrypha."
+    ],
+    "summary": "Ash'abahs' Oasis, Bonesnap Ruins, Divad's Chagrin Mine, Greenshade, Jode's Light, Leafwater, Little Ozur's Camp, Reaper's March, Shinji's Scarp, Near Telesubi Ruins\nBonerock Cavern, Morkul Descent, Shatul Range, Sorrow, Wrothgar\nGold Coast\nAnequina Aqueduct, Northern Elsweyr\nWestern Plains\nSouth of Four Skull Lookout\nBlackwood, Toad-Tongue War Camp, Welke\nNorthern Amenos\nChroma Incognito, The Infinite Panopticon, The Mythos, Necrom Necropolis\nColovian Highlands, Silorn Ogres are large, dim-witted humanoids found throughout Tamriel, both above ground and below. Ogres in Wrothgar are sometimes called Snow Ogres and are differentiated from the common ogre by their thick coat of white fur. Some of these ogres can even use powerful frost magic. Diseased ogres can be found in Orcrest and near Baan Dar's Litter at the Anequina Aqueduct.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ogre",
+        "page_title": "Online:Ogre",
+        "revision_id": 3552879,
+        "retrieved_at": "2026-08-12T21:32:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

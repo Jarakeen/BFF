@@ -1,0 +1,73 @@
+{
+    "id": "sanctum_ophidia",
+    "name": "Sanctum Ophidia",
+    "content_type": "trial",
+    "summary": "Sanctum Ophidia is an ancient Nedic temple in northern Craglorn. It is the stronghold of the Celestial Serpent and his Scaled Court. It has both a Normal and a Veteran mode, as well as a \"Hard Mode\" which can be triggered only in Veteran mode by desecrating the sacred banners of the Scaled Court. Hard Mode only affects the Celestial Serpent, making this boss fight far more challenging. You will receive The Serpent's Egg-Tooth for defeating the Celestial Serpent with hard mode active.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "possessed_mantikora",
+        "stonebreaker",
+        "troll",
+        "ozara",
+        "lamia",
+        "the_serpent_celestial"
+    ],
+    "achievements": [
+        {
+            "id": "sanctum_ophidia_completed",
+            "name": "Sanctum Ophidia Completed",
+            "description": "Defeat the Celestial Serpent.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sanctum_ophidia",
+            "name": "Time Trial: Sanctum Ophidia",
+            "description": "Complete Veteran Sanctum Ophidia within a time limit of 33 minutes.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "feeding_pit",
+            "name": "Sanctum Ophidia: Feeding Pit",
+            "description": "Use the feed pile in Sanctum Ophidia and survive the ensuing battle.",
+            "points": 5,
+            "source": null
+        },
+        {
+            "id": "sanctum_ophidia_conqueror",
+            "name": "Sanctum Ophidia Conqueror",
+            "description": "Defeat the Celestial Serpent in Veteran Sanctum Ophidia.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "sanctum_ophidia_difficult_mode",
+            "name": "Sanctum Ophidia Difficult Mode",
+            "description": "Defeat the Celestial Serpent after desecrating the sacred banners of the Scaled Court.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "immortal_warrior",
+        "twice_fanged_serpent",
+        "vicious_serpent",
+        "wise_mage"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "This trial scales to the Champion Points of the leader, to a maximum of 160.",
+        "This trial cannot be accessed unless the player is at least level 50 as the entrance is in Craglorn.",
+        "Sanctum Ophidia originally scaled to \u0000HEALTH_VETERAN\u000014 and had no Normal mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanctum_Ophidia",
+        "page_title": "Online:Sanctum Ophidia",
+        "revision_id": 3576345,
+        "retrieved_at": "2026-08-18T18:54:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

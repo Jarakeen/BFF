@@ -1,0 +1,60 @@
+{
+    "id": "kujo_kethba",
+    "name": "Kujo Kethba",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Moongrave Fane; The Penumbral Path",
+    "species": "Gargoyle",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,980,063",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic double-hitting melee attack. After the first time Fanning the Flames is used, Swipe gains a flame wave after-effect that adds fire damage."
+        },
+        {
+            "name": "Smash",
+            "description": "Kujo Kethba smashes down with its fist, dealing higher damage than Swipe."
+        },
+        {
+            "name": "Fanning the Flames",
+            "description": "Kujo Kethba flies up into the air and crashes back into the ground, and then continues smashing the ground where it landed, indicated by a small conical AoE in front of itself, dealing repeated damage. The pounding also creates volcanic geysers to appear in two of the four corners of the arena and begin launching homing molten projectiles at you. Sliding Stones present in the arena can be pushed over the geysers to stop them from spewing fireballs. During this ability, Kujo Kethba becomes immune to and reflects back all damage applied to it."
+        },
+        {
+            "name": "Spit Fire",
+            "description": "After Fanning the Flames is used for the first time, Kujo Kethba gains this ability. It spits out a fireball at you, indicated by a circular AoE, which explode on contact with the ground, leaving a lingering pool of flames."
+        },
+        {
+            "name": "Summon Allies",
+            "description": "Hollowfang Clan enemies will enter the arena to assist Kujo Kethba throughout the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Sanguine Successor: Prevent a clan of vampires from draining the blood of a captured dragon.",
+        "Pledge: Moongrave Fane: Prove you are truly Undaunted by conquering Moongrave Fane."
+    ],
+    "summary": "Kujo Kethba is a Khajiiti gargoyle that serves as the third boss of Moongrave Fane. It is awoken by Nisaazda as Chevalier Renald pursues her.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kujo_Kethba",
+        "page_title": "Online:Kujo Kethba",
+        "revision_id": 3607012,
+        "retrieved_at": "2026-08-12T21:29:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

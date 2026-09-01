@@ -1,0 +1,46 @@
+{
+    "id": "maw_of_lorkhaj",
+    "name": "Maw of Lorkhaj",
+    "content_type": "dungeon",
+    "summary": "The Maw of Lorkhaj is a desecrated Khajiiti temple in Reaper's March. It was known as the \"Temple of Seven Riddles\" prior to its occupation by the Dro-m'Athra. Just outside the entrance to the temple is a small hub with two merchants, crafting stations and a cooking fire. There are also some members of the Twilight Cantors nearby, and a few monks that have been afflicted by the Bent Dance. Adara'hai can be found in front of the entrance to the temple; she will request your help in dealing with the invading dro'm-Athra. You will receive The Rid-Thar's Moon Pearls along with your other rewards after defeating the Fang of Lorkhaj with Hard Mode engaged.",
+    "location": "",
+    "boss_ids": [
+        "zhaj_hassa_the_forgotten",
+        "dro_m_athra",
+        "s_kinrai",
+        "vashai",
+        "rakkhat",
+        "grievous_twilight"
+    ],
+    "achievements": [
+        {
+            "id": "thieves_guild_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This trial is commonly abbreviated as \"MoL\".",
+        "To celebrate the Thieves Guild DLC's one year anniversary, Defiled Whisker drops were temporarily doubled as part of the Thieves Guild Anniversary Event.",
+        "The reward chests for defeating bosses here have a chance to contain Defiled Whiskers.",
+        "Even though this trial is in an Alliance Zone region, access to the Thieves Guild DLC is required to run it.",
+        "You will receive The Rid-Thar's Moon Pearls for defeating Rakkhat with hard mode active."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maw_of_Lorkhaj",
+        "page_title": "Online:Maw of Lorkhaj",
+        "revision_id": 3511731,
+        "retrieved_at": "2026-08-12T05:33:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

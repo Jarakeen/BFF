@@ -1,0 +1,26 @@
+{
+    "id": "ondil",
+    "name": "Ondil",
+    "content_type": "dungeon",
+    "summary": "Ondil is an Aldmeri ruin in the center of Auridon, just south of the town of Mathiisen containing a local vampire and his minions. There is a chest south of the ruins, beside a wall. During the quest Long Lost Lore, a Forgotten Tome can be found here if your character is of the Dominion.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ondil",
+        "page_title": "Online:Ondil",
+        "revision_id": 3598282,
+        "retrieved_at": "2026-08-12T21:30:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

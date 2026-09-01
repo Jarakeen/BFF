@@ -1,0 +1,75 @@
+{
+    "id": "balorgh",
+    "name": "Balorgh",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices",
+    "species": "Werewolf Behemoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,645,195",
+        "hardmode": "6,491,974"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Bite",
+            "description": "The boss bites its target dealing moderate physical damage, followed by minor physical damage over time."
+        },
+        {
+            "name": "Slaughtering Strike",
+            "description": "The boss slashes at a target dealing very high physical damage. This must be blocked by the tank or dodged if you are not."
+        },
+        {
+            "name": "Icy Roar",
+            "description": "The boss shouts dealing high frost damage over time and rooting all targets hit in front of itself as indicated by a red cone."
+        },
+        {
+            "name": "Fiery Charge",
+            "description": "The boss charges forward dealing high flame damage and knocking down all targets as indicated by a red rectangle."
+        },
+        {
+            "name": "Fire Trail",
+            "description": "The boss leaves behind a trail of fire when charging that deals moderate flame damage over time as indicated by red circles."
+        },
+        {
+            "name": "Fiery Eruption",
+            "description": "The boss stomps dealing very high flame damage around itself as indicated by a red circle. This must be avoided at all costs."
+        },
+        {
+            "name": "Venomous Spores",
+            "description": "After Thunder Stomp ends, the boss summons poisonous plants that will cover the three islands with poisonous AOEs dealing moderate poison damage as indicated by red circles. Stay off the islands to avoid this."
+        },
+        {
+            "name": "Thunder Stomp",
+            "description": "After the plants disappear, the boss will stomp releasing lightning outwards from itself dealing moderate shock damage and staggering all players hit (Thundering Fissure). The water around the islands will also be electrified (Charged Water) dealing moderate shock damage over time. Stay on the islands to avoid this, while also moving to avoid the lightning strikes that occasionally spawn on top of the player as indicated by red circles (Thunder Storm)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt."
+    ],
+    "summary": "This article is about the NPC. For the set, see Balorgh (set). Balorgh is an Orc werewolf behemoth who can be found in the March of Sacrifices. He is the leader of one of the groups that are competing in Hircine's Great Hunt. Strangely, he does not seem to hold the Daedric Prince in much esteem but he is willing to play along out of necessity. According to a letter, he was originally entrusted with a mission by Vykosa to infiltrate the Hunting Grounds but some of his fellow pack-members worry that Balorgh is now pursuing his own goals. Balorgh will watch your progress throughout the various parts of the March. After Tarcyr is killed, he will ambush your group, killing Hanu to take the heart for himself. Hircine denies his request for the boon as he didn't kill Tarcyr, and Balorgh negotiates that killing your group will be enough to earn the boon. At the end of the Nightlands, he transforms into a Werewolf Behemoth and serves as the final boss. Burning the Moon Hunter Pack banner will activate hardmode.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Balorgh",
+        "page_title": "Online:Balorgh",
+        "revision_id": 3607121,
+        "retrieved_at": "2026-08-12T21:28:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

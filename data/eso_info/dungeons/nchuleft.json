@@ -1,0 +1,28 @@
+{
+    "id": "nchuleft",
+    "name": "Nchuleft",
+    "content_type": "dungeon",
+    "summary": "Nchuleft is a Dwemer ruin found in the Grazelands region of Vvardenfell, southwest of Vos, containing Ash Exiles and dwarven automatons. The upper sections of the ruins have been liberated from their ancient guardians by the hostile Ashlanders, who are now in the process of looting them for relics. The deeper and less hospitable reaches are still protected however. Nchuleft Depths are west of and Nchuleft Ruins are north of Nchuleft Ingress. The boss and the skyshard are on the lowest level of the Nchuleft Depths were Lava flows. Ash Hoppers, centipedes and skavengers are found in numbers within the delve.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Nchuleft also appears in Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nchuleft",
+        "page_title": "Online:Nchuleft",
+        "revision_id": 3548714,
+        "retrieved_at": "2026-08-12T21:30:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

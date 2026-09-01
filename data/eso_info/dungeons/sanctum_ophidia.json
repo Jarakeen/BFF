@@ -1,0 +1,44 @@
+{
+    "id": "sanctum_ophidia",
+    "name": "Sanctum Ophidia",
+    "content_type": "dungeon",
+    "summary": "Sanctum Ophidia is an ancient Nedic temple in northern Craglorn. It is the stronghold of the Celestial Serpent and his Scaled Court. It has both a Normal and a Veteran mode, as well as a \"Hard Mode\" which can be triggered only in Veteran mode by desecrating the sacred banners of the Scaled Court. Hard Mode only affects the Celestial Serpent, making this boss fight far more challenging. You will receive The Serpent's Egg-Tooth for defeating the Celestial Serpent with hard mode active.",
+    "location": "",
+    "boss_ids": [
+        "possessed_mantikora",
+        "stonebreaker",
+        "troll",
+        "ozara",
+        "lamia",
+        "the_serpent_celestial"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This trial scales to the Champion Points of the leader, to a maximum of 160.",
+        "This trial cannot be accessed unless the player is at least level 50 as the entrance is in Craglorn.",
+        "Sanctum Ophidia originally scaled to 14 and had no Normal mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanctum_Ophidia",
+        "page_title": "Online:Sanctum Ophidia",
+        "revision_id": 3576345,
+        "retrieved_at": "2026-08-12T05:33:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

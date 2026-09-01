@@ -1,0 +1,70 @@
+{
+    "id": "dwarven_centurion",
+    "name": "Dwarven Centurion",
+    "content_id": "darkshade_caverns_i",
+    "content_name": "Darkshade Caverns I",
+    "location": "Dwemer Ruins\nRandom Encounters",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Axe",
+            "description": "The centurion swings its left axe-arm as a basic melee attack, dealing moderate physical damage."
+        },
+        {
+            "name": "Hammer",
+            "description": "The centurion swings its right arm as a slow basic melee attack, dealing moderate-high physical damage."
+        },
+        {
+            "name": "Steam Breath",
+            "description": "The centurion releases steam, as indicated by a red cone in front of itself, dealing 4 ticks of moderate flame damage over time to all targets standing in the cone."
+        },
+        {
+            "name": "Sweeping Spin",
+            "description": "The centurion spins around, as indicated by a red circle, dealing moderate-high physical damage as well as knocking down all targets within. Blocking negates the knockdown. This only used if a target is very close to the Dwarven Centurion."
+        },
+        {
+            "name": "Overcharge",
+            "description": "If charged when destroyed, the centurion will explode, dealing moderate shock damage to all targets around it as indicated by a red circle. This only occurs if the centurion has been charged by a dwarven spider. (blue textures on their framing)"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "The Dangerous Past: Search a Dwemer ruin for signs of an ancient weapon.",
+        "Mine All Mine: Investigate a disturbance in Deshaan's largest kwama mine.",
+        "The Mystery of Razak: Discover what the Imperials are searching for at Razak's Wheel.",
+        "Parts of the Whole: Collect data on the constructs of Zthenganaz.",
+        "Pledge: Darkshade Caverns I: Explore Darkshade Caverns I and return Undaunted.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell.",
+        "Problem Growth: Clear Blackreach of a dangerous self-repairing Dwarven Colossus.",
+        "The Seal of Three: Prevent the Maulborn from completing their scheme inside the Tribunal Temple.",
+        "Snow and Steam: Deal with some dangerous Dwarven machines.",
+        "The Soul-Meld Mage: Help separate the souls of Gadris and Zur.",
+        "Urenenya's Lament: Learn what happened to the Ayleid Princess Urenenya."
+    ],
+    "summary": "Dwarven Centurions are hostile humanoid dwarven automatons, usually found in Dwemer ruins. However, unlike dwarven spiders and dwarven spheres, they are not found in every one. For example, they cannot be found in Lower Bthanual or Mzithumz.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dwarven_Centurion",
+        "page_title": "Online:Dwarven Centurion",
+        "revision_id": 3461553,
+        "retrieved_at": "2026-08-12T21:19:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

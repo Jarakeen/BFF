@@ -1,0 +1,18 @@
+{
+    "id": "xul_haj",
+    "name": "Xul-Haj",
+    "content_type": "dungeon",
+    "summary": "Xul-Haj is a Stone-Nest Argonian necropolis located along the northeastern coast of Solstice. Salt-Air Station lies southwest of the necropolis. Hazards include necromantic runes.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xul-Haj",
+        "page_title": "Online:Xul-Haj",
+        "revision_id": 3567107,
+        "retrieved_at": "2026-08-12T21:39:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

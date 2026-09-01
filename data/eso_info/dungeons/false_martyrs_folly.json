@@ -1,0 +1,26 @@
+{
+    "id": "false_martyrs_folly",
+    "name": "False Martyrs' Folly",
+    "content_type": "dungeon",
+    "summary": "False Martyrs' Folly is a delve in the deep northeast of the Deadlands, containing creatures from the Sever. It serves as one of Mehrunes Dagon's many prisons in his plane, where prisoners are trapped in stone for eternity.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "the_deadlands_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:False_Martyrs%27_Folly",
+        "page_title": "Online:False Martyrs' Folly",
+        "revision_id": 3585266,
+        "retrieved_at": "2026-08-12T21:21:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

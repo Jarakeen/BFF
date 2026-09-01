@@ -1,0 +1,75 @@
+{
+    "id": "mynar_metron",
+    "name": "Mynar Metron",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "The Brimstone Den",
+    "species": "Iron Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "696,518",
+        "veteran": "1,517,042",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Eruption",
+            "description": "A basic ranged attack, where Mynar Metron bashes the ground and causes a lava explosion at its target, dealing moderate flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Blast Furnace",
+            "description": "Mynar Metron stands still and spews molten projectiles from its chest cavity that explode on contact with the ground. The initial explosion deals moderate flame damage, and the lingering pool deals continuous low flame damage. Each AoE lingers for about two seconds.",
+            "damage_type": null
+        },
+        {
+            "name": "Sweltering Waves",
+            "description": "Mynar Metron sweeps the lava with its fists repeatedly, sending out five consecutive waves consisting of multiple flaming swirls that travel across most of the arena in different directions, indicated by red circles. Each deals moderate flame damage.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Mynar Metron stands still and spews molten projectiles from its chest cavity that explode on contact with the ground. The initial explosion deals moderate flame damage, and the lingering pool deals continuous low flame damage. Each AoE lingers for about two seconds.",
+            "name": "Blast Furnace",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": true,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [
+        "Mynar Metron is an iron atronach, and is standing on a platform in the middle of a lake of lava. If you die, you will end up on the lake shore across from the platform; you won't need to run all the way back from the previous boss. You do not need to step into the lava during the battle; just cross the lava to get to the boss's platform, and to get the Fortitude Remnant.",
+        "Mynar Metron spends this fight at the perimeter of the island. The boss stands at the edge of the island in the lava, flinging fire at you. Mynar Metron does not climb onto the platform during combat, and this fight is easy compared to the Magma Queen. Mynar Metron will walk over to one side of the platform and splash lines of lava onto the shore, which deal moderate flame damage. These are very easy to avoid. There's only one ability you truly need to worry about, and that's blast furnace. After the boss uses this ability, it moves around the perimeter of the island, and doesn't move until it uses this ability again. The boss sets a lot of AoEs down, so you might end up stepping in them, but you don't need to worry if you keep moving and try to get out of them as best you can.",
+        "Once you defeat the boss, a Warrior's Chest containing your reward will appear, and you will gain a buff called Empowered Brimstone. Your Brimstone Fortification now radiates intense heat."
+    ],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "Mynar Metron is an iron atronach serving as the secret boss of The Brimstone Den.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mynar_Metron",
+        "page_title": "Online:Mynar Metron",
+        "revision_id": 3580691,
+        "retrieved_at": "2026-08-19T03:21:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

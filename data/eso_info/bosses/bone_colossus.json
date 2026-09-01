@@ -1,0 +1,70 @@
+{
+    "id": "bone_colossus",
+    "name": "Bone Colossus",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Bone Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "119,538",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A Bone Colossus polymorph was made available with the Hidden Kindred Crates. It follows the player model as a basis rather than the creature model, and as such is much slimmer and smaller."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancestral Adversity: Accompany Narsis Dren on a Vvardenfell grave robbing expedition.",
+        "Banishing the Banished: Help imprison the spirit of an evil Altmer.",
+        "Banished Cells Pledge: Explore the Banished Cells and return Undaunted. (disabled since Patch 2.6.4)",
+        "Castle of the Worm: Grant a request for asylum from a prisoner in the Castle of the Worm.",
+        "City Under Siege: Protect Tanval as he performs the ritual.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Death of Balreth: Defeat Balreth and end his threat forever.",
+        "The Dragonguard: End the New Moon threat.",
+        "Dream-Walk Into Darkness: Discover the true nature of the threat to Rivenspire.",
+        "Free Spirits: Set free the spirits trapped by the evil sorcerer Gorlar the Dark.",
+        "The Jeweled Crown of Anton: Help locate a missing noble.",
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Banished Cells I: Explore the Banished Cells I and return Undaunted.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "Puzzle of the Pass: Head to the Boralis mountains and find a way through the Shrouded Pass.",
+        "Quiet the Ringing Bell: Head to the heart of Daen Seeth to return the juggernaut to its cage.",
+        "Ritual at the Dragonshrine: Stop the Worm Cult ritual at the Smokefrost Dragonshrine.",
+        "A Ritual in Smokefrost Peaks: Stop the Worm Cult ritual at the Smokefrost Peaks Altar.",
+        "A Ritual in the Ragged Hills: Stop the Worm Cult ritual at the Ragged Hills Altar.",
+        "Sadal's Final Defeat: Rebind Sadal and end the threat to Stonefalls.",
+        "Shadow of Sancre Tor: Retrieve the Amulet of Kings from its hiding place.",
+        "Soul Shriven in Coldharbour: Escape from the depths of Coldharbour.",
+        "Souls of the Betrayed: Investigate a claim of necromancy and disturbed undead in Upper Craglorn.",
+        "Torn Asunder: Recover the earthly remains of a spirit's three daughters.",
+        "Through the Shroud: End the threat of the Reachmen at Vernim Woods.",
+        "Vaermina's Gambit: Face the Night Terror and end the threat to Stormhaven.",
+        "What the Heart Wants: Rescue the wayward manservant from another life-threatening situation."
+    ],
+    "summary": "This article is about the enemy. For the polymorph, see Bone Colossus (polymorph). Abamath, Dark Anchors, The Doomcrag, Molavar\nThukhozod's Sanctum\nTraitor's Vault\nDefense Force Outpost, Rimmen Necropolis\nMidnight Barrow\nBloodrun Cave, Zenithar's Abbey\nZynoahz's Goal\nCastle Navire Catacombs, Death's Valor Keep, The Ghost Ship, Spire of the Crimson Coin\nNonungalo, Silorn\nAbandoned Village southwest of the Bismuth Grotto, Carapace Cavern Shrine, Worm Cult camp southeast of the Fellowship Forge, Random Encounter in Solstice, West of Stone Cove Wayshrine, Tarnur Mine, Vosgah Shrine, North of Xor-Hist Wayshrine Bone Colossi are large undead creatures constructed from many bones. While most bone colossi are elite enemies, smaller and weaker versions can be summoned by bonelords during battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bone_Colossus",
+        "page_title": "Online:Bone Colossus",
+        "revision_id": 3606806,
+        "retrieved_at": "2026-08-18T19:29:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

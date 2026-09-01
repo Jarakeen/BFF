@@ -1,0 +1,66 @@
+{
+    "id": "giant_scorpion",
+    "name": "Giant Scorpion",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Alik'r Desert, Ancestor Landing, Dawnmead, Salas En, Tu'whacca's Throne",
+    "species": "Giant Scorpion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Pincer",
+            "description": "The giant scorpion attacks with a pincer, dealing minor physical damage."
+        },
+        {
+            "name": "Sting",
+            "description": "The giant scorpion attacks with its tail, dealing minor physical damage on hit then minor poison damage over 8 seconds."
+        },
+        {
+            "name": "Blurred Strike",
+            "description": "The giant scorpion attacks twice with its pincers, dealing low physical damage with each strike. This can be blocked to set the giant scorpion off-balance."
+        },
+        {
+            "name": "Paralyze",
+            "description": "The giant scorpion channels an attack with its tail before striking with it, dealing low physical damage and snaring for 8 seconds. This can be interrupted to set the giant scorpion off-balance. Blocking prevents the snare."
+        },
+        {
+            "name": "Hardened Carapace",
+            "description": "The giant scorpion glows slightly, reducing its damage taken."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The same applies for giant scorpions summoned by spriggans.",
+        "Giant Scorpions found within the Nilata Ruins, Craglorn, Hew's Bane, and Northern Elsweyr are also simply named \"Scorpion\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Burdensome Beasts: Daedric creatures from Plokun's menagerie run wild across Blackwood.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "A Marriage in Ruins: Find out what happened to a mage and her sister.",
+        "Morwha's Curse: Help the Ash'abah concoct a poison antidote.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible."
+    ],
+    "summary": "Giant Scorpions are large predatory arthropods commonly found in the arid regions of Tamriel.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Giant_Scorpion",
+        "page_title": "Online:Giant Scorpion",
+        "revision_id": 3584460,
+        "retrieved_at": "2026-08-12T21:15:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

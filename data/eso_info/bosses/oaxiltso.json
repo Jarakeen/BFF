@@ -1,0 +1,354 @@
+{
+    "id": "oaxiltso",
+    "name": "Oaxiltso",
+    "content_id": "rockgrove",
+    "content_name": "Rockgrove",
+    "location": "Rockgrove, Ruined Springs",
+    "species": "Argonian Behemoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "19,086,236",
+        "veteran": "62,872,740",
+        "hardmode": "125,745,480 (Hard Mode)"
+    },
+    "abilities": [
+        {
+            "name": "Marsh Masher",
+            "description": "A basic melee attack dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Ravenous Chomp",
+            "description": "Oaxiltso performs a deep bite at his target, dealing massive physical damage. This can be blocked.",
+            "damage_type": null
+        },
+        {
+            "name": "Savage Blitz",
+            "description": "Oaxiltso charges forward and chomps the farthest (within 25m range) target, dealing massive physical damage. This can (and should) be dodged by the target and everyone on Oaxiltso's path, should he charge through the group.",
+            "damage_type": null
+        },
+        {
+            "name": "Fiery Stomp",
+            "description": "Oaxiltso performs a series of three stomping attacks, first stomping each of his feet, and ending with a jumping stomp. All three release flaming trails outward which deal high flame damage each. There isn't any AoE indicator during this ability.",
+            "damage_type": null
+        },
+        {
+            "name": "Blistering Smash",
+            "description": "Oaxiltso slams his fists into the ground, exploding the earth struck, as indicated by a large red circle. The initial hit deals very high physical damage, and the lingering area deals continuous high flame damage. This can be performed both up close or standing further away, spawning the cracked earth near his target.",
+            "damage_type": null
+        },
+        {
+            "name": "Noxious Sludge",
+            "description": "Oaxiltso retches poison on two targets in the party, prioritizing those farthest from the pools in the corners of the arena, if he can, otherwise he will select random targets. Poisoned targets will take ramping poison damage and drop Noxious Pools (small poison AOE) at their feet until they cleanse the effect by walking into the pools (which will turn the pool poisonous for a duration, dealing damage to anyone standing in it and not cleansing poisoned players).",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Havocrel Annihilators",
+            "description": "At 90%/75%/50%/25% health, Oaxiltso howls to Mehrunes Dagon for aid, causing three meteors and then a Havocrel Annihilator to fall from the sky into the arena, in blasts indicated by charging AoE circles, dealing high flame damage. On Veteran difficulty, Havocrel Annihilators have a noteworthy ability to cast enraging aura on themselves shortly after entering the fight - if Oaxiltso comes in its range, both him and the Havocrel enrage, boosting damage from all sources originating from their abilities, including poison DoTs and Noxious Pools. Havocrels should be burned down as quickly as possible when they appear (the last one can be held away from the boss, instead).",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Death Hoppers",
+            "description": "Occasionally, Death Hoppers are summoned during the fight to assist.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Oaxiltso charges forward and chomps the farthest (within 25m range) target, dealing massive physical damage. This can (and should) be dodged by the target and everyone on Oaxiltso's path, should he charge through the group.",
+            "name": "Savage Blitz",
+            "links": [],
+            "mechanic_type": "charge",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Oaxiltso performs a series of three stomping attacks, first stomping each of his feet, and ending with a jumping stomp. All three release flaming trails outward which deal high flame damage each. There isn't any AoE indicator during this ability.",
+            "name": "Fiery Stomp",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Oaxiltso slams his fists into the ground, exploding the earth struck, as indicated by a large red circle. The initial hit deals very high physical damage, and the lingering area deals continuous high flame damage. This can be performed both up close or standing further away, spawning the cracked earth near his target.",
+            "name": "Blistering Smash",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": true,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Oaxiltso retches poison on two targets in the party, prioritizing those farthest from the pools in the corners of the arena, if he can, otherwise he will select random targets. Poisoned targets will take ramping poison damage and drop Noxious Pools (small poison AOE) at their feet until they cleanse the effect by walking into the pools (which will turn the pool poisonous for a duration, dealing damage to anyone standing in it and not cleansing poisoned players).",
+            "name": "Noxious Sludge",
+            "links": [],
+            "mechanic_type": "targeted_hazard",
+            "damage_type": null,
+            "target_count": 2,
+            "requires_movement": true,
+            "requires_positioning": true,
+            "requires_cleanse": true,
+            "persistent_hazard": true,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "At 90%/75%/50%/25% health, Oaxiltso howls to Mehrunes Dagon for aid, causing three meteors and then a Havocrel Annihilator to fall from the sky into the arena, in blasts indicated by charging AoE circles, dealing high flame damage. On Veteran difficulty, Havocrel Annihilators have a noteworthy ability to cast enraging aura on themselves shortly after entering the fight - if Oaxiltso comes in its range, both him and the Havocrel enrage, boosting damage from all sources originating from their abilities, including poison DoTs and Noxious Pools. Havocrels should be burned down as quickly as possible when they appear (the last one can be held away from the boss, instead).",
+            "name": "Summon Havocrel Annihilators",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Oaxiltso",
+            "line": "Come! Fall!",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "You! Will not! Remain!",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "She! Will arrive!",
+            "trigger": "Idling before combat:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Burn! In! Flames!",
+            "trigger": "Fire attack:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Share the fire with you!",
+            "trigger": "Fire attack:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Soak you in spit!",
+            "trigger": "Noxious Sludge attack:",
+            "ability": "Noxious Sludge"
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Ha ha! Spit melt you away!",
+            "trigger": "Noxious Sludge attack:",
+            "ability": "Noxious Sludge"
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Crush you like falling boulder!",
+            "trigger": "Charge attack:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "You cannot run! Too slow!",
+            "trigger": "Charge attack:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Chase you down, small ones!",
+            "trigger": "Charge attack:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Break you to pieces!",
+            "trigger": "Stomp attack:",
+            "ability": "Fiery Stomp"
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Crush outsiders!",
+            "trigger": "Stomp attack:",
+            "ability": "Fiery Stomp"
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "So small.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "Not even hurt.",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "Oaxiltso",
+            "line": "More! Bring more!",
+            "trigger": "Group wipe:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before combat:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "Come! Fall!",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "You! Will not! Remain!",
+                "trigger": "Idling before combat:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "She! Will arrive!",
+                "trigger": "Idling before combat:",
+                "ability": null
+            }
+        ],
+        "Fire attack:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "Burn! In! Flames!",
+                "trigger": "Fire attack:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "Share the fire with you!",
+                "trigger": "Fire attack:",
+                "ability": null
+            }
+        ],
+        "Noxious Sludge attack:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "Soak you in spit!",
+                "trigger": "Noxious Sludge attack:",
+                "ability": "Noxious Sludge"
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "Ha ha! Spit melt you away!",
+                "trigger": "Noxious Sludge attack:",
+                "ability": "Noxious Sludge"
+            }
+        ],
+        "Charge attack:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "Crush you like falling boulder!",
+                "trigger": "Charge attack:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "You cannot run! Too slow!",
+                "trigger": "Charge attack:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "Chase you down, small ones!",
+                "trigger": "Charge attack:",
+                "ability": null
+            }
+        ],
+        "Stomp attack:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "Break you to pieces!",
+                "trigger": "Stomp attack:",
+                "ability": "Fiery Stomp"
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "Crush outsiders!",
+                "trigger": "Stomp attack:",
+                "ability": "Fiery Stomp"
+            }
+        ],
+        "Group wipe:": [
+            {
+                "speaker": "Oaxiltso",
+                "line": "So small.",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "Not even hurt.",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "Oaxiltso",
+                "line": "More! Bring more!",
+                "trigger": "Group wipe:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Of Stone and Steam: Save the souls of Rockgrove's fallen and drive back the Dagonite invaders."
+    ],
+    "summary": "Oaxiltso is an Argonian behemoth and a member of the Sul-Xan tribe who can be found in the Ruined Springs of Rockgrove. He is the first boss of the trial. Unlike most behemoths, his scales are red; Dust-On-Scales believes this to be some form of corruption, possibly resulting from Oaxiltso being altered somehow by Flame-Herald Bahsei's Daedric magic.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Oaxiltso",
+        "page_title": "Online:Oaxiltso",
+        "revision_id": 3304340,
+        "retrieved_at": "2026-09-01T01:54:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

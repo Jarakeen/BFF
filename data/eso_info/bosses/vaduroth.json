@@ -1,0 +1,288 @@
+{
+    "id": "vaduroth",
+    "name": "Vaduroth",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Castle Thorn — Sanctuary of Lament",
+    "species": "Wraith-of-Crows",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "5,004,472",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chop",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Shadow Blast",
+            "description": "A basic ranged attack dealing moderate magical damage."
+        },
+        {
+            "name": "Rend",
+            "description": "Vaduroth prepares for a vicious swing, raising its axe above its head then driving it down at its target, dealing very high physical damage and knocking them down. This can be blocked."
+        },
+        {
+            "name": "Crow's Feast",
+            "description": "Vaduroth conjures a storm of ravenous crows that begins flying around the arena independently, indicated by a large red circle, dealing continuous high physical damage. The swarm also throws projectiles at nearby targets outside of it, which deals moderate magical damage."
+        },
+        {
+            "name": "Discard",
+            "description": "At 75%/50%/25% health, Vaduroth throws its sickle away from itself in the arena, which briefly animates on its own and pulls targets to it, who are stunned and flailing the entire way (with no way to interrupt). Once at the sickle, targets are imbued with shadowy energy, indicated by growing red circles, which combusts dealing moderate magical damage, and deals more damage if multiple targets remain close together. Defeating the animated sickle causes it to remain lodged into the ground temporarily, with a green circle around it."
+        },
+        {
+            "name": "Sickle Toss",
+            "description": "While in the green circle, looking up to the ceiling at any of the hanging corpses shows a \"Use\" prompt, and making use of the prompt causes the sickle to be thrown at the highlighted body. This results in the body exploding and dropping Virulent Viscera into the arena that is allied against the boss."
+        },
+        {
+            "name": "Harvest",
+            "description": "Vaduroth teleports to one of the strapped corpses and brings them back to life as a Reanimated Vampire so that they can assist in the fight. The reanimation process grants a small damage shield to Vaduroth and the reanimated vampire. This always occurs after \"Discard\"."
+        },
+        {
+            "name": "Collection",
+            "description": "Vaduroth flies up to the hanging corpses and slashes one, spawning a Virulent Viscera of its own to assist in the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Sing the void. Pull it out. Arrive.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Spike of blood. Build her dolls. Send us home.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Place is now. Ready? A simple drip.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "His plan still thrives, swarms, breeds. Hunters gather. They know.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Not as were. Open meat. Stay.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Drain!",
+            "trigger": "When it uses its sickle",
+            "ability": "Discard"
+        },
+        {
+            "speaker": "",
+            "line": "Spoiler…",
+            "trigger": "When it uses its sickle",
+            "ability": "Discard"
+        },
+        {
+            "speaker": "",
+            "line": "Empty. Flawed. Barely meat. No use for her.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Shells. Nothing but shells. Filled with empty! Now you're done.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You do nothing. No soul. No teeth. Void. Just void!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Song of dust. Simple dirt and bones. Peel the scales! Failure.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Memories. Thoughts. Words. All have gone. To the hooks!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Skin of wheat. Chaff of soul. Sifted.",
+            "trigger": "???",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Is it flesh? Yes. Drink it up.",
+            "trigger": "???",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "It falls. No meaning. Step across! Delight.",
+            "trigger": "???",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Fall. Fall. Fall! She rejoices. Closer now.",
+            "trigger": "???",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "A crack opens. It pours out! Spills. No more.",
+            "trigger": "???",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before combat": [
+            {
+                "speaker": "",
+                "line": "Sing the void. Pull it out. Arrive.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Spike of blood. Build her dolls. Send us home.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Place is now. Ready? A simple drip.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "His plan still thrives, swarms, breeds. Hunters gather. They know.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Not as were. Open meat. Stay.",
+                "trigger": "Idling before combat",
+                "ability": null
+            }
+        ],
+        "When it uses its sickle": [
+            {
+                "speaker": "",
+                "line": "Drain!",
+                "trigger": "When it uses its sickle",
+                "ability": "Discard"
+            },
+            {
+                "speaker": "",
+                "line": "Spoiler…",
+                "trigger": "When it uses its sickle",
+                "ability": "Discard"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "Empty. Flawed. Barely meat. No use for her.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Shells. Nothing but shells. Filled with empty! Now you're done.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You do nothing. No soul. No teeth. Void. Just void!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Song of dust. Simple dirt and bones. Peel the scales! Failure.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Memories. Thoughts. Words. All have gone. To the hooks!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "???": [
+            {
+                "speaker": "",
+                "line": "Skin of wheat. Chaff of soul. Sifted.",
+                "trigger": "???",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Is it flesh? Yes. Drink it up.",
+                "trigger": "???",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "It falls. No meaning. Step across! Delight.",
+                "trigger": "???",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Fall. Fall. Fall! She rejoices. Closer now.",
+                "trigger": "???",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "A crack opens. It pours out! Spills. No more.",
+                "trigger": "???",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The corpses hanging from the arena ceiling are comprised of; a bristleback, a broodhand, a chaurus, a commoner, an echatere, a Falmer, a noble, an ogre, a sabre cat, a senche-raht, a Vale deer doe, a troll, a werewolf, and a wolf. However, they are counted as interactive objects rather than NPCs (as such, no nameplate/health)."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood of the Past: Launch a frontal assault on a Vampire Lord's castle.",
+        "Pledge: Castle Thorn: Prove you are truly Undaunted by clearing Castle Thorn."
+    ],
+    "summary": "Vaduroth is a Wraith-of-Crows who acts as the third boss of Castle Thorn. It is encountered in the Sanctuary of Lament, a room filled with corpses hanging on hooks from the ceiling and some strapped to tables around.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vaduroth",
+        "page_title": "Online:Vaduroth",
+        "revision_id": 3427585,
+        "retrieved_at": "2026-08-12T21:16:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

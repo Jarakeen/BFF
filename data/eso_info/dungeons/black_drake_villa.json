@@ -1,0 +1,42 @@
+{
+    "id": "black_drake_villa",
+    "name": "Black Drake Villa",
+    "content_type": "dungeon",
+    "summary": "Black Drake Villa is a group dungeon on the Gold Coast. It is included in the Flames of Ambition DLC alongside The Cauldron. The entrance is located along Varen's Wall northwest of Kvatch. Badgers, nixads, rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [
+        "kinras_ironeye",
+        "minotaur",
+        "captain_geminus",
+        "true_sworn",
+        "pyroturge_encratis",
+        "sentinel_aksalaz"
+    ],
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "dungeons",
+            "name": "Dungeon",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Fort Wariel appears in this location in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Black_Drake_Villa",
+        "page_title": "Online:Black Drake Villa",
+        "revision_id": 3608159,
+        "retrieved_at": "2026-08-12T21:14:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

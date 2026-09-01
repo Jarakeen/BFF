@@ -1,0 +1,77 @@
+{
+    "id": "kra_gh_the_dreugh_king",
+    "name": "Kra'gh the Dreugh King",
+    "content_id": "fungal_grotto_i",
+    "content_name": "Fungal Grotto I",
+    "location": "Fungal Grotto I",
+    "species": "Dreugh",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,993,959",
+        "hardmode": "4,593,053"
+    },
+    "abilities": [
+        {
+            "name": "Entrance",
+            "description": "When Kra'gh the Dreugh King appears, it busts through a rock wall. Any player too close will get knocked back."
+        },
+        {
+            "name": "Jagged Swipe",
+            "description": "A basic melee attack that does moderate physical damage."
+        },
+        {
+            "name": "Lunging Strike",
+            "description": "A heavy melee attack that does high physical damage and knocks the target back. This can be blocked to stagger Kra'gh the Dreugh King instead."
+        },
+        {
+            "name": "Storm Flurry",
+            "description": "Kra'gh the Dreugh King channels a series of swipes at a target in front of it, dealing moderate shock damage over time."
+        },
+        {
+            "name": "Lightning Tow",
+            "description": "Kra'gh the Dreugh King pulls a target that is far away toward himself."
+        },
+        {
+            "name": "Lightning Field",
+            "description": "Kra'gh the Dreugh King summons a large storm around himself, dealing very high shock damage as indicated by a red circle. Blocking doesn't reduce damage taken."
+        },
+        {
+            "name": "Summon Mudcrabs",
+            "description": "At 66% and 36% health, the boss will run to a fixed location in the arena to summon a few weak mudcrabs to attack the party. These should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Kings of the Grotto: Clear out an old grotto for a group of Mephala worshipers.",
+        "Pledge: Fungal Grotto I: Explore Fungal Grotto I and return Undaunted.",
+        "Fungal Grotto Pledge: Explore Fungal Grotto and return Undaunted. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "This article is about the creature. For the item set, see Kra'gh. Kra'gh the Dreugh King is a dreugh and the final boss of Fungal Grotto I. It is the namesake of the Kra'gh set and the basis of a trophy, bust, and outfit style.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kra%27gh_the_Dreugh_King",
+        "page_title": "Online:Kra'gh the Dreugh King",
+        "revision_id": 3297987,
+        "retrieved_at": "2026-08-12T21:23:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

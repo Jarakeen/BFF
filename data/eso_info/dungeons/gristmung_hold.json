@@ -1,0 +1,18 @@
+{
+    "id": "gristmung_hold",
+    "name": "Gristmung Hold",
+    "content_type": "dungeon",
+    "summary": "Gristmung Hold is a Daedric fortress in the middle of eastern Solstice.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gristmung_Hold",
+        "page_title": "Online:Gristmung Hold",
+        "revision_id": 3584675,
+        "retrieved_at": "2026-08-12T21:25:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

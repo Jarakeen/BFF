@@ -1,0 +1,40 @@
+{
+    "id": "dremora",
+    "name": "Dremora",
+    "content_id": "city_of_ash_i",
+    "content_name": "City of Ash I",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Dialogue spoken by Dremora in the Imperial City can be found here.",
+        "Dialogue spoken by Dremora in Blackwood can be found here.",
+        "The model of the male and female Dremora was upgraded starting with The Deadlands DLC, appearing with sharper textures, brighter eyes, and a slightly darker red skin tone."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Dremora are an intelligent, humanoid Daedric race that despises mortals. They refer to themselves as the Kyn. While Dremora are commonly associated with Mehrunes Dagon, various clans can be found serving most of the Princes, though some of the clans are not aligned with anyone and act as mercenaries in Oblivion. Dremora society operates in a rigid caste system with an emphasis on loyalty and clan ties. On the other end of the scale are the \"Clanless\", individual Dremora that for any number of reasons are not part of any clan. These individuals can be looked down upon depending on their situation. When multiple clans are serving the same Prince, intense rivalries can form. An example of this would be the Deathbringer and the Foolkillers clans that serve Molag Bal, which resulted in the latter being reduced to a single being. Dremora have red eyes and often have reddish brown skin, with some linked to Molag Bal having a paler blueish hue. The Xivilai and Xivkyn are races similar to the Dremora, but can be differentiated by the Xivilai having yellow eyes and the Xivkyn having solid glowing blue eyes. The Dremora have a chance to drop the Void Alloy Rivets antiquity lead for the Spaulder of Ruin. For more information, see the lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dremora",
+        "page_title": "Online:Dremora",
+        "revision_id": 3605095,
+        "retrieved_at": "2026-08-12T21:17:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,139 @@
+{
+    "id": "warlord_tzogvin",
+    "name": "Warlord Tzogvin",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "Warlord Tzogvin's Lair, Frostvault",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,654,115",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Landal Gevont",
+            "line": "Wait! It's their chieftain! I might be able to arrange a truce, maybe even a trade for the stone!",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Landal Gevont",
+            "line": "<Flattering Goblin gibberish.>",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Warlord Tzogvin",
+            "line": "<Furious Goblin gibberish.>",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Landal Gevont",
+            "line": "Oh my, that was … detailed. <Pleading Goblin gibberish.>",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Warlord Tzogvin",
+            "line": "<Contemptuous Goblin gibberish.> [Casts a cyclone at him]",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Landal Gevont",
+            "line": "No, no, no, no! Help!",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "Warlord Tzogvin",
+            "line": "<Mocking Goblin laughter.>",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "Landal Gevont",
+                "line": "Wait! It's their chieftain! I might be able to arrange a truce, maybe even a trade for the stone!",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Landal Gevont",
+                "line": "<Flattering Goblin gibberish.>",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Warlord Tzogvin",
+                "line": "<Furious Goblin gibberish.>",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Landal Gevont",
+                "line": "Oh my, that was … detailed. <Pleading Goblin gibberish.>",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Warlord Tzogvin",
+                "line": "<Contemptuous Goblin gibberish.> [Casts a cyclone at him]",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Landal Gevont",
+                "line": "No, no, no, no! Help!",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "Warlord Tzogvin",
+                "line": "<Mocking Goblin laughter.>",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He shares much of the same animations as The Celestial Warrior when fought, including the same sword model as the Warrior's Shehai. Even when his sword is summoned, he uses the exact same spell to cast it, showing the same magical runes in the air.",
+        "The original conversation between Tzogvin and Landal went somewhat differently:",
+        "The throne he sits on is identical to the chair used by the Harmonic Auditor. This can be seen by the unnecessary life-support vest connected to it."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Lock and Keystone: Search the depths of a Dwemer vault for a powerful artifact.",
+        "Pledge: Frostvault: Prove you are truly Undaunted by clearing Frostvault."
+    ],
+    "summary": "Warlord Tzogvin is the Riekling chieftain of the Coldsnap Tribe that serves as the first boss of Frostvault. He has plundered the soul gem of the Dwemer Excavation Machine and must be killed so that it can be obtained. Landal attempts to negotiate with him, but as Tzogvin's tribe has just been slaughtered by your group, he responds to him only with contempt, and to you with violence. At the start of the fight, he will use a dwarven warhammer to attack. At some point during the battle, he will throw it away and create a sword out of thin air and jump up, crashing back down and dealing damage. With his greatsword, he uses a variety of flame-based attacks. Later on, he will summon a battleaxe, which grants him access to frost-based attacks and cyclones. If at any point the group is wiped, he will sit back down on his makeshift dwemer throne.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Warlord_Tzogvin",
+        "page_title": "Online:Warlord Tzogvin",
+        "revision_id": 3347226,
+        "retrieved_at": "2026-08-12T21:23:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

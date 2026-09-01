@@ -1,0 +1,408 @@
+{
+    "id": "nisaazda",
+    "name": "Nisaazda",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Moongrave Fane",
+    "species": "",
+    "reaction": "Varies",
+    "health": {
+        "normal": "1,010,391",
+        "veteran": "2,030,064",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Blood Bolt",
+            "description": "A basic ranged attack."
+        },
+        {
+            "name": "Blood Swirl",
+            "description": "Nisaazda waves her hands together as she channels a spell, creating a massive pool of swirling blood in the center of the arena, causing high continuous damage if standing within."
+        },
+        {
+            "name": "Crimson Cloud",
+            "description": "Nisaazda disappears into a cloud of swirling blood mist and moves away from you in the arena, indicated by a circular AoE, dealing high damage if you make contact with the mist."
+        },
+        {
+            "name": "Corpuscle Cannonade",
+            "description": "Nisaazda holds up her staff to the air and unleashes a barrage of blood projectiles at you. This can be interrupted."
+        },
+        {
+            "name": "Impregnable Corpulence",
+            "description": "Nisaazda summons a group of Hemonculi to assist. They initially have a damage immunity shield, which can only be removed by destroying a Hemo Helot near them."
+        },
+        {
+            "name": "Summon Sangiin's Thirst",
+            "description": "When Nisaazda is away from you, she will start performing a spell to summon the blood gargoyle, Sangiin's Thirst. You must fling a Hemo Helot at her to stop her from doing so. Nisaazda summoning her blood creatures"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Chevalier Renald",
+            "line": "This is insanity, Grundwulf! Can't you see that these Hollowfangs spout nothing but hollow promises?",
+            "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Grundwulf",
+            "line": "Dragons are here, Renald! The world will end in fire before your fabled Emperor comes! If you won't act, I will!",
+            "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "The Devourer has chosen, old bat! Do not trouble us again!",
+            "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "Renald is slippery, but Nisaazda will catch him in time. You will not be so lucky.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Hollowfang Beastmaster",
+            "line": "There are many holes through which a rat can scurry here. Keep on guard.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "I've had enough wading through you leeches.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Hollowfang Assassin",
+            "line": "Nisaazda, they are coming!",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "The Dragon lies beneath that temple. I can smell its blood on the air. Push through!",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "That's far enough, old bat!",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "Out of my way, leech. I have more pressing concerns than ending your life.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "Surrender, Nisaazda, or are you going to fight us all?.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "This one won't have to.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "You've already lost your friend, next your life!",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "I've skinned many a dragon. A cat will not be trouble.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "Cats aren't the only ones who toy with their prey.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "This one has no fear of your sword, old bat. She is too swift.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "Nisaazda will feed you to her weakest warriors!",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "Such a menacing kitten.",
+            "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "You were always the stronger swordsman, Grundwulf, but not the better one.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Grundwulf",
+            "line": "Damn you, Renald! We can end it all! The empire can be reborn! Right here!",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Chevalier Renald",
+            "line": "Whatever you become through this madness, it will not be Emperor.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Grundwulf",
+            "line": "Then do it, Renald! I'd rather to die with blade in hand, than go back to that honorless life of yours!",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "",
+            "line": "<Nisaazda then appears and attacks Chevalier Renald.>",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "You hesitated, old bat.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Grundwulf",
+            "line": "I didn't need help.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "We have no more time for this. His allies are here.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Nisaazda",
+            "line": "Nisaazda will exact a debt of blood owed for her clan!",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        },
+        {
+            "speaker": "Grundwulf",
+            "line": "You're owed that much.",
+            "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+            "ability": "Summon Sangiin's Thirst"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins": [
+            {
+                "speaker": "Chevalier Renald",
+                "line": "This is insanity, Grundwulf! Can't you see that these Hollowfangs spout nothing but hollow promises?",
+                "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Grundwulf",
+                "line": "Dragons are here, Renald! The world will end in fire before your fabled Emperor comes! If you won't act, I will!",
+                "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "The Devourer has chosen, old bat! Do not trouble us again!",
+                "trigger": "When you first enter Moongrave Fane, you may overhear Nisaazda giving Chevalier Renald an ultimatum, before she heads further into the ruins",
+                "ability": "Summon Sangiin's Thirst"
+            }
+        ],
+        "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon": [
+            {
+                "speaker": "Nisaazda",
+                "line": "Renald is slippery, but Nisaazda will catch him in time. You will not be so lucky.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Hollowfang Beastmaster",
+                "line": "There are many holes through which a rat can scurry here. Keep on guard.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "I've had enough wading through you leeches.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Hollowfang Assassin",
+                "line": "Nisaazda, they are coming!",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "The Dragon lies beneath that temple. I can smell its blood on the air. Push through!",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "That's far enough, old bat!",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "Out of my way, leech. I have more pressing concerns than ending your life.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "Surrender, Nisaazda, or are you going to fight us all?.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "This one won't have to.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "You've already lost your friend, next your life!",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "I've skinned many a dragon. A cat will not be trouble.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "Cats aren't the only ones who toy with their prey.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "This one has no fear of your sword, old bat. She is too swift.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "Nisaazda will feed you to her weakest warriors!",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "Such a menacing kitten.",
+                "trigger": "The following dialogue is in chronological order but is unsorted. It occurs throughout the dungeon",
+                "ability": "Summon Sangiin's Thirst"
+            }
+        ],
+        "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted": [
+            {
+                "speaker": "Chevalier Renald",
+                "line": "You were always the stronger swordsman, Grundwulf, but not the better one.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Grundwulf",
+                "line": "Damn you, Renald! We can end it all! The empire can be reborn! Right here!",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Chevalier Renald",
+                "line": "Whatever you become through this madness, it will not be Emperor.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Grundwulf",
+                "line": "Then do it, Renald! I'd rather to die with blade in hand, than go back to that honorless life of yours!",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "",
+                "line": "<Nisaazda then appears and attacks Chevalier Renald.>",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "You hesitated, old bat.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Grundwulf",
+                "line": "I didn't need help.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "We have no more time for this. His allies are here.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Nisaazda",
+                "line": "Nisaazda will exact a debt of blood owed for her clan!",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            },
+            {
+                "speaker": "Grundwulf",
+                "line": "You're owed that much.",
+                "trigger": "When Renald confronts Grundwulf, Nisaazda will attack the chevalier while he is distracted",
+                "ability": "Summon Sangiin's Thirst"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Sanguine Successor: Prevent a clan of vampires from draining the blood of a captured dragon.",
+        "Pledge: Moongrave Fane: Prove you are truly Undaunted by conquering Moongrave Fane."
+    ],
+    "summary": "Nisaazda is the Khajiit Clan Mother of the vampiric Hollowfang Clan, who have come to Moongrave Fane to take the power within for themselves. She has manipulated Grundwulf of the Dragonguard, playing on his desires for a true Dragonborn to take the throne of Cyrodiil and sort out the mess that Tamriel is in.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nisaazda",
+        "page_title": "Online:Nisaazda",
+        "revision_id": 3607022,
+        "retrieved_at": "2026-08-12T21:29:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

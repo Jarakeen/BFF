@@ -1,0 +1,71 @@
+{
+    "id": "xivilai",
+    "name": "Xivilai",
+    "content_id": "crypt_of_hearts_i",
+    "content_name": "Crypt of Hearts I",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that deals low physical damage."
+        },
+        {
+            "name": "Heavy Attack",
+            "description": "The Xivilai performs an overhead swing that causes a frost explosion, dealing high frost damage. This can be blocked to set the Xivilai off-balance."
+        },
+        {
+            "name": "Hand of Flame",
+            "description": "The Xivilai sends three fire lines towards its target, indicated by moving red circles, dealing moderate flame damage. The fires split off a second time shortly afterward. This can be interrupted to set the Xivilai off-balance."
+        },
+        {
+            "name": "Lightning Grasp",
+            "description": "The Xivilai raises their hand and shoot a bolt of lightning which strikes five times in their order of apparition, as indicated by small red circles, dealing low shock damage each."
+        },
+        {
+            "name": "Ice Cage",
+            "description": "The Xivilai summons a ring of frost around themselves, indicated by a donut-shaped red circle, dealing continuous moderate frost damage and snaring targets. This cannot be blocked."
+        },
+        {
+            "name": "Summon Daedra",
+            "description": "The Xivilai summons a Daedra to fight for them. It can either be a Clannfear, Flame Atronach, Flame Ogrim, Spider Daedra, or a Winged Twilight. The daedra scales with the difficulty and location of the summoner. The daedra spawns with the summoner's current Health, for a maximum of 80% of the summoner's Max Health and have extreme damage resistance during the summoning animation. The summoner's Physical and Spell Resistance are reduced to 0 while a summon is active, as indicated by a blue glow on them. The daedra automatically dies if its summoner is defeated."
+        },
+        {
+            "name": "Empower Weapon: Frost",
+            "description": "The Xivilai infuse their weapon with frost which makes \"Quick Strike\" apply a snaring effect (Frost Edge)."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Crossing the Chasm: Secure the Chasm and gain access to Molag Bal's personal domain.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "Hall of Judgment: Rescue Mages Guild members from Coldharbour's justice.",
+        "Justice for the Fallen: Discover the true scope of the plan that involves the Soul Reapers.",
+        "The Mad God's Bargain: Release Shalidor's sanctuary from Sheogorath's lingering hold."
+    ],
+    "summary": "Arlimahera's Grip, The Chasm, Court of Contempt, Dark Anchors, Faldar's Tooth, Worm Cult Nest\nDeadlands: The Ashen Forest, Xynaa's Sanctuary\nDestruction's Solace, Fort Sundercliff\nNorth of Fallen Hues Edifice, South of Quires Wind, The Underweave — Underweave Heart\nEastern Solstice, Deetra Grotto, Near Warm-Stone Village, Worm Cult Camp north of Western Solstice, Xul-Katama Xivilai (listenLink⏵) are powerful horned humanoid Daedra who often serve Molag Bal. They wield two-handed weapons in battle, usually Daedric battle axes. They often come in pairs. They have blue skin and yellow eyes, and somewhat resemble the Dremora, who can be differentiated by their red eyes.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xivilai",
+        "page_title": "Online:Xivilai",
+        "revision_id": 3608259,
+        "retrieved_at": "2026-08-12T21:18:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

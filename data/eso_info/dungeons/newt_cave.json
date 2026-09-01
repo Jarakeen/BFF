@@ -1,0 +1,29 @@
+{
+    "id": "newt_cave",
+    "name": "Newt Cave",
+    "content_type": "dungeon",
+    "summary": "Newt Cave is a cave in southeastern Cyrodiil, southeast of Cropsford containing wildlife.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Newt Cave also appeared in Oblivion.",
+        "Prior to Update 19 (Patch 4.1.5), only one of the bosses would spawn at any given time."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Newt_Cave",
+        "page_title": "Online:Newt Cave",
+        "revision_id": 3598800,
+        "retrieved_at": "2026-08-12T21:30:08Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

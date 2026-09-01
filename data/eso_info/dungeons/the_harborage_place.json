@@ -1,0 +1,23 @@
+{
+    "id": "the_harborage_place",
+    "name": "The Harborage (place)",
+    "content_type": "dungeon",
+    "summary": "The Harborage is a cave in the wilderness which the Prophet has adopted as his home and refuge. The cave is located near the first major city of each alliance, and serves as the starting point for each stage of the Main Quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Like wayshrines and certain types of dungeons, the Harborage can be directly fast traveled to.",
+        "Originally, a purple force field would prevent you from entering the Harborage if you attempted to enter before reaching level 5.",
+        "While there is a Harborage in all three Alliances, you can only access the one in your own Alliance's territory.",
+        "Between Updates 9 and 12, you could also access other Alliance's Harborages. After being called to the Harborage by The Prophet it was possible to continue the quest inside any Harborage, however, you would always be sent to your own Alliance's Harborage at the end of the quest."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Harborage_(place)",
+        "page_title": "Online:The Harborage (place)",
+        "revision_id": 3505089,
+        "retrieved_at": "2026-08-12T21:25:24Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

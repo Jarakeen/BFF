@@ -1,0 +1,168 @@
+{
+    "id": "pyroturge_encratis",
+    "name": "Pyroturge Encratis",
+    "content_id": "black_drake_villa",
+    "content_name": "Black Drake Villa",
+    "location": "Black Drake Villa — Black Drake Athenaeum, Flooded Gardens",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,157,473",
+        "veteran": "4,781,923",
+        "hardmode": "8,607,464"
+    },
+    "abilities": [
+        {
+            "name": "Fireball",
+            "description": "A basic range attack dealing moderate flame damage."
+        },
+        {
+            "name": "Fire Hand",
+            "description": "Pyroturge Encratis release a bout of flame from his hand, dealing continuous flame damage. He will adjust his positioning if you attempt to strafe to avoid the attack."
+        },
+        {
+            "name": "Explosion",
+            "description": "Pyroturge Encratis casts a spell that triggers a fiery explosion at your location, as indicated by a quickly growing circular AoE, dealing very high flame damage."
+        },
+        {
+            "name": "Inner Bomb",
+            "description": "Pyroturge Encratis casts a spell that triggers a delayed explosion within you, indicated by a small circular AoE that tracks your movement. The culminating explosion deals very high flame damage. You must time your dodge with the explosion's timing."
+        },
+        {
+            "name": "Infernal Summoning - Close",
+            "description": "Pyroturge Encratis creates a large flame swirl beneath his feet, indicated by a very large circular AoE, dealing continuous high flame damage over time. During the course of the swirl, several Burning Specters will appear to assist Pyroturge Encratis. They have relatively low health and should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Infernal Summoning - Far",
+            "description": "Similar to the above, Pyroturge Encratis summons an even larger flame swirl that covers almost the whole of the arena, leaving only a small circle in the middle where he is, forcing you close to him. During the swirl, this time a lone Fire Behemoth is summoned, which poses a larger threat."
+        },
+        {
+            "name": "Escape",
+            "description": "Upon reaching 50% health, Pyroturge becomes invulnerable to damage and escapes the arena, crashing through a wall which creates Falling Rocks areas dealing moderate physical damage, leading to a secret lair. On the way, he regains health back up to 75%. He also gains access to some new abilities, on top of the previous ones."
+        },
+        {
+            "name": "Flame Fields",
+            "description": "Pyroturge Encratis summons several flame fields in front of himself, indicated by small circular AoEs. These are likely to overlap over each other, resulting in massive flame damage being applied if you stand in more than one at a time."
+        },
+        {
+            "name": "Teleport",
+            "description": "Pyroturge Encratis can teleport quickly to opposite ends of the lair. He often uses this to lead into his Infernal Summoning abilities."
+        },
+        {
+            "name": "Scalding Pit",
+            "description": "If you fall into the large central pit in the secret lair, you will take continuous high flame damage, and Grotto Salamanders will come out of grates to attack you. You must use any of the nearby steam vents to propel yourself back onto the edge of the arena where Pyroturge Encratis is located."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Pyroturge Encratis",
+            "line": "Someone else wants the book! We cannot allow this.",
+            "trigger": "He is found for the first time in the middle of the Grand Archive. There, he'll send his minions against you and put up a flaming barrier to block the way forward.",
+            "ability": "Infernal Summoning - Far"
+        },
+        {
+            "speaker": "Pyroturge Encratis",
+            "line": "Hold them off while I keep looking!",
+            "trigger": "He is found for the first time in the middle of the Grand Archive. There, he'll send his minions against you and put up a flaming barrier to block the way forward.",
+            "ability": "Infernal Summoning - Far"
+        },
+        {
+            "speaker": "Pyroturge Encratis",
+            "line": "The book isn't here. Burn this—burn it all! Our lord demands it!",
+            "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+            "ability": "Scalding Pit"
+        },
+        {
+            "speaker": "Captain Geminus",
+            "line": "You go. We must finish the job. I can delay these worms.",
+            "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+            "ability": "Scalding Pit"
+        },
+        {
+            "speaker": "Eveli Sharp-Arrow",
+            "line": "You take care of Captain Important there. I'm after the fire mage!",
+            "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+            "ability": "Scalding Pit"
+        },
+        {
+            "speaker": "Pyroturge Encratis",
+            "line": "You small creatures. The book belongs to the True-Sworn!",
+            "trigger": "After reaching the Walled Garden up ahead, you'll finally catch up and confront him",
+            "ability": "Escape"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "He is found for the first time in the middle of the Grand Archive. There, he'll send his minions against you and put up a flaming barrier to block the way forward.": [
+            {
+                "speaker": "Pyroturge Encratis",
+                "line": "Someone else wants the book! We cannot allow this.",
+                "trigger": "He is found for the first time in the middle of the Grand Archive. There, he'll send his minions against you and put up a flaming barrier to block the way forward.",
+                "ability": "Infernal Summoning - Far"
+            },
+            {
+                "speaker": "Pyroturge Encratis",
+                "line": "Hold them off while I keep looking!",
+                "trigger": "He is found for the first time in the middle of the Grand Archive. There, he'll send his minions against you and put up a flaming barrier to block the way forward.",
+                "ability": "Infernal Summoning - Far"
+            }
+        ],
+        "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus": [
+            {
+                "speaker": "Pyroturge Encratis",
+                "line": "The book isn't here. Burn this—burn it all! Our lord demands it!",
+                "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+                "ability": "Scalding Pit"
+            },
+            {
+                "speaker": "Captain Geminus",
+                "line": "You go. We must finish the job. I can delay these worms.",
+                "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+                "ability": "Scalding Pit"
+            },
+            {
+                "speaker": "Eveli Sharp-Arrow",
+                "line": "You take care of Captain Important there. I'm after the fire mage!",
+                "trigger": "In a rotunda near the archive's exit, you and Eveli will catch up with Encratis and one of his commanders, Captain Geminus",
+                "ability": "Scalding Pit"
+            }
+        ],
+        "After reaching the Walled Garden up ahead, you'll finally catch up and confront him": [
+            {
+                "speaker": "Pyroturge Encratis",
+                "line": "You small creatures. The book belongs to the True-Sworn!",
+                "trigger": "After reaching the Walled Garden up ahead, you'll finally catch up and confront him",
+                "ability": "Escape"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "flames_of_ambition_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Burning Secrets: Recover a book from an abandoned villa before it is burned to the ground.",
+        "Pledge: Black Drake Villa: Enter Black Drake Villa and return Undaunted."
+    ],
+    "summary": "Pyroturge Encratis is an Imperial member of the True-Sworn who can be encountered in Black Drake Villa. He is trying to burn down the estate. He serves as the final boss of the dungeon, and you will encounter him several times throughout the villa before finally confronting him. His fight consists of two phases; he will break through a carved wall and escape to a secret lair halfway through the battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pyroturge_Encratis",
+        "page_title": "Online:Pyroturge Encratis",
+        "revision_id": 3608168,
+        "retrieved_at": "2026-08-12T21:14:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

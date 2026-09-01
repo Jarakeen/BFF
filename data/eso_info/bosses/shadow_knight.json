@@ -1,0 +1,36 @@
+{
+    "id": "shadow_knight",
+    "name": "Shadow Knight",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Shadow Knight may refer to two NPCs:",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shadow_Knight",
+        "page_title": "Online:Shadow Knight",
+        "revision_id": 3305837,
+        "retrieved_at": "2026-08-19T03:20:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

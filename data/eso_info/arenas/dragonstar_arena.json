@@ -1,0 +1,31 @@
+{
+    "id": "dragonstar_arena",
+    "name": "Dragonstar Arena",
+    "content_type": "arena",
+    "summary": "The Dragonstar Arena is a group-based arena in Upper Craglorn. It is similar to the Trials in Craglorn, but is aimed at groups of four players rather than twelve. It comprises numerous waves of enemies across ten arena environments, and has both a Normal and Veteran mode. Veteran runs are recorded on a leaderboard system. You cannot respawn at the wayshrine until your entire team has been defeated, making soul gems a necessity for mid-fight resurrecting. A scamp named Kizna offers basic services in between rounds. Fighting in the arena grants access to loot chests after every round, which can contain items from several unique, powerful sets. A Swarming Wasp's nest is located along the road leading up to the Dragonstar Arena. The Snatch and Grab is at the base of the stairs leading up the hill to where the gladiator teams' camps are set up. Arena Enforcers patrol the Arena's exterior. The Inscrutable Enigma is beside a tent and a campfire all by her lonesome on the ledge to the right of the ruins leading into the Arena proper. A group of Legion soldiers called the Diamond's Daughters is camped out west of the entrance. Dorzogg's Dozen is set up west of the Diamond's Daughters. The Ballad of Dorzogg the Gutter-King can be found on a cart next to the eponymous Orc. The Blood-Feathers are camped out on the west side of the lower hill, south of Dorzogg's Dozen. Blood-Feathers Battle Slogans can be found on a cot under one of their small brown tents. The Blood-Feathers have a cooking fire in their camp. The Five Claws' camp lies east of the Diamond's Daughters, on the other side of the stairs. A list of potential battle cries can be found next to a backpack by the campfire. There is a cooking fire across from the Five Claws' camp, to the north. The Stone-Fish have a camp further east of the Five Claws. There is a cooking fire south of the Stone-Fish camp. The Lost Swords have a camp south of the Stone-Fish, a little ways down the hill. Pit-Fighter's Fare lies west of the Lost Swords' camp. There is a cooking fire beneath the store's tent. A pamphlet lies atop a crate next to the cooking fire. A chest can spawn next to the keg.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "arena_achievements",
+            "name": "Achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "As of Patch 2.5.8, Normal Dragonstar Arena can be accessed by non-Veteran\u0000HEALTH_VETERAN\u0000 characters as long as one member of the group is above level 50.[verification needed — Does this still apply in the present build?]",
+        "Prior to Update 12, this location used a Ruins map marker and could not be fast traveled to. It was replaced by a Gate map marker that could be fast traveled to yet lacked a blue highlighting glow, before it was replaced by the group instance icon in Update 20.",
+        "A Dragonstar arena also appeared in Shadowkey, although it is evidently a different one.",
+        "A similar challenge, called the Tournament of the Ten Bloods, is given by Boethia in TES IV: Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dragonstar_Arena",
+        "page_title": "Online:Dragonstar Arena",
+        "revision_id": 3511483,
+        "retrieved_at": "2026-08-12T21:46:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

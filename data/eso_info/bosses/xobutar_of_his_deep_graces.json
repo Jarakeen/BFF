@@ -1,0 +1,354 @@
+{
+    "id": "xobutar_of_his_deep_graces",
+    "name": "Xobutar of His Deep Graces",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "The Wounding",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "580,432",
+        "veteran": "1,319,167",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Crush",
+            "description": "Charged melee attack dealing moderate-high physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Chain",
+            "description": "Xobutar pulls you towards them with a blue chain made of magic, dealing moderate physical damage. When you reach Xobutar, you will be stunned, and need to break free before Xobutar uses Force Pulse.",
+            "damage_type": null
+        },
+        {
+            "name": "Force Pulse",
+            "description": "Xobutar channels an AoE of blue necromantic energy. When it peaks, it explodes, dealing high frost damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Necrotic Swarm",
+            "description": "Xobutar holds their staff up. Blue necromantic energy flows forth from the end of the staff which continuously launches tracking bolts at targets, each dealing direct moderate frost damage. Daedric Resonance and Daedric Shards occur at this time.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Resonance",
+            "description": "Areas dealing continuous moderate frost damage appear with a Lich Crystal at the center and disappear when the Lich Crystal explodes.",
+            "damage_type": null
+        },
+        {
+            "name": "Daedric Shards",
+            "description": "Lich Crystals rise from the Daedric Resonance areas, exploding after one second. If you're caught in the AoE, you'll be hit by a blast of high frost damage and stunned.",
+            "damage_type": null
+        },
+        {
+            "name": "Teleport/Vestigial Projection",
+            "description": "When Xobutar reaches 50% Health, he vanishes into the other sealed room and kicks back out to the main central room where the Mimic is found in. After a short while, the portal leading to Xobutar activates again. This occurs again at 40% Health.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Totem",
+            "description": "Xobutar gains this ability in the second room. He summons two Vampiric Totems, one on each side of the arena. They continuously heal Xobutar while active for 11,5% of its Max Health for each totem left standing.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Xobutar channels an AoE of blue necromantic energy. When it peaks, it explodes, dealing high frost damage.",
+            "name": "Force Pulse",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Areas dealing continuous moderate frost damage appear with a Lich Crystal at the center and disappear when the Lich Crystal explodes.",
+            "name": "Daedric Resonance",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Lich Crystals rise from the Daedric Resonance areas, exploding after one second. If you're caught in the AoE, you'll be hit by a blast of high frost damage and stunned.",
+            "name": "Daedric Shards",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Xobutar gains this ability in the second room. He summons two Vampiric Totems, one on each side of the arena. They continuously heal Xobutar while active for 11,5% of its Max Health for each totem left standing.",
+            "name": "Summon Totem",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Ah, look. An insect crawls into my lair.\"",
+            "trigger": "When you approach, he says:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your indecision demeans us both.\"",
+            "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"My time is not yours to waste!\"",
+            "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Come now, let us dance!\"",
+            "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Shall we begin, then?\"",
+            "trigger": "Entering combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"It has pride after all!\"",
+            "trigger": "Entering combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Aha! Battle is joined!\"",
+            "trigger": "Entering combat:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Do you trust your eyes?\"",
+            "trigger": "Summoning another Mimic after one has been destroyed:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Let us grow closer together.\"",
+            "trigger": "Using Daedric Chains:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Feel the souls of the vanquished!\"",
+            "trigger": "Using Necrotic Swarm:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I shall drink your vigor!\"",
+            "trigger": "Summoning Vampiric Totems:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"We shall meet again soon!\"",
+            "trigger": "Wounding Portal time expires:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Inevitable, really. I have never lost.\"",
+            "trigger": "If you die, he scoffs.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Pick yourself up, now! Let us dance once more!\"",
+            "trigger": "If you die, he scoffs.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Your easy death shames us both.\"",
+            "trigger": "If you die, he scoffs.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you approach, he says:": [
+            {
+                "speaker": "",
+                "line": "\"Ah, look. An insect crawls into my lair.\"",
+                "trigger": "When you approach, he says:",
+                "ability": null
+            }
+        ],
+        "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):": [
+            {
+                "speaker": "",
+                "line": "\"Your indecision demeans us both.\"",
+                "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"My time is not yours to waste!\"",
+                "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Come now, let us dance!\"",
+                "trigger": "Idling before combat (he says these lines even if you're lying dead on the floor in front of him; he knows you're not permanently dead):",
+                "ability": null
+            }
+        ],
+        "Entering combat:": [
+            {
+                "speaker": "",
+                "line": "\"Shall we begin, then?\"",
+                "trigger": "Entering combat:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"It has pride after all!\"",
+                "trigger": "Entering combat:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Aha! Battle is joined!\"",
+                "trigger": "Entering combat:",
+                "ability": null
+            }
+        ],
+        "Summoning another Mimic after one has been destroyed:": [
+            {
+                "speaker": "",
+                "line": "\"Do you trust your eyes?\"",
+                "trigger": "Summoning another Mimic after one has been destroyed:",
+                "ability": null
+            }
+        ],
+        "Using Daedric Chains:": [
+            {
+                "speaker": "",
+                "line": "\"Let us grow closer together.\"",
+                "trigger": "Using Daedric Chains:",
+                "ability": null
+            }
+        ],
+        "Using Necrotic Swarm:": [
+            {
+                "speaker": "",
+                "line": "\"Feel the souls of the vanquished!\"",
+                "trigger": "Using Necrotic Swarm:",
+                "ability": null
+            }
+        ],
+        "Summoning Vampiric Totems:": [
+            {
+                "speaker": "",
+                "line": "\"I shall drink your vigor!\"",
+                "trigger": "Summoning Vampiric Totems:",
+                "ability": null
+            }
+        ],
+        "Wounding Portal time expires:": [
+            {
+                "speaker": "",
+                "line": "\"We shall meet again soon!\"",
+                "trigger": "Wounding Portal time expires:",
+                "ability": null
+            }
+        ],
+        "If you die, he scoffs.": [
+            {
+                "speaker": "",
+                "line": "\"Inevitable, really. I have never lost.\"",
+                "trigger": "If you die, he scoffs.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Pick yourself up, now! Let us dance once more!\"",
+                "trigger": "If you die, he scoffs.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Your easy death shames us both.\"",
+                "trigger": "If you die, he scoffs.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [
+        "When the battle begins, his health increases, he summons a Mimic and he teleports behind one of the sealed gates. You do not need to kill the Mimic, and it will stay in the central chamber for the whole fight. For the most part, you can ignore the Mimic and focus on Xobutar. The Mimic will serve you well in allowing you to build up Ultimate so you can drop everything on Xobutar when you get the chance. Ten seconds after the battle starts, the Wounding Portal at the western end of the room activates. Synergize with it to be brought to Xobutar.",
+        "Drop your Ultimates and AoEs on Xobutar when you enter his chamber. The first thing he usually does is he either hits you with his staff or immediately pulls you in with Daedric Chains to use Force Pulse. After he uses Force Pulse, he starts using Necrotic Swarm, which causes Daedric Shards to occur. At 55% health, Xobutar has a chance to summon two Vampiric Totems on the left and right sides of the room. If they remain standing by the time Xobutar is 80% through with Necrotic Swarm, they will disappear; each totem you didn't get rid of will restore 10% of Xobutar's health. He can restore up to 20% of his health if those totems are left standing. Furthermore, if you stand in their AoE, your own health will be sapped. You should focus on the totems whenever they come up.",
+        "When you bring Xobutar down, a Warrior's Chest appears with your reward inside.",
+        "Defeating Xobutar grants you Empowered Teleportation. The Empowered Sigil traps a Xivkyn soul under the influence of the player for a short duration: a Bound Chillfiend will assist you while you're trying to kill the Watchers upstairs during the fight against Iozuzzunth. If you disconnect and have to redo the wounding portals up from Zakuryn's arena again, the Bound Chillfiend will also help you fend off Daedra while you run through those."
+    ],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Vateshran's Rites: Partake in a local clan's rite of passage."
+    ],
+    "summary": "Xobutar of His Deep Graces is a Xivkyn necromancer who serves as the secret boss of The Wounding. Defeating him grants a buff that will cause a Bound Xivkyn Chillfiend to show up as an ally in the boss fight against Iozuzzunth.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xobutar_of_His_Deep_Graces",
+        "page_title": "Online:Xobutar of His Deep Graces",
+        "revision_id": 3502600,
+        "retrieved_at": "2026-08-19T03:21:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

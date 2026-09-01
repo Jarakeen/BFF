@@ -1,0 +1,26 @@
+{
+    "id": "stormcrag_crypt",
+    "name": "Stormcrag Crypt",
+    "content_type": "dungeon",
+    "summary": "Stormcrag Crypt is an ancient Nordic tomb in southeastern Eastmarch, south of Jorunn's Stand containing draugr. Rats and torchbugs are found in numbers within. Hazards include: Flame Walls. There are more than a dozen bookshelves in the crypt. The Deathknight Stormcrag can be found in the northeastern chamber.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stormcrag_Crypt",
+        "page_title": "Online:Stormcrag Crypt",
+        "revision_id": 3601659,
+        "retrieved_at": "2026-08-12T21:35:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

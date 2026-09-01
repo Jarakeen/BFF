@@ -1,0 +1,91 @@
+{
+    "id": "noriwen",
+    "name": "Noriwen",
+    "content_id": "lep_seclusa",
+    "content_name": "Lep Seclusa",
+    "location": "Lep Seclusa",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "5,051,957",
+        "veteran": "11,368,356",
+        "hardmode": "18,189,370"
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "Light attack"
+        },
+        {
+            "name": "Brand",
+            "description": "Heavy attack"
+        },
+        {
+            "name": "Chain Pull",
+            "description": "If outside her melee range, Noriwen will pull the target (usually the Tank) towards her with a chain that will apply a damage over time effect"
+        },
+        {
+            "name": "Blast Powder",
+            "description": "Fire-based AoEs thrown at various players"
+        },
+        {
+            "name": "Charge Away",
+            "description": "Noriwen charges forward incredibly fast to dodge attacks"
+        },
+        {
+            "name": "Wing Gust",
+            "description": "Alcunar creates 3 lightning AoEs"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "(?)",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "(?)",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She wears the Tactician's Gold Lattice Skin and Aldmeri Dominion Style armor.",
+        "She wrote the Letter to Orpheon and is mentioned in The Sacking of Bruma."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Upstart Emperor: Repel an invading army from Lep Seclusa and secure an Elder Scroll.",
+        "Pledge: Lep Seclusa: Explore Lep Seclusa and return Undaunted."
+    ],
+    "summary": "Noriwen the Gryphon Tamer is an Altmer warrior and gryphon trainer in Orpheon's army. She serves as the second main boss in Lep Seclusa, accompanied by her massive gryphon Alcunar. She has participated in Orpheon's previous sieges, where her pet gryphons killed many of their enemies.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Noriwen",
+        "page_title": "Online:Noriwen",
+        "revision_id": 3501208,
+        "retrieved_at": "2026-08-12T21:27:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

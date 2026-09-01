@@ -1,0 +1,28 @@
+{
+    "id": "old_sord_s_cave",
+    "name": "Old Sord's Cave",
+    "content_type": "dungeon",
+    "summary": "Old Sord's Cave is a cave in southern Eastmarch, south of Wittestadr containing Stormfist soldiers. They are led by Braxek, Eorim the Hammer and Gadof.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before being removed in a very early update, Bandit Shamans and Bandit Warriors could be found here. They were replaced by Stormfist Shamans and Stormfist Warriors between the July 8th and December 22nd, 2014."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Old_Sord%27s_Cave",
+        "page_title": "Online:Old Sord's Cave",
+        "revision_id": 3598154,
+        "retrieved_at": "2026-08-12T21:30:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "id": "whalefall",
+    "name": "Whalefall",
+    "content_type": "dungeon",
+    "summary": "Whalefall is an island found off the western coast of Amenos. It can be accessed via a raft found on the coastline just west of Hidden Foundry. Prisoners are found dead on the ground throughout the delve, three with nameplates appear during the daily quest. Dragonflies, frogs, lizards are found in numbers within. Hazards include slaughterfish.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Despite their difficulty, all six of the Hunters can be killed with the Blade of Woe.",
+        "Whale fall is a phenomenon where the carcass of a whale falls to the ocean floor and creates complex localized ecosystems that supply sustenance to deep-sea organisms for decades."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Whalefall",
+        "page_title": "Online:Whalefall",
+        "revision_id": 3567085,
+        "retrieved_at": "2026-08-12T21:38:29Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

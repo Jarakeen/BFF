@@ -1,0 +1,83 @@
+{
+    "id": "drodda_of_icereach",
+    "name": "Drodda of Icereach",
+    "content_id": "direfrost_keep",
+    "content_name": "Direfrost Keep",
+    "location": "Direfrost Keep, Direfrost Summit",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,703,728",
+        "hardmode": "4,868,360"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Drodda of Icereach",
+            "line": "Your frozen souls will haunt this place forever!",
+            "trigger": "When you begin combat",
+            "ability": null
+        },
+        {
+            "speaker": "Drodda of Icereach",
+            "line": "The chill of Icereach flows through my veins!",
+            "trigger": "Entering Frost Phase",
+            "ability": null
+        },
+        {
+            "speaker": "Drodda of Icereach",
+            "line": "You haven't won!",
+            "trigger": "When you defeat her",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you begin combat": [
+            {
+                "speaker": "Drodda of Icereach",
+                "line": "Your frozen souls will haunt this place forever!",
+                "trigger": "When you begin combat",
+                "ability": null
+            }
+        ],
+        "Entering Frost Phase": [
+            {
+                "speaker": "Drodda of Icereach",
+                "line": "The chill of Icereach flows through my veins!",
+                "trigger": "Entering Frost Phase",
+                "ability": null
+            }
+        ],
+        "When you defeat her": [
+            {
+                "speaker": "Drodda of Icereach",
+                "line": "You haven't won!",
+                "trigger": "When you defeat her",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Nobles' Rest: Release an ancient fortress from the grasp of a witch.",
+        "Pledge: Direfrost Keep: Prove you are truly Undaunted by clearing Direfrost Keep."
+    ],
+    "summary": "Drodda of Icereach is a Nord witch who took control of Direfrost Keep many years ago from the family of witchhunters who owned it.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Drodda_of_Icereach",
+        "page_title": "Online:Drodda of Icereach",
+        "revision_id": 3322535,
+        "retrieved_at": "2026-08-12T21:20:04Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

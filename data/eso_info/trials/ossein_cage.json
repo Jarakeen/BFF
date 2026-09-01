@@ -1,0 +1,190 @@
+{
+    "id": "ossein_cage",
+    "name": "Ossein Cage",
+    "content_type": "trial",
+    "summary": "The Ossein Cage is a Coldharbour prison that is accessible from Solstice. It houses the Dolorous Cista, a vessel that harvests mortal suffering and converts it to magical energy. It is also one of the many vaults that Mannimarco used to hide artifacts and objects of power. It is also the trial for the zone, and the entrance can be found in some Argonian ruins, where an Oblivion portal can be found inside. Centipedes, rats, spiders and torchbugs are found within the Saxhleel ruin. Daedrats, fiendroths, frogs, scuttlers, snakes, and torchbugs are found within Coldharbour. Hazards include bottomless pits. You will receive a Shattered Horn of the Overfiend along with your other rewards after defeating Overfiend Kazpian with Hard Mode engaged.",
+    "location": "",
+    "group_size": 12,
+    "boss_ids": [
+        "shaper_of_flesh",
+        "jynorah",
+        "skorkhif",
+        "overfiend_kazpian"
+    ],
+    "achievements": [
+        {
+            "id": "worth_the_pain",
+            "name": "Worth the Pain",
+            "description": "Complete the following list of achievements for Veteran Ossein Cage.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "ossein_cage_vanquisher",
+            "name": "Ossein Cage Vanquisher",
+            "description": "Defeat the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian in Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "ossein_cage_conqueror",
+            "name": "Ossein Cage Conqueror",
+            "description": "Defeat the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "served_suffering",
+            "name": "Served Suffering",
+            "description": "Defeat the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian after raising the challenge banner in Veteran Ossein Cage, in one run.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "breakneck_battler",
+            "name": "Breakneck Battler",
+            "description": "Defeat all enemies and 3 abductor mini-bosses in addition to the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian within 45 minutes of entering Veteran Ossein Cage. Your timer starts when you enter Ossein Cage.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "thriving_in_adversity",
+            "name": "Thriving in Adversity",
+            "description": "Defeat all enemies and 3 abductor mini-bosses in addition to the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian without suffering a group member death in Veteran Ossein Cage.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "lord_of_suffering",
+            "name": "Lord of Suffering",
+            "description": "Defeat the Shapers of Flesh, Jynorah and Skorkhif, as well as Overfiend Kazpian after raising the challenge banner for each of them, plus all their hostile followers including all 3 abductor mini-bosses, without suffering a group member death, within 45 minutes of entering Veteran Ossein Cage.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "tormented_slayer",
+            "name": "Tormented Slayer",
+            "description": "Defeat 150 Tormented enemies in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "osteon_daedra_slayer",
+            "name": "Osteon Daedra Slayer",
+            "description": "Defeat 250 Osteon Daedra in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "flesh_swarmed",
+            "name": "Flesh Swarmed",
+            "description": "Ensure 6 Fleshspawn are present at the same time without forming a Flesh Abomination and kill all 6 Fleshspawn in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "portal_party",
+            "name": "Portal Party",
+            "description": "In a full group, have every member of the group use a Carrion portal at least once when battling the Shapers of Flesh in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "burnt_to_a_crisp",
+            "name": "Burnt to a Crisp",
+            "description": "As an individual, defeat Jynorah and Skorkhif after being affected by both Sparking Enfeeblement and Blazing Enfeeblement at the same time throughout both Titanic Clash phases in Veteran Ossein Cage. Titanic Clash phases begin when the lower platform becomes Superheated and end when it is no longer Superheated.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "most_victorious",
+            "name": "Most Victorious",
+            "description": "Observe both outcomes of the final duel between Sparkstorm Myrinax and Blazeforged Valneer in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "heating_up",
+            "name": "Heating Up",
+            "description": "After raising the challenge banner in Veteran Ossein Cage, defeat Jynorah and Skorkhif after every party member has taken damage from at least one Sparking Heat Ray and one Blazing Heat Ray, without exiting and reentering the same cast of Heat Ray that applied the effect.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "avoiding_agony",
+            "name": "Avoiding Agony",
+            "description": "As a group, don't let anyone aside from the initial target get hit by the Agonizer Bomb explosion when battling Overfiend Kazpian in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "share_the_misery",
+            "name": "Share the Misery",
+            "description": "In a full group, ensure that every member of your party goes over to the side island at least once when battling Overfiend Kazpian in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "familiar_foes",
+            "name": "Familiar Foes",
+            "description": "As a group, keep Molag Kena and Low Warden Dusk alive until the end and never kill them when battling Overfiend Kazpian in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "successful_strike",
+            "name": "Successful Strike",
+            "description": "As a group, defeat Channelers without allowing any party member who used the corresponding Carrion Portal to die in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "group_patience",
+            "name": "Group Patience",
+            "description": "As an individual, have the damage dealt by Caustic Carrion reset by a Carrion Shield at least 3 times during a single trip through a Carrion Portal in Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "living_well",
+            "name": "Living Well",
+            "description": "Defeat Red Witch Gedna Relvel, the Tortured Trio, and Blood Drinker Thisa in Veteran Ossein Cage.",
+            "points": 10,
+            "source": null
+        },
+        {
+            "id": "fears_of_the_flesh",
+            "name": "Fears of the Flesh",
+            "description": "Defeat the Shapers of Flesh after raising the challenge banner in Veteran Ossein Cage.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "titanic_triumph",
+            "name": "Titanic Triumph",
+            "description": "Defeat Jynorah and Skorkhif after raising the challenge banner in Veteran Ossein Cage.",
+            "points": 15,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "recovery_convergence",
+        "perfected_recovery_convergence",
+        "harmony_in_chaos",
+        "perfected_harmony_in_chaos",
+        "kazpian_s_cruel_signet",
+        "perfected_kazpian_s_cruel_signet",
+        "dolorous_arena",
+        "perfected_dolorous_arena"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ossein_Cage",
+        "page_title": "Online:Ossein Cage",
+        "revision_id": 3586242,
+        "retrieved_at": "2026-08-18T18:54:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

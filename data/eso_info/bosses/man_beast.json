@@ -1,0 +1,36 @@
+{
+    "id": "man_beast",
+    "name": "Man-Beast",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Man-Beasts are werewolves that take on a more bestial appearance while not transformed. While in this form, the werewolf is more intelligent, less primal and is able to cast magic and use weaponry. They have adapted to hunt in the darkness by taking on a shadowy appearance, with grey skin and red eyes. Werewolf Lords are similar to man-beasts in that their mortal form suits their lycanthropic nature, having red eyes, visible fangs, and a greyish complexion. A Sable Man-Beast skin is available for completing the Moon Hunter Keep Challenger achievement. A Werewolf Lord polymorph is typically available for purchase in the Crown Store during the month of October. It has a unique form for male and female humanoids, Argonians, and Khajiit. A limited number of Man-Beast NPCs exist. and are listed below.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Man-Beast",
+        "page_title": "Online:Man-Beast",
+        "revision_id": 3581105,
+        "retrieved_at": "2026-08-12T21:28:56Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

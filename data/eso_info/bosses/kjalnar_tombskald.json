@@ -1,0 +1,354 @@
+{
+    "id": "kjalnar_tombskald",
+    "name": "Kjalnar Tombskald",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "Unhallowed Grave; Pit of Sorrows",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,525,979",
+        "veteran": "7,697,993",
+        "hardmode": "16,165,786"
+    },
+    "abilities": [
+        {
+            "name": "Sword Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Grasping Bomb",
+            "description": "Kjalnar Tombskald throws a magical bomb that creates a necromantic hand that grasps you from the floor, dealing high magical damage and snaring you."
+        },
+        {
+            "name": "Runic Spin",
+            "description": "Kjalnar Tombskald spins in place, striking with his dual blades for very high physical damage, indicated by a large circular AoE. During the spin, he throws out a handful of runes across the arena that will linger for an extended time. Stepping in one causes an explosion that deals high magical damage."
+        },
+        {
+            "name": "Awakening",
+            "description": "Upon reaching 50% health, Kjalnar Tombskald moves to the center of the arena to begin the ritual to awaken Tzirhalir, who will then join the fight. Kjalnar remains vulnerable to incoming damage for the entirety of the summoning. Tzirzhalir doesn't have a health bar itself and will perish when Kjalnar is dead."
+        },
+        {
+            "name": "Summon Skeletons",
+            "description": "On Veteran, Kjalnar Tombskald summons Imbued Skeletons. They will travel to him from the outer edges of the arena before exploding near you, dealing very high magical damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Persistent, aren't we? Hear me, Draugrkin! Do not let these troublemakers reach the center of the tomb!",
+            "trigger": "Once you reach the outdoor area of the tomb complex, Kjalnar can be seen in one of the balconies and will goad his compatriots to stop you",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Shelaria",
+            "line": "Kjalnar! I'll kill you for what you've done!",
+            "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "By all means, try. Our patron demanded the remains of the Gray Host. What's the harm in adding a few more corpses?",
+            "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "Fennorian",
+            "line": "Shelaria! Arta vare! Sleep now.",
+            "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "",
+            "line": "<Shelaria falls asleep and is taken out of the fight.>",
+            "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "Fennorian",
+            "line": "She's in no condition to fight. Go! Kill that fiend!",
+            "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "What I accomplish here shall never be matched.",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Our patron can have his bones and ashes. I come to claim something far greater!",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Whatever preparations you're making, it will not be enough. You are overmatched.",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Death can only be delayed for so long ….",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Hrmm. Do I smell … cowardice?",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "You came to do battle. Let's get on with it.",
+            "trigger": "If you delay fighting him, he will taunt you",
+            "ability": "Summon Skeletons"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "I'll cleave your bones in twain!",
+            "trigger": "During the fight he will shout one of the following",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "I'll feed you to the pit!",
+            "trigger": "During the fight he will shout one of the following",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Bone and ash, unleash your fury!",
+            "trigger": "During the fight he will shout one of the following",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Beneath your feet, there is only death!",
+            "trigger": "During the fight he will shout one of the following",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "I cast the bones, and your future is bleak!",
+            "trigger": "During the fight he will shout one of the following",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "The time has come. Rise, Tzirzhalir. I call you by name! Rise!",
+            "trigger": "Midway, he will have completed the summoning of Tzirhalir",
+            "ability": "Awakening"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Dead, eh? Just toss their bones in with the others.",
+            "trigger": "Group Wipe Dialogue",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Dead already? What a disappointment.",
+            "trigger": "Group Wipe Dialogue",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Killed in a grave. Convenient.",
+            "trigger": "Group Wipe Dialogue",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Just another notch in the belt.",
+            "trigger": "Group Wipe Dialogue",
+            "ability": "Runic Spin"
+        },
+        {
+            "speaker": "Kjalnar Tombskald",
+            "line": "Barely broke a sweat. Pitiful.",
+            "trigger": "Group Wipe Dialogue",
+            "ability": "Runic Spin"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Once you reach the outdoor area of the tomb complex, Kjalnar can be seen in one of the balconies and will goad his compatriots to stop you": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Persistent, aren't we? Hear me, Draugrkin! Do not let these troublemakers reach the center of the tomb!",
+                "trigger": "Once you reach the outdoor area of the tomb complex, Kjalnar can be seen in one of the balconies and will goad his compatriots to stop you",
+                "ability": "Runic Spin"
+            }
+        ],
+        "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped": [
+            {
+                "speaker": "Shelaria",
+                "line": "Kjalnar! I'll kill you for what you've done!",
+                "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+                "ability": "Awakening"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "By all means, try. Our patron demanded the remains of the Gray Host. What's the harm in adding a few more corpses?",
+                "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+                "ability": "Awakening"
+            },
+            {
+                "speaker": "Fennorian",
+                "line": "Shelaria! Arta vare! Sleep now.",
+                "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+                "ability": "Awakening"
+            },
+            {
+                "speaker": "",
+                "line": "<Shelaria falls asleep and is taken out of the fight.>",
+                "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+                "ability": "Awakening"
+            },
+            {
+                "speaker": "Fennorian",
+                "line": "She's in no condition to fight. Go! Kill that fiend!",
+                "trigger": "When you enter the Pit of Sorrows, Kjalnar Tombskald will be waiting. Shelaria will be eager to kill him, only to be stopped",
+                "ability": "Awakening"
+            }
+        ],
+        "If you delay fighting him, he will taunt you": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "What I accomplish here shall never be matched.",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Our patron can have his bones and ashes. I come to claim something far greater!",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Whatever preparations you're making, it will not be enough. You are overmatched.",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Death can only be delayed for so long ….",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Hrmm. Do I smell … cowardice?",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "You came to do battle. Let's get on with it.",
+                "trigger": "If you delay fighting him, he will taunt you",
+                "ability": "Summon Skeletons"
+            }
+        ],
+        "During the fight he will shout one of the following": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "I'll cleave your bones in twain!",
+                "trigger": "During the fight he will shout one of the following",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "I'll feed you to the pit!",
+                "trigger": "During the fight he will shout one of the following",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Bone and ash, unleash your fury!",
+                "trigger": "During the fight he will shout one of the following",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Beneath your feet, there is only death!",
+                "trigger": "During the fight he will shout one of the following",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "I cast the bones, and your future is bleak!",
+                "trigger": "During the fight he will shout one of the following",
+                "ability": "Runic Spin"
+            }
+        ],
+        "Midway, he will have completed the summoning of Tzirhalir": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "The time has come. Rise, Tzirzhalir. I call you by name! Rise!",
+                "trigger": "Midway, he will have completed the summoning of Tzirhalir",
+                "ability": "Awakening"
+            }
+        ],
+        "Group Wipe Dialogue": [
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Dead, eh? Just toss their bones in with the others.",
+                "trigger": "Group Wipe Dialogue",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Dead already? What a disappointment.",
+                "trigger": "Group Wipe Dialogue",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Killed in a grave. Convenient.",
+                "trigger": "Group Wipe Dialogue",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Just another notch in the belt.",
+                "trigger": "Group Wipe Dialogue",
+                "ability": "Runic Spin"
+            },
+            {
+                "speaker": "Kjalnar Tombskald",
+                "line": "Barely broke a sweat. Pitiful.",
+                "trigger": "Group Wipe Dialogue",
+                "ability": "Runic Spin"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "He is the final boss of the dungeon and the hard mode fight can be initiated by destroying Kjalnar's Skull Totem."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His research notes can be found near the door to the Pit of Sorrows where he waits."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Unhallowed Grave: Help the last Pyre Watch Sentinel and a vampire investigator in the Unhallowed Grave.",
+        "Pledge: Unhallowed Grave: Prove you are truly Undaunted by clearing Unhallowed Grave."
+    ],
+    "summary": "Kjalnar Tombskald is the Nord leader of the Draugrkin who are looting the Unhallowed Grave of urns for their mysterious employer. However, he has his own personal goal within the tomb and must be stopped from achieving it. He is the final boss of the dungeon and the hard mode fight can be initiated by destroying Kjalnar's Skull Totem.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kjalnar_Tombskald",
+        "page_title": "Online:Kjalnar Tombskald",
+        "revision_id": 3339577,
+        "retrieved_at": "2026-08-12T21:37:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

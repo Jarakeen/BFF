@@ -1,0 +1,42 @@
+{
+    "id": "hunger",
+    "name": "Hunger",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Ald Sotha, Anudnabia, Ashalmawia, Barilzar's Tower (during Divine Intervention), Forgotten Wastes, Kushtashpi, The Shivering Isles, Sulipund Grange, Veloth Ancestral Tomb, Zaintiraris\nEbon Stadmont\nOrcrest\nAlavelis, Chroma Incognito, The Feral Gallery, Gorne, The Mythos, The Tranquil Catalog",
+    "species": "Hunger",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Ancestral Adversity: Accompany Narsis Dren on a Vvardenfell grave robbing expedition.",
+        "Bastion Nymic - Fallen Hues: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "Bastion Nymic - Writhing Wastes: Enter Bastion Nymic and defeat Hermaeus Mora's enemies.",
+        "A Creeping Hunger: Kill a hunger so that researchers can access a ruin.",
+        "The Taste of Fear: Something has been killing the residents of Cey-Tarn Keep..."
+    ],
+    "summary": "Hungers are powerful Daedra predominantly found in Daedric ruins and other various locations on Vvardenfell. They are often associated with Boethiah and Peryite. Those with the Defiler set can summon a hunger to briefly fight for them.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hunger",
+        "page_title": "Online:Hunger",
+        "revision_id": 3602522,
+        "retrieved_at": "2026-08-12T21:19:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

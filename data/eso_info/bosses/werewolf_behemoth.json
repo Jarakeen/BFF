@@ -1,0 +1,39 @@
+{
+    "id": "werewolf_behemoth",
+    "name": "Werewolf Behemoth",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "In some ways they can be compared to the Argonian Behemoths, who have a similarly enhanced body compared to normal Argonians.",
+        "A promotional render of a Werewolf Behemoth from ESO was featured on the Werewolf Brute card from Legends Asia."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Werewolf Behemoths are werewolves who have a larger and more muscular frame compared to their average counterparts. This is often paired with greater abilities. While some of these behemoths appear to have come about naturally, in many cases they have been created by some form of augmentation. For example, Archivist Ernarde's alchemical work and experiments allowed him immediately transform an ordinary member of the Moon Hunter Pack into a behemoth during battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Werewolf_Behemoth",
+        "page_title": "Online:Werewolf Behemoth",
+        "revision_id": 3558506,
+        "retrieved_at": "2026-08-12T21:28:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

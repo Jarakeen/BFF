@@ -1,0 +1,28 @@
+{
+    "id": "serpent_hollow_cave",
+    "name": "Serpent Hollow Cave",
+    "content_type": "dungeon",
+    "summary": "Serpent Hollow Cave is a cave in western Cyrodiil, north of Castle Brindle containing ogres and their pet bears. The lore book The Slave Pits of Coldharbour can be found here and nowhere else.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Serpent Hollow Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Serpent_Hollow_Cave",
+        "page_title": "Online:Serpent Hollow Cave",
+        "revision_id": 3598806,
+        "retrieved_at": "2026-08-12T21:33:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

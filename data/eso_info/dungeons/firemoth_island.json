@@ -1,0 +1,24 @@
+{
+    "id": "firemoth_island",
+    "name": "Firemoth Island",
+    "content_type": "dungeon",
+    "summary": "Firemoth Island is an island found off the southwest shores of Vvardenfell. The island is occupied by slavers, who have recently raided a ship that ran aground off Seyda Neen.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The compound on the island is only accessible to new characters playing through the old tutorial.",
+        "Firemoth cannot be reached from mainland Vvardenfell due to slaughterfish. However, it can be accessed again after the quest by interacting with the helm of the big boat in Seyda Neen.",
+        "Fast travel or teleporting is not possible on the island. If you have returned here after the quest, you will need to use a boat on the shore to escape back to Seyda Neen.",
+        "Ambient and combat music don't play while on Firemoth Island.",
+        "Firemoth previously appeared in the Siege at Firemoth official plug-in for The Elder Scrolls III: Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Firemoth_Island",
+        "page_title": "Online:Firemoth Island",
+        "revision_id": 3550252,
+        "retrieved_at": "2026-08-12T21:22:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

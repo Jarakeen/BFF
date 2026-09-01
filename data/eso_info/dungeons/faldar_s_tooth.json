@@ -1,0 +1,28 @@
+{
+    "id": "faldar_s_tooth",
+    "name": "Faldar's Tooth",
+    "content_type": "dungeon",
+    "summary": "Faldar's Tooth is a ruined fort in the central Rift, east of Honrich Tower containing Darkling cultists. A thieves trove can be found beneath a broken crate on the road leading towards the fort, at the round, U-shaped bend in the road. A functioning cooking fire can be found in the center of the exterior courtyard. There is a single piece of poultry that counts as stolen when you take it. It can be found in the southern tower in the courtyard. Some Speech Notes can be found on a table in front of the entrance to the delve's interior. These notes detail how the Darklings are building a shrine to Nocturnal within the ruins. A copy of the lore book, Song of the Askelde Men, can be found near a non-functioning cooking fire in the western portion of the first large chamber inside the delve. The delve's skyshard can be found in the western tunnels, just south of the entrance chamber. Israk Ice-Storm can be found in the chamber just west of the skyshard, trapped in a cell. Speaking with him starts the delve's related quest. The delve's boss, Rozelun, can be found in the southernmost chamber. There is a chest in the large, L-shaped eastern chamber. The chest is located in the long part of the \"L\", sitting against the northern wall near some barrels.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Faldar's Tooth also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Faldar%27s_Tooth",
+        "page_title": "Online:Faldar's Tooth",
+        "revision_id": 3598178,
+        "retrieved_at": "2026-08-12T21:21:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

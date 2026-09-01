@@ -1,0 +1,59 @@
+{
+    "id": "daedroth",
+    "name": "Daedroth",
+    "content_id": "city_of_ash_ii",
+    "content_name": "City of Ash II",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Daedroth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The friendly Daedroth in Eyevea that runs around the island along with a friendly banekin post-quest used to have a nameplate with 39,959 Health."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Betnihk's Boon: Prove your strength to the Seamount Clan during New Life.",
+        "Breaking the Shackle: Destroy Molag Bal's Great Shackle.",
+        "Castle of the Worm: Grant a request for asylum from a prisoner in the Castle of the Worm.",
+        "Dark Anchors in Tamriel: Help destroy Dark Anchors in Tamriel.",
+        "The Final Assault: Launch an assault on the Endless Stair and destroy the Planar Vortex.",
+        "The Fires of Dune: Stop the Daedric invasion of Dune.",
+        "Getting the Band Together: Liven up the Jester's Festival with a Daedric concert.",
+        "God of Schemes: Use the power of the Amulet of Kings to defeat Molag Bal.",
+        "The Grip of Madness: Discover why a town's citizens are killing each other.",
+        "Heist: Deadhollow Halls: Recover some Daedric idols stashed away in Deadhollow Halls.",
+        "The Mad God's Bargain: Release Shalidor's sanctuary from Sheogorath's lingering hold.",
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness.",
+        "The Returned: Search for survivors of a farmstead fire.",
+        "Rites of the Sul-Xan: Defeat the Sul-Xan ritualists and rescue the captives.",
+        "Roots in Stone: Help Mani-Kai save an ancient Stone-Nest village.",
+        "A Saint Asunder: Restore and cleanse the Shrine of Saint Veloth.",
+        "Storming the Garrison: Help the Lion Guard and the Knights of Saint Pelin reclaim Bangkorai Garrison.",
+        "The Summer Site: Investigate Falinesti Summer Site and uncover the location of the Walking City.",
+        "The Sublime Brazier: Put an end to Molag Bal's plot in the Imperial City."
+    ],
+    "summary": "Bangkorai Garrison, Castle of the Worm, Coldharbour, Damar Farmstead, Dark Anchors, Dune, Font of Schemes, The Great Shackle, Hollow Waste Dolmen, Isles of Torment\nThe Deadlands: Testing Grounds\nAshalmawia, Esutanamus, Tusenend\nDarkpool Mine, Rimmen Necropolis\nDeadlands: The Ashen Forest, Doomvault Capraxus, Doomvault Vulpinaz, Fort Redmane, Leyawiin Castle, The Silent Halls, Sul-Xan Ritual Site, Vandacia's Deadlands Keep, Welke\nThe Deadlands, Destruction's Solace, Isle of Joys\nApocrypha, Gorne\nCalindvale Gardens, Deetra Grotto, Eastern Solstice, Cave below Gristmung Hold, Mor Naril, Palace District, Sea and Sword Lodge, Near Warm-Stone Village Daedroth are a large reptilian Daedra. The common blue variety are associated with the Daedric Prince Molag Bal, while the green variety are associated with Mehrunes Dagon and can be found in the Deadlands and Apocrypha. They may sometimes be equipped with armor. Daedroth guard gateways within The Brimstone Den in Vateshran Hollows. Certain Daedroth in The Deadlands can be seen biting the head off of a banekin when approaching them.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Daedroth",
+        "page_title": "Online:Daedroth",
+        "revision_id": 3607405,
+        "retrieved_at": "2026-08-12T21:17:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

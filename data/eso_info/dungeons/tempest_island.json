@@ -1,0 +1,32 @@
+{
+    "id": "tempest_island",
+    "name": "Tempest Island",
+    "content_type": "dungeon",
+    "summary": "Tempest Island is a small island containing a group dungeon accessible from Malabal Tor. It has been invaded by the Sea Vipers, who use it to hone their storm magic for a planned assault on the Valenwood coast. A group of Dominion soldiers led by Battlereeve Alduril needs your help defeating the Maormer invaders and their lamia allies. You can learn about its location from Turuk Redclaws outside Velyn Harbor, Vyric the White in Sentinel, or Strong-With-Tail in Windhelm.",
+    "location": "",
+    "boss_ids": [
+        "valaran_stormcaller",
+        "stormfist",
+        "stormreeve_neidir"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Tempest Island was designed for levels 34–37."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tempest_Island",
+        "page_title": "Online:Tempest Island",
+        "revision_id": 3334456,
+        "retrieved_at": "2026-08-12T21:35:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

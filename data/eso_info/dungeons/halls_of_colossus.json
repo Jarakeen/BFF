@@ -1,0 +1,21 @@
+{
+    "id": "halls_of_colossus",
+    "name": "Halls of Colossus",
+    "content_type": "dungeon",
+    "summary": "The Halls of Colossus are ancient subterranean vaults located along the southern coast of Elsweyr. The part of the halls visited are currently occupied by the Euraxians, forces loyal to Queen Euraxia Tharn of Rimmen, who lured Abnur Tharn there to unlock the powers of the Wrathstone and release the weapons within. The Hall of the Lunar Champion contains a portal to the ledge on the western side of the entrance to the Halls where furnishings can be placed. The portal is opened placing the Behold Khunzar-ri's Betrayal on the altar of Betrayal, which is obtained from completing The Heir of Anequina. (Note that only the ledge overlooking the entrance is usable from this portal. It's possible to leap into the water below, but slaughterfish prevent going any further.)",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Halls of Colossus previously appeared in Arena, and re-appeared in Legends. It is also featured in the first cinematic trailer for the reveal of the Elsweyr expansion.",
+        "You should avoid traveling here with Ember as an active companion, as it will lower her Rapport by 10 points."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Halls_of_Colossus",
+        "page_title": "Online:Halls of Colossus",
+        "revision_id": 3550267,
+        "retrieved_at": "2026-08-12T21:25:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

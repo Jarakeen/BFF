@@ -1,0 +1,29 @@
+{
+    "id": "karnwasten",
+    "name": "Karnwasten",
+    "content_type": "dungeon",
+    "summary": "Karnwasten is a public dungeon found on the northern coast of Summerset. This cove is the main base of operations of the Night Runner smugglers, although their activities have recently been disturbed by a powerful Sea Sload moving in and causing havoc. The book Summerset Isles: A Visitor's Guide can be found shortly after you've entered. Its bosses have a chance to drop the Nautilus Shell Guards antiquity lead for the Thrassian Stranglers. The seven fragments for the Big-eared Ginger Kitten pet and achievement are randomly dropped from enemies in this zone.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "summerset_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "This location previously appeared in Arena as Karnwasten Moor.",
+        "Unlike King's Haven Pass, a similar location which has two entrances at two different locations across the island, only the northwest entrance of Karnwasten has an icon on the map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Karnwasten",
+        "page_title": "Online:Karnwasten",
+        "revision_id": 3347558,
+        "retrieved_at": "2026-08-12T21:26:48Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

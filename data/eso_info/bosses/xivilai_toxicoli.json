@@ -1,0 +1,109 @@
+{
+    "id": "xivilai_toxicoli",
+    "name": "Xivilai Toxicoli",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Spiral Shadows, Maelstrom Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "106,591",
+        "veteran": "227,952",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Uppercut",
+            "description": "A melee attack that deals moderate physical damage and knocks you back if it connects. This attack can be blocked to knock the enemy off balance.",
+            "damage_type": null
+        },
+        {
+            "name": "Cleave",
+            "description": "The Ravager swings their weapon around, dealing minor physical damage to all enemies in front of them. This attack has no red cone indicator.",
+            "damage_type": null
+        },
+        {
+            "name": "Poison Throw",
+            "description": "The xivilai forms a ball of poison in his hands then flings it at you, dealing moderate poison damage followed by poison damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Poison Swing",
+            "description": "The xivilai winds up his weapon before swinging horizontally, indicated by a thin and long conical AoE, releasing a wave of poison wind dealing high poison damage, followed by poison damage over time.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The xivilai winds up his weapon before swinging horizontally, indicated by a thin and long conical AoE, releasing a wave of poison wind dealing high poison damage, followed by poison damage over time.",
+            "name": "Poison Swing",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "poison",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Die, Nirnspawn!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Think you can take me? You're wrong!\"",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"Die, Nirnspawn!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Think you can take me? You're wrong!\"",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "The Xivilai Toxicoli is xivilai warrior who serves as the mini-boss of the fourth wave of enemies during Stage 6: Spiral Shadows in Maelstrom Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xivilai_Toxicoli",
+        "page_title": "Online:Xivilai Toxicoli",
+        "revision_id": 3391525,
+        "retrieved_at": "2026-08-19T03:21:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

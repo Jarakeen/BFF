@@ -1,0 +1,26 @@
+{
+    "id": "the_vault_of_haman_forgefire",
+    "name": "The Vault of Haman Forgefire",
+    "content_type": "dungeon",
+    "summary": "The Vault of Haman Forgefire is an ancient Nordic ruin in southeastern Coldharbour, north of the Everfull Flagon containing draugr and flame atronachs. It is partially flooded with lava, and contains a skyshard in the northernmost room. Haman Forgefire can be found in the southeastern chamber. The Legend of Haman Forgefire can be found within the vault, near the entrance.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Vault_of_Haman_Forgefire",
+        "page_title": "Online:The Vault of Haman Forgefire",
+        "revision_id": 3598790,
+        "retrieved_at": "2026-08-12T21:37:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

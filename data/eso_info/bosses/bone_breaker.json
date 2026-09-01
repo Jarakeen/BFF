@@ -1,0 +1,65 @@
+{
+    "id": "bone_breaker",
+    "name": "Bone-Breaker",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "Ogre",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Punch",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Backhand",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Smash",
+            "description": "Bone-Breaker smashes its target with its fist, dealing moderate-high physical damage and snaring for one second. This can be blocked to set the ogre off-balance, though it won't negate the snare."
+        },
+        {
+            "name": "Shockwave",
+            "description": "Bone-Breaker stomps the ground in front of itself, indicated by a red cone, dealing moderate physical damage, staggering and applying off-balance for 4 seconds to targets hit. This can be blocked to negate the stagger and the off-balance."
+        },
+        {
+            "name": "Ground Pound/Falling Rocks",
+            "description": "Bone-Breaker repeatedly smashes the ground with his fists, making rocks from the celling fall which creates a lot of small areas around the areas which deal moderate-high physical damage and stun for 2 seconds. Additionally, areas are continuously created under every player. During this ability Shaman Rezzutum casts \"Protective Barrier\" which renders him invincible but unable to attack."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Bone-Breaker is an ogre of the Rotbreath Tribe and serves alongside Shaman Rezzutum as one of the champions of Silorn.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Bone-Breaker",
+        "page_title": "Online:Bone-Breaker",
+        "revision_id": 3492852,
+        "retrieved_at": "2026-08-12T21:34:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,142 @@
+{
+    "id": "vampire_lord_thisa",
+    "name": "Vampire Lord Thisa",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 9: Crypts of the Lost",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,435,597",
+        "veteran": "6,960,775",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Low Slash",
+            "description": "A physical attack that snares the target.",
+            "damage_type": null
+        },
+        {
+            "name": "Dragonknight Standard",
+            "description": "This will be cast at the start of the fight if the target is not already standing within an already cast one. The attack is identic to a Dragonknight Standard, so it is an area that deals flame damage over time and applies Major Defile, reducing the healing received and damage shield strength by 12%.",
+            "damage_type": null
+        },
+        {
+            "name": "Blink Strike",
+            "description": "Vampire Lord Thisa will teleport towards their target and land hard on top of them, causing physical damage. Blink Strike knocks the target down if it lands and you have to block it.",
+            "damage_type": null
+        },
+        {
+            "name": "Dark Talons",
+            "description": "Vampire Lord Thisa roots all targets within range with claws that deal minor physical damage over time. Roll dodge or break free to get out of it.",
+            "damage_type": null
+        },
+        {
+            "name": "Drain Essence",
+            "description": "Vampire Lord Thisa channels a Vampiric Drain-like ability, which is a red beam linked at the player and does moderate physical damage over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Devouring Swarm",
+            "description": "Vampire Lord Thisa casts a bat swarm around her that deals damage over time to anyone standing in the area and heals her.",
+            "damage_type": null
+        },
+        {
+            "name": "Poison Mist",
+            "description": "Vampire Lord Thisa becomes invisible and casts a small area around her that deals damage over time to anyone standing inside.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "This will be cast at the start of the fight if the target is not already standing within an already cast one. The attack is identic to a Dragonknight Standard, so it is an area that deals flame damage over time and applies Major Defile, reducing the healing received and damage shield strength by 12%.",
+            "name": "Dragonknight Standard",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Vampire Lord Thisa roots all targets within range with claws that deal minor physical damage over time. Roll dodge or break free to get out of it.",
+            "name": "Dark Talons",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Vampire Lord Thisa casts a bat swarm around her that deals damage over time to anyone standing in the area and heals her.",
+            "name": "Devouring Swarm",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Vampire Lord Thisa becomes invisible and casts a small area around her that deals damage over time to anyone standing inside.",
+            "name": "Poison Mist",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "This article is about the Dragonstar Arena boss. For the version encountered within the Ossein Cage, see Blood Drinker Thisa. Vampire Lord Thisa is a Breton vampire who can be found at Round 9: Crypts of the Lost of the Dragonstar Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vampire_Lord_Thisa",
+        "page_title": "Online:Vampire Lord Thisa",
+        "revision_id": 3367230,
+        "retrieved_at": "2026-08-19T03:20:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

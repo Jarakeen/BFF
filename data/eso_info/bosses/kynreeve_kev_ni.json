@@ -1,0 +1,77 @@
+{
+    "id": "kynreeve_kev_ni",
+    "name": "Kynreeve Kev'ni",
+    "content_id": "the_underweave",
+    "content_name": "The Underweave",
+    "location": "Underweave Heart",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Flare",
+            "description": "A basic ranged attack that does moderate flame damage"
+        },
+        {
+            "name": "Flames",
+            "description": "Kynreeve Kev'ni releases fire along the ground in an arc in front of her, each area dealing moderate-high flame damage to all targets hit. This can be interrupted to stagger Kynreeve Kev'ni."
+        },
+        {
+            "name": "Fire Runes",
+            "description": "Kynreeve Kev'ni shoots two (three if two players fight Kev'ni) fireballs in the air which form two/three fire runes when they land. The runes deal continuous moderate flame damage to all targets within the red circles. Players should be prepared to move as soon as the attack casts as one rune will always be cast on top of you. Each rune spawns a Flame Atronach that chase a player and explode, dealing minor flame damage and knocking back in a large area which kills them in the process. Killing the Flame Atronach beforehand doesn't trigger this large explosion."
+        },
+        {
+            "name": "Ascendant Whip",
+            "description": "Kynreeve Kev'ni casts a Lava Whip-like attack dealing high physical damage and knocks back. This can be blocked to stagger Kynreeve Kev'ni instead."
+        },
+        {
+            "name": "Fiery Chains/Grapple",
+            "description": "Kynreeve Kev'ni casts a Fiery Grip-like attack on you which pulls you to her, deals moderate-high physical damage and stuns. This can be blocked to negate the crowd control. \"Daedric Wrath\" is always cast afterwards."
+        },
+        {
+            "name": "Daedric Wrath",
+            "description": "Kynreeve Kev'ni slams her staff on the ground which deals very high flame damage and knocks back in an area around her."
+        },
+        {
+            "name": "Meteor",
+            "description": "Kynreeve Kev'ni channels a spell which after a time sends a meteor at a target, dealing high flame damage and knocking down in a large area. This can be blocked to negate the knockdown. This can be interrupted to stager Kynreeve Kev'ni."
+        },
+        {
+            "name": "Fiery Breath",
+            "description": "At 76% Health Kynreeve Kev'ni summons one flaming daedroth spirit while at 51% and 26% she summons three of them. Each breath flames in a cone dealing continuous moderate flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Kynreeve Kev'ni is a Dremora who can be found in the Underweave Heart. She serves as one of the champions of the Underweave.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Kynreeve_Kev%27ni",
+        "page_title": "Online:Kynreeve Kev'ni",
+        "revision_id": 3508025,
+        "retrieved_at": "2026-08-12T21:36:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

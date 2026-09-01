@@ -1,0 +1,29 @@
+{
+    "id": "forgotten_crypts",
+    "name": "Forgotten Crypts",
+    "content_type": "dungeon",
+    "summary": "The Forgotten Crypts are burial vaults in western Deshaan, just southeast of the village of Quarantine Serk. Refugees fleeing from the Llodos Plague came here and set up a fortified camp. The crypt is patrolled by the undead. The crypt appears to belong to House Telvanni, as is evident by the banners featuring the Great House's crest hung upon the walls within and the presence of a Telvanni spirit. Bosses have a chance to drop the Niss'wo Sacramental Wraps antiquity lead for the Gaze of Sithis.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to very early update, Timothe the Sharp was named Ancient Assassin and the three Vindicators were named Kwama Guardian.",
+        "This dungeon was invaded by the Worm Cult during the Battle for the Writhing Wall event."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Forgotten_Crypts",
+        "page_title": "Online:Forgotten Crypts",
+        "revision_id": 3512298,
+        "retrieved_at": "2026-08-12T21:22:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

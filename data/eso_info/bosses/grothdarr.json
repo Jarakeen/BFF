@@ -1,0 +1,64 @@
+{
+    "id": "grothdarr",
+    "name": "Grothdarr",
+    "content_id": "vaults_of_madness",
+    "content_name": "Vaults of Madness",
+    "location": "Vaults of Madness",
+    "species": "Flesh Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Fire Trails",
+            "description": "At the start of combat, Grothdarr throws two fireballs down onto the ground next to itself. They then transform into two long fire trails that will continuously snake around the arena, close to Grothdarr, inflicting high flame damage to those that stand in them. The fire trails won't go out until Grothdarr is dead."
+        },
+        {
+            "name": "Bludgeon",
+            "description": "A basic melee attack causing moderate physical damage."
+        },
+        {
+            "name": "Overhead Smash",
+            "description": "Grothdarr winds up its mace hand before slamming it down, causing high physical damage and knocking down those hit. This attack can be blocked."
+        },
+        {
+            "name": "Burning Hate",
+            "description": "Grothdarr winds up its torch hand before throwing fire in front of itself, as indicated by a red cone, causing high flame damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Mind of Madness: Escape a labyrinthine structure in Coldharbour.",
+        "Pledge: Vaults of Madness: Prove you are truly Undaunted by clearing the Vaults of Madness."
+    ],
+    "summary": "This article is about the creature. For the item set, see Grothdarr (set). Grothdarr is a huge Flesh Atronach and one of the bosses of the Vaults of Madness. Grothdarr has three unique items that can be obtained, Grothdarr's Fist, Fleshsear, and Despair. It is also the namesake of the Grothdarr set and style, and the basis of a trophy and bust. The spirit of Reynelle Derone has been trapped within its flesh by the Mad Architect.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Grothdarr",
+        "page_title": "Online:Grothdarr",
+        "revision_id": 3139187,
+        "retrieved_at": "2026-08-12T21:37:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

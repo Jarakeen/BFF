@@ -1,0 +1,26 @@
+{
+    "id": "the_wailing_maw",
+    "name": "The Wailing Maw",
+    "content_type": "dungeon",
+    "summary": "The Wailing Maw is a cave in northeastern Coldharbour, northeast of the Lost Fleet containing Daedra. It is being used by Molag Bal to research new ways of using soul gems. Dralnas Moryon will approach you near the entrance to begin the related quest. Deathbringer Orders can be found on a table in the first open chamber. Centipedes are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Wailing_Maw",
+        "page_title": "Online:The Wailing Maw",
+        "revision_id": 3533555,
+        "retrieved_at": "2026-08-12T21:38:01Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

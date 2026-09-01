@@ -1,0 +1,46 @@
+{
+    "id": "halls_of_fabrication",
+    "name": "Halls of Fabrication",
+    "content_type": "dungeon",
+    "summary": "The Halls of Fabrication are a part of Sotha Sil's Clockwork City. The Halls are an enormous processing facility that produces and iterates the designs for Sotha Sil's machines and reprocesses their material. At one point their functions included the refactoring of material from Dwemer machines, but Sotha Sil suspended this practice at some point in the past. The facility is governed by its central intelligence, the Assembly General, which continues to process and redesign the Clockwork machines alone. A portal to the facility opened in Nirn within Abanabi Cave, spewing out fabricants which decimated the local wildlife, and threatened Divayth Fyr's expansion of Tel Fyr. You will receive a Divaricated Tone Fork for defeating the Assembly General with hard mode activated.",
+    "location": "",
+    "boss_ids": [
+        "hunter_killer_positrox",
+        "hunter_killer_negatrix",
+        "verminous_fabricant",
+        "pinnacle_factotum",
+        "factotum",
+        "archcustodian",
+        "dwarven_spider",
+        "reactor",
+        "reclaimer",
+        "reducer",
+        "assembly_general",
+        "dwarven_colossus"
+    ],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        },
+        {
+            "id": "trials",
+            "name": "trial",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Halls_of_Fabrication",
+        "page_title": "Online:Halls of Fabrication",
+        "revision_id": 3548781,
+        "retrieved_at": "2026-08-12T05:32:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

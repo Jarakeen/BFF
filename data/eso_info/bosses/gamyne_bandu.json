@@ -1,0 +1,70 @@
+{
+    "id": "gamyne_bandu",
+    "name": "Gamyne Bandu",
+    "content_id": "fungal_grotto_ii",
+    "content_name": "Fungal Grotto II",
+    "location": "Fungal Grotto II",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "29,870",
+        "veteran": "64,808",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that does moderate physical damage. If taunted, the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Ripper",
+            "description": "A heavy melee attack that does high physical damage as well as knocking the target back. Blocking will reduce the damage taken and prevent the knockback. If taunted, the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Torture Session",
+            "description": "The boss damages and stuns a random player, and four Shadow Tormentors chain the player to the ground. A sword appears above the player's head and slowly descends. This attack cannot be avoided, and players cannot break free from it. To escape, the other members only need to kill one of the Shadow Tormentors in order to free the player."
+        },
+        {
+            "name": "Shadow Execution",
+            "description": "If the players fail to free the trapped party member in time, the sword will impale that player resulting in an instant death by lethal oblivion damage."
+        },
+        {
+            "name": "Shadow Chains",
+            "description": "The boss throws a purple orb at a random player. If the orb hits, that player will take moderate magical damage. On top of that, a purple beam may form between that player and another player. The purple orb can be dodged by rolling to ensure the beam does not form."
+        },
+        {
+            "name": "Chains of Misery",
+            "description": "The beam does high magic damage over time. To break the beam, the two players must move away from each other until the beam breaks. To minimize the damage done by this attack, players should spread apart so the beam breaks faster."
+        },
+        {
+            "name": "Summon Obsidian Aspects",
+            "description": "At various points throughout the fight, the boss will vanish and summon four Obsidian Aspects to attack the party. These enemies do moderate physical damage. Once all four have been defeated, the boss reappears. There appears to be no time limit to this stage of the fight, and players can keep one of the aspects alive to buy them time to recover resources before resuming the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Kings of the Grotto: Clear out an old grotto for a group of Mephala worshipers.",
+        "Lighting the Shadows: Help the Fighters Guild stop the Spider Cult from raising an army of shadows.",
+        "Pledge: Fungal Grotto II: Explore Fungal Grotto II and return Undaunted.",
+        "Veteran Fungal Grotto Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Fungal Grotto. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Gamyne Bandu is a Dark Elf member of the Spider Cult found in both Fungal Grotto I, as well as Fungal Grotto II. While she is initially friendly, she later serves as the first boss of Fungal Grotto II. In Fungal Grotto II, she will be frozen in place on a boulder, being awoken by four mages after the spider cultists in the room are killed.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gamyne_Bandu",
+        "page_title": "Online:Gamyne Bandu",
+        "revision_id": 3497967,
+        "retrieved_at": "2026-08-12T21:23:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

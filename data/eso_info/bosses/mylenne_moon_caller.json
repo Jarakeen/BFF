@@ -1,0 +1,108 @@
+{
+    "id": "mylenne_moon_caller",
+    "name": "Mylenne Moon-Caller",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "Moon Hunter Bailey, Moon Hunter Keep",
+    "species": "Werewolf",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,210,231",
+        "veteran": "3,321,181",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw Slash",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Crimson Claw",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Gushing Wound",
+            "description": "Getting hit by Crimson Claw deals moderate physical damage over time."
+        },
+        {
+            "name": "Shred",
+            "description": "A charged heavy melee attack that deals devastating physical damage. This must be blocked if possible."
+        },
+        {
+            "name": "Lightning Rage",
+            "description": "The boss causes lightning to strike randomly around the group, dealing moderate shock damage as indicated by red circles. Keep moving to avoid this."
+        },
+        {
+            "name": "Alpha Leap",
+            "description": "The boss jumps on a random target, pinning them down and dealing moderate physical damage. This only affects one player."
+        },
+        {
+            "name": "Charging Leap",
+            "description": "The boss charges up and jumps on the pinned target, dealing lethal damage. Interrupt the boss to prevent this and free the pinned player."
+        },
+        {
+            "name": "Mark of the Pack",
+            "description": "At 90, 70, 50, 30 and 10% health, Mylenne will call dire wolves to attack a specific group member. Whoever is marked will have a red aura around their head. The wolves should be killed quickly: the damage they deal adds up over time and their bite snares the target, slowing their movement speed and making it difficult for the target to avoid the onslaught."
+        },
+        {
+            "name": "Summon Shock Wardens",
+            "description": "At 80, 60, 40 and 20% health, two Shock Wardens will join the fight. This is indicated by an audio cue. They should be killed quickly."
+        },
+        {
+            "name": "Prodding Shock",
+            "description": "When Mylenne is prodded by the Shock Wardens' lightning, she becomes enraged and starts glowing red. She must be pulled over to a residual pool of lightning left by a Shock Warden's death (known as Resonating Pools) in order to cleanse her rage. While enraged, the damage she deals is increased and the damage she takes is reduced."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Vykosa the Ascendant",
+            "line": "Was Vykosa not told the intruders would be dealt with? Must she handle everything herself?",
+            "trigger": "After walking into the courtyard, you'll see Vykosa on a nearby balcony bemoaning your progression through the keep",
+            "ability": "Mark of the Pack"
+        },
+        {
+            "speaker": "Mylenne Moon-Caller",
+            "line": "They shall not intrude much longer, my mistress. I swear it.",
+            "trigger": "After walking into the courtyard, you'll see Vykosa on a nearby balcony bemoaning your progression through the keep",
+            "ability": "Mark of the Pack"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After walking into the courtyard, you'll see Vykosa on a nearby balcony bemoaning your progression through the keep": [
+            {
+                "speaker": "Vykosa the Ascendant",
+                "line": "Was Vykosa not told the intruders would be dealt with? Must she handle everything herself?",
+                "trigger": "After walking into the courtyard, you'll see Vykosa on a nearby balcony bemoaning your progression through the keep",
+                "ability": "Mark of the Pack"
+            },
+            {
+                "speaker": "Mylenne Moon-Caller",
+                "line": "They shall not intrude much longer, my mistress. I swear it.",
+                "trigger": "After walking into the courtyard, you'll see Vykosa on a nearby balcony bemoaning your progression through the keep",
+                "ability": "Mark of the Pack"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Moonlight Ascent: Explore an old Silver Dawn stronghold and deal with the werewolves controlling it.",
+        "Pledge: Moon Hunter Keep: Prove you are truly Undaunted by clearing the Moon Hunter Keep."
+    ],
+    "summary": "Mylenne Moon-Caller is a white werewolf and member of the Moon Hunter Pack, found in Moon Hunter Keep's Bailey. She has killed all that have challenged her, and only Vykosa holds more power. Mylenne remains utterly loyal to her mistress.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mylenne_Moon-Caller",
+        "page_title": "Online:Mylenne Moon-Caller",
+        "revision_id": 3607124,
+        "retrieved_at": "2026-08-12T21:29:00Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

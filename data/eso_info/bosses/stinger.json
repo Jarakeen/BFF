@@ -1,0 +1,56 @@
+{
+    "id": "stinger",
+    "name": "Stinger",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible, Frozen Arena",
+    "species": "Giant Scorpion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "589,395",
+        "veteran": "1,745,443",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Double Strike",
+            "description": "Two basic melee attacks that does minor physical damage each."
+        },
+        {
+            "name": "Poison Geyser",
+            "description": "The boss stabs its stinger into the ground causing poison to erupt from under the players as indicated by red circles dealing moderate poison damage."
+        },
+        {
+            "name": "Envenom",
+            "description": "The boss shoots a ball of poison at a target causing them to take moderate poison damage."
+        },
+        {
+            "name": "Project Toxin",
+            "description": "Getting hit by Envenom will cause the target and all players near them to take minor poison damage over time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible."
+    ],
+    "summary": "The Stinger is a Giant Scorpion trained by the Beast Master of the Blessed Crucible. She will announce it with the words, \"Prepare yourself, combatants! Pray to your gods and make your peace. You face the Stinger!\" After you slay him, she will say: \"What? Impossible? How did you win?\"",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stinger",
+        "page_title": "Online:Stinger",
+        "revision_id": 3244825,
+        "retrieved_at": "2026-08-12T21:15:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

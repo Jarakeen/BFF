@@ -1,0 +1,18 @@
+{
+    "id": "dragonhold_new_moon_rising",
+    "name": "Dragonhold (New Moon Rising)",
+    "content_type": "dungeon",
+    "summary": "Dragonhold is a floating island off of the southern coast of Southern Elsweyr. It was Kaalgrontiid's seat of power in ancient times, and he has returned to put it to use. It has risen into the skies above Southern Elsweyr with the help of the innumerable sacrifices made to Kaalgrontiid at the aeonstone formations scattered across the island.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Dragonhold_(New_Moon_Rising)",
+        "page_title": "Online:Dragonhold (New Moon Rising)",
+        "revision_id": 3550276,
+        "retrieved_at": "2026-08-12T21:20:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

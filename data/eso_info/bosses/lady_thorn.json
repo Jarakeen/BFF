@@ -1,0 +1,205 @@
+{
+    "id": "lady_thorn",
+    "name": "Lady Thorn",
+    "content_id": "castle_thorn",
+    "content_name": "Castle Thorn",
+    "location": "Castle Thorn",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,283,772",
+        "veteran": "6,671,594",
+        "hardmode": "18,547,032"
+    },
+    "abilities": [
+        {
+            "name": "Lash",
+            "description": "Basic melee attack which causes moderate physical damage."
+        },
+        {
+            "name": "Cuff",
+            "description": "Lady Thorn glows red and slashes a target with both her hands as she moves towards the target with unnatural speed, dealing high physical damage and knocking back targets hit. This can be blocked to negate the knockback."
+        },
+        {
+            "name": "Rive",
+            "description": "Lady Thorn creates many small areas throughout the arena which explode after a delay, dealing moderate physical damage. When Lady Thorn is below 50% HealthC, only one area now spawns, but it grows in size over time and deals higher damage, and Lady Thorn doesn't have to perform a casting animation to create them."
+        },
+        {
+            "name": "Expulse",
+            "description": "Lady Thorn creates similar areas as in \"Rive\", but pushes them outward instead of detonating them, dealing moderate magical damage."
+        },
+        {
+            "name": "Incursion",
+            "description": "Lady Thorn approaches a target with alarming speed and drains some of their blood, dealing major physical damage."
+        },
+        {
+            "name": "Reconvene/Scatter",
+            "description": "At 70%/45% Health, Lady Thorn disappears into a bloodthirsty swarm and becomes untargettable, as a large area appears under her last position dealing continuous moderate physical damage (Reconvene). Many smaller areas shoot out and travel outward from the larger mass in many directions, which deal continuous moderate physical damage (Scatter). Also, Blood Crawlers rapidly spawn from the larger area."
+        },
+        {
+            "name": "Batswarm",
+            "description": "At 90% Health, Lady Thorn summons a swarm of bats that blankets the entire arena, dealing increasing continuous direct moderate-high oblivion damage to those who stand in it. A single green AoE (reminiscent of Zaan the Scalecaller's shield throw) will appear in the thick of the swarm. Standing in that circle gives protection from the bats and leaves a safe area to battle Lady Thorn."
+        },
+        {
+            "name": "Blood Dive",
+            "description": "During Batswarm, Lady Thorn periodically flies in a straight line in the arena, dealing moderate physical damage, knocking back and stunning targets hit. Blocking this attack prevents the crowd control."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Lady Thorn",
+            "line": "Uninvited guests! In my home! Please forgive my hospitality. I have not entertained in centuries.",
+            "trigger": "When you enter the castle proper after passing Dread Tindulra",
+            "ability": "Rive"
+        },
+        {
+            "speaker": "Lady Thorn",
+            "line": "Well done, Talfyg. You brought me a daughter of Verandis, as requested. She will complement our lord's army well.",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "",
+            "line": "<Talfyg strikes Gwendis, taking some of her essence and summoning a Blood Twilight.>",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "Gwendis",
+            "line": "What is this? Damn it, Talfyg, what have you done?",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "Talfyg",
+            "line": "Your blood flows strong, Gwendis! My lady has need of you. But she has no use for the others.",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "Gwendis",
+            "line": "No! You won't get away so easily!",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "",
+            "line": "<Talfyg transforms into mist and escapes through the door on the other side of the room. Gwendis follows suit.>",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "Gwendis",
+            "line": "You can handle this. I refuse to let him win!",
+            "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+            "ability": "Cuff"
+        },
+        {
+            "speaker": "Lady Thorn",
+            "line": "Such power! Perhaps I should not let my pets tear you limb from limb. Vaduroth can take your soul, instead.",
+            "trigger": "Defeating groups of her Thorn Legion before entering Vaduroth's chamber, Lady Thorn will be impressed.",
+            "ability": "Batswarm"
+        },
+        {
+            "speaker": "Lady Thorn",
+            "line": "The absolute gall! Little people, coming into my home and destroying my creations! You will pay!",
+            "trigger": "When you finally reach the Great Cathedral to confront Lady Thorn, she will be waiting for you.",
+            "ability": "Cuff"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you enter the castle proper after passing Dread Tindulra": [
+            {
+                "speaker": "Lady Thorn",
+                "line": "Uninvited guests! In my home! Please forgive my hospitality. I have not entertained in centuries.",
+                "trigger": "When you enter the castle proper after passing Dread Tindulra",
+                "ability": "Rive"
+            }
+        ],
+        "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.": [
+            {
+                "speaker": "Lady Thorn",
+                "line": "Well done, Talfyg. You brought me a daughter of Verandis, as requested. She will complement our lord's army well.",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "",
+                "line": "<Talfyg strikes Gwendis, taking some of her essence and summoning a Blood Twilight.>",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "Gwendis",
+                "line": "What is this? Damn it, Talfyg, what have you done?",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "Talfyg",
+                "line": "Your blood flows strong, Gwendis! My lady has need of you. But she has no use for the others.",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "Gwendis",
+                "line": "No! You won't get away so easily!",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "",
+                "line": "<Talfyg transforms into mist and escapes through the door on the other side of the room. Gwendis follows suit.>",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            },
+            {
+                "speaker": "Gwendis",
+                "line": "You can handle this. I refuse to let him win!",
+                "trigger": "Upon entering the Garden Conservatory with Gwendis and Talfyg, Lady Thorn's voice to suddenly boom out as Talfyg performs his sudden but inevitable betrayal.",
+                "ability": "Cuff"
+            }
+        ],
+        "Defeating groups of her Thorn Legion before entering Vaduroth's chamber, Lady Thorn will be impressed.": [
+            {
+                "speaker": "Lady Thorn",
+                "line": "Such power! Perhaps I should not let my pets tear you limb from limb. Vaduroth can take your soul, instead.",
+                "trigger": "Defeating groups of her Thorn Legion before entering Vaduroth's chamber, Lady Thorn will be impressed.",
+                "ability": "Batswarm"
+            }
+        ],
+        "When you finally reach the Great Cathedral to confront Lady Thorn, she will be waiting for you.": [
+            {
+                "speaker": "Lady Thorn",
+                "line": "The absolute gall! Little people, coming into my home and destroying my creations! You will pay!",
+                "trigger": "When you finally reach the Great Cathedral to confront Lady Thorn, she will be waiting for you.",
+                "ability": "Cuff"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She is mentioned in Meet the Character - Lady Thorn.",
+        "Several letters are addressed to her: Architectural Survey Summary Report and A Daedric Proposal."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood of the Past: Launch a frontal assault on a Vampire Lord's castle.",
+        "Pledge: Castle Thorn: Prove you are truly Undaunted by clearing Castle Thorn."
+    ],
+    "summary": "This article is about the creature. For the item set, see Lady Thorn (set). Lady Thorn is a High Elf Vampire Lord who rules over Castle Thorn. She used to be known as Lady Ingerien of Clan Direnni.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Lady_Thorn",
+        "page_title": "Online:Lady Thorn",
+        "revision_id": 3608057,
+        "retrieved_at": "2026-08-12T21:16:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

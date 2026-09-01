@@ -1,0 +1,28 @@
+{
+    "id": "forsaken_citadel",
+    "name": "Forsaken Citadel",
+    "content_type": "dungeon",
+    "summary": "The Forsaken Citadel is a ruined fortress in Southern Elsweyr, located north of Senchal containing undead soldiers. Formerly known as the Topal Legionary Academy, it trained some of the Akaviri Potentate's greatest tacticians, and later became an Imperial Legion school. In the face of the Knahaten Flu, the citadel's commander shut the gates and the garrison was never heard from again. The fortress is now considered haunted by the Khajiit locals. The spirit of Jano Invel still roams the ruins, tirelessly looking for a way to remove the curse. A copy of Demon from the East is sitting on a bench in the library. An unsent letter is on a writing desk in the same room. A copy of The Bounty and the Shields is on a table in the barracks. Hiijar's Tapestry Scrap is on the right-hand side wall, in the back of the room upstairs in the Grand Lecturer's Hall.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dragonhold_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "At some point in development, this delve was known as the House of Embers. The name, or references to it, persist in some books and dialogue."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Forsaken_Citadel",
+        "page_title": "Online:Forsaken Citadel",
+        "revision_id": 3198722,
+        "retrieved_at": "2026-08-12T21:22:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

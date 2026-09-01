@@ -1,0 +1,172 @@
+{
+    "id": "the_whisperer",
+    "name": "The Whisperer",
+    "content_id": "spindleclutch_i",
+    "content_name": "Spindleclutch I",
+    "location": "Spindleclutch I",
+    "species": "Spider Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,347,189",
+        "veteran": "3,993,959",
+        "hardmode": "4,992,448"
+    },
+    "abilities": [
+        {
+            "name": "Impale",
+            "description": "A basic melee attack that does moderate physical damage."
+        },
+        {
+            "name": "Web Blast",
+            "description": "The Whisperer spits a green projectile at a player, doing high physical damage and knocking the player back."
+        },
+        {
+            "name": "Arachnophobia",
+            "description": "The Whisperer spits a blue orb at a player, doing moderate-high magic damage and stunning the player. The player is then snared and also sees many spiders attacking them, but that is only a hallucination. This cannot be blocked."
+        },
+        {
+            "name": "Grappling Web",
+            "description": "The Whisperer pulls everyone in front of it towards itself using webs. This is usually followed by Daedric Explosion."
+        },
+        {
+            "name": "Daedric Explosion",
+            "description": "The Whisperer charges up a large burst of magic around itself that when released deals high magical damage and knocks back as indicated by a red circle. This can be blocked to be staggered instead."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Whisperer",
+            "line": "Who wanders into my web? More playthings?",
+            "trigger": "When you clear the first area of Spindlekin",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "I can taste your delicious fear.",
+            "trigger": "Once you enter into the lair of Swarm Mother",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Closer, my prey. Closer.",
+            "trigger": "After killing Swarm Mother",
+            "ability": null
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Kill them all! No mercy!",
+            "trigger": "When you enter the cave areas filled with the corrupted Fighters Guild members",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Misery and death all around. This pleases me!",
+            "trigger": "As you're fighting off the corrupted fighters",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Come to me. Enter my web. Join me, forever.",
+            "trigger": "As approach closer to her lair and more opposition to be faced",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Closer. Come closer. Embrace the darkness.",
+            "trigger": "As approach closer to her lair and more opposition to be faced",
+            "ability": "Daedric Explosion"
+        },
+        {
+            "speaker": "The Whisperer",
+            "line": "Incorruptible creatures! You dare to defy me! I'll kill you all!",
+            "trigger": "Once you step into her lair, she will order her thralls to attack you before she comes forward to deal with your group herself",
+            "ability": "Daedric Explosion"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you clear the first area of Spindlekin": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Who wanders into my web? More playthings?",
+                "trigger": "When you clear the first area of Spindlekin",
+                "ability": "Daedric Explosion"
+            }
+        ],
+        "Once you enter into the lair of Swarm Mother": [
+            {
+                "speaker": "The Whisperer",
+                "line": "I can taste your delicious fear.",
+                "trigger": "Once you enter into the lair of Swarm Mother",
+                "ability": "Daedric Explosion"
+            }
+        ],
+        "After killing Swarm Mother": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Closer, my prey. Closer.",
+                "trigger": "After killing Swarm Mother",
+                "ability": null
+            }
+        ],
+        "When you enter the cave areas filled with the corrupted Fighters Guild members": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Kill them all! No mercy!",
+                "trigger": "When you enter the cave areas filled with the corrupted Fighters Guild members",
+                "ability": "Daedric Explosion"
+            }
+        ],
+        "As you're fighting off the corrupted fighters": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Misery and death all around. This pleases me!",
+                "trigger": "As you're fighting off the corrupted fighters",
+                "ability": "Daedric Explosion"
+            }
+        ],
+        "As approach closer to her lair and more opposition to be faced": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Come to me. Enter my web. Join me, forever.",
+                "trigger": "As approach closer to her lair and more opposition to be faced",
+                "ability": "Daedric Explosion"
+            },
+            {
+                "speaker": "The Whisperer",
+                "line": "Closer. Come closer. Embrace the darkness.",
+                "trigger": "As approach closer to her lair and more opposition to be faced",
+                "ability": "Daedric Explosion"
+            }
+        ],
+        "Once you step into her lair, she will order her thralls to attack you before she comes forward to deal with your group herself": [
+            {
+                "speaker": "The Whisperer",
+                "line": "Incorruptible creatures! You dare to defy me! I'll kill you all!",
+                "trigger": "Once you step into her lair, she will order her thralls to attack you before she comes forward to deal with your group herself",
+                "ability": "Daedric Explosion"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Whispers: Aid the Fighters Guild members in clearing the Spindleclutch I caves.",
+        "Pledge: Spindleclutch I: Explore Spindleclutch I and return Undaunted."
+    ],
+    "summary": "This article is about the boss in Spindleclutch I. For the boss in the Infinite Archive, see The Whisperer (Infinite Archive). The Whisperer is a powerful Spider Daedra that lives deep within Spindleclutch I. It can cause beings that enter the caves to turn on each other. It serves as the second and final boss of Spindleclutch. Its unique drops are the Spindlecleave and the Whisperwoe. It also has a chance to drop the Goblet Gorget antiquity lead for the Bloodlord's Embrace.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Whisperer",
+        "page_title": "Online:The Whisperer",
+        "revision_id": 3321282,
+        "retrieved_at": "2026-08-12T21:34:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "frozen_coast",
+    "name": "Frozen Coast",
+    "content_type": "dungeon",
+    "summary": "The Frozen Coast is the northeastern shoreline of Western Skyrim. As the name implies, the landing is frozen all year round as the snow and ice never melts there. In Elder Scrolls Online, it is also the name of the delve in the area. It is a small island off the coast that is surrounded by ice floes and has a few wooden shacks and tents. It is home to the Frostbite Raiders, but they have recently been attacked by a group of marauding sea giants. Both sides will be hostile to adventurers nonetheless. While on the island, the water is so cold that standing or swimming in it for long will freeze you, dealing damage that increases the longer you stay in it. A former raider will send you to the island to reunite her with her partner.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "greymoor_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Frozen_Coast",
+        "page_title": "Online:Frozen Coast",
+        "revision_id": 3388281,
+        "retrieved_at": "2026-08-12T21:23:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

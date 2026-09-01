@@ -1,0 +1,77 @@
+{
+    "id": "spawn_of_mephala",
+    "name": "Spawn of Mephala",
+    "content_id": "fungal_grotto_ii",
+    "content_name": "Fungal Grotto II",
+    "location": "Fungal Grotto II",
+    "species": "Spider Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,702,217",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Impale",
+            "description": "A basic melee attack that does high physical damage."
+        },
+        {
+            "name": "Daedric Explosion",
+            "description": "The boss's arms glow blue and it charges up a large burst of energy around itself. This attack does high magical damage as indicated by a red circle."
+        },
+        {
+            "name": "Shadow Bolt",
+            "description": "The boss spits a purple bolt at a random player. This attack does high magical damage and knocks the player back. This attack can be avoided by rolling."
+        },
+        {
+            "name": "Daedric Destruction",
+            "description": "Lasers will appear from the altars above the arena and target the ground near a random player, causing an explosion at the point of contact. This attack does high magical damage and is indicated by an expanding red circle. Players should note that the laser will move in an attempt to focus on you, and thus constant movement will help the player avoid this attack."
+        },
+        {
+            "name": "Death Is Your Only Escape",
+            "description": "The boss will summon a portal at the back of the arena. This portal will suck the nearest player in and transport them to a small cave. To escape, the player has to kill all the spiders within. To make the fight easier, one of the DPS should stand near the portal, so as to prevent the tank or the healer from getting sucked in. Note that if the boss is low on health (roughly 10%), any player currently inside the cave will be transported back regardless of whether any spiders remain. No more portals will appear after that point as well."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Spawn of Mephala",
+            "line": "Your corpse will feed my children!",
+            "trigger": "When engaged in combat she will shout",
+            "ability": "Daedric Destruction"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When engaged in combat she will shout": [
+            {
+                "speaker": "Spawn of Mephala",
+                "line": "Your corpse will feed my children!",
+                "trigger": "When engaged in combat she will shout",
+                "ability": "Daedric Destruction"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Lighting the Shadows: Help the Fighters Guild stop the Spider Cult from raising an army of shadows.",
+        "Pledge: Fungal Grotto II: Explore Fungal Grotto II and return Undaunted.",
+        "Veteran Fungal Grotto Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Fungal Grotto. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "This article is about the creature. For the item set, see Spawn of Mephala (set). The Spawn of Mephala is a large spider daedra that serves as the second boss of Fungal Grotto II. Its unique drops are the Webspinner's Brace and Debaser. This boss has a small leashing radius to prevent exploits. It cannot be led onto the small bridge nearby, as this will reset the fight. Originally the boss could be taunted onto the bridge to avoid all damage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Spawn_of_Mephala",
+        "page_title": "Online:Spawn of Mephala",
+        "revision_id": 3259521,
+        "retrieved_at": "2026-08-12T21:23:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

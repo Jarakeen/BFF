@@ -1,0 +1,158 @@
+{
+    "id": "shilia",
+    "name": "Shilia",
+    "content_id": "dragonstar_arena",
+    "content_name": "Dragonstar Arena",
+    "location": "Dragonstar Arena, Round 3: The Marsh",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "618,865",
+        "veteran": "2,633,749",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack that does minor physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Rapid Strikes",
+            "description": "Shilia casts Rapid Strikes, hitting a player multiple times and dealing multiple instances of physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Blood Craze",
+            "description": "Shilia slashes at you twice, doing moderate physical damage over time to the player. This attack also heals the enemy over time.",
+            "damage_type": null
+        },
+        {
+            "name": "Agony",
+            "description": "The enemy stuns the player for a short time. Taking damage from any source will break the stun, but the player may choose to break free from it instead. After the stun ends, this spell also does moderate magical damage over time to the player. This spell can be interrupted to set the enemy off balance. Blocking will prevent the stun.",
+            "damage_type": null
+        },
+        {
+            "name": "Flying Blade",
+            "description": "The enemy backs away from the player and throws a dagger at the player. This attack Causes snare and bleed if it connects. This attack can be interrupted to set the enemy off balance. The dagger can be blocked to prevent the snare and bleed and reduce the damage done.",
+            "damage_type": null
+        },
+        {
+            "name": "Steel Tornado",
+            "description": "Shilia spins around, doing moderate physical damage to all players as indicated by a red circle. Blocking will reduce the damage taken.",
+            "damage_type": null
+        },
+        {
+            "name": "Roll Dodge",
+            "description": "Shilia can perform a roll dodge to avoid incoming damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Ember Explosion",
+            "description": "Shilia causes a Flame damage explosion in a area.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The enemy stuns the player for a short time. Taking damage from any source will break the stun, but the player may choose to break free from it instead. After the stun ends, this spell also does moderate magical damage over time to the player. This spell can be interrupted to set the enemy off balance. Blocking will prevent the stun.",
+            "name": "Agony",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The enemy backs away from the player and throws a dagger at the player. This attack Causes snare and bleed if it connects. This attack can be interrupted to set the enemy off balance. The dagger can be blocked to prevent the snare and bleed and reduce the damage done.",
+            "name": "Flying Blade",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "bleed",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Shilia spins around, doing moderate physical damage to all players as indicated by a red circle. Blocking will reduce the damage taken.",
+            "name": "Steel Tornado",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Shilia can perform a roll dodge to avoid incoming damage.",
+            "name": "Roll Dodge",
+            "links": [],
+            "mechanic_type": "movement",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Shilia causes a Flame damage explosion in a area.",
+            "name": "Ember Explosion",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Shilia is a Reachman warrior and member of the Dragonclaw Clan competing at the Dragonstar Arena. She is fought at the end of Round 3: The Marsh alongside Nak'tah.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shilia",
+        "page_title": "Online:Shilia",
+        "revision_id": 3196387,
+        "retrieved_at": "2026-08-19T03:20:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "quickwater_cave",
+    "name": "Quickwater Cave",
+    "content_type": "dungeon",
+    "summary": "Quickwater Cave is a cave in northeastern Cyrodiil, southeast of Arrius Keep containing Black Daggers. The second zone of this delve, Quickwater Depths, can only be reached by jumping into one of two whirlpools in the first zone. Orders for Athal can be found near Athal Andas.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Quickwater Cave also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Quickwater_Cave",
+        "page_title": "Online:Quickwater Cave",
+        "revision_id": 3598804,
+        "retrieved_at": "2026-08-12T21:31:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,73 @@
+{
+    "id": "creepclaw",
+    "name": "Creepclaw",
+    "content_id": "the_underweave",
+    "content_name": "The Underweave",
+    "location": "Underweave Courtyard",
+    "species": "Lurker",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "Basic melee attack with the claw dealing moderate physical damage."
+        },
+        {
+            "name": "Heavy Strike",
+            "description": "Creepclaw prepares a double strike attack with its claws. The first strike deals moderate-high physical damage and the second strike deals moderate damage and staggers. Blocking this staggers Creepclaw instead."
+        },
+        {
+            "name": "Quake",
+            "description": "Creepclaw punches and stomps the ground four times, dealing moderate physical damage over time and snaring each time in a area around them. The last stomp knocks back and stuns as well. Blocking the last stomp staggers instead."
+        },
+        {
+            "name": "Bile Sweep",
+            "description": "Creepclaw spits in a arc in front of them, creating four areas that travel forward which deal continuous moderate disease damage as well as snaring. Then each one forms an area dealing continuous direct moderate flame damage."
+        },
+        {
+            "name": "Foul Spit",
+            "description": "Creepclaw spits one large area of bile under a target, dealing moderate-high disease damage and snaring."
+        },
+        {
+            "name": "Toxic Bite",
+            "description": "Creepclaw pukes in a cone in front of it, dealing moderate physical damage, stunning and applying/reapplying \"Poisoned\" which deals minor disease damage over 8 seconds."
+        },
+        {
+            "name": "Tackle",
+            "description": "When far from Creepclaw, he charges towards the target, dealing moderate physical damage and staggering targets in its wake."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Creepclaw is a Lurker who can be found in the northern pool of water in the entry room of the Underweave. He serves as one of the champions of the Underweave public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Creepclaw",
+        "page_title": "Online:Creepclaw",
+        "revision_id": 3298023,
+        "retrieved_at": "2026-08-12T21:36:39Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "silatar",
+    "name": "Silatar",
+    "content_type": "dungeon",
+    "summary": "Silatar is an island estate in the Summerset archipelago. This is the island where Aranias grew up, and is visited only in the quest The Witch of Silatar, in a story told by Spinner Maruin at the Spinner's Cottage. Squirrels are found there. Hazards include: Slaughterfish",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "You cannot use your mount in this zone."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Silatar",
+        "page_title": "Online:Silatar",
+        "revision_id": 3593097,
+        "retrieved_at": "2026-08-12T21:33:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

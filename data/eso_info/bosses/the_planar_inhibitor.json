@@ -1,0 +1,39 @@
+{
+    "id": "the_planar_inhibitor",
+    "name": "The Planar Inhibitor",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "White-Gold Tower",
+    "species": "Flame Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,852,384",
+        "veteran": "3,308,249",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Planemeld Obverse: Fulfill the prophecy of an Elder Scroll by freeing the White-Gold Tower from Coldharbour's clutches.",
+        "Pledge: White-Gold Tower: Prove you are truly Undaunted by clearing White-Gold Tower."
+    ],
+    "summary": "The Planar Inhibitor is a cold-flame atronach found in the White-Gold Tower. She serves as the dungeon's second boss. She has a chance to drop The Unbroken, a unique item.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Planar_Inhibitor",
+        "page_title": "Online:The Planar Inhibitor",
+        "revision_id": 3497798,
+        "retrieved_at": "2026-08-12T21:38:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,68 @@
+{
+    "id": "rizzuk_bonechill",
+    "name": "Rizzuk Bonechill",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "Coldsnap Scraphoard, Frostvault",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,248,102",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Frost Bolt",
+            "description": "A basic ranged attack that deals moderate frost damage."
+        },
+        {
+            "name": "Frost Volley",
+            "description": "The boss channels a spell that deals high frost damage over time to all players. This must be interrupted as soon as possible."
+        },
+        {
+            "name": "Hail Storm",
+            "description": "The boss summons frost AOEs around the arena as indicated by blue circles. These deal very high frost damage over time and must be avoided if possible."
+        },
+        {
+            "name": "Deep Freeze",
+            "description": "The boss channels a spell that deals moderate unavoidable frost damage over time to all players. This is also telegraphed by a message on your screen."
+        },
+        {
+            "name": "Shatter",
+            "description": "After Deep Freeze ends, all players will explode dealing moderate frost damage around themselves as indicated by red circles. Do not overlap or go near your teammates when Deep Freeze is occurring as during shatter, you will be stunned in place."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Lock and Keystone: Search the depths of a Dwemer vault for a powerful artifact.",
+        "Pledge: Frostvault: Prove you are truly Undaunted by clearing Frostvault."
+    ],
+    "summary": "Rizzuk Bonechill is a Riekling frost mage of the Coldsnap Tribe that serves as the third boss of Frostvault. He is accompanied by a powerful Frost Atronach called Avalanche. After he is killed, his atronach will crumble as well.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Rizzuk_Bonechill",
+        "page_title": "Online:Rizzuk Bonechill",
+        "revision_id": 3347238,
+        "retrieved_at": "2026-08-12T21:23:07Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

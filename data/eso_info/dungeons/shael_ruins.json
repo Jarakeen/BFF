@@ -1,0 +1,26 @@
+{
+    "id": "shael_ruins",
+    "name": "Shael Ruins",
+    "content_type": "dungeon",
+    "summary": "Shael Ruins is a haunted Ayleid ruin in southern Malabal Tor, just north of the Grahtwood gate. It can be found south of Abamath. Rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shael_Ruins",
+        "page_title": "Online:Shael Ruins",
+        "revision_id": 3598319,
+        "retrieved_at": "2026-08-12T21:33:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

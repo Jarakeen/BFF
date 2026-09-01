@@ -1,0 +1,34 @@
+{
+    "id": "ruins_of_mazzatun",
+    "name": "Ruins of Mazzatun",
+    "content_type": "dungeon",
+    "summary": "Ruins of Mazzatun is a group dungeon in Shadowfen. It's part of the Shadows of the Hist dungeon pack DLC, along with Cradle of Shadows. The ruins can be entered from a cave at Hei-Halai, west of Stormhold. The entrance to Cold-Blood Cavern lies beneath a trap door in the tunnel leading to Mazzatun's entrance. Pages from the Mazzatun Style and a lead for the Bog-Blue Jasper Fetish (required for the Harpooner's Wading Kilt) have a chance to drop from the last boss. Similar to the Imperial City group dungeons, Mazzatun has an objective quest as well as a repeatable pledge from Urgarlag Chief-bane. Hist Ponds serve as traps in this dungeon. Monkeys, frogs, torchbugs and wasps can be found throughout the dungeon. Its dungeon sets are Amber Plasm, Aspect of Mazzatun, and Heem-Jas' Retribution. The Ruins of Mazzatun make up an ancient Argonian city inhabited by the Xit-Xaht Tribe. The Xit-Xaht have an affinity for the stone and the roots, and have recently taken to raiding other villages and enslaving the inhabitants. Those they capture are put to work, being forced to construct the sprawling city of Mazzatun. The city's construction doesn't entirely make sense; there are hallways leading nowhere and staircases that climb up to dead end walls. Aptly nicknamed the \"Puzzle City\", the ruins of old Mazzatun are like a sprawling maze.",
+    "location": "",
+    "boss_ids": [
+        "mighty_chudan",
+        "haj_mota",
+        "xal_nur_the_slaver",
+        "argonian_behemoth",
+        "tree_minder_na_kesh"
+    ],
+    "achievements": [
+        {
+            "id": "shadows_of_the_hist_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The text for having completed the objective dungeon used to be You put an end to the evil infecting the Ruins of Mazzatun. This was changed in one of the patches."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ruins_of_Mazzatun",
+        "page_title": "Online:Ruins of Mazzatun",
+        "revision_id": 3598014,
+        "retrieved_at": "2026-08-12T21:31:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

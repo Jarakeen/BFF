@@ -1,0 +1,192 @@
+{
+    "id": "voriak_solkyn",
+    "name": "Voriak Solkyn",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Theater of Despair, Maelstrom Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "435,324",
+        "veteran": "989,388",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"After I kill you, I shall animate your corpse!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I summon your death!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You are just a pest to be swatted away!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"That just makes me even angrier!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Stupid mortal! That won't stop me!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Enough play! Time to end this game.\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Now I shall reveal my true power!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"This will finish you!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"I win! I always win.\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Behold my lovely roiling cloud! I shall await you there.\"",
+            "trigger": "Once he teleports above:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Now for the final phase. Watch as I absorb all the power I need!\"",
+            "trigger": "Once the Animus Crystals on the upper platform are destroyed:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"You can die. We Daedra cannot!\"",
+            "trigger": "After wiping and resurrecting:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"After I kill you, I shall animate your corpse!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I summon your death!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"You are just a pest to be swatted away!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"That just makes me even angrier!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Stupid mortal! That won't stop me!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Enough play! Time to end this game.\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Now I shall reveal my true power!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"This will finish you!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"I win! I always win.\"",
+                "trigger": "",
+                "ability": null
+            }
+        ],
+        "Once he teleports above:": [
+            {
+                "speaker": "",
+                "line": "\"Behold my lovely roiling cloud! I shall await you there.\"",
+                "trigger": "Once he teleports above:",
+                "ability": null
+            }
+        ],
+        "Once the Animus Crystals on the upper platform are destroyed:": [
+            {
+                "speaker": "",
+                "line": "\"Now for the final phase. Watch as I absorb all the power I need!\"",
+                "trigger": "Once the Animus Crystals on the upper platform are destroyed:",
+                "ability": null
+            }
+        ],
+        "After wiping and resurrecting:": [
+            {
+                "speaker": "",
+                "line": "\"You can die. We Daedra cannot!\"",
+                "trigger": "After wiping and resurrecting:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Voriak Solkyn is a powerful Xivkyn mage serving as the final boss of Stage 9: Theater of Despair, and thus the final boss of Maelstrom Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Voriak_Solkyn",
+        "page_title": "Online:Voriak Solkyn",
+        "revision_id": 3163195,
+        "retrieved_at": "2026-08-19T03:21:31Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,192 @@
+{
+    "id": "ruzozuzalpamaz",
+    "name": "Ruzozuzalpamaz",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "Northern room of Crypt of Hearts II",
+    "species": "Spider Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Spit",
+            "description": "A basic ranged attack that deal moderate physical damage."
+        },
+        {
+            "name": "Lightning Onslaught",
+            "description": "Ruzozuzalpamaz releases streaks of lightning from itself as indicated by red circles. This attack does moderate shock damage and thus the tank should face the boss away from the party to reduce the chance of them being hit."
+        },
+        {
+            "name": "Creeping Storm",
+            "description": "Ruzozuzalpamaz places a large AOE under a random player. This attack does high shock damage over time as indicated by a red circle. This AOE will move along with the player it is targeting, thus that player should lead the AOE away from the rest of the party by running a lap along the side of the room until it dissipates."
+        },
+        {
+            "name": "Chattering Web/Spider Bites",
+            "description": "Ruzozuzalpamaz wraps a random player in a cocoon. This attack deals low shock damage on-hit then moderate poison damage over time. Other party members must go near the trapped player and press the synergy key to free them. This attack can also be escaped using Precognition."
+        },
+        {
+            "name": "Spider Swarm",
+            "description": "Ruzozuzalpamaz summons many spiders to attack the party. They should be killed as soon as possible to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Nerien'eth",
+            "line": "Leave those souls―kill the intruders!",
+            "trigger": "Entering the chamber",
+            "ability": "Lightning Onslaught"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "Watch your tone, mortal. Blade or no, only the Whisperer commands me.",
+            "trigger": "Entering the chamber",
+            "ability": "Lightning Onslaught"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "This is not a place for mortals.",
+            "trigger": "General Taunts",
+            "ability": null
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "Let's see if you can keep up.",
+            "trigger": "Casting Creeping Storm",
+            "ability": "Creeping Storm"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "You'll make a fine meal for my children.",
+            "trigger": "Cocoons a party member",
+            "ability": "Creeping Storm"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "You're not going anywhere!",
+            "trigger": "Cocoons a party member",
+            "ability": "Creeping Storm"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "Give up. Let my web take you.",
+            "trigger": "Cocoons a party member",
+            "ability": "Creeping Storm"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "What did you hope to accomplish by coming here? We will feast on your carcass, and thus, your carcass will make these grounds fertile.",
+            "trigger": "Party wipe",
+            "ability": "Lightning Onslaught"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "My web will hold your bodies for later.",
+            "trigger": "Party wipe",
+            "ability": "Lightning Onslaught"
+        },
+        {
+            "speaker": "Ruzozuzalpamaz",
+            "line": "We'll eat well tonight.",
+            "trigger": "Party wipe",
+            "ability": "Lightning Onslaught"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering the chamber": [
+            {
+                "speaker": "Nerien'eth",
+                "line": "Leave those souls―kill the intruders!",
+                "trigger": "Entering the chamber",
+                "ability": "Lightning Onslaught"
+            },
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "Watch your tone, mortal. Blade or no, only the Whisperer commands me.",
+                "trigger": "Entering the chamber",
+                "ability": "Lightning Onslaught"
+            }
+        ],
+        "General Taunts": [
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "This is not a place for mortals.",
+                "trigger": "General Taunts",
+                "ability": null
+            }
+        ],
+        "Casting Creeping Storm": [
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "Let's see if you can keep up.",
+                "trigger": "Casting Creeping Storm",
+                "ability": "Creeping Storm"
+            }
+        ],
+        "Cocoons a party member": [
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "You'll make a fine meal for my children.",
+                "trigger": "Cocoons a party member",
+                "ability": "Creeping Storm"
+            },
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "You're not going anywhere!",
+                "trigger": "Cocoons a party member",
+                "ability": "Creeping Storm"
+            },
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "Give up. Let my web take you.",
+                "trigger": "Cocoons a party member",
+                "ability": "Creeping Storm"
+            }
+        ],
+        "Party wipe": [
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "What did you hope to accomplish by coming here? We will feast on your carcass, and thus, your carcass will make these grounds fertile.",
+                "trigger": "Party wipe",
+                "ability": "Lightning Onslaught"
+            },
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "My web will hold your bodies for later.",
+                "trigger": "Party wipe",
+                "ability": "Lightning Onslaught"
+            },
+            {
+                "speaker": "Ruzozuzalpamaz",
+                "line": "We'll eat well tonight.",
+                "trigger": "Party wipe",
+                "ability": "Lightning Onslaught"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Pledge: Crypt of Hearts II: Prove you are truly Undaunted by clearing the Crypt of Hearts II."
+    ],
+    "summary": "Ruzozuzalpamaz is a Spider Daedra found within the Crypt of Hearts II. She serves as the first boss the players have to defeat to progress. Her unique drop is Ruzozuzalpamaz's Charged Barb.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ruzozuzalpamaz",
+        "page_title": "Online:Ruzozuzalpamaz",
+        "revision_id": 3259519,
+        "retrieved_at": "2026-08-12T21:18:36Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

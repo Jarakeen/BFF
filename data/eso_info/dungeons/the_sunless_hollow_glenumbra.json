@@ -1,0 +1,20 @@
+{
+    "id": "the_sunless_hollow_glenumbra",
+    "name": "The Sunless Hollow (Glenumbra)",
+    "content_type": "dungeon",
+    "summary": "The Sunless Hollow is a cave in Glenumbra used by the Blackguards to store Murkmire artifacts. The entrance can be found just north of Valewatch Tower.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The journal of Margus Derius can be found within the Hollow, on a pile of crates near a tent."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Sunless_Hollow_(Glenumbra)",
+        "page_title": "Online:The Sunless Hollow (Glenumbra)",
+        "revision_id": 3598138,
+        "retrieved_at": "2026-08-12T21:35:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

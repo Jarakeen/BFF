@@ -1,0 +1,52 @@
+{
+    "id": "squall_of_retribution",
+    "name": "Squall of Retribution",
+    "content_id": "exiled_redoubt",
+    "content_name": "Exiled Redoubt",
+    "location": "Exiled Redoubt, Albus Sanctum",
+    "species": "Air Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "10,263,990",
+        "hardmode": "15,395,986"
+    },
+    "abilities": [
+        {
+            "name": "Coordinated Slash",
+            "description": "Causes Hindered, Rattled, and Seethe debuffs"
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "fallen_banners_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Undying Requiem: Help clear out Exiled Redoubt.",
+        "Pledge: Exiled Redoubt: Explore Exiled Redoubt and return Undaunted."
+    ],
+    "summary": "This article is about the creature. For the item set, see Squall of Retribution (set). The Squall of Retribution is an air atronach summoned by Cato Albus in Exiled Redoubt, where it serves as the final boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Squall_of_Retribution",
+        "page_title": "Online:Squall of Retribution",
+        "revision_id": 3580304,
+        "retrieved_at": "2026-08-12T21:21:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

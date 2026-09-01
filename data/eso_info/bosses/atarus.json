@@ -1,0 +1,64 @@
+{
+    "id": "atarus",
+    "name": "Atarus",
+    "content_id": "blackheart_haven",
+    "content_name": "Blackheart Haven",
+    "location": "Blackheart Haven",
+    "species": "Ogrim",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "884,093",
+        "veteran": "1,338,938",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Projectile Vomit/Belch",
+            "description": "Atarus vomits green slime in front of itself dealing moderate poison damage over time as indicated by a red cone."
+        },
+        {
+            "name": "Projectile Stew/Slime",
+            "description": "Atarus summons a ball of stew from the nearby pot which lands on the ground where a player is standing dealing moderate poison damage over time and snaring as indicated by a red circle."
+        },
+        {
+            "name": "Tackle",
+            "description": "Atarus charges at a player in a straight line, dealing physical damage and knocking down targets hit as indicated by a red rectangle."
+        },
+        {
+            "name": "Quaking Stomp",
+            "description": "The boss stomps dealing moderate physical damage, knocking back and stunning all targets around itself as indicated by a red circle."
+        },
+        {
+            "name": "Monstrous Growth",
+            "description": "At around 20% health, Atarus drums on its chest and glows green, growing to twice his size. This also heals Atarus back to around 60% health (Fleshheal), and causes its stomp, tackle, stew and vomit AoE attacks to become larger but retain the same damage. It is possible to kill Atarus before the transformation completes if the group's damage is high enough."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Jumping Ship: Break the curse of Blackheart Haven.",
+        "Pledge: Blackheart Haven: Prove you are truly Undaunted by clearing Blackheart Haven."
+    ],
+    "summary": "Atarus is an Ogrim found in Blackheart Haven. When defeated, it has a chance to drop Atarus' Masher, a unique weapon in the Undaunted Unweaver item set.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Atarus",
+        "page_title": "Online:Atarus",
+        "revision_id": 3243930,
+        "retrieved_at": "2026-08-12T21:14:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

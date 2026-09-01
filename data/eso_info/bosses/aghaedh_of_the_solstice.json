@@ -1,0 +1,64 @@
+{
+    "id": "aghaedh_of_the_solstice",
+    "name": "Aghaedh of the Solstice",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "The Whispwood, March of Sacrifices",
+    "species": "Spriggan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Lacerate",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Wild Shot",
+            "description": "A basic ranged attack that deals minor magical damage."
+        },
+        {
+            "name": "Summon Sapling of Seasons",
+            "description": "Four smaller spriggans will spawn at the edge of the arena, each with a corresponding colored aura: green (Spring Deluge), red (Summer Wildfire), orange (Autumn's Tempest) and blue (Winter Blizzard). All deal minor damage over time to any player standing inside it. Lurchers will be weakened if brought to the aura of the opposite season; spring vs autumn and summer vs winter. As an example, if the Frost Lurcher (winter) is brought to the red aura (summer), it will have its maximum health reduced and take much more damage. If it's brought to the matching aura, the blue aura, it will take less damage. This is important for the next mechanic."
+        },
+        {
+            "name": "Summon Lurchers",
+            "description": "Over time, the boss will summon an Autumn Lurcher, a Frost Lurcher, a Blaze Lurcher and a Budding Lurcher to attack the party. They should be killed quickly to simplify the fight. Once killed, use a synergy on the lurcher's corpse to pick up a protective aura. All four players must pick up an aura each if group damage is low. To weaken the lurchers and make killing them easier, the group can choose to bring them near a spriggan with the opposite colored aura as described above."
+        },
+        {
+            "name": "Autumn's Tempest",
+            "description": "Used when Autumn Lurchers are up. Deals low magic damage over time."
+        },
+        {
+            "name": "Agrestal Tempest",
+            "description": "Some time after summoning the four lurchers, the boss will start to channel a spell that deals very high unavoidable magical damage that is lethal to the group. The only way to survive this is for each member to pick up a protective aura from the lurchers."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: March of Sacrifices: Prove you are truly Undaunted by clearing the March of Sacrifices.",
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt."
+    ],
+    "summary": "Aghaedh of the Solstice is a powerful spriggan encountered in the March of Sacrifices. Numerous Saplings of Seasons will spawn to aid her in battle.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Aghaedh_of_the_Solstice",
+        "page_title": "Online:Aghaedh of the Solstice",
+        "revision_id": 3347532,
+        "retrieved_at": "2026-08-12T21:28:18Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

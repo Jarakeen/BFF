@@ -1,0 +1,52 @@
+{
+    "id": "troll",
+    "name": "Troll",
+    "content_id": "sanctum_ophidia",
+    "content_name": "Sanctum Ophidia",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Troll",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A Troll acts as a hazard in The Feral Gallery."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Bath Time: Recover some bath salts for bathers in the hot springs.",
+        "The Common Good: Kill a dangerous beast which has been smuggled to the Gold Coast from Craglorn.",
+        "Crimes of the Past: Help bring a war criminal to justice.",
+        "A Diamond in the Root: Find and deliver a bandit's diamond to a Riften fence.",
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Land Dispute: Find out why the forest spirits are attacking a logging camp.",
+        "The Lover: Help recruit a reluctant lover to the Shornhelm Guard.",
+        "Mystery Metal: Recover a magical ore sample from the depths of a mine.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible.",
+        "Raiders at the Crossing: Help the Knights of Saint Pelin drive off the Imperial raiders.",
+        "The Pride of a Prince: Convince the Nords, Dunmer and Argonians to act on your information.",
+        "To Save a Chief: Embark on a secretive rescue mission for the High Priestess.",
+        "The Voice of the Village: Facilitate a marriage between two families of opposing ideologies.",
+        "Where There's a Will: Help Mizzik Thunderboots uncover the mystery of Lady Weatherleah's death.",
+        "The Will of the Woods: Help the Sentinel of Viridian Woods."
+    ],
+    "achievements": [],
+    "summary": "Near Arlimahera's Grip, Broken Helm Hollow, Southeast of Crestshade, Crestshade Mine, Darkwater Crossing, Drowned Coast, Exarch's Stronghold, The Frigid Grotto, Grahtwood, Jackdaw Cove, Kuna's Delve, Lost Knife Cave, Near Martyr's Crossing, Nine-Prow Landing, Near Old Kalgon's Keep, South of Kerbol's Hollow, Reman's Bluff, The Rift, Sanguine Barrows, Serpent's Nest, Thulvald's Logging Camp, Troll's Toothpick, Viridian Woods, Westmark Moor Dolmen\nMzark Cavern\nShipwreck Cove, Wrothgar\nAshurnibibi\nTwo Moons at Tenmar Temple\nWestern Plains\nBleakridge Barrow, Dark Moon Grotto, Haafingar, Karthald, Labyrinthian, The Lightless Hollow\nGloomreach, The Reach\nDawnwood, Fyrelight Cave Trolls are large monsters found throughout Tamriel. They are challenging opponents due to their high health that constantly regenerates, but they are weak to fire.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Troll",
+        "page_title": "Online:Troll",
+        "revision_id": 3536043,
+        "retrieved_at": "2026-08-12T05:33:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

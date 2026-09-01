@@ -1,0 +1,483 @@
+{
+    "id": "archdruid_devyric",
+    "name": "Archdruid Devyric",
+    "content_id": "earthen_root_enclave",
+    "content_name": "Earthen Root Enclave",
+    "location": "Earthen Root Enclave, Path of the Salt Wind",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "5,051,957",
+        "veteran": "8,120,255",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "We'll kill anyone who gets between us and our prize. That's your last warning, Laurel.",
+            "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "We invited you in. We welcomed you!",
+            "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Lyam",
+            "line": "The seed, we can't let him take it!",
+            "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "The Dais of Stonesight! It's wrong, like a gale offshore.",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Keep the corruption going.",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Archdruid Devyric leaves.>",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Corruption? Stop this! Firesong, what are you doing?",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Spirit! Stop. Please stop!",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "We can't let this corrupted spirit do more damage.",
+            "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "It's down! Archdruid Devyric, stop right where you are!",
+            "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Archdruid Devyric, stop this madness!",
+            "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Laurel, you know where the seed is, don't you? Come with me.",
+            "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Look down, Laurel. Do you see your rescue?",
+            "trigger": "After defeating the Corruption of Root, you give chase after Devyric. He can been seen holding Laurel hostage while crossing a bridge",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I don't. All I see is myself squashing your hope beneath my boot.",
+            "trigger": "After defeating the Corruption of Root, you give chase after Devyric. He can been seen holding Laurel hostage while crossing a bridge",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Still down there? Why won't you give up?",
+            "trigger": "He will taunt you as you progress the cliffs",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I was personally sent by my leader. I will not fail her.",
+            "trigger": "He will taunt you as you progress the cliffs",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Stay up here, Laurel. This spirit will tell me what I want to know.",
+            "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+            "ability": null
+        },
+        {
+            "speaker": "Druid Laurel",
+            "line": "Think you'll find the seed? Your ego is blinding.",
+            "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Blinding? The seed is here. Well, there's no reason to keep you or the spirit now.",
+            "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I have the Air's sight. I have the seed. You failed and all that's left to do is die!",
+            "trigger": "When you confront Archdruid Devyric",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "You won't keep me from my goal!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I will bring you down!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Fall before me!",
+            "trigger": "During combat",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Laurel's not the only one who can move rock.",
+            "trigger": "When he calls out stone attacks",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I'll bury you in stone!",
+            "trigger": "When he calls out stone attacks",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Tremble before my mountainous power!",
+            "trigger": "When he calls out stone attacks",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "You won't survive this form!",
+            "trigger": "When he transforms in his Ursauk form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "I'll snap your neck with my paw!",
+            "trigger": "When he transforms in his Ursauk form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Hear that? You're being hunted!",
+            "trigger": "When he transforms in his Ursauk form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Feel my power!",
+            "trigger": "When he transforms in his Ursauk form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "Your blood will coat my snout!",
+            "trigger": "When he transforms in his Ursauk form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "This form is too good for you.",
+            "trigger": "When he changes back to human form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "The bear is too powerful, this can't end yet.",
+            "trigger": "When he changes back to human form",
+            "ability": null
+        },
+        {
+            "speaker": "Archdruid Devyric",
+            "line": "But I was chosen.",
+            "trigger": "When you have slain Archdruid Devyric, his final words will be",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "We'll kill anyone who gets between us and our prize. That's your last warning, Laurel.",
+                "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "We invited you in. We welcomed you!",
+                "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Lyam",
+                "line": "The seed, we can't let him take it!",
+                "trigger": "When you arrive in the Earthen Root Enclave you will find several Storelore Circle Druids dead and Archdruid Devyric taunting Druid Laurel and Druid Lyam",
+                "ability": null
+            }
+        ],
+        "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.": [
+            {
+                "speaker": "Druid Laurel",
+                "line": "The Dais of Stonesight! It's wrong, like a gale offshore.",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Keep the corruption going.",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Archdruid Devyric leaves.>",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Corruption? Stop this! Firesong, what are you doing?",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Spirit! Stop. Please stop!",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "We can't let this corrupted spirit do more damage.",
+                "trigger": "When you are at the Dais of Stonesight, Druid Laurel will arrive, only to discover Archdruid Devyric leading the corruption of the Spirit of Stone.",
+                "ability": null
+            }
+        ],
+        "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root": [
+            {
+                "speaker": "Druid Laurel",
+                "line": "It's down! Archdruid Devyric, stop right where you are!",
+                "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Archdruid Devyric, stop this madness!",
+                "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Laurel, you know where the seed is, don't you? Come with me.",
+                "trigger": "After destroying the second Trellis Sentinel, Druid Laurel will confront Archdruid Devyric near the Corruption of Root",
+                "ability": null
+            }
+        ],
+        "After defeating the Corruption of Root, you give chase after Devyric. He can been seen holding Laurel hostage while crossing a bridge": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Look down, Laurel. Do you see your rescue?",
+                "trigger": "After defeating the Corruption of Root, you give chase after Devyric. He can been seen holding Laurel hostage while crossing a bridge",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I don't. All I see is myself squashing your hope beneath my boot.",
+                "trigger": "After defeating the Corruption of Root, you give chase after Devyric. He can been seen holding Laurel hostage while crossing a bridge",
+                "ability": null
+            }
+        ],
+        "He will taunt you as you progress the cliffs": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Still down there? Why won't you give up?",
+                "trigger": "He will taunt you as you progress the cliffs",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I was personally sent by my leader. I will not fail her.",
+                "trigger": "He will taunt you as you progress the cliffs",
+                "ability": null
+            }
+        ],
+        "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Stay up here, Laurel. This spirit will tell me what I want to know.",
+                "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+                "ability": null
+            },
+            {
+                "speaker": "Druid Laurel",
+                "line": "Think you'll find the seed? Your ego is blinding.",
+                "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Blinding? The seed is here. Well, there's no reason to keep you or the spirit now.",
+                "trigger": "Druid Laurel will call out, as Archdruid Devyric will be \"questioning\" the Spirit of Air",
+                "ability": null
+            }
+        ],
+        "When you confront Archdruid Devyric": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I have the Air's sight. I have the seed. You failed and all that's left to do is die!",
+                "trigger": "When you confront Archdruid Devyric",
+                "ability": null
+            }
+        ],
+        "During combat": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "You won't keep me from my goal!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I will bring you down!",
+                "trigger": "During combat",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Fall before me!",
+                "trigger": "During combat",
+                "ability": null
+            }
+        ],
+        "When he calls out stone attacks": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Laurel's not the only one who can move rock.",
+                "trigger": "When he calls out stone attacks",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I'll bury you in stone!",
+                "trigger": "When he calls out stone attacks",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Tremble before my mountainous power!",
+                "trigger": "When he calls out stone attacks",
+                "ability": null
+            }
+        ],
+        "When he transforms in his Ursauk form": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "You won't survive this form!",
+                "trigger": "When he transforms in his Ursauk form",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "I'll snap your neck with my paw!",
+                "trigger": "When he transforms in his Ursauk form",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Hear that? You're being hunted!",
+                "trigger": "When he transforms in his Ursauk form",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Feel my power!",
+                "trigger": "When he transforms in his Ursauk form",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "Your blood will coat my snout!",
+                "trigger": "When he transforms in his Ursauk form",
+                "ability": null
+            }
+        ],
+        "When he changes back to human form": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "This form is too good for you.",
+                "trigger": "When he changes back to human form",
+                "ability": null
+            },
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "The bear is too powerful, this can't end yet.",
+                "trigger": "When he changes back to human form",
+                "ability": null
+            }
+        ],
+        "When you have slain Archdruid Devyric, his final words will be": [
+            {
+                "speaker": "Archdruid Devyric",
+                "line": "But I was chosen.",
+                "trigger": "When you have slain Archdruid Devyric, his final words will be",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "lost_depths_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Archdruid Devyric is the author of The Only Record of Our Plan."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Stonelore Defense: Repel the Firesong Circle's attack on Earthen Root Enclave.",
+        "Pledge: Earthen Root Enclave: Enter Earthen Root Enclave and return Undaunted."
+    ],
+    "summary": "This article is about the boss. For the armor set, see Archdruid Devyric (set). Archdruid Devyric is a Breton archdruid of the Firesong Circle. He has the ability to shapeshift into an Ursauk at will. Devyric came to Earthen Root Enclave to steal the Stonelore Circle's sacred seed. You must chase him into the Deeproot and all the way to the Path of the Salt Wind, where he will absorb the island's Spirit of Air and attack. He serves as the dungeon's final boss.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Archdruid_Devyric",
+        "page_title": "Online:Archdruid Devyric",
+        "revision_id": 3569928,
+        "retrieved_at": "2026-08-12T21:20:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

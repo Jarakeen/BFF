@@ -1,0 +1,18 @@
+{
+    "id": "cath_bedraud",
+    "name": "Cath Bedraud",
+    "content_type": "dungeon",
+    "summary": "Cath Bedraud is a large cemetery in northern Glenumbra, west of Crosswych. It has been the burial ground of the Breton nobility for millennia, but has been desecrated by the writhing vines and dark necromancy of Angof the Gravesinger and his Bloodthorn Cult. Dead, frozen Lion Guard Officers and dead Bloodthorn Assassins can be found at the top of the hill, by each of the gates leading into the cemetery proper. Injured Knights can also be found here.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Cath_Bedraud",
+        "page_title": "Online:Cath Bedraud",
+        "revision_id": 3183263,
+        "retrieved_at": "2026-08-12T21:16:34Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

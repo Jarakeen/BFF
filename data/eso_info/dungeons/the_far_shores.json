@@ -1,0 +1,18 @@
+{
+    "id": "the_far_shores",
+    "name": "The Far Shores",
+    "content_type": "dungeon",
+    "summary": "The Far Shores are a realm of Aetherius to which the souls of Redguards travel upon their death. It is said that on the Far Shores, there is no hunger, thirst or fatigue, but there are enough challenges to keep a warrior spirit engaged for all eternity. It is rumored that a physical gateway to the Far Shores lies within the Chamber of Passage, a chamber inside the Hall of Heroes.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Far_Shores",
+        "page_title": "Online:The Far Shores",
+        "revision_id": 3598259,
+        "retrieved_at": "2026-08-12T21:22:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

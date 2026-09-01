@@ -1,0 +1,147 @@
+{
+    "id": "iozuzzunth",
+    "name": "Iozuzzunth",
+    "content_id": "vateshran_hollows",
+    "content_name": "Vateshran Hollows",
+    "location": "The Wounding",
+    "species": "Daedric Titan",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,197,141",
+        "veteran": "2,515,203",
+        "hardmode": "3"
+    },
+    "abilities": [
+        {
+            "name": "Punch",
+            "description": "A basic melee attack dealing high physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Scourge Bolt",
+            "description": "A basic ranged attack dealing high flame damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Fire Blast",
+            "description": "The daedric titan generates a path of flame directly in front of where it was cast, dealing high flame damage. This can be interrupted to stagger the Daedric Titan and it will cast \"Swallowing Souls\" instead.",
+            "damage_type": null
+        },
+        {
+            "name": "Soul Flame",
+            "description": "The AoE left in front of the titan by Fire Blast if not interrupted.",
+            "damage_type": null
+        },
+        {
+            "name": "Swallowing Souls",
+            "description": "The daedric titan unleashes a violent explosion in a short area around itself, dealing high magical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Wing Gust",
+            "description": "The daedric titan gets down on the ground and raises its wings, then unleashes a powerful gust, dealing high physical damage and launching you away.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Watchers",
+            "description": "Occasionally during the fight, Watchers spawn on the upper ring platform, in increasing amounts, and fire lasers down into the arena (with no AoE indicators), which deal continuous moderate magical damage. A portal appear near the entrance gate, which leads up to go defeat them. Jumping down from the platform doesn't deal any fall damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Sentinel",
+            "description": "Occasionally during the fight, a Sentinel of Debilitation, Sentinel of Dissipation, Sentinel of Enfeeblement, or a Sentinel of Vulnerability will spawn in the arena. Iozuzzunth's attacks can be lured into damaging it.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "The daedric titan generates a path of flame directly in front of where it was cast, dealing high flame damage. This can be interrupted to stagger the Daedric Titan and it will cast \"Swallowing Souls\" instead.",
+            "name": "Fire Blast",
+            "links": [],
+            "mechanic_type": "interrupt",
+            "damage_type": "flame",
+            "target_count": null,
+            "requires_movement": true,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": true,
+            "interrupt_note": "UESP description indicates the ability can be interrupted.",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The AoE left in front of the titan by Fire Blast if not interrupted.",
+            "name": "Soul Flame",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "The daedric titan unleashes a violent explosion in a short area around itself, dealing high magical damage.",
+            "name": "Swallowing Souls",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Occasionally during the fight, Watchers spawn on the upper ring platform, in increasing amounts, and fire lasers down into the arena (with no AoE indicators), which deal continuous moderate magical damage. A portal appear near the entrance gate, which leads up to go defeat them. Jumping down from the platform doesn't deal any fall damage.",
+            "name": "Summon Watchers",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": "magic",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [
+        "Iozuzzunth has all the abilities you would expect a Daedric Titan to have. Namely, he slashes you with his claws and sends a wall of fire towards you. The difference between Iozuzzunth and an ordinary Daedric Titan lies in the fight's mechanics.",
+        "Iozuzzunth does not move from his position in the center of the battlefield. A Wounding Portal is located by the entrance to his arena. As combat continues, Watchers will spawn on the upper level. They will fire lasers down at you from the top of the arena. You need to kill them, otherwise you will be overwhelmed by lasers on top of the damage dealt by Iozuzzunth. On normal, the Watchers don't do a whole bunch of damage on their own, but it can be overwhelming if there's a lot of them.",
+        "You can use the Wounding Portal by the entrance to head upstairs. You have 20 seconds to kill as many Watchers as you can. They have relatively low health, so they shouldn't take too long to kill. If you stay too close to a Watcher for too long, it will try to knock you back downstairs early. Furthermore, Iozuzzunth is blasting cold fire into the air to rain down on the Watcher platform in an attempt to hinder your progress. The fire comes to rest on the platform as a ground AoE.",
+        "A Sentinel will spawn periodically to debuff you during the battle. You'll encounter a new type of Sentinel here: the Sentinel of Dissipation. These enemies drain your health. The easiest way to deal with the Sentinels is to stand in front of or behind them and wait for Iozuzzunth to unleash a wall of cold fire in their direction. This will damage the Sentinel severely, allowing you to hit it once or twice to destroy it for good."
+    ],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Iozuzzunth is a Daedric Titan who serves as the final boss of The Wounding.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Iozuzzunth",
+        "page_title": "Online:Iozuzzunth",
+        "revision_id": 3570687,
+        "retrieved_at": "2026-08-19T03:21:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "id": "temple_of_y_ffelon",
+    "name": "Temple of Y'ffelon",
+    "content_type": "dungeon",
+    "summary": "Temple of Y'ffelon is a temple found inside the island of Y'ffelon. At the far south end is Druid King Kasorayn's Tomb and its guardian.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Temple_of_Y%27ffelon",
+        "page_title": "Online:Temple of Y'ffelon",
+        "revision_id": 3180953,
+        "retrieved_at": "2026-08-12T21:35:51Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

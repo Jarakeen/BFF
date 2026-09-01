@@ -1,0 +1,26 @@
+{
+    "id": "the_firepot",
+    "name": "The Firepot",
+    "content_type": "dungeon",
+    "summary": "The Firepot is a volcanic cavern found in central High Isle just south of All Flags Islet.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Firepot",
+        "page_title": "Online:The Firepot",
+        "revision_id": 3598058,
+        "retrieved_at": "2026-08-12T21:22:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

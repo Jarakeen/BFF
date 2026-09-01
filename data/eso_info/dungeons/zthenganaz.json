@@ -1,0 +1,26 @@
+{
+    "id": "zthenganaz",
+    "name": "Zthenganaz",
+    "content_type": "dungeon",
+    "summary": "Zthenganaz is a buried Dwemer ruin south of Fharun Stronghold, containing dwarven automatons and ice wraiths.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zthenganaz",
+        "page_title": "Online:Zthenganaz",
+        "revision_id": 3548976,
+        "retrieved_at": "2026-08-12T21:39:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

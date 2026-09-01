@@ -1,0 +1,73 @@
+{
+    "id": "zhaj_hassa_the_forgotten",
+    "name": "Zhaj'hassa the Forgotten",
+    "content_id": "maw_of_lorkhaj",
+    "content_name": "Maw of Lorkhaj",
+    "location": "Maw of Lorkhaj",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "The boss swings its weapon, doing moderate physical damage. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Raging Cleave",
+            "description": "The boss swings its weapon in an arc, doing moderate physical damage to everyone in front of him. If taunted the boss will be forced to use this attack on the tank only."
+        },
+        {
+            "name": "Dark Monolith",
+            "description": "The boss slams its weapon on the ground, and a blue pillar emerges from a location as indicated by a red circle. When the pillar emerges it will damage and knock back any player standing on top of it."
+        },
+        {
+            "name": "Thunderous Impact",
+            "description": "The boss slams its weapon on the ground, dealing high damage to his target."
+        },
+        {
+            "name": "Grip of Lorkhaj",
+            "description": "The boss throws three blue orbs on three random players. These players will have red circles around them indicating they are targeted. Any player within the circles will gain a debuff that turns their screen blue and does moderate magical damage over time. The players affected have to stand on the glowing pads at the side of the room to remove the debuff. Failure to do so will result in instant death after some time."
+        },
+        {
+            "name": "Slithering Darkness",
+            "description": "Once Grip of Lorkhaj is cleansed, blue orbs will travel along the floor of the room. Touching these orbs will deal moderate magical damage to that player."
+        },
+        {
+            "name": "Summon Ghostly Sar-m'Athra",
+            "description": "At 80%, 60%, 40% and 20% health, the boss will summon 2, 3, 4, or 5 Ghostly Sar-m'Athras to attack the group. These should be killed quickly to simplify the fight."
+        },
+        {
+            "name": "Void Explosion",
+            "description": "The boss holds his weapon up and channels a large explosion. Players will need to hide behind the blue pillars summoned earlier to avoid instant death. Note as the fight progresses fewer and fewer pillars will appear, and eventually no pillars will happen. If that happens, players have to kill the boss before the final explosion wipes the whole group."
+        },
+        {
+            "name": "Dark Aegis/Shadow Burst",
+            "description": "At 70% and 30% health, the boss summons a shield around himself and small red circles appear around all players. The circles will pulse for high damage over time. Stacking is not recommended here as overlapping the red damage circles may lead to death. Players will have to break through the damage shield to stop this phase, before the damage increases and wipes the group."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Into the Maw: Stop the dro-m'Athra from flooding into Tamriel."
+    ],
+    "achievements": [],
+    "summary": "This article is about the boss in Maw of Lorkhaj. For the boss in the Infinite Archive, see Zhaj'hassa the Forgotten (Infinite Archive). Zhaj'hassa the Forgotten is a large Dro-m'Athra found within the Maw of Lorkhaj. He serves as the first boss that must be defeated to progress.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zhaj%27hassa_the_Forgotten",
+        "page_title": "Online:Zhaj'hassa the Forgotten",
+        "revision_id": 3496085,
+        "retrieved_at": "2026-08-12T05:33:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

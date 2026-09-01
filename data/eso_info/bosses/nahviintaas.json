@@ -1,0 +1,91 @@
+{
+    "id": "nahviintaas",
+    "name": "Nahviintaas",
+    "content_id": "sunspire",
+    "content_name": "Sunspire",
+    "location": "Sunspire, Courtyard, Sunspire Summit",
+    "species": "Dragon",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Summon Allies",
+            "description": "At the start of the fight, Nahviintaas remains in the air and cannot be targeted. A group consisting of Alkosh's Fates, Alkosh's Wills, Furies of Alkosh, and Ruins of Alkosh appear in the arena and must be defeated."
+        },
+        {
+            "name": "Molten Meteor",
+            "description": "After the initial wave of adds are defeated, a set of three fire explosion go off in the center of the arena, increasing in size after each one, with the last being so large and powerful that you must hide behind the statues in the arena to avoid the damage. Flame Atronachs start appearing at the same time as this ability."
+        },
+        {
+            "name": "Bite",
+            "description": "A basic melee attack."
+        },
+        {
+            "name": "Fireball",
+            "description": "A basic ranged attack."
+        },
+        {
+            "name": "Wing Thrash",
+            "description": "Standing near Nahviintaas' wings can lead to him swatting you with them, dealing high damage and knocking you away, possibly off of the arena."
+        },
+        {
+            "name": "Fire Breath",
+            "description": "Nahviintaas breathes fire in front of him, indicated by a conical AoE."
+        },
+        {
+            "name": "Flame Sweep",
+            "description": "A wider version of Flame Breath, which is slower but covers the entire arena, and if this version hits you, you are stunned."
+        },
+        {
+            "name": "Head Swipe",
+            "description": "Nahviintaas winds his head up before swinging it down in an arc motion, dealing damage and knocking you away."
+        },
+        {
+            "name": "Timeshift",
+            "description": "At 90%/70%/50% health, three portals appear in the arena floor and three players must use them to be teleported in a separate reality where they must fight and defeat an Eternal Servant within 90 seconds. Yellow magical swirls will appear sometimes in the arena and stepping on them grants additional time to defeat the enemy. If the Eternal Servant isn't defeated within the time limit, it will be transported into the main arena in an immune state and will wipe the party. While the three players are fighting in the other reality, the same kind of adds that appeared initially will attack the rest of the party."
+        },
+        {
+            "name": "Fly Off",
+            "description": "At 80%/60%/40% health, Naahviintaas flies into the air and ceases to be targetable again, and the fight loops back to how it was initially, with the add waves and Molten Meteor."
+        },
+        {
+            "name": "Meteor Shower",
+            "description": "Once Nahviintaas reaches 30% health, he starts using this new ability where meteors will fall on every single member of the party, and they must split up to avoid stacking meteors over each other. After the meteors have landed into the ground, they linger for some time, with a pulsing field of fire around them. In hard mode, the meteors last long enough that another wave of meteors can arrive while older ones are still present, which can start limiting available space in the arena."
+        },
+        {
+            "name": "Summon Atronachs",
+            "description": "Flame Atronachs will continuously appear into the arena to assist Nahviintaas."
+        },
+        {
+            "name": "Flame Aura",
+            "description": "A circular aura is present underneath Nahviintaas for the whole duration of the fight while he is grounded, inflicting constant damage if standing too close."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "His name translates to \"Fury-Shining\" in the Dragon Language."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Return of Alkosh: Defeat the Alkosh pretender and liberate the faithful of Sunspire."
+    ],
+    "achievements": [],
+    "summary": "Nahviintaas is a golden dragon who has taken over the temple of the Sunspire alongside his dragon followers by posing as the Dragon God Alkosh.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nahviintaas",
+        "page_title": "Online:Nahviintaas",
+        "revision_id": 3468185,
+        "retrieved_at": "2026-08-12T05:34:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

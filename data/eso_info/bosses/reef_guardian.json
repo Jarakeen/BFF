@@ -1,0 +1,61 @@
+{
+    "id": "reef_guardian",
+    "name": "Reef Guardian",
+    "content_id": "dreadsail_reef",
+    "content_name": "Dreadsail Reef",
+    "location": "Y'ffelon\nCarapace Cavern, Western Solstice's shores, Shore south of Xor-Hist, east of Xul-Haj",
+    "species": "Reef Guardian",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "119,538",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw",
+            "description": "Basic melee attack dealing moderate physical damage.",
+            "damage_type": null
+        },
+        {
+            "name": "Pulverise",
+            "description": "A stronger melee attack dealing moderate physical damage and slightly staggering the target. Blocking negates the stagger.",
+            "damage_type": null
+        },
+        {
+            "name": "Crushing Limbs",
+            "description": "A charged melee attack dealing moderate physical damage and stunning for 1 second. This can be blocked to stagger the Reef Guardian instead.",
+            "damage_type": null
+        },
+        {
+            "name": "Acid Reflux",
+            "description": "The Reef Guardian pins itself in place and continuously sprays acid while slowly turning to face its target, dealing continuous direct minor poison damage in a cone.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Reef Guardian in Dreadsail Reef is a difficulty 3 raid boss, but the ones in the Galen and Solstice zones are difficulty 1 respawning enemies. This makes it one of the very few creatures in the game to appear as both without the boss version being differentiated in name."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Guardian of Y'ffelon: Go to Y'ffelon and stop the Firesong Circle."
+    ],
+    "summary": "This article is about the overland Reef Guardian. For the Dreadsail Reef boss, see Reef Guardian (Dreadsail Reef). Reef Guardians are a type of golem made from coral and possessing a blue glow. They resemble Magma Golems. They can be found along the coasts of Y'ffelon and Solstice.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reef_Guardian",
+        "page_title": "Online:Reef Guardian",
+        "revision_id": 3618074,
+        "retrieved_at": "2026-09-01T02:06:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

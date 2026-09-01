@@ -1,0 +1,22 @@
+{
+    "id": "fulstrom_homestead",
+    "name": "Fulstrom Homestead",
+    "content_type": "dungeon",
+    "summary": "Fulstrom Homestead is a private manor off the coast of Eastmarch. The grounds are patrolled by Manor Guards; additionally, several villagers can be seen around the manor. The tunnels beneath the manor are inhabited by dangerous draugr and spiders. Thane Fulstrom has allowed the Iron Wheel use of his manor, though they are concerned about the infested catacombs below his manor. Authenticity of the Giovessen Skull can be found in the manor's treasure vault. Prayer of the Resolute can be found in the catacombs.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "In early development this location was called Fortinbras Homestead.",
+        "While normally only appearing in deep waters in the open world, Slaughterfish will attack you if you attempt to sneak your way through the water of the inner manor docks.",
+        "This is one of the few places in the game one can consistently find a Spool, Red Thread."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fulstrom_Homestead",
+        "page_title": "Online:Fulstrom Homestead",
+        "revision_id": 3550248,
+        "retrieved_at": "2026-08-12T21:23:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

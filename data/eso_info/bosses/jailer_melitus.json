@@ -1,0 +1,364 @@
+{
+    "id": "jailer_melitus",
+    "name": "Jailer Melitus",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "Moon Hunter Keep",
+    "species": "",
+    "reaction": "Hostile\nFriendly (initially, when speaking to Adonatus)",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,214,120",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Hemorrhage",
+            "description": "A minor physical damage over time applied by Slash."
+        },
+        {
+            "name": "Bloody Cleave",
+            "description": "The boss swings its sword in an arc dealing moderate physical damage."
+        },
+        {
+            "name": "Bloodmoon's Mercy",
+            "description": "The boss summons a burst of magic around itself dealing moderate magical damage as indicated by a red circle."
+        },
+        {
+            "name": "Moonlit Rage",
+            "description": "Five smaller AOEs will be released outwards from the boss once Bloodmoon's Mercy triggers. These deal moderate magical damage and snare any target hit."
+        },
+        {
+            "name": "Bloody Geyser",
+            "description": "The boss spawns blood geysers under each person in the group dealing moderate magical damage as indicated by red circles. Keep moving to avoid this."
+        },
+        {
+            "name": "Bloody Execution",
+            "description": "The boss stuns one target and swings his sword at them after a short delay. This deals lethal damage on veteran mode. Interrupt the boss to prevent this."
+        },
+        {
+            "name": "Summon Minions",
+            "description": "Werewolf Bloodcallers and archers will spawn to attack the group. Kill them quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Oh, come now. Where's that Silver Dawn valor gone off to?",
+            "trigger": "As you enter the dungeon, you'll hear him taunting Adonatus Varian",
+            "ability": "Bloody Geyser"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Make sure this one doesn't go running off, you hear? I'm not done with him yet.",
+            "trigger": "As you enter the dungeon, you'll hear him taunting Adonatus Varian",
+            "ability": "Bloody Geyser"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Vykosa never does mind if I eat a prisoner or two.",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "How do you taste, I wonder? I bet you're all delicious.",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Oh good. I was just starting to feel peckish!",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Trying to escape? You'll have to get through me first.",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Got out of your cell, huh? Well, don't expect me to just put you back!",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "I'm sure Vykosa wouldn't mind if I killed just a few of you, eh?",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "No one leaves his prison. At least, no one leaves alive.",
+            "trigger": "Idling before battle",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "I'll show you why I'm the one who runs this prison!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Count yourselves lucky! Your deaths will be quick.",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "It is time to face your execution!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Your heads shall make fine trophies!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "I'll offer Vykosa your heads!",
+            "trigger": "Entering battle",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Guards! Empty the cells!",
+            "trigger": "When the prisoners are released",
+            "ability": "Moonlit Rage"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Let's give our prisoners a feast!",
+            "trigger": "When the prisoners are released",
+            "ability": "Moonlit Rage"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Open the cell doors! It's time to feed the prisoners.",
+            "trigger": "When the prisoners are released",
+            "ability": "Moonlit Rage"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Release the prisoners! I'm sure they're hungry.",
+            "trigger": "When the prisoners are released",
+            "ability": "Moonlit Rage"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "In this prison, I'm both judge and executioner!",
+            "trigger": "Casting Bloody Execution",
+            "ability": "Bloody Execution"
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Looks like I'll have a lovely meal tonight!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "You all should have stayed in your cells.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "Don't worry. I'll make sure your corpses don't go to waste.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Jailer Melitus",
+            "line": "I'm sure my guards will appreciate some fresh meat!",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you enter the dungeon, you'll hear him taunting Adonatus Varian": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Oh, come now. Where's that Silver Dawn valor gone off to?",
+                "trigger": "As you enter the dungeon, you'll hear him taunting Adonatus Varian",
+                "ability": "Bloody Geyser"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Make sure this one doesn't go running off, you hear? I'm not done with him yet.",
+                "trigger": "As you enter the dungeon, you'll hear him taunting Adonatus Varian",
+                "ability": "Bloody Geyser"
+            }
+        ],
+        "Idling before battle": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Vykosa never does mind if I eat a prisoner or two.",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "How do you taste, I wonder? I bet you're all delicious.",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Oh good. I was just starting to feel peckish!",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Trying to escape? You'll have to get through me first.",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Got out of your cell, huh? Well, don't expect me to just put you back!",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "I'm sure Vykosa wouldn't mind if I killed just a few of you, eh?",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "No one leaves his prison. At least, no one leaves alive.",
+                "trigger": "Idling before battle",
+                "ability": "Bloody Execution"
+            }
+        ],
+        "Entering battle": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "I'll show you why I'm the one who runs this prison!",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Count yourselves lucky! Your deaths will be quick.",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "It is time to face your execution!",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Your heads shall make fine trophies!",
+                "trigger": "Entering battle",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "I'll offer Vykosa your heads!",
+                "trigger": "Entering battle",
+                "ability": null
+            }
+        ],
+        "When the prisoners are released": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Guards! Empty the cells!",
+                "trigger": "When the prisoners are released",
+                "ability": "Moonlit Rage"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Let's give our prisoners a feast!",
+                "trigger": "When the prisoners are released",
+                "ability": "Moonlit Rage"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Open the cell doors! It's time to feed the prisoners.",
+                "trigger": "When the prisoners are released",
+                "ability": "Moonlit Rage"
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Release the prisoners! I'm sure they're hungry.",
+                "trigger": "When the prisoners are released",
+                "ability": "Moonlit Rage"
+            }
+        ],
+        "Casting Bloody Execution": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "In this prison, I'm both judge and executioner!",
+                "trigger": "Casting Bloody Execution",
+                "ability": "Bloody Execution"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Looks like I'll have a lovely meal tonight!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "You all should have stayed in your cells.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "Don't worry. I'll make sure your corpses don't go to waste.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Jailer Melitus",
+                "line": "I'm sure my guards will appreciate some fresh meat!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He wears the Misanthropic Lycanthrope hairstyle."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Moonlight Ascent: Explore an old Silver Dawn stronghold and deal with the werewolves controlling it.",
+        "Pledge: Moon Hunter Keep: Prove you are truly Undaunted by clearing the Moon Hunter Keep."
+    ],
+    "summary": "Jailer Melitus is an Imperial man-beast and the first boss of Moon Hunter Keep.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Jailer_Melitus",
+        "page_title": "Online:Jailer Melitus",
+        "revision_id": 3347796,
+        "retrieved_at": "2026-08-12T21:28:53Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

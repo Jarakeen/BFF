@@ -1,0 +1,26 @@
+{
+    "id": "gurzag_s_mine",
+    "name": "Gurzag's Mine",
+    "content_type": "dungeon",
+    "summary": "Gurzag's Mine is a mine in eastern Greenshade, south of Marbruk containing undead. They are led by the wraith Retribution. The curse in the mine was brought forth due to the nearby Wood Orcs buying an axe from Forthor, who actually applied the curse himself on the axe with the effects of attracting spirits and undead to it. Fleshflies are found in number within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Gurzag%27s_Mine",
+        "page_title": "Online:Gurzag's Mine",
+        "revision_id": 3598313,
+        "retrieved_at": "2026-08-12T21:25:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,106 @@
+{
+    "id": "the_lava_queen_person",
+    "name": "The Lava Queen (person)",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible, Champion's Arena",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,515,587",
+        "veteran": "4,703,728",
+        "hardmode": "5,879,660"
+    },
+    "abilities": [
+        {
+            "name": "Swing",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Overpowering Swing",
+            "description": "A heavy melee attack that does high physical damage and knocks the target down. This can be blocked to stagger The Lava Queen instead."
+        },
+        {
+            "name": "Catching Flame",
+            "description": "The boss shoots a fireball at a target dealing moderate flame damage then moderate flame damage over 6 seconds.."
+        },
+        {
+            "name": "Induce Eruption",
+            "description": "The boss stabs the ground and summons many lava lines that travel outwards from her location dealing very high flame damage to all players hit. This must be avoided at all costs, so keep a distance from her when she does this attack."
+        },
+        {
+            "name": "Summon Lava Atronach",
+            "description": "At 75%, 50% and 25% health, the boss will summon 1, 2, and 3 lava atronachs to shield her respectively. While they are alive, she is immune to damage in the form of damage shields and thus they must be killed as soon as possible. Follow the beams that they channel towards the boss to find them quickly and defeat them. Note that if she skips a health threshold by doing a lot of damage quickly to her, the skipped thresholds will not activate at all. If the DPS is especially high and she gets under 25% health before any Lava Atronachs have been spawned, only 3 Lava Atronachs will appear."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Lava Queen",
+            "line": "I am the Blessed Crucible! You are nothing!",
+            "trigger": "When she is approached",
+            "ability": "Summon Lava Atronach"
+        },
+        {
+            "speaker": "The Lava Queen",
+            "line": "When will they send me some worthy opponents?",
+            "trigger": "If your group is wiped, she will comment on it",
+            "ability": "Summon Lava Atronach"
+        },
+        {
+            "speaker": "The Lava Queen",
+            "line": "Let my legend live on.",
+            "trigger": "As she dies, she seems to accept her death",
+            "ability": "Summon Lava Atronach"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When she is approached": [
+            {
+                "speaker": "The Lava Queen",
+                "line": "I am the Blessed Crucible! You are nothing!",
+                "trigger": "When she is approached",
+                "ability": "Summon Lava Atronach"
+            }
+        ],
+        "If your group is wiped, she will comment on it": [
+            {
+                "speaker": "The Lava Queen",
+                "line": "When will they send me some worthy opponents?",
+                "trigger": "If your group is wiped, she will comment on it",
+                "ability": "Summon Lava Atronach"
+            }
+        ],
+        "As she dies, she seems to accept her death": [
+            {
+                "speaker": "The Lava Queen",
+                "line": "Let my legend live on.",
+                "trigger": "As she dies, she seems to accept her death",
+                "ability": "Summon Lava Atronach"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "According to The Lava Queen, she usurped Sanarel the Great."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible."
+    ],
+    "summary": "This article is about the boss in Blessed Crucible. For the boss in the Infinite Archive, see The Lava Queen (Infinite Archive). The Lava Queen is a Dark Elf and the current champion of the Blessed Crucible, as well as one of its greatest as she has remained undefeated for over four centuries with her powerful fire magic. She has a two unique items that may be dropped, Brimstone Staff, and Claymore of the Crucible.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Lava_Queen_(person)",
+        "page_title": "Online:The Lava Queen (person)",
+        "revision_id": 3542624,
+        "retrieved_at": "2026-08-12T21:15:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

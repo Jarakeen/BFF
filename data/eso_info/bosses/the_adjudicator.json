@@ -1,0 +1,156 @@
+{
+    "id": "the_adjudicator",
+    "name": "The Adjudicator",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "White-Gold Tower",
+    "species": "Harvester",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,768,185",
+        "veteran": "2,952,161",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chasten",
+            "description": "A basic ranged attack that does moderate magical damage."
+        },
+        {
+            "name": "Creeping Winter",
+            "description": "The boss releases rows of hands that travel along the ground in the direction she is facing, occasionally bouncing off the walls at the side of the room. This attack does very high magical damage and should be avoided at all costs. Holding block will reduce the damage done to the player."
+        },
+        {
+            "name": "Soul Vortex",
+            "description": "The boss stuns a player and places pools of fire around the room as indicated by red circles. This attack does moderate flame damage over time."
+        },
+        {
+            "name": "Summon Shriven Noble and Shriven Aristocrat[verification needed]",
+            "description": "The boss summons some Shriven Nobles and Shriven Aristocrats from the side doors. The party should kill them as soon as possible to simplify the fight."
+        },
+        {
+            "name": "Bolt of Judgment",
+            "description": "When these Nobles and Aristocrats are killed, their souls are stored in the pillars of judgment on both sides of the room. These pillars will occasionally shoot a bolt at all members of the party, doing moderate magical damage. This damage increases as the fight progresses and as more Nobles or Aristocrats die, thus the party has to defeat the boss before the damage becomes too great."
+        },
+        {
+            "name": "Coldharbour Justice",
+            "description": "The boss throws the furthest player into a cage, located at the sides of the room. The cage is locked with an intermediate lock, and the player inside takes continuous flame damage. The player, or an ally, has to pick (or force) the lock to escape. Players are advised to have at least one lockpick on them just for the Coldharbour Justice mechanic. Putting points into the Locksmith skill can help as it increases the chance to force the lock instead."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Adjudicator",
+            "line": "The two Thrones belong to Molag Bal, now. Your verdict is death, like the mortals before you.",
+            "trigger": "When you approach the center of the room, you'll see her execute three Imperial Prisoners.",
+            "ability": "Bolt of Judgment"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "Halt! The verdict is death.",
+            "trigger": "Casting Coldharbour Justice",
+            "ability": "Coldharbour Justice"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "I sentence you to eternal suffering!",
+            "trigger": "Casting Coldharbour Justice",
+            "ability": "Coldharbour Justice"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "I find you guilty! And the sentence is fire everlasting!",
+            "trigger": "Casting Coldharbour Justice",
+            "ability": "Coldharbour Justice"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "The sentence is complete.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "Your soul belongs to Lord Bal, now.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+        },
+        {
+            "speaker": "The Adjudicator",
+            "line": "We shall welcome your soul to Coldharbour.",
+            "trigger": "Party wiped",
+            "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you approach the center of the room, you'll see her execute three Imperial Prisoners.": [
+            {
+                "speaker": "The Adjudicator",
+                "line": "The two Thrones belong to Molag Bal, now. Your verdict is death, like the mortals before you.",
+                "trigger": "When you approach the center of the room, you'll see her execute three Imperial Prisoners.",
+                "ability": "Bolt of Judgment"
+            }
+        ],
+        "Casting Coldharbour Justice": [
+            {
+                "speaker": "The Adjudicator",
+                "line": "Halt! The verdict is death.",
+                "trigger": "Casting Coldharbour Justice",
+                "ability": "Coldharbour Justice"
+            },
+            {
+                "speaker": "The Adjudicator",
+                "line": "I sentence you to eternal suffering!",
+                "trigger": "Casting Coldharbour Justice",
+                "ability": "Coldharbour Justice"
+            },
+            {
+                "speaker": "The Adjudicator",
+                "line": "I find you guilty! And the sentence is fire everlasting!",
+                "trigger": "Casting Coldharbour Justice",
+                "ability": "Coldharbour Justice"
+            }
+        ],
+        "Party wiped": [
+            {
+                "speaker": "The Adjudicator",
+                "line": "The sentence is complete.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+            },
+            {
+                "speaker": "The Adjudicator",
+                "line": "Your soul belongs to Lord Bal, now.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+            },
+            {
+                "speaker": "The Adjudicator",
+                "line": "We shall welcome your soul to Coldharbour.",
+                "trigger": "Party wiped",
+                "ability": "Summon Shriven Noble and Shriven Aristocrat[verification needed]"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Planemeld Obverse: Fulfill the prophecy of an Elder Scroll by freeing the White-Gold Tower from Coldharbour's clutches.",
+        "Pledge: White-Gold Tower: Prove you are truly Undaunted by clearing White-Gold Tower."
+    ],
+    "summary": "The Adjudicator is a large harvester found within the throne room of the White-Gold Tower. She serves as the first boss that must be defeated to continue. She has a chance to drop Harvest Dirk, a unique dagger.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Adjudicator",
+        "page_title": "Online:The Adjudicator",
+        "revision_id": 3607425,
+        "retrieved_at": "2026-08-12T21:38:33Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

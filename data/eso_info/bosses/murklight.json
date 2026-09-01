@@ -1,0 +1,52 @@
+{
+    "id": "murklight",
+    "name": "Murklight",
+    "content_id": "elden_hollow_ii",
+    "content_name": "Elden Hollow II",
+    "location": "Elden Hollow II, Daedric Ruins\nInfinite Archive",
+    "species": "Lurcher",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Double Slam",
+            "description": "A basic melee attack that does high physical damage."
+        },
+        {
+            "name": "Consuming Shadow",
+            "description": "The boss summons pools of shadow under each player's feet. This does high magical damage over time as indicated by the red circles. This attack is usually followed by Eclipse."
+        },
+        {
+            "name": "Eclipse",
+            "description": "The boss envelops the room in shadow, and the red circles turn white. Players should now stand within the white circles, as the area outside the white circles now do high magical damage over time."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Consuming Darkness: Delve into Oblivion and save Bakkhara.",
+        "Pledge: Elden Hollow II: Explore Elden Hollow II and return Undaunted."
+    ],
+    "summary": "The Murklight is a shadowy lurcher found within a pocket Daedric realm guarding Bakkhara. The realm is accessed during the events of Elden Hollow II, and Murklight serves as the second boss. Its unique drop is the Murkhammer.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Murklight",
+        "page_title": "Online:Murklight",
+        "revision_id": 3179677,
+        "retrieved_at": "2026-08-12T21:21:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

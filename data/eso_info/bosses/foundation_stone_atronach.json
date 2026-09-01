@@ -1,0 +1,56 @@
+{
+    "id": "foundation_stone_atronach",
+    "name": "Foundation Stone Atronach",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Aetherian Archive",
+    "species": "Stone Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Stonegaze",
+            "description": "Basic ranged attack dealing high magic damage."
+        },
+        {
+            "name": "Big Quake",
+            "description": "The Atronach slams its \"head\" into the ground several times, each time dealing moderate-high physical damage in a very large area. This ability must be healed through."
+        },
+        {
+            "name": "Boulder Storm",
+            "description": "The atronach goes into \"turtle\" mode and hides its head. Stones will be thrown at individual players, each dealing moderate-high physical damage in a small area. The group must spread out and block to prevent shrapnel from hitting each other. If you don't block, you'll be knocked down."
+        },
+        {
+            "name": "Minions",
+            "description": "The Foundation Stone Atronach summons Firstmage Chainspinners and Nullifiers."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The body of a Foundation Stone Atronach can be found in Balamath. A few others can be found in the Deeproot of Earthen Root Enclave.",
+        "Generic Stone Atronachs were first introduced in Update 15. Before that, the Foundation Stone Atronach from Update 1 was the only named one."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent."
+    ],
+    "achievements": [],
+    "summary": "The Foundation Stone Atronach is a stone atronach acting as the second boss in the Aetherian Archive. Unlike regular stone atronachs, it is much larger and decorated with ancient Nedic carvings.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Foundation_Stone_Atronach",
+        "page_title": "Online:Foundation Stone Atronach",
+        "revision_id": 3388003,
+        "retrieved_at": "2026-08-12T05:31:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

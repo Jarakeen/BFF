@@ -1,0 +1,61 @@
+{
+    "id": "shepherd_of_the_doomed",
+    "name": "Shepherd of the Doomed",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "Wraith",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Ice Bolt",
+            "description": "A basic ranged attack that deals minor frost damage."
+        },
+        {
+            "name": "Impaled",
+            "description": "The Shepherd releases a frost storm in a straight line, dealing high frost damage, rooting and snaring for 3 seconds any target hit. Blocking will not negate both crowd controls."
+        },
+        {
+            "name": "Frigid Blast",
+            "description": "The Shepherd deals high frost damage in a large area around it which also stuns. \"Ice Pillars\" always follow this."
+        },
+        {
+            "name": "Ice Pillars",
+            "description": "The Shepherd summons 6 large Ice Pillars in the arena which affect a small area around them, dealing continuous low frost damage (named Chilled, but not the status effect) as well as snaring more as the target stays in. After five seconds in the affected area, the target becomes immobilized and is always dealt lethal frost damage as \"Deep Freeze\". You can destroy them and they are automatically destroyed when the Shepherd dies."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "The Shepherd of the Doomed is a wraith found in Silorn, where it serves as one of its champions. Many Welkynd Chills are in the arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Shepherd_of_the_Doomed",
+        "page_title": "Online:Shepherd of the Doomed",
+        "revision_id": 3263053,
+        "retrieved_at": "2026-08-12T21:34:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

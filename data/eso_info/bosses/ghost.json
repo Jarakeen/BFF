@@ -1,0 +1,136 @@
+{
+    "id": "ghost",
+    "name": "Ghost",
+    "content_id": "fang_lair",
+    "content_name": "Fang Lair",
+    "location": "Expand for Locations listClose Locations list",
+    "species": "Ghost",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Ghost",
+            "line": "The flesh is fleeting!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        },
+        {
+            "speaker": "Ghost",
+            "line": "Nirn will be my hunting ground!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        },
+        {
+            "speaker": "Ghost",
+            "line": "I will take your shell, mortal!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        },
+        {
+            "speaker": "Ghost",
+            "line": "With your flesh I shall hunt!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        },
+        {
+            "speaker": "Ghost",
+            "line": "Your life will be mine!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        },
+        {
+            "speaker": "Ghost",
+            "line": "Die! Die so I live!",
+            "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Ghosts in Wilding Run will speak when they attack you.": [
+            {
+                "speaker": "Ghost",
+                "line": "The flesh is fleeting!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            },
+            {
+                "speaker": "Ghost",
+                "line": "Nirn will be my hunting ground!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            },
+            {
+                "speaker": "Ghost",
+                "line": "I will take your shell, mortal!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            },
+            {
+                "speaker": "Ghost",
+                "line": "With your flesh I shall hunt!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            },
+            {
+                "speaker": "Ghost",
+                "line": "Your life will be mine!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            },
+            {
+                "speaker": "Ghost",
+                "line": "Die! Die so I live!",
+                "trigger": "Ghosts in Wilding Run will speak when they attack you.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "A ghost appears when a player uses the Ghost Lantern memento.",
+        "On top of the enemy ghosts (as listed in the table above), ambient ghosts can be seen flying in the air near Nighthollow Keep and in The Disquiet Study.",
+        "Prior to an early update, the three ghosts attacking you during the Wake the Dead quest were named Othrenis Ghost."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Breaking Fort Virak: Help liberate Fort Virak from the Covenant forces.",
+        "Broken Apart: Banish the wispmother that is corrupting Deep Graves.",
+        "Carzog's Demise: Learn about an ancient and powerful Ayleid relic.",
+        "A Family Divided: Reunite a refugee with her husband.",
+        "Haunted Grounds: Help drive out spirits infesting a nobleman's new property.",
+        "King Aphren's Sword: Help recover King Aphren's sword from his tomb.",
+        "Lover's Torment: Free a cursed soul from her torment.",
+        "Memento Mori: Break Molag Bal's curse to free Rosalind's spirit.",
+        "Motive for Heresy: Learn about Vox's past.",
+        "A Mysterious Curio: Free an Ayleid spirit from its ancient prison.",
+        "Pledge: Crypt of Hearts I: Prove you are truly Undaunted by clearing the Crypt of Hearts I.",
+        "Shadow of Sancre Tor: Retrieve the Amulet of Kings from its hiding place.",
+        "Songs of Sovngarde: Enter Sovngarde and stop Fildgor's plot.",
+        "The Ties that Bind: Search for any surviving Thalmor soldiers at Wilding Run.",
+        "Trade Negotiations: Find out what happened to Raston Vendil.",
+        "The Trial of the Ghost Snake: Decide the fate of the Mabrigash tribe.",
+        "Unearthing the Past: Use Betnikh's past to help the present.",
+        "Vigil's End: Help an ancient Ayleid spirit find rest.",
+        "What Was Done Must Be Undone: Enter the Reliquary and end the curse of Heimlyn Keep."
+    ],
+    "summary": "This article is about the hostile creatures. For the NPC spirits, see Spirit. Aphren's Hold, Crow's Wood, Outside the Crypt of Hearts, Crypt of the Exiles, Eidolon's Hollow, Eyebright Feld Dolmen, Fort Virak Ruins, Mal Sorra's Tomb, Othrenis, Thibaut's Cairn, Vale of the Ghost Snake, Near Valeguard Tower, Wilding Run\nDirenni Acropolis Ghosts are spirits of the deceased that have been trapped on Nirn. They are often found haunting tombs and graveyards. These enemies should not be confused with spirits — ghosts all look the same (though they may vary in color), whereas spirits look like the person they were in life.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ghost",
+        "page_title": "Online:Ghost",
+        "revision_id": 3602802,
+        "retrieved_at": "2026-08-12T21:22:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

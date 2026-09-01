@@ -1,0 +1,28 @@
+{
+    "id": "avanchnzel",
+    "name": "Avanchnzel",
+    "content_type": "dungeon",
+    "summary": "Avanchnzel is a Dwemer ruin in the southern Rift, south of Honrich Tower, containing dwarven automatons. There are several bookshelves in the ruin, as well as a lorebook which one?. A Skyshard can be found in the southwestern chamber, while Thzallek Eft occupies the south hall. Centipedes and spiders are found in numbers within. There is a dead Dunmer named Solvar in front of the ruin. If you head through the crevice north of his corpse, you'll find another skyshard, which is guarded by a sleeping bear. A chest can spawn just east of this skyshard.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Avanchnzel also appeared in Skyrim."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Avanchnzel",
+        "page_title": "Online:Avanchnzel",
+        "revision_id": 3598168,
+        "retrieved_at": "2026-08-12T21:13:30Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

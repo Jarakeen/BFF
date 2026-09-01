@@ -1,0 +1,26 @@
+{
+    "id": "timeless_wallow",
+    "name": "Timeless Wallow",
+    "content_type": "dungeon",
+    "summary": "The Timeless Wallow is a demi-realm carved out from the Parch by Gilded B'Kyfxi for her research into temporal magic. It can be found in the southeast corner of the arid district, and the passage to the dungeon's entrance is blocked by walls of sand. You will need the Windglass relic to bypass the sand, and gilded keys collected from Argent enemies to enter the Timeless Wallow. The dungeon consists of a stone passage lined with statues that lead down to an empty, sandy lake bed which is littered with skeletal dragon remains, and automaton parts. The surrounding area and sky is filled with giant hourglasses that are in varying states of repair. B'Kyfxi can be found wallowing in the last remaining water. Gilded B'Kyfxi's Research can be found near the ladder leading down into the fighting area.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "night_market_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Timeless_Wallow",
+        "page_title": "Online:Timeless Wallow",
+        "revision_id": 3597638,
+        "retrieved_at": "2026-08-12T21:35:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "id": "wayrest_sewers_i",
+    "name": "Wayrest Sewers I",
+    "content_type": "dungeon",
+    "summary": "Wayrest Sewers I is a group dungeon found under the city of Wayrest in Stormhaven. When you enter the sewers in the normal version, Investigator Irnand will request that you find and kill a rogue necromancer and his conspirators before they take over Wayrest above. You can learn its location from Wandering Jakalor outside Elden Root, Lady Blade outside Wayrest, or Hranir Icy-Mane outside Mournhold.",
+    "location": "",
+    "boss_ids": [
+        "investigator_garron",
+        "varaine_pellingare",
+        "allene_pellingare"
+    ],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Before dungeon scaling was introduced in Update 5, Normal Wayrest Sewers was designed for levels 20–23, and Veteran Wayrest Sewers was designed for Veteran Ranks 6–10.",
+        "Prior to Update 12, Wayrest Sewers I was only available in Normal mode, and Wayrest Sewers II was only available in Veteran mode. These were named Wayrest Sewers and Veteran Wayrest Sewers respectively.",
+        "The Rat Whisperer miniboss is in an easily missable side room, which may cause you to miss out on various in-game Achievements, especially in Veteran mode."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wayrest_Sewers_I",
+        "page_title": "Online:Wayrest Sewers I",
+        "revision_id": 3323667,
+        "retrieved_at": "2026-08-12T21:38:13Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

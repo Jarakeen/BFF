@@ -1,0 +1,47 @@
+{
+    "id": "thalmor",
+    "name": "Thalmor",
+    "content_id": "elden_hollow_i",
+    "content_name": "Elden Hollow I",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "A Pinch of Sugar: Help Juranda-ra save her plantation.",
+        "Ancient Remains: Investigate Wood Orc activity in the ruins beneath Elden Root.",
+        "Double Jeopardy: Uncover the Heritance spy's plan to conquer Valenwood.",
+        "The Family Business: Assist a moon-sugar farming family during a trying time.",
+        "The Misuses of Knowledge: Deliver notes about undead to their author.",
+        "Harsh Lesson: Uncover abuse at a renowned school.",
+        "Scars Never Fade: Investigate the Argonian refugees in the Gray Mire.",
+        "A Storm Upon the Shore: Drive the Sea Vipers out of Seaside Sanctuary.",
+        "Striking at the Heart: Defeat the shade of Prince Naemon.",
+        "Veil of Illusion: Trick a Heritance spy into assassinating the \"queen\"."
+    ],
+    "summary": "The Thalmor are the political and diplomatic representatives of both the Summerset Isles and the Aldmeri Dominion. They are responsible for almost every aspect of the Dominion on the mainland, and have the authority to do whatever is necessary to win the Alliance War. Though they bear the Thalmor name, the Fists of Thalmor are not affiliated with the group, despite widespread misconceptions. The Fists are the military arm of the Dominion government, though not the Dominion army. The misconception has caused problems for Thalmor who visit a location after the Fists have been there. The Thalmor have proposed that the Fists retake their previous name, Justiciars, to ease these problems. For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Thalmor",
+        "page_title": "Online:Thalmor",
+        "revision_id": 3197447,
+        "retrieved_at": "2026-08-12T21:20:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

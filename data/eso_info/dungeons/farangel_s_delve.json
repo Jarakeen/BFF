@@ -1,0 +1,26 @@
+{
+    "id": "farangel_s_delve",
+    "name": "Farangel's Delve",
+    "content_type": "dungeon",
+    "summary": "Farangel's Delve is a mine on the southern shore of Stormhaven, west of Farangel's Landing containing Midnight Union smugglers. They are led by Dimitri. It was used as a smuggler's den for generations until it was cleared out and closed by the Lion Guard. Beetles and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Farangel%27s_Delve",
+        "page_title": "Online:Farangel's Delve",
+        "revision_id": 3598205,
+        "retrieved_at": "2026-08-12T21:22:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

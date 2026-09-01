@@ -1,0 +1,36 @@
+{
+    "id": "unhallowed_grave",
+    "name": "Unhallowed Grave",
+    "content_type": "dungeon",
+    "summary": "The Unhallowed Grave is a tomb complex and group dungeon located in the desert wastes of Bangkorai. It is part of the Harrowstorm dungeon pack DLC, along with Icereach. Unhallowed Grave is known to contain the remains of an unholy army called the Gray Host and according to Fennorian, the burial mound dates back to the First Era. The ancient fraternity of Pyre Watch keeps guard over the burial site but has recently been facing several attacks of Nord graverobbers who call themselves the Draugrkin. Shelaria, a Redguard guardian of the Pyre Watch, requests your assistance to investigate the site and drive off the troublemakers. Beetles, scorpions and wasps are found in numbers within. Carts yielding Bone, Crawlers, Gnawed Bone, Guts and Worms are scattered throughout the dungeon. Hazards include bottomless pits.",
+    "location": "",
+    "boss_ids": [
+        "hakgrym_the_howler",
+        "werewolf_behemoth",
+        "keeper_of_the_kiln",
+        "eternal_aegis",
+        "mournful_aegis",
+        "ondagore_the_mad",
+        "lich",
+        "kjalnar_tombskald",
+        "tzirzhalir"
+    ],
+    "achievements": [
+        {
+            "id": "harrowstorm_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Unhallowed_Grave",
+        "page_title": "Online:Unhallowed Grave",
+        "revision_id": 3607996,
+        "retrieved_at": "2026-08-12T21:36:49Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

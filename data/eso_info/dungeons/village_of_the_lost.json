@@ -1,0 +1,30 @@
+{
+    "id": "village_of_the_lost",
+    "name": "Village of the Lost",
+    "content_type": "dungeon",
+    "summary": "The Village of the Lost is a plane containing three villages trapped between Coldharbour and Mundus. The Dunmer village of Silver Run, originally in Vvardenfell, Khajiit village of Khaj'yahai and the Orc stronghold known as Dushnikh's Shadow, were all pulled into this realm after individual residents from all three villages made secret deals with Grexev, the ruling lord, to gain power or rewards, only to be tricked soon after. It consists of islands primarily connected by portals. The central island is named Ruins of Silver Run, and contains portals to the two floating islands. Ruins of Khaj'yahai is the western floating island, while Ruins of Dushnikh's Shadow is the eastern one. Island of the Damned can be reached from Khaj'yahai, and the portal to Island of the Lost is found in Dushnikh's Shadow. The other islands can all be reached by swimming, but Slaughterfish can pose a problem. The island containing Dushnikh's Shadow Longhouse is located in the far northeast. The Subterranean Cavern entrance can be found at the base of the volcano to the north. Centipedes, frogs, rats and spiders are found in numbers within. Bosses have a chance to drop the Sanguine Doublet antiquity lead for the Bloodlord's Embrace.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Defeating Zatalguch in the Subterranean Lair will earn you 1 Skill Point.",
+        "While the flame atronachs in this realm are cold-flame (blue coloring), they are not referred to as such in their nameplates.",
+        "Before June 2015, Khaj'yahai and Dushnikh's Shadow were originally named Khajiit Village and Orcish Village respectively."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Village_of_the_Lost",
+        "page_title": "Online:Village of the Lost",
+        "revision_id": 3576120,
+        "retrieved_at": "2026-08-12T21:37:37Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "id": "khartag_point",
+    "name": "Khartag Point",
+    "content_type": "dungeon",
+    "summary": "Khartag Point is a delve found in the Bitter Coast region of Vvardenfell, west-southwest of Ald'ruhn, containing Camonna Tong and wildlife. Home to Ropefish leader Khartag and his faction, it has been attacked by the Camonna Tong, a ruthless criminal organization. The following letters can be found here: A One-Time Offer, Blood-Soaked Letter and My Dearest Love. Omaren Trial Transcript can be found in a boat at the entrance to the delve. Dragonflies and shroom beetles are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Khartag Point also appeared in Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Khartag_Point",
+        "page_title": "Online:Khartag Point",
+        "revision_id": 3548745,
+        "retrieved_at": "2026-08-12T21:26:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

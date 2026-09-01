@@ -1,0 +1,64 @@
+{
+    "id": "hedge_maze_guardian",
+    "name": "Hedge Maze Guardian",
+    "content_id": "moon_hunter_keep",
+    "content_name": "Moon Hunter Keep",
+    "location": "Moon Hunter Keep (Gardens)",
+    "species": "Lurcher",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Claw",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Pulverize",
+            "description": "A melee shove that does moderate physical damage as well as staggering the player. This attack can be blocked to prevent the stagger."
+        },
+        {
+            "name": "Crushing Limbs",
+            "description": "The lurcher slams its fist on the ground, doing very high physical damage as well as stunning the player. This must be blocked by the tank or dodged if you are not."
+        },
+        {
+            "name": "Root Stomp",
+            "description": "The boss stomps sending out roots to all players. Getting rooted will deal moderate physical damage over time. Roll dodge to escape this, or to avoid the roots in the first place."
+        },
+        {
+            "name": "Thorn Toss",
+            "description": "The boss shoots out thorns dealing high poison damage as indicated by a red cone. The tank will want to face the boss towards the gate so the thorns don't hit players within in the maze."
+        },
+        {
+            "name": "Summon Spriggans",
+            "description": "At 75, 55 and 35% health, spriggans will be summoned. They will heal the Guardian making the boss invulnerable as long as they are alive. The spriggans can be located by the light beams they channel within the hedge maze surrounding the arena. The stranglers in the maze can be ignored in general, but if you are caught by a strangler, simply break free."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Moonlight Ascent: Explore an old Silver Dawn stronghold and deal with the werewolves controlling it.",
+        "Pledge: Moon Hunter Keep: Prove you are truly Undaunted by clearing the Moon Hunter Keep."
+    ],
+    "summary": "The Hedge Maze Guardian is a powerful lurcher that guards the exit to the Hedge Maze in Moon Hunter Keep.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hedge_Maze_Guardian",
+        "page_title": "Online:Hedge Maze Guardian",
+        "revision_id": 3347807,
+        "retrieved_at": "2026-08-12T21:28:58Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

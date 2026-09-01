@@ -1,0 +1,28 @@
+{
+    "id": "nonungalo",
+    "name": "Nonungalo",
+    "content_type": "dungeon",
+    "summary": "Nonungalo is an Ayleid Ruin located east of Three Points Wayshrine, in central West Weald. Hazards include spike traps, swinging blades and Welkynd bolts. Beetles, centipedes and spiders are found in numbers within. Necromancer Anniar's Journal can be found outside the entrance to the ruins at the beginning of the related quest.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Nonungalo also appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Nonungalo",
+        "page_title": "Online:Nonungalo",
+        "revision_id": 3582282,
+        "retrieved_at": "2026-08-12T21:30:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "id": "the_guardian_s_strength",
+    "name": "The Guardian's Strength",
+    "content_id": "volenfell",
+    "content_name": "Volenfell",
+    "location": "Volenfell, The Eye's Chamber",
+    "species": "Dwarven Centurion",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "471,516",
+        "veteran": "1,258,098",
+        "hardmode": "1,446,813"
+    },
+    "abilities": [
+        {
+            "name": "Whirlwind Function",
+            "description": "The boss chases a player while spinning around dealing high physical damage over time around itself as indicated by a red circle. Players should kite this boss around and only focus on damaging it when it stops to recharge."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Blood and Sand: Help a Dwemer researcher recover her notes on a Dwemer artifact.",
+        "Pledge: Volenfell: Prove you are truly Undaunted by clearing Volenfell."
+    ],
+    "summary": "The Guardian's Strength is a red Dwarven Centurion that, along with The Guardian's Spark and The Guardian's Soul, makes up the Guardian Council, serving as the final bosses of Volenfell. It is found in The Eye's Chamber, in front of the Guardian's Eye.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Guardian%27s_Strength",
+        "page_title": "Online:The Guardian's Strength",
+        "revision_id": 3404587,
+        "retrieved_at": "2026-08-12T21:37:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,188 @@
+{
+    "id": "wyress_rangifer",
+    "name": "Wyress Rangifer",
+    "content_id": "march_of_sacrifices",
+    "content_name": "March of Sacrifices",
+    "location": "March of Sacrifices",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,031,441",
+        "veteran": "1,549,884",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Minor Wound",
+            "description": "A basic ranged attack that deals minor magical damage."
+        },
+        {
+            "name": "Stag Aura",
+            "description": "The boss has a green aura around her (see image) that heals her allies slowly over time. Keep them separate to prevent this. When killed, she will spawn a ghostly stag that emanates the same aura. The stag cannot be killed and will move on its own accordingly."
+        },
+        {
+            "name": "Focused Healing",
+            "description": "The enemy heals its allies over time as indicated by a yellow beam. Interrupt the boss to prevent this."
+        },
+        {
+            "name": "Rite of Passage",
+            "description": "The enemy channels a spell healing itself and nearby allies for very large amounts in a large yellow circle. This ability is usually used when the enemy is on low health. This spell must be interrupted as soon as possible to make the fight shorter."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "Frozen in awe before our might? I can hardly blame you.",
+            "trigger": "Idling before battle",
+            "ability": "Rite of Passage"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "You're here for the Great Hunt? Well, Lord Hircine's standards have certainly lowered.",
+            "trigger": "Idling before battle",
+            "ability": "Rite of Passage"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "You should run while you have the chance. I always love a good chase.",
+            "trigger": "Idling before battle",
+            "ability": "Rite of Passage"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "My, my. You all fell so easily.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "And I thought this would be a hunt worth bragging about. How disappointing.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "Another successful hunt. As always.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "No worries, sisters. My spirit remains.",
+            "trigger": "After she is killed",
+            "ability": "Stag Aura"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "The spirit of the stag lives on.",
+            "trigger": "After she is killed",
+            "ability": "Stag Aura"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "My defeat is not my end.",
+            "trigger": "After she is killed",
+            "ability": "Stag Aura"
+        },
+        {
+            "speaker": "Wyress Rangifer",
+            "line": "We will return, hunter …. Our spirits live on.",
+            "trigger": "When she is the last to be defeated",
+            "ability": "Stag Aura"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Idling before battle": [
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "Frozen in awe before our might? I can hardly blame you.",
+                "trigger": "Idling before battle",
+                "ability": "Rite of Passage"
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "You're here for the Great Hunt? Well, Lord Hircine's standards have certainly lowered.",
+                "trigger": "Idling before battle",
+                "ability": "Rite of Passage"
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "You should run while you have the chance. I always love a good chase.",
+                "trigger": "Idling before battle",
+                "ability": "Rite of Passage"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "My, my. You all fell so easily.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "And I thought this would be a hunt worth bragging about. How disappointing.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "Another successful hunt. As always.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "After she is killed": [
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "No worries, sisters. My spirit remains.",
+                "trigger": "After she is killed",
+                "ability": "Stag Aura"
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "The spirit of the stag lives on.",
+                "trigger": "After she is killed",
+                "ability": "Stag Aura"
+            },
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "My defeat is not my end.",
+                "trigger": "After she is killed",
+                "ability": "Stag Aura"
+            }
+        ],
+        "When she is the last to be defeated": [
+            {
+                "speaker": "Wyress Rangifer",
+                "line": "We will return, hunter …. Our spirits live on.",
+                "trigger": "When she is the last to be defeated",
+                "ability": "Stag Aura"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "She wears the Stag-Heart Skull Sallet, which shows her reverence to Uricanbeg, Hircine's Stag aspect.",
+        "It was revealed that she along with her sisters each represent a different aspect of Hircine in ESO Live's preview of Wolfhunter (Timestamp 32:30)."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Great Hunt: Conquer the March of Sacrifices and emerge victorious in the Great Hunt."
+    ],
+    "summary": "Wyress Rangifer is a Breton wyress who hunts alongside her sisters, Strigidae and Ursus, in the March of Sacrifices. Before you engage in battle with her, you can observe her sacrificing Gaedil, turning his essence into a channeled green flame that empowers the Wyresses. Rangifer possesses healing abilities that allow her to aid Strigidae and Ursus as they engage you with bow and mace respectively. She represents Uricanbeg, the Great Dark Stag.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Wyress_Rangifer",
+        "page_title": "Online:Wyress Rangifer",
+        "revision_id": 3347522,
+        "retrieved_at": "2026-08-12T21:28:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

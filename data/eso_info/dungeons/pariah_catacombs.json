@@ -1,0 +1,26 @@
+{
+    "id": "pariah_catacombs",
+    "name": "Pariah Catacombs",
+    "content_type": "dungeon",
+    "summary": "The Pariah Catacombs are a tomb just south of Pariah Abbey in Stormhaven containing Stonechewer goblins. Originally called Menevia Catacombs, the tomb was the favored burial place for the elite of Stormhaven, but was abandoned along with Menevia Abbey following the Ghost Harrowing of 2E 307. Beetles and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Pariah_Catacombs",
+        "page_title": "Online:Pariah Catacombs",
+        "revision_id": 3598204,
+        "retrieved_at": "2026-08-12T21:30:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

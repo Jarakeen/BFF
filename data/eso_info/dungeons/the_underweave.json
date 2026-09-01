@@ -1,0 +1,33 @@
+{
+    "id": "the_underweave",
+    "name": "The Underweave",
+    "content_type": "dungeon",
+    "summary": "The Underweave is a cave where Hermaeus Mora throws away forgotten secrets. It can be found to the southeast of the Apogee Nadir Wayshrine. All creatures here have a chance to drop Unearthed Valenwood Seedlings. Daedrats, fiendroths, Uncatalogued Fates and tomeshells are found in great numbers within.",
+    "location": "",
+    "boss_ids": [
+        "caz_iunes_the_executioner",
+        "creepclaw",
+        "kynreeve_kev_ni",
+        "loremaster_trigon",
+        "qacath_the_silent",
+        "all_seeing_ky_zuu"
+    ],
+    "achievements": [
+        {
+            "id": "necrom_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Underweave",
+        "page_title": "Online:The Underweave",
+        "revision_id": 3548833,
+        "retrieved_at": "2026-08-12T21:36:35Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

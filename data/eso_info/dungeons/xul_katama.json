@@ -1,0 +1,28 @@
+{
+    "id": "xul_katama",
+    "name": "Xul-Katama",
+    "content_type": "dungeon",
+    "summary": "Xul-Katama (or the Monastery of the Death-Dancers) is the ruins of an ancient Argonian monastery found off the coast of Eastern Solstice. It was built on an island found within Stone Cove and is reached by a series of bridges. At the height of its importance, it was the heart of the Death-Dancer sect on Solstice and a repository of their thoughts and knowledge regarding Sithis and the Void. However, Xul-Katama fell during the wars with the Corelanya Clan during the eleventh century of the First Era. Afterwards, the monastery was eventually abandoned and became the home of various wildlife and patrolled by Voskrona Guardians. In more recent times, the Worm Cult and allied Daedra have been sighted within the ruins, searching for lost secrets. Butterflies, centipedes, lizards, snakes, spiders and torchbugs are found within. Hazards include bottomless pits.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "It is called \"Sithis Crest\" in the files."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xul-Katama",
+        "page_title": "Online:Xul-Katama",
+        "revision_id": 3598035,
+        "retrieved_at": "2026-08-12T21:39:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

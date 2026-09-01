@@ -1,0 +1,20 @@
+{
+    "id": "loom_of_the_untraveled_road",
+    "name": "Loom of the Untraveled Road",
+    "content_type": "dungeon",
+    "summary": "Loom of the Untraveled Road is a Daedric apparatus hidden in the realm of Fargrave. It is accessed from a portal in the Fargrave Loom Quarter, which is part of the Fargrave Outer Ruins.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "It is called \"Ithelia's Prison Copy\" and \"Loomheart\" in some of the files."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Loom_of_the_Untraveled_Road",
+        "page_title": "Online:Loom of the Untraveled Road",
+        "revision_id": 3583766,
+        "retrieved_at": "2026-08-12T21:27:50Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

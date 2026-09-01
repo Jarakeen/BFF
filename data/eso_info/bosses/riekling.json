@@ -1,0 +1,40 @@
+{
+    "id": "riekling",
+    "name": "Riekling",
+    "content_id": "frostvault",
+    "content_name": "Frostvault",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Ice-Biter Tribe originally used standard goblin models before being updated with blue skin. The Rieklings in Frostvault use taller Riekr models.",
+        "The rieklings at Cragwallow were originally intended to be Falmer, but this was changed later in development. Some errant strings of the quest still remain in the files.",
+        "Mirri Elendis likes it when you kill them (+5 rep/5 minutes)"
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Rieklings are short, blue-skinned ice Goblins found in Eastmarch. During the celebration at Cragwallow, the lute that Valding the Bard plays will attract the rieklings of the Ice-Biter Tribe, resulting in the death of multiple workers. The Coldsnap Tribe inhabited the Dwemer ruins of Frostvault their home, and appropriated the various devices the Dwemer left behind. They are relatives of green-skinned goblins and riekrs (who have white skin). For more information, see the main lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Riekling",
+        "page_title": "Online:Riekling",
+        "revision_id": 3252378,
+        "retrieved_at": "2026-08-12T21:23:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "vale_of_revelry",
+    "name": "Vale of Revelry",
+    "content_type": "dungeon",
+    "summary": "The Vale of Revelry is a realm linked to Sanguine and his worshippers on Solstice. This location is also a delve, where the entrance can be found to the west of Shell-Tide Village. Approaching the entrance to the Vale of Revelry, it appears as a humble tent where would-be revelers are lining up to enter as they are vetted by Jenasa Aradil. Passing through the tent's curtain, you will find the Vale is much bigger on the inside. The surroundings are foggy and shrouded in perpetual nighttime. A brilliant aurora sprawls overhead. There will be bunting strung up and various tents with Sanguine's symbols set up along the paths. The eastern side of the Vale is dominated by what appears to be a Nord village with a large awning set up the center where the leader of the Revel drinks. Lizards, spiders and torchbugs are found in numbers within. The Vale is filled with mortal members of the Revelers of the Rose and Daedra who serve Sanguine. Unfortunately, the partygoers will view you as an outsider, and most will be hostile to you. In recent times, members of a Dibellan sect have entered the Vale, and their High Priest will ask for your help in ensuring their safe return.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "season_of_the_worm_cult_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Vale_of_Revelry",
+        "page_title": "Online:Vale of Revelry",
+        "revision_id": 3540197,
+        "retrieved_at": "2026-08-12T21:37:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

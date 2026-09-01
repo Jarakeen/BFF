@@ -1,0 +1,36 @@
+{
+    "id": "frozen",
+    "name": "Frozen",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Frozen (or Crystalfrost) is a condition in which an NPC or creature has a layer of ice covering them, including their armor and weapons. The Crystalfrost skin replicates this, but only affects skin and ignores covering armor and weapons. An older version of the skin was in use until at least 2015. While some frozen NPCs (such as Eboric Direfrost) are immobile, others can move around and attack while covered completely in ice.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Frozen",
+        "page_title": "Online:Frozen",
+        "revision_id": 3243024,
+        "retrieved_at": "2026-08-12T21:19:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

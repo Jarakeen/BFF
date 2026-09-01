@@ -1,0 +1,29 @@
+{
+    "id": "thukhozod_s_sanctum",
+    "name": "Thukhozod's Sanctum",
+    "content_type": "dungeon",
+    "summary": "Thukhozod's Sanctum is an Ayleid ruin located southeast of Old Orsinium, containing undead. Gorlar the Dark, a powerful Orc necromancer, resides deep within the ruins. The notes Letter from Thukhozod and Gorlar's Journal, Part One and Part Two can be found here, and the book, The Legend of Thukhozod can be found here too. The skyshard is located at the west end of the long hallway across the gap from the entrance. The fastest way is around the right corner as you enter, but beware the Bone Colossus standing between you and the hallway.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "orsinium_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "One of the items for the House of Orsimer Glories, Thukhozod's Bracer, can be found in Thukhozod's Sanctum. It is found on a bench in the northwest corner of the lower level of the large southern room.",
+        "An early name for this location was Uggamog's Lair."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Thukhozod%27s_Sanctum",
+        "page_title": "Online:Thukhozod's Sanctum",
+        "revision_id": 3550407,
+        "retrieved_at": "2026-08-12T21:35:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

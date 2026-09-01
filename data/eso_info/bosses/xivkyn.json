@@ -1,0 +1,44 @@
+{
+    "id": "xivkyn",
+    "name": "Xivkyn",
+    "content_id": "white_gold_tower",
+    "content_name": "White-Gold Tower",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "imperial_city_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Xivkyn are powerful humanoid Daedra created by Molag Bal. They are a fusion of Dremora (\"Kyn\") and Xivilai, and are encountered throughout the Imperial City. They can also be found at Dark Anchors. Several Xivkyn polymorphs can be obtained, and the Xivkyn style is available for crafting. The Coldharbour Elite Guard consists of some of Molag Bal's strongest Xivkyn warriors. For more information, see the lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Xivkyn",
+        "page_title": "Online:Xivkyn",
+        "revision_id": 3607355,
+        "retrieved_at": "2026-08-12T21:38:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

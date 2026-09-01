@@ -1,0 +1,41 @@
+{
+    "id": "black_gem_monstrosity",
+    "name": "Black Gem Monstrosity",
+    "content_id": "black_gem_foundry",
+    "content_name": "Black Gem Foundry",
+    "location": "Black Gem Foundry — Central Forge",
+    "species": "Black Soul Gem Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "5,557,153",
+        "veteran": "8,932,282",
+        "hardmode": "13,398,424"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Black Gem Monstrosity is referred to as an unnamed \"Laboratory-grown Atronach\" in Atronach Needs and Allocations."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Armaments: A regretful summoner needs help destroying arms and armor for the Worm Cult invasion of Solstice.",
+        "Pledge: Black Gem Foundry: Explore Black Gem Foundry and return Undaunted."
+    ],
+    "summary": "The Black Gem Monstrosity is an Atronach composed of black soul gems that serves as the second main boss of the Black Gem Foundry.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Black_Gem_Monstrosity",
+        "page_title": "Online:Black Gem Monstrosity",
+        "revision_id": 3487022,
+        "retrieved_at": "2026-08-12T21:14:44Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

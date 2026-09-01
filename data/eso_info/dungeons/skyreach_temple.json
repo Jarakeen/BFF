@@ -1,0 +1,20 @@
+{
+    "id": "skyreach_temple",
+    "name": "Skyreach Temple",
+    "content_type": "dungeon",
+    "summary": "Skyreach Temple is a Nedic temple located inside Loth'Na Caverns. Skyreach Temple can only be reached during the quest Dawn of the Exalted Viper by crossing a magical purple bridge. It consists of a short hallway with a central open-air ritual chamber at the end. Scaled Court cultists will be encountered here along with Little Leaf. Killing Little Leaf will cause the Exalted Viper to emerge from the central nirncrux pool and resurrect her as a ghost. Once the Viper has been defeated, the Thief will open a portal back to the top floor of the Star-Gazers' Observatory. It will always be night within Skyreach Temple, allowing you to see a display of stars if you look up. A copy of the book Dawn of the Exalted Viper can be found on the left banister above the ritual area, Cassipia's Change of Heart can be found on the right banister, and In Praise of Regent Cassipia can be found on a table on the left side of the chamber. The chamber is also filled with a high number of lootable urns.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Skyreach Temple can be accessed without being on the related quest if another player unlocks the bridge. The entrance door is open and every dialogue and fight encounter tied to the quest still triggers. The Thief even opens the portal to Belkarth though you cannot speak to her."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Skyreach_Temple",
+        "page_title": "Online:Skyreach Temple",
+        "revision_id": 3207535,
+        "retrieved_at": "2026-08-12T21:34:23Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

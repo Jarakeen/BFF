@@ -1,0 +1,106 @@
+{
+    "id": "stormborn_revenant",
+    "name": "Stormborn Revenant",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "Icereach Ramparts — Icereach Bailey",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "3,367,972",
+        "veteran": "5,954,854",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Sword Swing",
+            "description": "Basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "The Stormborn Revenant winds up his sword for a powerful melee strike, dealing very high physical damage and knocking you backwards. This attack can be blocked."
+        },
+        {
+            "name": "Avalanche Strike",
+            "description": "The Stormborn Revenant raises his sword to the sky before disappearing, reappearing a moment later dropping from the sky with force on top of you, dealing very high physical damage. This attack must be dodged and has no AoE indicator."
+        },
+        {
+            "name": "Thunderous Pursuit",
+            "description": "The Stormborn Revenant charges his sword with energy and swings it forward, calling forth fourteen lightning strikes to hit you, all chaining quickly one after the other as indicated by small circular AoEs, dealing high shock damage each."
+        },
+        {
+            "name": "Unending Storm",
+            "description": "Upon reaching 30% health, the Stormborn Revenant performs a last resort attack where he holds his swords horizontally in his hands towards the sky, summoning an arena-wide ice storm that deals continuous high frost damage. He cannot be interrupted and the damage must be healed through or he must be killed to end the fight before the damage becomes too much."
+        },
+        {
+            "name": "Summon Atronach",
+            "description": "The Stormborn Revenant will periodically summon a storm atronach in the arena. It has weak health however and can be killed quickly. Upon reaching the 40% health interval, three atronachs are summoned in the different corners of the arena instead of just one."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Lyris Titanborn \"Stay down, witch-scum! Come on, we're getting close to the ritual, I know it.\"",
+            "trigger": "When you reach the bailey, Lyris Titanborn will have just killed the Stormborn Champion, only for Sister Maefyn to intervene.",
+            "ability": "Summon Atronach"
+        },
+        {
+            "speaker": "Sister Maefyn",
+            "line": "So simple, is it? Arise, and fight on, champion!",
+            "trigger": "When you reach the bailey, Lyris Titanborn will have just killed the Stormborn Champion, only for Sister Maefyn to intervene.",
+            "ability": "Summon Atronach"
+        },
+        {
+            "speaker": "Stormborn Revenant",
+            "line": "Blood for the Coven!",
+            "trigger": "The Stormborn Revenant will then awaken.",
+            "ability": "Summon Atronach"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you reach the bailey, Lyris Titanborn will have just killed the Stormborn Champion, only for Sister Maefyn to intervene.": [
+            {
+                "speaker": "",
+                "line": "Lyris Titanborn \"Stay down, witch-scum! Come on, we're getting close to the ritual, I know it.\"",
+                "trigger": "When you reach the bailey, Lyris Titanborn will have just killed the Stormborn Champion, only for Sister Maefyn to intervene.",
+                "ability": "Summon Atronach"
+            },
+            {
+                "speaker": "Sister Maefyn",
+                "line": "So simple, is it? Arise, and fight on, champion!",
+                "trigger": "When you reach the bailey, Lyris Titanborn will have just killed the Stormborn Champion, only for Sister Maefyn to intervene.",
+                "ability": "Summon Atronach"
+            }
+        ],
+        "The Stormborn Revenant will then awaken.": [
+            {
+                "speaker": "Stormborn Revenant",
+                "line": "Blood for the Coven!",
+                "trigger": "The Stormborn Revenant will then awaken.",
+                "ability": "Summon Atronach"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "The Stormborn Revenant is a champion of the Icereach Coven who was reanimated by Sister Maefyn after his recent death. He is found in the Icereach Bailey on the ramparts and is the fourth boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stormborn_Revenant",
+        "page_title": "Online:Stormborn Revenant",
+        "revision_id": 3339495,
+        "retrieved_at": "2026-08-12T21:26:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

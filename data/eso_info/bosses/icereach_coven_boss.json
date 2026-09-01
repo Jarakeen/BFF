@@ -1,0 +1,39 @@
+{
+    "id": "icereach_coven_boss",
+    "name": "Icereach Coven (Boss)",
+    "content_id": "icereach",
+    "content_name": "Icereach",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Frozen Isle: Brave the island of Icereach and look for survivors.",
+        "Pledge: Icereach: Prove you are truly Undaunted by clearing Icereach."
+    ],
+    "summary": "The Icereach Coven serves as the final boss for the Icereach, it consists of Mother Ciannait and the surviving sisters on the island; Sister Bani, Gohlla, Hiti and Maefyn. They need to be stopped from completing their storm ritual.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Icereach_Coven_(Boss)",
+        "page_title": "Online:Icereach Coven (Boss)",
+        "revision_id": 2452479,
+        "retrieved_at": "2026-08-12T21:26:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

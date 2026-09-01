@@ -1,0 +1,54 @@
+{
+    "id": "mournful_aegis",
+    "name": "Mournful Aegis",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "Bahraha's Gloom, al-Danobia Tomb",
+    "species": "Mournful Aegis",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Singing Slice/Singing Strike",
+            "description": "A basic melee attack dealing minor physical damage."
+        },
+        {
+            "name": "Dissonant Blow",
+            "description": "A heavy melee attack dealing moderate physical damage. This can be blocked to set the aegis off-balance."
+        },
+        {
+            "name": "Symphony of Blades",
+            "description": "The aegis spins its swords around itself, dealing continuous direct moderate physical damage as indicated by a red circle."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Meridian boss enemies known as the Symphony of Blades and Iratan the Lightbringer have the internal mesh name TombGuardian_B_MornAeg, though they are actually a type of Daedra referred to as Blessed Sentinels.",
+        "A Mournful Aegis is seen caged in The Feral Gallery."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Memories of Youth: Recover a lost engagement ring."
+    ],
+    "summary": "Mournful Aegises are giant suits of armor animated by powerful Yokudan magic. They are similar in appearance to Air Atronachs. Larger aegises will split smaller Mournful Aegises off of them when low on health.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mournful_Aegis",
+        "page_title": "Online:Mournful Aegis",
+        "revision_id": 3598620,
+        "retrieved_at": "2026-08-12T21:36:57Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

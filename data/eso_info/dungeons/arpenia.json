@@ -1,0 +1,28 @@
+{
+    "id": "arpenia",
+    "name": "Arpenia",
+    "content_type": "dungeon",
+    "summary": "Arpenia is an Ayleid ruin in Blackwood, located east of Fort Redmane, containing Whispering Shadows and gloam creatures. A projection of the Duke of Crows can be spoken to outside, and will request your help in freeing members of the Blackfeather Court trapped within the ruins. A cultist note can be found shortly after entering the ruin. Lizards, rats, snakes, spiders and torchbugs are found in numbers within. Hazards include: Swinging Blades",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Arpenia previously appeared in Oblivion."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Arpenia",
+        "page_title": "Online:Arpenia",
+        "revision_id": 3588533,
+        "retrieved_at": "2026-08-12T21:13:06Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

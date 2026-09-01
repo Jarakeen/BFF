@@ -1,0 +1,55 @@
+{
+    "id": "varlariel",
+    "name": "Varlariel",
+    "content_id": "aetherian_archive",
+    "content_name": "Aetherian Archive",
+    "location": "Aetherian Archive",
+    "species": "Wispmother",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Frost Breath",
+            "description": "Basic melee attack dealing very high frost damage in an cone."
+        },
+        {
+            "name": "Rain of Wisps",
+            "description": "The wispmother summons a volley of wisps that crash into the ground all around the arena, indicated by numerous red circles, dealing very-high frost damage each."
+        },
+        {
+            "name": "Mother Clone",
+            "description": "Varlariel can split into four clones of herself to divert attention from the party. The clones' health do not scale with Varlariel's current Health. \"Combustion/Infused Combustion\" always occurs after this."
+        },
+        {
+            "name": "Combustion/Infused Combustion",
+            "description": "Some time after \"Mother Clone\", an non-avoidable arena-wide explosion occurs which scales with how many clones are still alive:"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "\"Varlariel\" translates to \"Beauty [of the] Stars\" in Ayleidoon."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "The Mage's Tower: Defeat the Celestial Mage to save her from the Serpent."
+    ],
+    "achievements": [],
+    "summary": "Varlariel is a wispmother acting as the third boss of the Aetherian Archive.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Varlariel",
+        "page_title": "Online:Varlariel",
+        "revision_id": 3332314,
+        "retrieved_at": "2026-08-12T05:31:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,45 @@
+{
+    "id": "arkasis_the_mad_alchemist",
+    "name": "Arkasis the Mad Alchemist",
+    "content_id": "stone_garden",
+    "content_name": "Stone Garden",
+    "location": "Stone Garden — Testing Chamber, Arkasis's Laboratory",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,189,182",
+        "veteran": "6,671,594",
+        "hardmode": "12,008,870"
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "At this point, you can enable the Hard Mode by raising the banner of the Undaunted, at which Arkasis will say:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He is the subject of one of the Meet the Characters, where he is speculated to be the inspiration for one of Investigator Vale's earliest foes.",
+        "His scribbled lab notes and dissection logs can be found around Stone Garden, as well as orders to his assistants.",
+        "He wears the Eccentric Experimenter outfit style."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Method and Madness: Disrupt the vile lycanthropic experiments being conducted deep beneath Skyrim.",
+        "Pledge: Stone Garden: Prove you are truly Undaunted by clearing Stone Garden."
+    ],
+    "summary": "Arkasis the Mad Alchemist is a Nord and a brilliant alchemist who has been causing trouble around Skyrim for decades with his experiments. His current abode is the Stone Garden, within Blackreach. Here, he performs research and experimentation on behalf of his new patron. He serves as the final boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Arkasis_the_Mad_Alchemist",
+        "page_title": "Online:Arkasis the Mad Alchemist",
+        "revision_id": 3335487,
+        "retrieved_at": "2026-08-12T21:35:09Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

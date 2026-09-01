@@ -1,0 +1,336 @@
+{
+    "id": "ibomez_the_flesh_sculptor",
+    "name": "Ibomez the Flesh Sculptor",
+    "content_id": "imperial_city_prison",
+    "content_name": "Imperial City Prison",
+    "location": "Imperial City Prison",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,473,488",
+        "veteran": "2,460,134",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Toxic Pool",
+            "description": "The center of the room contains a pool of acid that does moderate poison damage over time to players inside it. Players should avoid standing in the pool if possible."
+        },
+        {
+            "name": "Summon Flesh Grenades",
+            "description": "Throughout the fight the boss will also summon Flesh Grenades throughout the room. These green blobs on the floor will explode after a while as indicated by a red circle, dealing minor poison damage as well as knocking back the player. These grenades can be thrown by players by standing near one and pressing the synergy button to aim and throw it. This is important for some of the other attacks the boss does."
+        },
+        {
+            "name": "Summon Flesh Atronach",
+            "description": "At the beginning of the fight the boss will summon a Flesh Atronach to attack the party. This atronach will enrage and wipe the group if players take to long to kill it, so DPS should focus this down quickly. Throwing Flesh Grenades on the atronach will cause it to take more damage, this can help if many atronachs are up at once."
+        },
+        {
+            "name": "Hack",
+            "description": "The boss swings its weapon in front of itself, doing moderately high physical damage in a cone."
+        },
+        {
+            "name": "Bleeding",
+            "description": "Being hit by \"Hack\" deals minor physical damage over time."
+        },
+        {
+            "name": "Carve",
+            "description": "The boss swings its weapon upwards doing high physical damage and stunning the player hit. Players should block the reduce the damage taken and prevent the knockback."
+        },
+        {
+            "name": "Toxic Cleave",
+            "description": "The boss releases a wave of poison from itself as indicated by a red cone dealing high poison damage. The tank should face the boss away from the team to prevent them from being hit. All flesh grenades hit by Toxic Cleave will also explode, potentially hindering players during later phases of the fight."
+        },
+        {
+            "name": "Blight Bomb/Foul Sinew",
+            "description": "The boss throws green blobs at all players in front of him, dealing minor poison damage over time."
+        },
+        {
+            "name": "Tenderize",
+            "description": "The boss fears the whole group, and then runs to and stuns a random player with an unbreakable stun. The boss does multiple low physical damage strikes at the target then charges up a heavy swing, this can and must be interrupted by a teammate. Failure to do so will lead to high physical damage in Normal Mode and an instant death in Veteran Mode."
+        },
+        {
+            "name": "Summon Inmates",
+            "description": "At 75%, 50%, and 25% health the boss will run to the pool in the middle and summon inmates from the gates along the walls. While summoning the inmates the boss will be invincible. The inmates will walk slowly to the acid pool in the center, and players will have to kill the inmates before they reach the pool and dissolve. If too many inmates reach the pool, a Flesh Atronach will be summoned to attack the party. Players have to throw the Flesh Grenades around the room on the inmates, which will kill them instantly, as they have too much health to kill them all in a timely manner using normal attacks."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Ibomez the Flesh Sculptor",
+            "line": "Have you brought me these mortals as gifts, Lyranth? I'm flattered.",
+            "trigger": "Intro",
+            "ability": "Summon Inmates"
+        },
+        {
+            "speaker": "Lyranth",
+            "line": "Let's see if you're still blushing when we stick your head on a pike.",
+            "trigger": "Intro",
+            "ability": "Summon Inmates"
+        },
+        {
+            "speaker": "",
+            "line": "\"May this venom boil your blood!",
+            "trigger": "Casting Toxic Cleave",
+            "ability": "Toxic Cleave"
+        },
+        {
+            "speaker": "",
+            "line": "Let's thin that flesh of yours!",
+            "trigger": "Casting Toxic Cleave",
+            "ability": "Toxic Cleave"
+        },
+        {
+            "speaker": "",
+            "line": "Open wide!",
+            "trigger": "Casting Blight Bomb",
+            "ability": "Blight Bomb/Foul Sinew"
+        },
+        {
+            "speaker": "",
+            "line": "Accept this gift, and perish!",
+            "trigger": "Casting Blight Bomb",
+            "ability": "Blight Bomb/Foul Sinew"
+        },
+        {
+            "speaker": "",
+            "line": "Have some tainted flesh!",
+            "trigger": "Casting Blight Bomb",
+            "ability": "Blight Bomb/Foul Sinew"
+        },
+        {
+            "speaker": "",
+            "line": "Drink up!",
+            "trigger": "Casting Blight Bomb",
+            "ability": "Blight Bomb/Foul Sinew"
+        },
+        {
+            "speaker": "",
+            "line": "One death at a time!",
+            "trigger": "Casting Tenderize",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "Let's grind some meat!",
+            "trigger": "Casting Tenderize",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "You die first!",
+            "trigger": "Casting Tenderize",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "How dare you?",
+            "trigger": "Tenderize interrupted",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "I won't be denied!",
+            "trigger": "Tenderize interrupted",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "Impossible!",
+            "trigger": "Tenderize interrupted",
+            "ability": "Tenderize"
+        },
+        {
+            "speaker": "",
+            "line": "If you won't run, then perish!",
+            "trigger": "Casting Summon Inmates",
+            "ability": "Summon Inmates"
+        },
+        {
+            "speaker": "",
+            "line": "Your bones will become our spears, your flesh will power our spells.",
+            "trigger": "Group Wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You should have fled from this place when you could. Now your flesh will serve me.",
+            "trigger": "Group Wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "I will make potent weapons from your organs.",
+            "trigger": "Group Wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Your flesh belongs to me.",
+            "trigger": "Group Wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You will serve the Lord-Warden fighting your fellow mortals until time unending.",
+            "trigger": "Group Wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Intro": [
+            {
+                "speaker": "Ibomez the Flesh Sculptor",
+                "line": "Have you brought me these mortals as gifts, Lyranth? I'm flattered.",
+                "trigger": "Intro",
+                "ability": "Summon Inmates"
+            },
+            {
+                "speaker": "Lyranth",
+                "line": "Let's see if you're still blushing when we stick your head on a pike.",
+                "trigger": "Intro",
+                "ability": "Summon Inmates"
+            }
+        ],
+        "Casting Toxic Cleave": [
+            {
+                "speaker": "",
+                "line": "\"May this venom boil your blood!",
+                "trigger": "Casting Toxic Cleave",
+                "ability": "Toxic Cleave"
+            },
+            {
+                "speaker": "",
+                "line": "Let's thin that flesh of yours!",
+                "trigger": "Casting Toxic Cleave",
+                "ability": "Toxic Cleave"
+            }
+        ],
+        "Casting Blight Bomb": [
+            {
+                "speaker": "",
+                "line": "Open wide!",
+                "trigger": "Casting Blight Bomb",
+                "ability": "Blight Bomb/Foul Sinew"
+            },
+            {
+                "speaker": "",
+                "line": "Accept this gift, and perish!",
+                "trigger": "Casting Blight Bomb",
+                "ability": "Blight Bomb/Foul Sinew"
+            },
+            {
+                "speaker": "",
+                "line": "Have some tainted flesh!",
+                "trigger": "Casting Blight Bomb",
+                "ability": "Blight Bomb/Foul Sinew"
+            },
+            {
+                "speaker": "",
+                "line": "Drink up!",
+                "trigger": "Casting Blight Bomb",
+                "ability": "Blight Bomb/Foul Sinew"
+            }
+        ],
+        "Casting Tenderize": [
+            {
+                "speaker": "",
+                "line": "One death at a time!",
+                "trigger": "Casting Tenderize",
+                "ability": "Tenderize"
+            },
+            {
+                "speaker": "",
+                "line": "Let's grind some meat!",
+                "trigger": "Casting Tenderize",
+                "ability": "Tenderize"
+            },
+            {
+                "speaker": "",
+                "line": "You die first!",
+                "trigger": "Casting Tenderize",
+                "ability": "Tenderize"
+            }
+        ],
+        "Tenderize interrupted": [
+            {
+                "speaker": "",
+                "line": "How dare you?",
+                "trigger": "Tenderize interrupted",
+                "ability": "Tenderize"
+            },
+            {
+                "speaker": "",
+                "line": "I won't be denied!",
+                "trigger": "Tenderize interrupted",
+                "ability": "Tenderize"
+            },
+            {
+                "speaker": "",
+                "line": "Impossible!",
+                "trigger": "Tenderize interrupted",
+                "ability": "Tenderize"
+            }
+        ],
+        "Casting Summon Inmates": [
+            {
+                "speaker": "",
+                "line": "If you won't run, then perish!",
+                "trigger": "Casting Summon Inmates",
+                "ability": "Summon Inmates"
+            }
+        ],
+        "Group Wipe": [
+            {
+                "speaker": "",
+                "line": "Your bones will become our spears, your flesh will power our spells.",
+                "trigger": "Group Wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You should have fled from this place when you could. Now your flesh will serve me.",
+                "trigger": "Group Wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "I will make potent weapons from your organs.",
+                "trigger": "Group Wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Your flesh belongs to me.",
+                "trigger": "Group Wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You will serve the Lord-Warden fighting your fellow mortals until time unending.",
+                "trigger": "Group Wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Pledge: Imperial City Prison: Prove you are truly Undaunted by clearing Imperial City Prison.",
+        "Summary Execution: Aid Lyranth on her path to vengeance, and liberate some lost souls along the way."
+    ],
+    "summary": "Ibomez the Flesh Sculptor is a xivilai found in the Imperial City Prison. He serves as the first boss of the dungeon, and has a chance to drop the unique item Toxic Cleaver.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ibomez_the_Flesh_Sculptor",
+        "page_title": "Online:Ibomez the Flesh Sculptor",
+        "revision_id": 3567861,
+        "retrieved_at": "2026-08-12T21:26:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

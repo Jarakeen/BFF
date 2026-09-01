@@ -1,0 +1,28 @@
+{
+    "id": "norvulk_ruins",
+    "name": "Norvulk Ruins",
+    "content_type": "dungeon",
+    "summary": "Norvulk Ruins is an Ayleid ruin in the north of Stormhaven, north of Wind Keep containing Dremora. Several texts dedicated to Vaermina can be found within the ruins: In Dreams We Awaken is near the entrance to the ruins and Dream of a Thousand Dreamers can be found in the northern part of the large open area. Just before entering that area, you can also read some orders for the followers of Vaermina. Lastly, Dreamers Our Time Has Come is found near the delve's boss, Nariam. Beetles and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Escamel Vette in Wind Keep can mark Norvulk Ruins on your map if you have not yet discovered it."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Norvulk_Ruins",
+        "page_title": "Online:Norvulk Ruins",
+        "revision_id": 3454006,
+        "retrieved_at": "2026-08-12T21:30:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,72 @@
+{
+    "id": "yandir_the_butcher",
+    "name": "Yandir the Butcher",
+    "content_id": "kyne_s_aegis",
+    "content_name": "Kyne's Aegis",
+    "location": "Kyne's Aegis",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Cleave",
+            "description": "Yandir slowly prepares and then swings his greatsword forward, dealing very high physical damage."
+        },
+        {
+            "name": "Fiery Grip",
+            "description": "Yandir sends chains at far away targets and pulls them to him."
+        },
+        {
+            "name": "Uppercut",
+            "description": "A melee attack that deals very high physical damage and knocks targets back if it connects. This attack can be blocked."
+        },
+        {
+            "name": "Heal Pet",
+            "description": "If they're close together, Yandir will heal his pet occasionally. The tanks need to keep Yandir and his pet far away from each other. (Pre-50% only)"
+        },
+        {
+            "name": "Conjure Totem",
+            "description": "Yandir recoils into himself and then raises his harm, conjuring a Chaurus Totem, a Dragon Totem, Gargoyle Totem, or a Harpy Totem into the arena. The color of the magic in Yandir's hand indicates which totem is being summoned."
+        },
+        {
+            "name": "Hailstone Burst",
+            "description": "Yandir looks up then leaps high into the air, similar to a warpriest, and crashes back down, dealing massive physical damage and knocking down targets. This doesn't have an AoE indicator. (Post-50% only)"
+        },
+        {
+            "name": "Shatter",
+            "description": "Yandir swings his greatsword overhead and slams it into the ground, dealing very high physical damage and knocking down targets. (Post-50% only)"
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Hard Mode turned on:",
+            "Hard Mode turned off:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Fight for Kyne's Aegis: Retake Kyne's Aegis from a Vampire Lord's army."
+    ],
+    "achievements": [],
+    "summary": "Yandir the Butcher is a Sea Giant and the first boss of Kyne's Aegis. He is initially accompanied by a giant tame sea adder and a fire shaman. After the first shaman is slain, more will continue to appear from portals, after around 40 seconds into the arena as the fight goes on. The same goes for his pets. After the initial sea adder is slain, after around a minute, either another sea adder or a gryphon will be called in. If Yandir's pets are left alive long enough, they become enraged and deal far more damage. Once Yandir reaches 50% health, he will stop summoning pets but gains additional abilities.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Yandir_the_Butcher",
+        "page_title": "Online:Yandir the Butcher",
+        "revision_id": 3380452,
+        "retrieved_at": "2026-08-12T05:33:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

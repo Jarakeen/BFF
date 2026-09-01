@@ -1,0 +1,104 @@
+{
+    "id": "ozezan_the_inferno",
+    "name": "Ozezan the Inferno",
+    "content_id": "scrivener_s_hall",
+    "content_name": "Scrivener's Hall",
+    "location": "Scrivener's Hall, The Deadlands",
+    "species": "Infernium",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,546,762",
+        "veteran": "7,308,229",
+        "hardmode": "13,154,812"
+    },
+    "abilities": [
+        {
+            "name": "Biting Lunge",
+            "description": "A basic melee attack dealing high physical damage."
+        },
+        {
+            "name": "Clamp Down",
+            "description": "Ozezan the Inferno lunges forward and clamps all of its teeth down around you, dealing massive physical damage. This attack can be blocked."
+        },
+        {
+            "name": "Fire Beam",
+            "description": "Ozezan climbs on its hind legs and creates a beam of fire from its mouth firing towards you, indicated by a moving circular AoE, which slowly follows your movement. It deals very high flame damage if you are hit."
+        },
+        {
+            "name": "Poison Spew",
+            "description": "Ozezan the Inferno spews poison all over you, indicated by a wide conical AoE, dealing continuous high poison damage. It will adjust its position if you try to strafe."
+        },
+        {
+            "name": "Infernal Tunneling",
+            "description": "Ozezan the Inferno prepares to crawl underground. When it does so, its starting position, as well as exiting location, both become engulfed in lava, dealing continuous high flame damage. The lava lingers for an extended duration after this ability."
+        },
+        {
+            "name": "Summon Broodlings",
+            "description": "Ozezan the Inferno starts shaking around, as several eggs are tossed from its body onto the arena. After some time, they hatch into Evolved Broodlings that come to assist the boss."
+        },
+        {
+            "name": "Firestorm",
+            "description": "At 75%/45%/10% health, Ozezan the Inferno tunnels to the center of the arena, creating a large explosion that deals high flame damage and knocks you back and becomes protected by a ring of fire, dealing massive flame damage if attempting to cross it. It leaves the same lava fields as Infernal Tunneling when doing so. Once in position, it starts inhaling air and creates a tornado that pulls you towards itself and towards the deadly ring of fire. You must break free before you touch the ring."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Mazandi",
+            "line": "What is it doing? Protecting the sarcophagus?",
+            "trigger": "After Keshargo is injured, Mazandi will accompany you through the Deadlands rift to retrieve the Itinerant Staff which he hid there. When you reach the location where the staff was hid, Ozezan will be guarding it",
+            "ability": "Infernal Tunneling"
+        },
+        {
+            "speaker": "Mazandi",
+            "line": "I reckon we won't be able to get through this without a fight. Get ready.",
+            "trigger": "After Keshargo is injured, Mazandi will accompany you through the Deadlands rift to retrieve the Itinerant Staff which he hid there. When you reach the location where the staff was hid, Ozezan will be guarding it",
+            "ability": "Infernal Tunneling"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After Keshargo is injured, Mazandi will accompany you through the Deadlands rift to retrieve the Itinerant Staff which he hid there. When you reach the location where the staff was hid, Ozezan will be guarding it": [
+            {
+                "speaker": "Mazandi",
+                "line": "What is it doing? Protecting the sarcophagus?",
+                "trigger": "After Keshargo is injured, Mazandi will accompany you through the Deadlands rift to retrieve the Itinerant Staff which he hid there. When you reach the location where the staff was hid, Ozezan will be guarding it",
+                "ability": "Infernal Tunneling"
+            },
+            {
+                "speaker": "Mazandi",
+                "line": "I reckon we won't be able to get through this without a fight. Get ready.",
+                "trigger": "After Keshargo is injured, Mazandi will accompany you through the Deadlands rift to retrieve the Itinerant Staff which he hid there. When you reach the location where the staff was hid, Ozezan will be guarding it",
+                "ability": "Infernal Tunneling"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "scribes_of_fate_achievements",
+            "name": "Achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "A War of Scribes: A usurper has taken control of the Scribes of Mora.",
+        "Pledge: Scrivener's Hall: Explore Scrivener's Hall and return Undaunted."
+    ],
+    "summary": "This article is about the enemy. For the set, see Ozezan the Inferno (set). Ozezan the Inferno is an Infernium which can be found through the Deadlands rift in the Scrivener's Hall. You will need to defeat it to retrieve a particular staff. Ozezan acts as the second boss of this dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ozezan_the_Inferno",
+        "page_title": "Online:Ozezan the Inferno",
+        "revision_id": 3606294,
+        "retrieved_at": "2026-08-12T21:32:45Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

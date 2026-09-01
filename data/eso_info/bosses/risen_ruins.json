@@ -1,0 +1,52 @@
+{
+    "id": "risen_ruins",
+    "name": "Risen Ruins",
+    "content_id": "moongrave_fane",
+    "content_name": "Moongrave Fane",
+    "location": "Moongrave Fane\nInfinite Archive",
+    "species": "Stone Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "926,192",
+        "veteran": "2,677,221",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Stonegaze",
+            "description": "Basic ranged attack where the Atronach shoots a molten stone projectile at a target, dealing a low magic damage."
+        },
+        {
+            "name": "Big Quake",
+            "description": "The Risen Ruins suspends its legs floating into the air and uses its body to perform a jackhammer like motion on the ground, dealing moderate-high physical damage in a large area around it."
+        },
+        {
+            "name": "Boulder/Stone Shrapnel",
+            "description": "The Risen Ruins huddles, covering itself with its legs and getting invulnerable as seen by a golden glow. It throws out constant damage in the form of boulders thrown at players dealing high physical damage to them (Boulder) and high physical damage in an area around them (Stone Shrapnel). Also additional adds are summoned during this. It must be hit with \u0000HEALTH_NORMAL\u00001 Hemo Helot (or \u0000HEALTH_VETERAN\u00002 in Veteran) in order to remove its invulnerability. It is advised to focus on the adds during this attack as they will quickly overwhelm you otherwise.."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Sanguine Successor: Prevent a clan of vampires from draining the blood of a captured dragon.",
+        "Pledge: Moongrave Fane: Prove you are truly Undaunted by conquering Moongrave Fane."
+    ],
+    "summary": "The Risen Ruins is a stone atronach created from pieces of the Moongrave Fane's foundations and animated by Nisaazda in a bid to stop you from entering the temple interior.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Risen_Ruins",
+        "page_title": "Online:Risen Ruins",
+        "revision_id": 3470108,
+        "retrieved_at": "2026-08-12T21:29:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

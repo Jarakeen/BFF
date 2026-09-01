@@ -1,0 +1,41 @@
+{
+    "id": "golden_saint",
+    "name": "Golden Saint",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "While these daedra usually wear Golden Saint Style, those present in Fargrave wear the following motif combination: Divine Prosecution Medium Helm Shield and Weapons, Silken Ring Heavy Chest and Medium Shoulder, Deadlands Gladiator Heavy Legs, and Storm Lord Boots.",
+        "v",
+        "t",
+        "e"
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Golden Saints, also called the Aureal, are a haughty, golden-skinned race of Daedra in service to Sheogorath. Like most NPC enemy types, there are many different classes of Saints and they are often found in complementary groups. A Golden Saint Costume can be unlocked by acquiring 20 Champion points. For more information, please see the Lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Golden_Saint",
+        "page_title": "Online:Golden Saint",
+        "revision_id": 3552904,
+        "retrieved_at": "2026-08-19T03:20:55Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

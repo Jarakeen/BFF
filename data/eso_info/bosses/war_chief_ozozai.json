@@ -1,0 +1,68 @@
+{
+    "id": "war_chief_ozozai",
+    "name": "War Chief Ozozai",
+    "content_id": "fungal_grotto_i",
+    "content_name": "Fungal Grotto I",
+    "location": "Fungal Grotto I, Infinite Archive",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Slash",
+            "description": "A basic melee attack that does minor physical damage."
+        },
+        {
+            "name": "Staggering Roar",
+            "description": "A crowd control ability that staggers all players near him dealing minor physical damage."
+        },
+        {
+            "name": "Daedric Blast",
+            "description": "The boss channels a beam at a target causing them to explode dealing moderate magical damage around themselves as indicated by a red circle. Try to run away from teammates if this attack is cast on you to minimize damage done."
+        },
+        {
+            "name": "Haymaker",
+            "description": "A heavy melee attack that does high physical damage while also knocking the target back. This attack should be blocked if possible."
+        },
+        {
+            "name": "Vicious Charge",
+            "description": "The boss can rush towards targets that are far away to close the gap, dealing moderate physical damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Kings of the Grotto: Clear out an old grotto for a group of Mephala worshipers.",
+        "Pledge: Fungal Grotto I: Explore Fungal Grotto I and return Undaunted."
+    ],
+    "summary": "War Chief Ozozai is a goblin found in Fungal Grotto I, of which he is a boss. He for the most part is clad in Heavy Armor in the Nord Style, apart from his gauntlets and sabatons which are in the Primal Style. His sword is also in the Primal Style.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:War_Chief_Ozozai",
+        "page_title": "Online:War Chief Ozozai",
+        "revision_id": 3172715,
+        "retrieved_at": "2026-08-12T21:23:21Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

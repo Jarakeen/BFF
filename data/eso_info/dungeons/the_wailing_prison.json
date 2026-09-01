@@ -1,0 +1,22 @@
+{
+    "id": "the_wailing_prison",
+    "name": "The Wailing Prison",
+    "content_type": "dungeon",
+    "summary": "The Wailing Prison is a sub-location of Coldharbour, Molag Bal's realm of Oblivion. It is where the introductory quest to the game takes place. The location is split into seven zones. Centipedes and Frogs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "The Wailing Prison counts as a dungeon, meaning that dungeon-based achievements such as Dungeon Damage Dealer can be earned here.",
+        "The dungeon received a redesign in Update 44. Hiding spots were added to the parts with the Sentinels. New enemies such as Dremora Baunekyns, Dremora Harstryls, Dremora Kynbeks, Skeletal Cryomancers, Skeletal Venombows, and Watchers were also added.",
+        "Upon entering the Undercroft, the door to return to the Tower of Eyes becomes inaccessible."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Wailing_Prison",
+        "page_title": "Online:The Wailing Prison",
+        "revision_id": 3570612,
+        "retrieved_at": "2026-08-12T21:38:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

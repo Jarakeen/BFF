@@ -1,0 +1,26 @@
+{
+    "id": "sandblown_mine",
+    "name": "Sandblown Mine",
+    "content_type": "dungeon",
+    "summary": "Sandblown Mine is a depleted copper mine in the southeastern Alik'r Desert, east of HoonDing's Watch containing Khajiit bandits. It is inhabited by Khajiit bandits, who feed unwary travelers to the giant snake Huzal. Beetles and snakes are found in numbers within. Unique \"Spider Nests\" are present on top of bandit bodies in the southwest room. Multiple Young Spiders erupt from it upon approaching and when they are all defeated, you can loot the Spider Nest for a random item, ranging from leveled equipement to Decorative Wax",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sandblown_Mine",
+        "page_title": "Online:Sandblown Mine",
+        "revision_id": 3598252,
+        "retrieved_at": "2026-08-12T21:32:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

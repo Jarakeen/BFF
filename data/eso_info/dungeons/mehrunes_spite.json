@@ -1,0 +1,26 @@
+{
+    "id": "mehrunes_spite",
+    "name": "Mehrunes' Spite",
+    "content_type": "dungeon",
+    "summary": "Mehrunes' Spite is a Daedric ruin in the northwestern corner of Auridon, just west of the city of Firsthold containing Daedra and Veiled Heritance members. Butterflies, frogs and rats are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mehrunes%27_Spite",
+        "page_title": "Online:Mehrunes' Spite",
+        "revision_id": 3598284,
+        "retrieved_at": "2026-08-12T21:28:38Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

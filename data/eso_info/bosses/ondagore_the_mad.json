@@ -1,0 +1,343 @@
+{
+    "id": "ondagore_the_mad",
+    "name": "Ondagore the Mad",
+    "content_id": "unhallowed_grave",
+    "content_name": "Unhallowed Grave",
+    "location": "Unhallowed Grave — Halls of Banishment",
+    "species": "Lich",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "5,413,503",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Maladiction",
+            "description": "The poison damage ability, causes large amounts of damage which stack."
+        },
+        {
+            "name": "Drain Soul",
+            "description": "Once a player is caught, they will be unable to move until the damage kills them."
+        },
+        {
+            "name": "Ghost Summon",
+            "description": "During the fight between phases, he can summon ghost adds."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "You dare disturb me!",
+            "trigger": "When you first enter the Halls of Banishment and he is alerted to your presence",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "Waiting. Why are you waiting? Why?",
+            "trigger": "While idling in front of him, he may say the following",
+            "ability": "Maladiction"
+        },
+        {
+            "speaker": "",
+            "line": "Do they know the way out? No! No one does! No one!",
+            "trigger": "While idling in front of him, he may say the following",
+            "ability": "Maladiction"
+        },
+        {
+            "speaker": "",
+            "line": "No one leaves. No one ever, ever leaves!",
+            "trigger": "While idling in front of him, he may say the following",
+            "ability": "Maladiction"
+        },
+        {
+            "speaker": "",
+            "line": "How long have you been standing there? How long have I been standing here?",
+            "trigger": "While idling in front of him, he may say the following",
+            "ability": "Maladiction"
+        },
+        {
+            "speaker": "",
+            "line": "Get out! Get out!",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Yes! Come join me in death!",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "You think you have friends? We all die alone!",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Life is a curse! Let me free you!",
+            "trigger": "Engaging in combat",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Come out, spirits! Come out!",
+            "trigger": "Summoning a Ghost",
+            "ability": "Ghost Summon"
+        },
+        {
+            "speaker": "",
+            "line": "Lonely? I'll gather some friends!",
+            "trigger": "Summoning a Ghost",
+            "ability": "Ghost Summon"
+        },
+        {
+            "speaker": "",
+            "line": "No more hiding, spirits! Come out and play!",
+            "trigger": "Summoning a Ghost",
+            "ability": "Ghost Summon"
+        },
+        {
+            "speaker": "",
+            "line": "Sanity is an illusion! Be free of it!",
+            "trigger": "Beginning the Malediction phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "Let me show you true madness!",
+            "trigger": "Beginning the Malediction phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "Gaze into the abyss!",
+            "trigger": "Beginning the Malediction phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "Don't flee! Let the madness in!",
+            "trigger": "Beginning the Malediction phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "We're all lost here. Lost in the dark!",
+            "trigger": "Beginning the Drain Soul Phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "Even in death, there is no escape!",
+            "trigger": "Beginning the Drain Soul Phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "You think you know fear? Let me educate you!",
+            "trigger": "Beginning the Drain Soul Phase",
+            "ability": "Drain Soul"
+        },
+        {
+            "speaker": "",
+            "line": "More bones. But no answers! No answers!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "No! Don't die! Wake up, wake up, wake up! Tell me how to get out. Tell me!",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Dead. Dead like me! Do you like it? Do you like it?",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Ha! Now you're stuck here too. But at least we're all together! We're all dead together!",
+            "trigger": "Group wipe",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "When you first enter the Halls of Banishment and he is alerted to your presence": [
+            {
+                "speaker": "",
+                "line": "You dare disturb me!",
+                "trigger": "When you first enter the Halls of Banishment and he is alerted to your presence",
+                "ability": "Drain Soul"
+            }
+        ],
+        "While idling in front of him, he may say the following": [
+            {
+                "speaker": "",
+                "line": "Waiting. Why are you waiting? Why?",
+                "trigger": "While idling in front of him, he may say the following",
+                "ability": "Maladiction"
+            },
+            {
+                "speaker": "",
+                "line": "Do they know the way out? No! No one does! No one!",
+                "trigger": "While idling in front of him, he may say the following",
+                "ability": "Maladiction"
+            },
+            {
+                "speaker": "",
+                "line": "No one leaves. No one ever, ever leaves!",
+                "trigger": "While idling in front of him, he may say the following",
+                "ability": "Maladiction"
+            },
+            {
+                "speaker": "",
+                "line": "How long have you been standing there? How long have I been standing here?",
+                "trigger": "While idling in front of him, he may say the following",
+                "ability": "Maladiction"
+            }
+        ],
+        "Engaging in combat": [
+            {
+                "speaker": "",
+                "line": "Get out! Get out!",
+                "trigger": "Engaging in combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Yes! Come join me in death!",
+                "trigger": "Engaging in combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "You think you have friends? We all die alone!",
+                "trigger": "Engaging in combat",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Life is a curse! Let me free you!",
+                "trigger": "Engaging in combat",
+                "ability": null
+            }
+        ],
+        "Summoning a Ghost": [
+            {
+                "speaker": "",
+                "line": "Come out, spirits! Come out!",
+                "trigger": "Summoning a Ghost",
+                "ability": "Ghost Summon"
+            },
+            {
+                "speaker": "",
+                "line": "Lonely? I'll gather some friends!",
+                "trigger": "Summoning a Ghost",
+                "ability": "Ghost Summon"
+            },
+            {
+                "speaker": "",
+                "line": "No more hiding, spirits! Come out and play!",
+                "trigger": "Summoning a Ghost",
+                "ability": "Ghost Summon"
+            }
+        ],
+        "Beginning the Malediction phase": [
+            {
+                "speaker": "",
+                "line": "Sanity is an illusion! Be free of it!",
+                "trigger": "Beginning the Malediction phase",
+                "ability": "Drain Soul"
+            },
+            {
+                "speaker": "",
+                "line": "Let me show you true madness!",
+                "trigger": "Beginning the Malediction phase",
+                "ability": "Drain Soul"
+            },
+            {
+                "speaker": "",
+                "line": "Gaze into the abyss!",
+                "trigger": "Beginning the Malediction phase",
+                "ability": "Drain Soul"
+            },
+            {
+                "speaker": "",
+                "line": "Don't flee! Let the madness in!",
+                "trigger": "Beginning the Malediction phase",
+                "ability": "Drain Soul"
+            }
+        ],
+        "Beginning the Drain Soul Phase": [
+            {
+                "speaker": "",
+                "line": "We're all lost here. Lost in the dark!",
+                "trigger": "Beginning the Drain Soul Phase",
+                "ability": "Drain Soul"
+            },
+            {
+                "speaker": "",
+                "line": "Even in death, there is no escape!",
+                "trigger": "Beginning the Drain Soul Phase",
+                "ability": "Drain Soul"
+            },
+            {
+                "speaker": "",
+                "line": "You think you know fear? Let me educate you!",
+                "trigger": "Beginning the Drain Soul Phase",
+                "ability": "Drain Soul"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "",
+                "line": "More bones. But no answers! No answers!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "No! Don't die! Wake up, wake up, wake up! Tell me how to get out. Tell me!",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Dead. Dead like me! Do you like it? Do you like it?",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Ha! Now you're stuck here too. But at least we're all together! We're all dead together!",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Unhallowed Grave: Help the last Pyre Watch Sentinel and a vampire investigator in the Unhallowed Grave."
+    ],
+    "summary": "Ondagore the Mad is a lich who can be found within the Halls of Banishment of the Unhallowed Grave. He was once a necromancer aspiring to lichdom who found his way into the Unhallowed Grave, only to become trapped during the First Era. Though he succeeded in his initial goal, the isolation damaged his psyche. He acts as the fourth boss of the dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ondagore_the_Mad",
+        "page_title": "Online:Ondagore the Mad",
+        "revision_id": 3432765,
+        "retrieved_at": "2026-08-12T21:36:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

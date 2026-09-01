@@ -1,0 +1,26 @@
+{
+    "id": "mephala_s_nest",
+    "name": "Mephala's Nest",
+    "content_type": "dungeon",
+    "summary": "Mephala's Nest is a Daedric ruin in central Stonefalls, just south of Ebonheart containing Shadowsilk goblins and spiders. A Burnt, Mostly Illegible Scrap is located on a bench to the right in the hallway just beyond the entrance. The note implies that the cult of Mephala that previously resided here was wiped out by the Shadowsilk goblins. In the first large room, there are two Shadowsilk Ravagers and witches, and a single giant spider. There are coins on a table underneath the stairs, and a backpack is next to that same table. In this room, you can head up the stairs and go west or you can take the northern path. There's a giant spider at the top of the stairs. Up the northern path is a large rectangular chamber. Two giant spiders, one witch and one ravager patrol the hallway leading up to this room. The east side of this room contains one ravager and a Spider Daedra. Several bookshelves line the walls. A Shadowsilk Witch cheers next to the skyshard and a spider with below average health in the center of the room. A chest can spawn north of the skyshard, between a Daedric sarcophagus and a bench with a dagger, a stack of papers and a skull holding a candle on top of it. The west side of this room contains a ravager, his giant spider companion, and a Spider Daedra. A chest can spawn in the northwest corner of the chamber, behind a bench that is sat between two bookshelves. A Shadowsilk Witch patrols the hallway immediately west of this room. From the northernmost chamber, head out the western side and take a right. A Shadowsilk Ravager guards the hallway leading towards the westernmost chamber. A ravager and a witch stand at the mouth of the next chamber. If you were to keep heading south instead of taking that turn, you'd encounter a Shadowsilk Witch and his spider companion. A Shadowsilk Ravager and a giant spider are on the northern side of the western chamber, near a cart full of corpses. This room is covered in webs. The delve's boss, Gozzak, resides in the center of the room. Corpses are suspended from the ceiling on either side of the boss. A Shadowsilk Ravager and witch inspect carts of corpses on the south side of the room. A giant spider patrols the hallway to the southeast. The shortest path back to the entrance is a straight shot east. A spider guards the entrance to the southern chamber. A single Spider Daedra inhabits this room, and stands on the raised platform to the north. There are two bookshelves behind her. A giant spider patrols the hallway to the south. Rats and spiders are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Mephala%27s_Nest",
+        "page_title": "Online:Mephala's Nest",
+        "revision_id": 3598102,
+        "retrieved_at": "2026-08-12T21:28:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

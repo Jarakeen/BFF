@@ -1,0 +1,20 @@
+{
+    "id": "fargrave_outer_ruins",
+    "name": "Fargrave Outer Ruins",
+    "content_type": "dungeon",
+    "summary": "The Fargrave Outer Ruins are a derelict area in the realm of Fargrave. It is accessed from a portal in Wendir, and ultimately leads up to Ithelia's Prison and the Loom of the Untraveled Road.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "It is called \"Loom Road\" in some of the files."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Fargrave_Outer_Ruins",
+        "page_title": "Online:Fargrave Outer Ruins",
+        "revision_id": 3583763,
+        "retrieved_at": "2026-08-12T21:22:25Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "underground_sepulcher",
+    "name": "Underground Sepulcher",
+    "content_type": "dungeon",
+    "summary": "Underground Sepulcher is a tomb that serves as a heist location. You'll be taken here by Fa'ren-dar during the related quest. Several factions can inhabit the sepulcher, including the Ember-Eye Slavers, the Red Rooks and the Worm Cult.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Scouting Report: Underground Sepulcher has a bit of information about this location."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Underground_Sepulcher",
+        "page_title": "Online:Underground Sepulcher",
+        "revision_id": 3594853,
+        "retrieved_at": "2026-08-12T21:36:27Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

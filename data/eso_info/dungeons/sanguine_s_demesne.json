@@ -1,0 +1,29 @@
+{
+    "id": "sanguine_s_demesne",
+    "name": "Sanguine's Demesne",
+    "content_type": "dungeon",
+    "summary": "Sanguine's Demesne is a Daedric ruin in Shadowfen. It is the place of an eternal party held to honor Sanguine. Some of the participants seem to have trouble leaving when they have joined the party. It is advertised on a poster by the road from Mournhold to Stormhold. A copy of the lore book Modern Heretics can be found west of Sanguine's Demesne. Frogs, rats and snakes are found in numbers within. Alchemic nodes can be harvested throughout the dungeon. Bosses have a chance to drop the Fanged Cuirass antiquity lead for the Bloodlord's Embrace.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "There are lots of things to Take (not Steal) without consequence.",
+        "Altmer Revelers and Subdued Aldmeri Spies could be encountered before they were removed in a very early update."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Sanguine%27s_Demesne",
+        "page_title": "Online:Sanguine's Demesne",
+        "revision_id": 3275784,
+        "retrieved_at": "2026-08-12T21:32:16Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

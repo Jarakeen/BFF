@@ -1,0 +1,69 @@
+{
+    "id": "exarch_kraglen",
+    "name": "Exarch Kraglen",
+    "content_id": "stone_garden",
+    "content_name": "Stone Garden",
+    "location": "Stone Garden",
+    "species": "Werewolf Behemoth",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "2,946,975",
+        "veteran": "5,263,123",
+        "hardmode": "9,473,630"
+    },
+    "abilities": [
+        {
+            "name": "Swipe",
+            "description": "A basic melee attack that deals moderate physical damage."
+        },
+        {
+            "name": "Slaughter",
+            "description": "Exarch Kraglen winds up and eviscerates his targets with his claws, hitting twice for major physical damage. This can be blocked. If not, it will one-shot most non-tanks."
+        },
+        {
+            "name": "Charge",
+            "description": "Exarch Kraglen glows red and charges at a target, dealing major physical damage. This ability needs to be blocked, and is similar to Xal-Nur the Slaver's charge in the Ruins of Mazzatun in that regard."
+        },
+        {
+            "name": "Blood Rage",
+            "description": "Exarch Kraglen roars loudly, knocking back anyone in melee range, and will then continue on, draining the affected target's resources until he is interrupted. Those fighting from a distance can use Crushing Shock or Venom Arrow to interrupt this ability to help out the tank. This is the most crucial mechanic to pay attention to."
+        },
+        {
+            "name": "Fault Line",
+            "description": "Exarch Kraglen smashes the ground with his fists, indicated by a massive red circle, dealing very high physical damage and knocking down targets. Afterward, fissures crack open the ground in a winding line towards targets, indicated by additional smaller red circles, dealing moderate physical damage and stunning each. On Veteran, if you're in range when he stomps, it may be a one-shot ability."
+        },
+        {
+            "name": "Fracture",
+            "description": "Small line AoEs that link between the fissures created by \"Fault Line\", which deal moderate physical damage."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "Hard Mode can only be activated on Veteran."
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Exarch Kraglen was previously mentioned in My Beloved Siblings, the Exarchs, a book that could be found in Greymoor content prior to Stone Garden being released."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Method and Madness: Disrupt the vile lycanthropic experiments being conducted deep beneath Skyrim.",
+        "Pledge: Stone Garden: Prove you are truly Undaunted by clearing Stone Garden.",
+        "The Gray Council: Explore the secrets of Grayhome."
+    ],
+    "summary": "Exarch Kraglen is a Nord werewolf behemoth and a high-ranking member of the Gray Host who can be found in the Stone Garden. He is the dungeon's first boss, where he guards the entrance to Arkasis's laboratory.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Exarch_Kraglen",
+        "page_title": "Online:Exarch Kraglen",
+        "revision_id": 3405508,
+        "retrieved_at": "2026-08-12T21:35:05Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

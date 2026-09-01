@@ -1,0 +1,18 @@
+{
+    "id": "valorhorn_crypt",
+    "name": "Valorhorn Crypt",
+    "content_type": "dungeon",
+    "summary": "The Valorhorn Crypt is a crypt found in the Hall of the Dead that is used by the Servants of Valor to age their Fest Eidar cheese. It is accessible during the related quest, when Aud Soft-Hands asks you and your companion to clear out the skeever infestation. Rats and spiders are found in numbers inside, as well as environmental ghosts floating about.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Valorhorn_Crypt",
+        "page_title": "Online:Valorhorn Crypt",
+        "revision_id": 3602790,
+        "retrieved_at": "2026-08-12T21:37:11Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

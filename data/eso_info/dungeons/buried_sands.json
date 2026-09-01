@@ -1,0 +1,28 @@
+{
+    "id": "buried_sands",
+    "name": "Buried Sands",
+    "content_type": "dungeon",
+    "summary": "Buried Sands is a cave in northwestern Craglorn containing Anka-Ra warriors and desert wildlife. Beetles are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Prior to Update 12, this location was an instanced 4-player Group Delve."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Buried_Sands",
+        "page_title": "Online:Buried Sands",
+        "revision_id": 3533557,
+        "retrieved_at": "2026-08-12T21:16:02Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

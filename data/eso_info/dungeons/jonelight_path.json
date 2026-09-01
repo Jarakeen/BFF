@@ -1,0 +1,18 @@
+{
+    "id": "jonelight_path",
+    "name": "Jonelight Path",
+    "content_type": "dungeon",
+    "summary": "Jonelight Path is a realm between realms accessible by Khajiiti Heroes. The portal is accessed in the Dragonguard Sanctum during the related quest. The spirit of Khunzar-ri will appear here to guide you through this realm.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Jonelight_Path",
+        "page_title": "Online:Jonelight Path",
+        "revision_id": 3550275,
+        "retrieved_at": "2026-08-12T21:26:46Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

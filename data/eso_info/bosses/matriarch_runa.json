@@ -1,0 +1,187 @@
+{
+    "id": "matriarch_runa",
+    "name": "Matriarch Runa",
+    "content_id": "maelstrom_arena",
+    "content_name": "Maelstrom Arena",
+    "location": "Rink of Frozen Blood, Maelstrom Arena",
+    "species": "Giant",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "348,261",
+        "veteran": "791,497",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Foot Stomp",
+            "description": "Matriarch Runa rears one of her feet up before stomping into the ground, causing a shockwave to be sent out, indicated by a large circular AoE, dealing high physical damage and staggering you.",
+            "damage_type": null
+        },
+        {
+            "name": "Ice Waves",
+            "description": "While standing in the water of the arena, Matriarch Runa swings her hammer forward, causing ice wave ripples to shoot out towards you, dealing high physical damage and fracturing the ice platform you are standing on. Unlike this similar attack used by standard giants, the version used by Runa has almost no wind-up time.",
+            "damage_type": null
+        },
+        {
+            "name": "Roar",
+            "description": "Matriarch Runa roars deeply, making you cower in fear. You must break free to resume moving.",
+            "damage_type": null
+        },
+        {
+            "name": "Iceberg Calving",
+            "description": "Matriarch Runa enraged and starts glowing red. She rushes to the ice platform you are currently on and takes a slight few seconds to charge up and then stomp and destroy the ice platform, causing high physical damage and knocking you backwards if you are too close. A Leimenid Oracle is summoned as a result. Unlike Troll Breakers fought previously, she cannot be interrupted during this ability.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Matriarch Runa rears one of her feet up before stomping into the ground, causing a shockwave to be sent out, indicated by a large circular AoE, dealing high physical damage and staggering you.",
+            "name": "Foot Stomp",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "While standing in the water of the arena, Matriarch Runa swings her hammer forward, causing ice wave ripples to shoot out towards you, dealing high physical damage and fracturing the ice platform you are standing on. Unlike this similar attack used by standard giants, the version used by Runa has almost no wind-up time.",
+            "name": "Ice Waves",
+            "links": [],
+            "mechanic_type": "positioning",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": true,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Matriarch Runa enraged and starts glowing red. She rushes to the ice platform you are currently on and takes a slight few seconds to charge up and then stomp and destroy the ice platform, causing high physical damage and knocking you backwards if you are too close. A Leimenid Oracle is summoned as a result. Unlike Troll Breakers fought previously, she cannot be interrupted during this ability.",
+            "name": "Iceberg Calving",
+            "links": [],
+            "mechanic_type": "charge",
+            "damage_type": "physical",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "\"Gara go yara ar!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Yagra!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Yorag gara!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Yara ar yorag!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Aga yor yar!\"",
+            "trigger": "",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "\"Aga yara yor!\"",
+            "trigger": "",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "\"Gara go yara ar!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Yagra!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Yorag gara!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Yara ar yorag!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Aga yor yar!\"",
+                "trigger": "",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "\"Aga yara yor!\"",
+                "trigger": "",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Her dialogue is in an unknown language, presumably Giantish.",
+        "When Wrothgar was previewed at QuakeCon, it was implied that giantesses would be found in the wilderness. When it was released, Runa was the only giantess in-game (with Matriarch Aldis being added much later). As of yet, there is no generic Giantess in the game."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Maelstrom Arena: Compete in an otherworldly Daedric arena."
+    ],
+    "summary": "Matriarch Runa is a giantess serving as the final boss of Stage 5: Rink of Frozen Blood in Maelstrom Arena.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Matriarch_Runa",
+        "page_title": "Online:Matriarch Runa",
+        "revision_id": 3137059,
+        "retrieved_at": "2026-08-19T03:21:15Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

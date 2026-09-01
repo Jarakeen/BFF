@@ -1,0 +1,47 @@
+{
+    "id": "ilambris_amalgam",
+    "name": "Ilambris Amalgam",
+    "content_id": "crypt_of_hearts_ii",
+    "content_name": "Crypt of Hearts II",
+    "location": "Crypt of Hearts II",
+    "species": "Bone Colossus",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "3,007,499",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Edge of Darkness: Release the Crypt of Hearts from Mephala's grip.",
+        "Pledge: Crypt of Hearts II: Prove you are truly Undaunted by clearing the Crypt of Hearts II."
+    ],
+    "summary": "The Ilambris Amalgam is a Bone Colossus found in Crypt of Hearts II that serves as the second boss of the dungeon. It is summoned after Ilambris-Athor and Ilambris-Zaven merge together early in the fight.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ilambris_Amalgam",
+        "page_title": "Online:Ilambris Amalgam",
+        "revision_id": 3392772,
+        "retrieved_at": "2026-08-12T21:18:40Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

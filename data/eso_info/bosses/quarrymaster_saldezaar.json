@@ -1,0 +1,513 @@
+{
+    "id": "quarrymaster_saldezaar",
+    "name": "Quarrymaster Saldezaar",
+    "content_id": "black_gem_foundry",
+    "content_name": "Black Gem Foundry",
+    "location": "Black Gem Foundry",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "4,209,965",
+        "veteran": "6,766,879",
+        "hardmode": "13,533,758"
+    },
+    "abilities": [
+        {
+            "name": "Black Gem Splinters",
+            "description": "Shards of black gems fall to the ground, creating circular AoEs. They deal damage over time to anyone near them. They can be removed by Quarrymaster Saldezaar's Galvanizing Blow."
+        },
+        {
+            "name": "Blighted Periphery",
+            "description": "The inner and outer perimeters of the quarry will deal damage. Avoid touching the walls."
+        },
+        {
+            "name": "Galvanizing Blow?",
+            "description": "Quarrymaster Saldezaar swings his weapon in a cone, dealing damage and destroying Black Gem Splinters within the AoE."
+        },
+        {
+            "name": "(?)",
+            "description": "At (?) and (?)% health, a red ring AoE will appear around the outer or inner area of the quarry. Move out of this to avoid taking damage."
+        },
+        {
+            "name": "(?)",
+            "description": "At (?) and (?)% health, a yellow ring AoE will appear around the outer or inner area of the quarry. Stand in this to avoid being smashed into a wall. Also, mind the placement of Black Gem Splinters to avoid being smashed into them as well. On Veteran mode this ability is lethal."
+        },
+        {
+            "name": "Summon Imp",
+            "description": "Imps will spawn and cast shock abilities, and should be killed."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "This lot's good for nothing. They couldn't move slower if they trudged through azure plasm.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "High Soulbinder Vykand",
+            "line": "And whose fault is that, quarrymaster? Don't tell me you grew soft on these elementals like that pathetic summoner.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "I'm not—! I'll make use of them. Every last bit of them. You'll see.",
+            "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "You can't move this measly bunch of gems?",
+            "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+            "ability": "Black Gem Splinters"
+        },
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "Pathetic!",
+            "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+            "ability": "Black Gem Splinters"
+        },
+        {
+            "speaker": "Quarrymaster Saldezaar",
+            "line": "More walking refuse? Make yourself useful or shatter like the rest!",
+            "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+            "ability": "Black Gem Splinters"
+        },
+        {
+            "speaker": "",
+            "line": "Look at you. You're as pathetic as that little summoner.",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "There's work to be done, mortals! Get moving!",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Get moving, or I'll cart you out in pieces.",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "You saw what happens to those who vex me. You want to be next?",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "You don't look strong enough to move a pebble.",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Bold, aren't you? I'll crush that right out of you.",
+            "trigger": "If you idle before the fight, he will taunt you with various lines",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Now you're asking for a real beating.",
+            "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "I'll crush the very cries for mercy out of you.",
+            "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "When I'm done with you, they'll have to scrub what's left of you off the floor.",
+            "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "In the dirt where you belong.",
+            "trigger": "If your party wipes, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Your soul for our gems. Your body for the quarry.",
+            "trigger": "If your party wipes, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Didn't even dull my blade.",
+            "trigger": "If your party wipes, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Lesser even than the lesser Daedra. Pathetic.",
+            "trigger": "If your party wipes, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "What a waste of good suffering.",
+            "trigger": "If your party wipes, he'll say",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "I'll cleave you in two!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Crumble!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "I'll split you at the seams!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Fall before my axe!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "One with the earth!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Atronachs! Pummel them!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "I'll put you in the ground!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "To pieces with you!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Pathetic mortal. I'll flatten you!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Don't let this weigh you down!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Fracture and fall!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "To pieces with you!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Crush them to bits!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "Useless creatures. I'll put an end to this!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "These atronachs will break you!",
+            "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+            "ability": "(?)"
+        },
+        {
+            "speaker": "",
+            "line": "I won't fracture. I won't fail!",
+            "trigger": "At low health, he says",
+            "ability": "(?)"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.": [
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "This lot's good for nothing. They couldn't move slower if they trudged through azure plasm.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "High Soulbinder Vykand",
+                "line": "And whose fault is that, quarrymaster? Don't tell me you grew soft on these elementals like that pathetic summoner.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "I'm not—! I'll make use of them. Every last bit of them. You'll see.",
+                "trigger": "As you make your way through the quarry, you will overhear a conversation between High Soulbinder Vykand and Quarrymaster Saldezaar.",
+                "ability": "(?)"
+            }
+        ],
+        "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.": [
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "You can't move this measly bunch of gems?",
+                "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+                "ability": "Black Gem Splinters"
+            },
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "Pathetic!",
+                "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+                "ability": "Black Gem Splinters"
+            },
+            {
+                "speaker": "Quarrymaster Saldezaar",
+                "line": "More walking refuse? Make yourself useful or shatter like the rest!",
+                "trigger": "When you enter Saldezaar's arena, you will see him casting a conical attack that destroys several stone atronachs and black gem splinters.",
+                "ability": "Black Gem Splinters"
+            }
+        ],
+        "If you idle before the fight, he will taunt you with various lines": [
+            {
+                "speaker": "",
+                "line": "Look at you. You're as pathetic as that little summoner.",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "There's work to be done, mortals! Get moving!",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Get moving, or I'll cart you out in pieces.",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "You saw what happens to those who vex me. You want to be next?",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "You don't look strong enough to move a pebble.",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Bold, aren't you? I'll crush that right out of you.",
+                "trigger": "If you idle before the fight, he will taunt you with various lines",
+                "ability": "(?)"
+            }
+        ],
+        "If you raise the challenge banner to activate Hard Mode, he'll say": [
+            {
+                "speaker": "",
+                "line": "Now you're asking for a real beating.",
+                "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "I'll crush the very cries for mercy out of you.",
+                "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "When I'm done with you, they'll have to scrub what's left of you off the floor.",
+                "trigger": "If you raise the challenge banner to activate Hard Mode, he'll say",
+                "ability": "(?)"
+            }
+        ],
+        "If your party wipes, he'll say": [
+            {
+                "speaker": "",
+                "line": "In the dirt where you belong.",
+                "trigger": "If your party wipes, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Your soul for our gems. Your body for the quarry.",
+                "trigger": "If your party wipes, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Didn't even dull my blade.",
+                "trigger": "If your party wipes, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Lesser even than the lesser Daedra. Pathetic.",
+                "trigger": "If your party wipes, he'll say",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "What a waste of good suffering.",
+                "trigger": "If your party wipes, he'll say",
+                "ability": "(?)"
+            }
+        ],
+        "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to": [
+            {
+                "speaker": "",
+                "line": "I'll cleave you in two!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Crumble!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "I'll split you at the seams!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Fall before my axe!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "One with the earth!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Atronachs! Pummel them!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "I'll put you in the ground!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "To pieces with you!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Pathetic mortal. I'll flatten you!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Don't let this weigh you down!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Fracture and fall!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "To pieces with you!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Crush them to bits!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "Useless creatures. I'll put an end to this!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            },
+            {
+                "speaker": "",
+                "line": "These atronachs will break you!",
+                "trigger": "During the fight, he will yell out:needs more info about which abilities or health % these lines correspond to",
+                "ability": "(?)"
+            }
+        ],
+        "At low health, he says": [
+            {
+                "speaker": "",
+                "line": "I won't fracture. I won't fail!",
+                "trigger": "At low health, he says",
+                "ability": "(?)"
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": [
+            "If you raise the challenge banner to activate Hard Mode, he'll say:"
+        ]
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Deadly Armaments: A regretful summoner needs help destroying arms and armor for the Worm Cult invasion of Solstice."
+    ],
+    "summary": "Quarrymaster Saldezaar is a Dremora who manages the mine in Black Gem Foundry, and serves as that dungeon's first boss. According to Dalenor the Summoner, he is not fond of the other foundry leaders.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Quarrymaster_Saldezaar",
+        "page_title": "Online:Quarrymaster Saldezaar",
+        "revision_id": 3566865,
+        "retrieved_at": "2026-08-12T21:14:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

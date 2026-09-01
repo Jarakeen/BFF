@@ -1,0 +1,30 @@
+{
+    "id": "zenithar_s_abbey",
+    "name": "Zenithar's Abbey",
+    "content_type": "dungeon",
+    "summary": "Zenithar's Abbey is a public dungeon in Blackwood, located east of Fort Redmane. This temple, dedicated to Zenithar, was formerly a large merchant hub, but it was eventually abandoned after it fell to greed and corruption, leading to conflicts. It is made up of five sub-areas: Cloisters, Grounds, Trade Port, Bazaar, and Adytum. The Replica Zenithar Adytum Gate furnishing is also available from this dungeon. It can be forged by collecting and combining 50 Inscribed Shards fragments that can drop from any mob. Bosses have a chance to drop the Glass Skeletal Visage antiquity lead for the Gaze of Sithis. Bright Moons Lunar Moths, Centipedes, Lizards, Rats, Spiders and Torchbugs are found in numbers within.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "Zenithar's Abbey appears in Oblivion as Fort Teleman.",
+        "From outside, large bone colossi and Minotaurs can be seen patrolling the battlements. Wraiths can also be seen flying overhead from outside, and some can also be seen looming high on walls and cliffs inside.",
+        "A lot of the buildings of the abbey are not depicted on the Blackwood zone map, and is instead shown as a large spot of water, which isn't replicated on the location's local map."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Zenithar%27s_Abbey",
+        "page_title": "Online:Zenithar's Abbey",
+        "revision_id": 3548139,
+        "retrieved_at": "2026-08-12T21:39:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

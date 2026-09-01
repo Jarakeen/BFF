@@ -1,0 +1,70 @@
+{
+    "id": "stormfist",
+    "name": "Stormfist",
+    "content_id": "tempest_island",
+    "content_name": "Tempest Island",
+    "location": "Tempest Island, Temple of Storms",
+    "species": "Storm Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "2,706,752",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Left Cross",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Skyward Slam",
+            "description": "The boss stomps, dealing moderate physical damage and knocking all players hit up into the air as indicated by a red circle."
+        },
+        {
+            "name": "Enervating Stone",
+            "description": "The boss slams its fist into the ground, dealing moderate shock damage and stunning any players hit as indicated by a red circle."
+        },
+        {
+            "name": "Unstable Explosion",
+            "description": "At 20% health, the boss releases lightning constantly dealing unavoidable moderate shock damage over time to all players until it is killed."
+        },
+        {
+            "name": "Summon Storm Atronachs",
+            "description": "The boss will occasionally summon three Storm Atronachs to attack the party. These should be killed quickly to simplify the fight."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "dungeons_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "He does not have a resting ball of lightning in his abdominal area connecting his top half to his bottom half like most storm atronachs, with it being empty instead."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Eye of the Storm: Defeat the invading Maormer on Tempest Island.",
+        "Pledge: Tempest Island: Prove you are truly Undaunted by clearing Tempest Island."
+    ],
+    "summary": "This article is about the creature. For the item set, see Stormfist (set). The Stormfist is a storm atronach found at Tempest Island, of which it is a boss. Its unique loot is the Tempestshield or Raining Hammer He is brought in by short-lived Maormer Summoners near the island's peak, and will summon smaller Storm Atronachs in waves of three.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Stormfist",
+        "page_title": "Online:Stormfist",
+        "revision_id": 3482476,
+        "retrieved_at": "2026-08-12T21:35:47Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

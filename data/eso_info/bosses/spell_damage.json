@@ -1,0 +1,38 @@
+{
+    "id": "spell_damage",
+    "name": "Spell Damage",
+    "content_id": "blackrose_prison",
+    "content_name": "Blackrose Prison",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Although it is called Spell Damage, it may be useful to think of it as \"Spell Power,\" since it also increases the amount of healing done by spells and abilities."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Spell Damage represents the damage done by spells or abilities with a Magicka cost. Your Spell Damage can be improved by many sets (click for complete list), as well the Major Sorcery and Minor Sorcery effects, which increase your damage by 20% and 10% respectively.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Spell_Damage",
+        "page_title": "Online:Spell Damage",
+        "revision_id": 3227057,
+        "retrieved_at": "2026-08-12T22:12:03Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

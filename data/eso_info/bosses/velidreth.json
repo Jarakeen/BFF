@@ -1,0 +1,826 @@
+{
+    "id": "velidreth",
+    "name": "Velidreth",
+    "content_id": "cradle_of_shadows",
+    "content_name": "Cradle of Shadows",
+    "location": "Cradle of Shadows",
+    "species": "Hoarvor Daedra",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,667,146",
+        "veteran": "4,703,728",
+        "hardmode": "5,291,695"
+    },
+    "abilities": [
+        {
+            "name": "Lunging Slash",
+            "description": "The boss slashes at its target dealing moderate physical damage."
+        },
+        {
+            "name": "Exsanguinate",
+            "description": "Getting hit by Lunging Slash deals minor physical damage over time."
+        },
+        {
+            "name": "Flurry",
+            "description": "The boss slashes rapidly at its target dealing moderate physical damage over time."
+        },
+        {
+            "name": "Corpulence",
+            "description": "A charged heavy melee attack that deals high physical damage."
+        },
+        {
+            "name": "Feast and Famine",
+            "description": "The boss pulls a target in and drains their ultimate. Use ultimates when they are ready to counter this."
+        },
+        {
+            "name": "Shadow Sense",
+            "description": "After draining their ultimate, the boss tends to cast Shadow Sense. In this phase, the boss jumps onto the ceiling while saying \"That's it! Don't move a muscle.\". Players will need to stand still, if not they will take very high magical damage. This attack is lethal on veteran hard mode."
+        },
+        {
+            "name": "Shadow Spine",
+            "description": "After Shadow Sense, the boss jumps back down summoning spikes under each player as indicated by red circles. Quickly roll out of the AOE to avoid the spike. This attack is lethal on veteran hard mode."
+        },
+        {
+            "name": "Deadly Spores",
+            "description": "The boss releases colored spores that roam the arena at random. The color of the spore is determined by the player drained during Feast and Famine, tanks will spawn red orbs, magicka builds will spawn blue, and stamina builds will spawn green orbs. Touching the spores will drain the corresponding resource, so they must be avoided."
+        },
+        {
+            "name": "Summon Flesh Atronachs",
+            "description": "After a moment, the boss summons two flesh atronachs to attack the party. They must be defeated quickly, following which two players should run over to their bodies to use the \"Atronach's Light\" synergy to pick up their torches. The group must do this before the boss reaches 60% and 30% health as the Banish mechanic is scripted to trigger at those points, and going into the catacombs without the light can be challenging."
+        },
+        {
+            "name": "Banish",
+            "description": "At 60% and 30% health, the boss teleports the group into the catacombs connected to the arena. In normal, all four group members are together on the same side while on veteran the group is split into two pairs. The darkness within the catacombs will snare and damage players unless they stay within the Atronach's Light AOE or if they light the braziers found within. Hoarvors within the catacombs will spawn and attack the group endlessly, and players will need to run back towards the center to escape. Do note that the gates separating the catacombs from the center will be randomly locked, if one path is closed simply try another one."
+        },
+        {
+            "name": "Deadly Spikes",
+            "description": "Spike traps within the catacombs will deal moderate physical damage and snare to players that step on them. The Atronach's Light AOE can reveal which traps are active (glowing red) thus players can avoid them accordingly."
+        },
+        {
+            "name": "Gout of Bile",
+            "description": "If a player attempts to resurrect a dead group member, the boss will channel a spell on them that deals moderate magical damage and stuns them interrupting the rez. Other group members should interrupt the boss so the rez can proceed safely. This only occurs on veteran hard mode."
+        },
+        {
+            "name": "Summon Shadow Weavers, Shadow Warriors and Marrow Fiends",
+            "description": "The boss summons minions to attack the party. They should be killed quickly to simplify the fight. This only occurs on veteran hard mode."
+        },
+        {
+            "name": "Orb of Spite",
+            "description": "The Statue of Mephala at the side of the arena will fire orbs of magic on top of players occasionally dealing high magical damage. Players should block or shield up when targeted to reduce the damage taken. This is especially important during Shadow Sense, as players will be unable to move to avoid the AOE. This attack is only used on veteran hard mode."
+        },
+        {
+            "name": "Expose Morsel",
+            "description": "The boss bites its target lowering their armor and spell resistance momentarily. This is only used on veteran hard mode."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm … new dinner guests. Don't keep me waiting, sweetmeat. I am positively famished!",
+            "trigger": "Entering the hall past Dranos Velador's chamber",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mm … getting warmer. It's a shame you're not as smart as Tsatva-Lan. What a delightful servant you'd make!",
+            "trigger": "After using the lever to open the door in the hall Tsatva-Lan warned you in",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Hmmm … warmer still. Best hurry, sweetmeat. Tsatva-Lan receives my blessing even as we speak. Killing him may prove … difficult.",
+            "trigger": "In the big room before the flesh atronach ambush",
+            "ability": "Summon Flesh Atronachs"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm. Piping hot! Don't keep me waiting, adventurers. I'm starving!",
+            "trigger": "Entering Velidreth's chambers",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Why don't you come a little closer?",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Have you lost your appetite? Because I'm famished!",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Don't you know it's rude to keep your hostess waiting?",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Oh, look at all of you. Tonight will be a feast!",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Shall we start with the meal, or the entertainment? Why not both?",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Did you work up an appetite on your way here? Me too!?",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Oh, I could just eat you all up.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Is that how you dress for a meal? Slip in to something more comfortable, please.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Let me weave you something … nice and snug.",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Ugh, I'll die of hunger! Come here my darlings!",
+            "trigger": "Idling before combat",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Dinner is served!",
+            "trigger": "Engaging in combat",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm … supper time!",
+            "trigger": "Engaging in combat",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Time for the main course!",
+            "trigger": "Engaging in combat",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Come here, sweetmeat! Come to Velidreth!",
+            "trigger": "Engaging in combat",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Hahaha! Stop wriggling!",
+            "trigger": "Devouring Ultimate",
+            "ability": "Feast and Famine"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Just a taste! Just a taste!",
+            "trigger": "Devouring Ultimate",
+            "ability": "Feast and Famine"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "So … hungry!",
+            "trigger": "Devouring Ultimate",
+            "ability": "Feast and Famine"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Come here, little morsel! Come to Velidreth!",
+            "trigger": "Devouring Ultimate",
+            "ability": "Feast and Famine"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "You're mine! All mine!",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "So plump! So fresh!",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I'll tenderize you yet!",
+            "trigger": "(?)",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "One hero, finely minced!",
+            "trigger": "Mince attack",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Chop or filet?",
+            "trigger": "Mince attack",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I'll just take a slice!",
+            "trigger": "Mince attack",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "You look good enough to eat.",
+            "trigger": "Pulling a player before devouring their Ultimate",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Here, give me a kiss!",
+            "trigger": "Pulling a player before devouring their Ultimate",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Let's have a taste!",
+            "trigger": "Pulling a player before devouring their Ultimate",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Time to season the meat!",
+            "trigger": "Releasing poisonous spores",
+            "ability": "Deadly Spores"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Maybe I should shed some weight.",
+            "trigger": "Releasing poisonous spores",
+            "ability": "Deadly Spores"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm—I'm all aquiver!",
+            "trigger": "Releasing poisonous spores",
+            "ability": "Deadly Spores"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Watch your step—I dropped something.",
+            "trigger": "Releasing poisonous spores",
+            "ability": "Deadly Spores"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "That's it! Don't move a muscle.",
+            "trigger": "Using Shadow Sense, when she climbs to the ceiling",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Hahaha! On to the next course!",
+            "trigger": "Finishing Shadow Sense",
+            "ability": "Shadow Sense"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Not afraid of the dark, are you?",
+            "trigger": "Banishing players to the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I love playing hard to get!",
+            "trigger": "Banishing players to the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I think we need some time apart ….",
+            "trigger": "Banishing players to the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "The poor little morsel, succumbed to the dark.",
+            "trigger": "A player dies in the catacombs",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Aw, was the dark too much for you?",
+            "trigger": "A player dies in the catacombs",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Dead? Such a disappointment.",
+            "trigger": "A player dies in the catacombs",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Don't be shy! Join us!",
+            "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Ah ah ah! Can't hide from me!",
+            "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I see you lurking up there!",
+            "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "I knew you'd come back to me!",
+            "trigger": "Returning from the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm. Look who comes crawling back.",
+            "trigger": "Returning from the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Aw, did you miss me?",
+            "trigger": "Returning from the catacombs",
+            "ability": "Banish"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Let that meat rest!",
+            "trigger": "Interrupting an attempt to resurrect a dead player",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Not so fast, sweetmeat!",
+            "trigger": "Interrupting an attempt to resurrect a dead player",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Ah ah—leave that one alone!",
+            "trigger": "Interrupting an attempt to resurrect a dead player",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "No, no, that one's mine!",
+            "trigger": "Interrupting an attempt to resurrect a dead player",
+            "ability": "Gout of Bile"
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Poor things, never had a chance.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Finished! Now who's dessert?",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "Mmm … I couldn't eat another bite.",
+            "trigger": "Group wipe",
+            "ability": null
+        },
+        {
+            "speaker": "Velidreth",
+            "line": "No! Mephala, I'm starving! I'm starving!",
+            "trigger": "Defeat",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering the hall past Dranos Velador's chamber": [
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm … new dinner guests. Don't keep me waiting, sweetmeat. I am positively famished!",
+                "trigger": "Entering the hall past Dranos Velador's chamber",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "After using the lever to open the door in the hall Tsatva-Lan warned you in": [
+            {
+                "speaker": "Velidreth",
+                "line": "Mm … getting warmer. It's a shame you're not as smart as Tsatva-Lan. What a delightful servant you'd make!",
+                "trigger": "After using the lever to open the door in the hall Tsatva-Lan warned you in",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "In the big room before the flesh atronach ambush": [
+            {
+                "speaker": "Velidreth",
+                "line": "Hmmm … warmer still. Best hurry, sweetmeat. Tsatva-Lan receives my blessing even as we speak. Killing him may prove … difficult.",
+                "trigger": "In the big room before the flesh atronach ambush",
+                "ability": "Summon Flesh Atronachs"
+            }
+        ],
+        "Entering Velidreth's chambers": [
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm. Piping hot! Don't keep me waiting, adventurers. I'm starving!",
+                "trigger": "Entering Velidreth's chambers",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "Idling before combat": [
+            {
+                "speaker": "Velidreth",
+                "line": "Why don't you come a little closer?",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Have you lost your appetite? Because I'm famished!",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Don't you know it's rude to keep your hostess waiting?",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Oh, look at all of you. Tonight will be a feast!",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Shall we start with the meal, or the entertainment? Why not both?",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Did you work up an appetite on your way here? Me too!?",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Oh, I could just eat you all up.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Is that how you dress for a meal? Slip in to something more comfortable, please.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Let me weave you something … nice and snug.",
+                "trigger": "Idling before combat",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Ugh, I'll die of hunger! Come here my darlings!",
+                "trigger": "Idling before combat",
+                "ability": null
+            }
+        ],
+        "Engaging in combat": [
+            {
+                "speaker": "Velidreth",
+                "line": "Dinner is served!",
+                "trigger": "Engaging in combat",
+                "ability": "Shadow Sense"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm … supper time!",
+                "trigger": "Engaging in combat",
+                "ability": "Shadow Sense"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Time for the main course!",
+                "trigger": "Engaging in combat",
+                "ability": "Shadow Sense"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Come here, sweetmeat! Come to Velidreth!",
+                "trigger": "Engaging in combat",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "Devouring Ultimate": [
+            {
+                "speaker": "Velidreth",
+                "line": "Hahaha! Stop wriggling!",
+                "trigger": "Devouring Ultimate",
+                "ability": "Feast and Famine"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Just a taste! Just a taste!",
+                "trigger": "Devouring Ultimate",
+                "ability": "Feast and Famine"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "So … hungry!",
+                "trigger": "Devouring Ultimate",
+                "ability": "Feast and Famine"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Come here, little morsel! Come to Velidreth!",
+                "trigger": "Devouring Ultimate",
+                "ability": "Feast and Famine"
+            }
+        ],
+        "(?)": [
+            {
+                "speaker": "Velidreth",
+                "line": "You're mine! All mine!",
+                "trigger": "(?)",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "So plump! So fresh!",
+                "trigger": "(?)",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "I'll tenderize you yet!",
+                "trigger": "(?)",
+                "ability": null
+            }
+        ],
+        "Mince attack": [
+            {
+                "speaker": "Velidreth",
+                "line": "One hero, finely minced!",
+                "trigger": "Mince attack",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Chop or filet?",
+                "trigger": "Mince attack",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "I'll just take a slice!",
+                "trigger": "Mince attack",
+                "ability": null
+            }
+        ],
+        "Pulling a player before devouring their Ultimate": [
+            {
+                "speaker": "Velidreth",
+                "line": "You look good enough to eat.",
+                "trigger": "Pulling a player before devouring their Ultimate",
+                "ability": "Shadow Sense"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Here, give me a kiss!",
+                "trigger": "Pulling a player before devouring their Ultimate",
+                "ability": "Shadow Sense"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Let's have a taste!",
+                "trigger": "Pulling a player before devouring their Ultimate",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "Releasing poisonous spores": [
+            {
+                "speaker": "Velidreth",
+                "line": "Time to season the meat!",
+                "trigger": "Releasing poisonous spores",
+                "ability": "Deadly Spores"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Maybe I should shed some weight.",
+                "trigger": "Releasing poisonous spores",
+                "ability": "Deadly Spores"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm—I'm all aquiver!",
+                "trigger": "Releasing poisonous spores",
+                "ability": "Deadly Spores"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Watch your step—I dropped something.",
+                "trigger": "Releasing poisonous spores",
+                "ability": "Deadly Spores"
+            }
+        ],
+        "Using Shadow Sense, when she climbs to the ceiling": [
+            {
+                "speaker": "Velidreth",
+                "line": "That's it! Don't move a muscle.",
+                "trigger": "Using Shadow Sense, when she climbs to the ceiling",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "Finishing Shadow Sense": [
+            {
+                "speaker": "Velidreth",
+                "line": "Hahaha! On to the next course!",
+                "trigger": "Finishing Shadow Sense",
+                "ability": "Shadow Sense"
+            }
+        ],
+        "Banishing players to the catacombs": [
+            {
+                "speaker": "Velidreth",
+                "line": "Not afraid of the dark, are you?",
+                "trigger": "Banishing players to the catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "I love playing hard to get!",
+                "trigger": "Banishing players to the catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "I think we need some time apart ….",
+                "trigger": "Banishing players to the catacombs",
+                "ability": "Banish"
+            }
+        ],
+        "A player dies in the catacombs": [
+            {
+                "speaker": "Velidreth",
+                "line": "The poor little morsel, succumbed to the dark.",
+                "trigger": "A player dies in the catacombs",
+                "ability": "Gout of Bile"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Aw, was the dark too much for you?",
+                "trigger": "A player dies in the catacombs",
+                "ability": "Gout of Bile"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Dead? Such a disappointment.",
+                "trigger": "A player dies in the catacombs",
+                "ability": "Gout of Bile"
+            }
+        ],
+        "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs": [
+            {
+                "speaker": "Velidreth",
+                "line": "Don't be shy! Join us!",
+                "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Ah ah ah! Can't hide from me!",
+                "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "I see you lurking up there!",
+                "trigger": "Forcing players down into the arena if they linger too long on the ledge after traversing the Catacombs",
+                "ability": "Banish"
+            }
+        ],
+        "Returning from the catacombs": [
+            {
+                "speaker": "Velidreth",
+                "line": "I knew you'd come back to me!",
+                "trigger": "Returning from the catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm. Look who comes crawling back.",
+                "trigger": "Returning from the catacombs",
+                "ability": "Banish"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Aw, did you miss me?",
+                "trigger": "Returning from the catacombs",
+                "ability": "Banish"
+            }
+        ],
+        "Interrupting an attempt to resurrect a dead player": [
+            {
+                "speaker": "Velidreth",
+                "line": "Let that meat rest!",
+                "trigger": "Interrupting an attempt to resurrect a dead player",
+                "ability": "Gout of Bile"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Not so fast, sweetmeat!",
+                "trigger": "Interrupting an attempt to resurrect a dead player",
+                "ability": "Gout of Bile"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Ah ah—leave that one alone!",
+                "trigger": "Interrupting an attempt to resurrect a dead player",
+                "ability": "Gout of Bile"
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "No, no, that one's mine!",
+                "trigger": "Interrupting an attempt to resurrect a dead player",
+                "ability": "Gout of Bile"
+            }
+        ],
+        "Group wipe": [
+            {
+                "speaker": "Velidreth",
+                "line": "Poor things, never had a chance.",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Finished! Now who's dessert?",
+                "trigger": "Group wipe",
+                "ability": null
+            },
+            {
+                "speaker": "Velidreth",
+                "line": "Mmm … I couldn't eat another bite.",
+                "trigger": "Group wipe",
+                "ability": null
+            }
+        ],
+        "Defeat": [
+            {
+                "speaker": "Velidreth",
+                "line": "No! Mephala, I'm starving! I'm starving!",
+                "trigger": "Defeat",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Silk and Shadow: Help a former Shadowscale destroy a dangerous new group of assassins.",
+        "Pledge: Cradle of Shadows: Prove you are truly Undaunted by clearing the Cradle of Shadows."
+    ],
+    "summary": "This article is about the enemy. For the set, see Velidreth (set). Velidreth, the Lady of Lace, is a grotesque Hoarvor Daedra who serves Mephala. She has been luring assassins to the Cradle of Shadows to create the Silken Ring, a group of assassins devoted to her mistress. She serves as the final boss of the dungeon. She is the only enemy that drops Distilled Slowsilver.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Velidreth",
+        "page_title": "Online:Velidreth",
+        "revision_id": 3607178,
+        "retrieved_at": "2026-08-12T21:18:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

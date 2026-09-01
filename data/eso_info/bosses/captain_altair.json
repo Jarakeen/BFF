@@ -1,0 +1,171 @@
+{
+    "id": "captain_altair",
+    "name": "Captain Altair",
+    "content_id": "ghost_haven_bay",
+    "content_name": "Ghost Haven Bay",
+    "location": "Ghost Haven Bay",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Stab",
+            "description": "Basic physical attack."
+        },
+        {
+            "name": "Off-Hand Strike",
+            "description": "A physical attack dealing minor damage. If it hits in the back, it also staggers and applies a bleeding effect. They always use this attack when they reappear behind from using their salt abilities."
+        },
+        {
+            "name": "Lunge",
+            "description": "When far, the swashbuckler charges the target, dealing damage and staggering it."
+        },
+        {
+            "name": "Void Salt Explosion",
+            "description": "The enemy throws down void salts, causing an explosion and setting down a gout of lightning, indicated by a circular AoE, that deals damage over time when you stand in it. The initial blast does lightning damage. The enemy disappears and cannot be targeted while the ability is active."
+        },
+        {
+            "name": "Burning Void Salts",
+            "description": "The pool of lightning caused by Void Salt Explosion. Deals lightning damage over time."
+        },
+        {
+            "name": "Somersault",
+            "description": "The enemy somersaults backwards to put distance between you and them."
+        },
+        {
+            "name": "Boulder Toss/Debris Toss",
+            "description": "Captain Altair grabs a large rock on the ground and tosses it on a target, dealing moderate damage and knocking down targets in the area of impact."
+        },
+        {
+            "name": "Vomit",
+            "description": "Captain Altair breathes fire in a cone which deals continuous disease damage to targets inside."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "Vanisande Maul",
+            "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+            "trigger": "After reading Debonaire's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "",
+            "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+            "trigger": "After reading Debonaire's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "",
+            "line": "<While he is in the scene, he does not say anything.>",
+            "trigger": "After reading Debonaire's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "Vanisande Maul",
+            "line": "I can feel the dread clinging to this one.",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "",
+            "line": "<A vision of Captain Altair and Captain Tuvacca talking will appear.>",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "Captain Altair",
+            "line": "The Commodore keeps those old idols as good luck charms, but you have to wonder whose favor he's attracting.",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        },
+        {
+            "speaker": "Captain Tuvacca",
+            "line": "Aye, and he claims that crusty old tome keeps the secrets of the seas. Why aren't we all bending knee to druids then?",
+            "trigger": "After reading Dour Lady's Captain Log",
+            "ability": "Boulder Toss/Debris Toss"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "After reading Debonaire's Captain Log": [
+            {
+                "speaker": "Vanisande Maul",
+                "line": "There's lingering doubt about this book. Regrets are a lost soul's anchor.",
+                "trigger": "After reading Debonaire's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            },
+            {
+                "speaker": "",
+                "line": "<A vision of Commodore Malfairre standing before Captain Fauvette, Captain Tuvacca and Captain Altair.>",
+                "trigger": "After reading Debonaire's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            },
+            {
+                "speaker": "",
+                "line": "<While he is in the scene, he does not say anything.>",
+                "trigger": "After reading Debonaire's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            }
+        ],
+        "After reading Dour Lady's Captain Log": [
+            {
+                "speaker": "Vanisande Maul",
+                "line": "I can feel the dread clinging to this one.",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            },
+            {
+                "speaker": "",
+                "line": "<A vision of Captain Altair and Captain Tuvacca talking will appear.>",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            },
+            {
+                "speaker": "Captain Altair",
+                "line": "The Commodore keeps those old idols as good luck charms, but you have to wonder whose favor he's attracting.",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            },
+            {
+                "speaker": "Captain Tuvacca",
+                "line": "Aye, and he claims that crusty old tome keeps the secrets of the seas. Why aren't we all bending knee to druids then?",
+                "trigger": "After reading Dour Lady's Captain Log",
+                "ability": "Boulder Toss/Debris Toss"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Despite breathing flames, Vomit deals disease damage."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Buried at the Bay: Retrieve the treasure of Captain Maul for her great great great great grand … something."
+    ],
+    "summary": "Captain Altair is the spirit of a Breton ship captain in Ghost Haven Bay. He acts as one of the bosses in the public dungeon.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Captain_Altair",
+        "page_title": "Online:Captain Altair",
+        "revision_id": 3492785,
+        "retrieved_at": "2026-08-12T21:23:43Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

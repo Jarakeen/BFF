@@ -1,0 +1,26 @@
+{
+    "id": "death_s_valor_keep",
+    "name": "Death's Valor Keep",
+    "content_type": "dungeon",
+    "summary": "Death's Valor Keep is a ruined garrison that can be found in the northwestern corner of High Isle. A trio of faun can be sighted in the field outside the keep.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "high_isle_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Death%27s_Valor_Keep",
+        "page_title": "Online:Death's Valor Keep",
+        "revision_id": 3195274,
+        "retrieved_at": "2026-08-12T21:19:28Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

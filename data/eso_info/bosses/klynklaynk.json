@@ -1,0 +1,69 @@
+{
+    "id": "klynklaynk",
+    "name": "Klynklaynk",
+    "content_id": "leftwheal_trading_post",
+    "content_name": "Leftwheal Trading Post",
+    "location": "Leftwheal Trading Post",
+    "species": "Shattered Shard",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Quick Strike",
+            "description": "Basic melee attack dealing moderate-high physical damage."
+        },
+        {
+            "name": "Heavy Strike",
+            "description": "A charged melee attack dealing high physical damage and applying a weak snare for 1 second. This can be blocked to negate the snare and to stagger Klynklaynk."
+        },
+        {
+            "name": "Shard Volley",
+            "description": "Klynklaynk summons a rain of glass in three parts, first dealing minor physical damage in an area, then twice that damage in a larger area, then triple the base damage in the larger area with one smaller area around the main area. All parts of this ability apply a weak snare for 1 second on hit."
+        },
+        {
+            "name": "Shockwave",
+            "description": "Klynklaynk forms a glass mace with its right arm and smashes a target which creates a pillar of glass on the ground, dealing moderate physical damage to the target. A shockwave of glass then happens and expands outwards, dealing moderate-high magic damage. The shockwave part doesn't have indicators and can hit multiple times while a growing area indicator can be seen which only indicates when the shockwave part will happen and is not its hitbox."
+        },
+        {
+            "name": "Shield Charge",
+            "description": "Klynklaynk steps back and forms a glass shield with its right arm then charges by sliding forward, dealing high physical damage and staggering targets hit. This can be blocked to negate the stagger. Through the whole ability, the Klynklaynk blocks the attacks made against it which greatly reduces its damage taken and makes players who attempt to melee heavy attack it to be set off balance."
+        },
+        {
+            "name": "Summon Shard",
+            "description": "At the end of every \"Shield Charge\", a Shattered Shard is summoned to fight you and automatically dies if Klynklaynk is defeated."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Klynklaynk is a Shattered Shard who serves as one of the champions of Leftwheal Trading Post.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Klynklaynk",
+        "page_title": "Online:Klynklaynk",
+        "revision_id": 3485600,
+        "retrieved_at": "2026-08-12T21:27:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

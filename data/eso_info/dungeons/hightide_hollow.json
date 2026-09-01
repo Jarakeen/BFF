@@ -1,0 +1,26 @@
+{
+    "id": "hightide_hollow",
+    "name": "Hightide Hollow",
+    "content_type": "dungeon",
+    "summary": "Hightide Hollow is an abandoned mine in central Stonefalls, west of Ebonheart containing spiders. It has become infested by spiders, which drove out the goblins living in the cave. They are being controlled by an Orc mage named Oodegu. Hazards include: Lava Pools",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Hightide_Hollow",
+        "page_title": "Online:Hightide Hollow",
+        "revision_id": 3598101,
+        "retrieved_at": "2026-08-12T21:25:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "the_silent_halls",
+    "name": "The Silent Halls",
+    "content_type": "dungeon",
+    "summary": "The Silent Halls are an Argonian ruin and public dungeon in Blackwood, located south of Gideon. The ruins are occupied by the Sul-Xan, who are cultivating Harrada Root for their own nefarious ends. The dungeon is made up of five areas: the Overgrowth, Xanmeer, Hist Overlook, Root Cavern, and Vine Warrens. The skyshard is visible from the initial area, but is only accessible via the Hist Overlook accessed from the xanmeer. Dragonflies, frogs, glow bugs, herons, lizards, mud hoppers, rats, scorpions, swamp jellies and torchbugs are found in numbers within. Hazards include catapult cabbages, flamethrowers, gas blossoms, lantern mantises, lava pools, poisoned darts, spike walls, spinning blades, static pitchers, and swinging blades. The Thrafey Debutante Gown costume is also available from this dungeon. It can be forged by collecting and combining 50 Scaly Cloth Scraps fragments that can drop from any mob. Bosses have a chance to drop the Reinforced Clasp Anchor antiquity lead for the Shapeshifter's Chain.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "blackwood_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Silent_Halls",
+        "page_title": "Online:The Silent Halls",
+        "revision_id": 3567089,
+        "retrieved_at": "2026-08-12T21:33:59Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

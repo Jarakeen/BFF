@@ -1,0 +1,38 @@
+{
+    "id": "falarielle",
+    "name": "Falarielle",
+    "content_id": "cloudrest",
+    "content_name": "Cloudrest",
+    "location": "Cloudrest",
+    "species": "Gryphon",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Falarielle's name means \"Cold Beauty\" in Ayleid."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Woe of the Welkynars: Help a Gryphon Knight defeat a powerful Sea Sload sorceress and save Cloudrest."
+    ],
+    "achievements": [],
+    "summary": "Falarielle is a gryphon and the companion of Welkynar Galenwe. She possesses the ability to unleash powerful frost magic in the form of Hoarfrost. She and her mortal partner have been captured by the sea sload sorceress, Z'Maja. If the Shades of Galenwe and Falarielle are defeated, the real Galenwe and Falarielle will die, as Z'Maja will \"release them from her service\" by killing them. However, if the Shade of Galenwe is defeated during the fight against Z'Maja, Falarielle and her rider will live.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Falarielle",
+        "page_title": "Online:Falarielle",
+        "revision_id": 3527974,
+        "retrieved_at": "2026-08-12T05:31:54Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,91 @@
+{
+    "id": "viikor_brazen_hoof",
+    "name": "Viikor Brazen Hoof",
+    "content_id": "silorn",
+    "content_name": "Silorn",
+    "location": "Silorn",
+    "species": "Minotaur",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Chop",
+            "description": "Viikor hits you with a basic attack with its maul, dealing moderate physical damage. When \"Elemental Weapon\" is up, an \"Elemental Pool\" is created where you stand."
+        },
+        {
+            "name": "Elemental Pool",
+            "description": "Area of flames dealing continuous moderate flame damage to targets inside."
+        },
+        {
+            "name": "Clobber",
+            "description": "A heavy swing that stuns the target dealing moderate physical damage. This can be blocked to stagger Viikor instead. When \"Elemental Weapon\" is up, this attack sends a \"Smoldering Wave\""
+        },
+        {
+            "name": "Smoldering Wave",
+            "description": "A longer heavy swing which summons a wave of flames which travels forwards, dealing continuous fast ticks of minor flame damage and stuns targets in its wake. Blocking negates the stun."
+        },
+        {
+            "name": "Cleave",
+            "description": "Wiikor does a cleave attack with its maul, dealing moderate-high physical damage in a cone and staggering targets hit. This can be blocked to negate the stagger. When \"Elemental Weapon\" in up, three \"Elemental Wave\" are created in three directions."
+        },
+        {
+            "name": "Elemental Wave",
+            "description": "A wave of flames which travels forwards, dealing moderate flame damage to targets in its wake."
+        },
+        {
+            "name": "Elemental Weapon",
+            "description": "Viikor slams its weapon on the ground three times, heating it up and making it glow. This buffs its attacks and lasts for about 30 seconds."
+        },
+        {
+            "name": "Flying Leap",
+            "description": "If the target is far away, Viikor throws its cleaver at them and leaps over to pick it up, indicated by a red circle, dealing moderate physical damage in an area."
+        },
+        {
+            "name": "Ram",
+            "description": "Viikor charges forward, knocking down all enemies in its path. This deals moderate physical damage and can be blocked to prevent the knockdown."
+        },
+        {
+            "name": "Brimstone Hailfire",
+            "description": "Viikor summons a large flaming pool on top of the player as indicated by a large red circle. This does continuous minor flame damage to all enemies within as well as snaring them for 2 seconds."
+        },
+        {
+            "name": "Beastly Fury",
+            "description": "Viikor becomes invincible at 75%, 55% and 35% health and summons various enemies. Those enemies are Iron Atronachs, Flame Atronachs and Flame Hounds. You have to kill all those enemies in order to deal damage to Viikor again. Viikor retains a large damage reduction effect for a moment."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [
+        {
+            "id": "gold_road_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "While out-of-combat, you can see Viikor kneel in front of the Ayleid well and absorbing its power. This stops when you come too close of it."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "summary": "Viikor Brazen Hoof is a minotaur who serves as the group event of Silorn. He can be found in the rectangular room on the east side of the map.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Viikor_Brazen_Hoof",
+        "page_title": "Online:Viikor Brazen Hoof",
+        "revision_id": 3427738,
+        "retrieved_at": "2026-08-12T21:34:17Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

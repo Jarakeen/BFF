@@ -1,0 +1,42 @@
+{
+    "id": "grobull_the_transmuted",
+    "name": "Grobull the Transmuted",
+    "content_id": "darkshade_caverns_ii",
+    "content_name": "Darkshade Caverns II",
+    "location": "Darkshade Caverns II",
+    "species": "Netch",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,262,989",
+        "veteran": "1,912,769",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The fight with Grobull could originally be skipped, but the door to Rkugamz will now remain sealed if your group doesn't defeat it."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "What Was Lost: Help Shatasha investigate Dwemer ruins.",
+        "Pledge: Darkshade II: Explore Darkshade Caverns II and return Undaunted.",
+        "Veteran Darkshade Pledge\u0000HEALTH_VETERAN\u0000: Prove you are truly Undaunted by clearing Veteran Darkshade Caverns. (disabled since Patch 2.6.4)"
+    ],
+    "summary": "Grobull the Transmuted is a netch that serves as the second boss in Darkshade Caverns II. Although at first it appears to be wounded, Grobull will rise up and attack once you approach.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Grobull_the_Transmuted",
+        "page_title": "Online:Grobull the Transmuted",
+        "revision_id": 3451052,
+        "retrieved_at": "2026-08-12T21:19:14Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

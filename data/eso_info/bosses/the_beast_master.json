@@ -1,0 +1,267 @@
+{
+    "id": "the_beast_master",
+    "name": "The Beast Master",
+    "content_id": "blessed_crucible",
+    "content_name": "Blessed Crucible",
+    "location": "Blessed Crucible, Frozen Arena",
+    "species": "",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "52,831",
+        "veteran": "36,004",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "The Beast Master",
+            "line": "We don't abide cheaters in the Crucible. Double rations for the team that brings me their heads! Let the Grand Melee begin!",
+            "trigger": "The Beast Master acts as an announcer, making comments on the Grand Melee and her pets, as they arrive and are defeated. Once you enter the Frozen Arena, she calls out to the other teams",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "No time to lick their wounds. The Khajiit are defeated!",
+            "trigger": "When the Khajiit gladiators are defeated",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "The Nords have been sent packing, to their halls of the Dead!",
+            "trigger": "Upon the Nords' defeated",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "And there go the Altmer! High Elves, laid low!",
+            "trigger": "When the Altmer gladiators are killed",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "The Argonians should feel right at home, face down in the mud!",
+            "trigger": "The Argonians",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "These Dunmer will never again know the wonders of Morrowind!",
+            "trigger": "The Dunmer",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "And there we have it! The winners of the Grand Melee!",
+            "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<The Beast Master starts walking into the arena.>",
+            "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "Now for the true test! I've tamed the most exotic and dangerous beasts from the dark corners of Tamriel to test these challengers!",
+            "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "The first monstrosities—presented for your entertainment—come from the ashlands of Morrowind. These creatures laid waste to an entire village before I captured them!",
+            "trigger": "She will begin to release the Incineration Beetles",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "Without further ado, it is my great honor to present...a magically corrupted strain of Shalk. I call them … Incineration Beetles!",
+            "trigger": "She will begin to release the Incineration Beetles",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "These challengers are surpisingly [sic] fierce! But here's the real reason you've come today!",
+            "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<Starts walking towards next gate.>",
+            "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "Prepare yourself [sic], combatants! Pray to your gods and make your peace. You face the Stinger!",
+            "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "What? Impossible? How did you win?",
+            "trigger": "After defeating the Stinger",
+            "ability": null
+        },
+        {
+            "speaker": "The Beast Master",
+            "line": "From the volcanic island of Vvardenfell. A creature of fury that knows no mercy. The vicious … the cruel … the Troll King!",
+            "trigger": "Beast Master will go straight to unleashing the Troll King.",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<The Troll King leaps and jumps on her, crushing and killing her.>",
+            "trigger": "Beast Master will go straight to unleashing the Troll King.",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "The Beast Master acts as an announcer, making comments on the Grand Melee and her pets, as they arrive and are defeated. Once you enter the Frozen Arena, she calls out to the other teams": [
+            {
+                "speaker": "The Beast Master",
+                "line": "We don't abide cheaters in the Crucible. Double rations for the team that brings me their heads! Let the Grand Melee begin!",
+                "trigger": "The Beast Master acts as an announcer, making comments on the Grand Melee and her pets, as they arrive and are defeated. Once you enter the Frozen Arena, she calls out to the other teams",
+                "ability": null
+            }
+        ],
+        "When the Khajiit gladiators are defeated": [
+            {
+                "speaker": "The Beast Master",
+                "line": "No time to lick their wounds. The Khajiit are defeated!",
+                "trigger": "When the Khajiit gladiators are defeated",
+                "ability": null
+            }
+        ],
+        "Upon the Nords' defeated": [
+            {
+                "speaker": "The Beast Master",
+                "line": "The Nords have been sent packing, to their halls of the Dead!",
+                "trigger": "Upon the Nords' defeated",
+                "ability": null
+            }
+        ],
+        "When the Altmer gladiators are killed": [
+            {
+                "speaker": "The Beast Master",
+                "line": "And there go the Altmer! High Elves, laid low!",
+                "trigger": "When the Altmer gladiators are killed",
+                "ability": null
+            }
+        ],
+        "The Argonians": [
+            {
+                "speaker": "The Beast Master",
+                "line": "The Argonians should feel right at home, face down in the mud!",
+                "trigger": "The Argonians",
+                "ability": null
+            }
+        ],
+        "The Dunmer": [
+            {
+                "speaker": "The Beast Master",
+                "line": "These Dunmer will never again know the wonders of Morrowind!",
+                "trigger": "The Dunmer",
+                "ability": null
+            }
+        ],
+        "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.": [
+            {
+                "speaker": "The Beast Master",
+                "line": "And there we have it! The winners of the Grand Melee!",
+                "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<The Beast Master starts walking into the arena.>",
+                "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+                "ability": null
+            },
+            {
+                "speaker": "The Beast Master",
+                "line": "Now for the true test! I've tamed the most exotic and dangerous beasts from the dark corners of Tamriel to test these challengers!",
+                "trigger": "When all of the gladiator groups have been taken out, the Beast Master will come out and unleash her monsters.",
+                "ability": null
+            }
+        ],
+        "She will begin to release the Incineration Beetles": [
+            {
+                "speaker": "The Beast Master",
+                "line": "The first monstrosities—presented for your entertainment—come from the ashlands of Morrowind. These creatures laid waste to an entire village before I captured them!",
+                "trigger": "She will begin to release the Incineration Beetles",
+                "ability": null
+            },
+            {
+                "speaker": "The Beast Master",
+                "line": "Without further ado, it is my great honor to present...a magically corrupted strain of Shalk. I call them … Incineration Beetles!",
+                "trigger": "She will begin to release the Incineration Beetles",
+                "ability": null
+            }
+        ],
+        "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger": [
+            {
+                "speaker": "The Beast Master",
+                "line": "These challengers are surpisingly [sic] fierce! But here's the real reason you've come today!",
+                "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<Starts walking towards next gate.>",
+                "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+                "ability": null
+            },
+            {
+                "speaker": "The Beast Master",
+                "line": "Prepare yourself [sic], combatants! Pray to your gods and make your peace. You face the Stinger!",
+                "trigger": "Once the beetles are defeated, the Beast Master will move onto the next beast, the Stinger",
+                "ability": null
+            }
+        ],
+        "After defeating the Stinger": [
+            {
+                "speaker": "The Beast Master",
+                "line": "What? Impossible? How did you win?",
+                "trigger": "After defeating the Stinger",
+                "ability": null
+            }
+        ],
+        "Beast Master will go straight to unleashing the Troll King.": [
+            {
+                "speaker": "The Beast Master",
+                "line": "From the volcanic island of Vvardenfell. A creature of fury that knows no mercy. The vicious … the cruel … the Troll King!",
+                "trigger": "Beast Master will go straight to unleashing the Troll King.",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<The Troll King leaps and jumps on her, crushing and killing her.>",
+                "trigger": "Beast Master will go straight to unleashing the Troll King.",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Fires of Battle: Compete in a fiery arena to claim the Brimstone Crown.",
+        "Pledge: Blessed Crucible: Prove you are truly Undaunted by clearing Blessed Crucible."
+    ],
+    "summary": "The Beast Master is a huge Nord who has trained beasts from all over Tamriel, and is competing with some of them at the Blessed Crucible: a herd of Incineration Beetles, the Stinger, and the Troll King. She will eventually be crushed by the Troll King once he frees himself from his cage.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Beast_Master",
+        "page_title": "Online:The Beast Master",
+        "revision_id": 3344844,
+        "retrieved_at": "2026-08-12T21:15:26Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

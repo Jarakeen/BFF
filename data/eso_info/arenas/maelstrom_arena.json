@@ -1,0 +1,86 @@
+{
+    "id": "maelstrom_arena",
+    "name": "Maelstrom Arena",
+    "content_type": "arena",
+    "summary": "Maelstrom Arena is an otherworldly solo arena accessed from Wrothgar. Created by the Demiprince Fa-Nuit-Hen, it serves as a solo trial where one must defeat waves of enemies and bosses in nine different arenas. The entrance is found inside a small abandoned Orcish fort, complete with a set of stables and sealed well on the outside, and a number of hallways carved inside the mountain past the gate. The lower hallways are made up of jail cells, with a hole in the wall leading to a small cave containing the Daedric portal to the Maelstrom Arena. When you first enter the realm, you will find yourself at a small Redguard-style manor in an Alik'r-like desert, surrounded by a circular wall of large rocks. Accepting the quest from Fa-Nuit-Hen will allow you to enter a portal and begin the trial. Fa-Nuit-Hen and his Daedric subordinates will be spectating the games from the sidelines, and his assistant Tutor Riparius functions as a merchant between arenas. Each wave will have new sigils of defense, haste, healing, and power spawn, which can be used as temporary buffs. Once an arena is completed, one will be rewarded with a chest containing rewards and the option of traveling to the next arena. New arenas progressively become more difficult, and completing the final arena grants a Maelstrom Weapon; completing the arena on veteran difficulty grants a Perfected Maelstrom Weapon.",
+    "location": "",
+    "group_size": null,
+    "boss_ids": [
+        "golden_saint",
+        "centurion_champion",
+        "lamia_queen",
+        "achelir",
+        "aihrima",
+        "kothheid",
+        "the_control_guardian",
+        "angirgoth",
+        "ogre_elder",
+        "bor",
+        "matriarch_runa",
+        "spiderkith_captain",
+        "xivilai_toxicoli",
+        "champion_of_atrocity",
+        "argonian_behemoth",
+        "flame_knight",
+        "valkyn_tephra",
+        "xivilai_ravager",
+        "ash_titan",
+        "voriak_solkyn"
+    ],
+    "achievements": [
+        {
+            "id": "maelstrom_arena_champion",
+            "name": "Maelstrom Arena Champion",
+            "description": "Conquer all challengers and earn the title of Maelstrom Arena Champion.",
+            "points": 15,
+            "source": null
+        },
+        {
+            "id": "maelstrom_arena_conqueror",
+            "name": "Maelstrom Arena Conqueror",
+            "description": "Conquer all challengers in Veteran Maelstrom Arena.",
+            "points": 50,
+            "source": null
+        },
+        {
+            "id": "perfect_run",
+            "name": "Maelstrom Arena: Perfect Run",
+            "description": "Complete Veteran Maelstrom Arena in a single attempt, without dying or leaving the arena.",
+            "points": 50,
+            "source": null
+        }
+    ],
+    "set_ids": [
+        "elemental_succession",
+        "glorious_defender",
+        "hunt_leader",
+        "para_bellum",
+        "permafrost",
+        "winterborn",
+        "crushing_wall",
+        "perfected_crushing_wall",
+        "cruel_flurry",
+        "perfected_cruel_flurry",
+        "merciless_charge",
+        "perfected_merciless_charge",
+        "precise_regeneration",
+        "perfected_precise_regeneration",
+        "rampaging_slash",
+        "perfected_rampaging_slash",
+        "thunderous_volley",
+        "perfected_thunderous_volley"
+    ],
+    "reward_ids": [],
+    "related_npcs": [],
+    "notes": [
+        "The Maelstrom Arena was originally supposed to have 10 arenas (hence why the tenth bust in the starting area uses a Baron in place of an arena boss), as the cut Skein Grotto would have been visited somewhere in the middle. As the name suggests, it would've been themed after the Spiral Skein and complimented the Spiral Shadows arena in a similar manner to how Seht's Balcony contrasts with Seht's Flywheel.",
+        "Prior to an unknown patch, the spectators seen and heard commenting on the fights in the arena stages could all be found on the arena grounds upon first arriving. However, this is no longer the case."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Maelstrom_Arena_(place)",
+        "page_title": "Online:Maelstrom Arena (place)",
+        "revision_id": 3549525,
+        "retrieved_at": "2026-08-19T03:25:12Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

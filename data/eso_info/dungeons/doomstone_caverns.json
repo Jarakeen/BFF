@@ -1,0 +1,18 @@
+{
+    "id": "doomstone_caverns",
+    "name": "Doomstone Caverns",
+    "content_type": "dungeon",
+    "summary": "[[Category:Online-Places-(?)<[[Category:Online-Places-sup>]]s]] The Doomstone Caverns are a cave system beneath Doomstone Keep. This where the dragon Laatvulon was sealed away by Ja'darri and the Dragongurd centuries ago.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Doomstone_Caverns",
+        "page_title": "Online:Doomstone Caverns",
+        "revision_id": 3024937,
+        "retrieved_at": "2026-08-12T21:20:10Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

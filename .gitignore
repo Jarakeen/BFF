@@ -117,3 +117,13 @@ TODOs.md
 /Launch Foundry.bat
 /Launch Foundry.vbs
 /Launch Foundry (debug).bat
+
+
+!data/eso_info/arenas/
+!data/eso_info/arenas/**
+!data/eso_info/bosses/
+!data/eso_info/bosses/**
+!data/eso_info/dungeons/
+!data/eso_info/dungeons/**
+!data/eso_info/trials/
+!data/eso_info/trials/**

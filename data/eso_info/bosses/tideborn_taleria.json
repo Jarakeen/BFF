@@ -1,0 +1,543 @@
+{
+    "id": "tideborn_taleria",
+    "name": "Tideborn Taleria",
+    "content_id": "dreadsail_reef",
+    "content_name": "Dreadsail Reef",
+    "location": "Dreadsail Reef, Coral Caldera",
+    "species": "Air Atronach",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "29,538,220",
+        "veteran": "100,906,840",
+        "hardmode": "181,632,304 (Hard Mode)"
+    },
+    "abilities": [
+        {
+            "name": "Arcing Slash/Arcing Cleave/Soaked Wound",
+            "description": "Light attack that deals physical and frost damage to target, applies Soaked Wound (a 7 second frost DoT), and has a large cleave dealing physical damage",
+            "damage_type": null
+        },
+        {
+            "name": "Coral Slam/Rising Tide",
+            "description": "Heavy Attack dealing very high Physical and Frost Damage. If Rolled it creates a large AOE called Rising Tide under the target that hits 3 times dealing frost damage",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Behemoth",
+            "description": "Summons a Sea Behemoth",
+            "damage_type": null
+        },
+        {
+            "name": "Crashing Wave",
+            "description": "Taleria plunges her blades into the ground and places wave AOEs down, after a brief delay she pulls the swords up and launches waves in those areas dealing high damage and launching players hit backwards. 1 wave will always be positioned around the person with taunt on Taleria (on hard mode one AOE will be on the tank holding a sea behemoth as well).",
+            "damage_type": null
+        },
+        {
+            "name": "Rapid Deluge/Deluge Eruption",
+            "description": "Taleria debuffs 5 players (6 on hm) with rapid deluge, There will be bubbles around the players affected and they have 6 seconds to make it into the water and be swimming to prevent Deluge Eruption. If a player does not make it into the water, Deluge Eruption a 19m frost AOE will go off dealing very high damage to them and all surrounding players. Note: The water has slaughterfish dealing ramping damage so you want to get in the water as late as you can if possible.",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Siren",
+            "description": "Summons Enthralling Matrons",
+            "damage_type": null
+        },
+        {
+            "name": "Summon Bridge/Mage(?)",
+            "description": "At 50%, 35%, and 20% Mages are summoned on the sides of the Coral Caldera and Rock Bridges fall from the sky to allow players to go out to them. Each mage applies a different debuff to the group while alive.",
+            "damage_type": null
+        }
+    ],
+    "mechanics": [
+        {
+            "description": "Heavy Attack dealing very high Physical and Frost Damage. If Rolled it creates a large AOE called Rising Tide under the target that hits 3 times dealing frost damage",
+            "name": "Coral Slam/Rising Tide",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": "frost",
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Taleria plunges her blades into the ground and places wave AOEs down, after a brief delay she pulls the swords up and launches waves in those areas dealing high damage and launching players hit backwards. 1 wave will always be positioned around the person with taunt on Taleria (on hard mode one AOE will be on the tank holding a sea behemoth as well).",
+            "name": "Crashing Wave",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "Taleria debuffs 5 players (6 on hm) with rapid deluge, There will be bubbles around the players affected and they have 6 seconds to make it into the water and be swimming to prevent Deluge Eruption. If a player does not make it into the water, Deluge Eruption a 19m frost AOE will go off dealing very high damage to them and all surrounding players. Note: The water has slaughterfish dealing ramping damage so you want to get in the water as late as you can if possible.",
+            "name": "Rapid Deluge/Deluge Eruption",
+            "links": [],
+            "mechanic_type": "area_attack",
+            "damage_type": null,
+            "target_count": 5,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        },
+        {
+            "description": "At 50%, 35%, and 20% Mages are summoned on the sides of the Coral Caldera and Rock Bridges fall from the sky to allow players to go out to them. Each mage applies a different debuff to the group while alive.",
+            "name": "Summon Bridge/Mage(?)",
+            "links": [],
+            "mechanic_type": "summon",
+            "damage_type": null,
+            "target_count": null,
+            "requires_movement": null,
+            "requires_positioning": null,
+            "requires_cleanse": null,
+            "persistent_hazard": null,
+            "failure_is_fatal": null,
+            "interruptible": null,
+            "interrupt_note": "",
+            "interpretation_status": "inferred"
+        }
+    ],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "Fleet Queen Taleria \"Barging into a lady's private chambers. You are bold.\"",
+            "trigger": "Entering the Coral Caldera:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Fleet Queen Taleria \"But I won't be conquered so easily.\"",
+            "trigger": "Entering the Coral Caldera:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Fleet Queen Taleria \"Let me show you the power that's going to crush that little flotilla of yours.\"",
+            "trigger": "Entering the Coral Caldera:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "<She will dive into the water and transform into Tideborn Taleria.>",
+            "trigger": "Entering the Coral Caldera:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"My power is as vast as the sea itself!\"",
+            "trigger": "Entering the Coral Caldera:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Throw yourselves at my feet and beg for the privilege to lick my boots. Then, maybe, I'll let you keep your tongues.\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"I am the sea and tide! And you are just poor guppies.\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"I'll return your bodies to the admiral … at the bottom of the sea.\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"You really thought you had me on the run, didn't you? Adorable.\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Clouds gather, tides rise, and your precious flotilla will be dashed against the rocks like children's toys.\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Having a twinge of regret about leaping into the serpent's lair?\"",
+            "trigger": "Idling before the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Oh ho, you are brave. I'll enjoy watching that courage fade.\"",
+            "trigger": "If you activate Hard Mode:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"You little sand fleas are beginning to irritate me.\"",
+            "trigger": "If you activate Hard Mode:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Are you mocking me? I was going to take you prisoner, but now I think I'll grate you to shreds on the reef.\"",
+            "trigger": "If you activate Hard Mode:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"I'll fly your hides from the yardarms.\"",
+            "trigger": "Starting the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Welcome to your drowning pool!\"",
+            "trigger": "Starting the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Have at me.\"",
+            "trigger": "Starting the fight:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Sirens! A dirge for these doomed souls!\"",
+            "trigger": "Summoning Sirens:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Can you hear the sea beckoning? A sultry, seductive melody.\"",
+            "trigger": "Summoning Sirens:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Into the drink with you!\"",
+            "trigger": "Crushing wave:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"How do you like the water?\"",
+            "trigger": "Crushing wave:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Drown.\"",
+            "trigger": "Crushing wave:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Where's my crew? Show them who rules the seas!\"",
+            "trigger": "Summoning one of the three mages:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Dreadsails! Your queen demands a sacrifice!\"",
+            "trigger": "Summoning one of the three mages:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Come and join the brawl, mates!\"",
+            "trigger": "Summoning one of the three mages:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Nothing but bilge scum after all. How disappointing.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"You cleared out the trash in my ranks. My thanks.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Time to send the admeiral my proper regards.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"That was the best the Duforts could muster? Gonfalon Bay will be easy pickings.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"All dead? Damn, I needed a new latrine slave.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"Now you see how far beneath a queen you are.\"",
+            "trigger": "Group wipe:",
+            "ability": null
+        },
+        {
+            "speaker": "",
+            "line": "Tideborn Taleria \"You think you can defeat the sea herself? I will be reborn like a wave ….\"",
+            "trigger": "Upon defeat:",
+            "ability": null
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Entering the Coral Caldera:": [
+            {
+                "speaker": "",
+                "line": "Fleet Queen Taleria \"Barging into a lady's private chambers. You are bold.\"",
+                "trigger": "Entering the Coral Caldera:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Fleet Queen Taleria \"But I won't be conquered so easily.\"",
+                "trigger": "Entering the Coral Caldera:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Fleet Queen Taleria \"Let me show you the power that's going to crush that little flotilla of yours.\"",
+                "trigger": "Entering the Coral Caldera:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "<She will dive into the water and transform into Tideborn Taleria.>",
+                "trigger": "Entering the Coral Caldera:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"My power is as vast as the sea itself!\"",
+                "trigger": "Entering the Coral Caldera:",
+                "ability": null
+            }
+        ],
+        "Idling before the fight:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Throw yourselves at my feet and beg for the privilege to lick my boots. Then, maybe, I'll let you keep your tongues.\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"I am the sea and tide! And you are just poor guppies.\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"I'll return your bodies to the admiral … at the bottom of the sea.\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"You really thought you had me on the run, didn't you? Adorable.\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Clouds gather, tides rise, and your precious flotilla will be dashed against the rocks like children's toys.\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Having a twinge of regret about leaping into the serpent's lair?\"",
+                "trigger": "Idling before the fight:",
+                "ability": null
+            }
+        ],
+        "If you activate Hard Mode:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Oh ho, you are brave. I'll enjoy watching that courage fade.\"",
+                "trigger": "If you activate Hard Mode:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"You little sand fleas are beginning to irritate me.\"",
+                "trigger": "If you activate Hard Mode:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Are you mocking me? I was going to take you prisoner, but now I think I'll grate you to shreds on the reef.\"",
+                "trigger": "If you activate Hard Mode:",
+                "ability": null
+            }
+        ],
+        "Starting the fight:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"I'll fly your hides from the yardarms.\"",
+                "trigger": "Starting the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Welcome to your drowning pool!\"",
+                "trigger": "Starting the fight:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Have at me.\"",
+                "trigger": "Starting the fight:",
+                "ability": null
+            }
+        ],
+        "Summoning Sirens:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Sirens! A dirge for these doomed souls!\"",
+                "trigger": "Summoning Sirens:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Can you hear the sea beckoning? A sultry, seductive melody.\"",
+                "trigger": "Summoning Sirens:",
+                "ability": null
+            }
+        ],
+        "Crushing wave:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Into the drink with you!\"",
+                "trigger": "Crushing wave:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"How do you like the water?\"",
+                "trigger": "Crushing wave:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Drown.\"",
+                "trigger": "Crushing wave:",
+                "ability": null
+            }
+        ],
+        "Summoning one of the three mages:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Where's my crew? Show them who rules the seas!\"",
+                "trigger": "Summoning one of the three mages:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Dreadsails! Your queen demands a sacrifice!\"",
+                "trigger": "Summoning one of the three mages:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Come and join the brawl, mates!\"",
+                "trigger": "Summoning one of the three mages:",
+                "ability": null
+            }
+        ],
+        "Group wipe:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Nothing but bilge scum after all. How disappointing.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"You cleared out the trash in my ranks. My thanks.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Time to send the admeiral my proper regards.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"That was the best the Duforts could muster? Gonfalon Bay will be easy pickings.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"All dead? Damn, I needed a new latrine slave.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            },
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"Now you see how far beneath a queen you are.\"",
+                "trigger": "Group wipe:",
+                "ability": null
+            }
+        ],
+        "Upon defeat:": [
+            {
+                "speaker": "",
+                "line": "Tideborn Taleria \"You think you can defeat the sea herself? I will be reborn like a wave ….\"",
+                "trigger": "Upon defeat:",
+                "ability": null
+            }
+        ]
+    },
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Reavers of the Reef: Drive the Dreadsail pirates from the Systres."
+    ],
+    "summary": "Tideborn Taleria is a coral monstrosity that Fleet Queen Taleria turns herself into during the final battle of Dreadsail Reef. You will face her at the bottom of the Coral Caldera.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Tideborn_Taleria",
+        "page_title": "Online:Tideborn Taleria",
+        "revision_id": 3582555,
+        "retrieved_at": "2026-09-01T02:06:52Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

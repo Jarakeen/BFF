@@ -1,0 +1,18 @@
+{
+    "id": "ashbound_hall",
+    "name": "Ashbound Hall",
+    "content_type": "dungeon",
+    "summary": "Ashbound Hall is a specialized prison from Coldharbour that has fallen to Nirn. Salt-Air Station lies along the coast northeast of this location, while the Lair of the Black Worm sits off the side of the road to the northwest. A warning is posted beside Sirilonwe's camp along the road north of the prison. A Soul Shriven Bard is playing the flute in the wilderness southeast of the hall. Terinvel's Notebook and An Offer of Protection can be found at a camp near the hall during the related quest. Hazards include vampiric runes and volcanic activity.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ashbound_Hall",
+        "page_title": "Online:Ashbound Hall",
+        "revision_id": 3586229,
+        "retrieved_at": "2026-08-12T21:13:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

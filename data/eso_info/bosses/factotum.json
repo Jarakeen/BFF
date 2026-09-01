@@ -1,0 +1,39 @@
+{
+    "id": "factotum",
+    "name": "Factotum",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "",
+    "species": "",
+    "reaction": "",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "Two Factotum polymorphs are available: the Clockwork Curator, which can be earned within Asylum Sanctorium, and the Factotum, which is acquired through Baandari Pedlar Crown Crates and occasionally available in the Crown Store.",
+        "There are two collectible Factotum assistants: the Factotum Commerce Delegate (a merchant) and the Factotum Property Steward (a banker).",
+        "The generic and unique NPCs will be friendly in Brass Fortress, and hostile in most other locations.",
+        "Factotums added in Update 14 originally had a much more different appearance, consisting of smooth cone-shaped heads with no holes at their masks, chestplates with large pauldrons and different patterns, clunkier arms and legs without any thin pieces of metal protruding, and much pointier boots. Following the release of Clockwork City in Update 16, the appearance of all factotums was updated and the older Factotums established to be discontinued models known as \"Era 1 Factotum\"."
+    ],
+    "related_npcs": [],
+    "related_quests": [],
+    "achievements": [],
+    "summary": "This article is about the NPC type. For the polymorph, see Factotum (polymorph). For the personality, see Factotum (personality). Factotums are humanoid mechanical constructs created by Sotha Sil. They are predominantly found in the Clockwork City. Factotums are genderless machines, but they almost exclusively have female voices. Older models more commonly had a mix of both. Larger and more powerful variants, such as Imperfects, can also be encountered. They appear in both the Morrowind Chapter and Clockwork City DLC, and in few specific locations in the Greymoor and Necrom DLCs. For more information, see the lore article.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Factotum",
+        "page_title": "Online:Factotum",
+        "revision_id": 3230572,
+        "retrieved_at": "2026-08-12T05:32:32Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

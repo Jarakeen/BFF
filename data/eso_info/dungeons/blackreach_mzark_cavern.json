@@ -1,0 +1,21 @@
+{
+    "id": "blackreach_mzark_cavern",
+    "name": "Blackreach: Mzark Cavern",
+    "content_type": "dungeon",
+    "summary": "Mzark Cavern is a small section of the larger Blackreach cavern system, located beneath Eastmarch. After you and Lyris Titanborn follow a note found in the Riften Ratway to The Grinning Horker inn, a secret passage to Blackreach is found in the inn's cellar. It transpires that witches of the Icereach Coven and their vampire allies, led by Sister Balra, have been using Blackreach to experiment on unwitting subjects abducted from the inn. Despite the witches' encampments, Dwarven automatons and trolls still roam the ruins. An alternate exit is available through using Kagalthar's lift, and a door in the western part of the cavern leads to Greymoor Caverns. Dead commoners can be found strewn on the ground, being eaten by Harrowfiends and Death Hounds. There are several slow-spawning Crimson Nirnroot scattered throughout (See map). Various critters, including blackreach jellies, nixads, shroom beetles, skavengers and rats, inhabit this section of the cave system.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [],
+    "related_npcs": [],
+    "notes": [
+        "Blackreach: Mzark Caverns is the southern part of Blackreach that was previously seen in The Elder Scrolls V: Skyrim.",
+        "The map of Mzark Cavern can be accessed from the Eastmarch zone map. The marker reads , or \"BR\" in the Dwemer alphabet."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Blackreach:_Mzark_Cavern",
+        "page_title": "Online:Blackreach: Mzark Cavern",
+        "revision_id": 3369777,
+        "retrieved_at": "2026-08-12T21:29:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

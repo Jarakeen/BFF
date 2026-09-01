@@ -1,0 +1,64 @@
+{
+    "id": "orzun_the_foul_smelling",
+    "name": "Orzun the Foul-Smelling",
+    "content_id": "scalecaller_peak",
+    "content_name": "Scalecaller Peak",
+    "location": "Scalecaller Peak",
+    "species": "Ogre",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "1,252,465",
+        "veteran": "1,882,002",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Shredding Strike",
+            "description": "A basic melee attack that deals minor physical damage."
+        },
+        {
+            "name": "Rancid Fog",
+            "description": "The boss empowers itself causing disease clouds to emit from in front of itself when Shredding Strike is cast dealing moderate disease damage as indicated by red circles."
+        },
+        {
+            "name": "Crushing Blow",
+            "description": "A charged heavy melee attack that deals high physical damage. This should be blocked or dodged if possible."
+        },
+        {
+            "name": "Wretched Pollution",
+            "description": "The boss has an aura that deals minor disease damage around itself (visible as green mist in image above). This damage will increase dramatically if the two bosses are brought together, so keep them separate."
+        },
+        {
+            "name": "Frost Pillar",
+            "description": "The boss summons frost pillars around the arena dealing moderate frost damage as indicated by red circles. There are some taller frost pillars that the group can hide behind to counter Vicious Shard cast by Rinaerus later. The group is advised to kill the two ogres at around the same time, as once Orzun dies Frost Pillars will not appear to shield the group from Vicious Shard."
+        },
+        {
+            "name": "Terrorizing Tremor",
+            "description": "After Rinaerus casts Glacial Winds, smaller frost AoEs will remain. The group must freeze themselves in the AoEs to counter the Terrorizing Tremor AoEs that Orzun will summon, which deal high (lethal on vet) frost damage and are unavoidable."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [],
+    "dialogue_by_trigger": {},
+    "achievements": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "Plans of Pestilence: Conquer Scalecaller Peak and stop a dangerous plague from spreading.",
+        "Pledge: Scalecaller Peak: Prove you are truly Undaunted by clearing Scalecaller Peak."
+    ],
+    "summary": "Orzun the Foul-Smelling is an ogre found at Scalecaller Peak. Along with Rinaerus the Rancid, he serves as the first boss of the dungeon. He and Rinaerus have a chance to collectively drop a sample of Infected Flesh.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Orzun_the_Foul-Smelling",
+        "page_title": "Online:Orzun the Foul-Smelling",
+        "revision_id": 3348042,
+        "retrieved_at": "2026-08-12T21:32:22Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

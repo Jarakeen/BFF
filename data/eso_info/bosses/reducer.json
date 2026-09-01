@@ -1,0 +1,63 @@
+{
+    "id": "reducer",
+    "name": "Reducer",
+    "content_id": "halls_of_fabrication",
+    "content_name": "Halls of Fabrication",
+    "location": "Halls of Fabrication",
+    "species": "",
+    "reaction": "Hostile",
+    "health": {
+        "normal": "",
+        "veteran": "",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Strike",
+            "description": "A basic melee attack dealing moderate physical damage."
+        },
+        {
+            "name": "Uppercut",
+            "description": "A powerful melee attack dealing very high physical damage and knocking you away. This attack can be blocked."
+        },
+        {
+            "name": "Fulminate",
+            "description": "The Reducer also sends out bursts of flame, indicated by traveling circular AoEs, dealing high flame damage and applying the Melting Point debuff."
+        },
+        {
+            "name": "Melting Point",
+            "description": "The debuff drains the victim's health, and should be dispelled as quickly as possible."
+        },
+        {
+            "name": "Empowering Beam",
+            "description": "If near any of the other two constructs, they form a link which strengthens both of them, increasing their damage output and resistance. They should therefore be kept separate."
+        },
+        {
+            "name": "Overcharge",
+            "description": "At certain health thresholds (70%, 40%, and 20%), each of them will overcharge and be immune to all damage. Once all three enemies are overcharged, bringing them together will reverse that, allowing them to be damaged again, as well as offering a burn window while they are briefly stunned."
+        }
+    ],
+    "phases": [],
+    "dialogue": [],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [
+        "The Reducer's model predate the Series 7 Factotum model, which is why they use the Refabricated Style and have more Dwemer-inspired humanoid features."
+    ],
+    "related_npcs": [],
+    "related_quests": [
+        "Forging the Future: Stem the tide of fabricants before they overwhelm Tel Fyr."
+    ],
+    "achievements": [],
+    "summary": "The Reducer is a Factotum encountered together with the Reactor and the Reclaimer in the Halls of Fabrication, where they serve as the fourth boss encounter of the trial.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Reducer",
+        "page_title": "Online:Reducer",
+        "revision_id": 3029560,
+        "retrieved_at": "2026-08-12T05:32:41Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

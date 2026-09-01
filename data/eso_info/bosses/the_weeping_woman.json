@@ -1,0 +1,304 @@
+{
+    "id": "the_weeping_woman",
+    "name": "The Weeping Woman",
+    "content_id": "depths_of_malatar",
+    "content_name": "Depths of Malatar",
+    "location": "Ruins of Garlas Malatar",
+    "species": "Nereid",
+    "reaction": "Friendly",
+    "health": {
+        "normal": "1,683,986",
+        "veteran": "4,060,128",
+        "hardmode": ""
+    },
+    "abilities": [
+        {
+            "name": "Frost Bolt",
+            "description": "A basic ranged attack that deals moderate frost damage."
+        },
+        {
+            "name": "Shivering Swat",
+            "description": "A basic melee attack that deals minor frost damage."
+        },
+        {
+            "name": "Frostbite",
+            "description": "Getting hit by Shivering Swat or Frost Bolt will deal minor frost damage over time."
+        },
+        {
+            "name": "Gelid Globe",
+            "description": "A charged heavy ranged attack that deals very high frost damage as indicated by a red circle around the target. Block or dodge this if possible. This will also summon a Frost Atronach to attack the party, and it should be killed quickly to simplify the fight. Ensure the party has enough DPS to kill the atronach before the next is summoned."
+        },
+        {
+            "name": "Glaciation",
+            "description": "The boss summons a large frost AOE either in the center, middle, or outer portion of the room that deals high frost damage over time. Avoid this if possible. As the fight progresses, 2 of these areas will be covered in frost instead of 1."
+        },
+        {
+            "name": "Summon Stone Watcher",
+            "description": "At 75%, 55% and 35% health, the boss summons a Stone Watcher to attack the party, this should be killed quickly to simplify the fight. The message \"A Stone Watcher has awoken!\" appears to inform you of this."
+        }
+    ],
+    "mechanics": [],
+    "phases": [],
+    "dialogue": [
+        {
+            "speaker": "",
+            "line": "For her, we kept it hidden from our brethren and buried them with our tears. Here you too will drown.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "You won't take it. Not after all our sacrifice.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "All their pleas fell on deaf ears. I can still hear their desperation.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "She told us to protect it, no matter the cost.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "We had to keep it from them, no matter how much they needed it.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "We stood by as our empire crumbled, but it remains here. That's all that matters.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "My tears cling to everything, and drown it in my sorrow.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "There is no choking down this bile!",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Weep as I do!",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "This is our anguish!",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Share in our grief, forever.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Gloom hangs over us all.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Feel the weight of our loss!",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "A cold heart does not numb this pain!",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "The guiding light burns everyone who reaches too closely.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Their sacrifice was not in vain.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "Who will weep for you?",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "I have no tears left for you.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        },
+        {
+            "speaker": "",
+            "line": "You have paid the price they paid.",
+            "trigger": "",
+            "ability": "Gelid Globe"
+        }
+    ],
+    "dialogue_by_trigger": {
+        "Unspecified": [
+            {
+                "speaker": "",
+                "line": "For her, we kept it hidden from our brethren and buried them with our tears. Here you too will drown.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "You won't take it. Not after all our sacrifice.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "All their pleas fell on deaf ears. I can still hear their desperation.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "She told us to protect it, no matter the cost.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "We had to keep it from them, no matter how much they needed it.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "We stood by as our empire crumbled, but it remains here. That's all that matters.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "My tears cling to everything, and drown it in my sorrow.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "There is no choking down this bile!",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Weep as I do!",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "This is our anguish!",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Share in our grief, forever.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Gloom hangs over us all.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Feel the weight of our loss!",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "A cold heart does not numb this pain!",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "The guiding light burns everyone who reaches too closely.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Their sacrifice was not in vain.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "Who will weep for you?",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "I have no tears left for you.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            },
+            {
+                "speaker": "",
+                "line": "You have paid the price they paid.",
+                "trigger": "",
+                "ability": "Gelid Globe"
+            }
+        ]
+    },
+    "achievements": [
+        {
+            "id": "wrathstone_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "difficulty_notes": {
+        "normal_veteran_differences": [],
+        "hardmode_info": []
+    },
+    "strategy_notes": [],
+    "notes": [],
+    "related_npcs": [],
+    "related_quests": [
+        "The Guiding Light: Find the way into an ancient Ayleid city and recover a historical artifact.",
+        "Pledge: Depths of Malatar: Prove you are truly Undaunted by clearing Depths of Malatar."
+    ],
+    "summary": "The Weeping Woman is a nereid that serves as the second boss of the Depths of Malatar. Found in a room in the Ruins of Garlas Malatar, surrounded by the ice statues of Aurorans and other victims, she seeks to take the Wrathstone back from you. She may summon Frost Atronachs awaken the Stone Watchers present in the room to aid her during the fight. An unnatural permafrost blocks the passage out of the room, which will only melt after she has been killed. Initially, the Weeping Woman is an Ayleid woman, lamenting the sacrifice of her people. She walks to the center of the room and shatters into chunks of ice, returning as a leimenid.",
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:The_Weeping_Woman",
+        "page_title": "Online:The Weeping Woman",
+        "revision_id": 3387762,
+        "retrieved_at": "2026-08-12T21:19:42Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "id": "silumm",
+    "name": "Silumm",
+    "content_type": "dungeon",
+    "summary": "Silumm is an Ayleid ruin just north of Daggerfall in Glenumbra containing Aldmeri Dominion soldiers and werewolves. Rats are found in ample numbers within. During the quest Long Lost Lore, a Forgotten Tome can be found here if your character is of the Dominion.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "exploration_achievements",
+            "name": "achievement",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Silumm",
+        "page_title": "Online:Silumm",
+        "revision_id": 3598195,
+        "retrieved_at": "2026-08-12T21:34:19Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}

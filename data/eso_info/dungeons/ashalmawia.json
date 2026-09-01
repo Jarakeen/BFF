@@ -1,0 +1,28 @@
+{
+    "id": "ashalmawia",
+    "name": "Ashalmawia",
+    "content_type": "dungeon",
+    "summary": "Ashalmawia is a delve and shrine to Molag Bal found in the West Gash region of Vvardenfell, northeast of Gnisis, containing Worm cultists and Daedra. Galur Rithari, a Dunmer vampire and former Buoyant Armiger, can be found in the sunken vaults, feeding on the Worm cultists. Cultists are performing rituals in multiple locations throughout the ruins, which will summon additional Daedra to attack you. Ash Hoppers, Fetcherflies and Shroom Beetles are found in numbers within. Fiendroth are found outside. It sits atop a hill east of the Ald Velothi Harbor House and southwest of the Urshilaku Camp Wayshrine.",
+    "location": "",
+    "boss_ids": [],
+    "achievements": [
+        {
+            "id": "morrowind_achievements",
+            "name": "achievements",
+            "description": "",
+            "points": null,
+            "source": null
+        }
+    ],
+    "related_npcs": [],
+    "notes": [
+        "The ruin also appeared in Morrowind."
+    ],
+    "source": {
+        "url": "https://en.uesp.net/wiki/Online:Ashalmawia",
+        "page_title": "Online:Ashalmawia",
+        "revision_id": 3570073,
+        "retrieved_at": "2026-08-12T21:13:20Z",
+        "license": "CC BY-SA 2.5 (UESP)"
+    }
+}
