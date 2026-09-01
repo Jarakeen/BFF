@@ -43,26 +43,49 @@ Database-backed ESO information exists for skills, morphs, skill ranks, coeffici
 ---
 
 # PHASE 1 · Canonical Build System
-**Status: 🟢 / 🟡**
+**Status: 🟢 Backend foundation / 🟡 UI & downstream adoption**
 
 A Build is the reusable canonical representation of one character configuration.
 
 ```text
 Character
- └── Build
+ ├── Identity
+ ├── Character-owned progression
+ │    ├── Owned skill lines
+ │    └── Passive ranks
+ └── Build(s)
       ├── Race / Class
       ├── Gear / Traits / Enchants
       ├── Skills / Morphs / Ultimates
-      ├── Passives / CP
+      ├── CP
       ├── Mundus / Food / Potions
       └── Configuration
 ```
 
 A character may have many builds. The same saved Character → Build must ultimately be selectable everywhere, including Optimization, Raid Planning, Encounter Analysis, and Log Analysis. No rebuilding the same person five times because software apparently developed paperwork envy.
 
-**Remaining:** finish shared character-level progression/ownership persistence and make saved Character → Build selection authoritative across downstream pages.
+## Completed canonical persistence foundation
 
-**Exit criteria:** a real character can have reusable database-backed builds that downstream systems consume directly.
+- 🟢 stable canonical character identity separate from build identity
+- 🟢 same account + same character can own many builds without duplication
+- 🟢 different characters on the same account remain distinct
+- 🟢 existing `character_id` survives legacy roster resync
+- 🟢 stable build IDs preserved through canonical build persistence
+- 🟢 blank/template legacy rows do not become authoritative canonical builds
+- 🟢 character-scoped `owned_skill_lines` persist independently of build payloads
+- 🟢 canonical catalog schema v3 adds character-scoped `passive_ranks`
+- 🟢 passive-rank updates are case-insensitive, normalized, and removable by rank 0
+- 🟢 character progression survives legacy build resync and does not mutate individual build payloads
+- 🟢 `Medicinal Use` can now be resolved from canonical character progression into potion cadence
+
+## Remaining Phase 1 adoption work
+
+- expose character-owned progression in the Builds/character UI
+- make passive ranks and owned skill lines editable without requiring direct JSON manipulation
+- make saved Character → Build selection authoritative across downstream pages
+- migrate remaining page-specific identity/build reconstruction onto the canonical catalog
+
+**Exit criteria:** a real character can have reusable database-backed builds and character-owned progression that downstream systems consume directly.
 
 ---
 
@@ -74,7 +97,7 @@ The existing EffectVariant / effect-resolution architecture remains authoritativ
 ```text
 ESO Database
      ↓
-Skill / Morph / Gear
+Skill / Morph / Gear / Consumable
      ↓
 EffectVariant
      ↓
@@ -86,6 +109,8 @@ Normalized Effects
 ```
 
 **Rule:** do not create a second competing hard-coded effect dictionary.
+
+The architecture now also includes a dedicated `CONSUMABLE` effect layer. A selected potion represents **available capability**, not standing uptime. Temporal activation is projected explicitly later.
 
 **Remaining:** broaden real-build effect detection and character-owned passive coverage while keeping conditional effects out of standing state.
 
@@ -275,20 +300,23 @@ The audit explicitly separates ordinary recovery from explicit restores and stat
 
 ### Explicit Phase 4 boundaries
 
-The following remain deferred and explicit rather than guessed:
+The following were deferred from Phase 4 rather than guessed:
 
 - unverified percentage cost-increase ordering
 - unmeasured Light Armor Evocation piece counts
 - exact current heavy-attack base restore values where live precision is insufficient
 - automatic heavy-attack scheduling
-- potion resource events/effects
 - actual conditional-proc trigger/cooldown scheduling
 - Enlivening Overflow / Nature's Gift / Absorb trigger timing from combat events
 - exceptional recovery suppression/remapping such as Stormweaver's Cavort
 - dynamic/unmapped Champion Point behavior
-- canonical persisted character-level skill-line ownership
 
-These boundaries feed later real-build, conditional-effect, and temporal-combat phases. They are not hidden inside the Phase 4 calculation.
+Two important Phase 4 deferrals have since advanced in Phase 5:
+
+- 🟢 potion resource-use events and timed potion effects now have an explicit source-backed temporal foundation
+- 🟢 canonical character-level skill-line ownership and passive-rank persistence now exist
+
+These later improvements do not change the historical Phase 4 closeout boundary; they extend the engine in the intended later phases.
 
 ### Final closeout evidence
 
@@ -301,31 +329,219 @@ These boundaries feed later real-build, conditional-effect, and temporal-combat 
 ---
 
 # PHASE 5 · Real Build Resolution
-**Status: 🔴 Next active phase**
+**Status: 🟡 Active · advanced backend foundation**
 
 Prove the actual ESO database → effect resolver → build aggregation path across real saved builds.
 
 ```text
 REAL DB
  ↓
-Skill / Morph / Gear
+Skill / Morph / Gear / Consumable
  ↓
 EffectVariant
  ↓
 Repositories
  ↓
-Build Resolver
+Saved Build + Canonical Character
  ↓
-Normalization
+Build / Capability Resolver
  ↓
-Coverage
+Temporal Activation where required
+ ↓
+Coverage / Unresolved Evidence
 ```
 
-Phase 5 now inherits a working real saved-build bridge from Phase 4. The focus shifts from “can this build sustain this modeled activity?” to “what does this actual build provide, require, and leave conditional/unresolved?”
+Phase 5 inherits the real saved-build bridge from Phase 4 and is now actively proving what an actual saved character/build provides, requires, and leaves conditional or unresolved.
+
+## Completed Phase 5 foundations
+
+### Version-aware combat semantics
+
+- 🟢 U50 remains reproducible as explicit historical/current semantics
+- 🟢 U51 is represented as a separate game-update vocabulary rather than mutating U50 evidence
+- 🟢 named combat buffs are update-aware
+- 🟢 U51 Brutality/Savagery consolidation semantics are versioned
+- 🟢 U51 Mundus changes are versioned
+- 🟢 Alchemy trait migrations are versioned
+- 🟢 strict U51 source resolution rejects obsolete U50 names unless a legacy saved-label migration explicitly opts in
+
+### Character-owned progression
+
+- 🟢 stable canonical character/build identity bridge
+- 🟢 persisted character-owned skill-line ownership
+- 🟢 canonical catalog schema v3 with character-scoped passive ranks
+- 🟢 passive ranks survive build/legacy resync without contaminating build payloads
+- 🟢 `Medicinal Use` rank can flow from canonical character progression into potion cadence
+
+### U50 Alchemy source recovery and database import
+
+Recovered U50 Alchemy evidence now forms a canonical source-backed corpus rather than a hand-maintained potion list.
+
+- 🟢 **30** canonical U50 Alchemy effect names recovered
+- 🟢 **1,399** canonical U50 formulas represented
+- 🟢 source corpus rebuilt from recovered UESP pages with malformed/table-artifact rows quarantined rather than guessed
+- 🟢 all expected U50 effect names accounted for
+- 🟢 database import created/linked Potion and Poison `EffectVariant` rows without duplicating existing canonical effect names
+- 🟢 **60** Alchemy variants imported: **30 Potion + 30 Poison**
+- 🟢 source provenance attached to imported variants
+- 🟢 pre-import database backup retained
+
+Canonical U50 vocabulary includes:
+
+`Breach, Cowardice, Defile, Detection, Enervation, Entrapment, Fracture, Heroism, Hindrance, Increase Armor, Increase Spell Power, Increase Spell Resist, Increase Weapon Power, Invisible, Lingering Health, Maim, Protection, Ravage Health, Ravage Magicka, Ravage Stamina, Restore Health, Restore Magicka, Restore Stamina, Speed, Spell Critical, Timidity, Uncertainty, Unstoppable, Vitality, Weapon Critical`.
+
+Unsupported names such as `Vulnerability` are not promoted into the U50 Alchemy vocabulary without source evidence.
+
+### Crafted-potion identity and saved-build availability
+
+Potion architecture now separates effect family from reagent formula.
+
+```text
+Saved human label
+      ↓
+Known legacy alias or canonical formula ID
+      ↓
+Canonical effect family
+      ↓
+One or more valid reagent formulas
+      ↓
+Potion EffectVariants
+      ↓
+CONSUMABLE capability
+```
+
+- 🟢 exact canonical formula IDs identify one specific recipe
+- 🟢 human legacy aliases identify an effect family and may resolve to multiple equivalent recipes
+- 🟢 ambiguous unknown labels fail closed instead of selecting an arbitrary recipe
+- 🟢 merchant/store names are compatibility aliases only, not the canonical potion catalog
+- 🟢 `spell power` resolves to the exact U50 family:
+  - Restore Magicka
+  - Increase Spell Power
+  - Spell Critical
+- 🟢 `spell power` has **2** equivalent validated reagent formulas
+- 🟢 legacy `Health Elixir` / `Elixir of Health` resolve to the Restore Health family without inventing tri-stat effects
+- 🟢 Restore Health family currently exposes **37** equivalent U50 reagent formulas
+
+A saved potion proves **availability only**. It is not applied to static/standing character stats.
+
+### Source-backed explicit potion-use event
+
+Potion activation now has its own temporal event model rather than being smuggled into standing state.
+
+For the max-tier U50 source rows:
+
+- 🟢 Essence of Magicka instant restore: **7,582 Magicka**
+- 🟢 Essence of Health instant restore: **8,369 Health**
+- 🟢 ordinary max-tier timed Alchemy duration: **36.6s**
+- 🟢 source `triple_duration` candidate retained separately: **40.6s**
+- 🟢 triple duration is **not** assumed unless formula evidence proves all three reagents carry the trait
+
+Potion use separates instant and timed behavior:
+
+```text
+PotionUseEvent
+├── Instant resource event
+│    ├── Restore Health
+│    ├── Restore Magicka
+│    └── Restore Stamina
+└── Timed named-buff grants
+```
+
+U50 named-buff routing now includes:
+
+- Restore Health → Major Fortitude
+- Restore Magicka → Major Intellect
+- Restore Stamina → Major Endurance
+- Increase Spell Power → Major Sorcery
+- Increase Weapon Power → Major Brutality
+- Spell Critical → Major Prophecy
+- Weapon Critical → Major Savagery
+
+These reuse the existing named-combat-buff semantics instead of duplicating stat percentages inside potion code.
+
+### Explicit active potion windows
+
+A caller can project one explicit potion-use event into a point-in-time combat snapshot.
+
+For the current 36.6s ordinary source duration:
+
+```text
+t =  0.0s → active
+t = 12.0s → active
+t = 36.5s → active
+t = 36.6s → expired
+```
+
+- 🟢 expiry is exact at the duration boundary
+- 🟢 potion buffs merge into an existing explicit `CombatState` without overwriting unrelated buffs
+- 🟢 instant resource restores are not repeated by the active-window projection
+- 🟢 selected potions are never treated as permanently active
+
+### Potion cooldown and Medicinal Use cadence
+
+Potion cadence is modeled separately from effect duration.
+
+- 🟢 base potion cooldown: **45.0s**
+- 🟢 Medicinal Use rank 0: ×1.00 duration
+- 🟢 Medicinal Use rank 1: ×1.10 duration
+- 🟢 Medicinal Use rank 2: ×1.20 duration
+- 🟢 Medicinal Use rank 3: ×1.30 duration
+- 🟢 floating-point boundary arithmetic normalized so public timing values remain deterministic
+
+For a 36.6s base buff:
+
+```text
+Medicinal Use rank 0
+  duration = 36.60s
+  cooldown = 45.00s
+  gap      =  8.40s
+
+Medicinal Use rank 3
+  duration = 47.58s
+  cooldown = 45.00s
+  overlap  =  2.58s
+```
+
+The cadence model does not infer that a character owns Medicinal Use. The rank must come from canonical character progression; absent rank resolves to 0 without guessing.
+
+### Real saved-build potion validation
+
+**Magrat → DF Healer**
+
+Saved potion: `spell power`
+
+- resolved formulas: **2**
+- instant Restore Magicka: **7,582**
+- timed Increase Spell Power: **36.6s** base
+- timed Spell Critical: **36.6s** base
+- named buffs:
+  - Major Intellect
+  - Major Sorcery
+  - Major Prophecy
+- explicit active-window audit:
+  - active at 36.5s
+  - expired at 36.6s without Medicinal Use
+
+**YOUR TANK BUILD**
+
+Saved potion: `Health Elixir`
+
+- resolved formulas: **37**
+- instant Restore Health: **8,369**
+- named buff: Major Fortitude
+- active at 36.5s and expired at 36.6s without Medicinal Use
+
+### Latest verified regression checkpoint
+
+- 🟢 targeted canonical catalog tests green
+- 🟢 character passive-rank persistence tests green
+- 🟢 potion availability/use/window/cadence tests green
+- 🟢 production saved-build potion audits resolve without unresolved potion errors
+- 🟢 full regression suite: **1,586 passed** on **2026-09-01**
 
 ## Update 51 combat-semantics migration
 
-Update 51 changes shared combat semantics across multiple source families, so this is a Phase 5 architecture dependency rather than a potion-only patch.
+Update 51 changes shared combat semantics across multiple source families, so this remains a Phase 5 architecture dependency rather than a potion-only patch.
 
 **Canonical rule:** version the combat-effect meaning, not just the source label. Skills, buffs, Alchemy, Mundus, class passives, gear, and saved-build aliases must resolve through the same update-aware effect vocabulary.
 
@@ -342,7 +558,7 @@ Confirmed U51 migration targets from the current PTS evidence:
 - Alchemy gains Mending, Vexation, Damage Shield, Heal Absorption, and Force.
 - Alchemy Maim is removed/replaced by Cowardice, including previously crafted potions.
 
-Potion architecture must therefore model **trait combinations / formulas**, not a fixed merchant-potion list. Merchant/Crown equivalents are aliases/evidence only. Common legacy saved labels such as `spell power`, `weapon power`, `tri-stat`, and `health` remain loadable aliases but must not become canonical mechanics.
+Potion architecture therefore models **trait combinations / formulas**, not a fixed merchant-potion list. Merchant/Crown equivalents remain aliases/evidence only.
 
 ```text
 saved legacy label
@@ -353,10 +569,8 @@ canonical potion formula / trait combination
        ↓
 versioned Alchemy trait definitions
        ↓
-EffectVariant / combat-state effects
+EffectVariant / temporal combat-state effects
 ```
-
-Likewise, skill and buff sources must resolve through the same version-aware vocabulary so U50 Sorcery/Prophecy evidence can remain reproducible without leaking obsolete semantics into U51 calculations.
 
 **Migration safety rules:**
 
@@ -365,19 +579,21 @@ Likewise, skill and buff sources must resolve through the same version-aware voc
 3. Prefer canonical shared effects over source-specific hard-coding.
 4. Keep selected potion availability separate from timed potion activation/uptime.
 5. Derive legal crafted potions from Alchemy trait/reagent compatibility rather than hand-maintaining a short named-potion catalog.
+6. U51 temporal potion values must fail closed until a U51 tier-value source corpus exists.
 
-Immediate Phase 5 priorities:
+## Remaining Phase 5 priorities
 
-1. establish the version-aware combat-effect vocabulary required by U51 before expanding potion resolution
-2. persist/resolve character-level progression and skill-line ownership authoritatively rather than relying on audit assumptions
-3. run real saved builds through the existing EffectVariant/effect repository path
-4. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection
-5. separate standing effects from conditional/triggered effects without promoting proc behavior to permanent sheet state
-6. build the crafted-potion formula/trait catalog with U50 legacy aliases and U51 migration semantics
-7. produce an auditable real-build capability/coverage report with explicit unresolved evidence
-8. remove final-layer patches where the canonical repository/resolver should own the behavior
+1. expose/edit character-owned skill lines and passive ranks in the Builds/character UI
+2. replace free-text potion entry with a canonical crafted-potion/effect-family picker while preserving legacy aliases
+3. continue running real saved builds through the production `EffectVariant` / capability path
+4. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection across broader saved-build samples
+5. integrate consumable availability into build capability reporting without accidentally promoting `potion_use` effects to permanent/standing support
+6. keep standing effects separate from conditional/triggered effects and hand temporal proc mechanics to Phase 7/8
+7. import/verify U51 Alchemy tier values when authoritative source data exists
+8. produce a broader auditable real-build capability/coverage report with explicit unresolved evidence
+9. remove remaining final-layer patches where the canonical repository/resolver should own the behavior
 
-**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, potions, and conditional effects through the active game-update semantics without final-layer patching.
+**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, potions, and conditional effects through the active game-update semantics without final-layer patching or guessed temporal uptime.
 
 ---
 
@@ -402,9 +618,25 @@ Proc critical-eligibility policy exists as a static foundation, but temporal pro
 ---
 
 # PHASE 8 · Combat State
-**Status: 🟢 Named-buff/static-state foundation / 🔴 temporal engine**
+**Status: 🟢 Named-buff + explicit potion-window foundation / 🔴 full temporal engine**
 
-Named active buffs and target states already route through static combat calculations. Full time-aware CombatState remains later work.
+Named active buffs and target states already route through static combat calculations. Phase 5 additionally delivered a first explicit source-backed temporal projection for potion-use events.
+
+```text
+Potion availability
+      ↓
+Explicit PotionUseEvent
+      ↓
+Instant restore + timed grants
+      ↓
+PotionActiveWindow(elapsed time)
+      ↓
+Explicit CombatState snapshot
+```
+
+Current temporal foundation can answer whether a potion-granted named buff is active at a caller-supplied elapsed time, can apply an explicit Medicinal Use duration multiplier, and can reason about refresh gap/overlap against potion cooldown.
+
+It still does **not** automatically schedule potion use, infer rotation behavior, or simulate arbitrary proc/cooldown state.
 
 ```text
 CombatState
@@ -417,6 +649,8 @@ CombatState
 ├── Position
 └── Active Mechanics
 ```
+
+**Remaining:** generalize the same explicit time/state discipline to skills, procs, set effects, cooldowns, stacks, encounter phases, and action scheduling.
 
 **Exit criteria:** BFF can answer “what is true right now?” rather than only “what can this build theoretically provide?”
 
