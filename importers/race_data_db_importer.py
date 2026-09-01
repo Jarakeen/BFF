@@ -3,7 +3,7 @@ Black Feather Foundry
 Racial Data -> ESO.db Importer
 
 Reads:
-    data/raw/racial_data.json
+    research/raw/racial_data.json
 
 Writes:
     data/eso.db
@@ -30,21 +30,14 @@ import sqlite3
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-SOURCE_PATH = (
-    ROOT
-    / "data"
-    / "raw"
-    / "racial_data.json"
-)
+from services.paths import DATA, RAW_DATA
 
-DB_PATH = (
-    ROOT
-    / "data"
-    / "eso.db"
-)
+SOURCE_PATH = RAW_DATA / "racial_data.json"
+DB_PATH = DATA / "eso.db"
 
 
 STAT_KEYS = {
