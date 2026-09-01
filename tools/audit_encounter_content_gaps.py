@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.encounter_content_gap_audit import audit_content_encounters
+from services.paths import ENCOUNTER_EVIDENCE, ESO_INFO
 
 
 def main() -> int:
@@ -21,12 +22,12 @@ def main() -> int:
     parser.add_argument(
         "--packet-dir",
         type=Path,
-        default=Path("data/encounter_evidence"),
+        default=ENCOUNTER_EVIDENCE,
     )
     parser.add_argument(
         "--source-root",
         type=Path,
-        default=Path("data/eso_info"),
+        default=ESO_INFO,
         help="Root containing tracked ESO content records with boss_ids",
     )
     args = parser.parse_args()
