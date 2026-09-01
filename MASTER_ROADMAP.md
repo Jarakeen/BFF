@@ -323,16 +323,61 @@ Coverage
 
 Phase 5 now inherits a working real saved-build bridge from Phase 4. The focus shifts from “can this build sustain this modeled activity?” to “what does this actual build provide, require, and leave conditional/unresolved?”
 
+## Update 51 combat-semantics migration
+
+Update 51 changes shared combat semantics across multiple source families, so this is a Phase 5 architecture dependency rather than a potion-only patch.
+
+**Canonical rule:** version the combat-effect meaning, not just the source label. Skills, buffs, Alchemy, Mundus, class passives, gear, and saved-build aliases must resolve through the same update-aware effect vocabulary.
+
+Confirmed U51 migration targets from the current PTS evidence:
+
+- Major/Minor Brutality provide both Weapon and Spell Damage; Sorcery is removed/replaced by Brutality.
+- Major/Minor Savagery provide both Weapon and Spell Critical Chance; Prophecy is removed/replaced by Savagery.
+- Exploitation replaces Minor Prophecy with a unique 2974 Offensive Penetration group buff.
+- Illuminate replaces Minor Sorcery with a unique 2974 Armor group buff.
+- The Warrior grants both Weapon and Spell Damage.
+- The Apprentice stops granting Spell Damage and instead grants 8% Experience and Inspiration gain.
+- Alchemy Weapon/Spell Power traits consolidate into Increase Power.
+- Alchemy Weapon/Spell Critical traits consolidate into Critical.
+- Alchemy gains Mending, Vexation, Damage Shield, Heal Absorption, and Force.
+- Alchemy Maim is removed/replaced by Cowardice, including previously crafted potions.
+
+Potion architecture must therefore model **trait combinations / formulas**, not a fixed merchant-potion list. Merchant/Crown equivalents are aliases/evidence only. Common legacy saved labels such as `spell power`, `weapon power`, `tri-stat`, and `health` remain loadable aliases but must not become canonical mechanics.
+
+```text
+saved legacy label
+       ↓
+version-aware alias
+       ↓
+canonical potion formula / trait combination
+       ↓
+versioned Alchemy trait definitions
+       ↓
+EffectVariant / combat-state effects
+```
+
+Likewise, skill and buff sources must resolve through the same version-aware vocabulary so U50 Sorcery/Prophecy evidence can remain reproducible without leaking obsolete semantics into U51 calculations.
+
+**Migration safety rules:**
+
+1. Preserve U50 evidence and aliases for historical/current-build reproducibility until U51 is live.
+2. Do not silently reinterpret old source rows as U51 mechanics; record the active game update/provenance.
+3. Prefer canonical shared effects over source-specific hard-coding.
+4. Keep selected potion availability separate from timed potion activation/uptime.
+5. Derive legal crafted potions from Alchemy trait/reagent compatibility rather than hand-maintaining a short named-potion catalog.
+
 Immediate Phase 5 priorities:
 
-1. persist/resolve character-level progression and skill-line ownership authoritatively rather than relying on audit assumptions
-2. run real saved builds through the existing EffectVariant/effect repository path
-3. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection
-4. separate standing effects from conditional/triggered effects without promoting proc behavior to permanent sheet state
-5. produce an auditable real-build capability/coverage report with explicit unresolved evidence
-6. remove final-layer patches where the canonical repository/resolver should own the behavior
+1. establish the version-aware combat-effect vocabulary required by U51 before expanding potion resolution
+2. persist/resolve character-level progression and skill-line ownership authoritatively rather than relying on audit assumptions
+3. run real saved builds through the existing EffectVariant/effect repository path
+4. verify passive, gear, mythic, arena weapon, skill, buff/debuff, and conditional-effect detection
+5. separate standing effects from conditional/triggered effects without promoting proc behavior to permanent sheet state
+6. build the crafted-potion formula/trait catalog with U50 legacy aliases and U51 migration semantics
+7. produce an auditable real-build capability/coverage report with explicit unresolved evidence
+8. remove final-layer patches where the canonical repository/resolver should own the behavior
 
-**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, and conditional effects without final-layer patching.
+**Exit criteria:** a real database-backed character correctly reports buffs, debuffs, passives, gear effects, mythics, arena effects, skills, potions, and conditional effects through the active game-update semantics without final-layer patching.
 
 ---
 
@@ -517,74 +562,3 @@ STRATEGY OPTIONS
        ↓
 RECOMMENDATION + EXPLANATION
 ```
-
-**Exit criteria:** BFF can recommend the strongest configuration for a specific roster, encounter, strategy, and execution level.
-
----
-
-# 🧭 Where We Actually Are
-
-| Area | Status |
-|---|---|
-| ESO database | 🟢 |
-| Skill / morph data | 🟢 |
-| Skill coefficients | 🟢 |
-| Type-8 coefficient semantics | 🟢 unified |
-| Skill scaling | 🟢 |
-| Raw skill damage | 🟢 |
-| Normal skill crit eligibility | 🟢 |
-| Crit calculation | 🟢 |
-| Critical Healing | 🟢 |
-| Critical Resistance | 🟢 |
-| Penetration | 🟢 |
-| Mitigation | 🟢 |
-| Damage Done → skills | 🟢 |
-| Damage Taken → skills | 🟢 |
-| Per-component damage routing | 🟢 foundation |
-| Component classification DB | 🟢 2,376 persisted / 824 explicit unresolved |
-| Block Cost | 🟢 |
-| Block Mitigation | 🟢 |
-| Named CombatState buffs | 🟢 foundation |
-| Proc crit eligibility | 🟢 policy foundation |
-| Combat Prayer tooltip validation | 🟢 ~0.085% residual accepted |
-| Phase 3 real-DB audit | 🟢 passed |
-| Phase 3 final test suite | 🟢 1305 passed |
-| Resource / sustain engine | 🟢 complete |
-| Saved-build sustain integration | 🟢 |
-| Phase 4 real-build audit | 🟢 passed |
-| Phase 4 final test suite | 🟢 1444 passed |
-| Gear → effects | 🟢 / 🟡 |
-| Build effect orchestration | 🟡 |
-| Real build effect detection | 🟡 next active work |
-| Full status/proc temporal engine | 🔴 |
-| Conditional uptime | 🔴 |
-| Temporal Combat State | 🔴 |
-| Encounter requirements | 🟡 |
-| Encounter evaluation | 🟡 |
-| Provider assignment | 🔴 |
-| Build optimization | 🔴 |
-| Rotation evaluation | 🔴 |
-| Combat simulation | 🔴 |
-| Encounter optimization | 🔴 |
-| Explanation engine | 🔴 |
-| Log validation | 🔴 |
-| Strategy engine | 🔴 |
-
----
-
-# 🎯 Immediate Development Order After Phase 4
-
-1. **Phase 5: real saved-build effect resolution / coverage**
-2. **Finish canonical character-level progression and ownership persistence**
-3. **Conditional effect / proc engine**
-4. **Temporal Combat State**
-5. **Encounter requirements and evaluation**
-6. **Provider assignment**
-7. **Build optimization**
-8. **Rotation / simulation**
-9. **Encounter-aware optimization**
-10. **Explanation**
-11. **Log validation**
-12. **Strategy engine**
-
-The project now has both a coherent static combat rules engine and a coherent resource/sustain engine. Phase 5 shifts attention to proving that real saved builds expose the effects and capabilities those engines are supposed to consume.
