@@ -12,9 +12,7 @@ if str(ROOT) not in sys.path:
 from minmax.skill_component_missing_health_healing_repository import (
     SkillComponentMissingHealthHealingRepository,
 )
-from tools.audit_phase6_heal_shield_unresolved_taxonomy import (
-    load_unresolved_heal_shield_taxonomy,
-)
+from tools.audit_phase6_heal_shield_unresolved_taxonomy import load_unresolved_taxonomy
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 
@@ -39,7 +37,7 @@ def load_missing_health_healing_audit(
     repository = SkillComponentMissingHealthHealingRepository(path)
     rows: list[MissingHealthHealingAuditRow] = []
 
-    for candidate in load_unresolved_heal_shield_taxonomy(path, limit=limit):
+    for candidate in load_unresolved_taxonomy(path, limit=limit):
         if candidate.category != "missing_health_healing":
             continue
         healing = repository.resolve(candidate.skill_rank_id, candidate.coefficient_number)
