@@ -96,6 +96,43 @@ U51_TRANSITIONS: tuple[EffectTransition, ...] = (
 )
 
 
+# Source-visible U50 Alchemy effect names already represented by the repository's
+# historical importer, plus Timidity which is a valid craftable Alchemy effect
+# the build UI must be able to represent even though the old importer omitted it.
+U50_ALCHEMY_TRAITS = frozenset(
+    {
+        "Breach",
+        "Cowardice",
+        "Defile",
+        "Detection",
+        "Enervation",
+        "Entrapment",
+        "Fracture",
+        "Heroism",
+        "Hindrance",
+        "Increase Armor",
+        "Increase Spell Power",
+        "Increase Spell Resist",
+        "Increase Weapon Power",
+        "Invisible",
+        "Lingering Health",
+        "Maim",
+        "Protection",
+        "Ravage Health",
+        "Restore Health",
+        "Restore Magicka",
+        "Restore Stamina",
+        "Speed",
+        "Spell Critical",
+        "Timidity",
+        "Uncertainty",
+        "Unstoppable",
+        "Vitality",
+        "Weapon Critical",
+    }
+)
+
+
 U51_NEW_ALCHEMY_TRAITS = frozenset(
     {
         "Mending",
@@ -103,6 +140,19 @@ U51_NEW_ALCHEMY_TRAITS = frozenset(
         "Damage Shield",
         "Heal Absorption",
         "Force",
+    }
+)
+
+
+U51_ALCHEMY_TRAITS = frozenset(
+    {
+        *(
+            transition.new_name
+            for transition in U51_TRANSITIONS
+            if transition.domain == "alchemy"
+        ),
+        *(trait for trait in U50_ALCHEMY_TRAITS if trait not in {transition.old_name for transition in U51_TRANSITIONS if transition.domain == "alchemy"}),
+        *U51_NEW_ALCHEMY_TRAITS,
     }
 )
 
@@ -187,3 +237,12 @@ def resolve_alchemy_trait_name(
         game_update=game_update,
         allow_legacy_alias=allow_legacy_alias,
     )
+
+
+def is_known_alchemy_trait(name: str, *, game_update: GameUpdate | str) -> bool:
+    """Return whether a normalized trait belongs to the update's known vocabulary."""
+
+    update = normalize_game_update(game_update)
+    vocabulary = U50_ALCHEMY_TRAITS if update is GameUpdate.U50 else U51_ALCHEMY_TRAITS
+    key = _norm(name)
+    return any(_norm(trait) == key for trait in vocabulary)
