@@ -3,6 +3,7 @@ from __future__ import annotations
 """Read-only content-scoped audit for canonical encounter recovery coverage."""
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import sqlite3
 
@@ -51,6 +52,9 @@ class EncounterContentGapAudit:
     packet_gaps: tuple[EncounterPacketGap, ...]
     encounters_without_packets: tuple[str, ...]
     packets_without_encounters: tuple[str, ...]
+    source_declared_encounters: tuple[str, ...]
+    source_declared_missing_db: tuple[str, ...]
+    source_declared_missing_packets: tuple[str, ...]
 
 
 def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
@@ -99,6 +103,34 @@ def _persisted_refs(connection: sqlite3.Connection, encounter_id: str) -> set[st
     }
 
 
+def _source_declared_encounters(source_root: Path, content_id: str) -> tuple[str, ...]:
+    """Return boss_ids declared by the tracked UESP content record, if present."""
+
+    if not source_root.exists():
+        return ()
+
+    for path in sorted(source_root.glob(f"*/{content_id}.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(payload, dict) or str(payload.get("id", "")).strip() != content_id:
+            continue
+        boss_ids = payload.get("boss_ids")
+        if not isinstance(boss_ids, list):
+            return ()
+        return tuple(
+            sorted(
+                {
+                    str(encounter_id).strip()
+                    for encounter_id in boss_ids
+                    if str(encounter_id).strip()
+                }
+            )
+        )
+    return ()
+
+
 def audit_encounter_packet(
     connection: sqlite3.Connection,
     packet_path: Path,
@@ -138,6 +170,7 @@ def audit_content_encounters(
     *,
     content_id: str,
     packet_dir: Path,
+    source_root: Path = Path("data/uesp"),
 ) -> EncounterContentGapAudit:
     content_row = connection.execute(
         "SELECT name FROM content WHERE id=?",
@@ -183,6 +216,7 @@ def audit_content_encounters(
 
     encounter_ids = {row.encounter_id for row in database_encounters}
     packet_ids = {row.encounter_id for row in packet_gaps}
+    source_ids = set(_source_declared_encounters(source_root, content_id))
 
     return EncounterContentGapAudit(
         content_id=content_id,
@@ -191,4 +225,7 @@ def audit_content_encounters(
         packet_gaps=tuple(packet_gaps),
         encounters_without_packets=tuple(sorted(encounter_ids - packet_ids)),
         packets_without_encounters=tuple(sorted(packet_ids - encounter_ids)),
+        source_declared_encounters=tuple(sorted(source_ids)),
+        source_declared_missing_db=tuple(sorted(source_ids - encounter_ids)),
+        source_declared_missing_packets=tuple(sorted(source_ids - packet_ids)),
     )
