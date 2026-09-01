@@ -20,7 +20,11 @@ class CharacterProgression:
 
 
 class CharacterProgressionService:
-    """Persist character-owned progression without copying it into build payloads."""
+    """Persist character-owned progression without copying it into builds.
+
+    Present keys are known facts, including an explicit zero. Missing keys are
+    unknown/unrecorded and must not be interpreted as zero by calculators.
+    """
 
     def __init__(self, catalog_service: BuildCatalogService) -> None:
         self.catalog_service = catalog_service
@@ -55,7 +59,7 @@ class CharacterProgressionService:
                 points = int(raw_points)
             except (TypeError, ValueError):
                 continue
-            if points <= 0:
+            if points < 0:
                 continue
             seen.add(key)
             result[name] = points
@@ -80,11 +84,7 @@ class CharacterProgressionService:
         passive_ranks: dict[str, int],
         passive_cp_points: dict[str, int],
     ) -> CharacterProgression | None:
-        """Replace one character's progression snapshot atomically.
-
-        Rank/point zero is represented by omission. For calculations that means
-        no benefit is applied unless ownership/allocation was explicitly saved.
-        """
+        """Replace one character's known progression snapshot atomically."""
         catalog = self.catalog_service.load()
         for index, character in enumerate(catalog["characters"]):
             if character.get("character_id") != character_id:
