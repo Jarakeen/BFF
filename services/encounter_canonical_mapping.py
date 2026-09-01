@@ -42,6 +42,13 @@ def _title_from_key(key: str, *, suffix: str = "") -> str:
     return value.replace("_", " ").strip().title()
 
 
+def _v3_note(note: str) -> str:
+    return (
+        f"{note}; schema v3 preserves each independent source in "
+        "encounter_fact_evidence"
+    )
+
+
 def map_candidate_to_canonical(
     candidate: EncounterPromotionCandidate,
 ) -> EncounterCanonicalMapping | None:
@@ -49,6 +56,7 @@ def map_candidate_to_canonical(
 
     Only promotion-eligible facts are mapped here. Single-source facts still
     require explicit review, and conflicting facts remain blocked upstream.
+    Schema v3 can preserve the mapped fact plus every supporting evidence row.
     """
 
     if candidate.promotion_status != PROMOTION_ELIGIBLE:
@@ -67,10 +75,9 @@ def map_candidate_to_canonical(
             canonical_kind=CANONICAL_MECHANIC_PRESENCE,
             payload={"name": name, "present": True},
             source_count=fact.distinct_sources,
-            lossless_in_current_schema=False,
-            schema_note=(
-                "encounter_mechanic can store the mechanic, but one row cannot "
-                "preserve multiple independent evidence sources"
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed mechanic-presence fact"
             ),
         )
 
@@ -83,10 +90,9 @@ def map_candidate_to_canonical(
             canonical_kind=CANONICAL_PHASE,
             payload=dict(value),
             source_count=fact.distinct_sources,
-            lossless_in_current_schema=False,
-            schema_note=(
-                "encounter_phase can store the phase body, but cannot attach all "
-                "supporting source records independently"
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed phase fact"
             ),
         )
 
@@ -99,10 +105,9 @@ def map_candidate_to_canonical(
             canonical_kind=CANONICAL_PHASE_TRANSITION,
             payload=dict(value),
             source_count=fact.distinct_sources,
-            lossless_in_current_schema=False,
-            schema_note=(
-                "threshold/transition semantics can be represented only partially "
-                "by encounter_phase.threshold; multi-source provenance would be lost"
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the transition payload without flattening thresholds"
             ),
         )
 
@@ -114,10 +119,9 @@ def map_candidate_to_canonical(
             canonical_kind=CANONICAL_STATE,
             payload={"key": fact.fact_key, "value": fact.value},
             source_count=fact.distinct_sources,
-            lossless_in_current_schema=False,
-            schema_note=(
-                "the current schema has no first-class canonical encounter-state fact "
-                "with multi-source evidence links"
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores first-class reviewed encounter state"
             ),
         )
 
