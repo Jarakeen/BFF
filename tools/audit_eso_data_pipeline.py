@@ -4,8 +4,15 @@ import argparse
 import json
 import re
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from services.paths import RAW_DATA
 
 
 IMPORT_FILE_RE = re.compile(r'["\']([^"\']+\.json)["\']', re.IGNORECASE)
@@ -73,18 +80,18 @@ def print_fk_check(db: sqlite3.Connection, child: str, child_col: str, parent: s
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit ESO raw-data/import/database completeness without changing data")
     parser.add_argument("--db", default="data/eso.db")
-    parser.add_argument("--raw", default="data/raw")
-    parser.add_argument("--importers", default="importers")
+    parser.add_argument("--raw", type=Path, default=RAW_DATA)
+    parser.add_argument("--importers", type=Path, default=Path("importers"))
     args = parser.parse_args()
 
-    raw_dir = Path(args.raw)
-    importers_dir = Path(args.importers)
+    raw_dir = args.raw
+    importers_dir = args.importers
     db = sqlite3.connect(args.db)
 
     try:
         print("=== ESO DATA PIPELINE AUDIT ===")
         print(f"database={args.db}")
-        print(f"raw_dir={args.raw}")
+        print(f"raw_dir={raw_dir}")
         print()
 
         print("=== RAW JSON INVENTORY ===")
@@ -111,7 +118,7 @@ def main() -> int:
         print(f"Count: {len(unreferenced)}")
         print()
 
-        print("=== REFERENCED FILES MISSING FROM data/raw ===")
+        print(f"=== REFERENCED FILES MISSING FROM {raw_dir} ===")
         missing = sorted(referenced - raw_names)
         for name in missing:
             print(f"  {name}")
