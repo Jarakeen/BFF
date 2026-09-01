@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "content_id": "graven_deep",
+  "encounter_id": "zelvraak_the_unbreathing",
+  "encounter_name": "Zelvraak the Unbreathing",
+  "evidence": [
+    {"fact_type":"mechanic_detail","fact_key":"health_by_difficulty_uesp","value":{"normal":"2,197,602","veteran":"7,441,393","hardmode":"12,278,298"},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Health","source_revision":"3508004","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"heavy_cone_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Necrotic Wave","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"heavy_cone_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Tank Cleave","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"heavy_cone_tank_behavior","value":{"conal":true,"tank_faces_away_from_group":true,"blockable":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Necrotic Wave","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"heavy_cone_tank_behavior","value":{"conal":true,"tank_faces_away_from_group":true,"blockable":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Tank Cleave","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"terrified_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Terrified","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"terrified_turn_away","value":{"turn_away_to_avoid_fear":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Terrified","source_revision":"3508004","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"sea_orbs_exist","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"sea_orbs_exist","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Sea Orb","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"sea_orbs_exist","value":true,"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Sea Orbs","confidence":"high"},
+    {"fact_type":"failure_condition","fact_key":"sea_orb_reaches_ground_party_wipe","value":{"sea_orb_reaches_ground":true,"party_wipe":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"failure_condition","fact_key":"sea_orb_reaches_ground_party_wipe","value":{"sea_orb_reaches_ground":true,"party_wipe":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Sea Orb / Hardmode","confidence":"high"},
+    {"fact_type":"failure_condition","fact_key":"sea_orb_reaches_ground_party_wipe","value":{"sea_orb_reaches_ground":true,"party_wipe":true},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Sea Orbs","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_hardmode_count","value":{"hardmode_orb_count":4},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_hardmode_count","value":{"hardmode_orb_count":4},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Hardmode Sea Orbs","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_hardmode_count","value":{"hardmode_orb_count":4},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Sea Orbs","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_veteran_count","value":{"veteran_orb_count":2},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_veteran_count","value":{"veteran_orb_count":2},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Sea Orbs","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"sea_orb_normal_count_uesp","value":{"normal_orb_count":1},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"transition_state","fact_key":"drowning_waters_begins_around_90_percent_uesp","value":{"starts_at_approx":"90%"},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Drowning Waters","source_revision":"3508004","confidence":"medium","notes":"UESP wording says probably 90%; preserved as approximate single-source evidence."},
+
+    {"fact_type":"phase","fact_key":"afterlife_phase","value":{"label":"Afterlife/Banished","starts_at":"50%"},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - The Afterlife/Banished","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"phase","fact_key":"afterlife_phase","value":{"label":"Afterlife/Banished","starts_at":"50%"},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak's Realm","confidence":"high"},
+    {"fact_type":"phase","fact_key":"afterlife_phase","value":{"label":"Afterlife/Banished","starts_at":"50%"},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Afterlife","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"afterlife_healing_ghosts","value":{"touch_glowing_ghosts_to_heal":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - The Afterlife/Banished","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"afterlife_healing_ghosts","value":{"touch_glowing_ghosts_to_heal":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak's Realm","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"afterlife_healing_ghosts","value":{"touch_glowing_ghosts_to_heal":true},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Afterlife","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"afterlife_speed_bonus_uesp","value":{"soul_infusion_speed_per_stack_percent":25,"duration_seconds":10},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - The Afterlife/Banished","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"fractured_souls_exist","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - The Afterlife/Banished","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"fractured_souls_exist","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak's Realm - smaller ghosts","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"fractured_souls_exist","value":true,"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Afterlife swimming skeletons","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"fractured_souls_affect_post_afterlife_add","value":{"more_reaching_center_strengthens_post_phase_add":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak's Realm","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"fractured_souls_affect_post_afterlife_add","value":{"more_reaching_center_strengthens_post_phase_add":true},"source_type":"guide","source_name":"Ultimate Veteran/Hardmode Graven Deep Guide","source_locator":"Third Boss - Afterlife","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"split_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Split","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"split_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Shades","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"split_exists","value":true,"source_type":"guide","source_name":"Zelvraak Hard Mode Strategy Guide","source_locator":"Split phase","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"split_four_interruptible_shades","value":{"shade_count":4,"must_interrupt":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Split","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"split_four_interruptible_shades","value":{"shade_count":4,"must_interrupt":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Shades","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"split_four_interruptible_shades","value":{"shade_count":4,"must_interrupt":true},"source_type":"guide","source_name":"Zelvraak Hard Mode Strategy Guide","source_locator":"Split phase assignments","confidence":"high"},
+    {"fact_type":"transition","fact_key":"split_thresholds","value":{"thresholds":["75%","25%"]},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Shades","confidence":"high"},
+    {"fact_type":"transition","fact_key":"split_thresholds","value":{"thresholds":["75%","25%"]},"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Zelvraak HM - wait before 75% and 25% split phases","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"inferno_exists","value":true,"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Inferno","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"inferno_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Inferno","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"inferno_response","value":{"interrupt":true},"source_type":"uesp","source_name":"UESP Online:Zelvraak the Unbreathing","source_locator":"Abilities - Inferno","source_revision":"3508004","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"inferno_response","value":{"heal_through":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_locator":"Zelvraak - Inferno","confidence":"high"}
+  ]
+}
