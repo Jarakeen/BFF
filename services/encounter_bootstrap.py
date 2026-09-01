@@ -12,6 +12,7 @@ from services.encounter_schema import ensure_encounter_schema
 @dataclass(frozen=True)
 class EncounterBootstrapPlan:
     encounter_id: str
+    legacy_boss_id: str
     content_id: str
     name: str
     slug: str
@@ -27,29 +28,75 @@ class EncounterBootstrapPlan:
 
 
 def _slugify(value: str) -> str:
-    value = re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
-    return value
+    return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
 
 
-def build_encounter_bootstrap_plan(
-    connection: sqlite3.Connection,
-    boss_id: str,
-) -> EncounterBootstrapPlan:
-    row = connection.execute(
+def _canonical_id(value: str) -> str:
+    return _slugify(value).replace("-", "_")
+
+
+def _legacy_boss_rows(connection: sqlite3.Connection) -> list[tuple]:
+    return connection.execute(
         """
         SELECT id, name, content_id, summary, location, species, reaction,
                source_url, source_title, revision_id, retrieved_at, license
         FROM bosses
-        WHERE id = ?
-        """,
-        (boss_id,),
-    ).fetchone()
-    if row is None:
-        raise RuntimeError(f"Legacy boss row does not exist: {boss_id!r}")
+        """
+    ).fetchall()
+
+
+def _resolve_legacy_boss_row(
+    connection: sqlite3.Connection,
+    selector: str,
+) -> tuple:
+    selector = selector.strip()
+    if not selector:
+        raise RuntimeError("Legacy boss selector is required")
+
+    rows = _legacy_boss_rows(connection)
+
+    exact_id = [row for row in rows if str(row[0]) == selector]
+    if len(exact_id) == 1:
+        return exact_id[0]
+
+    exact_name = [row for row in rows if str(row[1]).casefold() == selector.casefold()]
+    if len(exact_name) == 1:
+        return exact_name[0]
+    if len(exact_name) > 1:
+        raise RuntimeError(
+            f"Legacy boss selector is ambiguous by exact name: {selector!r}"
+        )
+
+    normalized_selector = _canonical_id(selector)
+    normalized = [
+        row
+        for row in rows
+        if _canonical_id(str(row[0])) == normalized_selector
+        or _canonical_id(str(row[1])) == normalized_selector
+    ]
+    if len(normalized) == 1:
+        return normalized[0]
+    if len(normalized) > 1:
+        choices = ", ".join(f"{row[0]!r} ({row[1]})" for row in normalized)
+        raise RuntimeError(
+            f"Legacy boss selector is ambiguous after normalization: {selector!r}; "
+            f"matches: {choices}"
+        )
+
+    raise RuntimeError(f"Legacy boss row does not exist for selector: {selector!r}")
+
+
+def build_encounter_bootstrap_plan(
+    connection: sqlite3.Connection,
+    boss_selector: str,
+) -> EncounterBootstrapPlan:
+    row = _resolve_legacy_boss_row(connection, boss_selector)
+    legacy_boss_id = str(row[0])
+    name = str(row[1] or "")
 
     content_id = str(row[2] or "").strip()
     if not content_id:
-        raise RuntimeError(f"Legacy boss {boss_id!r} has no content_id")
+        raise RuntimeError(f"Legacy boss {legacy_boss_id!r} has no content_id")
 
     content = connection.execute(
         "SELECT 1 FROM content WHERE id = ?",
@@ -57,14 +104,15 @@ def build_encounter_bootstrap_plan(
     ).fetchone()
     if content is None:
         raise RuntimeError(
-            f"Legacy boss {boss_id!r} references missing content {content_id!r}"
+            f"Legacy boss {legacy_boss_id!r} references missing content {content_id!r}"
         )
 
     return EncounterBootstrapPlan(
-        encounter_id=str(row[0]),
+        encounter_id=_canonical_id(name or legacy_boss_id),
+        legacy_boss_id=legacy_boss_id,
         content_id=content_id,
-        name=str(row[1] or ""),
-        slug=_slugify(str(row[1] or row[0])),
+        name=name,
+        slug=_slugify(name or legacy_boss_id),
         summary=str(row[3] or ""),
         location=str(row[4] or ""),
         species=str(row[5] or ""),
