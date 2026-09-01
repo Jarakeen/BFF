@@ -30,10 +30,44 @@ _CURRENT_HEALTH_CONTEXT_RE = re.compile(
 )
 
 
+def _normalize_source_text(text: str | None) -> str:
+    return " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
+
+
+def _has_current_restore(text: str | None, coefficient_number: int) -> bool:
+    normalized = _normalize_source_text(text)
+    return any(
+        int(match.group("number")) == int(coefficient_number)
+        for match in _CURRENT_RESTORE_RE.finditer(normalized)
+    )
+
+
+def _defining_resource_context(text: str | None) -> str | None:
+    """Return explicit percent-resource + current-Health scaling context.
+
+    This helper is source-agnostic. Coefficient ownership is established
+    separately by ``coef_description`` via ``Current Restore: $N`` before raw
+    tooltip/description text is allowed to corroborate the resource definition.
+    """
+
+    normalized = _normalize_source_text(text)
+    if not normalized:
+        return None
+
+    resource_match = _PERCENT_RESOURCE_CONTEXT_RE.search(normalized)
+    health_match = _CURRENT_HEALTH_CONTEXT_RE.search(normalized)
+    if resource_match is None or health_match is None:
+        return None
+
+    start = max(0, min(resource_match.start(), health_match.start()) - 80)
+    end = min(len(normalized), max(resource_match.end(), health_match.end()) + 80)
+    return normalized[start:end].strip()
+
+
 def _current_restore_evidence_window(text: str | None, coefficient_number: int) -> str | None:
     """Return tightly bounded defining context for ``Current Restore: $N``.
 
-    ESO/Uesp source formatting is not guaranteed to preserve clean sentence
+    ESO/UESP source formatting is not guaranteed to preserve clean sentence
     boundaries around runtime-display lines. For this explicit display shape,
     inspect only a short prefix before ``Current Restore: $N`` and retain it only
     when that prefix itself proves both a named percentage resource restore and
@@ -41,7 +75,7 @@ def _current_restore_evidence_window(text: str | None, coefficient_number: int) 
     tolerating missing punctuation/newline normalization.
     """
 
-    normalized = " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
+    normalized = _normalize_source_text(text)
     if not normalized:
         return None
 
@@ -79,6 +113,10 @@ class SkillComponentResourceEventRepository:
             (name,),
         ).fetchone() is not None
 
+    @staticmethod
+    def _columns(db: sqlite3.Connection, table: str) -> set[str]:
+        return {str(row[1]) for row in db.execute(f"PRAGMA table_info({table})").fetchall()}
+
     def resolve(
         self,
         skill_rank_id: int,
@@ -90,9 +128,18 @@ class SkillComponentResourceEventRepository:
         with sqlite3.connect(self.database_path) as db:
             if not all(self._table_exists(db, name) for name in ("skill_rank", "ability")):
                 return ()
+
+            ability_columns = self._columns(db, "ability")
+            rank_columns = self._columns(db, "skill_rank")
+            optional_selects = [
+                "a.raw_description" if "raw_description" in ability_columns else "NULL",
+                "a.raw_tooltip" if "raw_tooltip" in ability_columns else "NULL",
+                "sr.raw_description" if "raw_description" in rank_columns else "NULL",
+                "sr.raw_tooltip" if "raw_tooltip" in rank_columns else "NULL",
+            ]
             row = db.execute(
-                """
-                SELECT a.coef_description
+                f"""
+                SELECT a.coef_description, {', '.join(optional_selects)}
                 FROM skill_rank sr
                 JOIN ability a ON a.ability_id = sr.ability_id
                 WHERE sr.id = ?
@@ -102,14 +149,30 @@ class SkillComponentResourceEventRepository:
             if row is None:
                 return ()
 
-        evidence = extract_component_text_evidence(row[0], int(coefficient_number))
+        coef_description = row[0]
+        evidence = extract_component_text_evidence(coef_description, int(coefficient_number))
         if not evidence.fragment:
             return ()
 
-        component_text = evidence.fragment
-        current_restore_window = _current_restore_evidence_window(row[0], int(coefficient_number))
-        if current_restore_window is not None:
-            component_text = current_restore_window
+        if _has_current_restore(coef_description, int(coefficient_number)):
+            component_text = _current_restore_evidence_window(
+                coef_description,
+                int(coefficient_number),
+            )
+            if component_text is None:
+                # ``coef_description`` owns the $N runtime-display component, but
+                # UESP can preserve its defining resource rule only in raw source
+                # text. Raw text may corroborate the definition; it never owns the
+                # coefficient number by itself.
+                for source_text in row[1:]:
+                    defining = _defining_resource_context(source_text)
+                    if defining is not None:
+                        component_text = f"{defining} Current Restore: ${int(coefficient_number)}"
+                        break
+            if component_text is None:
+                return ()
+        else:
+            component_text = evidence.fragment
 
         return extract_explicit_component_resource_events(
             skill_rank_id=int(skill_rank_id),
