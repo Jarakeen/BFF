@@ -2,9 +2,11 @@ from __future__ import annotations
 
 """Read-only repository for canonical Phase 6 component resource events."""
 
+import json
 import re
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 from .skill_component_resource_event import (
     SkillComponentResourceEvent,
@@ -63,6 +65,38 @@ def _defining_resource_context(text: str | None) -> str | None:
     start = max(0, min(resource_match.start(), health_match.start()) - 80)
     end = min(len(normalized), max(resource_match.end(), health_match.end()) + 80)
     return normalized[start:end].strip()
+
+
+def _raw_json_string_values(text: str | None) -> tuple[str, ...]:
+    """Return string values from one imported ability ``raw_json`` record.
+
+    The importer stores the complete original ability payload as JSON. These
+    values are corroborating source text only; they never establish coefficient
+    ownership. Invalid/missing JSON fails closed.
+    """
+
+    try:
+        payload = json.loads(str(text or ""))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return ()
+
+    values: list[str] = []
+
+    def visit(value: Any) -> None:
+        if isinstance(value, str):
+            if value.strip():
+                values.append(value)
+            return
+        if isinstance(value, dict):
+            for child in value.values():
+                visit(child)
+            return
+        if isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(payload)
+    return tuple(values)
 
 
 def _current_restore_evidence_window(text: str | None, coefficient_number: int) -> str | None:
@@ -138,6 +172,7 @@ class SkillComponentResourceEventRepository:
                 "a.raw_tooltip" if "raw_tooltip" in ability_columns else "NULL",
                 "sr.raw_description" if "raw_description" in rank_columns else "NULL",
                 "sr.raw_tooltip" if "raw_tooltip" in rank_columns else "NULL",
+                "a.raw_json" if "raw_json" in ability_columns else "NULL",
             ]
             row = db.execute(
                 f"""
@@ -167,7 +202,13 @@ class SkillComponentResourceEventRepository:
                 # description or other raw source text. Those fields may
                 # corroborate the definition; they never own the coefficient
                 # number by themselves.
-                for source_text in row[1:]:
+                for source_text in row[1:6]:
+                    defining = _defining_resource_context(source_text)
+                    if defining is not None:
+                        component_text = f"{defining} Current Restore: ${int(coefficient_number)}"
+                        break
+            if component_text is None:
+                for source_text in _raw_json_string_values(row[6]):
                     defining = _defining_resource_context(source_text)
                     if defining is not None:
                         component_text = f"{defining} Current Restore: ${int(coefficient_number)}"
