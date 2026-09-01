@@ -32,6 +32,7 @@ class GearSetKnownEffect:
     layer: EffectLayer = EffectLayer.PROC
     magnitude: float | None = None
     duration: float | None = None
+    cooldown: float | None = None
     target_count: int | None = None
     range: float | None = None
     scaling: str | None = None
@@ -80,6 +81,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             name="minor_courage",
             magnitude=215.0,
             duration=10.0,
+            cooldown=15.0,
             target_count=4,
             range=28.0,
             scaling="initial target plus up to 3 nearby group-member bounces within 8 meters",
@@ -96,6 +98,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             name="minor_resolve",
             magnitude=2974.0,
             duration=10.0,
+            cooldown=15.0,
             target_count=4,
             range=28.0,
             scaling="initial target plus up to 3 nearby group-member bounces within 8 meters",
@@ -120,7 +123,7 @@ _KNOWN_EFFECTS: dict[int, tuple[GearSetKnownEffect, ...]] = {
             target_type=SupportTargetType.GROUP,
             category=SupportEffectCategory.BUFF,
             stacking=StackingBehavior.UNIQUE,
-            exclusivity_group="spauld er_of_ruin_aura_of_pride".replace(" ", ""),
+            exclusivity_group="spaulder_of_ruin_aura_of_pride",
         ),
     ),
     SERPENTS_DISDAIN_FIVE_PIECE_BONUS_ID: (
