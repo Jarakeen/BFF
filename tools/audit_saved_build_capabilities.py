@@ -9,6 +9,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
+from minmax.race_repository import RaceRepository
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
@@ -51,6 +53,10 @@ def main() -> int:
     service = SavedBuildCapabilityService(
         BuildService(args.builds),
         args.database,
+    )
+    service.context_factory = Phase5BuildCalculationContextFactory(
+        race_repository=RaceRepository(args.database),
+        gear_set_repository=service.gear_repository,
     )
     audits = service.audit_roster()
 
