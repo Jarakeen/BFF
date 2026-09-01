@@ -2,13 +2,14 @@
 """Recover the full U50 UESP Alchemy effect-page corpus as raw HTML.
 
 The local processed Alchemy JSON can be rebuilt only if the underlying effect
-pages still exist.  This tool fetches the canonical UESP page for every effect
+pages still exist. This tool fetches the canonical UESP page for every effect
 known to the historical V3 importer, validates the page identity from its H1,
 and writes raw HTML plus a provenance manifest.
 
-It never modifies eso.db or data/processed/alchemy_effects.json.  The recovered
-HTML is deliberately fed back through the existing V3 parser so there remains
-one authoritative HTML parser rather than a second crawler-specific parser.
+It never modifies eso.db or research/processed/alchemy_effects.json. The
+recovered HTML is deliberately fed back through the existing V3 parser so
+there remains one authoritative HTML parser rather than a second
+crawler-specific parser.
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.paths import RAW_DATA
 from tools.import_uesp_alchemy_effects_v3 import (
     EXPECTED_EFFECTS,
     extract_effect_from_h1,
@@ -33,8 +35,8 @@ from tools.import_uesp_alchemy_effects_v3 import (
 )
 
 BASE_URL = "https://en.uesp.net/wiki/Online:{slug}"
-DEFAULT_RAW_DIR = ROOT / "data" / "raw" / "alchemy_u50_recovery"
-DEFAULT_MANIFEST = ROOT / "data" / "raw" / "alchemy_u50_recovery_manifest.json"
+DEFAULT_RAW_DIR = RAW_DATA / "alchemy_u50_recovery"
+DEFAULT_MANIFEST = RAW_DATA / "alchemy_u50_recovery_manifest.json"
 USER_AGENT = "BlackFeatherFoundry/1.0 (ESO U50 alchemy provenance recovery)"
 OPTIONAL_EFFECTS = frozenset({"Heroism"})
 
