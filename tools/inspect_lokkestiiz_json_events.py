@@ -5,7 +5,7 @@ Diagnostic script for the ESO Logs JSON adapter
 (services/esologs_json_adapter.py).
 
 Reads a fight directly from a raw ESO Logs JSON export
-(data/raw/esologs_night2.json by default) and prints:
+(research/raw/esologs_night2.json by default) and prints:
 
     - fight metadata
     - total events
@@ -21,7 +21,7 @@ Usage:
 
     python tools/inspect_lokkestiiz_json_events.py
     python tools/inspect_lokkestiiz_json_events.py --fight-id 27
-    python tools/inspect_lokkestiiz_json_events.py --path data/raw/esologs_probe.json --fight-id 41
+    python tools/inspect_lokkestiiz_json_events.py --path research/raw/esologs_probe.json --fight-id 41
 """
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ from services.esologs_json_adapter import (
     EsoLogsJsonFight,
     EsoLogsJsonFightNotFoundError,
 )
+from services.paths import RAW_DATA
 
 
 def parse_args() -> argparse.Namespace:
@@ -162,8 +163,8 @@ def main() -> None:
     if not args.path.exists():
         print(f"File not found: {args.path}")
         print(
-            "data/raw/ is gitignored in this project - place the "
-            "export there before running this script."
+            f"Raw ESO Logs research files belong under {RAW_DATA}. "
+            "Place the export there or pass --path explicitly."
         )
         return
 
