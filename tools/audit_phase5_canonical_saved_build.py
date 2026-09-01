@@ -97,6 +97,24 @@ def _canonical_piece_categories(build, repository: GearSetRepository):
     return tuple(rows)
 
 
+def _support_details(effect) -> str:
+    details = [
+        f"type={effect.effect_type}",
+        f"magnitude={effect.magnitude}",
+    ]
+    if effect.duration is not None:
+        details.append(f"duration={effect.duration}s")
+    if effect.cooldown is not None:
+        details.append(f"cooldown={effect.cooldown}s")
+    if effect.target_count is not None:
+        details.append(f"targets={effect.target_count}")
+    if effect.trigger is not None:
+        details.append(f"trigger={effect.trigger.trigger}")
+        if effect.trigger.condition:
+            details.append(f"condition={effect.trigger.condition}")
+    return " | ".join(details)
+
+
 def audit_canonical_saved_build(
     *,
     database_path: Path,
@@ -212,7 +230,7 @@ def audit_canonical_saved_build(
         for effect in effects:
             print(
                 f"  - {effect.name} | source={effect.source} | "
-                f"type={effect.effect_type} | magnitude={effect.magnitude}"
+                f"{_support_details(effect)}"
             )
 
     print()
