@@ -65,6 +65,7 @@ class GearSetEffectVariantResolver:
             source=f"{source_name} ({piece_count})",
             magnitude=known.magnitude,
             duration=known.duration,
+            cooldown=known.cooldown,
             target_count=known.target_count,
             range=known.range,
             scaling=known.scaling,
