@@ -46,8 +46,9 @@ def _defining_resource_context(text: str | None) -> str | None:
     """Return explicit percent-resource + current-Health scaling context.
 
     This helper is source-agnostic. Coefficient ownership is established
-    separately by ``coef_description`` via ``Current Restore: $N`` before raw
-    tooltip/description text is allowed to corroborate the resource definition.
+    separately by ``coef_description`` via ``Current Restore: $N`` before
+    description/raw source text is allowed to corroborate the resource
+    definition.
     """
 
     normalized = _normalize_source_text(text)
@@ -132,6 +133,7 @@ class SkillComponentResourceEventRepository:
             ability_columns = self._columns(db, "ability")
             rank_columns = self._columns(db, "skill_rank")
             optional_selects = [
+                "a.description" if "description" in ability_columns else "NULL",
                 "a.raw_description" if "raw_description" in ability_columns else "NULL",
                 "a.raw_tooltip" if "raw_tooltip" in ability_columns else "NULL",
                 "sr.raw_description" if "raw_description" in rank_columns else "NULL",
@@ -161,9 +163,10 @@ class SkillComponentResourceEventRepository:
             )
             if component_text is None:
                 # ``coef_description`` owns the $N runtime-display component, but
-                # UESP can preserve its defining resource rule only in raw source
-                # text. Raw text may corroborate the definition; it never owns the
-                # coefficient number by itself.
+                # its defining resource rule may live in the normalized ability
+                # description or other raw source text. Those fields may
+                # corroborate the definition; they never own the coefficient
+                # number by themselves.
                 for source_text in row[1:]:
                     defining = _defining_resource_context(source_text)
                     if defining is not None:
