@@ -9,7 +9,9 @@ from .stat_ids import StatId
 
 
 U50_SOURCE_URL = "https://eso-hub.com/en/mundus-stones"
+U51_SOURCE_URL = "https://hyperioxes.com/eso/news/update-51-pts-patch-notes"
 U50_GAME_UPDATE = 50
+U51_GAME_UPDATE = 51
 
 # Update 50 live values, CP160. Unsupported character-sheet effects are kept in
 # the DB deliberately so the calculator can report them instead of silently
@@ -41,6 +43,36 @@ U50_MUNDUS_EFFECTS: dict[str, tuple[tuple[str, float, str, int, str], ...]] = {
     "The Tower": ((StatId.MAX_STAMINA.value, 2023.0, "flat", 1, ""),),
     "The Warrior": ((StatId.WEAPON_DAMAGE.value, 238.0, "flat", 1, ""),),
 }
+
+# Update 51 PTS changes only the entries explicitly listed below. Values for
+# unchanged stones inherit the U50 CP160 records. Apprentice's new progression
+# bonuses are retained as unsupported records rather than being forced into the
+# combat-stat layer.
+U51_MUNDUS_EFFECTS: dict[str, tuple[tuple[str, float, str, int, str], ...]] = dict(U50_MUNDUS_EFFECTS)
+U51_MUNDUS_EFFECTS.update(
+    {
+        "The Warrior": (
+            (StatId.WEAPON_DAMAGE.value, 238.0, "flat", 1, ""),
+            (StatId.SPELL_DAMAGE.value, 238.0, "flat", 1, ""),
+        ),
+        "The Apprentice": (
+            (
+                "experience_gain",
+                8.0,
+                "percent",
+                0,
+                "Update 51: 8% Experience gain is outside the combat character-sheet stat layer.",
+            ),
+            (
+                "inspiration_gain",
+                8.0,
+                "percent",
+                0,
+                "Update 51: 8% Inspiration gain is outside the combat character-sheet stat layer.",
+            ),
+        ),
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -90,10 +122,17 @@ class MundusRepository:
                 );
                 """
             )
-            if self.game_update != U50_GAME_UPDATE:
+
+            if self.game_update == U50_GAME_UPDATE:
+                source_url = U50_SOURCE_URL
+                source_effects = U50_MUNDUS_EFFECTS
+            elif self.game_update == U51_GAME_UPDATE:
+                source_url = U51_SOURCE_URL
+                source_effects = U51_MUNDUS_EFFECTS
+            else:
                 return
 
-            for name, effects in U50_MUNDUS_EFFECTS.items():
+            for name, effects in source_effects.items():
                 connection.execute(
                     """
                     INSERT INTO mundus_stone(name, game_update, source_url)
@@ -101,11 +140,11 @@ class MundusRepository:
                     ON CONFLICT(name, game_update)
                     DO UPDATE SET source_url = excluded.source_url
                     """,
-                    (name, U50_GAME_UPDATE, U50_SOURCE_URL),
+                    (name, self.game_update, source_url),
                 )
                 row = connection.execute(
                     "SELECT id FROM mundus_stone WHERE name = ? AND game_update = ?",
-                    (name, U50_GAME_UPDATE),
+                    (name, self.game_update),
                 ).fetchone()
                 mundus_id = int(row["id"])
                 for stat_id, value, unit, supported, notes in effects:
