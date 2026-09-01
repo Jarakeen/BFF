@@ -8,6 +8,7 @@ from pathlib import Path
 from models.build_model import GearSlot as LegacyGearSlot, PlayerBuild
 from services.skill_bar_eligibility import is_eligible
 
+from ..gear_set_category_resolver import GearSetCategoryResolver
 from ..gear_set_repository import GearSetRepository
 from ..race_repository import RaceRepository
 from ..role import Role
@@ -122,15 +123,6 @@ def _parse_level(value: object) -> int | None:
         return None
 
 
-def _category_for_set(category: str | None) -> GearPieceCategory:
-    value = _key(category)
-    if "mythic" in value:
-        return GearPieceCategory.MYTHIC
-    if "monster" in value:
-        return GearPieceCategory.MONSTER_SET
-    return GearPieceCategory.SET_PIECE
-
-
 class SavedBuildCharacterAdapter:
     """Convert the Builds UI PlayerBuild model into canonical CharacterBuild.
 
@@ -150,6 +142,7 @@ class SavedBuildCharacterAdapter:
         *,
         race_repository: RaceRepository | None = None,
         gear_set_repository: GearSetRepository | None = None,
+        gear_set_category_resolver: GearSetCategoryResolver | None = None,
         skill_effect_repository: SkillEffectRepository | None = None,
         weapon_enchantment_repository: WeaponEnchantmentRepository | None = None,
     ) -> None:
@@ -157,6 +150,9 @@ class SavedBuildCharacterAdapter:
         self.race_repository = race_repository or RaceRepository(self.database_path)
         self.gear_set_repository = gear_set_repository or GearSetRepository(
             self.database_path
+        )
+        self.gear_set_category_resolver = (
+            gear_set_category_resolver or GearSetCategoryResolver(self.database_path)
         )
         self.skill_effect_repository = (
             skill_effect_repository or SkillEffectRepository(self.database_path)
@@ -284,7 +280,10 @@ class SavedBuildCharacterAdapter:
                     )
                 else:
                     set_id = str(gear_set.id)
-                    category = _category_for_set(gear_set.category)
+                    category = self.gear_set_category_resolver.resolve(
+                        int(gear_set.id),
+                        raw_category=gear_set.category,
+                    )
 
             piece = ArmorPiece(
                 slot=slot,
