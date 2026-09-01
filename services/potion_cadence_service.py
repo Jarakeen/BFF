@@ -12,7 +12,7 @@ class SavedPotionCadenceResolution:
     build_id: str
     character_id: str
     potion_name: str
-    medicinal_use_rank: int
+    medicinal_use_rank: int | None
     event: PotionUseEvent | None = None
     cadence: PotionCadence | None = None
     unresolved: tuple[str, ...] = ()
@@ -23,12 +23,7 @@ class SavedPotionCadenceResolution:
 
 
 class PotionCadenceService:
-    """Bridge canonical character progression into saved-build potion cadence.
-
-    Character-owned passive ranks remain in BuildCatalogService. Potion timing
-    remains in minmax. This service joins those layers without teaching either
-    one how to own the other's data.
-    """
+    """Bridge canonical character progression into saved-build potion cadence."""
 
     def __init__(
         self,
@@ -45,7 +40,7 @@ class PotionCadenceService:
                 build_id=build_id,
                 character_id="",
                 potion_name="",
-                medicinal_use_rank=0,
+                medicinal_use_rank=None,
                 unresolved=(f"Canonical build not found: {build_id}",),
             )
 
@@ -61,6 +56,17 @@ class PotionCadenceService:
                 potion_name="",
                 medicinal_use_rank=rank,
                 unresolved=("Saved build has no potion selection",),
+            )
+
+        if rank is None:
+            return SavedPotionCadenceResolution(
+                build_id=build_id,
+                character_id=character_id,
+                potion_name=potion_name,
+                medicinal_use_rank=None,
+                unresolved=(
+                    f"Medicinal Use rank is not recorded for character: {character_id}",
+                ),
             )
 
         event = self.event_resolver.resolve(potion_name)
