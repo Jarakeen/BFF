@@ -2,14 +2,13 @@ from __future__ import annotations
 
 """Verified named combat buffs and their routing layer.
 
-Source: ``math/buff.txt`` and ``math/debuff.txt`` in this repository.
-Shared-sheet effects are mapped to first-class stats here. Component-layer
-buffs/debuffs are canonicalized here as known names but are intentionally
-consumed by the damage/healing/shield layer that owns their semantics.
+U50 remains the default until Update 51 is live. U51 changes are expressed as
+versioned semantics rather than by mutating historical U50 definitions.
 """
 
 from dataclasses import dataclass
 
+from .combat_effect_semantics import GameUpdate, normalize_game_update, resolve_buff_name
 from .stat_ids import StatId
 
 
@@ -20,7 +19,7 @@ class NamedBuffEffect:
     bucket: str
 
 
-NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
+U50_NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
     "Minor Brutality": (NamedBuffEffect(StatId.WEAPON_DAMAGE, 0.10, "percent"),),
     "Major Brutality": (NamedBuffEffect(StatId.WEAPON_DAMAGE, 0.20, "percent"),),
     "Minor Sorcery": (NamedBuffEffect(StatId.SPELL_DAMAGE, 0.10, "percent"),),
@@ -58,6 +57,35 @@ NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = {
     "Minor Toughness": (NamedBuffEffect(StatId.MAX_HEALTH, 0.10, "resource_percent"),),
 }
 
+# Compatibility alias retained for existing callers/tests that inspect the map.
+NAMED_BUFF_EFFECTS = U50_NAMED_BUFF_EFFECTS
+
+U51_NAMED_BUFF_EFFECTS: dict[str, tuple[NamedBuffEffect, ...]] = dict(U50_NAMED_BUFF_EFFECTS)
+U51_NAMED_BUFF_EFFECTS.update(
+    {
+        "Minor Brutality": (
+            NamedBuffEffect(StatId.WEAPON_DAMAGE, 0.10, "percent"),
+            NamedBuffEffect(StatId.SPELL_DAMAGE, 0.10, "percent"),
+        ),
+        "Major Brutality": (
+            NamedBuffEffect(StatId.WEAPON_DAMAGE, 0.20, "percent"),
+            NamedBuffEffect(StatId.SPELL_DAMAGE, 0.20, "percent"),
+        ),
+        "Minor Savagery": (
+            NamedBuffEffect(StatId.WEAPON_CRITICAL, 1314.0, "critical_rating"),
+            NamedBuffEffect(StatId.SPELL_CRITICAL, 1314.0, "critical_rating"),
+        ),
+        "Major Savagery": (
+            NamedBuffEffect(StatId.WEAPON_CRITICAL, 2629.0, "critical_rating"),
+            NamedBuffEffect(StatId.SPELL_CRITICAL, 2629.0, "critical_rating"),
+        ),
+    }
+)
+# Removed U51 names are intentionally absent. Strict source resolution therefore
+# cannot accidentally apply obsolete Sorcery/Prophecy semantics.
+for _removed in ("Minor Sorcery", "Major Sorcery", "Minor Prophecy", "Major Prophecy"):
+    U51_NAMED_BUFF_EFFECTS.pop(_removed, None)
+
 # Known named effects whose semantics belong to a later component calculation,
 # not the shared standing/stat layer. Values are resolved by that owning layer.
 COMPONENT_LAYER_BUFFS = frozenset({
@@ -74,15 +102,32 @@ def canonical_buff_name(value: str) -> str | None:
     key = " ".join(str(value or "").strip().casefold().split())
     if not key:
         return None
-    for name in (*NAMED_BUFF_EFFECTS.keys(), *COMPONENT_LAYER_BUFFS):
+    names = set(U50_NAMED_BUFF_EFFECTS) | set(U51_NAMED_BUFF_EFFECTS) | set(COMPONENT_LAYER_BUFFS)
+    for name in names:
         if name.casefold() == key:
             return name
     return None
 
 
-def effects_for_buff(value: str) -> tuple[NamedBuffEffect, ...]:
+def effects_for_buff(
+    value: str,
+    *,
+    game_update: GameUpdate | str = GameUpdate.U50,
+    allow_legacy_alias: bool = False,
+) -> tuple[NamedBuffEffect, ...]:
+    update = normalize_game_update(game_update)
     canonical = canonical_buff_name(value)
-    return NAMED_BUFF_EFFECTS.get(canonical or "", ())
+    if canonical is None:
+        return ()
+    resolved = resolve_buff_name(
+        canonical,
+        game_update=update,
+        allow_legacy_alias=allow_legacy_alias,
+    )
+    if resolved is None:
+        return ()
+    table = U50_NAMED_BUFF_EFFECTS if update is GameUpdate.U50 else U51_NAMED_BUFF_EFFECTS
+    return table.get(resolved, ())
 
 
 def is_component_layer_buff(value: str) -> bool:
