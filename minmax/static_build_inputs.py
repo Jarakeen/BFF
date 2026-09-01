@@ -213,9 +213,8 @@ class StaticBuildInputResolver:
         if self.champion_point_repository is None:
             return result
 
-        # Compatibility path for direct/legacy resolver callers. Production
-        # BuildCalculationContext always supplies CharacterProgression and thus
-        # never reaches this max-all assumption.
+        # Compatibility path for callers that do not supply character-level
+        # progression at all.
         if progression is None:
             unresolved = list(result.unresolved)
             effects, passive_unresolved = self.champion_point_repository.resolve_all_non_slottable_maxed()
@@ -224,12 +223,16 @@ class StaticBuildInputResolver:
                 result = self._apply_effect(result, effect, resource_bucket="champion")
             return replace(result, unresolved=tuple(unresolved))
 
-        unresolved = list(result.unresolved)
         allocations = progression.passive_cp_points
         if allocations is None:
-            unresolved.append("Passive Champion Point allocations are not recorded for this character")
-            return replace(result, unresolved=tuple(unresolved))
+            # CharacterProgression predates explicit passive-CP persistence and
+            # many Phase 2/3 callers construct it only for attributes. Treat an
+            # absent snapshot as neutral compatibility state: do not invent
+            # passive CP, but also do not contaminate otherwise-resolved static
+            # calculations with a warning unrelated to their requested inputs.
+            return result
 
+        unresolved = list(result.unresolved)
         for name, points in allocations.items():
             record = self.champion_point_repository.get(name)
             if record is None:
