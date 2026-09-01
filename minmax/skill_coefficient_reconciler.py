@@ -8,7 +8,7 @@ from typing import Any
 
 DEFAULT_DATABASE = Path("data/eso.db")
 DEFAULT_COEFFICIENT_FILE = Path(
-    "data/raw/skill_coef_raw.json"
+    "research/raw/skill_coef_raw.json"
 )
 
 

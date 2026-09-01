@@ -15,7 +15,7 @@ Important:
 - Extracts CPs only from the skill's CP section.
 - Preserves relationship conditions such as "only while slotted".
 - Uses the champion_point table in eso.db as the authoritative CP-name list.
-- Writes data/raw/skill_champion_points.json.
+- Writes research/raw/skill_champion_points.json.
 - Caches fetched HTML so interrupted runs can resume without re-downloading pages.
 
 Dependencies:
@@ -43,7 +43,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "eso.db"
-RAW_DIR = ROOT / "data" / "raw"
+RAW_DIR = ROOT / "research" / "raw"
 
 OUTPUT_PATH = RAW_DIR / "skill_champion_points.json"
 CACHE_DIR = RAW_DIR / "eso_hub_skill_cache"

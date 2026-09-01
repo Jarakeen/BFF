@@ -14,10 +14,10 @@ Crawls individual ESO-Hub skill pages and extracts:
 The crawler resumes from an existing output file when possible.
 
 Source:
-    data/raw/eso_hub_skill_urls.json
+    research/raw/eso_hub_skill_urls.json
 
 Output:
-    data/raw/eso_hub_skill_data.json
+    research/raw/eso_hub_skill_data.json
 """
 
 from __future__ import annotations
@@ -42,14 +42,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 URL_MAP_PATH = (
     ROOT
-    / "data"
+    / "research"
     / "raw"
     / "eso_hub_skill_urls.json"
 )
 
 OUTPUT_PATH = (
     ROOT
-    / "data"
+    / "research"
     / "raw"
     / "eso_hub_skill_data.json"
 )

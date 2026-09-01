@@ -2,7 +2,7 @@
 services/esologs_json_adapter.py
 
 Adapter that reads a fight directly out of a raw ESO Logs JSON export
-(e.g. data/raw/esologs_night2.json) and translates its events into the
+(e.g. research/raw/esologs_night2.json) and translates its events into the
 EXISTING SemanticCombatEvent representation defined in
 services/esologs_event_interpreter.py.
 
@@ -73,7 +73,7 @@ try:
 
     DEFAULT_RAW_PATH = RAW_DATA / "esologs_night2.json"
 except ImportError:  # pragma: no cover - paths module should always exist
-    DEFAULT_RAW_PATH = Path("data/raw/esologs_night2.json")
+    DEFAULT_RAW_PATH = Path("research/raw/esologs_night2.json")
 
 
 # ============================================================

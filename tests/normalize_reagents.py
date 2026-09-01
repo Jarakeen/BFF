@@ -37,7 +37,7 @@ def load_source():
         "No reagent source file found.\n"
         "Expected one of:\n"
         f"{names}\n\n"
-        "Put the actual reagent JSON in data/raw and rerun."
+        "Put the actual reagent JSON in research/raw and rerun."
     )
 
 
