@@ -47,6 +47,12 @@ class PotionAvailabilityRepository:
     LEGACY_ALIASES: dict[str, tuple[str, ...]] = {
         "spell power": ("Restore Magicka", "Increase Spell Power", "Spell Critical"),
         "spell power potion": ("Restore Magicka", "Increase Spell Power", "Spell Critical"),
+        # Older Builds UI values used human tier-name wording rather than a
+        # canonical formula identity. These aliases mean only the single
+        # Restore Health effect family; they do not imply tri-stat or another
+        # multi-effect crafted formula.
+        "health elixir": ("Restore Health",),
+        "elixir of health": ("Restore Health",),
     }
 
     def __init__(
