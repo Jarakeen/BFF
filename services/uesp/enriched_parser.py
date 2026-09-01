@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from dataclasses import replace
 
 from models.uesp_models import UespAchievement, UespBoss, UespDialogueLine, UespHealth, UespMechanic, UespPhase
 from services.uesp.uesp_parser import (
@@ -22,13 +21,130 @@ from services.uesp.uesp_parser import (
     _extract_list_text,
     _extract_linked_titles,
     _extract_difficulty_notes,
-    _match_dialogue_trigger_to_ability,
     _source_for,
     _clean_title,
     slugify,
 )
 from services.uesp.mechanic_classifier import classify_mechanic
 from services.uesp.phase_extractor import extract_phases
+
+
+_NON_COMBAT_DIALOGUE_CUES = (
+    "idling before combat",
+    "group wipe",
+    "group wipes",
+    "group is defeated",
+    "group is defeated",
+    "if the group is defeated",
+    "when she's defeated",
+    "when shes defeated",
+    "when a player in group dies",
+    "if you wait a while",
+    "normally you'll take",
+    "normally you will take",
+    "you'll receive",
+    "you will receive",
+    "once bahsei has been defeated",
+    "starting combat",
+    "as the fight starts",
+)
+
+_GENERIC_TRIGGER_WORDS = {
+    "a",
+    "an",
+    "and",
+    "attack",
+    "ability",
+    "at",
+    "casting",
+    "during",
+    "event",
+    "her",
+    "his",
+    "in",
+    "of",
+    "phase",
+    "some",
+    "summon",
+    "summoning",
+    "the",
+    "when",
+}
+
+_ACTION_CUES = {
+    "charge": ("charge", "charges", "charging"),
+    "stomp": ("stomp", "stomps", "stomping"),
+    "interrupt": ("interrupt", "interruptible", "interrupted"),
+}
+
+
+def _normalize_words(value: str) -> list[str]:
+    words = re.findall(r"[a-z0-9]+", value.casefold())
+    normalized: list[str] = []
+    for word in words:
+        if len(word) > 4 and word.endswith("s"):
+            word = word[:-1]
+        normalized.append(word)
+    return normalized
+
+
+def _conservative_dialogue_ability_match(trigger: str, abilities) -> str | None:
+    """Link dialogue context to an ability only with strong source evidence.
+
+    Dialogue headings are useful mechanic cues, but many are narrative context
+    such as idle chatter, wipes, rewards, or post-fight lines. Those must remain
+    unlinked rather than being attached to an ability through loose vocabulary
+    overlap.
+    """
+    normalized_trigger = " ".join(_normalize_words(trigger))
+    if not normalized_trigger:
+        return None
+
+    if any(cue in normalized_trigger for cue in _NON_COMBAT_DIALOGUE_CUES):
+        return None
+
+    trigger_words = {
+        word
+        for word in _normalize_words(trigger)
+        if word not in _GENERIC_TRIGGER_WORDS and len(word) >= 4
+    }
+
+    strong_matches: list[tuple[int, str]] = []
+    for ability in abilities:
+        name_words = {
+            word
+            for word in _normalize_words(ability.name)
+            if word not in _GENERIC_TRIGGER_WORDS and len(word) >= 4
+        }
+        overlap = trigger_words & name_words
+        if overlap:
+            strong_matches.append((len(overlap), ability.name))
+
+    if strong_matches:
+        strong_matches.sort(key=lambda row: (-row[0], row[1].casefold()))
+        best_score = strong_matches[0][0]
+        best = [name for score, name in strong_matches if score == best_score]
+        if len(best) == 1:
+            return best[0]
+        return None
+
+    # Narrow fallback for generic action headings such as "Charge attack".
+    # Only link when exactly one ability description explicitly contains that
+    # action. Ambiguous action headings remain unresolved.
+    trigger_word_set = set(_normalize_words(trigger))
+    for action, variants in _ACTION_CUES.items():
+        if action not in trigger_word_set:
+            continue
+        candidates: list[str] = []
+        for ability in abilities:
+            description = ability.description.casefold()
+            if any(re.search(rf"\b{re.escape(variant)}\b", description) for variant in variants):
+                candidates.append(ability.name)
+        if len(candidates) == 1:
+            return candidates[0]
+        return None
+
+    return None
 
 
 class EnrichedUespParser(UespParser):
@@ -110,16 +226,8 @@ class EnrichedUespParser(UespParser):
         for line in dialogue:
             grouped.setdefault(line.trigger or "Unspecified", []).append(line)
 
-        # Preserve the hardened dialogue-to-mechanic evidence path used by the
-        # base parser. Enriched parsing keeps the richer trigger extraction, but
-        # still associates a trigger with an ability only when textual evidence
-        # clears the existing conservative matcher threshold.
         for trigger, entries in grouped.items():
-            matched_ability = _match_dialogue_trigger_to_ability(
-                trigger,
-                entries,
-                abilities,
-            )
+            matched_ability = _conservative_dialogue_ability_match(trigger, abilities)
             for entry in entries:
                 entry.ability = matched_ability
 
