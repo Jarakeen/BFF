@@ -15,6 +15,7 @@ from ..role import Role
 from ..skill_effect_repository import SkillEffectRepository
 from ..weapon_enchantment_repository import WeaponEnchantmentRepository
 from .bar import Bar
+from .champion_points import ChampionPointAllocation
 from .character_build import CharacterBuild
 from .character_class import CharacterClass
 from .effect_layer import BarId
@@ -196,6 +197,9 @@ class SavedBuildCharacterAdapter:
         armor, mythic, gear_unresolved = self._adapt_non_weapon_gear(saved)
         unresolved.extend(gear_unresolved)
 
+        champion_points, cp_unresolved = self._adapt_champion_points(saved)
+        unresolved.extend(cp_unresolved)
+
         front_bar, front_unresolved = self._adapt_bar(
             saved,
             BarId.FRONT,
@@ -223,6 +227,7 @@ class SavedBuildCharacterAdapter:
             potion_id=_text(saved.Potion) or None,
             mythic=mythic,
             armor=armor,
+            champion_points=champion_points,
             front_bar=front_bar,
             back_bar=back_bar,
         )
@@ -231,6 +236,43 @@ class SavedBuildCharacterAdapter:
             unresolved.append(f"Canonical build validation: {problem}")
 
         return SavedBuildAdaptation(canonical, tuple(dict.fromkeys(unresolved)))
+
+    def _adapt_champion_points(
+        self,
+        saved: PlayerBuild,
+    ) -> tuple[tuple[ChampionPointAllocation, ...], tuple[str, ...]]:
+        """Preserve saved CP identity/allocation without inventing CP effects."""
+        allocations: list[ChampionPointAllocation] = []
+        unresolved: list[str] = []
+
+        for index, entry in enumerate(saved.ChampionPoints, start=1):
+            name = _text(entry.Name)
+            if not name:
+                continue
+
+            points_text = _text(entry.Points)
+            try:
+                points = int(points_text or "0")
+            except (TypeError, ValueError):
+                unresolved.append(
+                    f"Champion Point entry {index} has invalid allocation: {name}: {entry.Points}"
+                )
+                continue
+
+            if points < 0:
+                unresolved.append(
+                    f"Champion Point entry {index} has negative allocation: {name}: {points}"
+                )
+                continue
+
+            allocations.append(
+                ChampionPointAllocation(
+                    node_id=_stable_skill_id(name),
+                    points=points,
+                )
+            )
+
+        return tuple(allocations), tuple(unresolved)
 
     def _adapt_non_weapon_gear(
         self,
