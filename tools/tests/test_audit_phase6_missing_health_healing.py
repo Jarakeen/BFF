@@ -47,7 +47,7 @@ def test_audit_promotes_missing_health_healing_candidate(tmp_path):
         INSERT INTO ability VALUES (
             100,
             'Drain Example',
-            'Deal $1 Magic Damage and healing you for 25% of your missing Health every 1 second.'
+            'Siphon away your enemies vitality, dealing $1 Magic Damage and healing you for 25% of your missing Health every 1 second for 3 seconds.'
         );
         INSERT INTO skill_component_classification VALUES (
             10, 1, 'damage', 'magical', 1, 0, NULL, 'test', 1.0
