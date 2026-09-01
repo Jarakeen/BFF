@@ -60,8 +60,9 @@ class ArmorPassiveInputResolver:
         light_count, medium_count, heavy_count = self._armor_counts(build)
         applied = result.applied_effect_count
 
-        # Armor-category bonuses/penalties are inherent to wearing that armor,
-        # not proof that any purchasable passive was bought.
+        # Armor-category bonuses/penalties are inherent equipment rules rather
+        # than resolved gear/passive effects. They belong in the stat trace but
+        # do not increment applied_effect_count.
         if light_count:
             block_cost = replace(
                 result.core.block_cost,
@@ -69,7 +70,6 @@ class ArmorPassiveInputResolver:
                 + (BlockCostModifier("Light Armor: Block Cost Penalty", 0.03 * light_count),),
             )
             result = replace(result, core=replace(result.core, block_cost=block_cost))
-            applied += 1
 
         if medium_count:
             block_cost = replace(
@@ -78,7 +78,6 @@ class ArmorPassiveInputResolver:
                 + (BlockCostModifier("Medium Armor: Block Cost Bonus", -0.03 * medium_count),),
             )
             result = replace(result, core=replace(result.core, block_cost=block_cost))
-            applied += 1
 
         if heavy_count:
             mitigation = replace(
@@ -87,7 +86,6 @@ class ArmorPassiveInputResolver:
                 + (("Heavy Armor: Block Mitigation Bonus", 0.01 * heavy_count),),
             )
             result = replace(result, core=replace(result.core, block_mitigation=mitigation))
-            applied += 1
 
         evocation = light_armor_passives_owned if evocation_owned is None else evocation_owned
         concentration = light_armor_passives_owned if concentration_owned is None else concentration_owned
