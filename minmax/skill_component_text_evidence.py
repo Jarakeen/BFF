@@ -141,6 +141,8 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
         rf"(?:shield[^.;]{{0,90}}?(?:absorbs?|absorb(?:ing)?)[^.;]{{0,30}}?){placeholder}(?:\s+damage)?\b",
         rf"(?:absorbs?|absorb(?:ing)?)\s+(?:up\s+to\s+)?{placeholder}(?:\s+damage)?\b",
         rf"\b(?:shielding|shields|shielded)\b[^.;]{{0,80}}?\bfor\s+{placeholder}\b",
+        rf"(?:damage\s+shield|shield)[^.;]{{0,150}}?\bup\s+to\s+(?:a\s+)?max(?:imum)?\s+of\s+{placeholder}(?:\s+damage)?\b",
+        rf"\b(?:and\s+)?then\s+{placeholder}\s+damage\b[^.;]{{0,90}}?\bshield\s+persists\b",
     )
     if any(re.search(pattern, lower) for pattern in shield_patterns):
         return "shield"
