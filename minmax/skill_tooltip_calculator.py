@@ -12,6 +12,10 @@ from .skill_coefficients import (
     evaluate_skill_coefficient,
     is_inactive_skill_coefficient,
 )
+from .skill_component_actual_effect_modifiers import (
+    SkillComponentActualEffectModifier,
+    SkillComponentActualEffectTrace,
+)
 from .skill_effect_modifiers import (
     SkillEffectModifier,
     SkillEffectModifierTrace,
@@ -36,6 +40,7 @@ class SkillTooltipResult:
     tooltip_modifier_trace: tuple[SkillEffectModifierTrace, ...]
     actual_effect_modifier_trace: tuple[SkillEffectModifierTrace, ...]
     rounding_candidates: SkillTooltipRoundingCandidates | None
+    component_actual_effect_trace: tuple[SkillComponentActualEffectTrace, ...] = ()
     unresolved: tuple[str, ...] = ()
 
 
@@ -47,12 +52,13 @@ class SkillTooltipCalculator:
         raw coefficient value
             -> verified tooltip-visible modifiers
             -> displayed-tooltip candidate
-            -> verified actual-effect-only/additional modifiers
+            -> verified per-component actual-effect-only modifiers
+            -> verified whole-effect actual-only/additional modifiers
             -> actual-effect candidate
 
-    Crit, target mitigation, execute rules, unverified CP/passive behavior, and
-    the final ESO rounding policy remain outside this layer until each rule is
-    independently verified.
+    Per-component actual modifiers can change a coefficient's power input and/or
+    its own additive percentage bucket without leaking that change into other
+    components on a mixed ability. They never alter the tooltip candidate.
     """
 
     def __init__(self, repository: SkillCoefficientRepository) -> None:
@@ -83,6 +89,7 @@ class SkillTooltipCalculator:
         context: BuildCalculationContext,
         *,
         modifiers: tuple[SkillEffectModifier, ...] = (),
+        component_actual_effect_modifiers: tuple[SkillComponentActualEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         resolution = self.repository.resolve_entity_id(entity_id)
         if resolution.rank is None:
@@ -92,6 +99,7 @@ class SkillTooltipCalculator:
             resolution.unresolved,
             context,
             modifiers,
+            component_actual_effect_modifiers,
         )
 
     def evaluate_name(
@@ -100,6 +108,7 @@ class SkillTooltipCalculator:
         context: BuildCalculationContext,
         *,
         modifiers: tuple[SkillEffectModifier, ...] = (),
+        component_actual_effect_modifiers: tuple[SkillComponentActualEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         resolution = self.repository.resolve_name(name)
         if resolution.rank is None:
@@ -109,6 +118,7 @@ class SkillTooltipCalculator:
             resolution.unresolved,
             context,
             modifiers,
+            component_actual_effect_modifiers,
         )
 
     def evaluate_ability_id(
@@ -117,6 +127,7 @@ class SkillTooltipCalculator:
         context: BuildCalculationContext,
         *,
         modifiers: tuple[SkillEffectModifier, ...] = (),
+        component_actual_effect_modifiers: tuple[SkillComponentActualEffectModifier, ...] = (),
     ) -> SkillTooltipResult:
         """Source/crosswalk lookup retained for diagnostics and reconciliation."""
 
@@ -128,6 +139,7 @@ class SkillTooltipCalculator:
             resolution.unresolved,
             context,
             modifiers,
+            component_actual_effect_modifiers,
         )
 
     @staticmethod
@@ -146,17 +158,40 @@ class SkillTooltipCalculator:
             unresolved=unresolved,
         )
 
+    @staticmethod
+    def _component_modifier_map(
+        modifiers: tuple[SkillComponentActualEffectModifier, ...],
+    ) -> tuple[dict[int, SkillComponentActualEffectModifier], tuple[str, ...]]:
+        result: dict[int, SkillComponentActualEffectModifier] = {}
+        unresolved: list[str] = []
+        for modifier in modifiers:
+            key = int(modifier.coefficient_number)
+            if key in result:
+                unresolved.append(
+                    f"Duplicate actual-effect component modifier for coefficient {key}"
+                )
+                continue
+            result[key] = modifier
+        return result, tuple(unresolved)
+
     def _evaluate_resolution(
         self,
         skill: ResolvedSkillRank,
         unresolved_seed: tuple[str, ...],
         context: BuildCalculationContext,
         modifiers: tuple[SkillEffectModifier, ...],
+        component_actual_effect_modifiers: tuple[SkillComponentActualEffectModifier, ...],
     ) -> SkillTooltipResult:
         unresolved = list(unresolved_seed)
         scaling = self.scaling_from_context(context)
         components: list[SkillCoefficientTrace] = []
         inactive_components: list[InactiveSkillCoefficientTrace] = []
+        component_actual_trace: list[SkillComponentActualEffectTrace] = []
+        actual_component_values: list[float] = []
+        component_modifier_map, duplicate_errors = self._component_modifier_map(
+            component_actual_effect_modifiers
+        )
+        unresolved.extend(duplicate_errors)
 
         for coefficient in skill.coefficients:
             coefficient_type = str(coefficient.type or "").strip()
@@ -186,12 +221,59 @@ class SkillTooltipCalculator:
                 continue
             components.append(trace)
 
+            component_modifier = component_modifier_map.pop(
+                int(coefficient.coefficient_number), None
+            )
+            if component_modifier is None:
+                actual_component_values.append(trace.final_value)
+                continue
+
+            effective_power = scaling.highest_offensive_power + float(
+                component_modifier.power_bonus
+            )
+            try:
+                actual_coefficient = evaluate_skill_coefficient(
+                    coefficient,
+                    max_stat=scaling.highest_max_resource,
+                    power=effective_power,
+                )
+            except UnsupportedSkillCoefficientType as exc:
+                unresolved.append(
+                    f"{skill.entity_id}: coefficient {coefficient.coefficient_number} actual-effect modifier: {exc}"
+                )
+                actual_component_values.append(trace.final_value)
+                continue
+
+            output_value = actual_coefficient.final_value * (
+                1.0 + float(component_modifier.additive_percent) / 100.0
+            )
+            actual_component_values.append(output_value)
+            component_actual_trace.append(
+                SkillComponentActualEffectTrace(
+                    coefficient_number=int(coefficient.coefficient_number),
+                    base_power=scaling.highest_offensive_power,
+                    power_bonus=float(component_modifier.power_bonus),
+                    effective_power=effective_power,
+                    coefficient_value=actual_coefficient.final_value,
+                    additive_percent=float(component_modifier.additive_percent),
+                    output_value=output_value,
+                    sources=tuple(component_modifier.sources),
+                )
+            )
+
+        for missing_number in sorted(component_modifier_map):
+            unresolved.append(
+                f"{skill.entity_id}: actual-effect modifier targets missing/inactive coefficient {missing_number}"
+            )
+
         raw_total = sum(component.final_value for component in components) if components else None
         if not components and not unresolved and not inactive_components:
             unresolved.append(f"{skill.entity_id}: no active coefficient components")
 
         tooltip_value = raw_total
-        actual_effect_value = raw_total
+        actual_effect_value = (
+            sum(actual_component_values) if actual_component_values else raw_total
+        )
         tooltip_trace: list[SkillEffectModifierTrace] = []
         actual_trace: list[SkillEffectModifierTrace] = []
 
@@ -201,7 +283,7 @@ class SkillTooltipCalculator:
                     trace = apply_skill_effect_modifier(tooltip_value, modifier)
                     tooltip_trace.append(trace)
                     tooltip_value = trace.output_value
-                if modifier.affects_actual_effect:
+                if modifier.affects_actual_effect and actual_effect_value is not None:
                     trace = apply_skill_effect_modifier(actual_effect_value, modifier)
                     actual_trace.append(trace)
                     actual_effect_value = trace.output_value
@@ -223,5 +305,6 @@ class SkillTooltipCalculator:
             tooltip_modifier_trace=tuple(tooltip_trace),
             actual_effect_modifier_trace=tuple(actual_trace),
             rounding_candidates=rounding,
+            component_actual_effect_trace=tuple(component_actual_trace),
             unresolved=tuple(unresolved),
         )
