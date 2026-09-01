@@ -16,6 +16,7 @@ from minmax.skill_coefficients import (
     evaluate_skill_coefficient,
     is_inactive_skill_coefficient,
 )
+from minmax.skill_component_actual_effect_modifiers import SkillComponentActualEffectModifier
 from minmax.skill_effect_modifiers import ModifierVisibility, SkillEffectModifier
 from minmax.skill_tooltip_calculator import SkillTooltipCalculator
 from minmax.skill_tooltip_rounding import (
@@ -237,6 +238,7 @@ def test_tooltip_calculator_uses_phase2_context_scaling(tmp_path):
     assert result.actual_effect_value == pytest.approx(expected)
     assert result.tooltip_modifier_trace == ()
     assert result.actual_effect_modifier_trace == ()
+    assert result.component_actual_effect_trace == ()
     assert result.rounding_candidates is not None
 
 
@@ -270,6 +272,59 @@ def test_tooltip_and_actual_modifier_layers_are_independent(tmp_path):
         "verified tooltip-visible test modifier",
         "verified actual-only test modifier",
     ]
+
+
+def test_component_actual_modifier_changes_only_targeted_component_and_actual_value(tmp_path):
+    path = _coefficient_db(tmp_path)
+    calculator = SkillTooltipCalculator(SkillCoefficientRepository(path))
+    context = _context()
+    component_modifier = SkillComponentActualEffectModifier(
+        coefficient_number=1,
+        power_bonus=205.0,
+        additive_percent=10.0,
+        sources=("Rejuvenator", "Soothing Tide"),
+    )
+
+    result = calculator.evaluate_name(
+        "Test Morph",
+        context,
+        component_actual_effect_modifiers=(component_modifier,),
+    )
+
+    assert result.raw_total is not None
+    assert result.tooltip_value == pytest.approx(result.raw_total)
+    base_two = next(c.final_value for c in result.components if c.coefficient_number == 2)
+    modified_one = (
+        (0.175015 * 19104) + (1.83764 * (5000 + 205)) - 1.73373
+    ) * 1.10
+    assert result.actual_effect_value == pytest.approx(modified_one + base_two)
+    assert len(result.component_actual_effect_trace) == 1
+    trace = result.component_actual_effect_trace[0]
+    assert trace.coefficient_number == 1
+    assert trace.power_bonus == 205.0
+    assert trace.effective_power == 5205.0
+    assert trace.additive_percent == 10.0
+    assert trace.sources == ("Rejuvenator", "Soothing Tide")
+
+
+def test_component_modifier_for_inactive_slot_is_unresolved_not_applied(tmp_path):
+    path = _coefficient_db(tmp_path)
+    calculator = SkillTooltipCalculator(SkillCoefficientRepository(path))
+    modifier = SkillComponentActualEffectModifier(
+        coefficient_number=3,
+        power_bonus=205.0,
+        sources=("Rejuvenator",),
+    )
+
+    result = calculator.evaluate_name(
+        "Test Morph",
+        _context(),
+        component_actual_effect_modifiers=(modifier,),
+    )
+
+    assert result.actual_effect_value == pytest.approx(result.raw_total)
+    assert result.component_actual_effect_trace == ()
+    assert any("missing/inactive coefficient 3" in message for message in result.unresolved)
 
 
 def test_tooltip_calculator_evaluates_canonical_entity_id(tmp_path):
