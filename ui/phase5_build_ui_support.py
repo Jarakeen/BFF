@@ -78,7 +78,8 @@ class CharacterProgressionDialog(QDialog):
 
         name = _clean(self.character.get("name")) or "Character"
         self.setWindowTitle(f"Character Progression — {name}")
-        self.resize(860, 760)
+        self.resize(900, 760)
+        self.setMinimumSize(700, 520)
 
         root = QVBoxLayout(self)
         explanation = QLabel(
@@ -90,8 +91,8 @@ class CharacterProgressionDialog(QDialog):
         root.addWidget(explanation)
 
         tabs = QTabWidget()
-        tabs.addTab(self._skill_passive_tab(), "Skill Passives")
-        tabs.addTab(self._passive_cp_tab(), "Passive Champion Points")
+        tabs.addTab(self._scrollable(self._skill_passive_tab()), "Skill Passives")
+        tabs.addTab(self._scrollable(self._passive_cp_tab()), "Passive Champion Points")
         root.addWidget(tabs, 1)
 
         actions = QHBoxLayout()
@@ -103,6 +104,16 @@ class CharacterProgressionDialog(QDialog):
         actions.addWidget(cancel)
         actions.addWidget(save)
         root.addLayout(actions)
+
+    @staticmethod
+    def _scrollable(widget: QWidget) -> QScrollArea:
+        area = QScrollArea()
+        area.setWidgetResizable(True)
+        area.setFrameShape(QFrame.NoFrame)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        area.setWidget(widget)
+        return area
 
     def _passive_rows_by_line(self) -> dict[str, list[dict]]:
         grouped: dict[str, list[dict]] = defaultdict(list)
@@ -205,7 +216,8 @@ class CharacterProgressionDialog(QDialog):
             clear.clicked.connect(clear_line)
             toolbox.addItem(page, line)
 
-        layout.addWidget(toolbox, 1)
+        layout.addWidget(toolbox)
+        layout.addStretch()
         return host
 
     def _passive_cp_tab(self) -> QWidget:
@@ -255,7 +267,8 @@ class CharacterProgressionDialog(QDialog):
             grid.setColumnStretch(0, 1)
             toolbox.addItem(page, _DISCIPLINE_NAMES.get(discipline, f"Discipline {discipline}"))
 
-        layout.addWidget(toolbox, 1)
+        layout.addWidget(toolbox)
+        layout.addStretch()
         return host
 
     @property
