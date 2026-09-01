@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from services.esologs_raw_importer import EsoLogsRawImporter
+from services.paths import RAW_DATA
 
 
 def main() -> int:
@@ -18,8 +19,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--raw-dir",
-        default="data/raw",
-        help="Directory containing ESO Logs probe JSON files (default: data/raw).",
+        type=Path,
+        default=RAW_DATA,
+        help=f"Directory containing ESO Logs probe JSON files (default: {RAW_DATA}).",
     )
     parser.add_argument(
         "--db",
@@ -34,7 +36,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    raw_dir = Path(args.raw_dir)
+    raw_dir = args.raw_dir
     connection = sqlite3.connect(args.db)
     try:
         importer = EsoLogsRawImporter(connection)
