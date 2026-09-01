@@ -7,6 +7,7 @@ from pathlib import Path
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.combat_effect_semantics import GameUpdate
 from minmax.potion_availability_repository import PotionAvailabilityRepository
+from services.potion_choice_service import PotionChoiceService
 
 
 def _write_processed(path: Path) -> None:
@@ -116,6 +117,31 @@ def test_legacy_spell_power_alias_resolves_effect_family_with_two_equivalent_for
     assert all("uptime are not assumed" in str(effect.condition) for effect in result.effects)
 
 
+def test_canonical_family_choice_groups_equivalent_formulas_without_picking_one(tmp_path: Path):
+    processed = tmp_path / "alchemy_effects.json"
+    database = tmp_path / "eso.db"
+    _write_processed(processed)
+    _write_db(database)
+
+    choices = PotionChoiceService(processed).list_choices()
+    spell_power = next(
+        choice
+        for choice in choices
+        if set(choice.traits) == {"Restore Magicka", "Increase Spell Power", "Spell Critical"}
+    )
+
+    assert spell_power.canonical_id.startswith("alchemy_family:u50:")
+    assert spell_power.formula_count == 2
+
+    result = PotionAvailabilityRepository(database, processed).resolve(spell_power.canonical_id)
+    assert result.resolved
+    assert len(result.formulas) == 2
+    assert {formula.canonical_id for formula in result.formulas} == {
+        formula.canonical_id
+        for formula in PotionAvailabilityRepository(database, processed).resolve("spell power").formulas
+    }
+
+
 def test_legacy_health_elixir_alias_resolves_restore_health_family(tmp_path: Path):
     processed = tmp_path / "alchemy_effects.json"
     database = tmp_path / "eso.db"
@@ -164,7 +190,7 @@ def test_unknown_or_ambiguous_human_label_fails_closed(tmp_path: Path):
 
     assert not result.resolved
     assert result.effects == ()
-    assert "not an exact canonical formula or known legacy alias" in result.unresolved[0]
+    assert "not an exact canonical formula, canonical family, or known legacy alias" in result.unresolved[0]
 
 
 def test_missing_potion_effect_variant_is_explicitly_unresolved(tmp_path: Path):
