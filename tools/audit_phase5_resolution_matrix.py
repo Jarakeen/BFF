@@ -19,11 +19,21 @@ def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _has_identity(build) -> bool:
+    return bool(_clean(build.Name) or _clean(build.Gamertag) or _clean(build.BuildName))
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Trace one real saved build through the current Phase 5 resolution matrix."
+        description="Trace real saved builds through the current Phase 5 resolution matrix."
     )
-    parser.add_argument("--build", required=True, help="Saved build name or character name.")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--build", help="Saved build name or character name.")
+    selection.add_argument(
+        "--all",
+        action="store_true",
+        help="Audit every non-empty saved build without mutating the roster.",
+    )
     parser.add_argument("--builds", type=Path, default=get_data_dir() / "builds.json")
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     return parser
@@ -45,27 +55,7 @@ def _effect_text(effect) -> str:
     )
 
 
-def main() -> int:
-    args = _parser().parse_args()
-    build_service = BuildService(args.builds)
-    roster = build_service.load()
-    requested = _clean(args.build).casefold()
-    matches = [
-        build
-        for build in roster.Members
-        if _clean(build.BuildName).casefold() == requested
-        or _clean(build.Name).casefold() == requested
-    ]
-    if len(matches) != 1:
-        print(f"Expected exactly one saved build/character matching {args.build!r}; found {len(matches)}")
-        return 2
-
-    build = matches[0]
-    service = SavedBuildCapabilityService(build_service, args.database)
-    service.context_factory = Phase5BuildCalculationContextFactory(
-        race_repository=RaceRepository(args.database),
-        gear_set_repository=service.gear_repository,
-    )
+def _print_build_matrix(*, build, service, database: Path) -> int:
     progression = service.progression.resolve(build)
     audit = service.audit_build(build)
 
@@ -76,7 +66,7 @@ def main() -> int:
     print(f"Build:        {build.BuildName or '(unnamed)'}")
     print(f"Character ID: {progression.character_id or '(unresolved)'}")
     print(f"Race/Class:   {build.Race or '(none)'} / {build.EsoClass or '(none)'}")
-    print(f"Database:     {args.database}")
+    print(f"Database:     {database}")
     print()
 
     print("CANONICAL CHARACTER PROGRESSION")
@@ -163,7 +153,62 @@ def main() -> int:
     print("=" * 88)
     print(f"PHASE 5 GENUINE UNRESOLVED: {len(audit.unresolved)}")
     print("=" * 88)
-    return 1 if audit.unresolved else 0
+    return len(audit.unresolved)
+
+
+def main() -> int:
+    args = _parser().parse_args()
+    build_service = BuildService(args.builds)
+    roster = build_service.load()
+
+    if args.all:
+        builds = [build for build in roster.Members if _has_identity(build)]
+        if not builds:
+            print("No non-empty saved builds found.")
+            return 2
+    else:
+        requested = _clean(args.build).casefold()
+        builds = [
+            build
+            for build in roster.Members
+            if _clean(build.BuildName).casefold() == requested
+            or _clean(build.Name).casefold() == requested
+        ]
+        if len(builds) != 1:
+            print(f"Expected exactly one saved build/character matching {args.build!r}; found {len(builds)}")
+            return 2
+
+    service = SavedBuildCapabilityService(build_service, args.database)
+    service.context_factory = Phase5BuildCalculationContextFactory(
+        race_repository=RaceRepository(args.database),
+        gear_set_repository=service.gear_repository,
+    )
+
+    unresolved_by_build: list[tuple[str, str, int]] = []
+    for index, build in enumerate(builds):
+        if index:
+            print("\n\n")
+        unresolved_count = _print_build_matrix(
+            build=build,
+            service=service,
+            database=args.database,
+        )
+        unresolved_by_build.append((build.Name, build.BuildName, unresolved_count))
+
+    if args.all:
+        print("\n" + "#" * 88)
+        print(" PHASE 5 ROSTER SUMMARY")
+        print("#" * 88)
+        total = 0
+        for character_name, build_name, unresolved_count in unresolved_by_build:
+            total += unresolved_count
+            label = f"{character_name or '(unnamed)'} | {build_name or '(unnamed build)'}"
+            print(f"  {label}: genuine unresolved={unresolved_count}")
+        print(f"  TOTAL GENUINE UNRESOLVED: {total}")
+        print("#" * 88)
+        return 1 if total else 0
+
+    return 1 if unresolved_by_build[0][2] else 0
 
 
 if __name__ == "__main__":
