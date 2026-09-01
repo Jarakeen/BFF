@@ -59,7 +59,9 @@ def install() -> None:
         layout = parent.layout() if parent is not None else None
         if layout is None:
             return
-        self.delete_build_button = FoundryButton("Delete Build", role=ButtonRole.GHOST)
+        # Match the surrounding Builds actions. The confirmation dialog carries
+        # the destructive warning, so the toolbar itself stays visually calm.
+        self.delete_build_button = FoundryButton("Delete Build", role=ButtonRole.SECONDARY)
         self.delete_build_button.clicked.connect(lambda: _delete_selected(self))
         # Keep destructive action next to Edit but before Save/Export.
         save_index = layout.indexOf(self.save_button)
