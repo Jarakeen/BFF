@@ -230,10 +230,11 @@ class EnrichedUespParser(UespParser):
             if block.get("type") == "p" and block.get("text", "").strip()
         ]
 
-        phase_facts = extract_phases(strategy_blocks + abilities_blocks)
+        dialogue_blocks = _section(parsed.sections, DIALOGUE_HEADINGS) or []
+
+        phase_facts = extract_phases(strategy_blocks + abilities_blocks + dialogue_blocks)
         phases = [UespPhase(fact.label, fact.threshold, fact.description) for fact in phase_facts]
 
-        dialogue_blocks = _section(parsed.sections, DIALOGUE_HEADINGS) or []
         dialogue = self._dialogue_from_blocks(dialogue_blocks)
         grouped: dict[str, list[UespDialogueLine]] = {}
         for line in dialogue:
