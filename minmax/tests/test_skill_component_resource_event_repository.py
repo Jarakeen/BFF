@@ -67,6 +67,39 @@ def test_repository_links_current_restore_to_bounded_resource_rule_context(tmp_p
     assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
 
 
+def test_repository_uses_ability_description_to_define_current_restore(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT,
+            description TEXT
+        );
+        INSERT INTO skill_rank VALUES (24, 240);
+        INSERT INTO ability VALUES (
+            240,
+            'Current Restore: $2 While slotted you gain Major Vitality.',
+            'You also restore 12% Stamina, increasing by up to 100% based on how high your current Health is.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    events = SkillComponentResourceEventRepository(path).resolve(24, 2)
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.resource_type is SkillComponentResourceType.STAMINA
+    assert event.amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert event.amount_fraction == 0.12
+    assert event.max_bonus_fraction == 1.0
+    assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+
 def test_repository_uses_raw_tooltip_to_define_current_restore(tmp_path):
     path = tmp_path / "eso.db"
     db = sqlite3.connect(path)
