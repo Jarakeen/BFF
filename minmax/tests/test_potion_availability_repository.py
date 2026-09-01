@@ -20,6 +20,16 @@ def _write_processed(path: Path) -> None:
             "effects": ["Restore Magicka", "Increase Spell Power", "Spell Critical"],
         },
     ]
+    health_formulas = [
+        {
+            "ingredients": ["Bugloss", "Columbine"],
+            "effects": ["Restore Health"],
+        },
+        {
+            "ingredients": ["Butterfly Wing", "Columbine"],
+            "effects": ["Restore Health"],
+        },
+    ]
     payload = {
         "effects": [
             {
@@ -36,6 +46,11 @@ def _write_processed(path: Path) -> None:
                 "effect_name": "Spell Critical",
                 "source_files": ["spell_critical.html"],
                 "formulas": formulas,
+            },
+            {
+                "effect_name": "Restore Health",
+                "source_files": ["restore_health.html"],
+                "formulas": health_formulas,
             },
         ]
     }
@@ -65,6 +80,7 @@ def _write_db(path: Path, *, omit: str | None = None) -> None:
             (1, "Restore Magicka", "alchemy"),
             (2, "Increase Spell Power", "alchemy"),
             (3, "Spell Critical", "alchemy"),
+            (4, "Restore Health", "alchemy"),
         )
         for effect_id, name, category in rows:
             db.execute("INSERT INTO effect(id, name, category) VALUES (?, ?, ?)", (effect_id, name, category))
@@ -98,6 +114,23 @@ def test_legacy_spell_power_alias_resolves_effect_family_with_two_equivalent_for
     assert all(effect.layer is EffectLayer.CONSUMABLE for effect in result.effects)
     assert all(effect.trigger == "potion_use" for effect in result.effects)
     assert all("uptime are not assumed" in str(effect.condition) for effect in result.effects)
+
+
+def test_legacy_health_elixir_alias_resolves_restore_health_family(tmp_path: Path):
+    processed = tmp_path / "alchemy_effects.json"
+    database = tmp_path / "eso.db"
+    _write_processed(processed)
+    _write_db(database)
+    repository = PotionAvailabilityRepository(database, processed)
+
+    for label in ("Health Elixir", "Elixir of Health"):
+        result = repository.resolve(label)
+        assert result.resolved
+        assert len(result.formulas) == 2
+        assert result.canonical_traits == ("Restore Health",)
+        assert tuple(effect.name for effect in result.effects) == ("restore_health",)
+        assert result.effects[0].layer is EffectLayer.CONSUMABLE
+        assert result.effects[0].trigger == "potion_use"
 
 
 def test_exact_formula_id_resolves_one_recipe(tmp_path: Path):
