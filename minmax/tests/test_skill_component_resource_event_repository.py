@@ -1,6 +1,10 @@
 import sqlite3
 
-from minmax.skill_component_resource_event import SkillComponentResourceType
+from minmax.skill_component_resource_event import (
+    SkillComponentResourceAmountBasis,
+    SkillComponentResourceScalingDriver,
+    SkillComponentResourceType,
+)
 from minmax.skill_component_resource_event_repository import SkillComponentResourceEventRepository
 
 
@@ -33,6 +37,55 @@ def test_repository_does_not_borrow_other_component_resource_text(tmp_path):
     _make_db(path)
 
     assert SkillComponentResourceEventRepository(path).resolve(10, 1) == ()
+
+
+def test_repository_links_current_restore_to_immediately_preceding_resource_rule(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (ability_id INTEGER PRIMARY KEY, coef_description TEXT);
+        INSERT INTO skill_rank VALUES (20, 200);
+        INSERT INTO ability VALUES (
+            200,
+            'You also restore 12% Stamina, increasing by up to 100% based on how high your current Health is. '
+            'Current Restore: $2 While slotted you gain Major Vitality.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    events = SkillComponentResourceEventRepository(path).resolve(20, 2)
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.resource_type is SkillComponentResourceType.STAMINA
+    assert event.amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert event.amount_fraction == 0.12
+    assert event.max_bonus_fraction == 1.0
+    assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+
+def test_current_restore_window_does_not_borrow_earlier_unrelated_resource_sentence(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (ability_id INTEGER PRIMARY KEY, coef_description TEXT);
+        INSERT INTO skill_rank VALUES (30, 300);
+        INSERT INTO ability VALUES (
+            300,
+            'Restore 20% Magicka. Gain Major Resolve. Current Restore: $2 While slotted you gain Major Vitality.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    assert SkillComponentResourceEventRepository(path).resolve(30, 2) == ()
 
 
 def test_repository_returns_empty_for_unknown_rank(tmp_path):
