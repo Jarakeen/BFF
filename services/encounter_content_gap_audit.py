@@ -104,7 +104,7 @@ def _persisted_refs(connection: sqlite3.Connection, encounter_id: str) -> set[st
 
 
 def _source_declared_encounters(source_root: Path, content_id: str) -> tuple[str, ...]:
-    """Return boss_ids declared by the tracked UESP content record, if present."""
+    """Return boss_ids declared by the tracked ESO source content record, if present."""
 
     if not source_root.exists():
         return ()
@@ -170,7 +170,7 @@ def audit_content_encounters(
     *,
     content_id: str,
     packet_dir: Path,
-    source_root: Path = Path("data/uesp"),
+    source_root: Path = Path("data/eso_info"),
 ) -> EncounterContentGapAudit:
     content_row = connection.execute(
         "SELECT name FROM content WHERE id=?",
