@@ -62,7 +62,13 @@ def _connection() -> sqlite3.Connection:
     return con
 
 
-def _plan(payload: str = '{"name":"Rapid Deluge","present":true}') -> EncounterPersistencePlan:
+def _plan(
+    payload: str = '{"name":"Rapid Deluge","present":true}',
+    *,
+    first_evidence_notes: str = "",
+    first_evidence_value: str = "true",
+    first_evidence_confidence: str = "high",
+) -> EncounterPersistencePlan:
     fact = PlannedCanonicalFactRow(
         logical_ref="mechanic_state:rapid_deluge_exists",
         encounter_id="tideborn_taleria",
@@ -83,9 +89,9 @@ def _plan(payload: str = '{"name":"Rapid Deluge","present":true}') -> EncounterP
             source_revision="3582555",
             game_update="",
             patch_version="",
-            confidence="high",
-            source_value_json="true",
-            notes="",
+            confidence=first_evidence_confidence,
+            source_value_json=first_evidence_value,
+            notes=first_evidence_notes,
         ),
         PlannedEvidenceRow(
             canonical_fact_ref=fact.logical_ref,
@@ -135,3 +141,20 @@ def test_writer_refuses_existing_conflicting_payload():
 
     with pytest.raises(RuntimeError, match="conflicts with reviewed plan"):
         persist_encounter_plans(con, [_plan('{"name":"Rapid Deluge","present":false}')])
+
+
+@pytest.mark.parametrize(
+    "changed_plan",
+    [
+        _plan(first_evidence_notes="source_family=changed"),
+        _plan(first_evidence_value="false"),
+        _plan(first_evidence_confidence="medium"),
+    ],
+)
+def test_writer_refuses_existing_conflicting_evidence(changed_plan):
+    con = _connection()
+    persist_encounter_plans(con, [_plan()])
+    con.commit()
+
+    with pytest.raises(RuntimeError, match="Existing encounter evidence conflicts"):
+        persist_encounter_plans(con, [changed_plan])
