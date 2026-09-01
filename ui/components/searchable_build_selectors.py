@@ -46,6 +46,7 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.quality_combo.setFixedWidth(82)
+        self.set2_combo.setVisible(False)
         for combo in (self.set_combo, self.set2_combo):
             self._compact_set_combo(combo)
         for combo in (self.set_combo, self.trait_combo, self.enchant_combo):
@@ -100,6 +101,35 @@ class SearchableSkillBarRow(EligibleSkillBarRow):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             _configure_search(field)
+
+
+class SearchableBuildEditor(EligibleBuildEditor):
+    """Live build editor with compact searchable controls."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hide_legacy_second_set_column()
+
+    def _hide_legacy_second_set_column(self) -> None:
+        """Collapse the old Set 2 column without changing the saved-build schema."""
+        root = self.layout()
+        if root is None or root.count() < 2:
+            return
+        gear_card = root.itemAt(1).widget()
+        if gear_card is None or not hasattr(gear_card, "body_layout"):
+            return
+        body = gear_card.body_layout
+        if body.count() < 1:
+            return
+        grid = body.itemAt(0).layout()
+        if grid is None:
+            return
+        header_item = grid.itemAtPosition(0, 3)
+        header = header_item.widget() if header_item is not None else None
+        if header is not None:
+            header.setVisible(False)
+        grid.setColumnMinimumWidth(3, 0)
+        grid.setColumnStretch(3, 0)
 
 
 def _patch_builds_page() -> None:
@@ -182,6 +212,6 @@ def install() -> None:
     """Install shared selector behavior before pages construct BuildEditor."""
     build_editor.GearSlotRow = SearchableGearSlotRow
     build_editor.SkillBarRow = SearchableSkillBarRow
-    build_editor.BuildEditor = EligibleBuildEditor
+    build_editor.BuildEditor = SearchableBuildEditor
     _patch_builds_page()
     _patch_optimization_skill_picker()
