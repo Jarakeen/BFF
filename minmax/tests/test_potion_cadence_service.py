@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from minmax.potion_use_event import PotionBuffGrant, PotionUseEvent
+from minmax.potion_use_event import PotionBuffGrant, PotionTraitUse, PotionUseEvent
 from services.build_catalog_service import BuildCatalogService
 from services.potion_cadence_service import PotionCadenceService
 
@@ -9,6 +9,18 @@ class _EventResolver:
     def resolve(self, potion_name: str) -> PotionUseEvent:
         return PotionUseEvent(
             selected_label=potion_name,
+            traits=(
+                PotionTraitUse(
+                    trait="Increase Spell Power",
+                    kind="timed_trait",
+                    magnitude=None,
+                    duration=36.6,
+                    triple_duration=40.6,
+                    tier_name="Essence of Spell Power",
+                    solvent="Lorkhan's Tears",
+                    level=150,
+                ),
+            ),
             buff_grants=(
                 PotionBuffGrant(
                     source_trait="Increase Spell Power",
