@@ -19,17 +19,19 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_resource_path
+from services.optional_modules import broadcast_enabled
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_label, semantic_icon, set_button_icon
 
 
-NAV_SECTIONS = [
-    {"label": "Broadcast", "children": [
-        ("Broadcast Desk", "broadcast"),
-        ("Field Notes", "field_office"),
-        ("Live Operations", "live_operations"),
-        ("Archive", "archive"),
-    ]},
+BROADCAST_NAV_SECTION = {"label": "Broadcast", "children": [
+    ("Broadcast Desk", "broadcast"),
+    ("Field Notes", "field_office"),
+    ("Live Operations", "live_operations"),
+    ("Archive", "archive"),
+]}
+
+CORE_NAV_SECTIONS = [
     ("Achievements", "achievements", "header"),
     {"label": "Collections", "children": [
         ("Mounts", "collectibles:Mounts"), ("Pets", "collectibles:Pets"),
@@ -51,11 +53,18 @@ NAV_SECTIONS = [
 ]
 
 
+def nav_sections(include_broadcast: bool) -> list:
+    if include_broadcast:
+        return [BROADCAST_NAV_SECTION, *CORE_NAV_SECTIONS]
+    return list(CORE_NAV_SECTIONS)
+
+
 class FoundrySidebar(QWidget):
     pageRequested = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, include_broadcast: bool | None = None):
         super().__init__(parent)
+        self.include_broadcast = broadcast_enabled() if include_broadcast is None else include_broadcast
         self.buttons = {}
         self.setMinimumWidth(215)
         self.setMaximumWidth(248)
@@ -123,7 +132,7 @@ class FoundrySidebar(QWidget):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(2)
 
-        for section in NAV_SECTIONS:
+        for section in nav_sections(self.include_broadcast):
             if isinstance(section, tuple):
                 text, page = section[0], section[1]
                 style = section[2] if len(section) > 2 else None
@@ -153,7 +162,10 @@ class FoundrySidebar(QWidget):
         self.obs = QLabel("● OBS")
         self.archive = QLabel("● Archive")
         self.discord = QLabel("● Discord")
-        for widget in (self.obs, self.archive, self.discord):
+        system_widgets = [self.archive, self.discord]
+        if self.include_broadcast:
+            system_widgets.insert(0, self.obs)
+        for widget in system_widgets:
             widget.setProperty("sidebarMeta", True)
             content_layout.addWidget(widget)
 
