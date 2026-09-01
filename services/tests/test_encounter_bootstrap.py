@@ -58,7 +58,7 @@ def _db() -> sqlite3.Connection:
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            "tideborn_taleria",
+            "legacy_taleria_384409",
             "Tideborn Taleria",
             "dreadsail_reef",
             "summary",
@@ -76,14 +76,23 @@ def _db() -> sqlite3.Connection:
     return db
 
 
-def test_build_bootstrap_plan_maps_legacy_boss_fields() -> None:
+def test_build_bootstrap_plan_resolves_normalized_selector_and_maps_legacy_fields() -> None:
     db = _db()
     plan = build_encounter_bootstrap_plan(db, "tideborn_taleria")
 
     assert plan.encounter_id == "tideborn_taleria"
+    assert plan.legacy_boss_id == "legacy_taleria_384409"
     assert plan.content_id == "dreadsail_reef"
     assert plan.slug == "tideborn-taleria"
     assert plan.source_revision_id == "3582555"
+
+
+def test_build_bootstrap_plan_accepts_exact_name() -> None:
+    db = _db()
+    plan = build_encounter_bootstrap_plan(db, "Tideborn Taleria")
+
+    assert plan.encounter_id == "tideborn_taleria"
+    assert plan.legacy_boss_id == "legacy_taleria_384409"
 
 
 def test_apply_bootstrap_initializes_schema_and_inserts_encounter() -> None:
