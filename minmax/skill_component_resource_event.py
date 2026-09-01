@@ -53,7 +53,7 @@ class SkillComponentResourceEvent:
 
 _COEFFICIENT_RESOURCE_EVENT_RE = re.compile(
     r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b"
-    r"[^.;]{0,70}?\$(?P<number>\d+)(?!\d)\s+"
+    r"[^.;]{0,70}?\$(?P<number>\d+)(?!\d)\s*"
     r"(?P<resource>magicka|stamina|ultimate)\b",
     flags=re.IGNORECASE,
 )
