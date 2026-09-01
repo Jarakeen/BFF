@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from models.build_model import PlayerBuild
 
 from .alliance_support_passive_input_resolver import AllianceSupportPassiveInputResolver
@@ -80,6 +82,7 @@ class BuildCalculationContextFactory:
             if skill_line_repository is None:
                 skill_line_repository = SkillLineRepository(database_path)
 
+        self.skill_line_repository = skill_line_repository
         self.gear_resolver = (
             GearStatInputResolver(
                 gear_set_repository,
@@ -180,6 +183,46 @@ class BuildCalculationContextFactory:
             return {}
         return self.race_repository.get_stat_map_by_name(str(race_name).strip())
 
+    def _maxed_passive(
+        self,
+        progression: CharacterProgression,
+        passive_name: str,
+        *,
+        relevant: bool = True,
+    ) -> tuple[bool | None, str | None]:
+        """Resolve whether verified max-rank math may be applied.
+
+        ``None`` ownership is returned only for legacy callers that supplied no
+        individual passive map at all. Production canonical progression uses an
+        explicit mapping and therefore fails closed for unknown/partial ranks.
+        """
+        if not relevant:
+            return False, None
+        if progression.passive_ranks is None:
+            return None, None
+
+        rank = progression.passive_rank(passive_name)
+        if rank is None:
+            return False, f"Passive rank is not recorded for character: {passive_name}"
+        if rank == 0:
+            return False, None
+        if self.skill_line_repository is None:
+            return False, f"Passive max rank cannot be verified without skill repository: {passive_name}"
+        maximum = self.skill_line_repository.passive_max_rank(passive_name)
+        if maximum is None:
+            return False, f"Passive max rank is not available in canonical data: {passive_name}"
+        if rank != maximum:
+            return False, f"Partial passive rank is not yet modeled: {passive_name} {rank}/{maximum}"
+        return True, None
+
+    @staticmethod
+    def _append_progression_unresolved(
+        result: GearCalculationInputs,
+        messages: list[str],
+    ) -> GearCalculationInputs:
+        clean = tuple(message for message in messages if message and message not in result.unresolved)
+        return replace(result, unresolved=result.unresolved + clean) if clean else result
+
     def _gear_inputs(
         self,
         build: PlayerBuild,
@@ -203,40 +246,129 @@ class BuildCalculationContextFactory:
             progression=progression,
         )
         gear = self.combat_state_resolver.apply(gear, build, combat_state=combat_state)
+
+        unresolved: list[str] = []
+        is_warden = str(build.EsoClass or "").strip().casefold() == "warden"
+        flourish, message = self._maxed_passive(progression, "Flourish", relevant=is_warden)
+        if message:
+            unresolved.append(message)
+        advanced_species, message = self._maxed_passive(progression, "Advanced Species", relevant=is_warden)
+        if message:
+            unresolved.append(message)
+        frozen_armor, message = self._maxed_passive(progression, "Frozen Armor", relevant=is_warden)
+        if message:
+            unresolved.append(message)
         if self.warden_passive_resolver is not None:
-            gear = self.warden_passive_resolver.apply(gear, build, active_bar=active_bar)
+            gear = self.warden_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                flourish_owned=flourish,
+                advanced_species_owned=advanced_species,
+                frozen_armor_owned=frozen_armor,
+            )
+
+        light_line = progression.owns_skill_line("Light Armor")
+        medium_line = progression.owns_skill_line("Medium Armor")
+        evocation, message = self._maxed_passive(progression, "Evocation", relevant=light_line)
+        if message:
+            unresolved.append(message)
+        concentration, message = self._maxed_passive(progression, "Concentration", relevant=light_line)
+        if message:
+            unresolved.append(message)
+        spell_warding, message = self._maxed_passive(progression, "Spell Warding", relevant=light_line)
+        if message:
+            unresolved.append(message)
+        prodigy, message = self._maxed_passive(progression, "Prodigy", relevant=light_line)
+        if message:
+            unresolved.append(message)
+        wind_walker, message = self._maxed_passive(progression, "Wind Walker", relevant=medium_line)
+        if message:
+            unresolved.append(message)
+        agility, message = self._maxed_passive(progression, "Agility", relevant=medium_line)
+        if message:
+            unresolved.append(message)
+        dexterity, message = self._maxed_passive(progression, "Dexterity", relevant=medium_line)
+        if message:
+            unresolved.append(message)
+
         gear = self.armor_passive_resolver.apply(
             gear,
             build,
-            light_armor_passives_owned=progression.owns_skill_line("Light Armor"),
-            medium_armor_passives_owned=progression.owns_skill_line("Medium Armor"),
-            heavy_armor_passives_owned=progression.owns_skill_line("Heavy Armor"),
+            light_armor_passives_owned=light_line if progression.passive_ranks is None else False,
+            medium_armor_passives_owned=medium_line if progression.passive_ranks is None else False,
+            heavy_armor_passives_owned=progression.owns_skill_line("Heavy Armor") if progression.passive_ranks is None else False,
+            evocation_owned=evocation,
+            concentration_owned=concentration,
+            spell_warding_owned=spell_warding,
+            prodigy_owned=prodigy,
+            wind_walker_owned=wind_walker,
+            agility_owned=agility,
+            dexterity_owned=dexterity,
         )
+
+        one_hand_line = progression.owns_skill_line("One Hand and Shield")
+        fortress, message = self._maxed_passive(progression, "Fortress", relevant=one_hand_line)
+        if message:
+            unresolved.append(message)
+        sword_and_board, message = self._maxed_passive(progression, "Sword and Board", relevant=one_hand_line)
+        if message:
+            unresolved.append(message)
+        deflect_bolts, message = self._maxed_passive(progression, "Deflect Bolts", relevant=one_hand_line)
+        if message:
+            unresolved.append(message)
         gear = self.one_hand_shield_passive_resolver.apply(
             gear,
             build,
             active_bar=active_bar,
-            passives_owned=progression.owns_skill_line("One Hand and Shield"),
+            passives_owned=one_hand_line if progression.passive_ranks is None else False,
+            fortress_owned=fortress,
+            sword_and_board_owned=sword_and_board,
+            deflect_bolts_owned=deflect_bolts,
             incoming_attack=incoming_attack,
         )
+
+        undaunted_line = progression.owns_skill_line("Undaunted")
+        undaunted_mettle, message = self._maxed_passive(progression, "Undaunted Mettle", relevant=undaunted_line)
+        if message:
+            unresolved.append(message)
         gear = self.undaunted_passive_resolver.apply(
             gear,
             build,
-            undaunted_passives_owned=progression.owns_skill_line("Undaunted"),
+            undaunted_passives_owned=undaunted_line if progression.passive_ranks is None else False,
+            undaunted_mettle_owned=undaunted_mettle,
         )
+
+        mages_line = progression.owns_skill_line("Mages Guild")
+        fighters_line = progression.owns_skill_line("Fighters Guild")
+        magicka_controller, message = self._maxed_passive(progression, "Magicka Controller", relevant=mages_line)
+        if message:
+            unresolved.append(message)
+        slayer, message = self._maxed_passive(progression, "Slayer", relevant=fighters_line)
+        if message:
+            unresolved.append(message)
         if self.guild_passive_resolver is not None:
             gear = self.guild_passive_resolver.apply(
                 gear,
                 build,
                 active_bar=active_bar,
-                mages_guild_passives_owned=progression.owns_skill_line("Mages Guild"),
-                fighters_guild_passives_owned=progression.owns_skill_line("Fighters Guild"),
+                mages_guild_passives_owned=mages_line if progression.passive_ranks is None else False,
+                fighters_guild_passives_owned=fighters_line if progression.passive_ranks is None else False,
+                magicka_controller_owned=magicka_controller,
+                slayer_owned=slayer,
             )
+
+        support_line = progression.owns_skill_line("Support")
+        magicka_aid, message = self._maxed_passive(progression, "Magicka Aid", relevant=support_line)
+        if message:
+            unresolved.append(message)
         if self.alliance_support_passive_resolver is not None:
             gear = self.alliance_support_passive_resolver.apply(
                 gear,
                 build,
                 active_bar=active_bar,
-                support_passives_owned=progression.owns_skill_line("Support"),
+                support_passives_owned=support_line if progression.passive_ranks is None else False,
+                magicka_aid_owned=magicka_aid,
             )
-        return gear
+
+        return self._append_progression_unresolved(gear, unresolved)
