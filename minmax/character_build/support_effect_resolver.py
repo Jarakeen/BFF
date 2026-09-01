@@ -20,7 +20,7 @@ from .effect_availability import (
     resolve_ultimate_cast_effects,
 )
 from .effect_instance import EffectVariant
-from .effect_layer import BarId
+from .effect_layer import BarId, EffectLayer
 from .effect_relationship import (
     ConditionContext,
     EffectRelationship,
@@ -49,13 +49,6 @@ def effect_variant_to_support_effect(
     *,
     role_relevance: frozenset[Role] = frozenset(),
 ) -> SupportEffect:
-    """
-    Convert one resolved EffectVariant into a SupportEffect, preserving
-    every field SupportEffect can represent instead of collapsing it.
-
-    An EffectVariant with no `target_type` set is treated as SELF, never
-    guessed to be group support.
-    """
     trigger: SupportEffectTrigger | None = None
 
     if effect.trigger is not None:
@@ -67,11 +60,7 @@ def effect_variant_to_support_effect(
         )
 
     conditions: tuple[str, ...] = ()
-
     if effect.condition is not None and trigger is None:
-        # Only surface `condition` via SupportEffect.conditions when it
-        # isn't already carried by a SupportEffectTrigger, to avoid
-        # representing the same piece of data twice.
         conditions = (effect.condition,)
 
     return SupportEffect(
@@ -95,7 +84,6 @@ def effect_variant_to_support_effect(
 
 
 def _weapon_set_piece_count(weapon_type: WeaponType) -> int:
-    """Return the ESO set-piece contribution of one equipped weapon."""
     return 2 if weapon_type in _TWO_PIECE_WEAPON_TYPES else 1
 
 
@@ -103,15 +91,6 @@ def equipped_gear_set_counts(
     build: CharacterBuild,
     active_bar: BarId | None = None,
 ) -> dict[str, int]:
-    """
-    Count equipped set pieces by stable set identity.
-
-    When `active_bar` is supplied, weapon pieces follow ESO's actual bar
-    rules: only the active bar contributes, and bows/two-handed weapons/
-    staves count as two set pieces. The no-bar form preserves the legacy
-    aggregate behavior for callers that are not performing active-bar
-    capability resolution.
-    """
     counts: Counter[str] = Counter()
 
     for piece in build.all_armor_pieces():
@@ -145,22 +124,7 @@ def resolve_effect_variants(
     condition_context: ConditionContext | None = None,
     ultimate_trigger: str | None = None,
 ) -> tuple[EffectVariant, ...]:
-    """
-    Resolve every EffectVariant `build` actually provides while
-    `active_bar` is active.
-
-    This includes cast/slotted/passive/proc effects, the active bar's
-    ultimate result, and generic relationship modifications/triggers.
-
-    `condition_context` is threaded into relationship resolution so
-    conditional effects and REQUIRES relationships can be evaluated
-    before the resulting effects cross into capability resolution.
-
-    Raises IllegalBuildError if `build` fails its own hard-constraint
-    validation.
-    """
     violations = build.validate()
-
     if violations:
         raise IllegalBuildError(violations)
 
@@ -169,13 +133,11 @@ def resolve_effect_variants(
         active_bar,
         passives,
     )
-
     ultimate_effects = resolve_ultimate_cast_effects(
         build,
         active_bar,
         trigger=ultimate_trigger,
     )
-
     return apply_relationships(
         base_effects + ultimate_effects,
         relationships,
@@ -184,53 +146,48 @@ def resolve_effect_variants(
 
 
 def _legacy_build_for_bar_weapons(bar: Bar | None) -> LegacyBuild:
-    """
-    Build a throwaway legacy `minmax.build.Build` containing only the
-    given bar's enchanted weapons, so the existing DB-backed
-    BuildSupportEffectService pipeline can be reused as-is for weapon
-    enchantments, without modifying that legacy path at all.
-    """
     legacy_build = LegacyBuild(name="character-build-bar-bridge")
-
     if bar is None:
         return legacy_build
 
     for weapon in (bar.main_hand, bar.off_hand):
         if weapon is None or weapon.enchantment_item_id is None:
             continue
-
         legacy_build.add_weapon(
             enchantment_item_id=weapon.enchantment_item_id,
             trait=weapon.trait,
             quality=weapon.quality,
         )
-
     return legacy_build
 
 
 class CharacterBuildSupportEffectResolver:
-    """
-    Resolves a legal CharacterBuild into the full SupportEffectRegistry of
-    effects it can actually provide at a given moment.
-
-    Character-build-native effects are resolved by effect_availability.py.
-    DB-backed weapon enchantments reuse the existing
-    BuildSupportEffectService. Known gear-set effects are resolved from
-    equipped set-piece counts through GearSetEffectVariantResolver.
-
-    This class is a bridge, not a new source of truth.
-    """
+    """Resolve a legal CharacterBuild into its available SupportEffects."""
 
     def __init__(
         self,
         weapon_enchantment_support_service: BuildSupportEffectService | None = None,
         gear_set_effect_variant_resolver: GearSetEffectVariantResolver | None = None,
     ) -> None:
-        self.weapon_enchantment_support_service = (
-            weapon_enchantment_support_service
-        )
-        self.gear_set_effect_variant_resolver = (
-            gear_set_effect_variant_resolver
+        self.weapon_enchantment_support_service = weapon_enchantment_support_service
+        self.gear_set_effect_variant_resolver = gear_set_effect_variant_resolver
+
+    @staticmethod
+    def _safe_consumables(effects: Iterable[EffectVariant]) -> tuple[EffectVariant, ...]:
+        """Admit only self-target consumable availability into capability data.
+
+        This is deliberately strict. A selected potion is something the player
+        can use; it is not evidence of standing uptime and must never become a
+        GROUP/ALLY/ENEMY support provider merely because a malformed variant was
+        supplied by a caller.
+        """
+        return tuple(
+            effect
+            for effect in effects
+            if effect.eligible
+            and effect.layer is EffectLayer.CONSUMABLE
+            and effect.target_type is SupportTargetType.SELF
+            and str(effect.trigger or "").strip().casefold() == "potion_use"
         )
 
     def resolve(
@@ -240,22 +197,11 @@ class CharacterBuildSupportEffectResolver:
         *,
         passives: Iterable[PassiveGrant] = (),
         relationships: Iterable[EffectRelationship] = (),
+        consumable_effects: Iterable[EffectVariant] = (),
         condition_context: ConditionContext | None = None,
         ultimate_trigger: str | None = None,
         role_relevance: frozenset[Role] = frozenset(),
     ) -> SupportEffectRegistry:
-        """
-        Resolve `build` into a SupportEffectRegistry containing every
-        effect it provides while `active_bar` is active.
-
-        Multiple providers of the same named effect are preserved as
-        separate SupportEffect entries. This resolver never merges or
-        sums them.
-
-        `condition_context` is optional and additive. When omitted,
-        relationship resolution preserves the existing unconditional
-        behavior.
-        """
         effect_variants = list(
             resolve_effect_variants(
                 build,
@@ -267,17 +213,8 @@ class CharacterBuildSupportEffectResolver:
             )
         )
 
-        # Ineligible EffectVariants remain preserved during relationship
-        # resolution as evidence, but must not become capabilities.
-        effect_variants = [
-            effect
-            for effect in effect_variants
-            if effect.eligible
-        ]
+        effect_variants = [effect for effect in effect_variants if effect.eligible]
 
-        # Resolve known gear-set effects from the actual equipped set
-        # counts. These are derived effects and are deliberately not
-        # written back onto ArmorPiece.effects.
         if self.gear_set_effect_variant_resolver is not None:
             for set_id, piece_count in equipped_gear_set_counts(
                 build,
@@ -287,7 +224,6 @@ class CharacterBuildSupportEffectResolver:
                     numeric_set_id = int(set_id)
                 except (TypeError, ValueError):
                     continue
-
                 effect_variants.extend(
                     self.gear_set_effect_variant_resolver.resolve(
                         numeric_set_id,
@@ -295,8 +231,12 @@ class CharacterBuildSupportEffectResolver:
                     )
                 )
 
-        registry = SupportEffectRegistry()
+        # Consumable availability joins the same EffectVariant pipeline only at
+        # this final capability boundary. The trigger/condition/SELF target are
+        # preserved, so no standing stat or raid-support uptime is inferred.
+        effect_variants.extend(self._safe_consumables(consumable_effects))
 
+        registry = SupportEffectRegistry()
         for effect in effect_variants:
             registry.add(
                 effect_variant_to_support_effect(
@@ -311,15 +251,10 @@ class CharacterBuildSupportEffectResolver:
                 if active_bar == BarId.FRONT
                 else build.back_bar
             )
-
             legacy_build = _legacy_build_for_bar_weapons(active_bar_obj)
-
-            enchantment_registry = (
-                self.weapon_enchantment_support_service.resolve(
-                    legacy_build
-                )
+            enchantment_registry = self.weapon_enchantment_support_service.resolve(
+                legacy_build
             )
-
             for support_effect in enchantment_registry.all():
                 registry.add(support_effect)
 
