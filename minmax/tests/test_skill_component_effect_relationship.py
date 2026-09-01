@@ -64,3 +64,51 @@ def test_inflicts_known_effect_is_supported_without_temporal_inference():
     assert len(relationships) == 1
     assert relationships[0].target_effect == "chilled"
     assert relationships[0].relationship_type is SkillComponentEffectRelationshipType.APPLIES
+
+
+def test_application_after_second_placeholder_belongs_only_to_second_component():
+    fragment = (
+        "Deal $1 Flame Damage and an additional $2 Flame Damage over 10 seconds, "
+        "applying the Burning status effect."
+    )
+
+    first = extract_explicit_effect_applications(
+        skill_rank_id=10,
+        coefficient_number=1,
+        fragment=fragment,
+        known_effect_names=("Burning",),
+    )
+    second = extract_explicit_effect_applications(
+        skill_rank_id=10,
+        coefficient_number=2,
+        fragment=fragment,
+        known_effect_names=("Burning",),
+    )
+
+    assert first == ()
+    assert len(second) == 1
+    assert second[0].target_effect == "burning"
+
+
+def test_application_before_second_placeholder_belongs_only_to_first_component():
+    fragment = (
+        "Deal $1 Flame Damage, applying the Burning status effect, then deal "
+        "$2 Magic Damage."
+    )
+
+    first = extract_explicit_effect_applications(
+        skill_rank_id=10,
+        coefficient_number=1,
+        fragment=fragment,
+        known_effect_names=("Burning",),
+    )
+    second = extract_explicit_effect_applications(
+        skill_rank_id=10,
+        coefficient_number=2,
+        fragment=fragment,
+        known_effect_names=("Burning",),
+    )
+
+    assert len(first) == 1
+    assert first[0].target_effect == "burning"
+    assert second == ()
