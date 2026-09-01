@@ -3,6 +3,7 @@ from pathlib import Path
 from models.build_model import PlayerBuild
 import tools.recover_saved_build_cp_skill_evidence as recovery
 from tools.recover_saved_build_cp_skill_evidence import (
+    _eso_hub_slug,
     _output_path,
     _saved_skill_names,
 )
@@ -25,6 +26,11 @@ def test_partial_output_path_is_build_scoped_and_not_full_harvest(tmp_path):
 
     assert path.name == "skill_champion_points.partial.df_healer.json"
     assert path.name != "skill_champion_points.json"
+
+
+def test_eso_hub_slug_collapses_possessive_apostrophe():
+    assert _eso_hub_slug("Winter's Embrace") == "winters-embrace"
+    assert _eso_hub_slug("Winter's Revenge") == "winters-revenge"
 
 
 def test_verified_class_skill_url_accepts_only_matching_skill_heading(monkeypatch):
