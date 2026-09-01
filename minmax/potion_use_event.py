@@ -3,14 +3,16 @@ from __future__ import annotations
 """Temporal potion-use evidence derived from saved potion availability.
 
 A saved potion only proves availability. This module models what becomes
-available *when the potion is explicitly used*: instant resource restores and
-timed Alchemy traits. It does not apply effects to CombatState automatically,
-does not assume cooldown/uptime, and does not apply Medicinal Use.
+available *when the potion is explicitly used*: instant resource restores,
+timed Alchemy traits, and source-backed named combat buffs. It does not apply
+effects to CombatState automatically, does not assume cooldown/uptime, and does
+not apply Medicinal Use.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
+from .alchemy_potion_buff_semantics import potion_buff_for_trait
 from .alchemy_potion_tier_repository import AlchemyPotionTierRepository, PotionTierEvidence
 from .combat_effect_semantics import GameUpdate, normalize_game_update
 from .potion_availability_repository import PotionAvailabilityRepository
@@ -31,10 +33,20 @@ class PotionTraitUse:
 
 
 @dataclass(frozen=True)
+class PotionBuffGrant:
+    source_trait: str
+    buff_name: str
+    duration: float
+    triple_duration: float | None
+    tier_name: str
+
+
+@dataclass(frozen=True)
 class PotionUseEvent:
     selected_label: str
     formula_ids: tuple[str, ...] = ()
     traits: tuple[PotionTraitUse, ...] = ()
+    buff_grants: tuple[PotionBuffGrant, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -76,14 +88,26 @@ class PotionUseEventResolver:
             trait=trait,
             kind="instant_restore" if is_restore else "timed_trait",
             magnitude=tier.magnitude if is_restore else None,
-            # Ordinary duration is the default. triple_duration is retained as
-            # evidence only until reagent support proves all three ingredients
-            # carry the same trait.
+            # Timed Alchemy-trait duration remains useful evidence even when the
+            # same trait also has an instant restore component. Named-buff grants
+            # below consume the ordinary duration explicitly.
             duration=None if is_restore else tier.duration,
             triple_duration=tier.triple_duration,
             tier_name=tier.potion_name,
             solvent=tier.solvent,
             level=tier.level,
+        )
+
+    def _buff_grant(self, trait: str, tier: PotionTierEvidence) -> PotionBuffGrant | None:
+        buff_name = potion_buff_for_trait(trait, game_update=self.game_update)
+        if buff_name is None or tier.duration is None:
+            return None
+        return PotionBuffGrant(
+            source_trait=trait,
+            buff_name=buff_name,
+            duration=tier.duration,
+            triple_duration=tier.triple_duration,
+            tier_name=tier.potion_name,
         )
 
     def resolve(self, selected_label: str) -> PotionUseEvent:
@@ -108,6 +132,7 @@ class PotionUseEventResolver:
             )
 
         uses: list[PotionTraitUse] = []
+        grants: list[PotionBuffGrant] = []
         unresolved: list[str] = []
         for trait in availability.canonical_traits:
             tier = self.tiers.max_tier(trait)
@@ -115,10 +140,14 @@ class PotionUseEventResolver:
                 unresolved.append(f"Max potion tier evidence missing for trait: {trait}")
                 continue
             uses.append(self._trait_use(trait, tier))
+            grant = self._buff_grant(trait, tier)
+            if grant is not None:
+                grants.append(grant)
 
         return PotionUseEvent(
             selected_label=clean,
             formula_ids=tuple(formula.canonical_id for formula in availability.formulas),
             traits=tuple(uses),
+            buff_grants=tuple(grants),
             unresolved=tuple(unresolved),
         )
