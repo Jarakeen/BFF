@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "content_id": "graven_deep",
+  "encounter_id": "the_euphotic_gatekeeper",
+  "encounter_name": "The Euphotic Gatekeeper",
+  "evidence": [
+    {"fact_type":"mechanic_detail","fact_key":"health_by_difficulty_uesp","value":{"normal":"2,946,975","veteran":"4,428,241","hardmode":"6,642,362"},"source_type":"uesp","source_name":"UESP Online:The Euphotic Gatekeeper","source_locator":"Health","source_revision":"3585400","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"bristlebarb_exists","value":true,"source_type":"uesp","source_name":"UESP Online:The Euphotic Gatekeeper","source_locator":"Abilities - Bristlebarb","source_revision":"3585400","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"bristlebarb_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Pangrits / poison synergy","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"pangrit_den_exists","value":true,"source_type":"uesp","source_name":"UESP Online:The Euphotic Gatekeeper","source_locator":"Abilities - Bristlebarb","source_revision":"3585400","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"pangrit_den_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Pangrits","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"pangrit_den_exists","value":true,"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Pangrit geysers","confidence":"high"},
+
+    {"fact_type":"mechanic_detail","fact_key":"bristlebarb_poison_closes_pangrit_den","value":{"afflicted_player_uses_poison_synergy":true,"drop_on_pangrit_den":true,"den_closes":true},"source_type":"uesp","source_name":"UESP Online:The Euphotic Gatekeeper","source_locator":"Abilities - Bristlebarb","source_revision":"3585400","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"bristlebarb_poison_closes_pangrit_den","value":{"afflicted_player_uses_poison_synergy":true,"drop_on_pangrit_den":true,"den_closes":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Pangrits","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"bristlepitch_hazard_exists","value":true,"source_type":"uesp","source_name":"UESP Online:The Euphotic Gatekeeper","source_locator":"Abilities - Bristlepitch","source_revision":"3585400","confidence":"high"},
+
+    {"fact_type":"mechanic_state","fact_key":"charge_exists","value":true,"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Charge","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"charge_exists","value":true,"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Triple Charge","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"charge_knockback","value":{"hit_by_charge_knocks_back":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Charge","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"charge_knockback","value":{"hit_by_charge_knocks_back":true},"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Triple Charge","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"charge_emits_aoes","value":{"aoes_emitted_during_charge":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Charge","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"charge_emits_aoes","value":{"aoes_emitted_during_charge":true},"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Triple Charge","confidence":"high"},
+
+    {"fact_type":"mechanic_detail","fact_key":"teleport_afterimage_explosion","value":{"expanding_aoe_before_explosion":true,"explosion_emits_aoes":true},"source_type":"guide","source_name":"ESO-Hub Graven Deep Dungeon Guide","source_family":"alcast_eso_hub","source_locator":"Euphotic Gatekeeper - Teleport","confidence":"high"},
+    {"fact_type":"mechanic_detail","fact_key":"teleport_afterimage_explosion","value":{"expanding_aoe_before_explosion":true,"explosion_emits_aoes":true},"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - After Image","confidence":"high","notes":"Guide calls this an after-image rather than teleport; normalized only to the shared expanding-AOE/explosion behavior."},
+
+    {"fact_type":"mechanic_state","fact_key":"leap_exists","value":true,"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Leap","confidence":"high"},
+    {"fact_type":"mechanic_state","fact_key":"heavy_attack_exists","value":true,"source_type":"guide","source_name":"The Tank Club Graven Deep Guide","source_locator":"Euphotic Gatekeeper - Heavy Attack","confidence":"high"}
+  ]
+}
