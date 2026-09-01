@@ -5,13 +5,13 @@ from minmax.gear_stat_inputs import GearCalculationInputs
 from minmax.static_build_inputs import StaticBuildInputResolver
 
 
-def test_selected_potion_is_explicitly_unresolved_until_effects_are_modeled():
+def test_selected_potion_remains_outside_static_active_state():
     build = PlayerBuild(Potion="spell power")
 
     result = StaticBuildInputResolver().apply(GearCalculationInputs(), build)
 
     assert result.unresolved == (
-        "Potion selected but potion effects are not yet modeled: spell power",
+        "Potion selected; activation/uptime is not part of static build state: spell power",
     )
 
 
