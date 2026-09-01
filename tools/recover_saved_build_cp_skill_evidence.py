@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -19,17 +20,18 @@ from crawlers.eso_hub_skill_cp_crawler import (
     load_champion_points,
     load_skills,
     normalize_name,
+    normalize_text,
+    slugify_name,
 )
-from engine.config import get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir
 from importers.champion_point_importer import ChampionPointSkillImporter
+from minmax.skill_coefficient_repository import SkillCoefficientRepository
 from models.build_model import PlayerBuild
 
 try:
     from bs4 import BeautifulSoup
-except ImportError as exc:  # pragma: no cover - dependency error is user-facing
-    raise SystemExit(
-        "beautifulsoup4 is required. Install project crawler dependencies first."
-    ) from exc
+except ImportError as exc:  # pragma: no cover
+    raise SystemExit("beautifulsoup4 is required. Install project crawler dependencies first.") from exc
 
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
@@ -41,7 +43,6 @@ def _load_saved_build(path: Path, requested: str) -> PlayerBuild:
     members = payload.get("Members") if isinstance(payload, dict) else None
     if not isinstance(members, list):
         raise ValueError(f"Unsupported saved-build format in {path}; expected Members")
-
     key = str(requested or "").strip().casefold()
     matches = [
         PlayerBuild.from_dict(entry)
@@ -50,9 +51,7 @@ def _load_saved_build(path: Path, requested: str) -> PlayerBuild:
         and str(entry.get("BuildName", "")).strip().casefold() == key
     ]
     if len(matches) != 1:
-        raise ValueError(
-            f"Expected exactly one saved build named {requested!r}; found {len(matches)}"
-        )
+        raise ValueError(f"Expected exactly one saved build named {requested!r}; found {len(matches)}")
     return matches[0]
 
 
@@ -62,10 +61,9 @@ def _saved_skill_names(saved: PlayerBuild) -> tuple[str, ...]:
     for value in tuple(saved.FrontBarSkills) + tuple(saved.BackBarSkills):
         name = str(value or "").strip()
         key = normalize_name(name)
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        result.append(name)
+        if key and key not in seen:
+            seen.add(key)
+            result.append(name)
     return tuple(result)
 
 
@@ -74,18 +72,63 @@ def _output_path(build_name: str, output_dir: Path) -> Path:
     return output_dir / f"skill_champion_points.partial.{slug}.json"
 
 
-def _db_skill_lookup() -> dict[str, list[dict]]:
-    result: dict[str, list[dict]] = {}
-    for skill in load_skills():
-        for candidate in (skill.get("name"), skill.get("index_name")):
-            key = normalize_name(str(candidate or ""))
-            if key:
-                result.setdefault(key, []).append(skill)
-    return result
+def _base_skills_by_id() -> dict[int, dict]:
+    return {int(skill["id"]): skill for skill in load_skills()}
+
+
+def _links_from_page(url: str) -> list[dict]:
+    html = fetch_html(url)
+    if not html:
+        return []
+    soup = BeautifulSoup(html, "html.parser")
+    found: dict[str, dict] = {}
+    for anchor in soup.find_all("a", href=True):
+        absolute = urljoin(BASE_URL, anchor.get("href", ""))
+        if not absolute.startswith(BASE_URL + "/en/skills/"):
+            continue
+        parsed = urlparse(absolute)
+        clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        if clean.rstrip("/") == url.rstrip("/"):
+            continue
+        text = normalize_text(anchor.get_text(" ", strip=True))
+        found.setdefault(
+            clean,
+            {
+                "url": clean,
+                "anchor_text": text,
+                "slug": parsed.path.rstrip("/").split("/")[-1],
+            },
+        )
+    return list(found.values())
+
+
+def _urls_for_skill_line(skill: dict, index_urls: list[dict], cache: dict[str, list[dict]]) -> list[dict]:
+    line = str(skill.get("skill_line") or "").strip()
+    key = normalize_name(line)
+    if not key:
+        return index_urls
+    if key in cache:
+        return cache[key]
+
+    line_slug = slugify_name(line)
+    candidates = [item for item in index_urls if str(item.get("slug") or "").casefold() == line_slug.casefold()]
+    if len(candidates) != 1:
+        candidates = [
+            item
+            for item in index_urls
+            if normalize_name(str(item.get("anchor_text") or "")) == key
+        ]
+    if len(candidates) == 1:
+        children = _links_from_page(str(candidates[0]["url"]))
+        cache[key] = children or index_urls
+    else:
+        cache[key] = index_urls
+    return cache[key]
 
 
 def recover(
     *,
+    database_path: Path,
     builds_path: Path,
     build_name: str,
     output_dir: Path,
@@ -94,7 +137,6 @@ def recover(
     if not builds_path.exists():
         print(f"Saved builds not found: {builds_path}")
         return 1
-
     try:
         saved = _load_saved_build(builds_path, build_name)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -107,8 +149,10 @@ def recover(
         return 3
 
     cp_vocab = load_champion_points()
-    skill_lookup = _db_skill_lookup()
-    urls = discover_skill_urls()
+    base_skills = _base_skills_by_id()
+    coefficient_repository = SkillCoefficientRepository(database_path)
+    index_urls = discover_skill_urls()
+    line_url_cache: dict[str, list[dict]] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = _output_path(build_name, output_dir)
@@ -128,14 +172,24 @@ def recover(
     failures: list[str] = []
 
     for number, saved_name in enumerate(requested_names, start=1):
-        matches = skill_lookup.get(normalize_name(saved_name), [])
-        if len(matches) != 1:
-            label = "not found in skill table" if not matches else f"ambiguous ({len(matches)} matches)"
+        resolution = coefficient_repository.resolve_name(saved_name)
+        if resolution.rank is None:
+            reason = "; ".join(resolution.unresolved) or "canonical skill resolution failed"
+            print(f"[{number}/{len(requested_names)}] {saved_name} -> {reason}")
+            failures.append(f"{saved_name}: {reason}")
+            continue
+
+        rank = resolution.rank
+        base = base_skills.get(rank.skill_id)
+        if base is None:
+            label = f"base skill id {rank.skill_id} not found"
             print(f"[{number}/{len(requested_names)}] {saved_name} -> {label}")
             failures.append(f"{saved_name}: {label}")
             continue
 
-        skill = matches[0]
+        skill = dict(base)
+        skill["name"] = rank.name
+        urls = _urls_for_skill_line(skill, index_urls, line_url_cache)
         match = choose_skill_url(skill, urls)
         if match is None:
             print(f"[{number}/{len(requested_names)}] {saved_name} -> no unique ESO-Hub URL")
@@ -151,14 +205,16 @@ def recover(
 
         cp_entries, error = extract_cp_section(
             BeautifulSoup(html, "html.parser"),
-            str(skill["name"]),
+            rank.name,
             cp_vocab,
         )
         record = {
-            "skill_id": skill["id"],
-            "skill_name": skill["name"],
-            "skill_base_ability_id": skill["base_ability_id"],
-            "skill_line": skill["skill_line"],
+            "skill_id": rank.skill_id,
+            "skill_rank_id": rank.skill_rank_id,
+            "ability_id": rank.ability_id,
+            "skill_name": rank.name,
+            "skill_base_ability_id": rank.base_ability_id,
+            "skill_line": base.get("skill_line"),
             "url": url,
             "champion_points": cp_entries,
             "parse_status": error or ("ok" if cp_entries else "section_found_but_no_cp_matches"),
@@ -175,10 +231,7 @@ def recover(
             "complete_corpus": False,
             "skills": records,
         }
-        output_path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
     if not records:
         print()
@@ -186,21 +239,6 @@ def recover(
         for failure in failures:
             print(f"  - {failure}")
         return 4
-
-    payload = {
-        "source": "ESO-Hub",
-        "source_index": INDEX_URL,
-        "generated_by": "recover_saved_build_cp_skill_evidence.py",
-        "scope": "partial_saved_build",
-        "build_name": saved.BuildName,
-        "character_name": saved.Name,
-        "complete_corpus": False,
-        "skills": records,
-    }
-    output_path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
 
     cp_links = sum(len(record["champion_points"]) for record in records)
     print()
@@ -213,7 +251,7 @@ def recover(
     if import_relationships:
         print()
         print("Importing recovered explicit relationships into champion_point_skill...")
-        ChampionPointSkillImporter(source_file=output_path).run()
+        ChampionPointSkillImporter(database=database_path, source_file=output_path).run()
     else:
         print()
         print("Read-only recovery complete. Database was not changed.")
@@ -229,15 +267,11 @@ def _parser() -> argparse.ArgumentParser:
             "The output is explicitly marked partial and never replaces a full harvest."
         )
     )
+    parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument(
-        "--import",
-        dest="import_relationships",
-        action="store_true",
-        help="Import recovered explicit links into champion_point_skill after writing the partial evidence file.",
-    )
+    parser.add_argument("--import", dest="import_relationships", action="store_true")
     return parser
 
 
@@ -245,6 +279,7 @@ if __name__ == "__main__":
     args = _parser().parse_args()
     raise SystemExit(
         recover(
+            database_path=args.database,
             builds_path=args.builds,
             build_name=args.build,
             output_dir=args.output_dir,
