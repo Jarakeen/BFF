@@ -1,6 +1,7 @@
 from minmax.skill_component_resource_event import (
     SkillComponentResourceAmountBasis,
     SkillComponentResourceEventType,
+    SkillComponentResourceScalingDriver,
     SkillComponentResourceType,
     extract_explicit_component_resource_events,
 )
@@ -84,11 +85,52 @@ def test_percent_of_missing_two_named_resources_emits_two_events():
     ]
 
 
+def test_percent_of_resource_with_current_health_scaling_is_supported():
+    events = extract_explicit_component_resource_events(
+        skill_rank_id=16,
+        coefficient_number=2,
+        component_text=(
+            "You also restore 12% Stamina, increasing by up to 100% based on how high "
+            "your current Health is. Current Restore: $2"
+        ),
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.resource_type is SkillComponentResourceType.STAMINA
+    assert event.amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert event.amount_fraction == 0.12
+    assert event.max_bonus_fraction == 1.0
+    assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+
+def test_percent_of_resource_without_dynamic_scaling_is_supported():
+    events = extract_explicit_component_resource_events(
+        skill_rank_id=17,
+        coefficient_number=1,
+        component_text="Restore 10% Stamina. Current Restore: $1",
+    )
+
+    assert len(events) == 1
+    assert events[0].amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert events[0].amount_fraction == 0.10
+    assert events[0].max_bonus_fraction is None
+    assert events[0].scaling_driver is None
+
+
 def test_percent_resource_event_requires_current_component_placeholder():
     assert extract_explicit_component_resource_events(
         skill_rank_id=14,
         coefficient_number=2,
         component_text="Restore 15% of your missing Magicka and heal $1 Health.",
+    ) == ()
+
+
+def test_percent_of_resource_without_current_component_placeholder_fails_closed():
+    assert extract_explicit_component_resource_events(
+        skill_rank_id=18,
+        coefficient_number=2,
+        component_text="Restore 12% Stamina based on current Health. Current Restore: $1",
     ) == ()
 
 
