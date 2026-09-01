@@ -124,7 +124,7 @@ class SearchableBuildEditor(EligibleBuildEditor):
         QTimer.singleShot(0, self._compact_host_dialog)
 
     def _compact_gear_grid(self) -> None:
-        """Collapse legacy Set 2 and send spare grid width to a trailing gutter."""
+        """Collapse legacy Set 2 and center the compact gear grid in its card."""
         root = self.layout()
         if root is None or root.count() < 2:
             return
@@ -143,20 +143,18 @@ class SearchableBuildEditor(EligibleBuildEditor):
         if header is not None:
             header.setVisible(False)
 
-        # The old Set 2 column contributes no width. Keep the Slot column from
-        # becoming Qt's dumping ground for all remaining horizontal space.
+        # The old Set 2 column contributes no width. Keep every real gear
+        # column content-sized, then center the complete grid inside the card so
+        # spare viewport space is shared evenly on the left and right.
         grid.setColumnMinimumWidth(3, 0)
-        for column in range(0, 11):
+        for column in range(0, 12):
             grid.setColumnStretch(column, 0)
         for row_index in range(grid.rowCount()):
             slot_item = grid.itemAtPosition(row_index, 1)
             slot_widget = slot_item.widget() if slot_item is not None else None
             if slot_widget is not None:
                 slot_widget.setMaximumWidth(150)
-
-        # An empty trailing column deliberately absorbs spare viewport width,
-        # leaving the real controls packed together at their useful size.
-        grid.setColumnStretch(11, 1)
+        grid.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
     def _compact_host_dialog(self) -> None:
         """Use a practical default editor size instead of the legacy 1500px width."""
