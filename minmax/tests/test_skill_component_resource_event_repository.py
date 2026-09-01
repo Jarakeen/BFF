@@ -133,6 +133,64 @@ def test_repository_uses_raw_tooltip_to_define_current_restore(tmp_path):
     assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
 
 
+def test_repository_uses_raw_json_string_value_to_define_current_restore(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT,
+            raw_json TEXT
+        );
+        INSERT INTO skill_rank VALUES (26, 260);
+        INSERT INTO ability VALUES (
+            260,
+            'Current Restore: $2 While slotted you gain Major Vitality.',
+            '{"nested":{"sourceText":"You also restore 12% Stamina, increasing by up to 100% based on how high your current Health is."}}'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    events = SkillComponentResourceEventRepository(path).resolve(26, 2)
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.resource_type is SkillComponentResourceType.STAMINA
+    assert event.amount_basis is SkillComponentResourceAmountBasis.PERCENT_RESOURCE
+    assert event.amount_fraction == 0.12
+    assert event.max_bonus_fraction == 1.0
+    assert event.scaling_driver is SkillComponentResourceScalingDriver.CURRENT_HEALTH
+
+
+def test_invalid_raw_json_does_not_define_current_restore(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT,
+            raw_json TEXT
+        );
+        INSERT INTO skill_rank VALUES (27, 270);
+        INSERT INTO ability VALUES (
+            270,
+            'Current Restore: $2 While slotted you gain Major Vitality.',
+            'not-json restore 12% Stamina increasing by up to 100% based on how high your current Health is'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    assert SkillComponentResourceEventRepository(path).resolve(27, 2) == ()
+
+
 def test_current_restore_window_does_not_borrow_earlier_unrelated_resource_sentence(tmp_path):
     path = tmp_path / "eso.db"
     db = sqlite3.connect(path)
