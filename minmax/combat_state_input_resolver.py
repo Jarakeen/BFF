@@ -6,6 +6,7 @@ from models.build_model import PlayerBuild
 
 from .base_character_state import PercentContribution
 from .champion_point_static_repository import ChampionPointStaticRepository
+from .combat_effect_semantics import GameUpdate
 from .combat_state import CombatState
 from .derived_stats import StatContribution
 from .gear_stat_inputs import CORE_FIELDS, GearCalculationInputs, GearStatInputResolver
@@ -73,7 +74,9 @@ class CombatStateInputResolver:
                 )
                 continue
 
-            source = f"Combat buff: {buff_name} [{combat_state.game_update.value}]"
+            source = f"Combat buff: {buff_name}"
+            if combat_state.game_update is not GameUpdate.U50:
+                source += f" [{combat_state.game_update.value}]"
             for effect in effects:
                 if effect.bucket == "resource_percent":
                     field_name = _RESOURCE_FIELDS.get(effect.stat)
