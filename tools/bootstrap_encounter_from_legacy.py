@@ -20,7 +20,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="Bootstrap one canonical encounter row from legacy bosses/content records"
     )
-    ap.add_argument("boss_id", help="Legacy bosses.id / canonical encounter id")
+    ap.add_argument(
+        "boss_selector",
+        help="Exact legacy boss id, exact boss name, or normalized canonical encounter id",
+    )
     ap.add_argument("--database", type=Path, default=Path("data/eso.db"))
     ap.add_argument(
         "--apply",
@@ -32,13 +35,15 @@ def main() -> int:
     connection = sqlite3.connect(args.database)
     connection.execute("PRAGMA foreign_keys = ON")
     try:
-        plan = build_encounter_bootstrap_plan(connection, args.boss_id)
+        plan = build_encounter_bootstrap_plan(connection, args.boss_selector)
 
         print("=" * 76)
         print(" ENCOUNTER BOOTSTRAP FROM LEGACY RECORDS")
         print("=" * 76)
         print(f"mode:             {'APPLY' if args.apply else 'DRY RUN'}")
         print(f"database:         {args.database}")
+        print(f"selector:         {args.boss_selector}")
+        print(f"legacy boss id:   {plan.legacy_boss_id}")
         print(f"encounter_id:     {plan.encounter_id}")
         print(f"content_id:       {plan.content_id}")
         print(f"name:             {plan.name}")
