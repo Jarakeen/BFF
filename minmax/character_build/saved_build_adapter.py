@@ -8,6 +8,7 @@ from pathlib import Path
 from models.build_model import GearSlot as LegacyGearSlot, PlayerBuild
 from services.skill_bar_eligibility import is_eligible
 
+from ..champion_point_effect_variant_resolver import ChampionPointEffectVariantResolver
 from ..gear_set_category_resolver import GearSetCategoryResolver
 from ..gear_set_repository import GearSetRepository
 from ..race_repository import RaceRepository
@@ -146,6 +147,7 @@ class SavedBuildCharacterAdapter:
         gear_set_category_resolver: GearSetCategoryResolver | None = None,
         skill_effect_repository: SkillEffectRepository | None = None,
         weapon_enchantment_repository: WeaponEnchantmentRepository | None = None,
+        champion_point_effect_resolver: ChampionPointEffectVariantResolver | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.race_repository = race_repository or RaceRepository(self.database_path)
@@ -161,6 +163,10 @@ class SavedBuildCharacterAdapter:
         self.weapon_enchantment_repository = (
             weapon_enchantment_repository
             or WeaponEnchantmentRepository(self.database_path)
+        )
+        self.champion_point_effect_resolver = (
+            champion_point_effect_resolver
+            or ChampionPointEffectVariantResolver(self.database_path)
         )
 
     def adapt(
@@ -241,7 +247,7 @@ class SavedBuildCharacterAdapter:
         self,
         saved: PlayerBuild,
     ) -> tuple[tuple[ChampionPointAllocation, ...], tuple[str, ...]]:
-        """Preserve saved CP identity/allocation without inventing CP effects."""
+        """Preserve saved CP allocations and attach only verified dynamic effects."""
         allocations: list[ChampionPointAllocation] = []
         unresolved: list[str] = []
 
@@ -265,10 +271,17 @@ class SavedBuildCharacterAdapter:
                 )
                 continue
 
+            effects, effect_unresolved = self.champion_point_effect_resolver.resolve(
+                name,
+                points,
+            )
+            unresolved.extend(effect_unresolved)
+
             allocations.append(
                 ChampionPointAllocation(
                     node_id=_stable_skill_id(name),
                     points=points,
+                    effects=effects,
                 )
             )
 
