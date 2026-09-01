@@ -278,6 +278,50 @@ def test_unstable_wall_projectile_barrier_amount_is_shield():
     assert evidence.is_aoe is None
 
 
+def test_gibbering_shield_maximum_absorb_amount_is_shield():
+    text = (
+        "Gather the true strength of Apocrypha around you, forming protective tentacles "
+        "and a damage shield that absorbs 60% of all damage for 10 seconds, up to a max "
+        "of |cffffff$1|r damage, scaling off your Max Health."
+    )
+
+    evidence = extract_component_text_evidence(text, 1)
+
+    assert evidence.effect_kind == "shield"
+    assert evidence.damage_type is None
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
+
+
+def test_impervious_runeward_second_stage_amount_is_shield():
+    text = (
+        "Like the rune knights of old, summon a shield that absorbs |cffffff$1|r damage "
+        "for 1 second, and then |cffffff$2|r damage for 5 seconds if the first shield persists."
+    )
+
+    evidence = extract_component_text_evidence(text, 2)
+
+    assert evidence.effect_kind == "shield"
+    assert evidence.damage_type is None
+    assert evidence.is_dot is None
+    assert evidence.is_aoe is None
+
+
+def test_pragmatic_fatecarver_damage_does_not_borrow_later_shield_semantics():
+    text = (
+        "Channel a beam of energy in front of you for up to 4 seconds, dealing "
+        "|cffffff$1|r Magic Damage every 0.3 seconds to up to 6 enemies, and gain a "
+        "damage shield that absorbs up to |cffffff$2|r damage and grants interrupt immunity."
+    )
+
+    first = extract_component_text_evidence(text, 1)
+    second = extract_component_text_evidence(text, 2)
+
+    assert first.effect_kind == "damage"
+    assert first.damage_type == "magical"
+    assert second.effect_kind == "shield"
+
+
 def test_soul_tether_siphoned_health_is_periodic_self_heal():
     text = (
         "Ravaged enemies are tethered to you for 8 seconds, and while they remain within "
