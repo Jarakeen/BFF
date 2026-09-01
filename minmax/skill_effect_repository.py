@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .character_build.effect_instance import EffectVariant
 from .character_build.effect_layer import EffectLayer
+from .skill_known_effects import verified_skill_effects
 from .support_effect_category import SupportEffectCategory
 from services.skill_bar_eligibility import is_eligible
 
@@ -12,7 +13,12 @@ DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 
 
 class SkillEffectRepository:
-    """Resolve imported player abilities into linked effect variants."""
+    """Resolve imported player abilities into linked and verified effects.
+
+    Imported ``ability_effect_link`` rows remain the primary source. A small
+    audited supplemental registry fills only mechanics that source ability
+    records prove but the imported link table omitted.
+    """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
@@ -98,37 +104,88 @@ class SkillEffectRepository:
             return ()
 
         with sqlite3.connect(self.database_path) as db:
-            rows = db.execute(
-                """
-                SELECT a.name, a.target, a.duration, ev.id, e.name,
-                       e.category, ev.type, es.source_name, es.condition
-                FROM ability a
-                JOIN ability_effect_link ael ON ael.ability_id = a.ability_id
-                JOIN effect_variant ev ON ev.id = ael.effect_variant_id
-                JOIN effect e ON e.id = ev.effect_id
-                LEFT JOIN effect_source es ON es.id = ael.effect_source_id
-                WHERE a.ability_id = ?
-                ORDER BY ev.id, es.id
-                """,
+            columns = self._ability_columns(db)
+            if "ability_id" not in columns:
+                return ()
+
+            metadata_columns = ["name"]
+            metadata_columns.append(
+                "base_ability_id" if "base_ability_id" in columns else "ability_id AS base_ability_id"
+            )
+            metadata_columns.append("morph" if "morph" in columns else "0 AS morph")
+            metadata = db.execute(
+                f"SELECT {', '.join(metadata_columns)} FROM ability WHERE ability_id = ?",
                 (ability_id,),
-            ).fetchall()
+            ).fetchone()
+            if metadata is None:
+                return ()
+
+            ability_name, base_ability_id, morph = metadata
+
+            tables = {
+                str(row[0])
+                for row in db.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+            required_link_tables = {
+                "ability_effect_link",
+                "effect_variant",
+                "effect",
+            }
+            if required_link_tables.issubset(tables):
+                rows = db.execute(
+                    """
+                    SELECT a.name, a.target, a.duration, ev.id, e.name,
+                           e.category, ev.type, es.source_name, es.condition
+                    FROM ability a
+                    JOIN ability_effect_link ael ON ael.ability_id = a.ability_id
+                    JOIN effect_variant ev ON ev.id = ael.effect_variant_id
+                    JOIN effect e ON e.id = ev.effect_id
+                    LEFT JOIN effect_source es ON es.id = ael.effect_source_id
+                    WHERE a.ability_id = ?
+                    ORDER BY ev.id, es.id
+                    """,
+                    (ability_id,),
+                ).fetchall()
+            else:
+                rows = []
 
         variants: list[EffectVariant] = []
         seen: set[tuple[str, str, str]] = set()
-        for ability_name, target, duration, variant_id, effect_name, category, variant_type, source_name, condition in rows:
-            key = (str(effect_name), str(source_name or ability_name), str(condition or ""))
+        for linked_ability_name, target, duration, variant_id, effect_name, category, variant_type, source_name, condition in rows:
+            key = (
+                str(effect_name).strip().casefold().replace(" ", "_"),
+                str(source_name or linked_ability_name),
+                str(condition or ""),
+            )
             if key in seen:
                 continue
             seen.add(key)
             variants.append(EffectVariant(
-                name=str(effect_name).strip().casefold().replace(" ", "_"),
+                name=key[0],
                 layer=EffectLayer.CAST,
-                source=str(source_name or ability_name),
+                source=str(source_name or linked_ability_name),
                 duration=float(duration) if duration is not None and duration >= 0 else None,
                 condition=condition,
                 target_type=self._target_type(target),
                 category=self._category(category),
             ))
+
+        for supplemental in verified_skill_effects(
+            int(base_ability_id or ability_id),
+            int(morph or 0),
+        ):
+            key = (
+                supplemental.name,
+                supplemental.source,
+                str(supplemental.condition or ""),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            variants.append(supplemental)
+
         return tuple(variants)
 
     @staticmethod
