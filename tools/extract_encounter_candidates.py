@@ -45,6 +45,14 @@ INTERMISSION_RE = re.compile(
     r"(?i)\b(?:intermission|portal\s+phase|add\s+phase|execute\s+phase|final\s+phase)\b"
 )
 
+RESPONSE_CUE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("block", re.compile(r"(?i)\bblock(?:ed|ing)?\b|\bcan be blocked\b")),
+    ("knockback", re.compile(r"(?i)\bknock(?:s|ed|ing)?\s*back\b|\bknockback\b")),
+    ("stun", re.compile(r"(?i)\bstun(?:s|ned|ning)?\b")),
+    ("safe_zone", re.compile(r"(?i)\bsafe (?:area|zone)\b|\bgives? protection\b|\bprotection from\b")),
+    ("adds", re.compile(r"(?i)\badds?\b|\bspawn(?:s|ed|ing)?\b|\bsummons?\b")),
+)
+
 
 @dataclass(frozen=True)
 class EvidenceBlock:
@@ -79,6 +87,7 @@ class MechanicCandidate:
     failure_is_fatal: bool | None
     interruptible: bool | None
     interrupt_note: str
+    response_cues: tuple[str, ...]
     evidence: str
 
 
@@ -229,6 +238,10 @@ def extract_phase_candidates(blocks: Iterable[EvidenceBlock]) -> list[PhaseCandi
     return results
 
 
+def _response_cues(text: str) -> tuple[str, ...]:
+    return tuple(label for label, pattern in RESPONSE_CUE_PATTERNS if pattern.search(text))
+
+
 def extract_mechanic_candidates(record: dict[str, Any]) -> list[MechanicCandidate]:
     results: list[MechanicCandidate] = []
     abilities = record.get("abilities")
@@ -244,9 +257,10 @@ def extract_mechanic_candidates(record: dict[str, Any]) -> list[MechanicCandidat
             continue
 
         classification = classify_mechanic(name, description)
-        facts = [
+        response_cues = _response_cues(description)
+
+        behavioral_facts = [
             classification.mechanic_type,
-            classification.damage_type,
             classification.target_count,
             classification.requires_movement,
             classification.requires_positioning,
@@ -255,7 +269,14 @@ def extract_mechanic_candidates(record: dict[str, Any]) -> list[MechanicCandidat
             classification.failure_is_fatal,
             classification.interruptible,
         ]
-        if not any(value is not None and value is not False for value in facts):
+        has_behavioral_fact = any(
+            value is not None and value is not False for value in behavioral_facts
+        )
+
+        # Damage type is useful metadata once an ability is a mechanic, but a
+        # basic attack does not become a mechanic merely because it deals frost,
+        # physical, or other typed damage.
+        if not has_behavioral_fact and not response_cues:
             continue
 
         explicit_action = any(
@@ -265,14 +286,21 @@ def extract_mechanic_candidates(record: dict[str, Any]) -> list[MechanicCandidat
                 classification.failure_is_fatal,
                 classification.interruptible,
             )
-        )
+        ) or any(cue in response_cues for cue in ("block", "safe_zone"))
         confidence = "high" if explicit_action else "medium"
+
+        mechanic_type = classification.mechanic_type
+        if "safe_zone" in response_cues and mechanic_type == "summon":
+            # Preserve the summon cue in response_cues, but prefer the actual
+            # player-facing environmental behavior for review.
+            mechanic_type = "environment"
+
         results.append(
             MechanicCandidate(
                 name=name,
                 section="ability",
                 confidence=confidence,
-                mechanic_type=classification.mechanic_type,
+                mechanic_type=mechanic_type,
                 damage_type=classification.damage_type,
                 target_count=classification.target_count,
                 requires_movement=classification.requires_movement,
@@ -282,6 +310,7 @@ def extract_mechanic_candidates(record: dict[str, Any]) -> list[MechanicCandidat
                 failure_is_fatal=classification.failure_is_fatal,
                 interruptible=classification.interruptible,
                 interrupt_note=classification.interrupt_note,
+                response_cues=response_cues,
                 evidence=description,
             )
         )
@@ -370,6 +399,11 @@ def main() -> int:
     print(f"mechanic candidates:         {mechanic_count:8}")
     print()
 
+    if args.boss and not records:
+        print(f"No raw boss JSON matched filter: {args.boss!r}")
+        print("This usually means the boss was not collected into data/uesp/bosses.")
+        print()
+
     interesting = [row for row in report if row["phase_candidates"] or row["mechanic_candidates"]]
     detail_rows = interesting if args.limit == 0 else interesting[: max(args.limit, 0)]
 
@@ -401,6 +435,8 @@ def main() -> int:
                     value = item[key]
                     if value is not None and value is not False:
                         facts.append(f"{key}={value}")
+                if item["response_cues"]:
+                    facts.append("response_cues=" + ",".join(item["response_cues"]))
                 print(f"    [{item['confidence'].upper()}] {item['name']}: {', '.join(facts)}")
                 print(f"      evidence={_clip(item['evidence'])}")
         print()
