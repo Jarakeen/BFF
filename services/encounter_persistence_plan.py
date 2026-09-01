@@ -52,6 +52,21 @@ def _shared_nonempty(values: Iterable[str]) -> str:
     return next(iter(distinct)) if len(distinct) == 1 else ""
 
 
+def _provenance_notes(source_family: str, notes: str) -> str:
+    """Preserve reconciliation lineage inside schema-v3 evidence notes.
+
+    Schema v3 predates source-family reconciliation. Encoding the family as a
+    stable first line preserves the relationship without requiring a schema
+    migration merely for this metadata field.
+    """
+    family = source_family.strip()
+    body = notes.strip()
+    if not family:
+        return body
+    marker = f"source_family={family}"
+    return f"{marker}\n{body}" if body else marker
+
+
 def build_persistence_plan(
     candidates: Iterable[EncounterPromotionCandidate],
 ) -> list[EncounterPersistencePlan]:
@@ -99,7 +114,7 @@ def build_persistence_plan(
                 patch_version=row.patch_version,
                 confidence=row.confidence,
                 source_value_json=_json(row.value),
-                notes=row.notes,
+                notes=_provenance_notes(row.source_family, row.notes),
             )
             for row in evidence_rows
         )
