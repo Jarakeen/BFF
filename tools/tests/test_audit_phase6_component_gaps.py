@@ -129,7 +129,7 @@ def test_phase6_signals_stay_scoped_to_component_fragment(tmp_path):
         ) VALUES (
             100,
             'Mixed Ability',
-            'Deal $1 Magic Damage to an enemy. Then heal an ally for $2 Health.',
+            'Deal $1 Magic Damage. Then heal an ally for $2 Health.',
             'Deal damage, then heal an ally.',
             8, .1, 1, 0, 1, 1000,
             8, .1, 1, 0, 1, 1000
@@ -145,4 +145,5 @@ def test_phase6_signals_stay_scoped_to_component_fragment(tmp_path):
     rows = load_phase6_gap_matrix(path)
     damage = next(row for row in rows if row.coefficient_number == 1)
 
+    assert damage.phase3_reasons == ("target_shape",)
     assert "healing_candidate" not in damage.signals
