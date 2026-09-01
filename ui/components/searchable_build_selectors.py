@@ -45,6 +45,7 @@ def _compact_set_label(value: str) -> str:
 class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.quality_combo.setFixedWidth(82)
         for combo in (self.set_combo, self.set2_combo):
             self._compact_set_combo(combo)
         for combo in (self.set_combo, self.trait_combo, self.enchant_combo):
