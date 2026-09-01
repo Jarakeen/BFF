@@ -39,6 +39,51 @@ def _table_names(connection: sqlite3.Connection) -> set[str]:
     }
 
 
+def _existing_evidence_row(
+    connection: sqlite3.Connection,
+    canonical_fact_id: int,
+    evidence,
+):
+    return connection.execute(
+        """
+        SELECT id, confidence, source_value_json, notes
+        FROM encounter_fact_evidence
+        WHERE canonical_fact_id = ?
+          AND source_type = ?
+          AND source_name = ?
+          AND source_locator = ?
+          AND source_revision = ?
+          AND game_update = ?
+          AND patch_version = ?
+        """,
+        (
+            canonical_fact_id,
+            evidence.source_type,
+            evidence.source_name,
+            evidence.source_locator,
+            evidence.source_revision,
+            evidence.game_update,
+            evidence.patch_version,
+        ),
+    ).fetchone()
+
+
+def _validate_existing_evidence(existing, evidence, logical_ref: str) -> None:
+    if existing is None:
+        return
+    actual = (str(existing[1]), str(existing[2]), str(existing[3] or ""))
+    expected = (
+        evidence.confidence,
+        evidence.source_value_json,
+        evidence.notes,
+    )
+    if actual != expected:
+        raise RuntimeError(
+            "Existing encounter evidence conflicts with reviewed plan: "
+            f"{logical_ref} | {evidence.source_type}:{evidence.source_name}"
+        )
+
+
 def validate_persistence_target(
     connection: sqlite3.Connection,
     plans: Iterable[EncounterPersistencePlan],
@@ -80,7 +125,7 @@ def validate_persistence_target(
     for plan in plans:
         existing = connection.execute(
             """
-            SELECT payload_json, canonical_kind, review_status
+            SELECT id, payload_json, canonical_kind, review_status
             FROM encounter_canonical_fact
             WHERE encounter_id = ?
               AND fact_type = ?
@@ -98,10 +143,27 @@ def validate_persistence_target(
         ).fetchone()
         if existing is None:
             continue
-        if existing[0] != plan.fact.payload_json or existing[1] != plan.fact.canonical_kind:
+        if (
+            existing[1] != plan.fact.payload_json
+            or existing[2] != plan.fact.canonical_kind
+            or existing[3] != plan.fact.review_status
+        ):
             raise RuntimeError(
                 "Existing canonical fact conflicts with reviewed plan: "
                 f"{plan.fact.logical_ref}"
+            )
+
+        canonical_fact_id = int(existing[0])
+        for evidence in plan.evidence:
+            existing_evidence = _existing_evidence_row(
+                connection,
+                canonical_fact_id,
+                evidence,
+            )
+            _validate_existing_evidence(
+                existing_evidence,
+                evidence,
+                plan.fact.logical_ref,
             )
 
 
@@ -112,7 +174,8 @@ def persist_encounter_plans(
     """Persist reviewed plans atomically and idempotently.
 
     The caller owns the connection. This function starts no nested transaction;
-    it validates first, writes rows, and raises on any conflicting existing fact.
+    it validates first, writes rows, and raises on any conflicting existing fact
+    or evidence provenance record.
     """
 
     plans = list(plans)
@@ -170,29 +233,17 @@ def persist_encounter_plans(
             facts_existing += 1
 
         for evidence in plan.evidence:
-            existing_evidence = connection.execute(
-                """
-                SELECT id
-                FROM encounter_fact_evidence
-                WHERE canonical_fact_id = ?
-                  AND source_type = ?
-                  AND source_name = ?
-                  AND source_locator = ?
-                  AND source_revision = ?
-                  AND game_update = ?
-                  AND patch_version = ?
-                """,
-                (
-                    canonical_fact_id,
-                    evidence.source_type,
-                    evidence.source_name,
-                    evidence.source_locator,
-                    evidence.source_revision,
-                    evidence.game_update,
-                    evidence.patch_version,
-                ),
-            ).fetchone()
+            existing_evidence = _existing_evidence_row(
+                connection,
+                canonical_fact_id,
+                evidence,
+            )
             if existing_evidence is not None:
+                _validate_existing_evidence(
+                    existing_evidence,
+                    evidence,
+                    plan.fact.logical_ref,
+                )
                 evidence_existing += 1
                 continue
 
