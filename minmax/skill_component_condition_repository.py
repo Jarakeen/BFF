@@ -7,7 +7,9 @@ from pathlib import Path
 
 from .skill_component_condition import (
     SkillComponentCondition,
+    explicit_ordinal_condition_owner,
     extract_explicit_component_conditions,
+    extract_explicit_ordinal_component_conditions,
 )
 from .skill_component_text_evidence import extract_component_text_evidence
 
@@ -18,8 +20,8 @@ DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 class SkillComponentConditionRepository:
     """Resolve explicit coefficient-local conditions from canonical source text.
 
-    Phase 6 records the condition identity and threshold only. It does not
-    evaluate current target Health, uptime, encounter timing, or damage scaling.
+    Explicit ordinal wording such as ``the second hit`` takes precedence over
+    placeholder proximity when both appear in the same condition sentence.
     """
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
@@ -55,7 +57,18 @@ class SkillComponentConditionRepository:
             if row is None:
                 return ()
 
-        evidence = extract_component_text_evidence(row[0], int(coefficient_number))
+        source_text = str(row[0] or "")
+        ordinal_owner = explicit_ordinal_condition_owner(source_text)
+        if ordinal_owner is not None:
+            if ordinal_owner != int(coefficient_number):
+                return ()
+            return extract_explicit_ordinal_component_conditions(
+                skill_rank_id=int(skill_rank_id),
+                coefficient_number=int(coefficient_number),
+                source_text=source_text,
+            )
+
+        evidence = extract_component_text_evidence(source_text, int(coefficient_number))
         if not evidence.fragment:
             return ()
 
