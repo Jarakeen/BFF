@@ -27,6 +27,26 @@ class SkillEffectRepository:
     def _ability_columns(db: sqlite3.Connection) -> set[str]:
         return {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
 
+    @staticmethod
+    def _duration_seconds(value: object) -> float | None:
+        """Normalize imported ability duration from milliseconds to seconds.
+
+        The ``ability.duration`` column is imported in ESO API milliseconds.
+        CharacterBuild/EffectVariant duration values are canonical seconds.
+        Supplemental verified effects are authored directly as EffectVariants
+        and therefore already use seconds; only linked DB ability rows pass
+        through this conversion boundary.
+        """
+        if value is None:
+            return None
+        try:
+            milliseconds = float(value)
+        except (TypeError, ValueError):
+            return None
+        if milliseconds < 0:
+            return None
+        return milliseconds / 1000.0
+
     def available_skills(self, character_class: object | None = None, limit: int | None = 5000) -> tuple[tuple[int, str], ...]:
         """Return combat-bar abilities allowed for the selected class.
 
@@ -166,7 +186,7 @@ class SkillEffectRepository:
                 name=key[0],
                 layer=EffectLayer.CAST,
                 source=str(source_name or linked_ability_name),
-                duration=float(duration) if duration is not None and duration >= 0 else None,
+                duration=self._duration_seconds(duration),
                 condition=condition,
                 target_type=self._target_type(target),
                 category=self._category(category),
