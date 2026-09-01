@@ -57,6 +57,12 @@ class CharacterProgressionDialog(QDialog):
         self.reference = reference
         self.character = dict(character or {})
         self.eso_class = _clean(self.character.get("eso_class"))
+        self.race = _clean(self.character.get("race"))
+        self._race_skill_lines = {
+            _clean(name).casefold()
+            for name in self.reference.list_race_names()
+            if _clean(name)
+        }
         self._owned = {
             _clean(name).casefold()
             for name in self.character.get("owned_skill_lines", [])
@@ -84,7 +90,8 @@ class CharacterProgressionDialog(QDialog):
         root = QVBoxLayout(self)
         explanation = QLabel(
             "These choices belong to the character and are shared by every build. "
-            "Class skill lines are available automatically, but passive ranks are never assumed purchased."
+            "Class and racial skill lines are available from the character identity, "
+            "but passive ranks are never assumed purchased."
         )
         explanation.setWordWrap(True)
         explanation.setProperty("pageSubtitle", True)
@@ -118,6 +125,7 @@ class CharacterProgressionDialog(QDialog):
     def _passive_rows_by_line(self) -> dict[str, list[dict]]:
         grouped: dict[str, list[dict]] = defaultdict(list)
         seen: set[tuple[str, str]] = set()
+        selected_race = self.race.casefold()
         for skill in self.reference.list_skills():
             if not isinstance(skill, dict):
                 continue
@@ -130,7 +138,10 @@ class CharacterProgressionDialog(QDialog):
             name = _clean(skill.get("name"))
             if not line or not name:
                 continue
-            key = (line.casefold(), name.casefold())
+            line_key = line.casefold()
+            if line_key in self._race_skill_lines and line_key != selected_race:
+                continue
+            key = (line_key, name.casefold())
             if key in seen:
                 continue
             seen.add(key)
@@ -160,10 +171,16 @@ class CharacterProgressionDialog(QDialog):
 
             owner_values = {_clean(row.get("class_type")) for row in rows if _clean(row.get("class_type"))}
             class_line = bool(owner_values) and self.eso_class in owner_values
+            racial_line = bool(self.race) and line.casefold() == self.race.casefold() and line.casefold() in self._race_skill_lines
+            intrinsic_line = class_line or racial_line
 
             header = QHBoxLayout()
             if class_line:
                 access = QLabel(f"{self.eso_class} class line")
+                access.setProperty("cardBadge", True)
+                header.addWidget(access)
+            elif racial_line:
+                access = QLabel(f"{self.race} racial line")
                 access.setProperty("cardBadge", True)
                 header.addWidget(access)
             else:
@@ -202,8 +219,8 @@ class CharacterProgressionDialog(QDialog):
             grid.setColumnStretch(0, 1)
             page_layout.addLayout(grid)
 
-            def buy_line(*_args, spins=line_spins, skill_line=line, is_class=class_line) -> None:
-                if not is_class and skill_line in self._line_checks:
+            def buy_line(*_args, spins=line_spins, skill_line=line, intrinsic=intrinsic_line) -> None:
+                if not intrinsic and skill_line in self._line_checks:
                     self._line_checks[skill_line].setChecked(True)
                 for spin in spins:
                     spin.setValue(spin.maximum())
