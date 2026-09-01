@@ -1,4 +1,9 @@
-from services.uesp.enriched_parser import EnrichedUespParser
+from types import SimpleNamespace
+
+from services.uesp.enriched_parser import (
+    EnrichedUespParser,
+    _conservative_dialogue_ability_match,
+)
 from services.uesp.uesp_parser import slugify
 from services.uesp.uesp_client import UespPage
 
@@ -86,6 +91,33 @@ def test_enriched_parser_classifies_ability_mechanics_without_replacing_source_t
     assert flame.damage_type == "flame"
     assert flame.interpretation_status == "inferred"
     assert "lingering hazard" in flame.description
+
+
+def test_dialogue_match_rejects_weak_single_thematic_word():
+    abilities = [
+        SimpleNamespace(name="Rend Flesh", description="A heavy melee strike."),
+        SimpleNamespace(name="Summon Behemoth", description="Summons a Fire Behemoth."),
+    ]
+    assert _conservative_dialogue_ability_match(
+        "Summoning Flesh Abominations:", abilities
+    ) is None
+
+
+def test_dialogue_match_keeps_distinctive_single_word_and_exact_name_evidence():
+    abilities = [
+        SimpleNamespace(name="Meteor Swarm", description="Calls down meteors."),
+        SimpleNamespace(name="Summon Behemoth", description="Summons a Fire Behemoth."),
+        SimpleNamespace(name="Creeping Manifold", description="Casts Creeping Manifold."),
+    ]
+    assert _conservative_dialogue_ability_match(
+        "Fire meteors attack:", abilities
+    ) == "Meteor Swarm"
+    assert _conservative_dialogue_ability_match(
+        "Summoning Fire Behemoths:", abilities
+    ) == "Summon Behemoth"
+    assert _conservative_dialogue_ability_match(
+        "Casting Creeping Manifold:", abilities
+    ) == "Creeping Manifold"
 
 
 def test_slugify_behavior_remains_unchanged():
