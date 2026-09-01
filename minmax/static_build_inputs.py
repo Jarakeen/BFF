@@ -262,7 +262,7 @@ class StaticBuildInputResolver:
         potion_name = str(build.Potion or "").strip()
         if not potion_name:
             return result
-        message = f"Potion selected but potion effects are not yet modeled: {potion_name}"
+        message = f"Potion selected; activation/uptime is not part of static build state: {potion_name}"
         if message in result.unresolved:
             return result
         return replace(result, unresolved=result.unresolved + (message,))
