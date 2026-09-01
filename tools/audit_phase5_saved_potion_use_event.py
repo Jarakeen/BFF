@@ -53,6 +53,14 @@ def main() -> int:
                     f"    - {value.trait} | duration={value.duration:g}s | "
                     f"triple_candidate={value.triple_duration:g}s | tier={value.tier_name}"
                 )
+        if event.buff_grants:
+            print("  Named buff grants:")
+            for grant in event.buff_grants:
+                print(
+                    f"    - {grant.source_trait} -> {grant.buff_name} | "
+                    f"duration={grant.duration:g}s | "
+                    f"triple_candidate={grant.triple_duration:g}s | tier={grant.tier_name}"
+                )
         if event.unresolved:
             failures += 1
             print("  Unresolved:")
@@ -63,7 +71,8 @@ def main() -> int:
     print("Interpretation boundary:")
     print("  - This represents an explicit potion-use event, not standing uptime.")
     print("  - Instant restores are events; they are not timed buffs.")
-    print("  - Ordinary source duration is used for timed traits by default.")
+    print("  - Named buff grants are source-backed temporal effects and are not auto-applied to CombatState.")
+    print("  - Ordinary source duration is used by default.")
     print("  - Triple-duration values remain evidence only until three-reagent trait support is proven.")
     print("  - Medicinal Use and potion cooldown are not applied here.")
     print("  - Database unchanged.")
