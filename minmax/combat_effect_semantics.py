@@ -96,9 +96,10 @@ U51_TRANSITIONS: tuple[EffectTransition, ...] = (
 )
 
 
-# Source-visible U50 Alchemy effect names already represented by the repository's
-# historical importer, plus Timidity which is a valid craftable Alchemy effect
-# the build UI must be able to represent even though the old importer omitted it.
+# Source-visible U50 Alchemy effect names represented by recovered UESP pages or
+# explicit formula evidence. Timidity, Ravage Magicka, and Ravage Stamina were
+# omitted from the historical V3 expected set even though they are valid U50
+# craftable Alchemy effects.
 U50_ALCHEMY_TRAITS = frozenset(
     {
         "Breach",
@@ -119,6 +120,8 @@ U50_ALCHEMY_TRAITS = frozenset(
         "Maim",
         "Protection",
         "Ravage Health",
+        "Ravage Magicka",
+        "Ravage Stamina",
         "Restore Health",
         "Restore Magicka",
         "Restore Stamina",
@@ -151,7 +154,16 @@ U51_ALCHEMY_TRAITS = frozenset(
             for transition in U51_TRANSITIONS
             if transition.domain == "alchemy"
         ),
-        *(trait for trait in U50_ALCHEMY_TRAITS if trait not in {transition.old_name for transition in U51_TRANSITIONS if transition.domain == "alchemy"}),
+        *(
+            trait
+            for trait in U50_ALCHEMY_TRAITS
+            if trait
+            not in {
+                transition.old_name
+                for transition in U51_TRANSITIONS
+                if transition.domain == "alchemy"
+            }
+        ),
         *U51_NEW_ALCHEMY_TRAITS,
     }
 )
