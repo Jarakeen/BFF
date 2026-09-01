@@ -3,10 +3,10 @@ Black Feather Foundry
 ESO Racial Data Importer
 
 Source:
-    data/raw/races.md
+    research/raw/races.md
 
 Output:
-    data/raw/racial_data.json
+    research/raw/racial_data.json
 
 NOTE:
 The supplied races.md is a flattened Markdown export rather than a
@@ -27,11 +27,14 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-SOURCE_PATH = ROOT / "data" / "raw" / "races.md"
-OUTPUT_PATH = ROOT / "data" / "raw" / "racial_data.json"
+from services.paths import RAW_DATA
+
+SOURCE_PATH = RAW_DATA / "races.md"
+OUTPUT_PATH = RAW_DATA / "racial_data.json"
 
 
 # The source contains exactly these race rows.
