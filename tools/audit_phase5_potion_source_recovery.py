@@ -181,7 +181,7 @@ def audit(*, database_path: Path, processed_path: Path, raw_dir: Path) -> int:
     print("  - This audit is read-only.")
     print("  - A saved potion selection proves availability, not active uptime.")
     print("  - Potion components must come from the active source corpus/database, not from the saved label alone.")
-    print("  - V3 currently omits Restore Magicka from EXPECTED_EFFECTS; that source-pipeline gap must be repaired.")
+    print("  - V3 EXPECTED_EFFECTS coverage is reported above; omitted historical traits may enter through supplementary source records.")
     print("  - U51 consolidates the power/critical trait names, so the eventual resolver must tolerate versioned source names.")
     return 0
 
