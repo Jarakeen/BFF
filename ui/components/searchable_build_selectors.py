@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QComboBox, QCompleter
+from PySide6.QtWidgets import QComboBox, QCompleter, QDialog
 
 from engine.config import get_resource_path
 from widgets import build_editor
@@ -120,10 +120,11 @@ class SearchableBuildEditor(EligibleBuildEditor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._hide_legacy_second_set_column()
+        self._compact_gear_grid()
+        QTimer.singleShot(0, self._compact_host_dialog)
 
-    def _hide_legacy_second_set_column(self) -> None:
-        """Collapse the old Set 2 column without changing the saved-build schema."""
+    def _compact_gear_grid(self) -> None:
+        """Collapse legacy Set 2 and send spare grid width to a trailing gutter."""
         root = self.layout()
         if root is None or root.count() < 2:
             return
@@ -136,12 +137,34 @@ class SearchableBuildEditor(EligibleBuildEditor):
         grid = body.itemAt(0).layout()
         if grid is None:
             return
+
         header_item = grid.itemAtPosition(0, 3)
         header = header_item.widget() if header_item is not None else None
         if header is not None:
             header.setVisible(False)
+
+        # The old Set 2 column contributes no width. Keep the Slot column from
+        # becoming Qt's dumping ground for all remaining horizontal space.
         grid.setColumnMinimumWidth(3, 0)
-        grid.setColumnStretch(3, 0)
+        for column in range(0, 11):
+            grid.setColumnStretch(column, 0)
+        for row_index in range(grid.rowCount()):
+            slot_item = grid.itemAtPosition(row_index, 1)
+            slot_widget = slot_item.widget() if slot_item is not None else None
+            if slot_widget is not None:
+                slot_widget.setMaximumWidth(150)
+
+        # An empty trailing column deliberately absorbs spare viewport width,
+        # leaving the real controls packed together at their useful size.
+        grid.setColumnStretch(11, 1)
+
+    def _compact_host_dialog(self) -> None:
+        """Use a practical default editor size instead of the legacy 1500px width."""
+        host = self.window()
+        if not isinstance(host, QDialog):
+            return
+        host.setMinimumSize(1000, 700)
+        host.resize(1180, 840)
 
 
 def _patch_builds_page() -> None:
