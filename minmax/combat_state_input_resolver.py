@@ -58,16 +58,22 @@ class CombatStateInputResolver:
         applied = result.applied_effect_count
 
         for buff_name in combat_state.active_buffs:
-            effects = effects_for_buff(buff_name)
+            effects = effects_for_buff(
+                buff_name,
+                game_update=combat_state.game_update,
+                allow_legacy_alias=False,
+            )
             if not effects:
                 # Known component-layer buffs are intentionally resolved later
                 # by the damage/healing/shield pipeline that owns their meaning.
                 if is_component_layer_buff(buff_name):
                     continue
-                unresolved.append(f"Active combat buff not yet stat-mapped: {buff_name}")
+                unresolved.append(
+                    f"Active combat buff not stat-mapped for {combat_state.game_update.value}: {buff_name}"
+                )
                 continue
 
-            source = f"Combat buff: {buff_name}"
+            source = f"Combat buff: {buff_name} [{combat_state.game_update.value}]"
             for effect in effects:
                 if effect.bucket == "resource_percent":
                     field_name = _RESOURCE_FIELDS.get(effect.stat)
