@@ -7,7 +7,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class BuildCatalogService:
@@ -64,11 +64,41 @@ class BuildCatalogService:
             normalized.append(name)
         return normalized
 
+    @staticmethod
+    def _normalize_passive_ranks(value: Any) -> dict[str, int]:
+        """Return stable character-owned passive ranks keyed by display name.
+
+        Rank zero means the passive is not owned and is therefore omitted.
+        Individual passive maximum ranks remain domain data rather than a
+        persistence-layer assumption.
+        """
+        if not isinstance(value, dict):
+            return {}
+        normalized: dict[str, int] = {}
+        seen: set[str] = set()
+        for raw_name, raw_rank in value.items():
+            name = " ".join(str(raw_name or "").strip().split())
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            try:
+                rank = int(raw_rank)
+            except (TypeError, ValueError):
+                continue
+            if rank <= 0:
+                continue
+            seen.add(key)
+            normalized[name] = rank
+        return normalized
+
     @classmethod
     def _normalize_character(cls, value: Any) -> dict[str, Any]:
         character = copy.deepcopy(value) if isinstance(value, dict) else {}
         character["owned_skill_lines"] = cls._normalize_owned_skill_lines(
             character.get("owned_skill_lines")
+        )
+        character["passive_ranks"] = cls._normalize_passive_ranks(
+            character.get("passive_ranks")
         )
         return character
 
@@ -182,6 +212,9 @@ class BuildCatalogService:
                     "owned_skill_lines": self._normalize_owned_skill_lines(
                         previous.get("owned_skill_lines") if previous else []
                     ),
+                    "passive_ranks": self._normalize_passive_ranks(
+                        previous.get("passive_ranks") if previous else {}
+                    ),
                 }
 
             legacy = member.to_dict()
@@ -241,6 +274,59 @@ class BuildCatalogService:
             self.save(catalog)
             return copy.deepcopy(updated)
         return None
+
+    def set_passive_rank(
+        self,
+        *,
+        character_id: str,
+        passive_name: str,
+        rank: int,
+    ) -> dict[str, Any] | None:
+        """Persist one character-owned passive rank without touching builds."""
+        name = " ".join(str(passive_name or "").strip().split())
+        if not name:
+            raise ValueError("Passive name must be non-empty")
+        try:
+            normalized_rank = int(rank)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid passive rank: {rank!r}") from exc
+        if normalized_rank < 0:
+            raise ValueError("Passive rank cannot be negative")
+
+        catalog = self.load()
+        for index, character in enumerate(catalog["characters"]):
+            if character.get("character_id") != character_id:
+                continue
+            updated = copy.deepcopy(character)
+            ranks = self._normalize_passive_ranks(updated.get("passive_ranks"))
+            existing_name = next(
+                (key for key in ranks if key.casefold() == name.casefold()),
+                None,
+            )
+            if existing_name is not None:
+                ranks.pop(existing_name)
+            if normalized_rank > 0:
+                ranks[name] = normalized_rank
+            updated["passive_ranks"] = ranks
+            catalog["characters"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
+        return None
+
+    def get_passive_rank(self, character_id: str, passive_name: str) -> int:
+        """Return one persisted passive rank, or zero when absent."""
+        name = " ".join(str(passive_name or "").strip().split()).casefold()
+        if not name:
+            return 0
+        character = self.get_character(character_id)
+        if character is None:
+            return 0
+        for stored_name, rank in self._normalize_passive_ranks(
+            character.get("passive_ranks")
+        ).items():
+            if stored_name.casefold() == name:
+                return rank
+        return 0
 
     def get_build(self, build_id: str) -> dict[str, Any] | None:
         catalog = self.load()
