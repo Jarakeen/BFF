@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
-from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
+from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
+from minmax.race_repository import RaceRepository
 from minmax.skill_effect_repository import SkillEffectRepository
 from models.build_model import GearSlot, PlayerBuild
 from services.build_service import BuildService
@@ -86,8 +87,9 @@ class SavedBuildCapabilityService:
         self.gear_effects = GearSetEffectVariantResolver(self.gear_repository)
         self.skill_effects = SkillEffectRepository(self.database_path)
         self.potions = PotionAvailabilityRepository(self.database_path)
-        self.context_factory = BuildCalculationContextFactory(
-            gear_set_repository=self.gear_repository
+        self.context_factory = Phase5BuildCalculationContextFactory(
+            race_repository=RaceRepository(self.database_path),
+            gear_set_repository=self.gear_repository,
         )
 
     @staticmethod
