@@ -3,19 +3,22 @@ from __future__ import annotations
 """Canonical Phase 6 relationships from coefficient components to named effects.
 
 This module deliberately models a different relationship shape than
-``character_build.effect_relationship``.  A skill coefficient component is not
+``character_build.effect_relationship``. A skill coefficient component is not
 itself a named EffectVariant identity, so it must never be smuggled into the
 ``source_effect`` field of an effect-to-effect relationship.
 
 The extractor here is conservative: it only records an application when the
 coefficient-local source text explicitly ties an application/infliction verb to
-one of the known combat-effect names supplied by the caller.  It does not infer
+one of the known combat-effect names supplied by the caller. It does not infer
 proc chance, cooldown, duration, uptime, or combat state.
 """
 
 import re
 from dataclasses import dataclass
 from enum import Enum
+
+
+_ANY_PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
 
 
 class SkillComponentEffectRelationshipType(str, Enum):
@@ -55,6 +58,37 @@ def canonical_effect_identity(name: str) -> str:
     return text.strip("_")
 
 
+def _component_segment(fragment: str, coefficient_number: int) -> str:
+    """Return only the clause span owned by ``$coefficient_number``.
+
+    A coefficient-aware sentence can contain more than one placeholder. In that
+    case, component semantics must not borrow wording that appears after the next
+    placeholder. The span starts after the previous placeholder (if present) and
+    ends before the next placeholder (if present), matching the same conservative
+    ownership rule used by the Phase 3 text-evidence extractor.
+    """
+
+    placeholders = list(_ANY_PLACEHOLDER_RE.finditer(fragment))
+    current_index = next(
+        (
+            index
+            for index, match in enumerate(placeholders)
+            if int(match.group(1)) == int(coefficient_number)
+        ),
+        None,
+    )
+    if current_index is None:
+        return ""
+
+    start = 0 if current_index == 0 else placeholders[current_index - 1].end()
+    end = (
+        len(fragment)
+        if current_index + 1 >= len(placeholders)
+        else placeholders[current_index + 1].start()
+    )
+    return fragment[start:end].strip()
+
+
 def extract_explicit_effect_applications(
     *,
     skill_rank_id: int,
@@ -65,12 +99,17 @@ def extract_explicit_effect_applications(
     """Extract explicit component-local named-effect applications.
 
     ``known_effect_names`` is expected to come from the canonical combat-effect
-    corpus.  Merely mentioning an effect name is insufficient.  The same local
-    fragment must explicitly say that the component applies or inflicts it.
+    corpus. Merely mentioning an effect name is insufficient. The same
+    coefficient-owned segment must explicitly say that the component applies or
+    inflicts it.
     """
 
     text = " ".join(str(fragment or "").split())
     if not text:
+        return ()
+
+    segment = _component_segment(text, int(coefficient_number))
+    if not segment:
         return ()
 
     relationships: list[SkillComponentEffectRelationship] = []
@@ -87,7 +126,11 @@ def extract_explicit_effect_applications(
             rf"\binflict(?:s|ed|ing)?\b[^.;]{{0,40}}?\b{escaped}\b(?:\s+status\s+effect)?",
         )
         match = next(
-            (candidate for pattern in patterns if (candidate := re.search(pattern, text, flags=re.IGNORECASE))),
+            (
+                candidate
+                for pattern in patterns
+                if (candidate := re.search(pattern, segment, flags=re.IGNORECASE))
+            ),
             None,
         )
         if match is None:
