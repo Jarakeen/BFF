@@ -13,17 +13,12 @@ from engine.operations import TheConsoleOpsEngine
 # Inside engine/main.py
 from pathlib import Path
 from engine.operations import TheConsoleOpsEngine
+from services.paths import PROCESSED
 
-# 1. Grab the folder where main.py lives: console/engine/src/
-CURRENT_FILE_DIR = Path(__file__).resolve().parent
+# Canonical developer-generated data path.
+DATABASE_PATH = PROCESSED
 
-# 2. Walk backwards up 2 folder levels to reach the master root: console/
-CONSOLE_ROOT_DIR = CURRENT_FILE_DIR.parent.parent
-
-# 3. Dive straight forward into the parallel directory structure: console/game_data/eso/
-DATABASE_PATH = CONSOLE_ROOT_DIR / "data" / "processed"
-
-# 4. Bind the resolved absolute string path straight into your platform engine
+# Bind the resolved absolute string path straight into your platform engine
 ops_service = TheConsoleOpsEngine(data_directory_path=str(DATABASE_PATH))
 
 
@@ -66,8 +61,8 @@ def perform_pre_fight_audit(payload: RosterSelectionRequest):
 from engine.operations import TheConsoleOpsEngine
 
 def init_app_operations():
-    # Points cleanly to your data directory structure
-    ops_service = TheConsoleOpsEngine(data_directory_path=f"./{DATABASE_PATH}")
+    # Points cleanly to the canonical processed research directory.
+    ops_service = TheConsoleOpsEngine(data_directory_path=str(DATABASE_PATH))
     return ops_service
 
 # Replace the entire block at the bottom of console/engine/sorce/main.py with this:
@@ -118,15 +113,10 @@ if __name__ == "__main__":
 # Add this testing snippet block to any execution file to run the database update
 if __name__ == "__main__":
     from engine.data_miner import UESPSkillMiner
-    import os
 
-    # Set path directory straight to your parallel data folders
-    DATA_PATH = "C:/Users/nourg/OneDrive/Desktop/Black Feather Foundry/40_Stream Studio/OBS/Scripts/FoundryDock/data/processed"
+    DATA_PATH = str(PROCESSED)
     
     print("Initializing UESP Data Mining Pipeline...")
     miner = UESPSkillMiner(output_directory=DATA_PATH)
     log_output = miner.run_mining_pipeline()
     print(log_output)
-
-
-    
