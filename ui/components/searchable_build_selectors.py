@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QComboBox, QCompleter, QDialog, QLabel
+from PySide6.QtWidgets import QComboBox, QCompleter, QDialog, QLabel, QSizePolicy
 
 from engine.config import get_resource_path
 from widgets import build_editor
@@ -13,6 +13,7 @@ from services.skill_choice_service import load_skill_choices
 
 ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
 EDITOR_CARD_MAX_WIDTH = 1340
+EDITOR_CARD_MARGIN = 20
 
 
 def _configure_search(combo: QComboBox) -> None:
@@ -47,14 +48,25 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_combo.setMaximumWidth(220)
-        self.set2_combo.setMaximumWidth(220)
+        # Give the grid useful minimums, then let its column stretch factors
+        # distribute any remaining card width consistently.
+        self.set_combo.setMinimumWidth(180)
+        self.set2_combo.setMinimumWidth(180)
         self.quality_combo.setFixedWidth(82)
-        self.trait_combo.setMaximumWidth(150)
-        self.type_combo.setMaximumWidth(170)
-        self.enchant_combo.setMaximumWidth(180)
-        self.enchant_tier_combo.setMaximumWidth(150)
-        self.level_combo.setMaximumWidth(100)
+        self.trait_combo.setMinimumWidth(120)
+        self.type_combo.setMinimumWidth(145)
+        self.enchant_combo.setMinimumWidth(150)
+        self.enchant_tier_combo.setMinimumWidth(130)
+        self.level_combo.setMinimumWidth(90)
+        for combo in (
+            self.set_combo,
+            self.trait_combo,
+            self.type_combo,
+            self.enchant_combo,
+            self.enchant_tier_combo,
+            self.level_combo,
+        ):
+            combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self.set2_combo.setVisible(False)
         for combo in (self.set_combo, self.set2_combo):
@@ -107,13 +119,14 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
 
 
 class SearchableCompactCPSlot(build_editor.CompactCPSlot):
-    """Compact CP picker that does not stretch across a wide editor."""
+    """Compact CP picker that shares its row evenly with the other slots."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.combo.setMaximumWidth(205)
+        self.combo.setMinimumWidth(145)
+        self.combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.points.setFixedWidth(44)
-        self.setMaximumWidth(260)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
 
 class SearchableSkillBarRow(EligibleSkillBarRow):
@@ -121,10 +134,13 @@ class SearchableSkillBarRow(EligibleSkillBarRow):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             _configure_search(field)
-            field.setMaximumWidth(195)
+            field.setMinimumWidth(145)
+            field.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         row = self.layout()
         if row is not None:
-            row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            row.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+            for index in range(row.count()):
+                row.setStretch(index, 1)
 
 
 class SearchableBuildEditor(EligibleBuildEditor):
@@ -132,26 +148,69 @@ class SearchableBuildEditor(EligibleBuildEditor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._compact_editor_cards()
+        self._configure_editor_cards()
+        self._compact_identity_grid()
         self._compact_gear_grid()
         self._compact_cp_grid()
+        self._sync_editor_card_widths()
         QTimer.singleShot(0, self._compact_host_dialog)
+        QTimer.singleShot(0, self._sync_editor_card_widths)
 
-    def _compact_editor_cards(self) -> None:
-        """Give the main editor sections one shared centered working width."""
+    def _editor_cards(self) -> list:
+        root = self.layout()
+        if root is None:
+            return []
+        cards = []
+        for index in range(root.count()):
+            item = root.itemAt(index)
+            card = item.widget() if item is not None else None
+            if card is not None and hasattr(card, "body_layout"):
+                cards.append(card)
+        return cards
+
+    def _configure_editor_cards(self) -> None:
+        """Center every major editor card and give all of them one width rule."""
         root = self.layout()
         if root is None:
             return
-        for index in range(min(4, root.count())):
-            item = root.itemAt(index)
-            card = item.widget() if item is not None else None
-            if card is None:
-                continue
-            card.setMaximumWidth(EDITOR_CARD_MAX_WIDTH)
+        for card in self._editor_cards():
+            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
             root.setAlignment(card, Qt.AlignmentFlag.AlignHCenter)
 
+    def _sync_editor_card_widths(self) -> None:
+        """Keep all cards the same responsive width as the editor changes size."""
+        available = max(0, self.width() - EDITOR_CARD_MARGIN)
+        if available <= 0:
+            return
+        target = min(EDITOR_CARD_MAX_WIDTH, available)
+        for card in self._editor_cards():
+            card.setFixedWidth(target)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._sync_editor_card_widths()
+
+    def _compact_identity_grid(self) -> None:
+        """Distribute the identity row across the same working width as Gear."""
+        root = self.layout()
+        if root is None or root.count() < 1:
+            return
+        identity_card = root.itemAt(0).widget()
+        if identity_card is None or not hasattr(identity_card, "body_layout"):
+            return
+        body = identity_card.body_layout
+        if body.count() < 1:
+            return
+        grid = body.itemAt(0).layout()
+        if grid is None:
+            return
+        # Name and gamertag deserve more room; the four compact identity
+        # selectors share the remainder in proportion to their content.
+        for column, stretch in enumerate((3, 3, 1, 1, 1, 2)):
+            grid.setColumnStretch(column, stretch)
+
     def _compact_gear_grid(self) -> None:
-        """Collapse legacy Set 2 and center the compact gear grid in its card."""
+        """Collapse legacy Set 2 and distribute the real gear columns evenly."""
         root = self.layout()
         if root is None or root.count() < 2:
             return
@@ -171,27 +230,35 @@ class SearchableBuildEditor(EligibleBuildEditor):
             header.setVisible(False)
 
         grid.setColumnMinimumWidth(3, 0)
-        for column in range(0, 12):
-            grid.setColumnStretch(column, 0)
+        # icon, slot, set, hidden set2, quality, trait, type, enchant, tier, level, clear
+        stretches = (0, 2, 4, 0, 1, 2, 3, 3, 2, 1, 0)
+        for column, stretch in enumerate(stretches):
+            grid.setColumnStretch(column, stretch)
         for row_index in range(grid.rowCount()):
             slot_item = grid.itemAtPosition(row_index, 1)
             slot_widget = slot_item.widget() if slot_item is not None else None
             if slot_widget is not None:
                 slot_widget.setMaximumWidth(150)
-        grid.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        grid.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def _compact_cp_grid(self) -> None:
-        """Keep CP labels and slots dense enough to match the gear section."""
-        root = self.layout()
-        if root is None or root.count() < 3:
-            return
-        cp_card = root.itemAt(2).widget()
+        """Let the four CP slots share each discipline row evenly."""
         cp_grid = getattr(self, "cp_grid", None)
-        if cp_card is None or cp_grid is None:
+        if cp_grid is None:
             return
         for heading in cp_grid.findChildren(QLabel):
             if heading.width() >= 140:
                 heading.setFixedWidth(125)
+        outer = cp_grid.layout()
+        if outer is None:
+            return
+        for row_index in range(outer.count()):
+            row_item = outer.itemAt(row_index)
+            row = row_item.layout() if row_item is not None else None
+            if row is None:
+                continue
+            for index in range(row.count()):
+                row.setStretch(index, 0 if index == 0 else 1)
 
     def _compact_host_dialog(self) -> None:
         """Use a practical default editor size instead of the legacy 1500px width."""
@@ -200,6 +267,7 @@ class SearchableBuildEditor(EligibleBuildEditor):
             return
         host.setMinimumSize(1000, 700)
         host.resize(1180, 840)
+        self._sync_editor_card_widths()
 
 
 def _patch_builds_page() -> None:
