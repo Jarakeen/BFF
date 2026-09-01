@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from services.obs_websocket_service import ObsWebSocketService
+from services.optional_modules import broadcast_enabled
 from services.settings_service import SettingsService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -41,11 +41,10 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 class SettingsPage(QWidget):
     """Field Office settings console."""
 
-    SECTIONS = (
+    CORE_SECTIONS = (
         ("⚙", "General"),
         ("⌘", "Integrations"),
         ("▣", "Archive"),
-        ("▤", "Broadcast"),
         ("♢", "Notifications"),
         ("⌁", "Appearance"),
         ("⚒", "Advanced"),
@@ -54,6 +53,7 @@ class SettingsPage(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.broadcast_enabled = broadcast_enabled()
         self.settings_service = SettingsService(Path("settings.json"))
         self._loaded_settings: dict = {}
         self._section_buttons: list[QPushButton] = []
@@ -84,7 +84,6 @@ class SettingsPage(QWidget):
         body.setSpacing(12)
         root.addLayout(body, 1)
 
-        # Left settings rail
         rail = QFrame()
         rail.setProperty("settingsRail", True)
         rail.setFixedWidth(190)
@@ -94,18 +93,23 @@ class SettingsPage(QWidget):
 
         self.stack = QStackedWidget()
 
-        page_builders = (
-            self._general_page,
-            self._integrations_page,
-            self._archive_page,
-            self._broadcast_page,
-            self._notifications_page,
-            self._appearance_page,
-            self._advanced_page,
-            self._about_page,
+        sections = [
+            (("⚙", "General"), self._general_page),
+            (("⌘", "Integrations"), self._integrations_page),
+            (("▣", "Archive"), self._archive_page),
+        ]
+        if self.broadcast_enabled:
+            sections.append((("▤", "Broadcast"), self._broadcast_page))
+        sections.extend(
+            [
+                (("♢", "Notifications"), self._notifications_page),
+                (("⌁", "Appearance"), self._appearance_page),
+                (("⚒", "Advanced"), self._advanced_page),
+                (("ⓘ", "About & Credits"), self._about_page),
+            ]
         )
 
-        for index, ((icon, label), builder) in enumerate(zip(self.SECTIONS, page_builders)):
+        for index, ((icon, label), builder) in enumerate(sections):
             button = QPushButton(f"{icon}   {label}")
             button.setCheckable(True)
             button.setProperty("settingsNav", True)
@@ -118,7 +122,6 @@ class SettingsPage(QWidget):
         rail_layout.addStretch(1)
         body.addWidget(rail, 0)
 
-        # Main content + right utility column
         content = QHBoxLayout()
         content.setSpacing(12)
         content.addWidget(self.stack, 3)
@@ -177,7 +180,6 @@ class SettingsPage(QWidget):
         form.addRow("Default Builds Export", self._browse_row(self.builds_export_folder, self.builds_export_browse))
 
         layout.addLayout(form)
-
         note = QLabel("General application preferences will live here as the UX branch grows.")
         note.setWordWrap(True)
         note.setProperty("muted", True)
@@ -189,23 +191,25 @@ class SettingsPage(QWidget):
         form = QFormLayout()
         form.setSpacing(9)
 
-        self.obs_host = QLineEdit()
-        self.obs_port = QLineEdit()
-        self.obs_password = QLineEdit()
-        self.obs_password.setEchoMode(QLineEdit.EchoMode.Password)
+        if self.broadcast_enabled:
+            self.obs_host = QLineEdit()
+            self.obs_port = QLineEdit()
+            self.obs_password = QLineEdit()
+            self.obs_password.setEchoMode(QLineEdit.EchoMode.Password)
+            form.addRow("OBS Host", self.obs_host)
+            form.addRow("OBS Port", self.obs_port)
+            form.addRow("OBS Password", self.obs_password)
+
         self.eso_logs_client_id = QLineEdit()
         self.eso_logs_client_secret = QLineEdit()
         self.eso_logs_client_secret.setEchoMode(QLineEdit.EchoMode.Password)
-
-        form.addRow("OBS Host", self.obs_host)
-        form.addRow("OBS Port", self.obs_port)
-        form.addRow("OBS Password", self.obs_password)
         form.addRow("ESO Logs Client ID", self.eso_logs_client_id)
         form.addRow("ESO Logs Client Secret", self.eso_logs_client_secret)
         layout.addLayout(form)
 
-        self.test_obs_button = QPushButton("Test OBS Connection")
-        layout.addWidget(self.test_obs_button)
+        if self.broadcast_enabled:
+            self.test_obs_button = QPushButton("Test OBS Connection")
+            layout.addWidget(self.test_obs_button)
         return page
 
     def _archive_page(self) -> QWidget:
@@ -319,13 +323,17 @@ class SettingsPage(QWidget):
     def _integration_status_card(self) -> FoundryCard:
         card = FoundryCard("INTEGRATION STATUS")
         self.integration_labels = {}
-        for key, title in (
-            ("obs", "OBS Studio"),
-            ("websocket", "WebSocket Server"),
-            ("archive", "Archive Folder"),
-            ("sheets", "Google Sheets"),
-            ("ai", "AI Service"),
-        ):
+        entries = []
+        if self.broadcast_enabled:
+            entries.extend((("obs", "OBS Studio"), ("websocket", "WebSocket Server")))
+        entries.extend(
+            (
+                ("archive", "Archive Folder"),
+                ("sheets", "Google Sheets"),
+                ("ai", "AI Service"),
+            )
+        )
+        for key, title in entries:
             row = QWidget()
             layout = QHBoxLayout(row)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -368,7 +376,8 @@ class SettingsPage(QWidget):
         self.counters_browse.clicked.connect(lambda: self._browse_folder(self.counters_folder, "Counters Folder"))
         self.achievement_data_browse.clicked.connect(lambda: self._browse_file(self.achievement_data, "Achievement Data", "JSON (*.json)"))
         self.progress_browse.clicked.connect(lambda: self._browse_file(self.achievement_progress, "Achievement Progress", "JSON (*.json)"))
-        self.test_obs_button.clicked.connect(self.test_obs)
+        if self.broadcast_enabled:
+            self.test_obs_button.clicked.connect(self.test_obs)
 
         self.save_button = QPushButton("Save Settings")
         self.save_button.setProperty("primary", True)
@@ -404,48 +413,60 @@ class SettingsPage(QWidget):
 
         self.workspace.setText(s.get("BffRoot", ""))
         self.builds_export_folder.setText(s.get("BuildsExportFolder", ""))
-        self.obs_host.setText(s.get("ObsWebSocketHost", ""))
-        self.obs_port.setText(str(s.get("ObsWebSocketPort", 4455)))
-        self.obs_password.setText(s.get("ObsWebSocketPassword", ""))
         self.eso_logs_client_id.setText(s.get("EsoLogsClientId", ""))
         self.eso_logs_client_secret.setText(s.get("EsoLogsClientSecret", ""))
         self.archive_folder.setText(s.get("ArchiveFolder", ""))
         self.counters_folder.setText(s.get("CountersFolder", ""))
-        self.brb_scene.setText(s.get("BrbSceneName", "BRB"))
-        self.end_scene.setText(s.get("EndOfStreamSceneName", s.get("EndSceneName", "Ending")))
         self.achievement_data.setText(s.get("AchievementData", ""))
         self.achievement_progress.setText(s.get("AchievementProgress", s.get("AchievementProgressPath", "")))
 
+        if self.broadcast_enabled:
+            self.obs_host.setText(s.get("ObsWebSocketHost", ""))
+            self.obs_port.setText(str(s.get("ObsWebSocketPort", 4455)))
+            self.obs_password.setText(s.get("ObsWebSocketPassword", ""))
+            self.brb_scene.setText(s.get("BrbSceneName", "BRB"))
+            self.end_scene.setText(s.get("EndOfStreamSceneName", s.get("EndSceneName", "Ending")))
+
         archive_ok = bool(self.archive_folder.text().strip())
         self.integration_labels["archive"].setText("●  Ready" if archive_ok else "●  Not configured")
-        self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
-        self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
+        if self.broadcast_enabled:
+            self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
+            self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
         self.integration_labels["sheets"].setText("●  Not checked")
         self.integration_labels["ai"].setText("●  Not configured")
         self.status.info("Settings loaded.")
 
     def save_settings(self):
         settings = dict(self._loaded_settings)
-        settings.update(
-            {
-                "BffRoot": self.workspace.text().strip(),
-                "BuildsExportFolder": self.builds_export_folder.text().strip(),
-                "ObsWebSocketHost": self.obs_host.text().strip(),
-                "ObsWebSocketPort": int(self.obs_port.text().strip() or 4455),
-                "ObsWebSocketPassword": self.obs_password.text(),
-                "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
-                "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
-                "ArchiveFolder": self.archive_folder.text().strip(),
-                "CountersFolder": self.counters_folder.text().strip(),
-                "BrbSceneName": self.brb_scene.text().strip(),
-                "EndOfStreamSceneName": self.end_scene.text().strip(),
-            }
-        )
+        updates = {
+            "BffRoot": self.workspace.text().strip(),
+            "BuildsExportFolder": self.builds_export_folder.text().strip(),
+            "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
+            "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
+            "ArchiveFolder": self.archive_folder.text().strip(),
+            "CountersFolder": self.counters_folder.text().strip(),
+        }
+        if self.broadcast_enabled:
+            updates.update(
+                {
+                    "ObsWebSocketHost": self.obs_host.text().strip(),
+                    "ObsWebSocketPort": int(self.obs_port.text().strip() or 4455),
+                    "ObsWebSocketPassword": self.obs_password.text(),
+                    "BrbSceneName": self.brb_scene.text().strip(),
+                    "EndOfStreamSceneName": self.end_scene.text().strip(),
+                }
+            )
+        settings.update(updates)
         self.settings_service.save(settings)
         self._loaded_settings = settings
         self.status.success("Settings saved.")
 
     def test_obs(self):
+        if not self.broadcast_enabled:
+            return
+
+        from services.obs_websocket_service import ObsWebSocketService
+
         try:
             ObsWebSocketService(
                 host=self.obs_host.text().strip() or "127.0.0.1",
