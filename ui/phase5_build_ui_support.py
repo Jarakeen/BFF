@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QScrollArea,
@@ -122,6 +121,17 @@ class CharacterProgressionDialog(QDialog):
         area.setWidget(widget)
         return area
 
+    @staticmethod
+    def _progression_spin(*, maximum: int, stored: int | None, width: int) -> QSpinBox:
+        """Create a rank/point control with -1 represented as Unknown."""
+        spin = QSpinBox()
+        spin.setRange(-1, maximum)
+        spin.setSpecialValueText("Unknown")
+        spin.setSuffix(f" / {maximum}")
+        spin.setValue(-1 if stored is None else max(0, min(maximum, stored)))
+        spin.setFixedWidth(width)
+        return spin
+
     def _passive_rows_by_line(self) -> dict[str, list[dict]]:
         grouped: dict[str, list[dict]] = defaultdict(list)
         seen: set[tuple[str, str]] = set()
@@ -156,7 +166,7 @@ class CharacterProgressionDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
 
         note = QLabel(
-            "Expand a line to record the ranks this character actually purchased. "
+            "Unknown means the rank has not been recorded. Zero means explicitly not purchased. "
             "Buy All sets every passive in that line to its database-backed maximum rank."
         )
         note.setWordWrap(True)
@@ -191,8 +201,10 @@ class CharacterProgressionDialog(QDialog):
             header.addStretch()
             buy_all = FoundryButton("Buy All", role=ButtonRole.SECONDARY, compact=True)
             clear = FoundryButton("Clear", role=ButtonRole.GHOST, compact=True)
+            unknown = FoundryButton("Unknown", role=ButtonRole.GHOST, compact=True)
             header.addWidget(buy_all)
             header.addWidget(clear)
+            header.addWidget(unknown)
             page_layout.addLayout(header)
 
             grid = QGridLayout()
@@ -202,11 +214,8 @@ class CharacterProgressionDialog(QDialog):
             for row_index, skill in enumerate(rows):
                 name = _clean(skill.get("name"))
                 maximum = max(1, _int(skill.get("rank"), 1))
-                spin = QSpinBox()
-                spin.setRange(0, maximum)
-                spin.setSuffix(f" / {maximum}")
-                spin.setValue(max(0, min(maximum, self._stored_passives.get(name.casefold(), 0))))
-                spin.setFixedWidth(92)
+                stored = self._stored_passives.get(name.casefold()) if name.casefold() in self._stored_passives else None
+                spin = self._progression_spin(maximum=maximum, stored=stored, width=108)
                 description = _clean(skill.get("description"))
                 label = QLabel(name)
                 if description:
@@ -229,8 +238,13 @@ class CharacterProgressionDialog(QDialog):
                 for spin in spins:
                     spin.setValue(0)
 
+            def unknown_line(*_args, spins=line_spins) -> None:
+                for spin in spins:
+                    spin.setValue(-1)
+
             buy_all.clicked.connect(buy_line)
             clear.clicked.connect(clear_line)
+            unknown.clicked.connect(unknown_line)
             toolbox.addItem(page, line)
 
         layout.addWidget(toolbox)
@@ -243,8 +257,8 @@ class CharacterProgressionDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
 
         note = QLabel(
-            "Only non-slottable Champion stars appear here. Record the points actually purchased; "
-            "the 12 slotted stars remain build-specific in the normal Champion Points editor."
+            "Only non-slottable Champion stars appear here. Unknown means unrecorded; zero means explicitly unpurchased. "
+            "The 12 slotted stars remain build-specific in the normal Champion Points editor."
         )
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -268,11 +282,8 @@ class CharacterProgressionDialog(QDialog):
             for row_index, cp in enumerate(rows):
                 name = _clean(cp.get("name"))
                 maximum = max(1, _int(cp.get("max_points"), 1))
-                spin = QSpinBox()
-                spin.setRange(0, maximum)
-                spin.setSuffix(f" / {maximum}")
-                spin.setValue(max(0, min(maximum, self._stored_cp.get(name.casefold(), 0))))
-                spin.setFixedWidth(100)
+                stored = self._stored_cp.get(name.casefold()) if name.casefold() in self._stored_cp else None
+                spin = self._progression_spin(maximum=maximum, stored=stored, width=116)
                 description = _clean(cp.get("description"))
                 label = QLabel(name)
                 if description:
@@ -297,7 +308,7 @@ class CharacterProgressionDialog(QDialog):
         return {
             name: spin.value()
             for name, spin in self._passive_spins.values()
-            if spin.value() > 0
+            if spin.value() >= 0
         }
 
     @property
@@ -305,7 +316,7 @@ class CharacterProgressionDialog(QDialog):
         return {
             name: spin.value()
             for name, spin in self._cp_spins.values()
-            if spin.value() > 0
+            if spin.value() >= 0
         }
 
 
@@ -339,7 +350,6 @@ def install() -> None:
     from ui.builds_page import BuildsPage
     from widgets.build_editor import BuildEditor
 
-    # ---- BuildEditor: one-click endgame gear finishing ------------------
     original_gear_card = BuildEditor._build_gear_card
 
     def gear_card_with_finisher(self):
@@ -353,7 +363,6 @@ def install() -> None:
     BuildEditor._build_gear_card = gear_card_with_finisher
     BuildEditor.finish_endgame_gear = _finish_endgame_gear
 
-    # ---- Builds page: compact character progression access --------------
     original_identity_header = BuildsPage._identity_header
 
     def identity_header_with_progression(self, name: str, role: str, build: PlayerBuild) -> QWidget:
