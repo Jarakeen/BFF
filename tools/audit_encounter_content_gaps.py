@@ -26,8 +26,8 @@ def main() -> int:
     parser.add_argument(
         "--source-root",
         type=Path,
-        default=Path("data/uesp"),
-        help="Root containing tracked UESP content records with boss_ids",
+        default=Path("data/eso_info"),
+        help="Root containing tracked ESO content records with boss_ids",
     )
     args = parser.parse_args()
 
