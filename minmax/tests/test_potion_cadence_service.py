@@ -70,8 +70,26 @@ def test_saved_potion_cadence_uses_character_medicinal_use_rank(tmp_path: Path) 
     assert result.cadence.guaranteed_overlap_seconds == 2.58
 
 
-def test_missing_medicinal_use_defaults_to_rank_zero_without_guessing(tmp_path: Path) -> None:
-    catalog, _character_id, build_id = _catalog_with_build(tmp_path)
+def test_missing_medicinal_use_rank_fails_closed(tmp_path: Path) -> None:
+    catalog, character_id, build_id = _catalog_with_build(tmp_path)
+
+    result = PotionCadenceService(catalog, _EventResolver()).resolve_build(build_id)
+
+    assert not result.resolved
+    assert result.medicinal_use_rank is None
+    assert result.cadence is None
+    assert result.unresolved == (
+        f"Medicinal Use rank is not recorded for character: {character_id}",
+    )
+
+
+def test_explicit_rank_zero_resolves_base_potion_cadence(tmp_path: Path) -> None:
+    catalog, character_id, build_id = _catalog_with_build(tmp_path)
+    catalog.set_passive_rank(
+        character_id=character_id,
+        passive_name="Medicinal Use",
+        rank=0,
+    )
 
     result = PotionCadenceService(catalog, _EventResolver()).resolve_build(build_id)
 
@@ -102,4 +120,5 @@ def test_missing_canonical_build_fails_closed(tmp_path: Path) -> None:
     result = PotionCadenceService(catalog, _EventResolver()).resolve_build("missing-build")
 
     assert not result.resolved
+    assert result.medicinal_use_rank is None
     assert result.unresolved == ("Canonical build not found: missing-build",)
