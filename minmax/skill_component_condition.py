@@ -13,6 +13,14 @@ from enum import Enum
 
 
 _ANY_PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
+_ORDINALS = {
+    "first": 1,
+    "second": 2,
+    "third": 3,
+    "fourth": 4,
+    "fifth": 5,
+    "sixth": 6,
+}
 
 
 class SkillComponentConditionType(str, Enum):
@@ -43,17 +51,29 @@ _HEALTH_THRESHOLD_RE = re.compile(
     r"\b(?:below|under|less\s+than)\s+(\d+(?:\.\d+)?)\s*%\s+(?:of\s+)?(?:their|the\s+target(?:'s)?|target|enemy(?:'s)?|its)?\s*health\b",
     flags=re.IGNORECASE,
 )
+_ORDINAL_HIT_RE = re.compile(
+    r"\b(first|second|third|fourth|fifth|sixth)\s+(?:hit|attack|strike)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _condition_from_match(*, skill_rank_id: int, coefficient_number: int, match: re.Match[str]) -> tuple[SkillComponentCondition, ...]:
+    percent = float(match.group(1))
+    if not (0.0 < percent <= 100.0):
+        return ()
+    return (
+        SkillComponentCondition(
+            skill_rank_id=int(skill_rank_id),
+            coefficient_number=int(coefficient_number),
+            condition_type=SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT,
+            threshold=percent / 100.0,
+            evidence=match.group(0),
+        ),
+    )
 
 
 def _component_segment(text: str, coefficient_number: int) -> str:
-    """Return the forward clause owned by ``$coefficient_number``.
-
-    Single-placeholder fragments keep their full local sentence so conditions
-    written before the scalar remain available. Multi-placeholder fragments are
-    stricter: each component owns wording from its own placeholder forward until
-    the next placeholder, preventing one coefficient from inheriting another
-    component's condition.
-    """
+    """Return the forward clause owned by ``$coefficient_number``."""
 
     placeholders = list(_ANY_PLACEHOLDER_RE.finditer(text))
     matches = [
@@ -68,12 +88,49 @@ def _component_segment(text: str, coefficient_number: int) -> str:
 
     current_index, current = matches[0]
     start = current.start()
-    end = (
-        len(text)
-        if current_index + 1 >= len(placeholders)
-        else placeholders[current_index + 1].start()
-    )
+    end = len(text) if current_index + 1 >= len(placeholders) else placeholders[current_index + 1].start()
     return text[start:end].strip()
+
+
+def explicit_ordinal_condition_owner(text: str) -> int | None:
+    """Return a component number when source text explicitly names its hit ordinal.
+
+    This is intentionally narrow. It recognizes only direct wording such as
+    ``the second hit`` / ``third attack`` in the same sentence as a supported
+    health threshold. It never infers ordinal ownership from prose order alone.
+    """
+
+    normalized = " ".join(str(text or "").split())
+    for sentence in re.split(r"(?<=[.;])\s+", normalized):
+        threshold = _HEALTH_THRESHOLD_RE.search(sentence)
+        ordinal = _ORDINAL_HIT_RE.search(sentence)
+        if threshold is not None and ordinal is not None:
+            return _ORDINALS[ordinal.group(1).casefold()]
+    return None
+
+
+def extract_explicit_ordinal_component_conditions(
+    *,
+    skill_rank_id: int,
+    coefficient_number: int,
+    source_text: str,
+) -> tuple[SkillComponentCondition, ...]:
+    """Extract a health condition explicitly assigned to an ordinal hit/attack."""
+
+    normalized = " ".join(str(source_text or "").split())
+    for sentence in re.split(r"(?<=[.;])\s+", normalized):
+        ordinal = _ORDINAL_HIT_RE.search(sentence)
+        threshold = _HEALTH_THRESHOLD_RE.search(sentence)
+        if ordinal is None or threshold is None:
+            continue
+        if _ORDINALS[ordinal.group(1).casefold()] != int(coefficient_number):
+            continue
+        return _condition_from_match(
+            skill_rank_id=skill_rank_id,
+            coefficient_number=coefficient_number,
+            match=threshold,
+        )
+    return ()
 
 
 def extract_explicit_component_conditions(
@@ -82,12 +139,7 @@ def extract_explicit_component_conditions(
     coefficient_number: int,
     component_text: str,
 ) -> tuple[SkillComponentCondition, ...]:
-    """Extract only explicit, normalized coefficient-owned conditions.
-
-    Generic words such as ``if`` or ``after`` are not interpreted without a
-    supported mechanical condition pattern. In multi-placeholder source text,
-    condition ownership is scoped to the current coefficient's forward clause.
-    """
+    """Extract only explicit, normalized coefficient-owned conditions."""
 
     text = " ".join(str(component_text or "").split())
     if not text:
@@ -101,16 +153,8 @@ def extract_explicit_component_conditions(
     if match is None:
         return ()
 
-    percent = float(match.group(1))
-    if not (0.0 < percent <= 100.0):
-        return ()
-
-    return (
-        SkillComponentCondition(
-            skill_rank_id=int(skill_rank_id),
-            coefficient_number=int(coefficient_number),
-            condition_type=SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT,
-            threshold=percent / 100.0,
-            evidence=match.group(0),
-        ),
+    return _condition_from_match(
+        skill_rank_id=skill_rank_id,
+        coefficient_number=coefficient_number,
+        match=match,
     )
