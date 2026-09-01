@@ -10,12 +10,7 @@ from .passive_math import undaunted_mettle_resource_percent
 
 
 class UndauntedPassiveInputResolver:
-    """Apply verified standing Undaunted passives to shared inputs.
-
-    Only Undaunted Mettle belongs here today. Undaunted Command is triggered
-    by synergy activation and therefore remains outside standing character
-    state.
-    """
+    """Apply verified standing Undaunted Mettle math."""
 
     @staticmethod
     def _equipped_armor_type_count(build: PlayerBuild) -> int:
@@ -31,8 +26,10 @@ class UndauntedPassiveInputResolver:
         build: PlayerBuild,
         *,
         undaunted_passives_owned: bool = False,
+        undaunted_mettle_owned: bool | None = None,
     ) -> GearCalculationInputs:
-        if not undaunted_passives_owned:
+        owned = undaunted_passives_owned if undaunted_mettle_owned is None else undaunted_mettle_owned
+        if not owned:
             return result
 
         armor_type_count = self._equipped_armor_type_count(build)
