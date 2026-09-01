@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Safely rebuild data/processed/alchemy_effects.json through the V3 parser.
+"""Safely rebuild research/processed/alchemy_effects.json through the V3 parser.
 
 The historical V3 CLI writes its output even when required effect pages are
 missing. This wrapper directs V3 into a candidate file first, inspects the
@@ -19,9 +19,14 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RAW_DIR = ROOT / "data" / "raw"
-DEFAULT_OUTPUT = ROOT / "data" / "processed" / "alchemy_effects.json"
-DEFAULT_CANDIDATE = ROOT / "data" / "processed" / "alchemy_effects.candidate.json"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from services.paths import PROCESSED, RAW_DATA
+
+DEFAULT_RAW_DIR = RAW_DATA
+DEFAULT_OUTPUT = PROCESSED / "alchemy_effects.json"
+DEFAULT_CANDIDATE = PROCESSED / "alchemy_effects.candidate.json"
 V3_IMPORTER = ROOT / "tools" / "import_uesp_alchemy_effects_v3.py"
 
 
