@@ -146,7 +146,7 @@ def test_adapts_unique_saved_weapon_enchantment_item_id(tmp_path: Path):
 
     assert result.build is not None
     assert result.build.front_bar is not None
-    assert result.build.front_bar.main_hand.enchantment_id == "weapon_damage"
+    assert result.build.front_bar.main_hand.enchantment_id is None
     assert result.build.front_bar.main_hand.enchantment_item_id == 12345
     assert result.unresolved == ()
 
@@ -165,7 +165,7 @@ def test_ambiguous_saved_weapon_enchantment_is_not_guessed(tmp_path: Path):
 
     assert result.build is not None
     assert result.build.front_bar is not None
-    assert result.build.front_bar.main_hand.enchantment_id == "weapon_damage"
+    assert result.build.front_bar.main_hand.enchantment_id is None
     assert result.build.front_bar.main_hand.enchantment_item_id is None
     assert any(
         "weapon enchantment label is ambiguous (2 matches): Weapon Damage" in message
@@ -187,7 +187,7 @@ def test_missing_saved_weapon_enchantment_is_reported(tmp_path: Path):
 
     assert result.build is not None
     assert result.build.front_bar is not None
-    assert result.build.front_bar.main_hand.enchantment_id == "unknown_enchant"
+    assert result.build.front_bar.main_hand.enchantment_id is None
     assert result.build.front_bar.main_hand.enchantment_item_id is None
     assert any(
         "weapon enchantment label not found in WeaponEnchantmentRepository: Unknown Enchant"
