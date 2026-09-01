@@ -22,6 +22,7 @@ from services.uesp.uesp_parser import (
     _extract_list_text,
     _extract_linked_titles,
     _extract_difficulty_notes,
+    _match_dialogue_trigger_to_ability,
     _source_for,
     _clean_title,
     slugify,
@@ -109,6 +110,19 @@ class EnrichedUespParser(UespParser):
         for line in dialogue:
             grouped.setdefault(line.trigger or "Unspecified", []).append(line)
 
+        # Preserve the hardened dialogue-to-mechanic evidence path used by the
+        # base parser. Enriched parsing keeps the richer trigger extraction, but
+        # still associates a trigger with an ability only when textual evidence
+        # clears the existing conservative matcher threshold.
+        for trigger, entries in grouped.items():
+            matched_ability = _match_dialogue_trigger_to_ability(
+                trigger,
+                entries,
+                abilities,
+            )
+            for entry in entries:
+                entry.ability = matched_ability
+
         existing = {(mechanic.name, mechanic.description) for mechanic in mechanics}
         for mechanic in self._inferred_mechanics(abilities):
             if (mechanic.name, mechanic.description) not in existing:
@@ -130,10 +144,9 @@ class EnrichedUespParser(UespParser):
 
         difficulty_notes = _extract_difficulty_notes(difficulty_text)
 
-
         achievement_refs = _extract_linked_titles(
             _section(parsed.sections, ACHIEVEMENT_HEADINGS) or []
-)
+        )
         return UespBoss(
             id=slugify(page.title),
             name=_clean_title(page.title),
