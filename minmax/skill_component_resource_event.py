@@ -51,10 +51,12 @@ class SkillComponentResourceEvent:
             raise ValueError("evidence must preserve the source wording")
 
 
-_COEFFICIENT_RESOURCE_EVENT_RE = re.compile(
-    r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b"
-    r"[^.;]{0,70}?\$(?P<number>\d+)(?!\d)\s*"
-    r"(?P<resource>magicka|stamina|ultimate)\b",
+_RESOURCE_VERB_RE = re.compile(
+    r"\b(?:restore|restores|restored|restoring|gain|gains|gained|gaining)\b",
+    flags=re.IGNORECASE,
+)
+_COEFFICIENT_RESOURCE_PAIR_RE = re.compile(
+    r"\$(?P<number>\d+)(?!\d)\s*(?P<resource>magicka|stamina|ultimate)\b",
     flags=re.IGNORECASE,
 )
 _PERCENT_MISSING_RESOURCE_EVENT_RE = re.compile(
@@ -68,6 +70,27 @@ _PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
 
 def _resource_type(value: str) -> SkillComponentResourceType:
     return SkillComponentResourceType(value.casefold())
+
+
+def _coefficient_resource_pairs_after_verb(text: str) -> tuple[re.Match[str], ...]:
+    """Return coefficient/resource pairs from explicit gain/restore clauses.
+
+    A single verb may govern more than one coordinated pair, for example
+    ``restores $1 Magicka and $2 Stamina``. Pairs are only collected from the
+    clause following an explicit resource-gain verb, never from arbitrary text.
+    """
+
+    matches: list[re.Match[str]] = []
+    for verb in _RESOURCE_VERB_RE.finditer(text):
+        clause_end_candidates = [
+            index
+            for index in (text.find(".", verb.end()), text.find(";", verb.end()))
+            if index != -1
+        ]
+        clause_end = min(clause_end_candidates) if clause_end_candidates else len(text)
+        clause = text[verb.end():clause_end]
+        matches.extend(_COEFFICIENT_RESOURCE_PAIR_RE.finditer(clause))
+    return tuple(matches)
 
 
 def extract_explicit_component_resource_events(
@@ -94,7 +117,7 @@ def extract_explicit_component_resource_events(
         return ()
 
     results: list[SkillComponentResourceEvent] = []
-    for match in _COEFFICIENT_RESOURCE_EVENT_RE.finditer(text):
+    for match in _coefficient_resource_pairs_after_verb(text):
         if int(match.group("number")) != int(coefficient_number):
             continue
         results.append(
