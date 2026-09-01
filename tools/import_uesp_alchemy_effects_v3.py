@@ -74,6 +74,7 @@ EXPECTED_EFFECTS = {
     "Protection",
     "Ravage Health",
     "Restore Health",
+    "Restore Magicka",
     "Restore Stamina",
     "Speed",
     "Spell Critical",
