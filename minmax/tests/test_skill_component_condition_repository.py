@@ -1,0 +1,61 @@
+import sqlite3
+
+from minmax.skill_component_condition import SkillComponentConditionType
+from minmax.skill_component_condition_repository import SkillComponentConditionRepository
+
+
+def _make_db(path):
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (
+            id INTEGER PRIMARY KEY,
+            ability_id INTEGER NOT NULL
+        );
+        CREATE TABLE ability (
+            ability_id INTEGER PRIMARY KEY,
+            coef_description TEXT
+        );
+
+        INSERT INTO skill_rank VALUES (10, 100);
+        INSERT INTO ability VALUES (
+            100,
+            'Deal $1 Magic Damage to an enemy below 25% Health.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+
+def test_repository_resolves_explicit_health_threshold(tmp_path):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    conditions = SkillComponentConditionRepository(path).resolve(10, 1)
+
+    assert len(conditions) == 1
+    condition = conditions[0]
+    assert condition.condition_type is SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT
+    assert condition.threshold == 0.25
+
+
+def test_repository_returns_empty_for_unknown_rank(tmp_path):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    assert SkillComponentConditionRepository(path).resolve(999, 1) == ()
+
+
+def test_repository_does_not_borrow_missing_component_text(tmp_path):
+    path = tmp_path / "eso.db"
+    _make_db(path)
+
+    assert SkillComponentConditionRepository(path).resolve(10, 2) == ()
+
+
+def test_repository_fails_closed_when_required_tables_are_missing(tmp_path):
+    path = tmp_path / "eso.db"
+    sqlite3.connect(path).close()
+
+    assert SkillComponentConditionRepository(path).resolve(10, 1) == ()
