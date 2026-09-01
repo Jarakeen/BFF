@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sqlite3
 import sys
 from collections import Counter
@@ -33,15 +34,13 @@ class ConditionConsequenceAuditRow:
 def consequence_cues(text: str) -> tuple[str, ...]:
     lower = " ".join(str(text or "").casefold().split())
     cues: list[str] = []
-    if "damage" in lower:
+    if re.search(r"\bdamage\b", lower):
         cues.append("damage")
-    if "heal" in lower or "restore health" in lower:
+    if re.search(r"\bheal(?:s|ed|ing)?\b", lower) or re.search(r"\brestore(?:s|d|ing)?\s+health\b", lower):
         cues.append("healing")
-    if "shield" in lower or "absorbs" in lower:
+    if re.search(r"\bshield\b|\babsorbs?\b", lower):
         cues.append("shield")
-    if any(resource in lower for resource in ("magicka", "stamina", "ultimate")) and any(
-        verb in lower for verb in ("restore", "gain")
-    ):
+    if re.search(r"\b(?:magicka|stamina|ultimate)\b", lower) and re.search(r"\b(?:restore(?:s|d|ing)?|gain(?:s|ed|ing)?)\b", lower):
         cues.append("resource")
     return tuple(cues)
 
