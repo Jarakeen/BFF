@@ -22,14 +22,34 @@ _FINAL_PHASE_THRESHOLD = re.compile(
 _HEALTH_THRESHOLD = re.compile(
     r"(?i)\b(?:at|reaches?|below|under|hits?)\s+(\d{1,3})\s*%\s*(?:health)?\b"
 )
+_NAMED_PHASE_REF = re.compile(
+    r"(?i)\b(?:"
+    r"end\s+of|enter(?:ing)?|during|begins?|starts?|after|before|into"
+    r")\s+(?:the\s+)?([a-z][a-z0-9' -]{1,40}?\s+phase)\b"
+)
+
+_GENERIC_NAMED_PHASES = {
+    "the phase",
+    "next phase",
+    "new phase",
+    "final phase",
+}
+
+
+def _clean_named_phase(value: str) -> str:
+    words = value.strip(" :-()\t\r\n").split()
+    if not words:
+        return ""
+    return " ".join(word.capitalize() for word in words)
 
 
 def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
     """Extract phase facts explicitly supported by UESP prose.
 
-    A bare health percentage never creates a phase. Explicit phase references
-    are merged, and a final-phase threshold can be attached to the following
-    explicit phase reference when the source presents them together.
+    A bare health percentage never creates a phase. Explicit numbered phases
+    and source-named phases are merged by label. Named phases require transition
+    wording such as "enter", "during", or "end of" so ordinary mentions of the
+    word "phase" do not fabricate encounter structure.
     """
     results: list[PhaseFact] = []
     index_by_label: dict[str, int] = {}
@@ -96,6 +116,19 @@ def extract_phases(blocks: list[dict]) -> list[PhaseFact]:
                         pending_final_threshold = None
                 add(current_label, threshold, text)
                 threshold_window = not bool(threshold)
+            continue
+
+        named_matches = list(_NAMED_PHASE_REF.finditer(text))
+        if named_matches:
+            for match in named_matches:
+                raw_label = match.group(1).strip()
+                if raw_label.casefold() in _GENERIC_NAMED_PHASES:
+                    continue
+                label = _clean_named_phase(raw_label)
+                if not label:
+                    continue
+                add(label, "", text)
+            threshold_window = False
             continue
 
         if threshold_window and current_label:
