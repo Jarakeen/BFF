@@ -2,7 +2,7 @@
 Generic GearSet -> EffectVariant bridge.
 
 The resolver never parses bonus descriptions or invents effect identities.
-It asks the canonical known-effect registry for an already-verified mapping.
+It asks the canonical known-effect registry for already-verified mappings.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 from .character_build.effect_instance import EffectVariant
 from .gear_set_known_effects import (
     GearSetKnownEffect,
-    known_effect_for_bonus_row,
+    known_effects_for_bonus_row,
 )
 from .gear_set_repository import GearSetRepository
 
@@ -39,17 +39,16 @@ class GearSetEffectVariantResolver:
             if bonus.piece_count > equipped_piece_count:
                 continue
 
-            known = known_effect_for_bonus_row(
+            known_effects = known_effects_for_bonus_row(
                 bonus.id,
                 bonus.set_id,
                 source_name,
                 bonus.piece_count,
             )
-            if known is None:
-                continue
 
-            variants.append(
+            variants.extend(
                 self._to_effect_variant(known, source_name, bonus.piece_count)
+                for known in known_effects
             )
 
         return variants
