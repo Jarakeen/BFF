@@ -49,13 +49,12 @@ class SavedBuildCapabilityService:
     )
     INTENTIONAL_BOUNDARY_PREFIXES = (
         "Potion selected; activation/uptime is not part of static build state:",
+        "Conditional racial passive bonus requires combat-state model:",
+        "Racial ability-cost reduction requires cost-stat model:",
+        "Non-combat racial passive outside combat capability audit:",
     )
     CP_DYNAMIC_PREFIX = "Champion Point is dynamic or not yet stat-mapped:"
 
-    # These purchased CP stars are verified by canonical tooltip text but do
-    # not belong in the Phase 5 standing/core-stat layer. Keep them explicit as
-    # capability boundaries instead of pretending their conditional/runtime
-    # semantics are unresolved defects in saved-build persistence.
     CP_DEFERRED_BOUNDARY_REASONS = {
         "battle mastery": "status-effect chance model",
         "flawless ritual": "status-effect chance model",
@@ -176,12 +175,6 @@ class SavedBuildCapabilityService:
 
     @classmethod
     def _partition_context_messages(cls, messages: tuple[str, ...]) -> tuple[list[str], list[str]]:
-        """Partition context messages without requiring repository access.
-
-        This remains callable at class level for compatibility with existing
-        callers/tests. Database-aware CP discipline classification is layered
-        on separately by ``_partition_context_messages_with_cp``.
-        """
         unresolved: list[str] = []
         boundaries: list[str] = []
         for message in messages:
