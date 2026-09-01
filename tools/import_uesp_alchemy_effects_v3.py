@@ -22,18 +22,18 @@ The importer is deliberately database-safe:
       modify eso.db
 
 Expected raw location:
-    data/raw/
+    research/raw/
 
 The script recursively searches that directory for .html/.htm files and
 also accepts JSON files containing previously parsed UESP effect records.
 
 Usage
 -----
-    python tools/import_uesp_alchemy_effects.py
+    python tools/import_uesp_alchemy_effects_v3.py
 
 Optional:
-    python tools/import_uesp_alchemy_effects.py --raw-dir data/raw
-    python tools/import_uesp_alchemy_effects.py --output data/processed/alchemy_effects.json
+    python tools/import_uesp_alchemy_effects_v3.py --raw-dir research/raw
+    python tools/import_uesp_alchemy_effects_v3.py --output research/processed/alchemy_effects.json
 """
 
 from __future__ import annotations
@@ -45,6 +45,12 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from services.paths import PROCESSED, RAW_DATA
 
 try:
     from bs4 import BeautifulSoup
@@ -148,21 +154,13 @@ def add_unique_dict(items, item, key_fields):
 def detect_effect_name_from_text(text: str) -> str | None:
     text = clean_text(text)
 
-    # Exact expected names first, longest first.
     for effect in sorted(EXPECTED_EFFECTS, key=len, reverse=True):
         if re.search(rf"\b{re.escape(effect)}\b", text, re.I):
             return effect
 
-    # Fallback for UESP pages whose H1 may contain only the effect title.
     return None
 
 def parse_table(table):
-    """
-    Convert a normal HTML table into rows of cleaned cell text.
-
-    The UESP pages have changed their exact markup over time, so this avoids
-    relying on one specific class name.
-    """
     rows = []
     for tr in table.find_all("tr"):
         cells = tr.find_all(["th", "td"])
@@ -184,12 +182,6 @@ def classify_table(rows):
     return None
 
 def extract_reagents(soup) -> list[str]:
-    """
-    Extract reagent names from the Availability section.
-
-    This intentionally uses the visible link text rather than trying to infer
-    reagent IDs from URLs.
-    """
     reagents = []
 
     for table in soup.find_all("table"):
@@ -204,14 +196,11 @@ def extract_reagents(soup) -> list[str]:
                 }:
                     reagents.append(text)
 
-    # Fallback: links to Alchemy ingredient pages.
     if not reagents:
         for a in soup.find_all("a"):
             href = clean_text(a.get("href", ""))
             text = clean_text(a.get_text(" ", strip=True))
             if "/Online:" in href and text:
-                # Common reagent names in the source are not generic effect
-                # pages. Keep only likely ingredient links.
                 if any(
                     token in href.casefold()
                     for token in (
@@ -237,7 +226,6 @@ def extract_effect_from_h1(soup) -> str | None:
     text = clean_text(h1.get_text(" ", strip=True))
     text = re.sub(r"^Online\s*:\s*", "", text, flags=re.I)
 
-    # Prefer exact expected names.
     for effect in sorted(EXPECTED_EFFECTS, key=len, reverse=True):
         if norm_name(text) == norm_name(effect):
             return effect
@@ -255,7 +243,6 @@ def extract_page_effect(soup, path: Path) -> str | None:
         if effect:
             return effect
 
-    # Last-resort filename matching.
     stem = re.sub(r"[_\-]+", " ", path.stem)
     return detect_effect_name_from_text(stem)
 
@@ -315,7 +302,6 @@ def parse_effect_page(path: Path) -> dict | None:
 
         elif kind == "formula":
             for row in rows:
-                # Ignore headings and obvious table labels.
                 if len(row) < 2:
                     continue
                 lower = " ".join(row).casefold()
@@ -349,8 +335,6 @@ def merge_records(records):
 
         existing = merged[key]
 
-        # Safe source merge. No pop(), because some records already have
-        # source_files and therefore no source_file key.
         for source in record.get("source_files", []):
             if source not in existing["source_files"]:
                 if existing["source_files"]:
@@ -396,12 +380,6 @@ def merge_records(records):
     return merged, duplicate_sources
 
 def load_json_records(path: Path):
-    """
-    Accept previously parsed JSON if present.
-
-    This is intentionally permissive because earlier passes produced more
-    than one JSON shape.
-    """
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
@@ -453,7 +431,6 @@ def discover_inputs(raw_dir: Path):
         list(raw_dir.rglob("*.html")) + list(raw_dir.rglob("*.htm"))
     )
 
-    # Avoid treating the final output as an input on subsequent runs.
     html_files = [
         p for p in html_files
         if "alchemy_effects" not in p.name.casefold()
@@ -479,8 +456,6 @@ def validate(merged):
         key=str.casefold,
     )
 
-    # Don't call a missing effect a failure if the local collection simply
-    # didn't include Heroism. It is a known separately collected page.
     missing_non_optional = [x for x in missing if x != "Heroism"]
 
     return missing, missing_non_optional
@@ -490,12 +465,12 @@ def main():
     parser.add_argument(
         "--raw-dir",
         default=None,
-        help="Raw data directory. Defaults to <project>/data/raw.",
+        help=f"Raw data directory. Defaults to {RAW_DATA}.",
     )
     parser.add_argument(
         "--output",
         default=None,
-        help="Output JSON. Defaults to <project>/data/processed/alchemy_effects.json.",
+        help=f"Output JSON. Defaults to {PROCESSED / 'alchemy_effects.json'}.",
     )
     parser.add_argument(
         "--commit",
@@ -504,12 +479,11 @@ def main():
     )
     args = parser.parse_args()
 
-    project = Path(__file__).resolve().parents[1]
-    raw_dir = Path(args.raw_dir).resolve() if args.raw_dir else project / "data" / "raw"
+    raw_dir = Path(args.raw_dir).resolve() if args.raw_dir else RAW_DATA
     output = (
         Path(args.output).resolve()
         if args.output
-        else project / "data" / "processed" / "alchemy_effects.json"
+        else PROCESSED / "alchemy_effects.json"
     )
 
     print("=" * 60)
@@ -546,8 +520,6 @@ def main():
             continue
         records.append(record)
 
-    # JSON is supplementary. It can recover pages/records from the earlier
-    # parser without making JSON the authoritative source over HTML.
     for path in json_files:
         for record in load_json_records(path):
             if record.get("effect_name"):
