@@ -21,6 +21,7 @@ CANONICAL_MECHANIC_DETAIL = "mechanic_detail"
 CANONICAL_PHASE = "phase"
 CANONICAL_PHASE_TRANSITION = "phase_transition"
 CANONICAL_STATE = "encounter_state"
+CANONICAL_FAILURE_CONDITION = "failure_condition"
 CANONICAL_UNMAPPED = "unmapped"
 
 
@@ -67,20 +68,27 @@ def map_candidate_to_canonical(
     fact_type = fact.fact_type.casefold()
     fact_key = fact.fact_key.casefold()
 
-    if fact_type == "mechanic_state" and fact_key.endswith("_exists") and fact.value is True:
-        name = _title_from_key(fact.fact_key, suffix="_exists")
-        return EncounterCanonicalMapping(
-            encounter_id=fact.encounter_id,
-            fact_type=fact.fact_type,
-            fact_key=fact.fact_key,
-            canonical_kind=CANONICAL_MECHANIC_PRESENCE,
-            payload={"name": name, "present": True},
-            source_count=fact.distinct_sources,
-            lossless_in_current_schema=True,
-            schema_note=_v3_note(
-                "encounter_canonical_fact stores the reviewed mechanic-presence fact"
-            ),
-        )
+    if fact_type == "mechanic_state" and fact.value is True:
+        suffix = ""
+        if fact_key.endswith("_exists"):
+            suffix = "_exists"
+        elif fact_key.endswith("_exist"):
+            suffix = "_exist"
+
+        if suffix:
+            name = _title_from_key(fact.fact_key, suffix=suffix)
+            return EncounterCanonicalMapping(
+                encounter_id=fact.encounter_id,
+                fact_type=fact.fact_type,
+                fact_key=fact.fact_key,
+                canonical_kind=CANONICAL_MECHANIC_PRESENCE,
+                payload={"name": name, "present": True},
+                source_count=fact.distinct_sources,
+                lossless_in_current_schema=True,
+                schema_note=_v3_note(
+                    "encounter_canonical_fact stores the reviewed mechanic-presence fact"
+                ),
+            )
 
     if fact_type == "mechanic_detail":
         value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
@@ -94,6 +102,21 @@ def map_candidate_to_canonical(
             lossless_in_current_schema=True,
             schema_note=_v3_note(
                 "encounter_canonical_fact stores the reviewed mechanic detail without flattening its payload"
+            ),
+        )
+
+    if fact_type == "failure_condition":
+        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
+        return EncounterCanonicalMapping(
+            encounter_id=fact.encounter_id,
+            fact_type=fact.fact_type,
+            fact_key=fact.fact_key,
+            canonical_kind=CANONICAL_FAILURE_CONDITION,
+            payload=dict(value),
+            source_count=fact.distinct_sources,
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed failure condition without flattening its payload"
             ),
         )
 
