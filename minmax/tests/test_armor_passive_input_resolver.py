@@ -50,42 +50,39 @@ def test_six_light_one_medium_applies_verified_owned_armor_passives():
 
     assert result.magicka_recovery.skill_percent_contributions[-1].label == "Light Armor: Evocation"
     assert result.magicka_recovery.skill_percent_contributions[-1].value == pytest.approx(0.24)
-
     assert result.stamina_recovery.skill_percent_contributions[-1].label == "Medium Armor: Wind Walker"
     assert result.stamina_recovery.skill_percent_contributions[-1].value == pytest.approx(0.04)
-
     assert result.core.physical_penetration.flat[-1].label == "Light Armor: Concentration"
     assert result.core.physical_penetration.flat[-1].value == 5634.0
     assert result.core.spell_penetration.flat[-1].value == 5634.0
-
     assert result.core.spell_resistance.flat[-1].label == "Light Armor: Spell Warding"
     assert result.core.spell_resistance.flat[-1].value == 4356.0
     assert result.core.physical_resistance.flat == ()
-
     assert result.core.weapon_critical.flat[-1].label == "Light Armor: Prodigy"
     assert result.core.weapon_critical.flat[-1].value == pytest.approx(1314.0 / 21912.0)
     assert result.core.spell_critical.flat[-1].value == pytest.approx(1314.0 / 21912.0)
-
     assert result.core.weapon_damage.percent[-1].label == "Medium Armor: Agility"
     assert result.core.weapon_damage.percent[-1].value == pytest.approx(0.02)
     assert result.core.spell_damage.percent[-1].value == pytest.approx(0.02)
-
     assert result.core.critical_damage.additive_after_percent[-1].label == "Medium Armor: Dexterity (Critical Damage)"
     assert result.core.critical_damage.additive_after_percent[-1].value == pytest.approx(0.02)
     assert result.core.critical_healing.additive_after_percent[-1].label == "Medium Armor: Dexterity (Critical Healing)"
     assert result.core.critical_healing.additive_after_percent[-1].value == pytest.approx(0.02)
+    assert [m.percent for m in result.core.block_cost.sequential_modifiers] == pytest.approx([0.18, -0.03])
+
+
+def test_equipped_weight_applies_only_inherent_armor_rules_without_purchased_passives():
+    result = ArmorPassiveInputResolver().apply(GearCalculationInputs(), _six_light_one_medium())
 
     assert [m.percent for m in result.core.block_cost.sequential_modifiers] == pytest.approx([0.18, -0.03])
-    assert not any("Critical Healing" in message for message in result.unresolved)
+    assert not result.magicka_recovery.skill_percent_contributions
+    assert not result.stamina_recovery.skill_percent_contributions
+    assert not result.core.physical_penetration.flat
+    assert not result.core.weapon_damage.percent
+    assert not result.core.critical_healing.additive_after_percent
 
 
-def test_equipped_weight_does_not_apply_passives_without_ownership():
-    original = GearCalculationInputs()
-    result = ArmorPassiveInputResolver().apply(original, _six_light_one_medium())
-    assert result == original
-
-
-def test_light_and_medium_ownership_are_independent():
+def test_light_and_medium_purchased_passives_are_independent():
     build = _six_light_one_medium()
 
     light_only = ArmorPassiveInputResolver().apply(
@@ -97,7 +94,7 @@ def test_light_and_medium_ownership_are_independent():
     assert not light_only.stamina_recovery.skill_percent_contributions
     assert not light_only.core.weapon_damage.percent
     assert not light_only.core.critical_healing.additive_after_percent
-    assert [m.percent for m in light_only.core.block_cost.sequential_modifiers] == pytest.approx([0.18])
+    assert [m.percent for m in light_only.core.block_cost.sequential_modifiers] == pytest.approx([0.18, -0.03])
 
     medium_only = ArmorPassiveInputResolver().apply(
         GearCalculationInputs(),
@@ -108,14 +105,13 @@ def test_light_and_medium_ownership_are_independent():
     assert medium_only.stamina_recovery.skill_percent_contributions
     assert medium_only.core.weapon_damage.percent
     assert medium_only.core.critical_healing.additive_after_percent
-    assert [m.percent for m in medium_only.core.block_cost.sequential_modifiers] == pytest.approx([-0.03])
+    assert [m.percent for m in medium_only.core.block_cost.sequential_modifiers] == pytest.approx([0.18, -0.03])
 
 
-def test_heavy_armor_ownership_adds_direct_block_mitigation_points():
+def test_heavy_armor_inherent_block_mitigation_does_not_require_purchased_passive():
     result = ArmorPassiveInputResolver().apply(
         GearCalculationInputs(),
         _five_heavy_two_light(),
-        heavy_armor_passives_owned=True,
     )
 
     assert result.core.block_mitigation.direct_points == (
@@ -123,7 +119,7 @@ def test_heavy_armor_ownership_adds_direct_block_mitigation_points():
     )
 
 
-def test_context_factory_uses_character_progression_ownership_for_armor_passives():
+def test_context_factory_legacy_skill_line_ownership_still_drives_legacy_passive_path():
     build = _six_light_one_medium()
     progression = CharacterProgression(owned_skill_lines=("Light Armor", "Medium Armor"))
 
@@ -143,24 +139,21 @@ def test_context_factory_uses_character_progression_ownership_for_armor_passives
     assert context.core_state.derived[StatId.CRITICAL_DAMAGE].final_value == pytest.approx(0.52)
     assert context.core_state.derived[StatId.CRITICAL_HEALING].final_value == pytest.approx(0.02)
     assert context.core_state.derived[StatId.BLOCK_COST].final_value == 2004
-    assert not any("Critical Healing" in message for message in context.unresolved_gear_effects)
 
 
-def test_context_factory_wires_heavy_armor_block_mitigation_ownership():
+def test_context_factory_inherent_heavy_armor_block_mitigation_needs_no_skill_line_flag():
     build = _five_heavy_two_light()
-    progression = CharacterProgression(owned_skill_lines=("Heavy Armor",))
-
     context = BuildCalculationContextFactory().build(
         character_id="character",
         build_id="build",
         build=build,
-        progression=progression,
+        progression=CharacterProgression(),
     )
 
     assert context.core_state.derived[StatId.BLOCK_MITIGATION].final_value == pytest.approx(0.55)
 
 
-def test_context_factory_does_not_infer_armor_passive_ownership_from_equipment():
+def test_context_factory_does_not_infer_purchased_armor_passives_from_equipment():
     build = _six_light_one_medium()
 
     context = BuildCalculationContextFactory().build(
@@ -175,4 +168,4 @@ def test_context_factory_does_not_infer_armor_passive_ownership_from_equipment()
     assert context.core_state.derived[StatId.PHYSICAL_PENETRATION].final_value == 0
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
     assert context.core_state.derived[StatId.CRITICAL_HEALING].final_value == 0
-    assert context.core_state.derived[StatId.BLOCK_COST].final_value == 1750
+    assert context.core_state.derived[StatId.BLOCK_COST].final_value == 2004
