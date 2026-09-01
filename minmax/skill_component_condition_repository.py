@@ -22,6 +22,7 @@ _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 def _normalize_source_text(value: object) -> str:
     text = str(value or "").replace("\r", " ").replace("\n", " ")
     text = _COLOR_TAG_RE.sub("", text)
+    text = re.sub(r"\bless\s*than\b", "less than", text, flags=re.IGNORECASE)
     return " ".join(text.split())
 
 
