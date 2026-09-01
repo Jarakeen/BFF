@@ -48,7 +48,13 @@ def _contains_pattern(text: str, pattern: str) -> bool:
 
 
 def semantic_signals(text: str) -> tuple[str, ...]:
-    """Return conservative Phase 6 audit cues, never mechanic conclusions."""
+    """Return conservative Phase 6 audit cues, never mechanic conclusions.
+
+    ``text`` must be the coefficient-owned fragment whenever one exists. The
+    audit deliberately avoids borrowing unrelated clauses from the rest of an
+    ability tooltip because a multi-component skill can mix damage, healing,
+    resources, and conditions that belong to different coefficient slots.
+    """
 
     signals: list[str] = []
     patterns = (
@@ -58,7 +64,10 @@ def semantic_signals(text: str) -> tuple[str, ...]:
         ("healing_candidate", r"\bheal(?:ing|s|ed)?\b|\brestore(?:s|d|ing)?\b[^.;]{0,60}\bhealth\b"),
         ("secondary_component_candidate", r"\b(?:also|additional(?:ly)?|then)\b[^.;]{0,100}\b(?:damage|heal|shield|restore)\b"),
         ("conditional_candidate", r"\b(?:if|while|when|whenever|after|upon)\b"),
-        ("temporal_proc_candidate", r"\bchance\b|\bcooldown\b|\bonce every\b|\bstacks?\b|\bper stack\b"),
+        (
+            "temporal_proc_candidate",
+            r"\bchance\b|\bcooldown\b|\bonce every\b|\bstacks?\b|\bper stack\b",
+        ),
     )
     for label, pattern in patterns:
         if _contains_pattern(text, pattern):
@@ -134,11 +143,11 @@ def load_phase6_gap_matrix(database_path: str | Path, *, limit: int | None = Non
 
     rows: list[Phase6GapRow] = []
     for gap in gaps:
-        context = descriptions.get(gap.ability_id, "")
-        text = " ".join(part for part in (_normalize(gap.fragment), context) if part)
-        signals = semantic_signals(text)
+        ability_context = descriptions.get(gap.ability_id, "")
+        component_text = _normalize(gap.fragment) or ability_context
+        signals = semantic_signals(component_text)
         linked = linked_by_ability.get(gap.ability_id, ())
-        named = _matched_named_effects(text, combat_effect_names)
+        named = _matched_named_effects(component_text, combat_effect_names)
         rows.append(
             Phase6GapRow(
                 skill_rank_id=gap.skill_rank_id,
