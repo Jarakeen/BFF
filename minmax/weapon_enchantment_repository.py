@@ -5,6 +5,12 @@ from .combat_effects import CombatEffect
 from .effects import EffectUnit
 
 
+_SAVED_LABEL_EFFECT_ALIASES = {
+    "weapon damage": "weapon_spell_damage",
+    "crushing": "physical_spell_resistance_reduction",
+}
+
+
 class WeaponEnchantmentRepository:
     """Loads weapon enchantment identities and combat effects from ESO data."""
 
@@ -12,17 +18,19 @@ class WeaponEnchantmentRepository:
         self.database_path = str(database_path)
 
     def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
-        """Return exact DB matches for one saved enchantment label.
+        """Return exact or semantically verified matches for one saved label.
 
-        Legacy Builds stores a human-facing enchantment label while the combat
-        pipeline requires the enchantment item id. Match only exact normalized
-        values from the imported ``name`` or ``enchant_name`` columns. Multiple
-        matches remain visible to callers rather than being guessed away.
+        Legacy Builds stores short UI labels while imported ESO rows may expose
+        longer item/enchantment names. Exact normalized name matches are tried
+        first. Known UI labels may then map to a canonical effect type that the
+        imported effect table can verify. Multiple matches remain visible to
+        callers rather than being guessed away.
         """
         value = " ".join(str(label or "").strip().split())
         if not value:
             return ()
 
+        normalized = value.casefold()
         with sqlite3.connect(self.database_path) as connection:
             columns = {
                 str(row[1])
@@ -47,6 +55,33 @@ class WeaponEnchantmentRepository:
                 ORDER BY item_id
                 """,
                 tuple(parameters),
+            ).fetchall()
+            exact = tuple(int(row[0]) for row in rows)
+            if exact:
+                return exact
+
+            effect_type = _SAVED_LABEL_EFFECT_ALIASES.get(normalized)
+            if effect_type is None:
+                return ()
+
+            effect_columns = {
+                str(row[1])
+                for row in connection.execute(
+                    "PRAGMA table_info(weapon_enchantment_effect)"
+                ).fetchall()
+            }
+            required = {"enchantment_item_id", "effect_type"}
+            if not required.issubset(effect_columns):
+                return ()
+
+            rows = connection.execute(
+                """
+                SELECT DISTINCT enchantment_item_id
+                FROM weapon_enchantment_effect
+                WHERE effect_type = ?
+                ORDER BY enchantment_item_id
+                """,
+                (effect_type,),
             ).fetchall()
 
         return tuple(int(row[0]) for row in rows)
