@@ -58,6 +58,10 @@ class SkillComponentSourceStatRule:
 
 
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+_GRAVELORD_SLOT_HEADER_RE = re.compile(
+    r"\bwith\s+(?:a\s+)?gravelord\s+ability\s+slotted\b",
+    re.IGNORECASE,
+)
 
 
 def _strip_color_tags(text: str) -> str:
@@ -137,7 +141,7 @@ def extract_source_mapped_stat_rule(
         )
         if amount_match is None:
             return ()
-        if "gravelord ability slotted" not in str(desc_header or "").casefold():
+        if _GRAVELORD_SLOT_HEADER_RE.search(str(desc_header or "")) is None:
             return ()
         return (
             SkillComponentSourceStatRule(
