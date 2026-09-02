@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "content_id": "dragonstar_arena",
+  "encounter_id": "hiath_the_battlemaster",
+  "encounter_name": "Hiath the Battlemaster",
+  "evidence": [
+    {
+      "fact_type": "cleanse_method",
+      "fact_key": "purifying_light",
+      "value": {
+        "mechanic_name": "Purifying Light",
+        "method": "core_action",
+        "interaction": "break_free",
+        "player_skill_effectiveness_known": false
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Hiath the Battlemaster",
+      "source_locator": "Abilities - Purifying Light",
+      "source_revision": "3574984",
+      "confidence": "high",
+      "notes": "UESP states the affected player can Break Free to purge the effect. This establishes the core-action method only; it does not establish whether ordinary cleanse skills also work."
+    }
+  ]
+}
