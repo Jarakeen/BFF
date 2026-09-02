@@ -39,6 +39,11 @@ _ADDITIONAL_DAMAGE_RE = re.compile(
     r"\badditional(?:ly)?\b[^.;]{0,90}?\$(?P<number>\d+)(?!\d)[^.;]{0,60}?\bdamage\b",
     re.IGNORECASE,
 )
+_ATTACK_TRIGGERED_ADDITIONAL_DAMAGE_RE = re.compile(
+    r"\b(?:light|heavy)\s+attacks?\b[^.;]{0,120}?\badditional(?:ly)?\b[^.;]{0,90}?"
+    r"\$(?P<number>\d+)(?!\d)[^.;]{0,60}?\bdamage\b",
+    re.IGNORECASE,
+)
 _ALSO_HEAL_RE = re.compile(
     r"\balso\b[^.;]{0,90}?\bheal(?:s|ed|ing)?\b[^.;]{0,70}?\$(?P<number>\d+)(?!\d)",
     re.IGNORECASE,
@@ -66,9 +71,10 @@ def extract_explicit_component_roles(
     """Extract explicit same-ability secondary roles without trigger inference.
 
     Additional damage is accepted only when the source contains another
-    coefficient placeholder in the same text. This deliberately excludes
-    single-coefficient triggered add-on damage such as "next Light Attack"
-    effects, whose activation semantics belong to Phase 7.
+    coefficient placeholder in the same text and the additional component is
+    not explicitly caused by a Light/Heavy Attack. The latter is an activation
+    relationship and remains a Phase 7 concern even when another coefficient
+    appears elsewhere in the full canonical description.
     """
 
     text = " ".join(str(component_text or "").split())
@@ -79,8 +85,17 @@ def extract_explicit_component_roles(
 
     if effect_kind == "damage":
         match = _match_for_component(_ADDITIONAL_DAMAGE_RE, text, number)
+        attack_triggered = _match_for_component(
+            _ATTACK_TRIGGERED_ADDITIONAL_DAMAGE_RE,
+            text,
+            number,
+        )
         placeholders = {int(found.group(1)) for found in _ANY_PLACEHOLDER_RE.finditer(text)}
-        if match is not None and any(other != number for other in placeholders):
+        if (
+            match is not None
+            and attack_triggered is None
+            and any(other != number for other in placeholders)
+        ):
             return (
                 SkillComponentRole(
                     skill_rank_id=int(skill_rank_id),
