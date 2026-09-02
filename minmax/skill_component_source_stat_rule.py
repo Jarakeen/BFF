@@ -59,7 +59,7 @@ class SkillComponentSourceStatRule:
 
 _COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _GRAVELORD_SLOT_HEADER_RE = re.compile(
-    r"\bwith\s+(?:a\s+)?gravelord\s+ability\s+slotted\b",
+    r"\bwith\s+(?:a\s+)?grave\s*lord\s+ability\s+slotted\b",
     re.IGNORECASE,
 )
 
