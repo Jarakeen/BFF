@@ -11,3 +11,11 @@ def test_health_threshold_is_explicit_or_unknown():
     assert CombatStateSnapshot(0,CombatantSnapshot("player",24,100)).meets_health_threshold(.25) is True
     assert CombatStateSnapshot(0,CombatantSnapshot("player",25,100)).meets_health_threshold(.25) is False
     assert CombatStateSnapshot(0,CombatantSnapshot("player",None,100)).meets_health_threshold(.25) is None
+
+
+def test_target_execute_truth_and_validation():
+    boss=CombatantSnapshot("boss",24,100,current_magicka=0,maximum_magicka=1)
+    state=CombatStateSnapshot(0,CombatantSnapshot("player"),targets=(boss,))
+    assert state.meets_health_threshold(.25,"boss") is True
+    assert state.meets_health_threshold(.25,"missing") is None
+
