@@ -62,6 +62,11 @@ def test_remaining_semantics_reconciles_canonical_phase6_coverage(monkeypatch):
     )
     monkeypatch.setattr(
         audit,
+        "SkillComponentRoleRepository",
+        lambda path: _FakeRepository(path, {(20, 2)}),
+    )
+    monkeypatch.setattr(
+        audit,
         "SkillComponentSecondaryHealingRepository",
         lambda path: _FakeRepository(path),
     )
@@ -80,11 +85,11 @@ def test_remaining_semantics_reconciles_canonical_phase6_coverage(monkeypatch):
     summary = audit.summarize(rows)
 
     assert summary["rows"] == 5
-    assert summary["covered"] == 4
-    assert summary["remaining"] == 1
+    assert summary["covered"] == 5
+    assert summary["remaining"] == 0
     assert rows[0].covered_by == ("resource_event",)
-    assert rows[1].covered_by == ()
+    assert rows[1].covered_by == ("component_role",)
     assert rows[2].covered_by == ("conditional_consequence",)
     assert rows[3].covered_by == ("utility_effect",)
     assert rows[4].covered_by == ("damage_scaling",)
-    assert summary["signals"]["secondary_component_candidate"] == 1
+    assert summary["signals"]["secondary_component_candidate"] == 0
