@@ -13,9 +13,11 @@
 # so the packaged app has full functionality: PDF roster export
 # (reportlab) and OS-vault-backed credential storage for the ESO Logs
 # API key (keyring) instead of falling back to plaintext.
+# openpyxl is required for local achievement workbook import/export.
 
 PySide6>=6.11
 requests>=2.33
 keyring>=25.7
 reportlab>=4.4
+openpyxl>=3.1
 pyinstaller>=6.22
