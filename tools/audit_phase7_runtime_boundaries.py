@@ -59,7 +59,24 @@ _DURATION_RE = re.compile(
 )
 _DELAY_RE = re.compile(r"\bafter\s+\d+(?:\.\d+)?\s+seconds?\b", re.IGNORECASE)
 _STATE_WINDOW_RE = re.compile(
-    r"\bwhile\b|\buntil\b|\bwhile\s+transformed\b|\bwhile\s+the\s+field\s+grows\b",
+    r"\bwhile\b|\buntil\b|\byour\s+next\b|\bnext\s+[^.;]{0,60}?\b(?:cast|use|attack)\b",
+    re.IGNORECASE,
+)
+_CHANCE_RE = re.compile(r"\b\d+(?:\.\d+)?%\s+chance\b", re.IGNORECASE)
+_COOLDOWN_RE = re.compile(
+    r"\b(?:up\s+to\s+|only\s+)?once\s+every\s+\d+(?:\.\d+)?\s+seconds?\b",
+    re.IGNORECASE,
+)
+_STACK_RE = re.compile(r"\b(?:stacks?|charges?)\b", re.IGNORECASE)
+_STACK_THRESHOLD_RE = re.compile(
+    r"\b(?:after\s+reaching|when\s+you\s+reach|upon\s+reaching)\s+\d+\s+(?:stacks?|charges?)\b",
+    re.IGNORECASE,
+)
+_EVENT_GATE_RE = re.compile(
+    r"\bactivating\s+again\b|"
+    r"\bwhen\s+you\s+deal\s+damage\b|"
+    r"\bcasting\s+(?:a|an)\s+[^.;]{0,80}?ability\b|"
+    r"\bafter\s+reaching\s+\d+\s+(?:stacks?|charges?)\b",
     re.IGNORECASE,
 )
 
@@ -90,7 +107,12 @@ def classify_runtime_concerns(
     row: Phase6CloseoutRow,
     trigger_types: tuple[SkillComponentTriggerType, ...] = (),
 ) -> tuple[str, ...]:
-    """Classify runtime responsibilities without inferring a new mechanic."""
+    """Classify runtime responsibilities without inferring a new mechanic.
+
+    ``trigger_resolution`` is intentionally not a trigger identity. It marks
+    wording that clearly requires an event gate even though Phase 6 has not
+    supplied a canonical SkillComponentTriggerRelationship for that row.
+    """
 
     text = " ".join(str(row.fragment or "").split())
     concerns: list[str] = []
@@ -101,6 +123,9 @@ def classify_runtime_concerns(
 
     if trigger_types:
         add("trigger_detection")
+    elif _EVENT_GATE_RE.search(text):
+        add("trigger_resolution")
+
     if any(trigger in _ATTACK_TRIGGERS for trigger in trigger_types):
         add("attack_event")
     if any(trigger in _LIFECYCLE_TRIGGERS for trigger in trigger_types):
@@ -109,6 +134,15 @@ def classify_runtime_concerns(
         add("target_event")
     if SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED in trigger_types:
         add("trigger_count")
+
+    if _STACK_RE.search(text):
+        add("stack_state")
+    if _STACK_THRESHOLD_RE.search(text):
+        add("stack_threshold")
+    if _CHANCE_RE.search(text):
+        add("chance")
+    if _COOLDOWN_RE.search(text):
+        add("cooldown")
     if SkillComponentTriggerType.DELAY_ELAPSED in trigger_types or _DELAY_RE.search(text):
         add("delay")
     if _CADENCE_RE.search(text):
@@ -168,6 +202,7 @@ def summarize(rows: tuple[Phase7RuntimeBoundaryRow, ...]) -> dict[str, object]:
         "concerns": concerns,
         "triggers": triggers,
         "without_canonical_trigger": sum(not row.trigger_types for row in rows),
+        "trigger_resolution": sum("trigger_resolution" in row.runtime_concerns for row in rows),
         "runtime_review": sum("runtime_review" in row.runtime_concerns for row in rows),
     }
 
@@ -193,6 +228,7 @@ def main() -> int:
     print(f"Database:                   {args.database}")
     print(f"Phase 7 boundary rows:      {summary['rows']}")
     print(f"Without canonical trigger: {summary['without_canonical_trigger']}")
+    print(f"Need trigger resolution:   {summary['trigger_resolution']}")
     print(f"Runtime-review rows:        {summary['runtime_review']}")
 
     print("\nRUNTIME CONCERNS")
@@ -215,6 +251,7 @@ def main() -> int:
         rows,
         key=lambda row: (
             "runtime_review" not in row.runtime_concerns,
+            "trigger_resolution" not in row.runtime_concerns,
             row.runtime_concerns,
             row.skill_rank_id,
             row.coefficient_number,
