@@ -102,6 +102,12 @@ _TARGET_EVENT_TRIGGERS = frozenset(
         SkillComponentTriggerType.ENEMY_DIES_AFTER_STRIKE,
     }
 )
+_THRESHOLD_TRIGGERS = frozenset(
+    {
+        SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED,
+        SkillComponentTriggerType.STACK_THRESHOLD_REACHED,
+    }
+)
 
 
 def classify_runtime_concerns(
@@ -133,7 +139,7 @@ def classify_runtime_concerns(
         add("effect_lifecycle")
     if any(trigger in _TARGET_EVENT_TRIGGERS for trigger in trigger_types):
         add("target_event")
-    if SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED in trigger_types:
+    if any(trigger in _THRESHOLD_TRIGGERS for trigger in trigger_types):
         add("trigger_count")
 
     if _STACK_RE.search(text):
