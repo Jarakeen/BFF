@@ -41,6 +41,10 @@ _CLEAR_OTHER = {
 }
 
 
+def _has_trigger_signal(signals: tuple[str, ...]) -> bool:
+    return "conditional_candidate" in signals or "temporal_proc_candidate" in signals
+
+
 def _closeout_status(item) -> tuple[str, str]:
     gap = item.gap
 
@@ -63,10 +67,15 @@ def _closeout_status(item) -> tuple[str, str]:
     richer = richer_category(gap.fragment, gap.coefficient_number, evidence.effect_kind)
 
     if richer in _CLEAR_CLASSIFICATION_RICHER:
+        if _has_trigger_signal(gap.signals):
+            return (
+                "NEEDS_PHASE6_REVIEW",
+                f"{richer} with unresolved static trigger relationship",
+            )
         return "CLASSIFICATION_CLEANUP", richer
 
     if richer == "multi_damage_classification_gap":
-        if "conditional_candidate" in gap.signals or "temporal_proc_candidate" in gap.signals:
+        if _has_trigger_signal(gap.signals):
             return "NEEDS_PHASE6_REVIEW", "multi-damage row also carries unresolved conditional/temporal semantics"
         return "CLASSIFICATION_CLEANUP", richer
 
@@ -81,8 +90,6 @@ def _closeout_status(item) -> tuple[str, str]:
     if richer != "other_richer_semantics":
         return "NEEDS_PHASE6_REVIEW", richer
 
-    # The second-pass taxonomy is useful only after the broader richer category
-    # has established that this is genuinely in the catch-all bucket.
     from tools.audit_phase6_richer_semantics_taxonomy import RicherSemanticsTaxonomyRow
 
     taxonomy_row = RicherSemanticsTaxonomyRow(
@@ -102,23 +109,23 @@ def _closeout_status(item) -> tuple[str, str]:
         if signal_category == "multi_heal_classification_gap":
             return "CLASSIFICATION_CLEANUP", signal_category
         if signal_category == "phase7_attack_triggered_heal":
-            return "PHASE7_BOUNDARY", signal_category
+            # Phase 7 owns runtime trigger evaluation, but Phase 6 still owns the
+            # static component relationship that says which action causes the heal.
+            return "NEEDS_PHASE6_REVIEW", "attack-triggered heal needs static Phase 6 trigger relationship"
         return "NEEDS_PHASE6_REVIEW", signal_category
 
     if detail == "damage_scaling_or_modifier_candidate":
-        # Current corpus family is Runic Embrace: the Max Health scaling wording
-        # belongs to the neighboring heal coefficient, not the damage coefficient.
         if "heals you for" in gap.fragment.casefold() and "scaling off your max health" in gap.fragment.casefold():
             return "OWNERSHIP_NEGATIVE", "neighboring heal owns the Max Health scaling wording"
         return "NEEDS_PHASE6_REVIEW", detail
 
     if detail in _CLEAR_OTHER:
-        if "conditional_candidate" in gap.signals or "temporal_proc_candidate" in gap.signals:
+        if _has_trigger_signal(gap.signals):
             return "NEEDS_PHASE6_REVIEW", f"{detail} with unresolved conditional/temporal signal"
         return "CLASSIFICATION_CLEANUP", detail
 
     if detail in {"direct_damage_classification_gap", "secondary_damage_classification_gap"}:
-        if "conditional_candidate" in gap.signals or "temporal_proc_candidate" in gap.signals:
+        if _has_trigger_signal(gap.signals):
             return "NEEDS_PHASE6_REVIEW", f"{detail} with unresolved conditional/temporal signal"
         return "CLASSIFICATION_CLEANUP", detail
 
