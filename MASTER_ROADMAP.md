@@ -558,41 +558,48 @@ Detailed closeout: `docs/phase7_conditional_runtime_closeout.md`.
 ---
 
 # PHASE 8 · Combat State
-**Status: 🟢 Named-buff + explicit potion-window foundation / 🔴 full temporal engine**
+**Status: 🟡 Active**
 
-Named active buffs and target states already route through static combat calculations. Phase 5 additionally delivered a first explicit source-backed temporal projection for potion-use events.
+Phase 8 turns the verified static and runtime foundations into one canonical answer to a deceptively simple question: **what is true right now?**
 
-```text
-Potion availability
-      ↓
-Explicit PotionUseEvent
-      ↓
-Instant restore + timed grants
-      ↓
-PotionActiveWindow(elapsed time)
-      ↓
-Explicit CombatState snapshot
-```
-
-Current temporal foundation can answer whether a potion-granted named buff is active at a caller-supplied elapsed time, can apply an explicit Medicinal Use duration multiplier, and can reason about refresh gap/overlap against potion cooldown.
-
-It still does **not** automatically schedule potion use, infer rotation behavior, or simulate arbitrary proc/cooldown state.
+Phase 7 already knows how individual conditional effects behave over time. Phase 8 must assemble those truths into a coherent snapshot without becoming the later rotation or combat-simulation engine.
 
 ```text
-CombatState
-├── Time / Phase
-├── Target State
-├── Player State
-├── Resources
-├── Buffs / Debuffs
-├── Cooldowns / Stacks
-├── Position
-└── Active Mechanics
+Canonical Build + Static Character State
+                 ↓
+       Runtime Event History
+                 ↓
+    Phase 7 Effect Runtime State
+                 ↓
+      CombatState Snapshot at t
+                 ↓
+Static Combat / Sustain / Encounter Consumers
 ```
 
-**Remaining:** generalize the same explicit time/state discipline to skills, procs, set effects, cooldowns, stacks, encounter phases, and action scheduling.
+## Existing foundation entering Phase 8
 
-**Exit criteria:** BFF can answer “what is true right now?” rather than only “what can this build theoretically provide?”
+- 🟢 static named buffs and target-side states already route through combat math
+- 🟢 explicit potion-use events and potion active windows
+- 🟢 deterministic runtime events, cooldowns, chance decisions, windows, stacking, statuses, heals/restores, and target caps from Phase 7
+- 🟢 canonical build identity and build-resolved `EffectVariant` capability
+- 🟢 deterministic resource timelines from Phase 4
+
+## Initial Phase 8 priorities
+
+1. inventory every existing `CombatState` / target-state / resource-state representation and identify overlap before adding fields
+2. define the smallest canonical immutable snapshot contract for a specific `time_seconds`
+3. project Phase 7 runtime windows and statuses into active buffs/debuffs/statuses at that instant
+4. represent current player and target Health/resource values and percentages explicitly, including execute-threshold truth
+5. expose cooldown/stack state needed to answer current eligibility without duplicating Phase 7 transition logic
+6. keep position/range/encounter mechanics explicit inputs until Phase 9 provides authoritative encounter geometry/state
+7. bridge the snapshot into existing static damage/healing/sustain consumers
+8. validate against representative saved-build scenarios before broadening coverage
+
+## Phase 8 boundary discipline
+
+Phase 8 owns **state projection**, not action planning. It should answer what is currently true from known events and caller-supplied state. It should not automatically invent a rotation, choose the next action, simulate an encounter, or guess missing position/target-selection rules.
+
+**Exit criteria:** BFF can construct an auditable CombatState snapshot for a specific instant and use it to evaluate current player/target conditions, resources, active effects, cooldowns, stacks, and supported combat math without treating theoretical capability as current truth.
 
 ---
 
