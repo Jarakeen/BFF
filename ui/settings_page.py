@@ -205,7 +205,23 @@ class SettingsPage(QWidget):
         self.eso_logs_client_secret.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow("ESO Logs Client ID", self.eso_logs_client_id)
         form.addRow("ESO Logs Client Secret", self.eso_logs_client_secret)
+
+        self.google_credentials = QLineEdit()
+        self.google_credentials_browse = QPushButton("Browse…")
+        self.google_spreadsheet_id = QLineEdit()
+        self.google_spreadsheet_id.setPlaceholderText("Google Sheet ID")
+        form.addRow(
+            "Google Service Account JSON",
+            self._browse_row(self.google_credentials, self.google_credentials_browse),
+        )
+        form.addRow("Google Spreadsheet ID", self.google_spreadsheet_id)
         layout.addLayout(form)
+
+        sheet_note = self._muted_note(
+            "Achievement Sync reads the legacy tracker checkmarks for the active Jarakeen or Rylo profile. "
+            "The spreadsheet remains external; canonical ESO catalog data is never replaced by the sheet."
+        )
+        layout.addWidget(sheet_note)
 
         if self.broadcast_enabled:
             self.test_obs_button = QPushButton("Test OBS Connection")
@@ -376,6 +392,13 @@ class SettingsPage(QWidget):
         self.counters_browse.clicked.connect(lambda: self._browse_folder(self.counters_folder, "Counters Folder"))
         self.achievement_data_browse.clicked.connect(lambda: self._browse_file(self.achievement_data, "Achievement Data", "JSON (*.json)"))
         self.progress_browse.clicked.connect(lambda: self._browse_file(self.achievement_progress, "Achievement Progress", "JSON (*.json)"))
+        self.google_credentials_browse.clicked.connect(
+            lambda: self._browse_file(
+                self.google_credentials,
+                "Google Service Account Credentials",
+                "JSON (*.json)",
+            )
+        )
         if self.broadcast_enabled:
             self.test_obs_button.clicked.connect(self.test_obs)
 
@@ -415,6 +438,8 @@ class SettingsPage(QWidget):
         self.builds_export_folder.setText(s.get("BuildsExportFolder", ""))
         self.eso_logs_client_id.setText(s.get("EsoLogsClientId", ""))
         self.eso_logs_client_secret.setText(s.get("EsoLogsClientSecret", ""))
+        self.google_credentials.setText(s.get("GoogleCredentialsPath", ""))
+        self.google_spreadsheet_id.setText(s.get("GoogleSpreadsheetId", ""))
         self.archive_folder.setText(s.get("ArchiveFolder", ""))
         self.counters_folder.setText(s.get("CountersFolder", ""))
         self.achievement_data.setText(s.get("AchievementData", ""))
@@ -428,11 +453,15 @@ class SettingsPage(QWidget):
             self.end_scene.setText(s.get("EndOfStreamSceneName", s.get("EndSceneName", "Ending")))
 
         archive_ok = bool(self.archive_folder.text().strip())
+        sheets_ok = bool(
+            self.google_credentials.text().strip()
+            and self.google_spreadsheet_id.text().strip()
+        )
         self.integration_labels["archive"].setText("●  Ready" if archive_ok else "●  Not configured")
         if self.broadcast_enabled:
             self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
             self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
-        self.integration_labels["sheets"].setText("●  Not checked")
+        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Not configured")
         self.integration_labels["ai"].setText("●  Not configured")
         self.status.info("Settings loaded.")
 
@@ -443,6 +472,8 @@ class SettingsPage(QWidget):
             "BuildsExportFolder": self.builds_export_folder.text().strip(),
             "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
             "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
+            "GoogleCredentialsPath": self.google_credentials.text().strip(),
+            "GoogleSpreadsheetId": self.google_spreadsheet_id.text().strip(),
             "ArchiveFolder": self.archive_folder.text().strip(),
             "CountersFolder": self.counters_folder.text().strip(),
         }
@@ -459,6 +490,12 @@ class SettingsPage(QWidget):
         settings.update(updates)
         self.settings_service.save(settings)
         self._loaded_settings = settings
+
+        sheets_ok = bool(
+            self.google_credentials.text().strip()
+            and self.google_spreadsheet_id.text().strip()
+        )
+        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Not configured")
         self.status.success("Settings saved.")
 
     def test_obs(self):
