@@ -7,15 +7,18 @@ from typing import Mapping
 from services.paths import DATA, PROJECT_ROOT
 
 
+BROADCAST_RESOURCES = PROJECT_ROOT / "modules" / "broadcast" / "resources"
+
+
 @dataclass(frozen=True)
 class BroadcastPaths:
     """Resolved filesystem contract for the optional Broadcast module.
 
-    The paths intentionally point at today's on-disk layout. Broadcast callers
-    should depend on this contract instead of constructing file locations.
-    That lets a later migration move mutable state into ``user_data/broadcast``
-    and static resources into ``modules/broadcast/resources`` without changing
-    every page, service, and OBS integration independently.
+    Broadcast callers should depend on this contract instead of constructing
+    file locations. Mutable state still points at today's on-disk layout while
+    tracked static resources can already live under ``modules/broadcast``.
+    Legacy default resource paths are translated automatically so existing
+    settings files do not need to be hand-edited during the migration.
     """
 
     current_broadcast: Path
@@ -57,8 +60,11 @@ class BroadcastPaths:
             marker_log=_configured_path(
                 settings, "MarkerLogPath", DATA / "MarkerLog.md"
             ),
-            footnotes=_configured_path(
-                settings, "FootnotesPath", DATA / "footnotes.txt"
+            footnotes=_configured_resource_path(
+                settings,
+                "FootnotesPath",
+                BROADCAST_RESOURCES / "footnotes.txt",
+                DATA / "footnotes.txt",
             ),
             field_note_counter=_configured_path(
                 settings, "FieldNoteCounterPath", DATA / "FieldNoteCounter.txt"
@@ -72,8 +78,11 @@ class BroadcastPaths:
             weather_folder=_configured_path(
                 settings, "WeatherFolder", DATA / "Weather"
             ),
-            narrator_content=_configured_path(
-                settings, "NarratorContentPath", DATA / "natural_history_narrator.json"
+            narrator_content=_configured_resource_path(
+                settings,
+                "NarratorContentPath",
+                BROADCAST_RESOURCES / "natural_history_narrator.json",
+                DATA / "natural_history_narrator.json",
             ),
             boss_log=_configured_path(
                 settings, "BossLogPath", legacy_archive / "BossLog.md"
@@ -90,10 +99,34 @@ class BroadcastPaths:
         )
 
 
+def _clean_path_value(value: object) -> str:
+    return str(value or "").strip().strip('"').strip("'")
+
+
 def _configured_path(
     settings: Mapping[str, object],
     key: str,
     fallback: Path,
 ) -> Path:
-    value = str(settings.get(key, "") or "").strip().strip('"').strip("'")
+    value = _clean_path_value(settings.get(key, ""))
     return Path(value) if value else fallback
+
+
+def _configured_resource_path(
+    settings: Mapping[str, object],
+    key: str,
+    fallback: Path,
+    legacy_default: Path,
+) -> Path:
+    value = _clean_path_value(settings.get(key, ""))
+    if not value:
+        return fallback
+
+    configured = Path(value)
+    try:
+        if configured.resolve(strict=False) == legacy_default.resolve(strict=False):
+            return fallback
+    except OSError:
+        pass
+
+    return configured
