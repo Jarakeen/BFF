@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.audit_phase6_richer_semantics_taxonomy import load_richer_semantics_taxonomy
+from minmax.skill_component_text_evidence import extract_component_text_evidence
+from tools.audit_phase6_component_gaps import load_phase6_gap_matrix
+from tools.audit_phase6_richer_semantics_taxonomy import richer_category
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 
@@ -53,19 +55,31 @@ def load_utility_candidates(
     *,
     limit: int | None = None,
 ) -> tuple[UtilityCandidateRow, ...]:
+    """Return the stable original Phase 6 utility-candidate corpus.
+
+    This audit intentionally starts from the original gap matrix rather than the
+    remaining-semantics reconciliation. Canonical promotions must not make the
+    audit forget rows it already proved, otherwise coverage appears to shrink as
+    the implementation improves.
+    """
+
     rows: list[UtilityCandidateRow] = []
-    for row in load_richer_semantics_taxonomy(database_path, limit=limit):
-        if row.category != "utility_relationship_candidate":
+    for gap in load_phase6_gap_matrix(database_path, limit=limit):
+        if gap.disposition != "richer_component_semantics":
             continue
-        kinds = utility_types(row.fragment)
+        evidence = extract_component_text_evidence(gap.fragment, gap.coefficient_number)
+        category = richer_category(gap.fragment, gap.coefficient_number, evidence.effect_kind)
+        if category != "utility_relationship_candidate":
+            continue
+        kinds = utility_types(gap.fragment)
         rows.append(
             UtilityCandidateRow(
-                skill_rank_id=row.skill_rank_id,
-                coefficient_number=row.coefficient_number,
-                ability_id=row.ability_id,
-                ability_name=row.ability_name,
+                skill_rank_id=gap.skill_rank_id,
+                coefficient_number=gap.coefficient_number,
+                ability_id=gap.ability_id,
+                ability_name=gap.name,
                 utility_types=kinds,
-                fragment=row.fragment,
+                fragment=gap.fragment,
             )
         )
     return tuple(rows)
