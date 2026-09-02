@@ -48,3 +48,9 @@ def test_combatant_uses_phase4_static_resource_capacities():
  resources=StaticResourceState(StaticResourcePool(ResourceType.HEALTH,100,0),StaticResourcePool(ResourceType.MAGICKA,200,0),StaticResourcePool(ResourceType.STAMINA,300,0))
  player=CombatantSnapshot.from_static_resources("player",resources,current_health=50,current_magicka=100)
  assert (player.maximum_health,player.maximum_magicka,player.maximum_stamina)==(100,200,300)
+
+def test_reports_retained_runtime_instances_without_claiming_stack_semantics():
+ windows=(RuntimeEffectActiveWindow("dot","skill",0,10,target="boss"),RuntimeEffectActiveWindow("dot","skill",1,10,target="boss"))
+ effect=EffectVariant(name="dot",layer=None,source="skill")
+ state=CombatStateSnapshot.from_windows(2,CombatantSnapshot("player"),windows,effects=(effect,))
+ assert state.active_instance_count("dot","boss")==2
