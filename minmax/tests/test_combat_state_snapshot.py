@@ -2,6 +2,8 @@ from minmax.combat_state_snapshot import CombatStateSnapshot, CombatantSnapshot
 from minmax.runtime_effect_window import RuntimeEffectActiveWindow
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.support_effect_category import SupportEffectCategory
+from minmax.runtime_event import RuntimeEvent
+from minmax.runtime_effect_eligibility import RuntimeEffectState
 
 def test_projects_active_windows_with_end_exclusive_boundary():
     window=RuntimeEffectActiveWindow("Major Courage","Potion",0,10)
@@ -33,3 +35,9 @@ def test_known_self_buff_bridges_to_static_combat_state():
  e=EffectVariant(name="Major Courage",layer=None,source="skill",category=SupportEffectCategory.BUFF)
  state=CombatStateSnapshot.from_windows(1,CombatantSnapshot("player"),(w,),effects=(e,))
  assert state.static_combat_state().has_buff("Major Courage")
+
+def test_snapshot_delegates_cooldown_eligibility_to_phase7():
+ effect=EffectVariant(name="proc",layer=None,source="skill",trigger="cast",cooldown=10)
+ event=RuntimeEvent(5,"cast","skill")
+ state=CombatStateSnapshot(5,CombatantSnapshot("player"))
+ assert not state.eligibility(event,effect,RuntimeEffectState(last_activation_time_seconds=0)).eligible
