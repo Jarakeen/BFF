@@ -31,6 +31,9 @@ from minmax.skill_component_secondary_healing_repository import (
     SkillComponentSecondaryHealingRepository,
 )
 from minmax.skill_component_stat_scaling_repository import SkillComponentStatScalingRepository
+from minmax.skill_component_trigger_relationship_repository import (
+    SkillComponentTriggerRelationshipRepository,
+)
 from minmax.skill_component_utility_effect_repository import (
     SkillComponentUtilityEffectRepository,
 )
@@ -61,6 +64,7 @@ def _coverage_for_row(
     secondary_healing: SkillComponentSecondaryHealingRepository,
     missing_health_healing: SkillComponentMissingHealthHealingRepository,
     stat_scaling: SkillComponentStatScalingRepository,
+    triggers: SkillComponentTriggerRelationshipRepository,
     utility_effects: SkillComponentUtilityEffectRepository,
 ) -> tuple[str, ...]:
     rank = row.skill_rank_id
@@ -85,6 +89,8 @@ def _coverage_for_row(
         covered.append("missing_health_healing")
     if stat_scaling.resolve(rank, coef):
         covered.append("stat_scaling")
+    if triggers.resolve(rank, coef):
+        covered.append("component_trigger")
     if utility_effects.resolve(rank, coef):
         covered.append("utility_effect")
 
@@ -107,6 +113,7 @@ def load_remaining_phase6_semantics(
         "secondary_healing": SkillComponentSecondaryHealingRepository(path),
         "missing_health_healing": SkillComponentMissingHealthHealingRepository(path),
         "stat_scaling": SkillComponentStatScalingRepository(path),
+        "triggers": SkillComponentTriggerRelationshipRepository(path),
         "utility_effects": SkillComponentUtilityEffectRepository(path),
     }
 
