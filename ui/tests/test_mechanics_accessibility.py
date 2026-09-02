@@ -38,5 +38,17 @@ def test_encounter_mapping_board_exposes_colorblind_safe_mode() -> None:
     assert '"Safe": Qt.PenStyle.DashLine' in source
     assert '"Stack": Qt.PenStyle.DotLine' in source
     assert '"Neutral": Qt.PenStyle.DashDotLine' in source
-    assert "Danger: orange / solid" in source
-    assert "Safe: blue / dashed" in source
+    assert "Colorblind Friendly: Danger orange/solid" in source
+    assert "Safe blue/dashed" in source
+
+
+def test_raid_map_name_and_background_uploads_are_protected() -> None:
+    source = Path(encounter_board_accessibility.__file__).read_text(encoding="utf-8")
+
+    assert '"Raid Map"' in source
+    assert 'self.section_tabs.setTabText(index, "RAID MAP")' in source
+    assert 'QPushButton("Upload Map")' in source
+    assert 'QPushButton("Remove Map")' in source
+    assert 'self.data_dir / "raid_maps"' in source
+    assert 'payload["background_map"]' in source
+    assert "Map Images (*.png *.jpg *.jpeg *.webp)" in source
