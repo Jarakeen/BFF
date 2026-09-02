@@ -34,6 +34,9 @@ from minmax.skill_component_role_repository import SkillComponentRoleRepository
 from minmax.skill_component_secondary_healing_repository import (
     SkillComponentSecondaryHealingRepository,
 )
+from minmax.skill_component_source_stat_rule_repository import (
+    SkillComponentSourceStatRuleRepository,
+)
 from minmax.skill_component_stat_scaling_repository import SkillComponentStatScalingRepository
 from minmax.skill_component_trigger_relationship_repository import (
     SkillComponentTriggerRelationshipRepository,
@@ -69,6 +72,7 @@ def _coverage_for_row(
     roles: SkillComponentRoleRepository,
     secondary_healing: SkillComponentSecondaryHealingRepository,
     missing_health_healing: SkillComponentMissingHealthHealingRepository,
+    source_stat_rules: SkillComponentSourceStatRuleRepository,
     stat_scaling: SkillComponentStatScalingRepository,
     triggers: SkillComponentTriggerRelationshipRepository,
     utility_effects: SkillComponentUtilityEffectRepository,
@@ -97,6 +101,8 @@ def _coverage_for_row(
         covered.append("damage_linked_healing")
     if missing_health_healing.resolve(rank, coef):
         covered.append("missing_health_healing")
+    if source_stat_rules.resolve(rank, coef):
+        covered.append("source_mapped_stat_rule")
     if stat_scaling.resolve(rank, coef):
         covered.append("stat_scaling")
     if triggers.resolve(rank, coef):
@@ -124,6 +130,7 @@ def load_remaining_phase6_semantics(
         "roles": SkillComponentRoleRepository(path),
         "secondary_healing": SkillComponentSecondaryHealingRepository(path),
         "missing_health_healing": SkillComponentMissingHealthHealingRepository(path),
+        "source_stat_rules": SkillComponentSourceStatRuleRepository(path),
         "stat_scaling": SkillComponentStatScalingRepository(path),
         "triggers": SkillComponentTriggerRelationshipRepository(path),
         "utility_effects": SkillComponentUtilityEffectRepository(path),
