@@ -15,10 +15,45 @@ from .skill_component_utility_effect import (
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 _ANY_PLACEHOLDER_RE = re.compile(r"\$(\d+)(?!\d)")
+_ORDINAL_CLAUSE_RE = re.compile(
+    r"(?:^|,\s*)(?:and\s+)?(?:their|the)\s+"
+    r"(?:first|second|third|fourth|fifth|sixth)\s+(?:attack|hit)\b",
+    re.IGNORECASE,
+)
+
+
+def _ordinal_component_segment(fragment: str, coefficient_number: int) -> str | None:
+    """Return an explicit ordinal attack/hit clause that owns ``$N``.
+
+    Multi-stage tooltips such as Unstable Core put the utility wording before
+    each coefficient placeholder. Placeholder-to-placeholder slicing therefore
+    leaks the next stage's utility backward. Explicit ordinal clauses are a
+    stronger ownership signal, so use them when present.
+    """
+
+    text = " ".join(str(fragment or "").split())
+    clauses = list(_ORDINAL_CLAUSE_RE.finditer(text))
+    if not clauses:
+        return None
+
+    placeholder = re.compile(rf"\${int(coefficient_number)}(?!\d)")
+    for index, match in enumerate(clauses):
+        start = match.start()
+        if text[start:start + 1] == ",":
+            start += 1
+        end = clauses[index + 1].start() if index + 1 < len(clauses) else len(text)
+        clause = text[start:end].strip(" ,")
+        if placeholder.search(clause):
+            return clause
+    return None
 
 
 def _owned_component_segment(fragment: str, coefficient_number: int) -> str:
-    """Return the placeholder-owned segment without borrowing adjacent utility prose."""
+    """Return the coefficient-owned segment without borrowing adjacent utility prose."""
+
+    ordinal = _ordinal_component_segment(fragment, coefficient_number)
+    if ordinal is not None:
+        return ordinal
 
     text = " ".join(str(fragment or "").split())
     placeholders = list(_ANY_PLACEHOLDER_RE.finditer(text))
