@@ -21,7 +21,7 @@ def _set_windows_app_id() -> None:
     try:
         import ctypes
 
-        ctypes.windll.shell32.SetCurrentProcessExplicitApplicationUserModelID(
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
             "BlackFeatherFoundry.FieldOffice"
         )
 
