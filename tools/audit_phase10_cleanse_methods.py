@@ -22,6 +22,7 @@ def main() -> int:
     print(f"Encounters missing cleanse-method detail: {audit.encounters_missing_method_detail}")
     print(f"Resolved cleanse methods: {audit.resolved_method_count}")
     print(f"Encounter-interaction methods: {audit.encounter_interaction_count}")
+    print(f"Core-action methods: {audit.core_action_count}")
     print(f"Player-build methods: {audit.player_build_method_count}")
     print()
     print("UNRESOLVED CLEANSE REQUIREMENTS")
