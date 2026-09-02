@@ -37,19 +37,13 @@ def resolve_collectible_icons_root(
     *,
     content_packs_root: Path = CONTENT_PACKS_ROOT,
 ) -> Path:
-    """Prefer the optional collectible-icons pack, with a legacy cache fallback.
+    """Return the canonical optional collectible-icons pack directory.
 
-    The legacy ``data/collectible_icons`` fallback is transitional so an
-    existing local cache keeps working while users migrate it into
-    ``content_packs/collectible_icons``. A missing pack is a supported state.
+    ``data_dir`` remains in the signature for compatibility with existing
+    callers, but runtime no longer falls back to ``data/collectible_icons``.
+    A missing content pack is a supported state: the collectibles UI remains
+    usable and simply renders without optional thumbnails.
     """
 
-    canonical = Path(content_packs_root) / "collectible_icons"
-    if (canonical / "manifest.json").is_file():
-        return canonical
-
-    legacy = Path(data_dir) / "collectible_icons"
-    if (legacy / "manifest.json").is_file():
-        return legacy
-
-    return canonical
+    _ = data_dir
+    return Path(content_packs_root) / "collectible_icons"
