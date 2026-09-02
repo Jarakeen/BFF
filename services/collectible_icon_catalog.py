@@ -11,27 +11,27 @@ class CollectibleIconCatalog:
     """Resolve collectible IDs to optional local thumbnail files.
 
     Runtime metadata remains usable when the thumbnail pack is absent. The
-    canonical pack lives under ``content_packs/collectible_icons``; the old
-    ``data/collectible_icons`` cache remains a temporary compatibility fallback.
+    canonical runtime pack lives under ``content_packs/collectible_icons``.
+    Isolated callers may still pass a self-contained directory containing a
+    ``collectible_icons`` child, which keeps fixtures and standalone tooling
+    independent from an installed application pack.
     """
 
     def __init__(self, data_dir: str | Path):
         self.data_dir = Path(data_dir)
 
-        # Runtime calls use the canonical application DATA directory, where the
-        # optional content pack must win over the transitional legacy cache.
-        # Tests and other isolated callers may pass a self-contained directory
-        # with its own ``collectible_icons`` child; preserve that long-standing
-        # contract instead of letting an installed application pack leak into
-        # the isolated fixture.
-        local_legacy = self.data_dir / "collectible_icons"
+        # Runtime calls use the canonical application DATA directory. Tests
+        # and standalone callers may pass an isolated directory with its own
+        # collectible_icons child; preserve that long-standing local contract
+        # without reintroducing a production fallback to data/collectible_icons.
+        local_icons = self.data_dir / "collectible_icons"
         try:
             is_runtime_data = self.data_dir.resolve() == DATA.resolve()
         except OSError:
             is_runtime_data = False
 
-        if not is_runtime_data and (local_legacy / "manifest.json").is_file():
-            self.icon_dir = local_legacy
+        if not is_runtime_data and (local_icons / "manifest.json").is_file():
+            self.icon_dir = local_icons
         else:
             self.icon_dir = resolve_collectible_icons_root(self.data_dir)
 
