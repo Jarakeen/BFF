@@ -54,7 +54,7 @@ _HEALTH_THRESHOLD_RE = re.compile(
 )
 _SELF_HEALTH_THRESHOLD_RE = re.compile(
     r"\b(?:your|the\s+caster(?:'s)?|caster(?:'s)?)\s+health\s+(?:drops?|falls?|is)\s+"
-    r"(?:below|under|less\s+than)\s+(\d+(?:\.\d+)?)\s*%\b",
+    r"(?:below|under|less\s+than)\s+(\d+(?:\.\d+)?)\s*%(?!\w)",
     flags=re.IGNORECASE,
 )
 _ORDINAL_HIT_RE = re.compile(
