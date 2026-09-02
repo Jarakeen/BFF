@@ -22,6 +22,7 @@ from services.encounter_service import EncounterEvidenceFact, EncounterService
 class CleanseMethod(str, Enum):
     SELF_SKILL = "self_skill"
     GROUP_SKILL = "group_skill"
+    CORE_ACTION = "core_action"
     ENCOUNTER_INTERACTION = "encounter_interaction"
     UNCLEANSABLE = "uncleansable"
 
