@@ -81,7 +81,7 @@ class EncounterCapabilityCandidateAudit:
             if not {"ability_id", "name"}.issubset(columns):
                 raise ValueError("ability table must contain ability_id and name")
 
-            searchable = ["name"]
+            detail_fields = []
             for candidate in (
                 "description",
                 "tooltip",
@@ -89,7 +89,12 @@ class EncounterCapabilityCandidateAudit:
                 "raw_tooltip",
             ):
                 if candidate in columns:
-                    searchable.append(candidate)
+                    detail_fields.append(candidate)
+            searchable = ["name", *detail_fields]
+            # Prefer mechanic-bearing source text over a matching ability name.
+            # Name remains a fallback for records whose descriptive fields do not
+            # contain the capability wording.
+            match_order = [*detail_fields, "name"]
 
             selected = [
                 "ability_id",
@@ -126,7 +131,7 @@ class EncounterCapabilityCandidateAudit:
                 values[column] = str(row[index] or "").strip()
 
             match: tuple[str, str] | None = None
-            for field_name in searchable:
+            for field_name in match_order:
                 text = values[field_name].casefold()
                 for term in terms:
                     if term.casefold() in text:
