@@ -146,6 +146,12 @@ class MainWindow(QMainWindow):
             print(f"[FoundryDock] Unknown navigation page: {page_name}")
             return
 
+        # Settings -> Data Management can import progress through a separate
+        # service instance. Refresh the long-lived Achievements page when it
+        # becomes visible so those external writes appear immediately.
+        if page_name == "achievements":
+            self.pages["achievements"].refresh()
+
         self.stack.setCurrentWidget(self.page_containers[page_name])
 
     def wrap_page(self, page):
