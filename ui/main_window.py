@@ -20,6 +20,7 @@ from engine.config import get_data_dir
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
+from ui.achievement_progress_import_page import AchievementProgressImportPage
 from ui.achievements_page import AchievementsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
 
         core_pages = {
             "achievements": AchievementsPage(),
+            "achievement_progress_import": AchievementProgressImportPage(),
             "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(expedition=self.expedition_service),
