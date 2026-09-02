@@ -60,19 +60,24 @@ def _is_phase7_cadence_only(fragment: str) -> bool:
 
 
 def _neighbor_owns_interrupt_immunity(fragment: str, coefficient_number: int) -> bool:
-    """Detect utility wording explicitly owned by a later shield component."""
+    """Detect utility wording explicitly owned by a later shield component.
+
+    Decimal timing values (for example ``0.3 seconds``) may occur between the
+    damage component and the shield clause, so this matcher deliberately does
+    not use periods as sentence boundaries. Ownership still requires a distinct
+    later coefficient placeholder inside the explicit damage-shield clause.
+    """
 
     text = " ".join(str(fragment or "").split()).casefold()
     current = rf"\${int(coefficient_number)}(?!\d)"
-    # The current component must be the damage component, followed later in the
-    # same sentence by a distinct shield placeholder that owns interrupt immunity.
-    return re.search(
-        rf"{current}[^.;]{{0,120}}?\b(?:magic|flame|frost|shock|physical|poison|disease|bleed)?\s*damage\b"
-        rf"[^.;]{{0,220}}?\bdamage\s+shield\b[^.;]{{0,140}}?\$\d+(?!\d)"
-        rf"[^.;]{{0,120}}?\binterrupt\s+immunity\b",
+    match = re.search(
+        rf"{current}.{{0,180}}?\b(?:magic|flame|frost|shock|physical|poison|disease|bleed)?\s*damage\b"
+        rf".{{0,280}}?\bdamage\s+shield\b.{{0,160}}?\$(?P<shield_coef>\d+)(?!\d)"
+        rf".{{0,140}}?\binterrupt\s+immunity\b",
         text,
         re.IGNORECASE,
-    ) is not None
+    )
+    return match is not None and int(match.group("shield_coef")) != int(coefficient_number)
 
 
 def _closeout_status(item) -> tuple[str, str]:
