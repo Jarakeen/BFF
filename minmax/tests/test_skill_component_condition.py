@@ -20,6 +20,31 @@ def test_explicit_target_health_threshold_becomes_component_condition():
     assert "below 25% Health" in condition.evidence
 
 
+def test_explicit_self_health_threshold_becomes_component_condition():
+    conditions = extract_explicit_component_conditions(
+        skill_rank_id=12,
+        coefficient_number=1,
+        component_text="When your Health drops below 20% your soul explodes, dealing $1 Magic Damage.",
+    )
+
+    assert len(conditions) == 1
+    condition = conditions[0]
+    assert condition.condition_type is SkillComponentConditionType.SELF_HEALTH_BELOW_PERCENT
+    assert condition.threshold == 0.20
+    assert "your Health drops below 20%" in condition.evidence
+
+
+def test_self_health_threshold_does_not_become_target_health_threshold():
+    conditions = extract_explicit_component_conditions(
+        skill_rank_id=13,
+        coefficient_number=1,
+        component_text="When your Health drops below 20%, deal $1 Magic Damage to an enemy.",
+    )
+
+    assert len(conditions) == 1
+    assert conditions[0].condition_type is SkillComponentConditionType.SELF_HEALTH_BELOW_PERCENT
+
+
 def test_under_health_wording_is_supported():
     conditions = extract_explicit_component_conditions(
         skill_rank_id=11,
