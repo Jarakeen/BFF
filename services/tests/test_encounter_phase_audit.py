@@ -13,8 +13,23 @@ class _StubEncounterService:
     def get(self, encounter_id):
         return self._encounters[encounter_id]
 
+    def phase_threshold(self, encounter_id, phase_id):
+        encounter = self._encounters[encounter_id]
+        phase = next(item for item in encounter.phases if item.phase_id == phase_id)
+        if phase.threshold.strip() == "75%":
+            return SimpleNamespace(
+                raw_value=phase.threshold,
+                percent=75,
+                resolution="parsed",
+            )
+        return SimpleNamespace(
+            raw_value=phase.threshold,
+            percent=None,
+            resolution="unresolved",
+        )
 
-def test_phase_audit_parses_only_unambiguous_single_percent_thresholds():
+
+def test_phase_audit_reports_service_threshold_resolution_counts():
     service = _StubEncounterService(
         {
             "sample": SimpleNamespace(
