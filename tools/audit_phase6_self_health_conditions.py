@@ -18,9 +18,15 @@ from tools.audit_phase6_component_gaps import load_phase6_gap_matrix
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
 _SELF_HEALTH_RE = re.compile(
     r"\b(?:your|the\s+caster(?:'s)?|caster(?:'s)?)\s+health\s+(?:drops?|falls?|is)\s+"
-    r"(?:below|under|less\s+than)\s+\d+(?:\.\d+)?\s*%\b",
+    r"(?:below|under|less\s+than)\s+\d+(?:\.\d+)?\s*%(?!\w)",
     re.IGNORECASE,
 )
+
+
+def _normalize_fragment(value: object) -> str:
+    text = " ".join(str(value or "").split())
+    text = re.sub(r"\bhealth\s*drops\b", "Health drops", text, flags=re.IGNORECASE)
+    return text
 
 
 @dataclass(frozen=True)
@@ -44,7 +50,7 @@ def load_self_health_condition_audit(
     rows: list[SelfHealthConditionAuditRow] = []
 
     for gap in load_phase6_gap_matrix(path, limit=limit):
-        fragment = " ".join(str(gap.fragment or "").split())
+        fragment = _normalize_fragment(gap.fragment)
         if not _SELF_HEALTH_RE.search(fragment):
             continue
 
