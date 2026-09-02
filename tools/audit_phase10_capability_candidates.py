@@ -48,7 +48,18 @@ def main() -> int:
     for row in rows:
         print()
         print(f"Ability {row.ability_id}: {row.ability_name}")
+        print(
+            "  canonical identity: "
+            f"base={row.base_ability_id if row.base_ability_id is not None else '(unknown)'}"
+            f" | morph={row.morph if row.morph is not None else '(unknown)'}"
+            f" | rank={row.rank if row.rank is not None else '(unknown)'}"
+        )
+        print(
+            "  taxonomy: "
+            f"class={row.class_type or '(none)'} | skill_line={row.skill_line or '(none)'}"
+        )
         print(f"  matched: {row.matched_term!r} in {row.matched_field}")
+        print(f"  source text: {row.matched_source_text}")
         print(
             "  resolved EffectVariant names: "
             + (", ".join(row.resolved_effect_names) if row.resolved_effect_names else "(none)")
