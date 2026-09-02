@@ -117,6 +117,7 @@ def main() -> int:
     from ui.icon_consistency import install as install_icon_consistency
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
+    from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -137,6 +138,8 @@ def main() -> int:
     install_icon_consistency(app)
     install_encounter_board_accessibility()
     install_collectibles_profile_support()
+    # Learned recipes/plans layer on top of the profile-aware Collectibles page.
+    install_collectibles_learned_recipe_support()
 
     from ui.main_window import MainWindow
 
