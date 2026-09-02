@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QBrush, QPen
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QComboBox, QLabel
 
 from services.accessibility_preferences import (
     AccessibilityPreferences,
@@ -96,15 +96,15 @@ def install() -> None:
             zone.update()
 
         self.view.setBackgroundBrush(QColor("#0E1012" if friendly else "#061315"))
-        if hasattr(self, "color_vision_key"):
+        if hasattr(self, "color_vision_combo"):
             if friendly:
-                self.color_vision_key.setText(
-                    "Danger: orange / solid   •   Safe: blue / dashed   •   "
-                    "Stack: purple / dotted   •   Neutral: gray / dash-dot"
+                self.color_vision_combo.setToolTip(
+                    "Colorblind Friendly: Danger orange/solid, Safe blue/dashed, "
+                    "Stack purple/dotted, Neutral gray/dash-dot."
                 )
             else:
-                self.color_vision_key.setText(
-                    "Standard encounter colors. Labels and marker glyphs remain visible alongside color."
+                self.color_vision_combo.setToolTip(
+                    "Standard encounter colors. Marker labels and glyphs remain visible alongside color."
                 )
         self.scene.update()
         self.view.viewport().update()
@@ -120,12 +120,6 @@ def install() -> None:
         self._accessibility_preferences = AccessibilityPreferences()
         mode = self._accessibility_preferences.color_vision_mode()
 
-        row = QHBoxLayout()
-        row.setSpacing(6)
-        label = QLabel("COLOR VISION")
-        label.setProperty("sidebarHeading", True)
-        row.addWidget(label)
-
         self.color_vision_combo = QComboBox()
         self.color_vision_combo.setObjectName("encounterColorVisionCombo")
         self.color_vision_combo.addItem("Standard", COLOR_VISION_STANDARD)
@@ -135,16 +129,22 @@ def install() -> None:
         self.color_vision_combo.currentIndexChanged.connect(
             lambda i: color_vision_changed(self, i)
         )
-        row.addWidget(self.color_vision_combo)
+        self.color_vision_combo.setMinimumWidth(150)
 
-        self.color_vision_key = QLabel()
-        self.color_vision_key.setProperty("muted", True)
-        self.color_vision_key.setWordWrap(True)
-        row.addWidget(self.color_vision_key, 1)
-
+        # Keep the board controls to two horizontal menu rows. The native
+        # EncounterBoard already owns row 1 (TACTICAL BOARD) and row 2
+        # (CIRCLE ZONES), so accessibility joins row 1 rather than creating
+        # a third toolbar above them.
         layout = self.layout()
-        if layout is not None:
-            layout.insertLayout(0, row)
+        primary_toolbar = None
+        if layout is not None and layout.count():
+            primary_toolbar = layout.itemAt(0).layout()
+
+        if primary_toolbar is not None:
+            color_label = QLabel("COLOR VISION")
+            color_label.setProperty("sidebarHeading", True)
+            primary_toolbar.insertWidget(0, self.color_vision_combo)
+            primary_toolbar.insertWidget(0, color_label)
 
         apply_color_vision_mode(self, mode)
 
