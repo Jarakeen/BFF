@@ -4,8 +4,8 @@ from __future__ import annotations
 
 Numeric source values retain their exact source text. A number is exposed only
 when its format is unambiguous; callers must handle unresolved values explicitly.
-Encounter requirements are projected only from explicit structured mechanic
-fields; this service never derives requirements from prose.
+Encounter requirements and target counts are projected only from explicit
+structured mechanic fields; this service never derives them from prose.
 """
 
 from dataclasses import dataclass
@@ -45,6 +45,18 @@ class EncounterRequirement:
     mechanic_name: str
     requirement_type: str
     target_count: int | None
+    interpretation_status: str
+
+
+@dataclass(frozen=True)
+class EncounterTargetConstraint:
+    """An explicit mechanic target count, not a target-selection decision."""
+
+    constraint_id: str
+    encounter_id: str
+    mechanic_id: str
+    mechanic_name: str
+    target_count: int
     interpretation_status: str
 
 
@@ -122,3 +134,28 @@ class EncounterService:
                     )
                 )
         return tuple(requirements)
+
+    def target_constraints(self, encounter_id: str) -> tuple[EncounterTargetConstraint, ...]:
+        """Return only explicit positive target counts from structured mechanics.
+
+        A count does not identify which players or enemies are chosen, nor does
+        it imply a targeting rule. Missing target counts remain absent rather
+        than being converted to one, all players, or any other guessed value.
+        """
+        encounter = self.get(encounter_id)
+        constraints = []
+        for mechanic in encounter.mechanics:
+            target_count = mechanic.target_count
+            if not isinstance(target_count, int) or isinstance(target_count, bool) or target_count <= 0:
+                continue
+            constraints.append(
+                EncounterTargetConstraint(
+                    constraint_id=f"{mechanic.mechanic_id}:targets",
+                    encounter_id=encounter.encounter_id,
+                    mechanic_id=mechanic.mechanic_id,
+                    mechanic_name=mechanic.name,
+                    target_count=target_count,
+                    interpretation_status=mechanic.interpretation_status,
+                )
+            )
+        return tuple(constraints)
