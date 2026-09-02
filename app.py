@@ -109,6 +109,7 @@ def main() -> int:
     from ui.phase5_operations_progression_support import install as install_phase5_operations_progression_support
     from ui.phase5_racial_context_support import install as install_phase5_racial_context_support
     from ui.phase5_potion_picker_support import install as install_phase5_potion_picker_support
+    from ui.build_editor_inline_compat import install as install_inline_build_editor
 
     install_searchable_selectors()
     install_scribing_support()
@@ -119,6 +120,9 @@ def main() -> int:
     install_phase5_operations_progression_support()
     install_phase5_racial_context_support()
     install_phase5_potion_picker_support()
+    # Install last so no earlier Build Editor extension can restore the native
+    # dialog path. The editor remains inside the existing dark Builds page.
+    install_inline_build_editor()
 
     from ui.main_window import MainWindow
 
