@@ -4,8 +4,8 @@ from __future__ import annotations
 
 Trigger identity remains owned by Phase 6 relationships. This module records
 only repeat cadence and the source of the bound that makes a schedule finite.
-It deliberately does not infer a parent ability duration when the component
-fragment supplies only an interval.
+It deliberately does not infer a parent ability duration or an unspoken tick
+spacing from tooltip wording.
 """
 
 from dataclasses import dataclass
@@ -29,17 +29,18 @@ class RuntimeCadenceBoundKind(str, Enum):
 class SkillComponentRuntimeTiming:
     """Source-backed cadence metadata for one recurring skill component."""
 
-    interval_seconds: float
     bound_kind: RuntimeCadenceBoundKind
     evidence: str
+    interval_seconds: float | None = None
     occurrence_count: int | None = None
     duration_seconds: float | None = None
     max_occurrence_count: int | None = None
     source: str = "coef_description"
 
     def __post_init__(self) -> None:
-        if not math.isfinite(self.interval_seconds) or self.interval_seconds <= 0:
-            raise ValueError("runtime timing interval must be finite and positive")
+        if self.interval_seconds is not None:
+            if not math.isfinite(self.interval_seconds) or self.interval_seconds <= 0:
+                raise ValueError("runtime timing interval must be finite and positive")
         if not self.evidence:
             raise ValueError("runtime timing evidence must preserve source wording")
         if self.occurrence_count is not None and self.occurrence_count <= 0:
@@ -62,6 +63,10 @@ class SkillComponentRuntimeTiming:
         elif self.max_occurrence_count is not None:
             raise ValueError("max_occurrence_count is only valid for stack-count timing")
 
+        if self.bound_kind is not RuntimeCadenceBoundKind.FIXED_COUNT_DURATION:
+            if self.interval_seconds is None:
+                raise ValueError(f"{self.bound_kind.value} timing requires an explicit interval")
+
     def to_periodic_schedule(
         self,
         *,
@@ -70,14 +75,22 @@ class SkillComponentRuntimeTiming:
         first_occurrence_time_seconds: float,
         active_end_time_seconds: float | None = None,
         stack_count: int | None = None,
+        interval_seconds: float | None = None,
         target: str | None = None,
     ) -> PeriodicRuntimeSchedule:
         """Bind canonical timing metadata to concrete runtime state.
 
         The caller supplies the time of the first actual occurrence. This avoids
-        guessing whether a game's first tick happens immediately on activation
-        or one cadence interval later.
+        guessing whether the first tick happens immediately on activation or one
+        cadence interval later. ``interval_seconds`` is required only when the
+        source supplied count + duration without exact within-window spacing.
         """
+
+        resolved_interval = self.interval_seconds
+        if resolved_interval is None:
+            resolved_interval = interval_seconds
+        if resolved_interval is None or not math.isfinite(resolved_interval) or resolved_interval <= 0:
+            raise ValueError("runtime schedule requires a verified positive interval")
 
         if self.bound_kind is RuntimeCadenceBoundKind.FIXED_COUNT_DURATION:
             assert self.occurrence_count is not None
@@ -85,7 +98,7 @@ class SkillComponentRuntimeTiming:
             return PeriodicRuntimeSchedule(
                 trigger=trigger,
                 source=source,
-                interval_seconds=self.interval_seconds,
+                interval_seconds=resolved_interval,
                 start_time_seconds=first_occurrence_time_seconds,
                 occurrence_count=self.occurrence_count,
                 end_time_seconds=first_occurrence_time_seconds + self.duration_seconds,
@@ -99,7 +112,7 @@ class SkillComponentRuntimeTiming:
             return PeriodicRuntimeSchedule(
                 trigger=trigger,
                 source=source,
-                interval_seconds=self.interval_seconds,
+                interval_seconds=resolved_interval,
                 start_time_seconds=first_occurrence_time_seconds,
                 occurrence_count=min(int(stack_count), self.max_occurrence_count),
                 target=target,
@@ -112,7 +125,7 @@ class SkillComponentRuntimeTiming:
         return PeriodicRuntimeSchedule(
             trigger=trigger,
             source=source,
-            interval_seconds=self.interval_seconds,
+            interval_seconds=resolved_interval,
             start_time_seconds=first_occurrence_time_seconds,
             end_time_seconds=active_end_time_seconds,
             target=target,
@@ -167,16 +180,10 @@ def extract_skill_component_runtime_timing(
 
     fixed = _FIXED_COUNT_RE.search(text)
     if fixed is not None:
-        count = _parse_count(fixed.group("count"))
-        duration = float(fixed.group("duration"))
-        # The source gives count + total window but not a separate interval.
-        # Even spacing is the only deterministic cadence implied by that wording.
-        interval = duration / count
         return SkillComponentRuntimeTiming(
-            interval_seconds=interval,
             bound_kind=RuntimeCadenceBoundKind.FIXED_COUNT_DURATION,
-            occurrence_count=count,
-            duration_seconds=duration,
+            occurrence_count=_parse_count(fixed.group("count")),
+            duration_seconds=float(fixed.group("duration")),
             evidence=fixed.group(0),
         )
 
