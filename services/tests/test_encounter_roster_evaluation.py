@@ -12,6 +12,7 @@ from services.encounter_build_capability_adapter import (
     SavedBuildEncounterCapabilityAdapter,
 )
 from services.encounter_cleanse_method import CleanseMethod
+from services.encounter_interrupt_method import InterruptMethod
 from services.encounter_repository import EncounterRepository
 from services.encounter_requirement_evaluation import RequirementSemantics
 from services.encounter_roster_evaluation import EncounterRosterEvaluator
@@ -74,8 +75,16 @@ def test_real_oaxiltso_saved_build_audits_do_not_overclaim_generic_cleanse_cover
     assert method.requires_player_build_capability is False
     assert method.player_skill_effectiveness_known is False
 
+    execution_cleanse = next(
+        row for row in result.execution_evaluation.results
+        if row.requirement_type == "cleanse"
+    )
+    assert execution_cleanse.classification == CoverageClassification.COVERED
+    assert execution_cleanse.requires_player_build_capability is False
+    assert result.execution_evaluation.unknown  # movement/positioning remain unresolved
 
-def test_unmapped_generic_cleanse_remains_unknown_through_full_orchestration():
+
+def test_unmapped_generic_cleanse_remains_unknown_through_raw_requirement_layer_but_method_is_ready():
     evaluator = EncounterRosterEvaluator(
         _encounter_service(),
         SavedBuildEncounterCapabilityAdapter(()),
@@ -86,9 +95,39 @@ def test_unmapped_generic_cleanse_remains_unknown_through_full_orchestration():
         (_audit("Healer"),),
     )
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
+    execution_cleanse = next(
+        row for row in result.execution_evaluation.results
+        if row.requirement_type == "cleanse"
+    )
 
     assert cleanse.semantics == RequirementSemantics.COMPLIANCE
     assert cleanse.classification == CoverageClassification.UNKNOWN
+    assert execution_cleanse.classification == CoverageClassification.COVERED
+
+
+def test_standard_interrupt_only_encounter_is_build_independently_ready():
+    evaluator = EncounterRosterEvaluator(
+        _encounter_service(),
+        SavedBuildEncounterCapabilityAdapter(()),
+    )
+
+    result = evaluator.evaluate_saved_build_audits("achelir", (_audit("Player"),))
+    raw_interrupt = next(
+        row for row in result.results if row.requirement_type == "interrupt"
+    )
+    execution_interrupt = next(
+        row for row in result.execution_evaluation.results
+        if row.requirement_type == "interrupt"
+    )
+
+    assert raw_interrupt.classification == CoverageClassification.UNKNOWN
+    assert execution_interrupt.classification == CoverageClassification.COVERED
+    assert execution_interrupt.handling_method == "core_bash"
+    assert len(result.interrupt_methods) == 1
+    assert result.interrupt_methods[0].method == InterruptMethod.CORE_BASH
+    assert result.provider_results == ()
+    assert result.is_fully_evaluable is True
+    assert result.is_fully_covered is True
 
 
 def test_duplicate_roster_member_identity_is_rejected_before_evaluation():
