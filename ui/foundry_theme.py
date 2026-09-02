@@ -1,4 +1,4 @@
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont, QPalette
 from PySide6.QtWidgets import QApplication
 
 FOUNDry_STYLESHEET = r"""
@@ -99,7 +99,23 @@ QFrame[achievementBrowserCard="true"] QWidget[cardHeader="true"] { min-height: 0
 QFrame[foundryCard="true"] QWidget[cardHeader="true"] { min-height: 34px; max-height: 34px; }
 """
 
+
 def apply_foundry_theme(app: QApplication) -> None:
     app.setStyle("Fusion")
+
+    # Top-level widgets can be exposed by the window manager before Qt's
+    # stylesheet has completed its first paint. Give the application palette
+    # the same dark Foundry base colors so dialogs never flash the platform's
+    # default white background while their styled children are being polished.
+    palette = app.palette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#0d0f0e"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#d8d0c2"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#111411"))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#151815"))
+    palette.setColor(QPalette.ColorRole.Text, QColor("#d8d0c2"))
+    palette.setColor(QPalette.ColorRole.Button, QColor("#211a12"))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor("#cec5b6"))
+    app.setPalette(palette)
+
     app.setStyleSheet(FOUNDry_STYLESHEET)
     app.setFont(QFont("Segoe UI", 9))
