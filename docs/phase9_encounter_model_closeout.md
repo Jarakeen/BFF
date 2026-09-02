@@ -1,8 +1,8 @@
 # Phase 9 Encounter Model Closeout
 
-## Result: PENDING CORPUS AUDIT
+## Result: PASS
 
-Phase 9 now provides a read-only, source-backed encounter domain model that answers **what an encounter explicitly demands from the evidence currently available** without converting prose, strategy, or manual planning into hidden canonical truth.
+Phase 9 provides a read-only, source-backed encounter domain model that answers **what an encounter explicitly demands from the evidence currently available** without converting prose, strategy, or manual planning into hidden canonical truth.
 
 ## Delivered
 
@@ -16,9 +16,31 @@ Phase 9 now provides a read-only, source-backed encounter domain model that answ
 - reconciled temporal evidence retaining the original seconds-field meaning, approximation status, source count, and reconciliation status;
 - exact transition-evidence access with conflicting values preserved unresolved;
 - exact `add_group` and `damage_window` evidence channels so later enrichment can model adds and immunity/burn windows without prose inference;
+- real source-backed `add_group` and `damage_window` evidence for Archcustodian, using tracked UESP source material;
 - requirement, phase/transition, health, temporal, and full encounter-model coverage audits;
-- runnable corpus audit: `python tools/audit_phase9_encounter_model.py`;
-- focused Phase 9 checkpoint reported on 2026-09-02: **21 passed**.
+- runnable corpus audit: `python tools/audit_phase9_encounter_model.py`.
+
+## Final validation
+
+Focused Phase 9 regression checkpoint reported on **2026-09-02**:
+
+- **23 passed in 3.94s**
+
+Corpus audit:
+
+- encounters: **490**
+- with mechanics: **35**
+- with phases: **2**
+- with requirements: **21**
+- with positioning constraints: **12**
+- with temporal evidence: **4**
+- with transition evidence: **6**
+- with target constraints: **3**
+- with reconciled evidence: **8**
+- with explicit add-group evidence: **1**
+- with explicit damage-window evidence: **1**
+
+These counts measure structured coverage, not live-game absence. Low or zero coverage in any future audit is an enrichment gap, not permission to infer that the mechanic does not exist.
 
 ## Boundary discipline
 
@@ -33,12 +55,10 @@ Missing structured evidence remains missing. In particular:
 - single-source timing remains source-qualified evidence rather than silently promoted canon;
 - conflicting evidence never receives an automatic winner.
 
-## Final closeout gate
+## Exit criteria
 
-Before marking Phase 9 complete in `MASTER_ROADMAP.md`, run:
+**PASS.** BFF now has a deterministic encounter contract capable of representing bosses, mechanics, phases, requirements, positioning demands, timers, transitions, target-count constraints, source evidence, add groups, and damage windows while preserving unknown and conflicting evidence explicitly.
 
-```powershell
-python tools\audit_phase9_encounter_model.py
-```
+Phase 10 can now consume Encounter + Requirements + Roster + Builds without needing to reinterpret source prose or invent encounter truth.
 
-Record the corpus coverage output here. Zero counts are enrichment gaps, not negative claims about the live encounter. The final closeout decision should be based on whether the domain model cleanly represents supported truth and leaves unsupported truth explicitly unresolved, not on pretending every encounter in the corpus is fully enriched.
+**Exit criteria met on 2026-09-02.**
