@@ -1,5 +1,7 @@
 from minmax.combat_state_snapshot import CombatStateSnapshot, CombatantSnapshot
 from minmax.runtime_effect_window import RuntimeEffectActiveWindow
+from minmax.character_build.effect_instance import EffectVariant
+from minmax.support_effect_category import SupportEffectCategory
 
 def test_projects_active_windows_with_end_exclusive_boundary():
     window=RuntimeEffectActiveWindow("Major Courage","Potion",0,10)
@@ -19,3 +21,9 @@ def test_target_execute_truth_and_validation():
     assert state.meets_health_threshold(.25,"boss") is True
     assert state.meets_health_threshold(.25,"missing") is None
 
+
+def test_projects_status_only_with_canonical_effect_metadata():
+ w=RuntimeEffectActiveWindow("burning","skill",0,10,target="boss")
+ e=EffectVariant(name="burning",layer=None,source="skill",category=SupportEffectCategory.STATUS)
+ state=CombatStateSnapshot.from_windows(1,CombatantSnapshot("player"),(w,),effects=(e,))
+ assert state.active_statuses("boss")[0].name == "burning"
