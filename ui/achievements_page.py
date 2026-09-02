@@ -214,6 +214,10 @@ class AchievementsPage(QWidget):
         self.pvp_stat.set_ratio(pvp["count_earned"], pvp["count_total"])
 
     def refresh(self):
+        # Progress can be written by the Settings -> Data Management importer,
+        # which owns a separate service instance. Invalidate this page's cache
+        # before repainting so imported achievements appear immediately.
+        self.achievement_progress_service.reload(preserve_active_profile=True)
         self._reload_profile_combo()
         self.browser.reload()
         self.refresh_stats()
