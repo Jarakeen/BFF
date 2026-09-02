@@ -2,16 +2,18 @@ from __future__ import annotations
 
 """Keep the Build Editor inside the existing Builds page surface.
 
-The former editor path used a top-level ``QDialog``. On Windows that native
-surface can briefly paint with the platform default background before Qt has
-finished polishing the themed child widgets. For photosensitive users, even a
-single bright frame is unacceptable. This compatibility layer avoids creating
-a new native window at all: the editor is constructed offscreen, loaded, then
-swapped into the already-dark Foundry page.
+The former editor path used a top-level native dialog. On Windows that surface
+could briefly paint with the platform default background before Qt finished
+polishing the themed child widgets. For photosensitive users, even a single
+bright frame is unacceptable.
+
+The editor now lives in a persistent in-page tab. The normal Builds workspace
+remains available in its own tab, so editing never creates another native
+window and never traps the user in a hide/show replacement state.
 """
 
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
 
 DARK_SURFACE = "#0C171B"
@@ -33,48 +35,83 @@ def install() -> None:
 
     from ui.builds_page import BuildsPage
 
-    def finish_inline_edit(self, save: bool) -> None:
-        editor = getattr(self, "_inline_build_editor", None)
-        host = getattr(self, "_inline_build_editor_host", None)
-        if editor is None or host is None:
+    original_build_ui = BuildsPage._build_ui
+
+    def build_ui_with_editor_tabs(self) -> None:
+        original_build_ui(self)
+
+        # The original page places the roster/detail splitter directly in the
+        # workspace. Reparent it into a stable tab container instead. The
+        # surrounding FoundryPage and its dark native surface never change.
+        self.workspace_layout.removeWidget(self.splitter)
+
+        tabs = QTabWidget(self.workspace_widget)
+        tabs.setObjectName("buildWorkspaceTabs")
+        tabs.setDocumentMode(True)
+        tabs.setMovable(False)
+        tabs.setTabsClosable(False)
+        _force_dark_surface(tabs)
+
+        tabs.addTab(self.splitter, "Builds")
+        self.workspace_layout.addWidget(tabs, 1)
+
+        self.build_tabs = tabs
+        self._build_editor = None
+        self._build_editor_host = None
+        self._build_editor_index = None
+
+    def finish_tab_edit(self, save: bool) -> None:
+        editor = getattr(self, "_build_editor", None)
+        host = getattr(self, "_build_editor_host", None)
+        index = getattr(self, "_build_editor_index", None)
+        tabs = getattr(self, "build_tabs", None)
+        if editor is None or host is None or tabs is None:
             return
 
-        if save and self.roster.Members:
-            original = self.roster.Members[self.selected_index]
+        if save and index is not None and 0 <= index < len(self.roster.Members):
+            original = self.roster.Members[index]
             updated = editor.model
             updated.ScribedSkills = list(getattr(original, "ScribedSkills", []))
-            self.roster.Members[self.selected_index] = updated
+            self.roster.Members[index] = updated
+            self.selected_index = index
             self._save()
             self._refresh_roster()
 
-        host.hide()
-        self.workspace_layout.removeWidget(host)
+        tab_index = tabs.indexOf(host)
+        if tab_index >= 0:
+            tabs.removeTab(tab_index)
         host.deleteLater()
-        self._inline_build_editor = None
-        self._inline_build_editor_host = None
 
-        self.splitter.show()
-        if self.actions is not None:
-            self.actions.show()
-        self.workspace_scroll.verticalScrollBar().setValue(
-            getattr(self, "_inline_build_editor_previous_scroll", 0)
-        )
+        self._build_editor = None
+        self._build_editor_host = None
+        self._build_editor_index = None
+        self.edit_button.setEnabled(True)
+        tabs.setCurrentIndex(0)
 
-    def edit_selected_inline(self) -> None:
+    def edit_selected_tab(self) -> None:
         if not self.roster.Members:
             return
-        if getattr(self, "_inline_build_editor_host", None) is not None:
+
+        tabs = getattr(self, "build_tabs", None)
+        if tabs is None:
             return
 
-        build = self.roster.Members[self.selected_index]
+        existing = getattr(self, "_build_editor_host", None)
+        if existing is not None:
+            tabs.setCurrentWidget(existing)
+            return
 
-        # Build and populate everything before changing what the user can see.
-        # The current dark Builds page therefore remains on screen throughout
-        # the potentially expensive editor construction work.
-        host = QWidget(self.workspace_widget)
-        host.setObjectName("inlineBuildEditorHost")
+        index = self.selected_index
+        if index < 0 or index >= len(self.roster.Members):
+            return
+        build = self.roster.Members[index]
+
+        # Construct and populate the editor while the existing Builds tab stays
+        # visible. Only after the widget is complete do we add and select the
+        # editor tab. No top-level/native window is created.
+        host = QWidget(tabs)
+        host.setObjectName("buildEditorTab")
         _force_dark_surface(host)
-        host.setVisible(False)
 
         layout = QVBoxLayout(host)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -85,23 +122,20 @@ def install() -> None:
         editor.load(build)
         layout.addWidget(editor, 1)
 
-        self._inline_build_editor = editor
-        self._inline_build_editor_host = host
-        self._inline_build_editor_previous_scroll = self.workspace_scroll.verticalScrollBar().value()
+        self._build_editor = editor
+        self._build_editor_host = host
+        self._build_editor_index = index
 
-        editor.saveRequested.connect(lambda: finish_inline_edit(self, True))
-        editor.cancelRequested.connect(lambda: finish_inline_edit(self, False))
+        editor.saveRequested.connect(lambda: finish_tab_edit(self, True))
+        editor.cancelRequested.connect(lambda: finish_tab_edit(self, False))
 
-        # Add the fully prepared editor to the existing page before hiding the
-        # normal roster view. No top-level window is created at any point.
-        self.workspace_layout.addWidget(host, 1)
-        self.splitter.hide()
-        if self.actions is not None:
-            self.actions.hide()
-        self.workspace_scroll.verticalScrollBar().setValue(0)
-        host.show()
-        host.raise_()
+        name = (build.Name or build.Gamertag or "Build").strip() or "Build"
+        tabs.addTab(host, f"Edit: {name}")
+        tabs.setCurrentWidget(host)
+        self.edit_button.setEnabled(False)
 
-    BuildsPage._edit_selected = edit_selected_inline
-    BuildsPage._finish_inline_build_edit = finish_inline_edit
+    BuildsPage._build_ui = build_ui_with_editor_tabs
+    BuildsPage._edit_selected = edit_selected_tab
+    BuildsPage._finish_inline_build_edit = finish_tab_edit
+    BuildsPage._finish_build_tab_edit = finish_tab_edit
     _INSTALLED = True
