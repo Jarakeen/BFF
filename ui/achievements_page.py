@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -229,6 +230,26 @@ class AchievementsPage(QWidget):
                 return person
         return None
 
+    def _confirm_sheet_import(self, source_person: str, profile: str) -> bool:
+        dialog = QMessageBox(self)
+        dialog.setIcon(QMessageBox.Icon.Warning)
+        dialog.setWindowTitle("Are you really, really, really sure?")
+        dialog.setText("Are you really, really, really sure?")
+        dialog.setInformativeText(
+            f"This will import checked achievements from {source_person}'s Google Sheet column "
+            f"into the local profile '{profile}'. Achievement rewards may also mark canonical "
+            "collectibles as owned. Existing local progress is preserved; this import only adds "
+            "matched checked items."
+        )
+        dialog.setStandardButtons(
+            QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Yes
+        )
+        dialog.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        yes_button = dialog.button(QMessageBox.StandardButton.Yes)
+        if yes_button is not None:
+            yes_button.setText("Yes, I am really really really sure")
+        return dialog.exec() == QMessageBox.StandardButton.Yes
+
     def sync(self):
         """Import checked R/J Google Sheet rows into the active named profile."""
         profile = self.achievement_progress_service.active_profile
@@ -238,6 +259,10 @@ class AchievementsPage(QWidget):
                 "Google Sheet import requires the active profile to be named Jarakeen or Rylo. "
                 "No profile was guessed."
             )
+            return
+
+        if not self._confirm_sheet_import(source_person, profile):
+            self.status.info("Google Sheet import cancelled. Nothing changed.")
             return
 
         self.status.info(f"Reading {source_person}'s achievement checkmarks from Google Sheets…")
