@@ -18,6 +18,7 @@ from widgets.narrator_panel import NarratorPanel
 from widgets.stream_controls import StreamControls
 from models.event_model import Event
 from services.settings_service import SettingsService
+from services.broadcast_paths import BroadcastPaths
 from services.expedition_service import ExpeditionService
 from services.raid_service import RaidService
 from services.narrator_service import NarratorService
@@ -40,6 +41,7 @@ class LiveOperationsPage(FoundryPage):
 
     def build_services(self):
         self.settings = SettingsService(Path("settings.json")).load()
+        self.broadcast_paths = BroadcastPaths.from_settings(self.settings)
         root = Path(self.settings["BffRoot"])
         self.expedition = ExpeditionService()
         self.raid = RaidService(self.expedition)
@@ -50,13 +52,13 @@ class LiveOperationsPage(FoundryPage):
             password=self.settings["ObsWebSocketPassword"],
         )
         self.archive = ArchiveService(
-            counters_folder=Path(self.settings["CountersFolder"]),
-            archive_folder=Path(self.settings["ArchiveFolder"]),
+            counters_folder=self.broadcast_paths.counters_folder,
+            archive_folder=self.broadcast_paths.archive_folder,
         )
         self.stream_events = StreamEventService(
-            events_path=Path(self.settings["StreamEventsPath"]),
-            session_path=Path(self.settings["StreamSessionPath"]),
-            boss_log_path=Path(self.settings["BossLogPath"]),
+            events_path=self.broadcast_paths.stream_events,
+            session_path=self.broadcast_paths.stream_session,
+            boss_log_path=self.broadcast_paths.boss_log,
         )
 
     @staticmethod
@@ -229,7 +231,7 @@ class LiveOperationsPage(FoundryPage):
         return lines
 
     def _load_current_broadcast(self) -> dict:
-        path = Path(self.settings["CurrentBroadcastPath"])
+        path = self.broadcast_paths.current_broadcast
         if not path.exists():
             return {}
         try:
