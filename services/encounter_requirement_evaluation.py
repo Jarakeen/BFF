@@ -9,6 +9,7 @@ interrupting describe what the encounter demands; they do not by themselves prov
 that one roster member must provide a special build capability.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -28,11 +29,12 @@ class CapabilityAssessment(str, Enum):
     UNKNOWN = "unknown"
 
 
-# Phase 9 currently exposes these as generic encounter actions. Do not turn them
-# into special provider requirements without stronger encounter evidence, e.g.
-# explicit ranged-interrupt, group-cleanse, or named-effect requirements.
-_PROVIDER_REQUIREMENTS = frozenset()
-_COMPLIANCE_REQUIREMENTS = frozenset({"movement", "positioning", "cleanse", "interrupt"})
+_DEFAULT_REQUIREMENT_SEMANTICS: dict[str, RequirementSemantics] = {
+    "movement": RequirementSemantics.COMPLIANCE,
+    "positioning": RequirementSemantics.COMPLIANCE,
+    "cleanse": RequirementSemantics.COMPLIANCE,
+    "interrupt": RequirementSemantics.COMPLIANCE,
+}
 
 
 @dataclass(frozen=True)
@@ -112,18 +114,31 @@ class EncounterRequirementEvaluation:
 
 
 class EncounterRequirementEvaluator:
-    """Evaluate Phase 9 demands against explicit per-roster-member evidence."""
+    """Evaluate encounter demands against explicit per-roster-member evidence.
 
-    def __init__(self, encounter_service: EncounterService) -> None:
+    Phase 9's generic actions default to COMPLIANCE. Callers may register stronger
+    source-backed semantics for richer requirement types such as ``group_cleanse``
+    or ``ranged_interrupt`` without changing the evaluator itself.
+    """
+
+    def __init__(
+        self,
+        encounter_service: EncounterService,
+        requirement_semantics: Mapping[str, RequirementSemantics] | None = None,
+    ) -> None:
         self._encounter_service = encounter_service
+        semantics = dict(_DEFAULT_REQUIREMENT_SEMANTICS)
+        if requirement_semantics:
+            for requirement_type, semantic in requirement_semantics.items():
+                if not str(requirement_type).strip():
+                    raise ValueError("requirement semantic keys must be non-empty")
+                if not isinstance(semantic, RequirementSemantics):
+                    raise ValueError("requirement semantic values must be RequirementSemantics")
+                semantics[str(requirement_type)] = semantic
+        self._requirement_semantics = semantics
 
-    @staticmethod
-    def semantics_for(requirement_type: str) -> RequirementSemantics:
-        if requirement_type in _PROVIDER_REQUIREMENTS:
-            return RequirementSemantics.PROVIDER_CAPABILITY
-        if requirement_type in _COMPLIANCE_REQUIREMENTS:
-            return RequirementSemantics.COMPLIANCE
-        return RequirementSemantics.UNKNOWN
+    def semantics_for(self, requirement_type: str) -> RequirementSemantics:
+        return self._requirement_semantics.get(requirement_type, RequirementSemantics.UNKNOWN)
 
     def evaluate(
         self,
