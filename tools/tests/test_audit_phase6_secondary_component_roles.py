@@ -26,6 +26,22 @@ def test_secondary_role_category_keeps_plain_component_as_classification_leftove
     assert secondary_role_category("Deal $1 Flame Damage.", 1, "damage") == "classification_leftover"
 
 
+def test_secondary_role_category_marks_triggered_addon_damage_as_phase7_boundary():
+    fragment = (
+        "While active, dealing damage with Light and Heavy Attacks causes an additional "
+        "$1 Flame Damage, up to once every 2 seconds."
+    )
+    assert secondary_role_category(fragment, 1, "damage") == "phase7_triggered_additional_damage"
+
+
+def test_secondary_role_category_marks_next_attack_addon_as_phase7_boundary():
+    fragment = (
+        "Infuse your weapon with power, causing your next Light Attack used within 2 seconds "
+        "to deal an additional $1 Physical Damage."
+    )
+    assert secondary_role_category(fragment, 1, "damage") == "phase7_triggered_additional_damage"
+
+
 def test_summarize_counts_categories():
     rows = (
         SecondaryComponentRoleAuditRow(1, 2, 10, "A", "explicit_additional_damage", "damage", "x"),
