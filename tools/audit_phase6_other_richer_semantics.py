@@ -47,6 +47,7 @@ _DURATION_OR_CADENCE_RE = re.compile(
 )
 _EFFECT_WORDING_RE = re.compile(
     r"\b(?:major|minor)\s+[A-Z][A-Za-z' -]+\b|\b(?:burning|chilled|concussion|diseased|hemorrhaging|poisoned|sundered|off-balance)\b",
+    re.IGNORECASE,
 )
 
 
