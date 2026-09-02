@@ -31,6 +31,15 @@ def test_extracts_stun_and_immobilize_without_temporal_fields():
     assert all(effect.magnitude_fraction is None for effect in effects)
 
 
+def test_extracts_spaced_knockback_wording():
+    effects = extract_explicit_component_utility_effects(
+        skill_rank_id=25,
+        coefficient_number=1,
+        component_text="Strike the enemy and knock them back.",
+    )
+    assert [effect.effect_type for effect in effects] == [SkillComponentUtilityEffectType.KNOCKBACK]
+
+
 def test_damage_only_text_emits_no_utility_effect():
     assert extract_explicit_component_utility_effects(
         skill_rank_id=30,
