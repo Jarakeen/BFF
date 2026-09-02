@@ -21,7 +21,7 @@ def _set_windows_app_id() -> None:
     try:
         import ctypes
 
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+        ctypes.windll.shell32.SetCurrentProcessExplicitApplicationUserModelID(
             "BlackFeatherFoundry.FieldOffice"
         )
 
@@ -119,6 +119,7 @@ def main() -> int:
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
     from ui.collectibles_motif_support import install as install_collectibles_motif_support
+    from ui.collectibles_lorebook_support import install as install_collectibles_lorebook_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -141,8 +142,10 @@ def main() -> int:
     install_collectibles_profile_support()
     # Learned recipes/plans layer on top of the profile-aware Collectibles page.
     install_collectibles_learned_recipe_support()
-    # Motifs layer last so it can delegate safely to both existing collection layers.
+    # Motifs layer after learned recipes/plans so it can delegate safely.
     install_collectibles_motif_support()
+    # Lorebooks layer last so its dedicated reader can delegate through all prior collection layers.
+    install_collectibles_lorebook_support()
 
     from ui.main_window import MainWindow
 
