@@ -63,7 +63,7 @@ def test_death_knell_preserves_threshold_amount_and_canonical_slot_requirement()
         coefficient_number=1,
         raw_description="Increases your Critical Strike Chance against enemies under 33% Health by <<1>>.",
         coef_description="Increases your Critical Strike Chance against enemies under 33% Health by 10%.",
-        desc_header="WITH A GRAVELORD ABILITY SLOTTED",
+        desc_header="WITH A GRAVE LORD ABILITY SLOTTED",
     )
     assert len(rows) == 1
     assert rows[0].driver is SkillComponentSourceStatRuleDriver.GRAVELORD_ABILITY_SLOTTED
@@ -82,11 +82,22 @@ def test_death_knell_accepts_color_tagged_literal_source():
             "Increases your Critical Strike Chance against enemies under |cffffff33|r% Health "
             "by |cffffff20|r%."
         ),
-        desc_header="WITH A GRAVELORD ABILITY SLOTTED",
+        desc_header="WITH A GRAVE LORD ABILITY SLOTTED",
     )
     assert len(rows) == 1
     assert rows[0].amount == 0.20
     assert rows[0].target_health_below_fraction == 0.33
+
+
+def test_death_knell_still_accepts_compact_gravelord_header():
+    rows = extract_source_mapped_stat_rule(
+        skill_rank_id=7390,
+        coefficient_number=1,
+        raw_description="Increases your Critical Strike Chance against enemies under 33% Health by <<1>>.",
+        coef_description="Increases your Critical Strike Chance against enemies under 33% Health by 10%.",
+        desc_header="WITH A GRAVELORD ABILITY SLOTTED",
+    )
+    assert len(rows) == 1
 
 
 def test_death_knell_rejects_unrelated_slot_header():
