@@ -5,6 +5,10 @@ from __future__ import annotations
 Text matching here is intentionally a *review queue*, never runtime truth. Candidate
 abilities are resolved through SkillEffectRepository so reviewers can promote only
 verified exact EffectVariant.name identities into the Phase 10 capability map.
+
+The audit also preserves stable ability metadata and the exact matched source text.
+That lets reviewers verify a mechanic against canonical base ability / morph identity
+rather than accidentally promoting one rank-specific ability id.
 """
 
 from dataclasses import dataclass
@@ -35,8 +39,14 @@ class EncounterCapabilityCandidate:
     capability_type: str
     ability_id: int
     ability_name: str
+    base_ability_id: int | None
+    morph: int | None
+    rank: int | None
+    class_type: str
+    skill_line: str
     matched_term: str
     matched_field: str
+    matched_source_text: str
     resolved_effect_names: tuple[str, ...]
     resolved_effect_sources: tuple[str, ...]
 
@@ -49,6 +59,10 @@ class EncounterCapabilityCandidateAudit:
     @staticmethod
     def supported_capabilities() -> tuple[str, ...]:
         return tuple(_CAPABILITY_TERMS)
+
+    @staticmethod
+    def _optional_select(columns: set[str], name: str, fallback: str) -> str:
+        return f'"{name}"' if name in columns else f"{fallback} AS \"{name}\""
 
     def candidates(self, capability_type: str) -> tuple[EncounterCapabilityCandidate, ...]:
         if capability_type not in _CAPABILITY_TERMS:
@@ -77,12 +91,21 @@ class EncounterCapabilityCandidateAudit:
                 if candidate in columns:
                     searchable.append(candidate)
 
-            selected = ", ".join(
-                ["ability_id", "name"]
-                + [f'COALESCE("{column}", \'\') AS "{column}"' for column in searchable[1:]]
+            selected = [
+                "ability_id",
+                "name",
+                self._optional_select(columns, "base_ability_id", "NULL"),
+                self._optional_select(columns, "morph", "NULL"),
+                self._optional_select(columns, "rank", "NULL"),
+                self._optional_select(columns, "class_type", "''"),
+                self._optional_select(columns, "skill_line", "''"),
+            ]
+            selected.extend(
+                f'COALESCE("{column}", \'\') AS "{column}"'
+                for column in searchable[1:]
             )
             rows = db.execute(
-                f"SELECT {selected} FROM ability ORDER BY ability_id"
+                f"SELECT {', '.join(selected)} FROM ability ORDER BY ability_id"
             ).fetchall()
 
         found: list[EncounterCapabilityCandidate] = []
@@ -92,9 +115,15 @@ class EncounterCapabilityCandidateAudit:
         for row in rows:
             ability_id = int(row[0])
             ability_name = str(row[1] or "").strip()
+            base_ability_id = int(row[2]) if row[2] is not None else None
+            morph = int(row[3]) if row[3] is not None else None
+            rank = int(row[4]) if row[4] is not None else None
+            class_type = str(row[5] or "").strip()
+            skill_line = str(row[6] or "").strip()
+
             values = {"name": ability_name}
-            for index, column in enumerate(searchable[1:], start=2):
-                values[column] = str(row[index] or "")
+            for index, column in enumerate(searchable[1:], start=7):
+                values[column] = str(row[index] or "").strip()
 
             match: tuple[str, str] | None = None
             for field_name in searchable:
@@ -119,8 +148,14 @@ class EncounterCapabilityCandidateAudit:
                     capability_type=capability_type,
                     ability_id=ability_id,
                     ability_name=ability_name,
+                    base_ability_id=base_ability_id,
+                    morph=morph,
+                    rank=rank,
+                    class_type=class_type,
+                    skill_line=skill_line,
                     matched_term=match[0],
                     matched_field=match[1],
+                    matched_source_text=values[match[1]],
                     resolved_effect_names=tuple(dict.fromkeys(effect.name for effect in effects)),
                     resolved_effect_sources=tuple(dict.fromkeys(effect.source for effect in effects)),
                 )
