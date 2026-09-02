@@ -6,21 +6,21 @@ import random
 import re
 from pathlib import Path
 
+from services.paths import DATA
+
 
 class NarratorService:
-    """Read Natural History Narrator content for the optional Broadcast module.
-
-    JSON is the canonical runtime format. Markdown remains supported as a
-    backward-compatible authoring/reference format while the Broadcast module
-    is being separated from the core application.
-
-    Public API:
-        categories()
-        pick(category)
-    """
+    """Read Natural History Narrator content for Broadcast."""
 
     def __init__(self, content_path: Path):
-        self.content_path = Path(content_path)
+        requested = Path(content_path)
+        fallback = DATA / "natural_history_narrator.json"
+        if requested.exists():
+            self.content_path = requested
+        elif fallback.exists():
+            self.content_path = fallback
+        else:
+            self.content_path = requested
 
     def _load(self) -> dict[str, list[str]]:
         if not self.content_path.exists():
@@ -40,8 +40,11 @@ class NarratorService:
         for key, values in data.items():
             if not isinstance(key, str) or not isinstance(values, list):
                 continue
-            lines = [str(value).strip() for value in values if str(value).strip()]
-            categories[key.strip()] = lines
+            categories[key.strip()] = [
+                str(value).strip()
+                for value in values
+                if str(value).strip()
+            ]
         return categories
 
     def _load_markdown(self) -> dict[str, list[str]]:
@@ -49,7 +52,6 @@ class NarratorService:
             text = self.content_path.read_text(encoding="utf-8")
         except OSError:
             return {}
-
         categories: dict[str, list[str]] = {}
         current = None
         for line in text.splitlines():
