@@ -1,5 +1,54 @@
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QFont, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QAbstractScrollArea, QApplication, QDialog
+
+
+SAFE_DIALOG_BACKGROUND = "#0C171B"
+
+
+class _DarkDialogPrepaintFilter(QObject):
+    """Force top-level dialogs dark before their first visible paint."""
+
+    def eventFilter(self, watched, event):
+        if isinstance(watched, QDialog) and event.type() in {
+            QEvent.Type.Polish,
+            QEvent.Type.Show,
+        }:
+            watched.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            watched.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+            watched.setAutoFillBackground(True)
+
+            palette = watched.palette()
+            palette.setColor(QPalette.ColorRole.Window, QColor(SAFE_DIALOG_BACKGROUND))
+            palette.setColor(QPalette.ColorRole.Base, QColor(SAFE_DIALOG_BACKGROUND))
+            watched.setPalette(palette)
+
+            # Apply a direct top-level rule so the native dialog surface has an
+            # explicit dark fill even before inherited application QSS settles.
+            watched.setStyleSheet(
+                f"QDialog {{ background-color: {SAFE_DIALOG_BACKGROUND}; }}"
+            )
+
+            # Scroll-area viewports are separate paint surfaces and can briefly
+            # expose a platform-default background while a large editor is laid
+            # out. Give them the same opaque dark teal prepaint.
+            for area in watched.findChildren(QAbstractScrollArea):
+                viewport = area.viewport()
+                viewport.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+                viewport.setAutoFillBackground(True)
+                viewport_palette = viewport.palette()
+                viewport_palette.setColor(
+                    QPalette.ColorRole.Window,
+                    QColor(SAFE_DIALOG_BACKGROUND),
+                )
+                viewport_palette.setColor(
+                    QPalette.ColorRole.Base,
+                    QColor(SAFE_DIALOG_BACKGROUND),
+                )
+                viewport.setPalette(viewport_palette)
+
+        return super().eventFilter(watched, event)
+
 
 FOUNDry_STYLESHEET = r"""
 /* ==========================================================
@@ -108,7 +157,7 @@ def apply_foundry_theme(app: QApplication) -> None:
     # the same dark Foundry base colors so dialogs never flash the platform's
     # default white background while their styled children are being polished.
     palette = app.palette()
-    palette.setColor(QPalette.ColorRole.Window, QColor("#0d0f0e"))
+    palette.setColor(QPalette.ColorRole.Window, QColor(SAFE_DIALOG_BACKGROUND))
     palette.setColor(QPalette.ColorRole.WindowText, QColor("#d8d0c2"))
     palette.setColor(QPalette.ColorRole.Base, QColor("#111411"))
     palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#151815"))
@@ -116,6 +165,12 @@ def apply_foundry_theme(app: QApplication) -> None:
     palette.setColor(QPalette.ColorRole.Button, QColor("#211a12"))
     palette.setColor(QPalette.ColorRole.ButtonText, QColor("#cec5b6"))
     app.setPalette(palette)
+
+    # Keep the filter alive on the QApplication and install it before any
+    # later-created modal dialog is polished or shown.
+    if not hasattr(app, "_foundry_dark_dialog_filter"):
+        app._foundry_dark_dialog_filter = _DarkDialogPrepaintFilter(app)
+        app.installEventFilter(app._foundry_dark_dialog_filter)
 
     app.setStyleSheet(FOUNDry_STYLESHEET)
     app.setFont(QFont("Segoe UI", 9))
