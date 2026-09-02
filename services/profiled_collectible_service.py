@@ -67,9 +67,26 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
                 db.rollback()
                 raise
 
+        self.connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS collectible_profile (
+                profile_name TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_collectible_progress_profile_owned
+                ON collectible_progress(profile_name, owned);
+            """
+        )
         self.connection.execute(
-            "CREATE INDEX IF NOT EXISTS idx_collectible_progress_profile_owned "
-            "ON collectible_progress(profile_name, owned)"
+            "INSERT OR IGNORE INTO collectible_profile(profile_name) VALUES (?)",
+            (self.DEFAULT_PROFILE,),
+        )
+        self.connection.execute(
+            """
+            INSERT OR IGNORE INTO collectible_profile(profile_name)
+            SELECT DISTINCT profile_name FROM collectible_progress
+            WHERE profile_name IS NOT NULL AND TRIM(profile_name) <> ''
+            """
         )
         self.connection.commit()
 
@@ -79,19 +96,23 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
 
     def profiles(self) -> list[str]:
         rows = self.connection.execute(
-            "SELECT DISTINCT profile_name FROM collectible_progress ORDER BY profile_name COLLATE NOCASE"
+            "SELECT profile_name FROM collectible_profile ORDER BY profile_name COLLATE NOCASE"
         ).fetchall()
         names = [str(row[0]) for row in rows if str(row[0] or "").strip()]
-        if self.DEFAULT_PROFILE not in names:
+        if self.DEFAULT_PROFILE in names:
+            names.remove(self.DEFAULT_PROFILE)
             names.insert(0, self.DEFAULT_PROFILE)
-        return names
+        return names or [self.DEFAULT_PROFILE]
 
     def ensure_profile(self, name: str) -> str:
         normalized = self._normalize_profile_name(name)
         if not normalized:
             raise ValueError("Profile name cannot be empty.")
-        # A profile does not need a dummy progress row. It becomes persistent
-        # as soon as imported or edited ownership exists.
+        self.connection.execute(
+            "INSERT OR IGNORE INTO collectible_profile(profile_name) VALUES (?)",
+            (normalized,),
+        )
+        self.connection.commit()
         return normalized
 
     def set_active_profile(self, name: str) -> str:
