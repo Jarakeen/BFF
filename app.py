@@ -111,6 +111,7 @@ def main() -> int:
     from ui.phase5_potion_picker_support import install as install_phase5_potion_picker_support
     from ui.build_editor_inline_compat import install as install_inline_build_editor
     from ui.build_workspace_edit_fix import install as install_build_workspace_edit_fix
+    from ui.build_workspace_tab_layout_fix import install as install_build_workspace_tab_layout_fix
 
     install_searchable_selectors()
     install_scribing_support()
@@ -122,9 +123,10 @@ def main() -> int:
     install_phase5_racial_context_support()
     install_phase5_potion_picker_support()
     # Install the permanent non-native workspace after the older Build Editor
-    # extensions, then apply the targeted Edit-tab layout/performance fixes.
+    # extensions, then apply the targeted Edit-tab and layout fixes.
     install_inline_build_editor()
     install_build_workspace_edit_fix()
+    install_build_workspace_tab_layout_fix()
 
     from ui.main_window import MainWindow
 
