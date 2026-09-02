@@ -6,12 +6,10 @@ import random
 import re
 from pathlib import Path
 
-from services.paths import PROJECT_ROOT
+from services.paths import BROADCAST_RESOURCES
 
 
-_BROADCAST_NARRATOR = (
-    PROJECT_ROOT / "modules" / "broadcast" / "resources" / "natural_history_narrator.json"
-)
+_BROADCAST_NARRATOR = BROADCAST_RESOURCES / "natural_history_narrator.json"
 
 
 class NarratorService:
