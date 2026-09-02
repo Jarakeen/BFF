@@ -130,13 +130,20 @@ def main() -> int:
     print(f"Selected roster members: {len(audits)}")
     for audit in audits:
         state = "resolved" if audit.resolved else f"unresolved={len(audit.unresolved)}"
+        capability_gaps = len(audit.capability_resolution_gaps)
         print(
             f"  {audit.character_name or '(unnamed)'} | {audit.build_name or '(unnamed build)'} "
-            f"| id={_identity(audit) or '(none)'} | effects={len(audit.resolved_effects)} | {state}"
+            f"| id={_identity(audit) or '(none)'} | effects={len(audit.resolved_effects)} "
+            f"| {state} | capability_gaps={capability_gaps}"
         )
         if audit.unresolved:
             for message in audit.unresolved:
-                print(f"    UNRESOLVED: {message}")
+                scope = (
+                    "CAPABILITY-GAP"
+                    if message in audit.capability_resolution_gaps
+                    else "STAT/STATE-GAP"
+                )
+                print(f"    {scope}: {message}")
         if audit.boundaries:
             for message in audit.boundaries:
                 print(f"    BOUNDARY: {message}")
