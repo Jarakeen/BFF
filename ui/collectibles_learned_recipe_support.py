@@ -17,6 +17,27 @@ def install() -> None:
         return
 
     from ui import collectibles_page
+    from ui.components import foundry_sidebar
+
+    # Keep Recipes and Furnishing Plans inside the existing Collections
+    # accordion instead of inventing more top-level navigation.
+    for section in foundry_sidebar.CORE_NAV_SECTIONS:
+        if not isinstance(section, dict) or section.get("label") != "Collections":
+            continue
+        children = section["children"]
+        existing = {page for _label, page in children}
+        additions = [
+            ("Furnishing Plans", "collectibles:Furnishing Plans"),
+            ("Recipes", "collectibles:Recipes"),
+        ]
+        insert_at = next(
+            (index + 1 for index, (label, _page) in enumerate(children) if label == "Furnishings"),
+            len(children),
+        )
+        for label, page in reversed(additions):
+            if page not in existing:
+                children.insert(insert_at, (label, page))
+        break
 
     original_init = collectibles_page.CollectiblesPage.__init__
     original_set_category = collectibles_page.CollectiblesPage.set_category
