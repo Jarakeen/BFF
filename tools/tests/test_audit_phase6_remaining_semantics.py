@@ -31,6 +31,7 @@ def test_remaining_semantics_reconciles_canonical_phase6_coverage(monkeypatch):
         _row(20, 2, signals=("secondary_component_candidate",)),
         _row(30, 1, signals=("conditional_candidate",)),
         _row(40, 1, signals=("secondary_component_candidate",)),
+        _row(50, 2, signals=("conditional_candidate",)),
     )
     monkeypatch.setattr(audit, "load_phase6_gap_matrix", lambda *args, **kwargs: gaps)
 
@@ -56,6 +57,11 @@ def test_remaining_semantics_reconciles_canonical_phase6_coverage(monkeypatch):
     )
     monkeypatch.setattr(
         audit,
+        "SkillComponentDamageScalingRepository",
+        lambda path: _FakeRepository(path, {(50, 2)}),
+    )
+    monkeypatch.setattr(
+        audit,
         "SkillComponentSecondaryHealingRepository",
         lambda path: _FakeRepository(path),
     )
@@ -73,11 +79,12 @@ def test_remaining_semantics_reconciles_canonical_phase6_coverage(monkeypatch):
     rows = audit.load_remaining_phase6_semantics("ignored.db")
     summary = audit.summarize(rows)
 
-    assert summary["rows"] == 4
-    assert summary["covered"] == 3
+    assert summary["rows"] == 5
+    assert summary["covered"] == 4
     assert summary["remaining"] == 1
     assert rows[0].covered_by == ("resource_event",)
     assert rows[1].covered_by == ()
     assert rows[2].covered_by == ("conditional_consequence",)
     assert rows[3].covered_by == ("utility_effect",)
+    assert rows[4].covered_by == ("damage_scaling",)
     assert summary["signals"]["secondary_component_candidate"] == 1
