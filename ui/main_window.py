@@ -131,6 +131,30 @@ class MainWindow(QMainWindow):
             return True
         return False
 
+    def _refresh_collectibles_for_active_profile(self) -> None:
+        """Show collectible ownership for the same named profile as Achievements.
+
+        Achievement imports can write collectible rewards through a separate
+        ProfiledCollectibleService instance. The long-lived Collectibles page
+        otherwise starts on its own ``Default`` profile, making valid imported
+        ownership look absent. Keep the two profile views aligned when the
+        same named profile is available.
+        """
+        achievements_page = self.pages.get("achievements")
+        collectibles_page = self.pages.get("collectibles")
+        service = getattr(collectibles_page, "service", None)
+        progress = getattr(achievements_page, "achievement_progress_service", None)
+        if service is None or progress is None or not hasattr(service, "set_active_profile"):
+            return
+
+        profile = str(progress.active_profile or "").strip()
+        if profile:
+            service.set_active_profile(profile)
+            reload_combo = getattr(collectibles_page, "_reload_profile_combo", None)
+            if callable(reload_combo):
+                reload_combo(profile)
+        collectibles_page.refresh()
+
     def show_page(self, page_name: str):
         if not self._confirm_collectible_navigation(page_name):
             return
@@ -138,6 +162,7 @@ class MainWindow(QMainWindow):
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
             collectibles_page = self.pages["collectibles"]
+            self._refresh_collectibles_for_active_profile()
             collectibles_page.set_category(category)
             self.stack.setCurrentWidget(self.page_containers["collectibles"])
             return
@@ -147,10 +172,12 @@ class MainWindow(QMainWindow):
             return
 
         # Settings -> Data Management can import progress through a separate
-        # service instance. Refresh the long-lived Achievements page when it
-        # becomes visible so those external writes appear immediately.
+        # service instance. Refresh the long-lived pages when they become
+        # visible so those external writes appear immediately.
         if page_name == "achievements":
             self.pages["achievements"].refresh()
+        elif page_name == "collectibles":
+            self._refresh_collectibles_for_active_profile()
 
         self.stack.setCurrentWidget(self.page_containers[page_name])
 
