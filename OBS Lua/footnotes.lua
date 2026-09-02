@@ -45,8 +45,12 @@ local function path_join(base, child)
     return base .. "\\" .. child
 end
 
+local function default_data_folder()
+    return path_join(script_path(), "..\\data")
+end
+
 local function find_default_footnotes_path()
-    local scripts_dir = "C:\\Users\\nourg\\OneDrive\\Desktop\\BFF\\40_Stream Studio\\OBS\\Scripts\\FoundryDock\\Data"
+    local scripts_dir = default_data_folder()
     local candidates = {
         path_join(scripts_dir, "footnotes.json"),
         path_join(scripts_dir, "footnotes.txt"),
@@ -75,7 +79,7 @@ local function resolve_footnotes_path(path_value)
 end
 
 local function find_default_cover_art_path()
-    local scripts_dir = "C:\\Users\\nourg\\OneDrive\\Desktop\\Black Feather Foundry\\40_Stream Studio\\OBS\\Scripts\\Foundrydock\\data"
+    local scripts_dir = default_data_folder()
     local candidates = {
         path_join(scripts_dir, "current_cover.png"),
         path_join(scripts_dir, "cover.png"),
