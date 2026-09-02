@@ -64,7 +64,8 @@ _STATE_WINDOW_RE = re.compile(
 )
 _CHANCE_RE = re.compile(r"\b\d+(?:\.\d+)?%\s+chance\b", re.IGNORECASE)
 _COOLDOWN_RE = re.compile(
-    r"\b(?:up\s+to\s+|only\s+)?once\s+every\s+\d+(?:\.\d+)?\s+seconds?\b",
+    r"\b(?:up\s+to|only)\s+once\s+every\s+\d+(?:\.\d+)?\s+seconds?\b|"
+    r"\bcooldown\b",
     re.IGNORECASE,
 )
 _STACK_RE = re.compile(r"\b(?:stacks?|charges?)\b", re.IGNORECASE)
