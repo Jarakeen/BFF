@@ -40,6 +40,29 @@ def test_extracts_spaced_knockback_wording():
     assert [effect.effect_type for effect in effects] == [SkillComponentUtilityEffectType.KNOCKBACK]
 
 
+def test_contextual_stun_mentions_do_not_apply_stun():
+    for text in (
+        "Deals $1 Magic Damage if the stun lasts the full duration.",
+        "After the stun ends, the target takes $1 Flame Damage.",
+    ):
+        assert extract_explicit_component_utility_effects(
+            skill_rank_id=27,
+            coefficient_number=1,
+            component_text=text,
+        ) == ()
+
+
+def test_explicit_interrupt_immunity_grant_is_utility_effect():
+    effects = extract_explicit_component_utility_effects(
+        skill_rank_id=28,
+        coefficient_number=2,
+        component_text="Gain a damage shield that absorbs up to $2 damage and grants interrupt immunity.",
+    )
+    assert [effect.effect_type for effect in effects] == [
+        SkillComponentUtilityEffectType.INTERRUPT_IMMUNITY
+    ]
+
+
 def test_damage_only_text_emits_no_utility_effect():
     assert extract_explicit_component_utility_effects(
         skill_rank_id=30,
