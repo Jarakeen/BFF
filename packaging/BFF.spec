@@ -6,7 +6,7 @@ project_root = Path(SPECPATH).resolve().parent
 
 # Read-only UI resources are bundled into PyInstaller's extraction directory.
 # Writable application data (especially data/eso.db) is deliberately NOT
-# bundled; the build scripts place it beside BFF.exe where engine.config finds it.
+# bundled; the build scripts place it beside FoundryDock.exe where engine.config finds it.
 datas = [
     (str(project_root / "assets"), "assets"),
     (str(project_root / "bff.ico"), "."),
@@ -34,7 +34,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="BFF",
+    name="FoundryDock",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
