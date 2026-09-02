@@ -5,6 +5,8 @@ Canonical replacement for the historically misnamed ``collections_page.py``.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -20,6 +22,14 @@ from engine.config import get_data_dir
 from services.achievement_progress_service import AchievementProgressService
 from services.achievement_stats_service import AchievementStatsService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
+from services.google_sheet_progress_importer import GoogleSheetProgressImporter
+from services.google_sheets_service import (
+    COLUMN_FOR_PERSON,
+    GoogleSheetsNotConfigured,
+    GoogleSheetsService,
+)
+from services.profiled_collectible_service import ProfiledCollectibleService
+from services.settings_service import SettingsService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -45,6 +55,18 @@ class AchievementsPage(QWidget):
         self.achievement_stats_service = AchievementStatsService(
             self.eso_data_service,
             self.achievement_progress_service,
+        )
+        self.collectible_progress_service = ProfiledCollectibleService(data_dir / "eso.db")
+
+        settings = SettingsService(Path("settings.json")).load()
+        self.google_sheets_service = GoogleSheetsService(
+            Path(settings["GoogleCredentialsPath"]),
+            str(settings["GoogleSpreadsheetId"]),
+        )
+        self.google_sheet_importer = GoogleSheetProgressImporter(
+            self.eso_data_service,
+            self.achievement_progress_service,
+            self.collectible_progress_service,
         )
 
     @staticmethod
@@ -199,8 +221,61 @@ class AchievementsPage(QWidget):
             f"{self.achievement_progress_service.completed_count()} achievements completed for {profile}."
         )
 
+    @staticmethod
+    def _sheet_person_for_profile(profile: str) -> str | None:
+        profile_key = str(profile or "").strip().casefold()
+        for person in COLUMN_FOR_PERSON:
+            if person.casefold() == profile_key:
+                return person
+        return None
+
     def sync(self):
-        self.status.info("Spreadsheet synchronization is the next profile-aware import step.")
+        """Import checked R/J Google Sheet rows into the active named profile."""
+        profile = self.achievement_progress_service.active_profile
+        source_person = self._sheet_person_for_profile(profile)
+        if source_person is None:
+            self.status.warning(
+                "Google Sheet import requires the active profile to be named Jarakeen or Rylo. "
+                "No profile was guessed."
+            )
+            return
+
+        self.status.info(f"Reading {source_person}'s achievement checkmarks from Google Sheets…")
+        try:
+            snapshot = self.google_sheets_service.read_achievement_statuses(source_person)
+            report = self.google_sheet_importer.import_checked(snapshot, profile=profile)
+        except GoogleSheetsNotConfigured as exc:
+            self.status.warning(f"Google Sheets is not configured: {exc}")
+            return
+        except ImportError:
+            self.status.warning(
+                "Google Sheets support needs the gspread and google-auth packages installed."
+            )
+            return
+        except Exception as exc:
+            self.status.error(f"Google Sheet import failed: {exc}")
+            return
+
+        self.refresh()
+        issue_count = (
+            len(report.unresolved_names)
+            + len(report.ambiguous_names)
+            + len(report.missing_tabs)
+        )
+        summary = (
+            f"Imported {report.matched_achievements} checked achievements for {profile}; "
+            f"{report.achievements_added} newly added; "
+            f"{report.collectible_rewards_marked} achievement-reward collectibles marked owned."
+        )
+        if issue_count:
+            self.status.warning(
+                summary
+                + f" Review needed: {len(report.unresolved_names)} unmatched names, "
+                f"{len(report.ambiguous_names)} ambiguous names, "
+                f"{len(report.missing_tabs)} missing sheet tabs."
+            )
+        else:
+            self.status.success(summary)
 
 
 # Transitional class alias for callers that imported the old class name.
