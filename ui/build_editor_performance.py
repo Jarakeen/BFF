@@ -3,16 +3,16 @@ from __future__ import annotations
 """Performance safeguards for the permanent Builds/Edit workspace.
 
 The Build Editor is intentionally kept inside the existing application window
-for photosensitive-user safety.  This layer keeps that safer architecture while
-removing avoidable work from the heavy editor path:
+for photosensitive-user safety. This layer keeps the safer architecture while
+removing the largest avoidable cost from the Edit tab:
 
-* eligibility controls rebuild only when their context actually changes;
-* skill icons are cached for the process lifetime;
 * one Build Editor widget is reused across saved builds;
 * build-specific synthetic scribed skills are refreshed before each load.
-"""
 
-from functools import lru_cache
+Skill-bar eligibility setters and icon resolution intentionally remain on their
+canonical implementations. Earlier attempts to monkeypatch those hot paths
+caused skill-bar population regressions, so correctness wins there.
+"""
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QLabel
@@ -25,58 +25,10 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    from ui.components import eligible_build_editor as eligible
     from ui.builds_page import BuildsPage
     from ui.build_editor_inline_compat import _force_dark_surface, _set_combo_index
     from ui.build_workspace_edit_fix import _identity_card_for
     from ui.scribing_support import _recipes_for, _synthetic_skill
-
-    # ---- Skill-row rebuild deduplication ---------------------------------
-    # EligibleSkillBarRow setters historically rebuilt all six selectors every
-    # time they were called, even when the requested state was already active.
-    # BuildEditor.load can call these setters repeatedly for the same build.
-    original_set_affiliation = eligible.EligibleSkillBarRow.set_affiliation
-    original_set_form = eligible.EligibleSkillBarRow.set_form
-    original_set_class = eligible.EligibleSkillBarRow.set_class
-
-    def set_affiliation_if_changed(self, *, vampire: bool = False, werewolf: bool = False):
-        vampire = bool(vampire)
-        werewolf = bool(werewolf)
-        if self.vampire == vampire and self.werewolf == werewolf:
-            return
-        original_set_affiliation(self, vampire=vampire, werewolf=werewolf)
-
-    def set_form_if_changed(self, form: str | None):
-        value = (form or "").strip().casefold()
-        normalized = value if value in {"vampire", "werewolf"} else None
-        if self.transformed_form == normalized:
-            return
-        original_set_form(self, form)
-
-    def set_class_if_changed(self, eso_class: str):
-        value = eso_class or ""
-        if self._selected_class == value:
-            return
-        original_set_class(self, value)
-
-    eligible.EligibleSkillBarRow.set_affiliation = set_affiliation_if_changed
-    eligible.EligibleSkillBarRow.set_form = set_form_if_changed
-    eligible.EligibleSkillBarRow.set_class = set_class_if_changed
-
-    # Rebuilding a skill bar asks for the same icon many times, once per combo.
-    # The skill records themselves are dicts and therefore cannot be passed
-    # directly to lru_cache. Cache by the stable texture string instead.
-    original_icon_for_skill = eligible._icon_for_skill
-
-    @lru_cache(maxsize=4096)
-    def icon_for_texture(texture: str):
-        return original_icon_for_skill({"texture": texture})
-
-    def cached_icon_for_skill(skill: dict):
-        texture = str(skill.get("texture", "") or "").strip()
-        return icon_for_texture(texture)
-
-    eligible._icon_for_skill = cached_icon_for_skill
 
     # ---- Persistent Edit widget ------------------------------------------
     def refresh_scribed_choices(editor, build) -> None:
@@ -152,8 +104,8 @@ def install() -> None:
         if self._pending_edit_index == index:
             return
         self._pending_edit_index = index
-        # Keep the already-dark tab responsive before any unavoidable first
-        # construction work begins.
+        # Paint the already-dark Edit tab before the unavoidable first editor
+        # construction begins. Later visits reuse the same widget.
         QTimer.singleShot(0, lambda selected=index: show_persistent_editor(self, selected))
 
     BuildsPage._load_edit_tab = load_edit_tab_persistent
