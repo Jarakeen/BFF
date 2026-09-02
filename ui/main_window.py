@@ -20,7 +20,6 @@ from engine.config import get_data_dir
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
-from ui.achievement_progress_import_page import AchievementProgressImportPage
 from ui.achievements_page import AchievementsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
@@ -66,7 +65,6 @@ class MainWindow(QMainWindow):
 
         core_pages = {
             "achievements": AchievementsPage(),
-            "achievement_progress_import": AchievementProgressImportPage(),
             "collectibles": CollectiblesPage(),
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(expedition=self.expedition_service),
@@ -83,9 +81,6 @@ class MainWindow(QMainWindow):
 
         broadcast_pages = {}
         if self.broadcast_enabled:
-            # Keep optional UI imports out of core startup when Broadcast is
-            # disabled. This is the first boundary needed for a separately
-            # installable Broadcast Desk module.
             from ui.archive_page import ArchivePage
             from ui.broadcast_page import BroadcastPage
             from ui.field_notes_page import FieldNotesPage
@@ -154,8 +149,6 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.page_containers[page_name])
 
     def wrap_page(self, page):
-        # FoundryPage already owns its scrolling workspace. Wrapping it in a
-        # second QScrollArea caused oversized cards and competing scrollbars.
         if isinstance(page, FoundryPage):
             page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             return page
