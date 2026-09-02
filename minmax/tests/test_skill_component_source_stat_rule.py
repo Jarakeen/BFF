@@ -73,11 +73,14 @@ def test_death_knell_preserves_threshold_amount_and_canonical_slot_requirement()
     assert rows[0].stats == (StatId.CRITICAL_CHANCE,)
 
 
-def test_death_knell_accepts_color_tagged_literal_source():
+def test_death_knell_accepts_live_color_tagged_raw_and_display_source():
     rows = extract_source_mapped_stat_rule(
         skill_rank_id=7391,
         coefficient_number=1,
-        raw_description="Increases your Critical Strike Chance against enemies under 33% Health by <<1>>.",
+        raw_description=(
+            "Increases your Critical Strike Chance against enemies under "
+            "|cffffff33|r% Health by <<1>>."
+        ),
         coef_description=(
             "Increases your Critical Strike Chance against enemies under |cffffff33|r% Health "
             "by |cffffff20|r%."
