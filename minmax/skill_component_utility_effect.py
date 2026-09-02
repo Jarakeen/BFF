@@ -104,7 +104,13 @@ def extract_explicit_component_utility_effects(
     simple_patterns: tuple[tuple[SkillComponentUtilityEffectType, re.Pattern[str]], ...] = (
         (SkillComponentUtilityEffectType.STUN, re.compile(r"\bstun(?:s|ned|ning)?\b", re.IGNORECASE)),
         (SkillComponentUtilityEffectType.IMMOBILIZE, re.compile(r"\bimmobiliz(?:e|es|ed|ing)\b", re.IGNORECASE)),
-        (SkillComponentUtilityEffectType.KNOCKBACK, re.compile(r"\bknock(?:back|ed\s+back|s\s+back|ing\s+back)\b", re.IGNORECASE)),
+        (
+            SkillComponentUtilityEffectType.KNOCKBACK,
+            re.compile(
+                r"\b(?:knockback|knock(?:s|ed|ing)?\s+(?:\w+\s+){0,2}?back)\b",
+                re.IGNORECASE,
+            ),
+        ),
         (SkillComponentUtilityEffectType.PULL, re.compile(r"\bpull(?:s|ed|ing)?\b", re.IGNORECASE)),
         (SkillComponentUtilityEffectType.TAUNT, re.compile(r"\btaunt(?:s|ed|ing)?\b", re.IGNORECASE)),
         (SkillComponentUtilityEffectType.INTERRUPT_IMMUNITY, re.compile(r"\binterrupt\s+immunity\b", re.IGNORECASE)),
