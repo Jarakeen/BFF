@@ -14,6 +14,9 @@ from minmax.skill_component_condition_repository import SkillComponentConditionR
 from minmax.skill_component_conditional_consequence_repository import (
     SkillComponentConditionalConsequenceRepository,
 )
+from minmax.skill_component_damage_scaling_repository import (
+    SkillComponentDamageScalingRepository,
+)
 from minmax.skill_component_effect_relationship_repository import (
     SkillComponentEffectRelationshipRepository,
 )
@@ -50,6 +53,7 @@ def _coverage_for_row(
     effects: SkillComponentEffectRelationshipRepository,
     conditions: SkillComponentConditionRepository,
     consequences: SkillComponentConditionalConsequenceRepository,
+    damage_scaling: SkillComponentDamageScalingRepository,
     resources: SkillComponentResourceEventRepository,
     secondary_healing: SkillComponentSecondaryHealingRepository,
     missing_health_healing: SkillComponentMissingHealthHealingRepository,
@@ -65,6 +69,8 @@ def _coverage_for_row(
         covered.append("conditional_consequence")
     elif conditions.resolve(rank, coef):
         covered.append("component_condition")
+    if damage_scaling.resolve(rank, coef):
+        covered.append("damage_scaling")
     if resources.resolve(rank, coef):
         covered.append("resource_event")
     if secondary_healing.resolve(rank, coef):
@@ -87,6 +93,7 @@ def load_remaining_phase6_semantics(
         "effects": SkillComponentEffectRelationshipRepository(path),
         "conditions": SkillComponentConditionRepository(path),
         "consequences": SkillComponentConditionalConsequenceRepository(path),
+        "damage_scaling": SkillComponentDamageScalingRepository(path),
         "resources": SkillComponentResourceEventRepository(path),
         "secondary_healing": SkillComponentSecondaryHealingRepository(path),
         "missing_health_healing": SkillComponentMissingHealthHealingRepository(path),
