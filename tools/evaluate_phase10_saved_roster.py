@@ -134,6 +134,12 @@ def main() -> int:
             f"  {audit.character_name or '(unnamed)'} | {audit.build_name or '(unnamed build)'} "
             f"| id={_identity(audit) or '(none)'} | effects={len(audit.resolved_effects)} | {state}"
         )
+        if audit.unresolved:
+            for message in audit.unresolved:
+                print(f"    UNRESOLVED: {message}")
+        if audit.boundaries:
+            for message in audit.boundaries:
+                print(f"    BOUNDARY: {message}")
 
     print()
     print("EXECUTION READINESS")
