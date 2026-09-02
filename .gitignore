@@ -38,6 +38,9 @@ build/
 # Local / generated data
 # ============================================================
 
+# Mutable per-user application state
+/user_data/
+
 # ESO database is intentionally local for now
 /data/eso.db
 eso.db.pre_gear_customizationq
