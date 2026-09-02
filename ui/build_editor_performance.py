@@ -64,9 +64,19 @@ def install() -> None:
     eligible.EligibleSkillBarRow.set_class = set_class_if_changed
 
     # Rebuilding a skill bar asks for the same icon many times, once per combo.
-    # QIcon is implicitly shared, so returning a cached instance is safe and
-    # avoids repeated filesystem probes and image construction.
-    eligible._icon_for_skill = lru_cache(maxsize=4096)(eligible._icon_for_skill)
+    # The skill records themselves are dicts and therefore cannot be passed
+    # directly to lru_cache. Cache by the stable texture string instead.
+    original_icon_for_skill = eligible._icon_for_skill
+
+    @lru_cache(maxsize=4096)
+    def icon_for_texture(texture: str):
+        return original_icon_for_skill({"texture": texture})
+
+    def cached_icon_for_skill(skill: dict):
+        texture = str(skill.get("texture", "") or "").strip()
+        return icon_for_texture(texture)
+
+    eligible._icon_for_skill = cached_icon_for_skill
 
     # ---- Persistent Edit widget ------------------------------------------
     def refresh_scribed_choices(editor, build) -> None:
