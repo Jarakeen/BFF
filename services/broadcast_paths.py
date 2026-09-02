@@ -14,7 +14,8 @@ class BroadcastPaths:
     This deliberately points at the application's current on-disk locations.
     Callers should depend on this object rather than constructing Broadcast
     paths themselves. A later migration can therefore move mutable state into
-    ``user_data/broadcast`` without rewriting every page and service.
+    ``user_data/broadcast`` and static Broadcast resources into
+    ``modules/broadcast/resources`` without rewriting every page and service.
     """
 
     current_broadcast: Path
@@ -27,6 +28,7 @@ class BroadcastPaths:
     marker_log: Path
     field_note_counter: Path
     session_archive_folder: Path
+    narrator_content: Path
 
     @classmethod
     def from_settings(cls, settings: Mapping[str, object]) -> "BroadcastPaths":
@@ -61,6 +63,9 @@ class BroadcastPaths:
             ),
             session_archive_folder=_configured_path(
                 settings, "SessionArchiveFolder", legacy_archive / "Sessions"
+            ),
+            narrator_content=_configured_path(
+                settings, "NarratorContentPath", DATA / "natural_history_narrator.json"
             ),
         )
 
