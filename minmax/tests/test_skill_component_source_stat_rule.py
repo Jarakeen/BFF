@@ -39,6 +39,24 @@ def test_twin_blade_accepts_color_tagged_literal_source():
     assert rows[0].amount == 1487
 
 
+def test_twin_blade_survives_raw_display_sentence_drift():
+    rows = extract_source_mapped_stat_rule(
+        skill_rank_id=5654,
+        coefficient_number=2,
+        raw_description=(
+            "With one of each weapon type equipped, gain an extra benefit. "
+            "Each mace increases your Offensive Penetration by <<2>>."
+        ),
+        coef_description=(
+            "Gain bonuses based on each weapon equipped: each axe increases Critical Damage. "
+            "Weapon bonuses are calculated independently. "
+            "Each mace increases your Offensive Penetration by |cffffff1487|r."
+        ),
+    )
+    assert len(rows) == 1
+    assert rows[0].amount == 1487
+
+
 def test_death_knell_preserves_threshold_amount_and_slot_requirement():
     rows = extract_source_mapped_stat_rule(
         skill_rank_id=7390,
