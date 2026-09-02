@@ -93,7 +93,10 @@ def extract_source_mapped_stat_rule(
     if raw_sentence is None:
         return ()
 
-    raw_lower = raw_sentence.casefold()
+    # UESP may preserve ESO color markup in both raw and coefficientized text.
+    # Normalize it on both sides before matching mechanics so source ownership is
+    # not lost merely because a numeric threshold is wrapped in |c......|r tags.
+    raw_lower = " ".join(_strip_color_tags(raw_sentence).split()).casefold()
     # UESP's raw and coefficientized strings do not always preserve identical
     # sentence boundaries. The raw sentence is therefore used only to prove slot
     # ownership; the distinctive literal-valued mechanic is located in the full
