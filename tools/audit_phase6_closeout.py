@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -45,6 +46,35 @@ def _has_trigger_signal(signals: tuple[str, ...]) -> bool:
     return "conditional_candidate" in signals or "temporal_proc_candidate" in signals
 
 
+def _is_phase7_cadence_only(fragment: str) -> bool:
+    """Return True for explicit repeat/state cadence with no extra Phase 6 rule.
+
+    These shapes already identify the component itself. What remains is when the
+    repeated tick occurs or while an active field/summon exists, which Phase 7 owns.
+    """
+
+    text = " ".join(str(fragment or "").split()).casefold()
+    patterns = (
+        r"\bcalls\s+upon\b[^.;]{0,100}?\bevery\s+\d+(?:\.\d+)?\s+seconds?\b",
+        r"\bwhile\s+the\s+field\s+grows\b[^.;]{0,140}?\bevery\s+\d+(?:\.\d+)?\s+seconds?\b",
+        r"\bsmashes?\b[^.;]{0,80}?\b\d+\s+times?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b[^.;]{0,120}?\bwith\s+each\s+smash\b",
+    )
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+
+def _neighbor_owns_interrupt_immunity(fragment: str, coefficient_number: int) -> bool:
+    """Detect utility wording explicitly owned by a later shield component."""
+
+    text = " ".join(str(fragment or "").split()).casefold()
+    current = rf"\${int(coefficient_number)}(?!\d)"
+    return re.search(
+        rf"{current}[^.;]{{0,160}}?\bdamage\b[^.;]{{0,180}}?\bdamage\s+shield\b"
+        rf"[^.;]{{0,120}}?\$\d+(?!\d)[^.;]{{0,100}}?\binterrupt\s+immunity\b",
+        text,
+        re.IGNORECASE,
+    ) is not None
+
+
 def _closeout_status(item) -> tuple[str, str]:
     gap = item.gap
 
@@ -62,6 +92,12 @@ def _closeout_status(item) -> tuple[str, str]:
 
     if gap.disposition != "richer_component_semantics":
         return "NEEDS_PHASE6_REVIEW", f"unrecognized remaining disposition: {gap.disposition}"
+
+    if _is_phase7_cadence_only(gap.fragment):
+        return "PHASE7_BOUNDARY", "component identity is known; remaining repeat/state cadence belongs to Phase 7"
+
+    if _neighbor_owns_interrupt_immunity(gap.fragment, gap.coefficient_number):
+        return "OWNERSHIP_NEGATIVE", "interrupt immunity belongs to the neighboring shield component"
 
     evidence = extract_component_text_evidence(gap.fragment, gap.coefficient_number)
     richer = richer_category(gap.fragment, gap.coefficient_number, evidence.effect_kind)
