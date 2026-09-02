@@ -22,13 +22,56 @@ obs = obslua
 -- FILE PATHS
 -- ==========================================================
 
-local BROADCAST_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\CurrentBroadcast.json]]
+local function trim(value)
+    return (value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+end
 
-local COUNTER_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\FieldNoteCounter.txt]]
+local function path_join(base, child)
+    if not base or base == "" then
+        return child
+    end
 
-local WEATHER_FOLDER = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\Weather\]]
+    if base:sub(-1) == "\\" or base:sub(-1) == "/" then
+        return base .. child
+    end
 
-local MARKER_LOG_FILE = [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\MarkerLog.md]]
+    return base .. "\\" .. child
+end
+
+local function default_data_folder()
+    return path_join(script_path(), "..\\data")
+end
+
+local broadcast_state_folder = default_data_folder()
+local broadcast_resource_folder = default_data_folder()
+
+local BROADCAST_FILE = ""
+local COUNTER_FILE = ""
+local WEATHER_FOLDER = ""
+local MARKER_LOG_FILE = ""
+local CHECK_FOLDER = ""
+
+local function configure_paths(state_folder, resource_folder)
+    local state = trim(state_folder)
+    local resources = trim(resource_folder)
+
+    if state == "" then
+        state = default_data_folder()
+    end
+    if resources == "" then
+        resources = default_data_folder()
+    end
+
+    broadcast_state_folder = state
+    broadcast_resource_folder = resources
+    BROADCAST_FILE = path_join(state, "CurrentBroadcast.json")
+    COUNTER_FILE = path_join(state, "FieldNoteCounter.txt")
+    MARKER_LOG_FILE = path_join(state, "MarkerLog.md")
+    WEATHER_FOLDER = path_join(resources, "Weather") .. "\\"
+    CHECK_FOLDER = resources .. (resources:sub(-1) == "\\" and "" or "\\")
+end
+
+configure_paths(broadcast_state_folder, broadcast_resource_folder)
 
 
 -- ==========================================================
@@ -398,10 +441,6 @@ end
 -- ==========================================================
 -- CHECKBOX IMAGES
 -- ==========================================================
-
-local CHECK_FOLDER =
-    [[C:\Users\nourg\OneDrive\Desktop\BFF\40_Stream Studio\OBS\Scripts\FoundryDock\data\]]
-
 
 local function set_checkbox(
     source_name,
@@ -989,6 +1028,9 @@ Black Feather Foundry
 Reads CurrentBroadcast.json and updates
 the Foundry OBS overlay.
 
+Broadcast state and resource folders are configurable,
+so the script does not depend on a machine-specific path.
+
 Updates once per second.
 ]]
 
@@ -1007,6 +1049,18 @@ function script_defaults(settings)
         true
     )
 
+    obs.obs_data_set_default_string(
+        settings,
+        "broadcast_state_folder",
+        default_data_folder()
+    )
+
+    obs.obs_data_set_default_string(
+        settings,
+        "broadcast_resource_folder",
+        default_data_folder()
+    )
+
 end
 
 
@@ -1018,6 +1072,24 @@ function script_properties()
 
     local props =
         obs.obs_properties_create()
+
+    obs.obs_properties_add_path(
+        props,
+        "broadcast_state_folder",
+        "Broadcast State Folder",
+        obs.OBS_PATH_DIRECTORY,
+        nil,
+        nil
+    )
+
+    obs.obs_properties_add_path(
+        props,
+        "broadcast_resource_folder",
+        "Broadcast Resource Folder",
+        obs.OBS_PATH_DIRECTORY,
+        nil,
+        nil
+    )
 
     obs.obs_properties_add_bool(
         props,
@@ -1042,6 +1114,11 @@ function script_update(settings)
             "auto_chapters"
         )
 
+    configure_paths(
+        obs.obs_data_get_string(settings, "broadcast_state_folder"),
+        obs.obs_data_get_string(settings, "broadcast_resource_folder")
+    )
+
 end
 
 
@@ -1053,6 +1130,11 @@ function script_load(settings)
 
     print(
         ">>> FOUNDRY SCRIPT_LOAD <<<"
+    )
+
+    configure_paths(
+        obs.obs_data_get_string(settings, "broadcast_state_folder"),
+        obs.obs_data_get_string(settings, "broadcast_resource_folder")
     )
 
     obs.timer_add(
