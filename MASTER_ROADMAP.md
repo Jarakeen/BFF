@@ -606,11 +606,30 @@ Phase 8 owns **state projection**, not action planning. It should answer what is
 ---
 
 # PHASE 9 · Encounter Model
-**Status: 🟡**
+**Status: 🟢 Complete**
 
-Mature the existing encounter framework into structured phases, bosses, mechanics, requirements, positioning, timers, state transitions, targets, damage windows, and evidence.
+Phase 9 matures the encounter framework into a deterministic, source-backed model for bosses, mechanics, phases, requirements, positioning demands, timers, transitions, target-count constraints, add groups, damage windows, and reconciled evidence.
 
-**Exit criteria:** BFF understands what an encounter actually demands.
+## Closeout evidence
+
+- focused Phase 9 regression checkpoint: **23 passed in 3.94s**
+- encounter corpus audited: **490 encounters**
+- mechanics represented: **35 encounters**
+- phases represented: **2 encounters**
+- requirements represented: **21 encounters**
+- positioning constraints represented: **12 encounters**
+- temporal evidence represented: **4 encounters**
+- transition evidence represented: **6 encounters**
+- target constraints represented: **3 encounters**
+- reconciled evidence represented: **8 encounters**
+- explicit add-group evidence represented: **1 encounter**
+- explicit damage-window evidence represented: **1 encounter**
+
+Low coverage is an enrichment gap, not a negative claim about the live encounter. Missing and conflicting evidence remains explicit rather than guessed.
+
+Detailed closeout: `docs/phase9_encounter_model_closeout.md`.
+
+**Exit criteria met on 2026-09-02.** BFF understands what an encounter explicitly demands from available structured evidence and provides stable unresolved boundaries where evidence is absent or conflicting.
 
 ---
 
