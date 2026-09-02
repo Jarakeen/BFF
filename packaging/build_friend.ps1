@@ -1,3 +1,7 @@
+param(
+    [switch]$IncludeBroadcast
+)
+
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
@@ -74,6 +78,26 @@ Get-ChildItem -Path $SourceDataDir -File |
     } |
     Copy-Item -Destination $DataRoot -Force
 
+# Broadcast is a real optional payload. The core friend build deliberately
+# omits modules/broadcast, so the runtime manifest gate disables all Broadcast
+# pages and startup work automatically. Use -IncludeBroadcast to ship it.
+if ($IncludeBroadcast) {
+    $SourceBroadcastModule = Join-Path $ProjectRoot "modules\broadcast"
+    $TargetModulesRoot = Join-Path $PackageRoot "modules"
+    $TargetBroadcastModule = Join-Path $TargetModulesRoot "broadcast"
+
+    if (-not (Test-Path (Join-Path $SourceBroadcastModule "manifest.json"))) {
+        throw "Broadcast module manifest not found: $SourceBroadcastModule"
+    }
+
+    New-Item -ItemType Directory -Force -Path $TargetModulesRoot | Out-Null
+    Copy-Item $SourceBroadcastModule $TargetBroadcastModule -Recurse -Force
+    Write-Host "Broadcast module: INCLUDED"
+}
+else {
+    Write-Host "Broadcast module: omitted"
+}
+
 # Use UTF-8 without BOM so Python's JSON loader behaves identically in Windows
 # PowerShell 5 and PowerShell 7.
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -84,7 +108,10 @@ $CleanBuildsPath = Join-Path $DataRoot "builds.json"
 [System.IO.File]::WriteAllText($CleanBuildsPath, '{"Members": []}', $Utf8NoBom)
 
 # Ship clean portable settings rather than allowing workstation-specific
-# developer defaults to leak into a tester build.
+# developer defaults to leak into a tester build. Broadcast-specific keys may
+# remain here for backwards compatibility; without the Broadcast manifest they
+# are inert, and when the module is included BroadcastPaths translates legacy
+# data paths into user_data/broadcast and modules/broadcast/resources.
 $FriendSettings = @'
 {
   "EsoLogsClientId": "",
@@ -137,5 +164,6 @@ Write-Host ""
 Write-Host "Folder: $PackageRoot"
 Write-Host "Executable: $(Join-Path $PackageRoot 'BFF.exe')"
 Write-Host "Zip to send: $ZipPath"
+Write-Host "Broadcast: $(if ($IncludeBroadcast) { 'included' } else { 'omitted' })"
 Write-Host ""
 Write-Host "Run BFF.exe from the extracted folder; keep the data folder beside it."
