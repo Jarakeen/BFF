@@ -1,6 +1,7 @@
 # services/google_sheets_service.py
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 # The ~50 tabs in the BFF achievement tracker that share the same layout:
@@ -33,6 +34,25 @@ COLUMN_FOR_PERSON = {"Rylo": 1, "Jarakeen": 2}  # 1-indexed: column A / column B
 
 NAME_COL = 3
 POINTS_COL = 6
+
+
+@dataclass(frozen=True)
+class GoogleSheetAchievementStatus:
+    tab_name: str
+    row_number: int
+    name: str
+    checked: bool
+
+
+@dataclass(frozen=True)
+class GoogleSheetAchievementSnapshot:
+    person: str
+    rows: tuple[GoogleSheetAchievementStatus, ...]
+    missing_tabs: tuple[str, ...]
+
+    @property
+    def checked_rows(self) -> tuple[GoogleSheetAchievementStatus, ...]:
+        return tuple(row for row in self.rows if row.checked)
 
 
 class GoogleSheetsNotConfigured(Exception):
@@ -68,6 +88,64 @@ class GoogleSheetsService:
 
         self._client = gspread.service_account(filename=str(self.credentials_path))
         self._spreadsheet = self._client.open_by_key(self.spreadsheet_id)
+
+    @staticmethod
+    def _is_checked(value: str) -> bool:
+        return str(value or "").strip().casefold() in {"x", "✓", "✔", "yes", "true", "1"}
+
+    @staticmethod
+    def _validate_person(person: str) -> str:
+        person = str(person or "").strip()
+        if person not in COLUMN_FOR_PERSON:
+            allowed = ", ".join(COLUMN_FOR_PERSON)
+            raise ValueError(f"Unknown Google Sheets person {person!r}; expected one of: {allowed}.")
+        return person
+
+    def read_achievement_statuses(self, person: str, progress_callback=None) -> GoogleSheetAchievementSnapshot:
+        """Bulk-read achievement checkmarks for one person.
+
+        Each worksheet is fetched once. This is deliberately separate from
+        ``get_status`` so a full import does not make one network call per
+        achievement. Missing configured tabs are reported rather than guessed.
+        """
+        person = self._validate_person(person)
+        self._ensure_connected()
+        col = COLUMN_FOR_PERSON[person]
+        rows: list[GoogleSheetAchievementStatus] = []
+        missing_tabs: list[str] = []
+        self._index.clear()
+
+        for i, tab_name in enumerate(ACHIEVEMENT_TABS):
+            if progress_callback:
+                progress_callback(i + 1, len(ACHIEVEMENT_TABS), tab_name)
+            try:
+                worksheet = self._spreadsheet.worksheet(tab_name)
+            except Exception:
+                missing_tabs.append(tab_name)
+                continue
+
+            values = worksheet.get_all_values()
+            for row_num, row in enumerate(values, start=1):
+                name = row[NAME_COL - 1].strip() if len(row) >= NAME_COL else ""
+                points = row[POINTS_COL - 1].strip() if len(row) >= POINTS_COL else ""
+                if not (name and points):
+                    continue
+                mark = row[col - 1] if len(row) >= col else ""
+                rows.append(
+                    GoogleSheetAchievementStatus(
+                        tab_name=tab_name,
+                        row_number=row_num,
+                        name=name,
+                        checked=self._is_checked(mark),
+                    )
+                )
+                self._index[name] = (tab_name, row_num)
+
+        return GoogleSheetAchievementSnapshot(
+            person=person,
+            rows=tuple(rows),
+            missing_tabs=tuple(missing_tabs),
+        )
 
     def build_index(self, progress_callback=None) -> int:
         """Scan every achievement tab and index each achievement row by name.
@@ -106,9 +184,9 @@ class GoogleSheetsService:
         tab_name, row_num = location
         self._ensure_connected()
         worksheet = self._spreadsheet.worksheet(tab_name)
-        col = COLUMN_FOR_PERSON[person]
+        col = COLUMN_FOR_PERSON[self._validate_person(person)]
         value = worksheet.cell(row_num, col).value or ""
-        return value.strip().lower() == "x"
+        return self._is_checked(value)
 
     def set_status(self, achievement_name: str, person: str, checked: bool) -> bool:
         """Writes/clears the checkmark for one person on one achievement.
@@ -120,6 +198,6 @@ class GoogleSheetsService:
         tab_name, row_num = location
         self._ensure_connected()
         worksheet = self._spreadsheet.worksheet(tab_name)
-        col = COLUMN_FOR_PERSON[person]
+        col = COLUMN_FOR_PERSON[self._validate_person(person)]
         worksheet.update_cell(row_num, col, "X" if checked else "")
         return True
