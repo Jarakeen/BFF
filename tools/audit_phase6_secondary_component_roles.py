@@ -44,6 +44,11 @@ _ADDITIONAL_HEAL_RE = re.compile(
     r"\badditional(?:ly)?\b[^.;]{0,80}?\$(?P<number>\d+)(?!\d)(?:\s+health)?\b",
     re.IGNORECASE,
 )
+_TRIGGERED_ADDON_RE = re.compile(
+    r"\b(?:causes?|causing|your\s+next|fully-charged|light\s+and\s+heavy\s+attacks?|heavy\s+attacks?)\b",
+    re.IGNORECASE,
+)
+_ONCE_EVERY_RE = re.compile(r"\bonce\s+every\b", re.IGNORECASE)
 
 
 def _numbers(pattern: re.Pattern[str], text: str) -> set[int]:
@@ -55,6 +60,8 @@ def secondary_role_category(fragment: str, coefficient_number: int, effect_kind:
     number = int(coefficient_number)
 
     if number in _numbers(_ADDITIONAL_DAMAGE_RE, text) and effect_kind == "damage":
+        if _TRIGGERED_ADDON_RE.search(text) or _ONCE_EVERY_RE.search(text):
+            return "phase7_triggered_additional_damage"
         return "explicit_additional_damage"
     if number in _numbers(_THEN_DAMAGE_RE, text) and effect_kind == "damage":
         return "explicit_followup_damage"
@@ -116,7 +123,7 @@ def main() -> int:
     print("\nCATEGORIES")
     for category, count in counts.most_common():
         print(f"  {category:32} {count}")
-    print("\nNOTE: audit only; no component-role mechanics are written.")
+    print("\nNOTE: audit only; trigger/cadence semantics remain Phase 7 boundaries.")
 
     ordered = sorted(rows, key=lambda row: (row.category, row.skill_rank_id, row.coefficient_number))
     for row in ordered[: max(0, args.samples)]:
