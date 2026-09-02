@@ -35,6 +35,11 @@ def test_secondary_wording_without_known_damage_kind_stays_candidate():
     assert detail_category(row) == "secondary_wording_candidate"
 
 
+def test_status_wording_is_case_insensitive():
+    row = _row("Apply the Chilled status effect.", effect_kind=None)
+    assert detail_category(row) == "named_or_status_effect_wording"
+
+
 def test_signal_only_row_remains_visible():
     row = _row("Special unresolved behavior.", effect_kind=None, signals=("healing_candidate",))
     assert detail_category(row) == "signal_only_candidate"
