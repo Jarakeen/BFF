@@ -135,22 +135,29 @@ def effective_runtime_effect_windows(
     behavior: StackingBehavior,
     at_time_seconds: float,
 ) -> RuntimeEffectStackingResult:
-    """Resolve effective windows at one time from already-applied runtime state."""
+    """Resolve effective windows at one time from already-applied runtime state.
+
+    Query results preserve caller order across independent effect scopes. Within
+    one HIGHEST_ONLY scope, magnitude decides the effective contributor; stable
+    caller order is not gameplay evidence and is therefore used only to present
+    the already-resolved result without gratuitously reordering unrelated effects.
+    """
 
     candidates = [window for window in windows if window.is_active_at(at_time_seconds)]
     if behavior in {StackingBehavior.STACKS, StackingBehavior.UNIQUE}:
-        return RuntimeEffectStackingResult(retained=order_runtime_effect_windows(candidates))
+        return RuntimeEffectStackingResult(retained=tuple(candidates))
 
     groups: dict[tuple[str, str | None], list[RuntimeEffectActiveWindow]] = {}
     for window in candidates:
         groups.setdefault((window.effect_name, window.target), []).append(window)
 
-    retained: list[RuntimeEffectActiveWindow] = []
+    chosen_ids: set[int] = set()
+    superseded_ids: set[int] = set()
     unresolved: list[str] = []
-    superseded: list[RuntimeEffectActiveWindow] = []
+
     for group in groups.values():
         if len(group) == 1:
-            retained.extend(group)
+            chosen_ids.add(id(group[0]))
             continue
         if any(window.magnitude is None for window in group):
             unresolved.append("magnitude_required_for_highest_only")
@@ -169,11 +176,11 @@ def effective_runtime_effect_windows(
                 window.source,
             ),
         )
-        retained.append(chosen)
-        superseded.extend(window for window in group if window is not chosen)
+        chosen_ids.add(id(chosen))
+        superseded_ids.update(id(window) for window in group if window is not chosen)
 
     return RuntimeEffectStackingResult(
-        retained=order_runtime_effect_windows(retained),
-        superseded=order_runtime_effect_windows(superseded),
+        retained=tuple(window for window in candidates if id(window) in chosen_ids),
+        superseded=tuple(window for window in candidates if id(window) in superseded_ids),
         unresolved=tuple(dict.fromkeys(unresolved)),
     )
