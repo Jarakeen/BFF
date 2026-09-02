@@ -63,6 +63,32 @@ def test_runic_embrace_neighbor_scaling_is_ownership_negative():
     assert "neighboring heal" in reason
 
 
+def test_signal_only_multi_heal_is_classification_cleanup():
+    gap = _gap(
+        signals=("healing_candidate",),
+        fragment=(
+            "Once summoned, you can activate the twilight matriarch's special ability, "
+            "causing it to heal 2 friendly targets for $1 and itself for $2."
+        ),
+    )
+    status, reason = audit._closeout_status(_item(gap))
+    assert status == "CLASSIFICATION_CLEANUP"
+    assert reason == "multi_heal_classification_gap"
+
+
+def test_signal_only_attack_triggered_heal_is_phase7_boundary():
+    gap = _gap(
+        signals=("healing_candidate", "conditional_candidate"),
+        fragment=(
+            "While transformed, your damaging Light Attacks restore $1 Health and "
+            "your fully-charged Heavy Attacks restore $2 Health."
+        ),
+    )
+    status, reason = audit._closeout_status(_item(gap))
+    assert status == "PHASE7_BOUNDARY"
+    assert reason == "phase7_attack_triggered_heal"
+
+
 def test_summary_counts_review_rows_separately():
     rows = (
         audit.Phase6CloseoutRow(1, 1, 10, "A", "x", "CLASSIFICATION_CLEANUP", "cleanup", (), ""),
