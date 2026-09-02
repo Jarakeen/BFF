@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 from services.encounter_interrupt_method_audit import audit_encounter_interrupt_methods
 from services.encounter_repository import EncounterRepository
 from services.encounter_service import EncounterService
+from services.eso_combat_rules import STANDARD_INTERRUPT
 
 
 def main() -> int:
@@ -39,9 +40,13 @@ def main() -> int:
             print(f"  {row.encounter_id}: requirements={row.interrupt_requirement_count}")
 
     print()
+    print("GLOBAL RULE")
+    print(f"{STANDARD_INTERRUPT.rule_id}: {STANDARD_INTERRUPT.statement}")
+    print(f"Source: {STANDARD_INTERRUPT.source_name}")
+    print()
     print("BOUNDARY")
-    print("An interruptible mechanic is not treated as proof that bash or a player skill works.")
-    print("Ranged interrupt is not required unless explicit evidence says so.")
+    print("Encounter-specific interrupt evidence overrides the global core-bash rule.")
+    print("Ranged interrupt is not required unless explicit encounter evidence says so.")
     return 0
 
 
