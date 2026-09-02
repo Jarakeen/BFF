@@ -35,7 +35,6 @@ BROADCAST_NAV_SECTION = {"label": "Broadcast", "children": [
 
 CORE_NAV_SECTIONS = [
     ("Achievements", "achievements", "header"),
-    ("Progress Import", "achievement_progress_import"),
     {"label": "Collections", "children": [
         ("Mounts", "collectibles:Mounts"), ("Pets", "collectibles:Pets"),
         ("Allies / Assistants", "collectibles:Allies / Assistants"), ("Houses", "collectibles:Houses"),
