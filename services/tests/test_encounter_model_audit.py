@@ -31,6 +31,11 @@ def test_model_audit_reports_structured_phase9_domains_without_inference():
     assert taleria.transition_fact_count > 0
     assert taleria.evidence_fact_count > 0
 
+    archcustodian = by_id["archcustodian"]
+    assert archcustodian.add_group_fact_count == 1
+    assert archcustodian.damage_window_fact_count == 1
+    assert archcustodian.evidence_fact_count == 2
+
     assert audit.encounters_with_mechanics > 0
     assert audit.encounters_with_requirements > 0
     assert audit.encounters_with_positioning_constraints > 0
@@ -38,6 +43,8 @@ def test_model_audit_reports_structured_phase9_domains_without_inference():
     assert audit.encounters_with_transition_evidence > 0
     assert audit.encounters_with_target_constraints > 0
     assert audit.encounters_with_evidence > 0
+    assert audit.encounters_with_add_group_evidence > 0
+    assert audit.encounters_with_damage_window_evidence > 0
 
 
 def test_model_audit_counts_explicit_add_group_and_damage_window_facts(tmp_path):
