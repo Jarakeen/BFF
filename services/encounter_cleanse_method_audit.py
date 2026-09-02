@@ -20,6 +20,7 @@ class EncounterCleanseMethodAuditRow:
     unresolved_method_count: int
     conflicting_method_count: int
     encounter_interaction_count: int
+    core_action_count: int
     player_build_method_count: int
 
     @property
@@ -59,6 +60,10 @@ class EncounterCleanseMethodAudit:
         return sum(row.encounter_interaction_count for row in self.rows)
 
     @property
+    def core_action_count(self) -> int:
+        return sum(row.core_action_count for row in self.rows)
+
+    @property
     def player_build_method_count(self) -> int:
         return sum(row.player_build_method_count for row in self.rows)
 
@@ -94,6 +99,10 @@ def audit_encounter_cleanse_methods(service: EncounterService) -> EncounterClean
                 ),
                 encounter_interaction_count=sum(
                     method.method == CleanseMethod.ENCOUNTER_INTERACTION
+                    for method in resolved
+                ),
+                core_action_count=sum(
+                    method.method == CleanseMethod.CORE_ACTION
                     for method in resolved
                 ),
                 player_build_method_count=sum(
