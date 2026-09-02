@@ -11,6 +11,14 @@ from services.encounter_cleanse_method import (
     EncounterCleanseMethod,
     EncounterCleanseMethodService,
 )
+from services.encounter_execution_evaluation import (
+    EncounterExecutionEvaluation,
+    EncounterExecutionEvaluator,
+)
+from services.encounter_interrupt_method import (
+    EncounterInterruptMethod,
+    EncounterInterruptMethodService,
+)
 from services.encounter_requirement_evaluation import (
     EncounterRequirementEvaluation,
     EncounterRequirementEvaluator,
@@ -23,10 +31,12 @@ from services.saved_build_capability_service import SavedBuildCapabilityAudit
 
 @dataclass(frozen=True)
 class EncounterRosterEvaluationReport:
-    """Combined requirement result plus source-backed mechanic method detail."""
+    """Combined provider, execution, and source-backed mechanic-method results."""
 
     requirement_evaluation: EncounterRequirementEvaluation
+    execution_evaluation: EncounterExecutionEvaluation
     cleanse_methods: tuple[EncounterCleanseMethod, ...]
+    interrupt_methods: tuple[EncounterInterruptMethod, ...]
 
     @property
     def encounter_id(self) -> str:
@@ -34,10 +44,12 @@ class EncounterRosterEvaluationReport:
 
     @property
     def results(self) -> tuple[RequirementEvaluation, ...]:
+        """Backward-compatible raw requirement classifications."""
         return self.requirement_evaluation.results
 
     @property
     def unknown(self) -> tuple[RequirementEvaluation, ...]:
+        """Backward-compatible raw requirement UNKNOWN rows."""
         return self.requirement_evaluation.unknown
 
     @property
@@ -49,24 +61,44 @@ class EncounterRosterEvaluationReport:
         return self.requirement_evaluation.satisfied
 
     @property
+    def provider_results(self) -> tuple[RequirementEvaluation, ...]:
+        """Requirements whose final state must come from roster/provider evidence.
+
+        Generic compliance rows are excluded because the execution evaluator owns
+        their final handling readiness. Unknown requirement semantics remain here
+        so unsupported requirement types cannot disappear from the overall result.
+        """
+        return tuple(
+            row
+            for row in self.requirement_evaluation.results
+            if row.semantics != RequirementSemantics.COMPLIANCE
+        )
+
+    @property
     def is_fully_evaluable(self) -> bool:
-        return self.requirement_evaluation.is_fully_evaluable
+        provider_evaluable = all(
+            row.classification.value != "unknown"
+            for row in self.provider_results
+        )
+        return provider_evaluable and self.execution_evaluation.is_fully_evaluable
 
     @property
     def is_fully_covered(self) -> bool:
-        return self.requirement_evaluation.is_fully_covered
+        provider_covered = all(row.is_satisfied for row in self.provider_results)
+        return (
+            self.is_fully_evaluable
+            and provider_covered
+            and self.execution_evaluation.is_fully_ready
+        )
 
 
 class EncounterRosterEvaluator:
-    """Compose Phase 9 requirements with existing saved-build capability audits.
+    """Compose Phase 9 demands with saved-build and execution capability evidence.
 
     This orchestrator does not assign providers or invent capability mappings.
-    The adapter owns exact identity recognition; the requirement evaluator owns
-    coverage classification. Canonical character identity is used for roster
-    membership so display-name changes cannot create or erase provider evidence.
-
-    Cleanse method detail is attached separately so a generic ``cleanse`` demand
-    cannot be mistaken for proof that a player cleanse skill is the required method.
+    Canonical character identity is used for roster membership. Provider coverage,
+    build-independent execution readiness, cleanse methods, and interrupt methods
+    are returned together so callers do not have to reinterpret generic mechanics.
     """
 
     def __init__(
@@ -77,7 +109,9 @@ class EncounterRosterEvaluator:
         self._encounter_service = encounter_service
         self._adapter = build_capability_adapter
         self._evaluator = EncounterRequirementEvaluator(encounter_service)
+        self._execution_evaluator = EncounterExecutionEvaluator(encounter_service)
         self._cleanse_methods = EncounterCleanseMethodService(encounter_service)
+        self._interrupt_methods = EncounterInterruptMethodService(encounter_service)
 
     def evaluate_saved_build_audits(
         self,
@@ -107,5 +141,7 @@ class EncounterRosterEvaluator:
         )
         return EncounterRosterEvaluationReport(
             requirement_evaluation=requirement_evaluation,
+            execution_evaluation=self._execution_evaluator.evaluate(encounter_id),
             cleanse_methods=self._cleanse_methods.methods(encounter_id),
+            interrupt_methods=self._interrupt_methods.methods(encounter_id),
         )
