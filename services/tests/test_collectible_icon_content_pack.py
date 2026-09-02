@@ -29,7 +29,19 @@ def test_collectible_icon_pack_is_optional(tmp_path: Path) -> None:
     ) == packs / "collectible_icons"
 
 
-def test_collectible_icon_pack_wins_over_legacy_cache(tmp_path: Path) -> None:
+def test_runtime_resolver_never_falls_back_to_legacy_data_cache(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    packs = tmp_path / "content_packs"
+    legacy_image = _write_manifest(data_dir / "collectible_icons", collectible_id="42")
+
+    resolved = resolve_collectible_icons_root(data_dir, content_packs_root=packs)
+
+    assert resolved == packs / "collectible_icons"
+    assert legacy_image.exists()
+    assert not (resolved / "manifest.json").exists()
+
+
+def test_collectible_icon_pack_is_canonical_when_installed(tmp_path: Path) -> None:
     data_dir = tmp_path / "data"
     packs = tmp_path / "content_packs"
     legacy_image = _write_manifest(data_dir / "collectible_icons", collectible_id="42")
@@ -43,8 +55,8 @@ def test_collectible_icon_pack_wins_over_legacy_cache(tmp_path: Path) -> None:
 
 
 def test_catalog_remains_usable_when_pack_is_absent(tmp_path: Path, monkeypatch) -> None:
-    # Existing catalog behavior remains safe when there is neither a pack nor
-    # a legacy cache: metadata pages can render with no thumbnails.
+    # Existing catalog behavior remains safe when there is no installed pack:
+    # metadata pages can render with no thumbnails.
     from services import collectible_icon_catalog as catalog_module
 
     empty_packs = tmp_path / "packs"
