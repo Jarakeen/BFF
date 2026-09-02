@@ -27,10 +27,18 @@ class SavedBuildCapabilityAudit:
     conditional_sources: tuple[str, ...] = ()
     boundaries: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+    # None preserves conservative behavior for legacy/synthetic callers that
+    # have not classified unresolved evidence. Production audits populate this
+    # with only gaps that could change the resolved support-effect inventory.
+    capability_unresolved: tuple[str, ...] | None = None
 
     @property
     def resolved(self) -> bool:
         return bool(self.character_id) and not self.unresolved
+
+    @property
+    def capability_resolution_gaps(self) -> tuple[str, ...]:
+        return self.unresolved if self.capability_unresolved is None else self.capability_unresolved
 
 
 class SavedBuildCapabilityService:
@@ -38,6 +46,13 @@ class SavedBuildCapabilityService:
 
     This service reports evidence rather than inventing uptime. Intentional
     static/temporal boundaries are separated from genuine unresolved evidence.
+
+    ``unresolved`` remains the complete build-calculation audit. The narrower
+    ``capability_unresolved`` collection contains only source-resolution gaps
+    that could alter the support-effect inventory itself (unresolved slotted
+    skills, gear sets, or potion formulas/effects). A missing passive rank may
+    still matter to stat math without making every unrelated support capability
+    unknowable.
     """
 
     TWO_PIECE_WEAPON_MARKERS = (
@@ -214,6 +229,7 @@ class SavedBuildCapabilityService:
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
         unresolved: list[str] = []
+        capability_unresolved: list[str] = []
         boundaries: list[str] = []
         sources: list[str] = []
         effects: list[EffectVariant] = []
@@ -238,12 +254,18 @@ class SavedBuildCapabilityService:
             except Exception as exc:
                 unresolved.append(f"{active_bar} static build resolution failed: {exc}")
 
-            bar_skill_effects = self._skill_variants(build, active_bar, unresolved)
+            skill_gaps: list[str] = []
+            bar_skill_effects = self._skill_variants(build, active_bar, skill_gaps)
+            unresolved.extend(skill_gaps)
+            capability_unresolved.extend(skill_gaps)
             if bar_skill_effects:
                 sources.append(f"{active_bar}:skills")
                 effects.extend(bar_skill_effects)
 
-            bar_gear_effects = self._gear_variants(build, active_bar, unresolved)
+            gear_gaps: list[str] = []
+            bar_gear_effects = self._gear_variants(build, active_bar, gear_gaps)
+            unresolved.extend(gear_gaps)
+            capability_unresolved.extend(gear_gaps)
             if bar_gear_effects:
                 sources.append(f"{active_bar}:gear")
                 effects.extend(bar_gear_effects)
@@ -252,6 +274,7 @@ class SavedBuildCapabilityService:
         if potion_name:
             potion = self.potions.resolve(potion_name)
             unresolved.extend(potion.unresolved)
+            capability_unresolved.extend(potion.unresolved)
             if potion.effects:
                 sources.append("potion:availability")
                 effects.extend(potion.effects)
@@ -285,6 +308,9 @@ class SavedBuildCapabilityService:
             conditional_sources=conditional,
             boundaries=tuple(dict.fromkeys(message for message in boundaries if message)),
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
+            capability_unresolved=tuple(
+                dict.fromkeys(message for message in capability_unresolved if message)
+            ),
         )
 
     def audit_roster(self) -> tuple[SavedBuildCapabilityAudit, ...]:
