@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-"""Color-vision support for Encounters > Mechanics tactical mapping board."""
+"""Color-vision and Raid Map UX support for Encounters tactical mapping."""
+
+import json
+import shutil
+from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QBrush, QPen
-from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtGui import QColor, QBrush, QPen, QPixmap
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from services.accessibility_preferences import (
     AccessibilityPreferences,
@@ -59,7 +70,7 @@ ZONE_LINE_STYLES = {
 
 
 def install() -> None:
-    """Install a persistent Standard/Colorblind Friendly board mode."""
+    """Install Raid Map naming, uploads, and persistent color-vision support."""
     global _INSTALLED
     if _INSTALLED:
         return
@@ -72,6 +83,8 @@ def install() -> None:
     original_add_token = board.EncounterBoard._add_token
     original_add_zone = board.EncounterBoard._add_zone
     original_zone_paint = board.EncounterZone.paint
+    original_save_state = board.EncounterBoard.save_state
+    original_load_state = board.EncounterBoard.load_state
 
     def palette_for(mode: str):
         if mode == COLOR_VISION_FRIENDLY:
@@ -132,24 +145,161 @@ def install() -> None:
         self.view.setToolTip("Drag markers and circle zones to position them. Use the mouse wheel to zoom.")
 
         help_text = {
-            "+ Tank": "Add a tank marker to the tactical board.",
-            "+ Healer": "Add a healer marker to the tactical board.",
-            "+ DD": "Add a damage-dealer marker or DD stack to the tactical board.",
-            "+ Portal": "Add a portal marker to the tactical board.",
-            "+ AOE": "Add an AOE marker to the tactical board.",
-            "+ Stack": "Add a stack-point marker to the tactical board.",
+            "+ Tank": "Add a tank marker to Raid Map.",
+            "+ Healer": "Add a healer marker to Raid Map.",
+            "+ DD": "Add a damage-dealer marker or DD stack to Raid Map.",
+            "+ Portal": "Add a portal marker to Raid Map.",
+            "+ AOE": "Add an AOE marker to Raid Map.",
+            "+ Stack": "Add a stack-point marker to Raid Map.",
             "Delete Selected": "Remove the currently selected marker or circle zone.",
-            "Fit Arena": "Fit the entire encounter arena in the visible board area.",
+            "Fit Arena": "Fit the entire Raid Map in the visible board area.",
             "+ Circle Zone": "Add a resizable circle zone using the selected type and radius.",
-            "Save Layout": "Save the current editable encounter layout.",
-            "Capture Positioning": "Capture the board image used by the Assignments positioning preview.",
+            "Upload Map": "Import a PNG, JPG, JPEG, or WebP image as the Raid Map background.",
+            "Replace Map": "Replace the current Raid Map background image.",
+            "Remove Map": "Remove the uploaded background and return to the built-in blank arena.",
+            "Save Layout": "Save the current editable Raid Map layout and background reference.",
+            "Capture Positioning": "Capture the Raid Map image used by the Assignments positioning preview.",
         }
         for text, tooltip in help_text.items():
             button = _button_by_text(self, text)
             if button is not None:
                 button.setToolTip(tooltip)
 
+    def _raid_map_dir(self) -> Path:
+        path = self.data_dir / "raid_maps"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def _background_relative_path(self) -> str:
+        path = getattr(self, "_raid_map_background_path", None)
+        if not path:
+            return ""
+        try:
+            return str(Path(path).resolve().relative_to(self.data_dir.resolve())).replace("\\", "/")
+        except ValueError:
+            return str(Path(path))
+
+    def _clear_background_item(self) -> None:
+        item = getattr(self, "_raid_map_background_item", None)
+        if item is not None and item.scene() is self.scene:
+            self.scene.removeItem(item)
+        self._raid_map_background_item = None
+
+    def _set_background_map(self, path: str | Path | None) -> bool:
+        _clear_background_item(self)
+        self._raid_map_background_path = None
+
+        if not path:
+            _refresh_map_buttons(self)
+            self.scene.update()
+            return True
+
+        candidate = Path(path)
+        if not candidate.is_absolute():
+            candidate = self.data_dir / candidate
+        if not candidate.exists():
+            _refresh_map_buttons(self)
+            return False
+
+        pixmap = QPixmap(str(candidate))
+        if pixmap.isNull():
+            _refresh_map_buttons(self)
+            return False
+
+        scaled = pixmap.scaled(
+            int(board.SCENE_W),
+            int(board.SCENE_H),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        item = self.scene.addPixmap(scaled)
+        item.setPos(
+            (board.SCENE_W - scaled.width()) / 2.0,
+            (board.SCENE_H - scaled.height()) / 2.0,
+        )
+        # Above the built-in dungeon floor, below every mechanic overlay.
+        item.setZValue(-60)
+        self._raid_map_background_item = item
+        self._raid_map_background_path = candidate
+        _refresh_map_buttons(self)
+        self.scene.update()
+        self.view.viewport().update()
+        return True
+
+    def _unique_import_path(self, source: Path) -> Path:
+        folder = _raid_map_dir(self)
+        stem = source.stem.strip() or "raid_map"
+        suffix = source.suffix.lower() or ".png"
+        candidate = folder / f"{stem}{suffix}"
+        counter = 2
+        while candidate.exists() and candidate.resolve() != source.resolve():
+            candidate = folder / f"{stem}_{counter}{suffix}"
+            counter += 1
+        return candidate
+
+    def _choose_background_map(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Choose Raid Map",
+            "",
+            "Map Images (*.png *.jpg *.jpeg *.webp);;All Files (*)",
+        )
+        if not filename:
+            return
+
+        source = Path(filename)
+        destination = _unique_import_path(self, source)
+        try:
+            if source.resolve() != destination.resolve():
+                shutil.copy2(source, destination)
+        except OSError:
+            return
+
+        if _set_background_map(self, destination):
+            save_state_with_background(self)
+
+    def _remove_background_map(self) -> None:
+        _set_background_map(self, None)
+        save_state_with_background(self)
+
+    def _refresh_map_buttons(self) -> None:
+        has_map = bool(getattr(self, "_raid_map_background_path", None))
+        if hasattr(self, "upload_map_button"):
+            self.upload_map_button.setText("Replace Map" if has_map else "Upload Map")
+            self.upload_map_button.setToolTip(
+                "Replace the current Raid Map background image."
+                if has_map
+                else "Import a PNG, JPG, JPEG, or WebP image as the Raid Map background."
+            )
+        if hasattr(self, "remove_map_button"):
+            self.remove_map_button.setEnabled(has_map)
+
+    def save_state_with_background(self) -> None:
+        original_save_state(self)
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError):
+            return
+        payload["background_map"] = _background_relative_path(self)
+        self.state_path.write_text(
+            json.dumps(payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    def load_state_with_background(self) -> bool:
+        loaded = original_load_state(self)
+        background = ""
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+            background = str(payload.get("background_map", "") or "").strip()
+        except (OSError, json.JSONDecodeError, TypeError):
+            background = ""
+        _set_background_map(self, background or None)
+        return loaded
+
     def init_with_accessibility(self, parent=None):
+        self._raid_map_background_item = None
+        self._raid_map_background_path = None
         original_init(self, parent)
 
         self._accessibility_preferences = AccessibilityPreferences()
@@ -189,18 +339,28 @@ def install() -> None:
         if hint is not None:
             hint.hide()
 
-        # Save and Capture belong on the second row, pinned to its far right.
         if primary_toolbar is not None and zone_toolbar is not None:
             save_button = _button_by_text(self, "Save Layout")
             capture_button = _button_by_text(self, "Capture Positioning")
             for button in (save_button, capture_button):
                 if button is not None:
                     primary_toolbar.removeWidget(button)
+
+            # Background controls live on row 2 without creating another toolbar.
+            self.upload_map_button = QPushButton("Upload Map")
+            self.upload_map_button.clicked.connect(lambda: _choose_background_map(self))
+            self.remove_map_button = QPushButton("Remove Map")
+            self.remove_map_button.clicked.connect(lambda: _remove_background_map(self))
+
+            zone_toolbar.addStretch(1)
+            zone_toolbar.addWidget(self.upload_map_button)
+            zone_toolbar.addWidget(self.remove_map_button)
             if save_button is not None:
                 zone_toolbar.addWidget(save_button)
             if capture_button is not None:
                 zone_toolbar.addWidget(capture_button)
 
+        _refresh_map_buttons(self)
         _install_tooltips(self)
         apply_color_vision_mode(self, mode)
 
@@ -260,15 +420,15 @@ def install() -> None:
         painter.setBrush(QBrush(Qt.BrushStyle.NoBrush))
         painter.drawEllipse(QPointF(0, 0), self.radius + 2, self.radius + 2)
 
-    def compact_mechanics_tab(self) -> QWidget:
+    def raid_map_tab(self) -> QWidget:
         tab = QWidget()
         root = QVBoxLayout(tab)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
 
         board_card = FoundryCard(
-            "Mechanics Map - Interactive Positioning Board",
-            "crossed-swords",
+            "Raid Map",
+            "treasure-map",
         ).set_watermark("compass", 0.025)
         self.encounter_board = board.EncounterBoard()
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
@@ -278,14 +438,28 @@ def install() -> None:
         self._load_positioning_preview(self.encounter_board.snapshot_path)
         return tab
 
+    def build_ui_with_raid_map(self) -> None:
+        # Call the original page builder, which now uses raid_map_tab because
+        # _mechanics_tab is patched before the page instance is constructed.
+        original_page_build_ui(self)
+        for index in range(self.section_tabs.count()):
+            if self.section_tabs.tabText(index) == "MECHANICS":
+                self.section_tabs.setTabText(index, "RAID MAP")
+                break
+
     # QPointF is imported lazily here only to keep the compatibility layer tiny.
     from PySide6.QtCore import QPointF
+
+    original_page_build_ui = encounters_page.EncountersPage._build_ui
 
     board.EncounterBoard.__init__ = init_with_accessibility
     board.EncounterBoard._apply_color_vision_mode = apply_color_vision_mode
     board.EncounterBoard._add_token = add_token_with_palette
     board.EncounterBoard._add_zone = add_zone_with_palette
+    board.EncounterBoard.save_state = save_state_with_background
+    board.EncounterBoard.load_state = load_state_with_background
     board.EncounterZone.paint = paint_zone_with_pattern
-    encounters_page.EncountersPage._mechanics_tab = compact_mechanics_tab
+    encounters_page.EncountersPage._mechanics_tab = raid_map_tab
+    encounters_page.EncountersPage._build_ui = build_ui_with_raid_map
 
     _INSTALLED = True
