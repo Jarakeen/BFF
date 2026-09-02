@@ -4,10 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from services.paths import DATA, PROJECT_ROOT
-
-
-BROADCAST_RESOURCES = PROJECT_ROOT / "modules" / "broadcast" / "resources"
+from services.paths import BROADCAST_RESOURCES, DATA, PROJECT_ROOT
 
 
 @dataclass(frozen=True)
