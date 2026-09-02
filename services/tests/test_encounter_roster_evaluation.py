@@ -11,6 +11,7 @@ from services.encounter_build_capability_adapter import (
     EncounterCapabilityIdentityMap,
     SavedBuildEncounterCapabilityAdapter,
 )
+from services.encounter_cleanse_method import CleanseMethod
 from services.encounter_repository import EncounterRepository
 from services.encounter_requirement_evaluation import RequirementSemantics
 from services.encounter_roster_evaluation import EncounterRosterEvaluator
@@ -63,6 +64,15 @@ def test_real_oaxiltso_saved_build_audits_do_not_overclaim_generic_cleanse_cover
     assert cleanse.providers == ()
     assert cleanse.unknown_members == ("id-Tank", "id-Healer", "id-DD")
     assert result.is_fully_covered is False
+
+    # The same report explains *how* the current source evidence says the cleanse
+    # happens, without pretending the healer's Purge is therefore the solution.
+    assert len(result.cleanse_methods) == 1
+    method = result.cleanse_methods[0]
+    assert method.method == CleanseMethod.ENCOUNTER_INTERACTION
+    assert method.interaction == "cleanse_pool"
+    assert method.requires_player_build_capability is False
+    assert method.player_skill_effectiveness_known is False
 
 
 def test_unmapped_generic_cleanse_remains_unknown_through_full_orchestration():
