@@ -3,11 +3,8 @@ from __future__ import annotations
 """Read-only audit of source-backed phase thresholds and transition evidence."""
 
 from dataclasses import dataclass
-import re
 
 from services.encounter_service import EncounterService
-
-_PERCENT = re.compile(r"^\s*(100|[1-9]?\d)\s*%\s*$")
 
 
 @dataclass(frozen=True)
@@ -57,15 +54,15 @@ def audit_encounter_phases(service: EncounterService) -> EncounterPhaseAudit:
     for encounter_id in service.encounter_ids():
         encounter = service.get(encounter_id)
         for phase in encounter.phases:
-            match = _PERCENT.fullmatch(phase.threshold)
+            threshold = service.phase_threshold(encounter_id, phase.phase_id)
             phases.append(
                 EncounterPhaseAuditRow(
                     encounter_id=encounter_id,
                     phase_id=phase.phase_id,
                     label=phase.label,
-                    raw_threshold=phase.threshold,
-                    threshold_percent=int(match.group(1)) if match else None,
-                    resolution="parsed" if match else "unresolved",
+                    raw_threshold=threshold.raw_value,
+                    threshold_percent=threshold.percent,
+                    resolution=threshold.resolution,
                 )
             )
         for fact in encounter.evidence_facts:
