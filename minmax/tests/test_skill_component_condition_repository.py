@@ -50,7 +50,7 @@ def test_repository_resolves_explicit_self_health_threshold(tmp_path):
         INSERT INTO skill_rank VALUES (11, 110);
         INSERT INTO ability VALUES (
             110,
-            'WHEN SOUL ABILITY IS SLOTTED When your Health drops below 20% your soul explodes, dealing $1 Magic Damage to enemies within 8 meters of you.'
+            'WHEN SOUL ABILITY IS SLOTTED When your Healthdrops below 20% your soul explodes, dealing $1 Magic Damage to enemies within 8 meters of you.'
         );
         """
     )
