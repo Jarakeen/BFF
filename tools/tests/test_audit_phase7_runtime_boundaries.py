@@ -51,7 +51,69 @@ def test_charge_threshold_keeps_trigger_count_separate_from_detection():
         (SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED,),
     )
 
-    assert concerns == ("trigger_detection", "trigger_count")
+    assert concerns == ("trigger_detection", "trigger_count", "stack_state", "stack_threshold")
+
+
+def test_flame_lash_reactivation_requires_trigger_resolution_and_stack_state():
+    concerns = audit.classify_runtime_concerns(
+        _row("Activating again consumes a stack to deal $1 Flame Damage and heal for $2 Health.")
+    )
+
+    assert concerns == ("trigger_resolution", "stack_state")
+
+
+def test_burning_light_stack_threshold_is_explicit_without_inventing_trigger_identity():
+    concerns = audit.classify_runtime_concerns(
+        _row("After reaching 4 stacks, you deal $1 Magic Damage to your target.")
+    )
+
+    assert concerns == (
+        "trigger_resolution",
+        "stack_state",
+        "stack_threshold",
+    )
+
+
+def test_static_reverberation_separates_chance_cooldown_and_cadence():
+    concerns = audit.classify_runtime_concerns(
+        _row("When you deal damage, you have a 5% chance to deal $1 Shock Damage, up to once every 0.3 seconds.")
+    )
+
+    assert concerns == (
+        "trigger_resolution",
+        "chance",
+        "cooldown",
+        "cadence",
+    )
+
+
+def test_crystal_fragments_tracks_chance_and_persistent_next_cast_state():
+    concerns = audit.classify_runtime_concerns(
+        _row(
+            "While slotted on either bar, casting a non-Ultimate ability has a 33% chance "
+            "of causing your next Crystal Fragments to be instant cast at half cost."
+        )
+    )
+
+    assert concerns == (
+        "trigger_resolution",
+        "chance",
+        "state_window",
+    )
+
+
+def test_bound_armaments_keeps_stack_state_separate_from_cadence():
+    concerns = audit.classify_runtime_concerns(
+        _row(
+            "When at one or more stacks, you can arm up to 4 of them to strike your target "
+            "for $1 Physical Damage every 0.3 seconds for each stack consumed."
+        )
+    )
+
+    assert concerns == (
+        "stack_state",
+        "cadence",
+    )
 
 
 def test_unrecognized_phase7_boundary_stays_explicit_runtime_review():
@@ -90,7 +152,7 @@ def test_summary_counts_rows_concerns_and_missing_trigger_relationships():
             30,
             "C",
             (),
-            ("runtime_review",),
+            ("trigger_resolution", "chance"),
             "later",
             (),
             "",
@@ -101,7 +163,9 @@ def test_summary_counts_rows_concerns_and_missing_trigger_relationships():
 
     assert summary["rows"] == 3
     assert summary["without_canonical_trigger"] == 2
-    assert summary["runtime_review"] == 1
+    assert summary["trigger_resolution"] == 1
+    assert summary["runtime_review"] == 0
     assert summary["concerns"]["trigger_detection"] == 1
     assert summary["concerns"]["cadence"] == 1
+    assert summary["concerns"]["chance"] == 1
     assert summary["triggers"]["light_attack"] == 1
