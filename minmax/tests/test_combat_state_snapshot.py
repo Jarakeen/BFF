@@ -27,3 +27,9 @@ def test_projects_status_only_with_canonical_effect_metadata():
  e=EffectVariant(name="burning",layer=None,source="skill",category=SupportEffectCategory.STATUS)
  state=CombatStateSnapshot.from_windows(1,CombatantSnapshot("player"),(w,),effects=(e,))
  assert state.active_statuses("boss")[0].name == "burning"
+
+def test_known_self_buff_bridges_to_static_combat_state():
+ w=RuntimeEffectActiveWindow("Major Courage","skill",0,10)
+ e=EffectVariant(name="Major Courage",layer=None,source="skill",category=SupportEffectCategory.BUFF)
+ state=CombatStateSnapshot.from_windows(1,CombatantSnapshot("player"),(w,),effects=(e,))
+ assert state.static_combat_state().has_buff("Major Courage")
