@@ -54,6 +54,15 @@ def test_charge_threshold_keeps_trigger_count_separate_from_detection():
     assert concerns == ("trigger_detection", "trigger_count", "stack_state", "stack_threshold")
 
 
+def test_stack_threshold_keeps_trigger_count_separate_from_detection():
+    concerns = audit.classify_runtime_concerns(
+        _row("After reaching 4 stacks, deal $1 Magic Damage."),
+        (SkillComponentTriggerType.STACK_THRESHOLD_REACHED,),
+    )
+
+    assert concerns == ("trigger_detection", "trigger_count", "stack_state", "stack_threshold")
+
+
 def test_flame_lash_reactivation_requires_trigger_resolution_and_stack_state():
     concerns = audit.classify_runtime_concerns(
         _row("Activating again consumes a stack to deal $1 Flame Damage and heal for $2 Health.")
