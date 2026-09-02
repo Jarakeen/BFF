@@ -19,7 +19,8 @@ class EncounterRosterEvaluator:
 
     This orchestrator does not assign providers or invent capability mappings.
     The adapter owns exact identity recognition; the requirement evaluator owns
-    coverage classification.
+    coverage classification. Canonical character identity is used for roster
+    membership so display-name changes cannot create or erase provider evidence.
     """
 
     def __init__(
@@ -36,10 +37,7 @@ class EncounterRosterEvaluator:
         encounter_id: str,
         audits: tuple[SavedBuildCapabilityAudit, ...],
     ) -> EncounterRequirementEvaluation:
-        roster_members = tuple(
-            audit.character_name or audit.build_name or audit.character_id
-            for audit in audits
-        )
+        roster_members = tuple(self._adapter.member_id(audit) for audit in audits)
         if len(roster_members) != len(set(roster_members)):
             raise ValueError(
                 "saved-build roster must resolve to unique member identities; "
