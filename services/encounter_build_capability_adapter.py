@@ -113,13 +113,16 @@ class SavedBuildEncounterCapabilityAdapter:
                     )
                     continue
 
-                if audit.unresolved:
+                if audit.capability_resolution_gaps:
                     rows.append(
                         RosterCapabilityEvidence(
                             member_id=member_id,
                             capability_type=capability_type,
                             assessment=CapabilityAssessment.UNKNOWN,
-                            source="saved-build capability audit has unresolved evidence",
+                            source=(
+                                "saved-build support-capability resolution has unresolved source evidence: "
+                                + "; ".join(audit.capability_resolution_gaps)
+                            ),
                         )
                     )
                     continue
@@ -129,7 +132,7 @@ class SavedBuildEncounterCapabilityAdapter:
                         member_id=member_id,
                         capability_type=capability_type,
                         assessment=CapabilityAssessment.UNSUPPORTED,
-                        source="fully resolved saved build lacks mapped effect identity",
+                        source="support-capability sources are resolved and mapped effect identity is absent",
                     )
                 )
 
