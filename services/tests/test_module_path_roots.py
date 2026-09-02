@@ -1,3 +1,4 @@
+from engine.config import get_app_root
 from services.paths import (
     BROADCAST_MODULE,
     BROADCAST_RESOURCES,
@@ -10,6 +11,7 @@ from services.paths import (
 
 
 def test_module_and_user_data_roots_are_canonical() -> None:
+    assert PROJECT_ROOT == get_app_root()
     assert MODULES == PROJECT_ROOT / "modules"
     assert USER_DATA == PROJECT_ROOT / "user_data"
     assert BROADCAST_MODULE == MODULES / "broadcast"
