@@ -14,6 +14,7 @@ from minmax.skill_component_condition_repository import SkillComponentConditionR
 from minmax.skill_component_conditional_consequence_repository import (
     SkillComponentConditionalConsequenceRepository,
 )
+from minmax.skill_component_current_bonus_repository import SkillComponentCurrentBonusRepository
 from minmax.skill_component_damage_scaling_repository import (
     SkillComponentDamageScalingRepository,
 )
@@ -25,6 +26,9 @@ from minmax.skill_component_missing_health_healing_repository import (
 )
 from minmax.skill_component_resource_event_repository import (
     SkillComponentResourceEventRepository,
+)
+from minmax.skill_component_resource_restore_display_repository import (
+    SkillComponentResourceRestoreDisplayRepository,
 )
 from minmax.skill_component_role_repository import SkillComponentRoleRepository
 from minmax.skill_component_secondary_healing_repository import (
@@ -58,8 +62,10 @@ def _coverage_for_row(
     effects: SkillComponentEffectRelationshipRepository,
     conditions: SkillComponentConditionRepository,
     consequences: SkillComponentConditionalConsequenceRepository,
+    current_bonuses: SkillComponentCurrentBonusRepository,
     damage_scaling: SkillComponentDamageScalingRepository,
     resources: SkillComponentResourceEventRepository,
+    resource_displays: SkillComponentResourceRestoreDisplayRepository,
     roles: SkillComponentRoleRepository,
     secondary_healing: SkillComponentSecondaryHealingRepository,
     missing_health_healing: SkillComponentMissingHealthHealingRepository,
@@ -77,10 +83,14 @@ def _coverage_for_row(
         covered.append("conditional_consequence")
     elif conditions.resolve(rank, coef):
         covered.append("component_condition")
+    if current_bonuses.resolve(rank, coef):
+        covered.append("current_stat_bonus_display")
     if damage_scaling.resolve(rank, coef):
         covered.append("damage_scaling")
     if resources.resolve(rank, coef):
         covered.append("resource_event")
+    if resource_displays.resolve(rank, coef):
+        covered.append("resource_restore_display")
     if roles.resolve(rank, coef):
         covered.append("component_role")
     if secondary_healing.resolve(rank, coef):
@@ -107,8 +117,10 @@ def load_remaining_phase6_semantics(
         "effects": SkillComponentEffectRelationshipRepository(path),
         "conditions": SkillComponentConditionRepository(path),
         "consequences": SkillComponentConditionalConsequenceRepository(path),
+        "current_bonuses": SkillComponentCurrentBonusRepository(path),
         "damage_scaling": SkillComponentDamageScalingRepository(path),
         "resources": SkillComponentResourceEventRepository(path),
+        "resource_displays": SkillComponentResourceRestoreDisplayRepository(path),
         "roles": SkillComponentRoleRepository(path),
         "secondary_healing": SkillComponentSecondaryHealingRepository(path),
         "missing_health_healing": SkillComponentMissingHealthHealingRepository(path),
