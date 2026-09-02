@@ -1,4 +1,4 @@
-# Dependencies actually needed to build and run the BFF.exe build.
+# Dependencies actually needed to build and run the FoundryDock.exe build.
 #
 # The repo's top-level requirements.txt is missing PySide6 (the GUI
 # framework the whole app runs on) and has a pile of unrelated
@@ -6,7 +6,7 @@
 # xmlrpclib...) that come from engine/main.py, services/google_sheets
 # _service.py, and other dev-only scripts nothing in the actual
 # running app imports. Traced from what app.py's real import chain
-# uses -- this is what's actually needed to build and run BFF.exe.
+# uses -- this is what's actually needed to build and run FoundryDock.exe.
 #
 # reportlab and keyring are both soft dependencies (the app already
 # has fallback code paths if they're missing) but are included here
