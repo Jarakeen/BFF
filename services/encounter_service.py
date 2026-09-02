@@ -4,6 +4,8 @@ from __future__ import annotations
 
 Numeric source values retain their exact source text. A number is exposed only
 when its format is unambiguous; callers must handle unresolved values explicitly.
+Encounter requirements are projected only from explicit structured mechanic
+fields; this service never derives requirements from prose.
 """
 
 from dataclasses import dataclass
@@ -31,6 +33,19 @@ class EncounterPhaseThreshold:
     raw_value: str
     percent: int | None
     resolution: str
+
+
+@dataclass(frozen=True)
+class EncounterRequirement:
+    """One explicit mechanic demand, without provider or strategy assignment."""
+
+    requirement_id: str
+    encounter_id: str
+    mechanic_id: str
+    mechanic_name: str
+    requirement_type: str
+    target_count: int | None
+    interpretation_status: str
 
 
 class EncounterService:
@@ -73,3 +88,37 @@ class EncounterService:
             percent=int(match.group(1)) if match else None,
             resolution="parsed" if match else "unresolved",
         )
+
+    def requirements(self, encounter_id: str) -> tuple[EncounterRequirement, ...]:
+        """Return demands represented explicitly by structured mechanic fields.
+
+        ``None`` and ``False`` do not become requirements. In particular, prose
+        such as "should be dodged" does not create an invented ``dodge`` demand
+        because the current canonical mechanic contract has no structured dodge
+        field. Later phases may evaluate these requirements, but this method does
+        not choose a provider, player, target, position, or response.
+        """
+        encounter = self.get(encounter_id)
+        requirements = []
+        for mechanic in encounter.mechanics:
+            structured_demands = (
+                ("movement", mechanic.requires_movement),
+                ("positioning", mechanic.requires_positioning),
+                ("cleanse", mechanic.requires_cleanse),
+                ("interrupt", mechanic.interruptible),
+            )
+            for requirement_type, required in structured_demands:
+                if required is not True:
+                    continue
+                requirements.append(
+                    EncounterRequirement(
+                        requirement_id=f"{mechanic.mechanic_id}:requirement:{requirement_type}",
+                        encounter_id=encounter.encounter_id,
+                        mechanic_id=mechanic.mechanic_id,
+                        mechanic_name=mechanic.name,
+                        requirement_type=requirement_type,
+                        target_count=mechanic.target_count,
+                        interpretation_status=mechanic.interpretation_status,
+                    )
+                )
+        return tuple(requirements)
