@@ -21,9 +21,14 @@ def test_edit_selector_moves_into_identity_and_heavy_load_is_deferred() -> None:
     assert "self._build_editor_cache" in source
 
 
-def test_scribed_tab_reads_configured_recipe_data() -> None:
+def test_scribed_tab_reads_and_edits_configured_recipe_data() -> None:
     source = Path(build_workspace_edit_fix.__file__).read_text(encoding="utf-8")
 
-    assert "from ui.scribing_support import _recipes_for" in source
-    assert "recipes = _recipes_for(build)" in source
-    assert "No scribed skills configured for this build." in source
+    assert "from ui.scribing_support import _recipes_for, _store_recipes" in source
+    assert "recipes = list(_recipes_for(build))" in source
+    assert "No scribed skills configured for this build yet." in source
+    assert '"+ New Scribed Skill"' in source
+    assert '"Save Scribed Skill"' in source
+    assert "ScribedSkillRecipe(" in source
+    assert "_store_recipes(build, recipes)" in source
+    assert "_remove_scribed_recipe" in source
