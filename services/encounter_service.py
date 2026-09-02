@@ -6,12 +6,14 @@ Numeric source values retain their exact source text. A number is exposed only
 when its format is unambiguous; callers must handle unresolved values explicitly.
 Encounter requirements and target counts are projected only from explicit
 structured mechanic fields; this service never derives them from prose.
+Reconciled evidence remains source-qualified rather than silently promoted to
+canonical encounter truth.
 """
 
 from dataclasses import dataclass
 import re
 
-from services.encounter_projection import EncounterDefinition
+from services.encounter_projection import EncounterDefinition, EncounterEvidenceFact
 from services.encounter_repository import EncounterRepository
 
 _HEALTH = re.compile(r"^\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\s*\(([^()]*)\))?\s*$")
@@ -58,6 +60,23 @@ class EncounterTargetConstraint:
     mechanic_name: str
     target_count: int
     interpretation_status: str
+
+
+@dataclass(frozen=True)
+class EncounterTemporalEvidence:
+    """One numeric seconds field from a resolved reconciled evidence fact."""
+
+    temporal_id: str
+    encounter_id: str
+    fact_id: str
+    fact_type: str
+    fact_key: str
+    value_key: str
+    seconds: float
+    approximate: bool
+    reconciliation_status: str
+    distinct_sources: int
+    distinct_values: int
 
 
 class EncounterService:
@@ -159,3 +178,55 @@ class EncounterService:
                 )
             )
         return tuple(constraints)
+
+    def evidence_facts(
+        self,
+        encounter_id: str,
+        fact_type: str | None = None,
+    ) -> tuple[EncounterEvidenceFact, ...]:
+        """Return reconciled evidence facts, optionally by exact fact type."""
+        encounter = self.get(encounter_id)
+        if fact_type is None:
+            return encounter.evidence_facts
+        if not isinstance(fact_type, str) or not fact_type:
+            raise ValueError("fact_type must be a non-empty exact fact type")
+        return tuple(fact for fact in encounter.evidence_facts if fact.fact_type == fact_type)
+
+    def temporal_evidence(self, encounter_id: str) -> tuple[EncounterTemporalEvidence, ...]:
+        """Expose top-level numeric ``seconds`` fields from resolved evidence.
+
+        The original evidence key is retained verbatim so this layer does not
+        pretend that duration, cooldown, detonation delay, tick interval, and
+        phase timer are interchangeable concepts. Conflicting facts have no
+        reconciled value and therefore do not become temporal values here; they
+        remain visible through :meth:`evidence_facts` for explicit review.
+        """
+        temporal_rows = []
+        for fact in self.evidence_facts(encounter_id):
+            value = fact.value
+            if not isinstance(value, dict):
+                continue
+            for value_key, raw_seconds in value.items():
+                if "seconds" not in value_key.casefold():
+                    continue
+                if (
+                    not isinstance(raw_seconds, (int, float))
+                    or isinstance(raw_seconds, bool)
+                ):
+                    continue
+                temporal_rows.append(
+                    EncounterTemporalEvidence(
+                        temporal_id=f"{fact.fact_id}:{value_key}",
+                        encounter_id=encounter_id,
+                        fact_id=fact.fact_id,
+                        fact_type=fact.fact_type,
+                        fact_key=fact.fact_key,
+                        value_key=value_key,
+                        seconds=float(raw_seconds),
+                        approximate="approx" in value_key.casefold(),
+                        reconciliation_status=fact.status,
+                        distinct_sources=fact.distinct_sources,
+                        distinct_values=fact.distinct_values,
+                    )
+                )
+        return tuple(temporal_rows)
