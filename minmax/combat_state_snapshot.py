@@ -4,6 +4,8 @@ import math
 from .character_build.effect_instance import EffectVariant
 from .combat_state import CombatState
 from .named_combat_buffs import canonical_buff_name
+from .runtime_effect_eligibility import RuntimeCooldownScope, RuntimeEffectState, evaluate_effect_variant_runtime_eligibility
+from .runtime_event import RuntimeEvent
 from .runtime_effect_window import RuntimeEffectActiveWindow, partition_runtime_effect_windows
 from .support_effect_category import SupportEffectCategory
 @dataclass(frozen=True)
@@ -35,6 +37,9 @@ class CombatStateSnapshot:
   c=s.player if target is None else s.target(target); return None if c is None or c.health_fraction() is None else c.health_fraction()<threshold
  def active_statuses(s,target):
   return tuple(e for e in s.active_effects if e.category is SupportEffectCategory.STATUS and e.target==target)
+ def eligibility(s,event:RuntimeEvent,effect:EffectVariant,state:RuntimeEffectState=RuntimeEffectState(),cooldown_scope:RuntimeCooldownScope=RuntimeCooldownScope.GLOBAL,chance_roll:float|None=None):
+  if event.time_seconds != s.time_seconds: raise ValueError("eligibility event must use snapshot time")
+  return evaluate_effect_variant_runtime_eligibility(event,effect,state=state,cooldown_scope=cooldown_scope,chance_roll=chance_roll)
  def static_combat_state(s):
   buffs=tuple(e.name for e in s.active_effects if e.category is SupportEffectCategory.BUFF and e.target in (None,s.player.identity) and canonical_buff_name(e.name))
   return CombatState(in_combat=s.combat_state.in_combat,active_buffs=(*s.combat_state.active_buffs,*buffs),game_update=s.combat_state.game_update)
