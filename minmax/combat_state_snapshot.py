@@ -4,6 +4,7 @@ import math
 from .character_build.effect_instance import EffectVariant
 from .combat_state import CombatState
 from .named_combat_buffs import canonical_buff_name
+from .resource_state import StaticResourceState
 from .runtime_effect_eligibility import RuntimeCooldownScope, RuntimeEffectState, evaluate_effect_variant_runtime_eligibility
 from .runtime_event import RuntimeEvent
 from .runtime_effect_window import RuntimeEffectActiveWindow, partition_runtime_effect_windows
@@ -14,6 +15,9 @@ class CombatantSnapshot:
  def __post_init__(s):
   if not s.identity.strip(): raise ValueError("combatant identity is required")
   if any(v is not None and (not math.isfinite(v) or v<0) for k,v in s.__dict__.items() if k!="identity"): raise ValueError("resources must be finite and non-negative")
+ @classmethod
+ def from_static_resources(cls,identity,resources:StaticResourceState,*,current_health=None,current_magicka=None,current_stamina=None,current_ultimate=None):
+  return cls(identity,current_health,resources.health.maximum,current_magicka,resources.magicka.maximum,current_stamina,resources.stamina.maximum,current_ultimate)
  def health_fraction(s): return None if s.current_health is None or not s.maximum_health else s.current_health/s.maximum_health
 @dataclass(frozen=True)
 class ActiveEffectProjection:
