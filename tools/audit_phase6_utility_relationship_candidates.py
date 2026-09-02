@@ -38,7 +38,13 @@ _UTILITY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         ),
     ),
     ("interrupt_immunity", re.compile(r"\binterrupt\s+immunity\b", re.IGNORECASE)),
-    ("knockback", re.compile(r"\bknock(?:back|ed\s+back|s?\s+back)\b", re.IGNORECASE)),
+    (
+        "knockback",
+        re.compile(
+            r"\bknockback\b|\bknock(?:s|ed|ing)?\b[^.;]{0,70}?\bback\b",
+            re.IGNORECASE,
+        ),
+    ),
     ("pull", re.compile(r"\bpull(?:s|ed|ing)?\b", re.IGNORECASE)),
     ("taunt", re.compile(r"\btaunt(?:s|ed|ing)?\b", re.IGNORECASE)),
 )
