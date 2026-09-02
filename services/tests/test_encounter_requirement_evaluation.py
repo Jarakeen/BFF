@@ -22,15 +22,13 @@ def _service(data_root: Path = ROOT / "data") -> EncounterService:
     return EncounterService(EncounterRepository.from_data_root(data_root))
 
 
-def test_oaxiltso_provider_and_compliance_requirements_remain_semantically_distinct():
+def test_oaxiltso_generic_actions_are_compliance_not_provider_requirements():
     evaluator = EncounterRequirementEvaluator(_service())
     roster = ("tank", "healer", "dd1", "dd2")
     evidence = (
+        # Even explicit build evidence must not transform a generic encounter
+        # action into a provider requirement without stronger encounter semantics.
         RosterCapabilityEvidence("healer", "cleanse", CapabilityAssessment.SUPPORTED, "build"),
-        RosterCapabilityEvidence("tank", "cleanse", CapabilityAssessment.UNSUPPORTED, "build"),
-        RosterCapabilityEvidence("dd1", "cleanse", CapabilityAssessment.UNSUPPORTED, "build"),
-        RosterCapabilityEvidence("dd2", "cleanse", CapabilityAssessment.UNSUPPORTED, "build"),
-        # Movement evidence must not be mistaken for provider coverage.
         RosterCapabilityEvidence("dd1", "movement", CapabilityAssessment.SUPPORTED, "caller"),
     )
 
@@ -38,30 +36,31 @@ def test_oaxiltso_provider_and_compliance_requirements_remain_semantically_disti
     sludge = [row for row in result.results if row.mechanic_name == "Noxious Sludge"]
     by_type = {row.requirement_type: row for row in sludge}
 
-    assert by_type["cleanse"].semantics == RequirementSemantics.PROVIDER_CAPABILITY
-    assert by_type["cleanse"].classification == CoverageClassification.COVERED
-    assert by_type["cleanse"].providers == ("healer",)
+    for requirement_type in ("cleanse", "movement", "positioning"):
+        row = by_type[requirement_type]
+        assert row.semantics == RequirementSemantics.COMPLIANCE
+        assert row.classification == CoverageClassification.UNKNOWN
+        assert row.providers == ()
+        assert row.unknown_members == roster
 
-    assert by_type["movement"].semantics == RequirementSemantics.COMPLIANCE
-    assert by_type["movement"].classification == CoverageClassification.UNKNOWN
-    assert by_type["positioning"].classification == CoverageClassification.UNKNOWN
     assert result.is_fully_evaluable is False
     assert result.is_fully_covered is False
 
 
-def test_missing_evidence_is_unknown_not_missing():
+def test_missing_compliance_evidence_is_unknown_not_missing():
     evaluator = EncounterRequirementEvaluator(_service())
     roster = ("tank", "healer")
 
     result = evaluator.evaluate("oaxiltso", roster)
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
+    assert cleanse.semantics == RequirementSemantics.COMPLIANCE
     assert cleanse.classification == CoverageClassification.UNKNOWN
     assert cleanse.providers == ()
     assert cleanse.unknown_members == roster
 
 
-def test_fully_assessed_provider_absence_is_missing():
+def test_fully_assessed_build_absence_cannot_turn_generic_cleanse_into_missing():
     evaluator = EncounterRequirementEvaluator(_service())
     roster = ("tank", "healer")
     evidence = tuple(
@@ -72,12 +71,12 @@ def test_fully_assessed_provider_absence_is_missing():
     result = evaluator.evaluate("oaxiltso", roster, evidence)
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
-    assert cleanse.classification == CoverageClassification.MISSING
-    assert cleanse.unknown_members == ()
-    assert cleanse.is_actionable_problem is True
+    assert cleanse.semantics == RequirementSemantics.COMPLIANCE
+    assert cleanse.classification == CoverageClassification.UNKNOWN
+    assert cleanse.is_actionable_problem is False
 
 
-def test_multiple_supported_providers_are_redundant_not_silently_collapsed():
+def test_multiple_build_cleanse_sources_do_not_create_fake_redundant_provider_coverage():
     evaluator = EncounterRequirementEvaluator(_service())
     roster = ("healer1", "healer2")
     evidence = (
@@ -88,11 +87,11 @@ def test_multiple_supported_providers_are_redundant_not_silently_collapsed():
     result = evaluator.evaluate("oaxiltso", roster, evidence)
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
-    assert cleanse.classification == CoverageClassification.REDUNDANT
-    assert cleanse.providers == roster
+    assert cleanse.classification == CoverageClassification.UNKNOWN
+    assert cleanse.providers == ()
 
 
-def test_conflicting_member_evidence_is_conflict(tmp_path):
+def test_generic_interrupt_is_compliance_even_when_build_evidence_conflicts(tmp_path):
     boss = tmp_path / "eso_info" / "bosses"
     evidence_root = tmp_path / "encounter_evidence"
     boss.mkdir(parents=True)
@@ -113,9 +112,10 @@ def test_conflicting_member_evidence_is_conflict(tmp_path):
     result = evaluator.evaluate("x", roster, evidence)
     row = result.results[0]
 
-    assert row.classification == CoverageClassification.CONFLICT
-    assert row.conflicting_members == ("tank",)
-    assert row.is_actionable_problem is True
+    assert row.semantics == RequirementSemantics.COMPLIANCE
+    assert row.classification == CoverageClassification.UNKNOWN
+    assert row.conflicting_members == ()
+    assert row.is_actionable_problem is False
 
 
 def test_evidence_for_non_roster_member_is_rejected():
