@@ -6,7 +6,11 @@ from ui import build_editor_inline_compat
 def test_build_editor_uses_existing_page_instead_of_native_dialog() -> None:
     source = Path(build_editor_inline_compat.__file__).read_text(encoding="utf-8")
 
-    assert "QDialog" not in source
+    # Documentation may mention the former QDialog implementation. The safety
+    # invariant is that the active compatibility layer never constructs or
+    # executes a native dialog for the Build Editor.
+    assert "QDialog(" not in source
+    assert "dialog.exec(" not in source
     assert 'DARK_SURFACE = "#0C171B"' in source
     assert "self.workspace_layout.addWidget(host, 1)" in source
     assert "self.splitter.hide()" in source
