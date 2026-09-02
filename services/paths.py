@@ -1,7 +1,7 @@
 # services/paths.py
-from pathlib import Path
+from engine.config import get_app_root
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = get_app_root()
 
 # Runtime/static application data.
 DATA = PROJECT_ROOT / "data"
