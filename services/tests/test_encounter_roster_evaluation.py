@@ -24,11 +24,11 @@ def _encounter_service() -> EncounterService:
     return EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
 
 
-def _audit(name: str, effects=(), unresolved=()) -> SavedBuildCapabilityAudit:
+def _audit(name: str, effects=(), unresolved=(), *, character_id: str | None = None) -> SavedBuildCapabilityAudit:
     return SavedBuildCapabilityAudit(
         character_name=name,
         build_name=f"{name} Build",
-        character_id=f"id-{name}",
+        character_id=character_id or f"id-{name}",
         resolved_effects=tuple(effects),
         unresolved=tuple(unresolved),
     )
@@ -58,7 +58,7 @@ def test_real_oaxiltso_saved_build_audits_flow_into_requirement_evaluation():
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
     assert cleanse.classification == CoverageClassification.COVERED
-    assert cleanse.providers == ("Healer",)
+    assert cleanse.providers == ("id-Healer",)
     assert any(row.classification == CoverageClassification.UNKNOWN for row in result.results)
     assert result.is_fully_covered is False
 
@@ -88,4 +88,20 @@ def test_duplicate_roster_member_identity_is_rejected_before_evaluation():
         evaluator.evaluate_saved_build_audits(
             "oaxiltso",
             (_audit("Same"), _audit("Same")),
+        )
+
+
+def test_two_display_names_for_same_canonical_character_do_not_become_two_providers():
+    evaluator = EncounterRosterEvaluator(
+        _encounter_service(),
+        SavedBuildEncounterCapabilityAdapter(()),
+    )
+
+    with pytest.raises(ValueError, match="one authoritative build"):
+        evaluator.evaluate_saved_build_audits(
+            "oaxiltso",
+            (
+                _audit("Old Name", character_id="character-1"),
+                _audit("New Name", character_id="character-1"),
+            ),
         )
