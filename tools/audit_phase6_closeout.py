@@ -47,17 +47,14 @@ def _has_trigger_signal(signals: tuple[str, ...]) -> bool:
 
 
 def _is_phase7_cadence_only(fragment: str) -> bool:
-    """Return True for explicit repeat/state cadence with no extra Phase 6 rule.
-
-    These shapes already identify the component itself. What remains is when the
-    repeated tick occurs or while an active field/summon exists, which Phase 7 owns.
-    """
+    """Return True for explicit repeat/state cadence with no extra Phase 6 rule."""
 
     text = " ".join(str(fragment or "").split()).casefold()
+    count_word = r"(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)"
     patterns = (
         r"\bcalls\s+upon\b[^.;]{0,100}?\bevery\s+\d+(?:\.\d+)?\s+seconds?\b",
         r"\bwhile\s+the\s+field\s+grows\b[^.;]{0,140}?\bevery\s+\d+(?:\.\d+)?\s+seconds?\b",
-        r"\bsmashes?\b[^.;]{0,80}?\b\d+\s+times?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b[^.;]{0,120}?\bwith\s+each\s+smash\b",
+        rf"\bsmashes?\b[^.;]{{0,80}}?\b{count_word}\s+times?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b[^.;]{{0,120}}?\bwith\s+each\s+smash\b",
     )
     return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
 
@@ -67,9 +64,12 @@ def _neighbor_owns_interrupt_immunity(fragment: str, coefficient_number: int) ->
 
     text = " ".join(str(fragment or "").split()).casefold()
     current = rf"\${int(coefficient_number)}(?!\d)"
+    # The current component must be the damage component, followed later in the
+    # same sentence by a distinct shield placeholder that owns interrupt immunity.
     return re.search(
-        rf"{current}[^.;]{{0,160}}?\bdamage\b[^.;]{{0,180}}?\bdamage\s+shield\b"
-        rf"[^.;]{{0,120}}?\$\d+(?!\d)[^.;]{{0,100}}?\binterrupt\s+immunity\b",
+        rf"{current}[^.;]{{0,120}}?\b(?:magic|flame|frost|shock|physical|poison|disease|bleed)?\s*damage\b"
+        rf"[^.;]{{0,220}}?\bdamage\s+shield\b[^.;]{{0,140}}?\$\d+(?!\d)"
+        rf"[^.;]{{0,120}}?\binterrupt\s+immunity\b",
         text,
         re.IGNORECASE,
     ) is not None
@@ -145,8 +145,6 @@ def _closeout_status(item) -> tuple[str, str]:
         if signal_category == "multi_heal_classification_gap":
             return "CLASSIFICATION_CLEANUP", signal_category
         if signal_category == "phase7_attack_triggered_heal":
-            # Phase 7 owns runtime trigger evaluation, but Phase 6 still owns the
-            # static component relationship that says which action causes the heal.
             return "NEEDS_PHASE6_REVIEW", "attack-triggered heal needs static Phase 6 trigger relationship"
         return "NEEDS_PHASE6_REVIEW", signal_category
 
