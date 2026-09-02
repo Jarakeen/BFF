@@ -39,6 +39,8 @@ class CombatStateSnapshot:
  def target(s,identity): return next((t for t in s.targets if t.identity==identity),None)
  def meets_health_threshold(s,threshold,target=None):
   c=s.player if target is None else s.target(target); return None if c is None or c.health_fraction() is None else c.health_fraction()<threshold
+ def active_instance_count(s,name,target=None):
+  return sum(1 for e in s.active_effects if e.name==name and e.target==target)
  def active_statuses(s,target):
   return tuple(e for e in s.active_effects if e.category is SupportEffectCategory.STATUS and e.target==target)
  def eligibility(s,event:RuntimeEvent,effect:EffectVariant,state:RuntimeEffectState=RuntimeEffectState(),cooldown_scope:RuntimeCooldownScope=RuntimeCooldownScope.GLOBAL,chance_roll:float|None=None):
