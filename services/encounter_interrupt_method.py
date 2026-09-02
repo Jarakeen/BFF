@@ -135,12 +135,18 @@ class EncounterInterruptMethodService:
                 fact_type=self.FACT_TYPE,
             )
         )
-        explicit_names = {row.mechanic_name for row in explicit}
 
-        fallback = tuple(
+        # Encounter-specific method evidence is authoritative for this layer.
+        # This includes unresolved or conflicting evidence: uncertainty must not
+        # be overwritten by a generic ESO-wide fallback. Until explicit facts
+        # can be matched safely to individual mechanics, the conservative rule
+        # is to suppress the fallback for the encounter whenever such evidence
+        # exists.
+        if explicit:
+            return explicit
+
+        return tuple(
             self._global_bash_row(encounter_id, requirement.mechanic_name)
             for requirement in self._encounter_service.requirements(encounter_id)
             if requirement.requirement_type == "interrupt"
-            and requirement.mechanic_name not in explicit_names
         )
-        return explicit + fallback
