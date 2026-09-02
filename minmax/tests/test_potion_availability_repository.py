@@ -92,6 +92,36 @@ def _write_db(path: Path, *, omit: str | None = None) -> None:
                 )
 
 
+def _embed_processed_payload_in_db(database: Path, processed: Path) -> None:
+    payload = json.loads(processed.read_text(encoding="utf-8"))
+    by_name = {
+        str(row["effect_name"]): row
+        for row in payload["effects"]
+    }
+    with sqlite3.connect(database) as db:
+        for name, record in by_name.items():
+            db.execute(
+                """
+                UPDATE effect_variant
+                SET raw_json = ?
+                WHERE effect_id = (
+                    SELECT id FROM effect WHERE lower(trim(name)) = lower(trim(?)) LIMIT 1
+                )
+                  AND lower(trim(type)) = 'potion'
+                """,
+                (
+                    json.dumps(
+                        {
+                            "source": "UESP",
+                            "source_kind": "alchemy_effect_page",
+                            **record,
+                        }
+                    ),
+                    name,
+                ),
+            )
+
+
 def test_legacy_spell_power_alias_resolves_effect_family_with_two_equivalent_formulas(tmp_path: Path):
     processed = tmp_path / "alchemy_effects.json"
     database = tmp_path / "eso.db"
@@ -115,6 +145,31 @@ def test_legacy_spell_power_alias_resolves_effect_family_with_two_equivalent_for
     assert all(effect.layer is EffectLayer.CONSUMABLE for effect in result.effects)
     assert all(effect.trigger == "potion_use" for effect in result.effects)
     assert all("uptime are not assumed" in str(effect.condition) for effect in result.effects)
+
+
+def test_missing_processed_file_recovers_formula_catalog_from_canonical_db(tmp_path: Path):
+    processed = tmp_path / "alchemy_effects.json"
+    missing_processed = tmp_path / "omitted_from_lean_install.json"
+    database = tmp_path / "eso.db"
+    _write_processed(processed)
+    _write_db(database)
+    _embed_processed_payload_in_db(database, processed)
+
+    result = PotionAvailabilityRepository(database, missing_processed).resolve("spell power")
+
+    assert result.resolved
+    assert len(result.formulas) == 2
+    assert set(result.canonical_traits) == {
+        "Restore Magicka",
+        "Increase Spell Power",
+        "Spell Critical",
+    }
+    assert {effect.name for effect in result.effects} == {
+        "restore_magicka",
+        "increase_spell_power",
+        "spell_critical",
+    }
+    assert all("processed source missing" not in message for message in result.unresolved)
 
 
 def test_canonical_family_choice_groups_equivalent_formulas_without_picking_one(tmp_path: Path):
