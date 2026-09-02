@@ -15,6 +15,7 @@ from minmax.coverage_classification import CoverageClassification
 from services.encounter_cleanse_method import (
     CleanseMethod,
     CleanseMethodResolution,
+    EncounterCleanseMethod,
     EncounterCleanseMethodService,
 )
 from services.encounter_interrupt_method import (
@@ -92,11 +93,51 @@ class EncounterExecutionEvaluator:
         self._cleanse_methods = EncounterCleanseMethodService(encounter_service)
         self._interrupt_methods = EncounterInterruptMethodService(encounter_service)
 
+    @staticmethod
+    def _cleanse_methods_by_requirement(
+        requirements: tuple[EncounterRequirement, ...],
+        methods: tuple[EncounterCleanseMethod, ...],
+    ) -> dict[str, EncounterCleanseMethod]:
+        """Join cleanse methods to requirements without fuzzy mechanic matching.
+
+        Exact mechanic-name identity wins. A legacy method record may lack the
+        canonical mechanic name; in that case we permit a one-to-one association
+        only when exactly one cleanse requirement and exactly one cleanse method
+        exist. Any ambiguity remains unresolved rather than being guessed.
+        """
+        cleanse_requirements = tuple(
+            requirement
+            for requirement in requirements
+            if requirement.requirement_type == "cleanse"
+        )
+        by_requirement_id: dict[str, EncounterCleanseMethod] = {}
+        methods_by_name = {method.mechanic_name: method for method in methods}
+
+        unmatched_requirements: list[EncounterRequirement] = []
+        matched_fact_ids: set[str] = set()
+        for requirement in cleanse_requirements:
+            method = methods_by_name.get(requirement.mechanic_name)
+            if method is None:
+                unmatched_requirements.append(requirement)
+                continue
+            by_requirement_id[requirement.requirement_id] = method
+            matched_fact_ids.add(method.fact_id)
+
+        unmatched_methods = tuple(
+            method for method in methods if method.fact_id not in matched_fact_ids
+        )
+        if len(unmatched_requirements) == 1 and len(unmatched_methods) == 1:
+            by_requirement_id[unmatched_requirements[0].requirement_id] = unmatched_methods[0]
+
+        return by_requirement_id
+
     def evaluate(self, encounter_id: str) -> EncounterExecutionEvaluation:
-        cleanse_by_name = {
-            row.mechanic_name: row
-            for row in self._cleanse_methods.methods(encounter_id)
-        }
+        requirements = self._encounter_service.requirements(encounter_id)
+        cleanse_methods = self._cleanse_methods.methods(encounter_id)
+        cleanse_by_requirement_id = self._cleanse_methods_by_requirement(
+            requirements,
+            cleanse_methods,
+        )
         interrupt_by_name = {
             row.mechanic_name: row
             for row in self._interrupt_methods.methods(encounter_id)
@@ -105,10 +146,10 @@ class EncounterExecutionEvaluator:
         rows = tuple(
             self._evaluate_requirement(
                 requirement,
-                cleanse_by_name=cleanse_by_name,
+                cleanse_by_requirement_id=cleanse_by_requirement_id,
                 interrupt_by_name=interrupt_by_name,
             )
-            for requirement in self._encounter_service.requirements(encounter_id)
+            for requirement in requirements
         )
         return EncounterExecutionEvaluation(encounter_id=encounter_id, results=rows)
 
@@ -131,7 +172,7 @@ class EncounterExecutionEvaluator:
         self,
         requirement: EncounterRequirement,
         *,
-        cleanse_by_name: dict,
+        cleanse_by_requirement_id: dict[str, EncounterCleanseMethod],
         interrupt_by_name: dict,
     ) -> ExecutionRequirementEvaluation:
         if requirement.requirement_type in {"movement", "positioning"}:
@@ -142,7 +183,7 @@ class EncounterExecutionEvaluator:
             )
 
         if requirement.requirement_type == "cleanse":
-            method = cleanse_by_name.get(requirement.mechanic_name)
+            method = cleanse_by_requirement_id.get(requirement.requirement_id)
             if method is None:
                 return self._unknown(requirement, "Cleanse method is unresolved.")
             if method.resolution == CleanseMethodResolution.CONFLICTING:
