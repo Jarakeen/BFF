@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import shutil
 import sys
 from pathlib import Path
@@ -13,6 +14,9 @@ from services.paths import BROADCAST_RESOURCES, DATA
 
 
 RESOURCE_FILES = ("check.png", "blank.png")
+_TRANSPARENT_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+)
 
 
 def _copy_file(source: Path, destination: Path) -> bool:
@@ -20,6 +24,16 @@ def _copy_file(source: Path, destination: Path) -> bool:
         return False
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
+    return True
+
+
+def _ensure_blank_resource(destination: Path) -> bool:
+    """Create the transparent unchecked-state image if no legacy copy exists."""
+
+    blank = destination / "blank.png"
+    if blank.exists():
+        return False
+    blank.write_bytes(_TRANSPARENT_PNG)
     return True
 
 
@@ -53,6 +67,9 @@ def migrate(
             copied += 1
         elif (data_dir / filename).exists():
             skipped += 1
+
+    if _ensure_blank_resource(destination):
+        copied += 1
 
     return copied, skipped
 
