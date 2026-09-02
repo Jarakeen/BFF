@@ -1,20 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <rect width="256" height="256" fill="#0B0F13"/>
-  <g opacity="0.24" fill="none" stroke-linecap="square">
-    <path d="M0 34 H256 M0 117 H256 M0 203 H256" stroke="#151B21" stroke-width="1"/>
-    <path d="M42 0 V256 M166 0 V256 M226 0 V256" stroke="#11171D" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <rect width="320" height="320" fill="#0B0B0D"/>
+
+  <!-- broad low-contrast concrete mottling -->
+  <g opacity="0.12" fill="#17181A">
+    <path d="M0 18h76v2H0z M118 54h83v2h-83z M238 31h82v2h-82z"/>
+    <path d="M34 126h112v2H34z M187 151h91v2h-91z M9 246h93v2H9z"/>
+    <path d="M154 286h112v2H154z"/>
   </g>
-  <g opacity="0.18" fill="#1B2229">
-    <path d="M12 18h39v3H12z M82 67h56v2H82z M166 28h68v3h-68z"/>
-    <path d="M28 148h74v2H28z M132 177h92v3h-92z M17 229h54v2H17z"/>
+
+  <!-- soft irregular urban wear; intentionally sparse and matte -->
+  <g fill="none" stroke="#292B2E" stroke-width="1" opacity="0.15" stroke-linecap="round">
+    <path d="M14 74c21-8 38-4 58 2 23 7 44 3 69-8 24-10 50-9 77 2 22 9 47 8 88-2"/>
+    <path d="M0 213c24 7 49 7 73-2 25-10 54-10 83 1 28 10 56 10 83 1 29-10 55-9 81-1"/>
   </g>
-  <g opacity="0.16" fill="#05080B">
-    <path d="M0 92h67v2H0z M112 132h76v2h-76z M189 91h67v2h-67z"/>
-    <path d="M55 0h2v61h-2z M151 199h2v57h-2z M238 129h2v73h-2z"/>
+
+  <!-- hairline concrete fractures, kept very faint to avoid visual fatigue -->
+  <g fill="none" stroke="#34363A" stroke-width="1" opacity="0.13">
+    <path d="M74 0l-5 31 8 24-11 39 8 26-5 42"/>
+    <path d="M250 161l-9 22 7 31-14 24 6 35-7 47"/>
+    <path d="M165 97l-18 12-4 19-17 8-7 23"/>
   </g>
-  <g opacity="0.12" stroke="#303840" stroke-width="1">
-    <path d="M4 52l38-9 35 7 43-11 31 8 53-13 48 10" fill="none"/>
-    <path d="M0 187l43 8 51-10 42 7 36-8 42 9 42-6" fill="none"/>
+
+  <!-- subtle darker patches like worn painted concrete -->
+  <g fill="#060708" opacity="0.14">
+    <path d="M19 24h42v13H19z M265 85h34v18h-34z M91 185h51v15H91z M203 259h58v19h-58z"/>
   </g>
-  <rect x="1" y="1" width="254" height="254" fill="none" stroke="#171D23" stroke-width="2" opacity="0.35"/>
+
+  <!-- a few warm city-wear flecks, almost subliminal -->
+  <g fill="#6E4D2B" opacity="0.055">
+    <circle cx="44" cy="52" r="2"/><circle cx="191" cy="41" r="1.5"/>
+    <circle cx="284" cy="134" r="2"/><circle cx="121" cy="271" r="1.5"/>
+  </g>
 </svg>
