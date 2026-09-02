@@ -1,0 +1,5 @@
+{
+  "version": "2.0.0",
+  "inputs": [{"id":"checkpointTest","type":"promptString","description":"Focused pytest target","default":"minmax/tests/test_combat_state_snapshot.py"}],
+  "tasks": [{"label":"BFF: Phase checkpoint","type":"shell","command":"powershell","args":["-ExecutionPolicy","Bypass","-File","${workspaceFolder}/tools/run_phase_checkpoint.ps1","-TestTarget","${input:checkpointTest}","-Branch","phase8"],"problemMatcher":[]}]
+}
