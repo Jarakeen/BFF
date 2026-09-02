@@ -62,3 +62,44 @@ def test_phase_threshold_requires_exact_canonical_phase_id(tmp_path):
 
     with pytest.raises(LookupError):
         service.phase_threshold("x", "One")
+
+
+def test_oaxiltso_requirements_project_only_explicit_structured_demands():
+    service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+    requirements = service.requirements("oaxiltso")
+
+    sludge = tuple(row for row in requirements if row.mechanic_name == "Noxious Sludge")
+    assert tuple(row.requirement_type for row in sludge) == (
+        "movement",
+        "positioning",
+        "cleanse",
+    )
+    assert all(row.target_count == 2 for row in sludge)
+    assert all(row.interpretation_status == "inferred" for row in sludge)
+
+    blitz = tuple(row for row in requirements if row.mechanic_name == "Savage Blitz")
+    assert tuple(row.requirement_type for row in blitz) == ("movement", "positioning")
+
+    assert not any(row.requirement_type == "dodge" for row in requirements)
+    assert not any(row.requirement_type == "interrupt" for row in requirements)
+
+
+def test_requirements_do_not_promote_false_or_unknown_fields(tmp_path):
+    boss = tmp_path / "eso_info" / "bosses"
+    evidence = tmp_path / "encounter_evidence"
+    boss.mkdir(parents=True)
+    evidence.mkdir()
+    (boss / "x.json").write_text(
+        '{"id":"x","mechanics":['
+        '{"name":"Explicit","description":"should be interrupted and cleansed",'
+        '"requires_movement":false,"requires_positioning":null,'
+        '"requires_cleanse":true,"interruptible":null}'
+        ']}'
+    )
+    service = EncounterService(EncounterRepository.from_data_root(tmp_path))
+
+    requirements = service.requirements("x")
+
+    assert len(requirements) == 1
+    assert requirements[0].requirement_type == "cleanse"
+    assert requirements[0].mechanic_name == "Explicit"
