@@ -25,6 +25,19 @@ def test_single_coefficient_triggered_additional_damage_is_not_phase6_role():
     assert roles == ()
 
 
+def test_attack_triggered_additional_damage_is_not_phase6_role_even_with_other_placeholder():
+    roles = extract_explicit_component_roles(
+        skill_rank_id=14,
+        coefficient_number=1,
+        component_text=(
+            "With Destruction Staff Equipped Fully-charged Inferno Staff Heavy Attacks "
+            "deal an additional $1 Flame Damage over 20 seconds. Another effect restores $2 Magicka."
+        ),
+        effect_kind="damage",
+    )
+    assert roles == ()
+
+
 def test_extracts_additional_heal_role():
     roles = extract_explicit_component_roles(
         skill_rank_id=12,
