@@ -118,6 +118,7 @@ def main() -> int:
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
+    from ui.collectibles_motif_support import install as install_collectibles_motif_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -140,6 +141,8 @@ def main() -> int:
     install_collectibles_profile_support()
     # Learned recipes/plans layer on top of the profile-aware Collectibles page.
     install_collectibles_learned_recipe_support()
+    # Motifs layer last so it can delegate safely to both existing collection layers.
+    install_collectibles_motif_support()
 
     from ui.main_window import MainWindow
 
