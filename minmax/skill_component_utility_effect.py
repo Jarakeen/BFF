@@ -66,7 +66,11 @@ def extract_explicit_component_utility_effects(
 ) -> tuple[SkillComponentUtilityEffect, ...]:
     """Extract explicit non-temporal utility effects from one owned component segment.
 
-    The caller is responsible for passing text already scoped to the coefficient.
+    Utility nouns used only as conditions or prior-state references do not count.
+    For example, ``if the stun lasts`` and ``after the stun ends`` describe the
+    context in which the coefficient occurs; they do not prove that the component
+    itself applies a stun.
+
     Duration, cadence, trigger frequency, chance, and current state are deliberately
     excluded from this Phase 6 primitive.
     """
@@ -102,8 +106,20 @@ def extract_explicit_component_utility_effects(
         )
 
     simple_patterns: tuple[tuple[SkillComponentUtilityEffectType, re.Pattern[str]], ...] = (
-        (SkillComponentUtilityEffectType.STUN, re.compile(r"\bstun(?:s|ned|ning)?\b", re.IGNORECASE)),
-        (SkillComponentUtilityEffectType.IMMOBILIZE, re.compile(r"\bimmobiliz(?:e|es|ed|ing)\b", re.IGNORECASE)),
+        (
+            SkillComponentUtilityEffectType.STUN,
+            re.compile(
+                r"\b(?:stuns|stunned|stunning)\b|(?:^|\b(?:and|then|to)\s+)stun\b",
+                re.IGNORECASE,
+            ),
+        ),
+        (
+            SkillComponentUtilityEffectType.IMMOBILIZE,
+            re.compile(
+                r"\b(?:immobilizes|immobilized|immobilizing)\b|(?:^|\b(?:and|then|to)\s+)immobilize\b",
+                re.IGNORECASE,
+            ),
+        ),
         (
             SkillComponentUtilityEffectType.KNOCKBACK,
             re.compile(
@@ -111,9 +127,22 @@ def extract_explicit_component_utility_effects(
                 re.IGNORECASE,
             ),
         ),
-        (SkillComponentUtilityEffectType.PULL, re.compile(r"\bpull(?:s|ed|ing)?\b", re.IGNORECASE)),
-        (SkillComponentUtilityEffectType.TAUNT, re.compile(r"\btaunt(?:s|ed|ing)?\b", re.IGNORECASE)),
-        (SkillComponentUtilityEffectType.INTERRUPT_IMMUNITY, re.compile(r"\binterrupt\s+immunity\b", re.IGNORECASE)),
+        (
+            SkillComponentUtilityEffectType.PULL,
+            re.compile(r"\b(?:pulls|pulled|pulling)\b|(?:^|\b(?:and|then|to)\s+)pull\b", re.IGNORECASE),
+        ),
+        (
+            SkillComponentUtilityEffectType.TAUNT,
+            re.compile(r"\b(?:taunts|taunted|taunting)\b|(?:^|\b(?:and|then|to)\s+)taunt\b", re.IGNORECASE),
+        ),
+        (
+            SkillComponentUtilityEffectType.INTERRUPT_IMMUNITY,
+            re.compile(
+                r"\b(?:grant(?:s|ed|ing)?|gain(?:s|ed|ing)?|provide(?:s|d|ing)?)\b"
+                r"[^.;]{0,45}?\binterrupt\s+immunity\b",
+                re.IGNORECASE,
+            ),
+        ),
     )
     for effect_type, pattern in simple_patterns:
         evidence = _first_evidence(text, pattern)
