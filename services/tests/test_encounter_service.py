@@ -137,3 +137,66 @@ def test_target_constraints_ignore_missing_nonpositive_and_boolean_counts(tmp_pa
     assert len(constraints) == 1
     assert constraints[0].mechanic_name == "Exact"
     assert constraints[0].target_count == 3
+
+
+def test_evidence_facts_filter_by_exact_fact_type():
+    service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+
+    transitions = service.evidence_facts("tideborn_taleria", "transition")
+
+    assert transitions
+    assert all(fact.fact_type == "transition" for fact in transitions)
+    assert any(fact.fact_key == "bridge_thresholds" for fact in transitions)
+    assert service.evidence_facts("tideborn_taleria", "Transition") == ()
+    with pytest.raises(ValueError):
+        service.evidence_facts("tideborn_taleria", "")
+
+
+def test_taleria_temporal_evidence_preserves_keys_approximation_and_source_status():
+    service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+    temporal = service.temporal_evidence("tideborn_taleria")
+    by_ref = {(row.fact_key, row.value_key): row for row in temporal}
+
+    duration = by_ref[("maelstrom_veteran_behavior", "duration_seconds")]
+    assert duration.seconds == 6
+    assert duration.approximate is False
+    assert duration.reconciliation_status == "single_source"
+    assert duration.distinct_sources == 1
+
+    cooldown = by_ref[("maelstrom_veteran_behavior", "cooldown_seconds")]
+    assert cooldown.seconds == 20
+    assert cooldown.approximate is False
+
+    detonation = by_ref[("rapid_deluge_veteran_behavior", "detonation_seconds_approx")]
+    assert detonation.seconds == 6
+    assert detonation.approximate is True
+
+    interval_min = by_ref[("behemoth_spawn_interval", "seconds_approx_min")]
+    interval_max = by_ref[("behemoth_spawn_interval", "seconds_approx_max")]
+    assert (interval_min.seconds, interval_max.seconds) == (60, 70)
+    assert interval_min.approximate is True
+    assert interval_max.approximate is True
+
+
+def test_conflicting_temporal_fact_is_not_converted_to_a_timer(tmp_path):
+    boss = tmp_path / "eso_info" / "bosses"
+    evidence = tmp_path / "encounter_evidence"
+    boss.mkdir(parents=True)
+    evidence.mkdir()
+    (boss / "x.json").write_text('{"id":"x"}')
+    (evidence / "x.json").write_text(
+        '{"encounter_id":"x","evidence":['
+        '{"fact_type":"mechanic_detail","fact_key":"timer",'
+        '"value":{"duration_seconds":10},"source_type":"guide",'
+        '"source_name":"A"},'
+        '{"fact_type":"mechanic_detail","fact_key":"timer",'
+        '"value":{"duration_seconds":12},"source_type":"guide",'
+        '"source_name":"B"}'
+        ']}'
+    )
+    service = EncounterService(EncounterRepository.from_data_root(tmp_path))
+
+    fact = service.evidence_facts("x", "mechanic_detail")[0]
+    assert fact.status == "conflicting"
+    assert fact.value is None
+    assert service.temporal_evidence("x") == ()
