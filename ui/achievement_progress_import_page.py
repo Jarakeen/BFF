@@ -34,8 +34,9 @@ class AchievementProgressImportPage(QWidget):
 
     PEOPLE = ("Jarakeen", "Rylo")
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, embedded: bool = False):
         super().__init__(parent)
+        self.embedded = bool(embedded)
         data_dir = get_data_dir()
         self.achievement_data = EsoAchievementDatabaseService(data_dir / "eso.db")
         self.achievement_progress = AchievementProgressService(data_dir / "achievement_progress.json")
@@ -57,16 +58,24 @@ class AchievementProgressImportPage(QWidget):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 12, 16, 12)
+        root.setContentsMargins(0, 0, 0, 0) if self.embedded else root.setContentsMargins(16, 12, 16, 12)
         root.setSpacing(12)
 
-        self.header = FoundryHeader(
-            title="Progress Import & Export",
-            subtitle="Bring the old achievement workbook forward, then use canonical IDs from here on.",
-            department="Research",
-            icon="download",
-        )
-        root.addWidget(self.header)
+        if not self.embedded:
+            self.header = FoundryHeader(
+                title="Progress Import & Export",
+                subtitle="Bring the old achievement workbook forward, then use canonical IDs from here on.",
+                department="Research",
+                icon="download",
+            )
+            root.addWidget(self.header)
+        else:
+            root.addWidget(
+                self._note(
+                    "Import legacy achievement progress without Google API access, preview every change before writing it, "
+                    "or export a clean canonical workbook/CSV for future backups and round trips."
+                )
+            )
 
         source_card = FoundryCard("SOURCE WORKBOOK")
         source_row = QHBoxLayout()
@@ -80,7 +89,7 @@ class AchievementProgressImportPage(QWidget):
         source_card.addWidget(
             self._note(
                 "Legacy BFF format is supported: column A = Rylo, B = Jarakeen, C = achievement name, F = points. "
-                "Foundry-native workbooks exported from this page use canonical achievement IDs."
+                "Foundry-native workbooks exported here use canonical achievement IDs instead of column-position folklore."
             )
         )
         root.addWidget(source_card)
