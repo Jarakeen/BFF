@@ -4,8 +4,9 @@ from __future__ import annotations
 
 This layer deliberately distinguishes provider capabilities from execution/compliance
 requirements. Missing roster evidence stays UNKNOWN instead of being collapsed into
-MISSING. It reuses the Phase 10 coverage vocabulary without forcing movement or
-positioning into the support-effect provider model.
+MISSING. Generic Phase 9 mechanics such as movement, positioning, cleansing, and
+interrupting describe what the encounter demands; they do not by themselves prove
+that one roster member must provide a special build capability.
 """
 
 from dataclasses import dataclass
@@ -27,8 +28,11 @@ class CapabilityAssessment(str, Enum):
     UNKNOWN = "unknown"
 
 
-_PROVIDER_REQUIREMENTS = frozenset({"cleanse", "interrupt"})
-_COMPLIANCE_REQUIREMENTS = frozenset({"movement", "positioning"})
+# Phase 9 currently exposes these as generic encounter actions. Do not turn them
+# into special provider requirements without stronger encounter evidence, e.g.
+# explicit ranged-interrupt, group-cleanse, or named-effect requirements.
+_PROVIDER_REQUIREMENTS = frozenset()
+_COMPLIANCE_REQUIREMENTS = frozenset({"movement", "positioning", "cleanse", "interrupt"})
 
 
 @dataclass(frozen=True)
@@ -156,7 +160,7 @@ class EncounterRequirementEvaluator:
         if semantics != RequirementSemantics.PROVIDER_CAPABILITY:
             reason = (
                 "Execution/compliance requirement requires explicit compliance evidence; "
-                "provider capability is not inferred."
+                "provider capability is not inferred from a generic encounter action."
                 if semantics == RequirementSemantics.COMPLIANCE
                 else "Requirement semantics are not yet mapped for Phase 10 evaluation."
             )
