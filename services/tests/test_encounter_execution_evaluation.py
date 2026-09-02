@@ -1,9 +1,14 @@
 from pathlib import Path
 
 from minmax.coverage_classification import CoverageClassification
+from services.encounter_cleanse_method import (
+    CleanseMethod,
+    CleanseMethodResolution,
+    EncounterCleanseMethod,
+)
 from services.encounter_execution_evaluation import EncounterExecutionEvaluator
 from services.encounter_repository import EncounterRepository
-from services.encounter_service import EncounterService
+from services.encounter_service import EncounterRequirement, EncounterService
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +17,31 @@ ROOT = Path(__file__).resolve().parents[2]
 def _evaluator() -> EncounterExecutionEvaluator:
     service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
     return EncounterExecutionEvaluator(service)
+
+
+def _cleanse_requirement(requirement_id: str, mechanic_name: str) -> EncounterRequirement:
+    return EncounterRequirement(
+        requirement_id=requirement_id,
+        encounter_id="fixture",
+        mechanic_id=requirement_id,
+        mechanic_name=mechanic_name,
+        requirement_type="cleanse",
+        target_count=None,
+        interpretation_status="structured",
+    )
+
+
+def _legacy_method(fact_id: str, mechanic_name: str) -> EncounterCleanseMethod:
+    return EncounterCleanseMethod(
+        encounter_id="fixture",
+        mechanic_name=mechanic_name,
+        method=CleanseMethod.ENCOUNTER_INTERACTION,
+        resolution=CleanseMethodResolution.RESOLVED,
+        interaction="fixture_interaction",
+        fact_id=fact_id,
+        reconciliation_status="corroborated",
+        distinct_sources=2,
+    )
 
 
 def test_oaxiltso_cleanse_is_build_independent_but_movement_and_positioning_stay_unknown():
@@ -66,3 +96,33 @@ def test_real_standard_interrupt_requirement_is_covered_by_global_core_action_ru
     assert interrupt.handling_method == "core_bash"
     assert interrupt.requires_player_build_capability is False
     assert "not successful player execution" in interrupt.explanation
+
+
+def test_single_unmatched_cleanse_requirement_and_method_are_joined_one_to_one():
+    requirement = _cleanse_requirement("cleanse-1", "Canonical Mechanic")
+    legacy = _legacy_method("fact-1", "legacy_fact_key")
+
+    joined = EncounterExecutionEvaluator._cleanse_methods_by_requirement(
+        (requirement,),
+        (legacy,),
+    )
+
+    assert joined == {"cleanse-1": legacy}
+
+
+def test_ambiguous_unmatched_cleanse_methods_are_not_guessed():
+    requirements = (
+        _cleanse_requirement("cleanse-1", "Mechanic One"),
+        _cleanse_requirement("cleanse-2", "Mechanic Two"),
+    )
+    methods = (
+        _legacy_method("fact-1", "legacy_one"),
+        _legacy_method("fact-2", "legacy_two"),
+    )
+
+    joined = EncounterExecutionEvaluator._cleanse_methods_by_requirement(
+        requirements,
+        methods,
+    )
+
+    assert joined == {}
