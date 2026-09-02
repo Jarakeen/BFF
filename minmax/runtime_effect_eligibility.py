@@ -80,10 +80,13 @@ def evaluate_effect_variant_runtime_eligibility(
     from free-form condition text.
     """
 
-    reasons: list[str] = []
-
     if not effect.eligible:
-        reasons.append("effect_not_statically_eligible")
+        return RuntimeEffectEligibilityResult(
+            eligible=False,
+            reasons=("effect_not_statically_eligible",),
+        )
+
+    reasons: list[str] = []
 
     if not runtime_event_matches_effect_variant(event, effect):
         reasons.append("trigger_mismatch")
