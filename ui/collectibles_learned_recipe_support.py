@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Expose learned Recipes and Furnishing Plans inside the Collectibles workspace."""
 
+import re
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidgetItem
 
@@ -9,6 +11,12 @@ from services.learned_recipe_service import KIND_BY_CATEGORY, LearnedRecipeServi
 
 _INSTALLED = False
 LEARNED_CATEGORIES = frozenset(KIND_BY_CATEGORY)
+_ESO_COLOR_TAG_RE = re.compile(r"\|c[0-9A-Fa-f]{6}")
+
+
+def _strip_eso_color_markup(text: str) -> str:
+    """Remove ESO inline color tags while preserving the source text and line breaks."""
+    return _ESO_COLOR_TAG_RE.sub("", str(text or "")).replace("|r", "")
 
 
 def install() -> None:
@@ -178,7 +186,7 @@ def install() -> None:
                 meta.append(f"Quality {row['recipe_quality']}")
         self.detail_type.setText(" · ".join(meta))
 
-        description = (row.get("description") or "").strip()
+        description = _strip_eso_color_markup((row.get("description") or "").strip())
         self.detail_description.setText(description or "No recipe description is available.")
         self.detail_hint.clear()
         self.detail_flags.setText(
