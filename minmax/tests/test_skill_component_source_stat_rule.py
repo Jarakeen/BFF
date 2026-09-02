@@ -57,7 +57,7 @@ def test_twin_blade_survives_raw_display_sentence_drift():
     assert rows[0].amount == 1487
 
 
-def test_death_knell_preserves_threshold_amount_and_slot_requirement():
+def test_death_knell_preserves_threshold_amount_and_canonical_slot_requirement():
     rows = extract_source_mapped_stat_rule(
         skill_rank_id=7390,
         coefficient_number=1,
@@ -87,6 +87,17 @@ def test_death_knell_accepts_color_tagged_literal_source():
     assert len(rows) == 1
     assert rows[0].amount == 0.20
     assert rows[0].target_health_below_fraction == 0.33
+
+
+def test_death_knell_rejects_unrelated_slot_header():
+    rows = extract_source_mapped_stat_rule(
+        skill_rank_id=7390,
+        coefficient_number=1,
+        raw_description="Increases your Critical Strike Chance against enemies under 33% Health by <<1>>.",
+        coef_description="Increases your Critical Strike Chance against enemies under 33% Health by 10%.",
+        desc_header="WITH A BONE TYRANT ABILITY SLOTTED",
+    )
+    assert rows == ()
 
 
 def test_raw_slot_alignment_does_not_invent_unrelated_semantics():
