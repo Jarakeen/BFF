@@ -115,6 +115,7 @@ def main() -> int:
     from ui.build_editor_performance import install as install_build_editor_performance
     from ui.build_progression_scroll_fix import install as install_build_progression_scroll_fix
     from ui.icon_consistency import install as install_icon_consistency
+    from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
 
     install_searchable_selectors()
     install_scribing_support()
@@ -133,6 +134,7 @@ def main() -> int:
     install_build_editor_performance()
     install_build_progression_scroll_fix()
     install_icon_consistency(app)
+    install_encounter_board_accessibility()
 
     from ui.main_window import MainWindow
 
