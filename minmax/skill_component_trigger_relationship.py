@@ -13,12 +13,16 @@ from enum import Enum
 
 class SkillComponentTriggerType(str, Enum):
     ABILITY_TRIGGERED = "ability_triggered"
+    ABILITY_REACTIVATED = "ability_reactivated"
+    NON_ULTIMATE_ABILITY_CAST = "non_ultimate_ability_cast"
+    DAMAGE_DEALT = "damage_dealt"
     LIGHT_ATTACK = "light_attack"
     HEAVY_ATTACK = "heavy_attack"
     LIGHT_OR_HEAVY_ATTACK = "light_or_heavy_attack"
     EFFECT_ENDED = "effect_ended"
     DELAY_ELAPSED = "delay_elapsed"
     CHARGE_THRESHOLD_REACHED = "charge_threshold_reached"
+    STACK_THRESHOLD_REACHED = "stack_threshold_reached"
     STUN_ENDED = "stun_ended"
     STUN_FULL_DURATION = "stun_full_duration"
     TARGET_TAKES_DAMAGE = "target_takes_damage"
@@ -78,19 +82,27 @@ def extract_explicit_component_trigger_relationships(
     placeholder = rf"\${int(coefficient_number)}(?!\d)"
     condition = _condition_from_text(text)
 
-    charge_match = re.search(
-        rf"\bwhen\s+you\s+reach\s+(?P<count>\d+)\s+[^.;]{{0,40}}?charges?\b[^.;]{{0,180}}?{placeholder}",
-        text,
-        re.IGNORECASE,
+    threshold_patterns: tuple[tuple[SkillComponentTriggerType, str], ...] = (
+        (
+            SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED,
+            rf"\bwhen\s+you\s+reach\s+(?P<count>\d+)\s+[^.;]{{0,40}}?charges?\b[^.;]{{0,180}}?{placeholder}",
+        ),
+        (
+            SkillComponentTriggerType.STACK_THRESHOLD_REACHED,
+            rf"\b(?:after|when|upon)\s+(?:you\s+)?(?:reach|reaching)\s+(?P<count>\d+)\s+stacks?\b[^.;]{{0,180}}?{placeholder}",
+        ),
     )
-    if charge_match is not None:
+    for trigger_type, pattern in threshold_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match is None:
+            continue
         return (
             SkillComponentTriggerRelationship(
                 skill_rank_id=int(skill_rank_id),
                 coefficient_number=int(coefficient_number),
-                trigger_type=SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED,
-                trigger_count=int(charge_match.group("count")),
-                evidence=charge_match.group(0),
+                trigger_type=trigger_type,
+                trigger_count=int(match.group("count")),
+                evidence=match.group(0),
                 condition=condition,
             ),
         )
@@ -127,6 +139,18 @@ def extract_explicit_component_trigger_relationships(
         (
             SkillComponentTriggerType.LIGHT_ATTACK,
             rf"\blight\s+attacks?\b[^.;]{{0,160}}?{placeholder}",
+        ),
+        (
+            SkillComponentTriggerType.NON_ULTIMATE_ABILITY_CAST,
+            rf"\bcasting\s+(?:a|an)\s+non[-\s]ultimate\s+ability\b[^.;]{{0,220}}?{placeholder}",
+        ),
+        (
+            SkillComponentTriggerType.ABILITY_REACTIVATED,
+            rf"\bactivating\s+again\b[^.;]{{0,260}}?{placeholder}",
+        ),
+        (
+            SkillComponentTriggerType.DAMAGE_DEALT,
+            rf"\bwhen\s+you\s+deal\s+damage\b[^.;]{{0,220}}?{placeholder}",
         ),
         (
             SkillComponentTriggerType.ABILITY_TRIGGERED,
