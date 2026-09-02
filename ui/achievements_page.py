@@ -5,7 +5,16 @@ Canonical replacement for the historically misnamed ``collections_page.py``.
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from engine.config import get_data_dir
 from services.achievement_progress_service import AchievementProgressService
@@ -20,7 +29,7 @@ from widgets.collection_browser import CollectionBrowser
 
 
 class AchievementsPage(QWidget):
-    """Browse and track ESO account achievements."""
+    """Browse and track ESO account achievements by profile."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,12 +47,34 @@ class AchievementsPage(QWidget):
             self.achievement_progress_service,
         )
 
+    @staticmethod
+    def _context_field(title: str, widget: QWidget) -> QWidget:
+        box = QWidget()
+        layout = QVBoxLayout(box)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+        label = QLabel(title)
+        label.setProperty("sidebarHeading", True)
+        layout.addWidget(label)
+        layout.addWidget(widget)
+        return box
+
     def _build_ui(self):
         self.header = FoundryHeader(
             title="Achievements",
             subtitle="Browse and track ESO account achievements.",
             department="Research",
         )
+
+        self.profile_combo = QComboBox()
+        self.profile_combo.setMinimumWidth(150)
+        self.profile_combo.setToolTip("Choose whose achievement progress is displayed.")
+        self._reload_profile_combo()
+        self.header.add_context_widget(self._context_field("PROFILE", self.profile_combo))
+
+        self.add_profile_button = QPushButton("+ Profile")
+        self.add_profile_button.setToolTip("Add another person/account progress profile.")
+        self.header.add_context_widget(self.add_profile_button)
 
         self.points_stat = AchievementPointsCard()
         self.earned_stat = AchievementRatioCard()
@@ -102,15 +133,49 @@ class AchievementsPage(QWidget):
         self.status.info("Achievements ready.")
 
     def _connect_signals(self):
+        self.profile_combo.currentTextChanged.connect(self._profile_changed)
+        self.add_profile_button.clicked.connect(self._add_profile)
         self.browser.achievementChanged.connect(self.achievement_changed)
         self.browser.achievementSelected.connect(self.achievement_details.load_achievement)
         self.actions.refreshRequested.connect(self.refresh)
         self.actions.syncRequested.connect(self.sync)
 
+    def _reload_profile_combo(self, selected: str | None = None) -> None:
+        active = selected or self.achievement_progress_service.active_profile
+        self.profile_combo.blockSignals(True)
+        self.profile_combo.clear()
+        self.profile_combo.addItems(self.achievement_progress_service.profiles())
+        index = self.profile_combo.findText(active)
+        self.profile_combo.setCurrentIndex(index if index >= 0 else 0)
+        self.profile_combo.blockSignals(False)
+
+    def _profile_changed(self, profile: str) -> None:
+        profile = profile.strip()
+        if not profile:
+            return
+        self.achievement_progress_service.set_active_profile(profile)
+        self.refresh()
+
+    def _add_profile(self) -> None:
+        name, accepted = QInputDialog.getText(self, "Add Achievement Profile", "Profile name")
+        if not accepted or not name.strip():
+            return
+        try:
+            profile = self.achievement_progress_service.ensure_profile(name)
+            self.achievement_progress_service.set_active_profile(profile)
+        except ValueError as exc:
+            self.status.warning(str(exc))
+            return
+        self._reload_profile_combo(profile)
+        self.refresh()
+        self.status.success(f"Achievement profile ready: {profile}.")
+
     def achievement_changed(self, achievement_id: int, complete: bool):
         self.achievement_progress_service.set_complete(achievement_id, complete)
         self.refresh_stats()
-        self.status.success("Progress updated.")
+        self.status.success(
+            f"Progress updated for {self.achievement_progress_service.active_profile}."
+        )
 
     def refresh_stats(self):
         self.achievement_stats_service.refresh()
@@ -126,12 +191,16 @@ class AchievementsPage(QWidget):
         self.pvp_stat.set_ratio(pvp["count_earned"], pvp["count_total"])
 
     def refresh(self):
+        self._reload_profile_combo()
         self.browser.reload()
         self.refresh_stats()
-        self.status.info(f"{self.achievement_progress_service.completed_count()} achievements completed.")
+        profile = self.achievement_progress_service.active_profile
+        self.status.info(
+            f"{self.achievement_progress_service.completed_count()} achievements completed for {profile}."
+        )
 
     def sync(self):
-        self.status.info("Synchronization not implemented yet.")
+        self.status.info("Spreadsheet synchronization is the next profile-aware import step.")
 
 
 # Transitional class alias for callers that imported the old class name.
