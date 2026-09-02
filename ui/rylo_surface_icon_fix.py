@@ -29,17 +29,52 @@ QFrame[bookPanel="true"], QWidget[bookPanel="true"] {
     border-radius: 1px;
 }
 
-/* Keep the texture quieter inside note/detail plates. */
+/* Note/detail plates are intentionally dark and quieter than the stone cards. */
 QFrame[parchment="true"], QWidget[parchment="true"],
 QFrame[foundryNoteCard="true"], QWidget[foundryNoteCard="true"] {
-    background-color: #1A1A1C;
-    background-image: url("@RYLO_ASSET_PATH@/rylo_stone.svg");
-    color: #D0D1D2;
-    border-left: 2px solid #404144;
-    border-top: 2px solid #404144;
-    border-right: 2px solid #242527;
-    border-bottom: 2px solid #242527;
+    background-color: #171719;
+    background-image: none;
+    color: #D5D6D7;
+    border-left: 2px solid #3B3C3F;
+    border-top: 2px solid #3B3C3F;
+    border-right: 2px solid #232426;
+    border-bottom: 2px solid #232426;
     border-radius: 1px;
+}
+
+/* Legacy Grimoire has dedicated parchment text rules. Override those too. */
+QFrame[foundryNoteCard="true"] QLabel[noteCardTitle="true"],
+QWidget[foundryNoteCard="true"] QLabel[noteCardTitle="true"],
+QLabel[noteCardTitle="true"] {
+    background: transparent;
+    color: #D9D6CF;
+    font-style: normal;
+}
+QFrame[foundryNoteCard="true"] QLabel[noteCardBody="true"],
+QWidget[foundryNoteCard="true"] QLabel[noteCardBody="true"],
+QLabel[noteCardBody="true"] {
+    background: transparent;
+    color: #CDD0D2;
+}
+QFrame[foundryNoteCard="true"] QTextEdit[noteCardBody="true"],
+QWidget[foundryNoteCard="true"] QTextEdit[noteCardBody="true"],
+QTextEdit[noteCardBody="true"] {
+    background-color: #111214;
+    background-image: none;
+    color: #D5D6D7;
+    selection-background-color: #4A4D51;
+    selection-color: #FFFFFF;
+    border: 1px solid #35373A;
+}
+
+/* Some pages put the parchment property directly on labels or text widgets. */
+QLabel[parchment="true"],
+QTextEdit[parchment="true"],
+QPlainTextEdit[parchment="true"] {
+    background-color: #171719;
+    background-image: none;
+    color: #D5D6D7;
+    border: 1px solid #35373A;
 }
 
 QWidget[cardHeader="true"] {
