@@ -66,6 +66,23 @@ class AchievementProgressService:
         if self._active_profile not in self._profiles:
             self._active_profile = next(iter(self._profiles))
 
+    def reload(self, *, preserve_active_profile: bool = True) -> None:
+        """Reload progress from disk after another service instance writes it.
+
+        The application has multiple UI surfaces that can own separate
+        ``AchievementProgressService`` instances. Local workbook import is one
+        such writer, so long-lived readers need an explicit cache invalidation
+        point before repainting their UI.
+        """
+        previous = self._active_profile if preserve_active_profile else self.DEFAULT_PROFILE
+        self._profiles = None
+        self._active_profile = self.DEFAULT_PROFILE
+        self._ensure_loaded()
+        if preserve_active_profile:
+            normalized = self._normalize_profile_name(previous)
+            if normalized in self._profiles:
+                self._active_profile = normalized
+
     @staticmethod
     def _normalize_profile_name(name) -> str:
         return " ".join(str(name or "").strip().split())
