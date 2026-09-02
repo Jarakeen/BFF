@@ -1,0 +1,23 @@
+{
+  "id": "broadcast",
+  "name": "Broadcast Desk",
+  "version": 1,
+  "optional": true,
+  "resources": [
+    "resources/natural_history_narrator.json",
+    "resources/Natural_history_narrator.md",
+    "resources/footnotes.txt"
+  ],
+  "user_state_root": "user_data/broadcast",
+  "state_files": [
+    "CurrentBroadcast.json",
+    "CurrentExpedition.json",
+    "CurrentIncident.json",
+    "StreamEvents.json",
+    "StreamSession.json",
+    "MarkerLog.md",
+    "FieldNoteCounter.txt",
+    "ExpeditionCounter.txt",
+    "IncidentCounter.txt"
+  ]
+}
