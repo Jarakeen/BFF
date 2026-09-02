@@ -131,6 +131,30 @@ def _component_segment(fragment: str, coefficient_number: int) -> str:
     return fragment[start:end].strip()
 
 
+def _coordinated_damage_type(lower: str, coefficient_number: int) -> str | None:
+    """Return a shared damage type for an explicit coordinated coefficient list.
+
+    ESO sometimes writes one damage type after several coefficient placeholders,
+    for example ``dealing $1, $2, and $3 Disease Damage``. Every placeholder in
+    that grammatical list owns the same damage identity. This deliberately does
+    not infer across arbitrary neighboring placeholders.
+    """
+
+    damage_type_group = "|".join(re.escape(token) for token in _DAMAGE_TYPES)
+    pattern = re.compile(
+        rf"\bdeal(?:ing|s)?\s+"
+        rf"(?P<coefficients>\$\d+(?!\d)(?:\s*,\s*\$\d+(?!\d))*(?:\s*,?\s*and\s*\$\d+(?!\d))?)"
+        rf"\s+(?P<damage_type>{damage_type_group})\s+damage\b",
+        re.IGNORECASE,
+    )
+    for match in pattern.finditer(lower):
+        numbers = {int(value) for value in _ANY_PLACEHOLDER_RE.findall(match.group("coefficients"))}
+        if int(coefficient_number) not in numbers:
+            continue
+        return _DAMAGE_TYPES[match.group("damage_type").casefold()]
+    return None
+
+
 def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
     """Resolve effect kind only when wording ties the mechanic to ``$N``."""
 
@@ -162,6 +186,8 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
         rf"\b(?:deal(?:ing|s)?|take(?:s|n)?|inflict(?:ing|s)?|hit(?:s|ting)?|blast(?:s|ing)?)\b[^.;]{{0,80}}?{placeholder}\s+damage\b",
     )
     if any(re.search(pattern, lower) for pattern in damage_patterns):
+        return "damage"
+    if _coordinated_damage_type(lower, coefficient_number) is not None:
         return "damage"
 
     # Explicit non-damage scalar or duration coefficients are safely classed as
@@ -224,6 +250,10 @@ def extract_component_text_evidence(
                 damage_type = canonical
                 evidence.append(f"placeholder explicitly precedes {token.title()} Damage")
                 break
+        if damage_type is None:
+            damage_type = _coordinated_damage_type(lower, coefficient_number)
+            if damage_type is not None:
+                evidence.append(f"placeholder belongs to a coordinated {damage_type.title()} Damage coefficient list")
 
         periodic_patterns = (
             r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
