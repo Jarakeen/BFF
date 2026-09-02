@@ -25,13 +25,19 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import data_paths
+from tools import data_paths as canonical_data_paths
 from services.uesp.uesp_client import UespClient
 from services.uesp.uesp_importer import ImportResult, UespImporter
 from services.uesp.uesp_store import UespStore
 
 
-DEFAULT_DATA_ROOT = data_paths.UESP_DATA_ROOT
+DEFAULT_DATA_ROOT = canonical_data_paths.UESP_DATA_ROOT
+
+
+def data_paths(data_root: Path) -> tuple[Path, Path]:
+    """Return the cache and import-log locations for an explicit corpus root."""
+    root = Path(data_root)
+    return root / ".cache", root / "import_log.jsonl"
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -129,8 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
 
     data_root: Path = args.data_root
-    cache_root = data_paths.UESP_CACHE_ROOT if data_root == DEFAULT_DATA_ROOT else data_root / ".cache"
-    log_path = data_paths.UESP_IMPORT_LOG_PATH if data_root == DEFAULT_DATA_ROOT else data_root / "import_log.jsonl"
+    cache_root, log_path = data_paths(data_root)
 
     client = UespClient(cache_dir=cache_root, min_request_interval=args.rate_limit)
     store = UespStore(root=data_root)
