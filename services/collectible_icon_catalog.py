@@ -3,17 +3,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from services.content_packs import resolve_collectible_icons_root
+
 
 class CollectibleIconCatalog:
-    """Resolve harvested collectible IDs to local image files.
+    """Resolve collectible IDs to optional local thumbnail files.
 
-    The icon collector owns the manifest format. Runtime code only needs a
-    stable ID -> Path lookup and remains usable when the cache is absent.
+    Runtime metadata remains usable when the thumbnail pack is absent. The
+    canonical pack lives under ``content_packs/collectible_icons``; the old
+    ``data/collectible_icons`` cache remains a temporary compatibility fallback.
     """
 
     def __init__(self, data_dir: str | Path):
         self.data_dir = Path(data_dir)
-        self.icon_dir = self.data_dir / "collectible_icons"
+        self.icon_dir = resolve_collectible_icons_root(self.data_dir)
         self.manifest_path = self.icon_dir / "manifest.json"
         self.entries: dict[str, dict] = {}
         self.load()
@@ -40,6 +43,10 @@ class CollectibleIconCatalog:
     def available_count(self) -> int:
         return sum(1 for key in self.entries if self.path_for(key) is not None)
 
+    @property
+    def installed(self) -> bool:
+        return self.manifest_path.is_file()
+
     def path_for(self, collectible_id: int | str) -> Path | None:
         entry = self.entries.get(str(collectible_id))
         if not entry:
@@ -49,8 +56,8 @@ class CollectibleIconCatalog:
         if not filename:
             return None
 
-        # The manifest stores basenames relative to collectible_icons. Reject
-        # attempts to escape the cache directory if a manifest is malformed.
+        # The manifest stores basenames relative to the selected icon pack.
+        # Reject attempts to escape the pack directory if it is malformed.
         candidate = (self.icon_dir / filename).resolve()
         try:
             candidate.relative_to(self.icon_dir.resolve())
