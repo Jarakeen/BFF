@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Domain-facing read-only encounter service.
 
-Numeric source values retain their exact source text.  A number is exposed only
+Numeric source values retain their exact source text. A number is exposed only
 when its format is unambiguous; callers must handle unresolved values explicitly.
 """
 
@@ -13,6 +13,8 @@ from services.encounter_projection import EncounterDefinition
 from services.encounter_repository import EncounterRepository
 
 _HEALTH = re.compile(r"^\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\s*\(([^()]*)\))?\s*$")
+_PERCENT = re.compile(r"^\s*(100|[1-9]?\d)\s*%\s*$")
+
 
 @dataclass(frozen=True)
 class EncounterHealth:
@@ -21,6 +23,15 @@ class EncounterHealth:
     value: int | None
     annotation: str
     resolution: str
+
+
+@dataclass(frozen=True)
+class EncounterPhaseThreshold:
+    phase_id: str
+    raw_value: str
+    percent: int | None
+    resolution: str
+
 
 class EncounterService:
     def __init__(self, repository: EncounterRepository) -> None:
@@ -40,4 +51,25 @@ class EncounterService:
         match = _HEALTH.fullmatch(raw)
         if match is None:
             return EncounterHealth(difficulty, raw, None, "", "unresolved")
-        return EncounterHealth(difficulty, raw, int(match.group(1).replace(",", "")), match.group(2) or "", "parsed")
+        return EncounterHealth(
+            difficulty,
+            raw,
+            int(match.group(1).replace(",", "")),
+            match.group(2) or "",
+            "parsed",
+        )
+
+    def phase_threshold(self, encounter_id: str, phase_id: str) -> EncounterPhaseThreshold:
+        if not isinstance(phase_id, str) or not phase_id:
+            raise ValueError("phase_id must be a non-empty canonical id")
+        encounter = self.get(encounter_id)
+        phase = next((item for item in encounter.phases if item.phase_id == phase_id), None)
+        if phase is None:
+            raise LookupError(f"No canonical phase {phase_id!r} for encounter {encounter_id!r}")
+        match = _PERCENT.fullmatch(phase.threshold)
+        return EncounterPhaseThreshold(
+            phase_id=phase.phase_id,
+            raw_value=phase.threshold,
+            percent=int(match.group(1)) if match else None,
+            resolution="parsed" if match else "unresolved",
+        )
