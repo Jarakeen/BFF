@@ -9,6 +9,7 @@ $DistRoot = Join-Path $ProjectRoot "dist"
 $BuildRoot = Join-Path $ProjectRoot "build"
 $PackageRoot = Join-Path $DistRoot "BFF-Friend"
 $SpecPath = Join-Path $PSScriptRoot "BFF.spec"
+$ExeName = "FoundryDock.exe"
 
 Write-Host ""
 Write-Host "========================================"
@@ -27,19 +28,19 @@ if (Test-Path $BuildRoot) {
     Remove-Item $BuildRoot -Recurse -Force
 }
 
-Write-Host "Building BFF.exe..."
+Write-Host "Building $ExeName..."
 python -m PyInstaller --clean $SpecPath
 
-$BuiltExe = Join-Path $DistRoot "BFF.exe"
+$BuiltExe = Join-Path $DistRoot $ExeName
 if (-not (Test-Path $BuiltExe)) {
-    throw "PyInstaller did not create BFF.exe at: $BuiltExe"
+    throw "PyInstaller did not create $ExeName at: $BuiltExe"
 }
 
 New-Item -ItemType Directory -Force -Path $PackageRoot | Out-Null
 $DataRoot = Join-Path $PackageRoot "data"
 New-Item -ItemType Directory -Force -Path $DataRoot | Out-Null
 
-Move-Item $BuiltExe (Join-Path $PackageRoot "BFF.exe") -Force
+Move-Item $BuiltExe (Join-Path $PackageRoot $ExeName) -Force
 
 # The reference DB remains external and writable. engine.config resolves data/
 # beside the executable when frozen.
@@ -162,8 +163,8 @@ Write-Host " FRIEND BUILD COMPLETE"
 Write-Host "========================================"
 Write-Host ""
 Write-Host "Folder: $PackageRoot"
-Write-Host "Executable: $(Join-Path $PackageRoot 'BFF.exe')"
+Write-Host "Executable: $(Join-Path $PackageRoot $ExeName)"
 Write-Host "Zip to send: $ZipPath"
 Write-Host "Broadcast: $(if ($IncludeBroadcast) { 'included' } else { 'omitted' })"
 Write-Host ""
-Write-Host "Run BFF.exe from the extracted folder; keep the data folder beside it."
+Write-Host "Run $ExeName from the extracted folder; keep the data folder beside it."
