@@ -10,6 +10,7 @@ from services.encounter_interrupt_method import (
 )
 from services.encounter_repository import EncounterRepository
 from services.encounter_service import EncounterService
+from services.eso_combat_rules import STANDARD_INTERRUPT
 
 
 def _service(data_root: Path) -> EncounterService:
@@ -51,10 +52,20 @@ def _write_synthetic(tmp_path: Path, evidence_rows: list[dict]) -> EncounterServ
     return _service(tmp_path)
 
 
-def test_generic_interruptible_flag_does_not_invent_bash_method(tmp_path):
+def test_generic_interruptible_flag_uses_sourced_global_bash_rule(tmp_path):
     service = _write_synthetic(tmp_path, [])
 
-    assert EncounterInterruptMethodService(service).methods("x") == ()
+    row = EncounterInterruptMethodService(service).methods("x")[0]
+
+    assert row.method == InterruptMethod.CORE_BASH
+    assert row.resolution == InterruptMethodResolution.RESOLVED
+    assert row.interaction == "standard_interrupt_bash"
+    assert row.fact_id == f"global_rule:{STANDARD_INTERRUPT.rule_id}"
+    assert row.reconciliation_status == "global_rule"
+    assert row.ranged_required is False
+    assert row.rule_source_name == STANDARD_INTERRUPT.source_name
+    assert row.rule_source_url == STANDARD_INTERRUPT.source_url
+    assert row.requires_player_build_capability is False
 
 
 def test_explicit_core_bash_method_resolves_without_build_requirement(tmp_path):
@@ -84,10 +95,11 @@ def test_explicit_core_bash_method_resolves_without_build_requirement(tmp_path):
     assert row.resolution == InterruptMethodResolution.RESOLVED
     assert row.interaction == "bash"
     assert row.ranged_required is False
+    assert row.reconciliation_status == "single_source"
     assert row.requires_player_build_capability is False
 
 
-def test_explicit_ranged_player_skill_marks_build_capability(tmp_path):
+def test_explicit_ranged_player_skill_overrides_global_bash_rule(tmp_path):
     service = _write_synthetic(
         tmp_path,
         [
@@ -108,14 +120,17 @@ def test_explicit_ranged_player_skill_marks_build_capability(tmp_path):
         ],
     )
 
-    row = EncounterInterruptMethodService(service).methods("x")[0]
+    rows = EncounterInterruptMethodService(service).methods("x")
 
+    assert len(rows) == 1
+    row = rows[0]
     assert row.method == InterruptMethod.PLAYER_SKILL
     assert row.ranged_required is True
     assert row.requires_player_build_capability is True
+    assert row.reconciliation_status == "single_source"
 
 
-def test_conflicting_interrupt_method_evidence_never_selects_winner(tmp_path):
+def test_conflicting_interrupt_method_evidence_blocks_global_fallback(tmp_path):
     service = _write_synthetic(
         tmp_path,
         [
@@ -140,8 +155,10 @@ def test_conflicting_interrupt_method_evidence_never_selects_winner(tmp_path):
         ],
     )
 
-    row = EncounterInterruptMethodService(service).methods("x")[0]
+    rows = EncounterInterruptMethodService(service).methods("x")
 
+    assert len(rows) == 1
+    row = rows[0]
     assert row.method is None
     assert row.resolution == InterruptMethodResolution.CONFLICTING
     assert row.requires_player_build_capability is None
