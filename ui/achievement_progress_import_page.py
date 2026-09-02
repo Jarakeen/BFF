@@ -6,6 +6,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QFileDialog,
     QHBoxLayout,
@@ -239,6 +240,11 @@ class AchievementProgressImportPage(QWidget):
             self.status.info("Import cancelled. Local progress was not changed.")
             return
 
+        self.import_button.setEnabled(False)
+        self.import_button.setText("Importing…")
+        self.status.info("Import in progress. Please wait…")
+        QApplication.processEvents()
+
         summaries = []
         try:
             for person in people:
@@ -249,11 +255,26 @@ class AchievementProgressImportPage(QWidget):
                     f"{report.collectible_rewards_marked} reward collectibles marked owned"
                 )
         except Exception as exc:
+            self.import_button.setText("Import Selected Profiles")
+            self.import_button.setEnabled(bool(self._snapshots))
             self.status.error(f"Import failed: {exc}")
+            QMessageBox.critical(
+                self,
+                "Achievement Import Failed",
+                f"The import did not finish successfully.\n\n{exc}",
+            )
             return
 
+        completion_text = "\n".join(summaries)
         self.preview_workbook()
+        self.import_button.setText("Import Selected Profiles")
+        self.import_button.setEnabled(bool(self._snapshots))
         self.status.success("Import complete. " + " | ".join(summaries))
+        QMessageBox.information(
+            self,
+            "Achievement Import Complete",
+            "Import complete.\n\n" + completion_text,
+        )
 
     def export_xlsx(self) -> None:
         filename, _ = QFileDialog.getSaveFileName(
