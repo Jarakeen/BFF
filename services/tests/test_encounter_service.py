@@ -103,3 +103,37 @@ def test_requirements_do_not_promote_false_or_unknown_fields(tmp_path):
     assert len(requirements) == 1
     assert requirements[0].requirement_type == "cleanse"
     assert requirements[0].mechanic_name == "Explicit"
+
+
+def test_oaxiltso_target_constraints_preserve_explicit_count_without_selecting_targets():
+    service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+    constraints = service.target_constraints("oaxiltso")
+
+    sludge = next(row for row in constraints if row.mechanic_name == "Noxious Sludge")
+    assert sludge.target_count == 2
+    assert sludge.constraint_id == f"{sludge.mechanic_id}:targets"
+    assert sludge.interpretation_status == "inferred"
+    assert not hasattr(sludge, "selected_targets")
+    assert not hasattr(sludge, "targeting_rule")
+
+
+def test_target_constraints_ignore_missing_nonpositive_and_boolean_counts(tmp_path):
+    boss = tmp_path / "eso_info" / "bosses"
+    evidence = tmp_path / "encounter_evidence"
+    boss.mkdir(parents=True)
+    evidence.mkdir()
+    (boss / "x.json").write_text(
+        '{"id":"x","mechanics":['
+        '{"name":"Missing","description":"","target_count":null},'
+        '{"name":"Zero","description":"","target_count":0},'
+        '{"name":"Boolean","description":"","target_count":true},'
+        '{"name":"Exact","description":"","target_count":3}'
+        ']}'
+    )
+    service = EncounterService(EncounterRepository.from_data_root(tmp_path))
+
+    constraints = service.target_constraints("x")
+
+    assert len(constraints) == 1
+    assert constraints[0].mechanic_name == "Exact"
+    assert constraints[0].target_count == 3
