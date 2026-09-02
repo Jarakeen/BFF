@@ -17,6 +17,7 @@ def _audit(
     name: str = "Healer",
     effects: tuple[EffectVariant, ...] = (),
     unresolved: tuple[str, ...] = (),
+    capability_unresolved: tuple[str, ...] | None = None,
 ) -> SavedBuildCapabilityAudit:
     return SavedBuildCapabilityAudit(
         character_name=name,
@@ -24,6 +25,7 @@ def _audit(
         character_id=f"id-{name}",
         resolved_effects=effects,
         unresolved=unresolved,
+        capability_unresolved=capability_unresolved,
     )
 
 
@@ -91,6 +93,48 @@ def test_unresolved_build_without_match_stays_unknown_not_unsupported():
     row = adapter.evidence_for((audit,), ("cleanse",))[0]
 
     assert row.assessment == CapabilityAssessment.UNKNOWN
+
+
+def test_non_capability_build_uncertainty_does_not_poison_absent_support_effect():
+    adapter = SavedBuildEncounterCapabilityAdapter(
+        (
+            EncounterCapabilityIdentityMap(
+                capability_type="major_courage",
+                effect_names=frozenset({"major_courage"}),
+            ),
+        )
+    )
+    audit = _audit(
+        effects=(_effect("major_resolve"),),
+        unresolved=("Passive rank is not recorded for character: Frozen Armor",),
+        capability_unresolved=(),
+    )
+
+    row = adapter.evidence_for((audit,), ("major_courage",))[0]
+
+    assert row.assessment == CapabilityAssessment.UNSUPPORTED
+    assert "support-capability sources are resolved" in row.source
+
+
+def test_capability_scoped_source_gap_keeps_absent_effect_unknown():
+    adapter = SavedBuildEncounterCapabilityAdapter(
+        (
+            EncounterCapabilityIdentityMap(
+                capability_type="major_courage",
+                effect_names=frozenset({"major_courage"}),
+            ),
+        )
+    )
+    audit = _audit(
+        effects=(_effect("major_resolve"),),
+        unresolved=("front skill not found in canonical ability data: Mystery Skill",),
+        capability_unresolved=("front skill not found in canonical ability data: Mystery Skill",),
+    )
+
+    row = adapter.evidence_for((audit,), ("major_courage",))[0]
+
+    assert row.assessment == CapabilityAssessment.UNKNOWN
+    assert "Mystery Skill" in row.source
 
 
 def test_ineligible_mapped_effect_stays_unknown():
