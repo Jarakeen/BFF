@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from services.broadcast_paths import BROADCAST_RESOURCES, BroadcastPaths
-from services.paths import DATA, PROJECT_ROOT
+from services.broadcast_paths import BroadcastPaths
+from services.paths import BROADCAST_RESOURCES, BROADCAST_USER_DATA, DATA, PROJECT_ROOT
 
 
 def test_broadcast_paths_honor_configured_settings() -> None:
@@ -44,33 +44,53 @@ def test_broadcast_paths_honor_configured_settings() -> None:
     assert paths.session_archive_folder == Path(settings["SessionArchiveFolder"])
 
 
-def test_broadcast_paths_use_module_resources_and_current_state_as_fallback() -> None:
+def test_broadcast_paths_use_user_state_and_module_resources_as_fallback() -> None:
     paths = BroadcastPaths.from_settings({})
 
-    assert paths.current_broadcast == DATA / "CurrentBroadcast.json"
-    assert paths.current_expedition == DATA / "CurrentExpedition.json"
-    assert paths.current_incident == DATA / "CurrentIncident.json"
-    assert paths.stream_events == DATA / "StreamEvents.json"
-    assert paths.stream_session == DATA / "StreamSession.json"
-    assert paths.marker_log == DATA / "MarkerLog.md"
+    assert paths.current_broadcast == BROADCAST_USER_DATA / "CurrentBroadcast.json"
+    assert paths.current_expedition == BROADCAST_USER_DATA / "CurrentExpedition.json"
+    assert paths.current_incident == BROADCAST_USER_DATA / "CurrentIncident.json"
+    assert paths.stream_events == BROADCAST_USER_DATA / "StreamEvents.json"
+    assert paths.stream_session == BROADCAST_USER_DATA / "StreamSession.json"
+    assert paths.marker_log == BROADCAST_USER_DATA / "MarkerLog.md"
     assert paths.footnotes == BROADCAST_RESOURCES / "footnotes.txt"
-    assert paths.field_note_counter == DATA / "FieldNoteCounter.txt"
-    assert paths.expedition_counter == DATA / "ExpeditionCounter.txt"
-    assert paths.incident_counter == DATA / "IncidentCounter.txt"
+    assert paths.field_note_counter == BROADCAST_USER_DATA / "FieldNoteCounter.txt"
+    assert paths.expedition_counter == BROADCAST_USER_DATA / "ExpeditionCounter.txt"
+    assert paths.incident_counter == BROADCAST_USER_DATA / "IncidentCounter.txt"
     assert paths.weather_folder == DATA / "Weather"
     assert paths.narrator_content == BROADCAST_RESOURCES / "natural_history_narrator.json"
-    assert paths.counters_folder == DATA
+    assert paths.counters_folder == BROADCAST_USER_DATA
     assert paths.archive_folder == PROJECT_ROOT / "Archive"
     assert paths.session_archive_folder == PROJECT_ROOT / "Archive" / "Sessions"
 
 
-def test_broadcast_paths_translate_legacy_default_resource_settings() -> None:
+def test_broadcast_paths_translate_legacy_default_settings() -> None:
     paths = BroadcastPaths.from_settings(
         {
+            "CurrentBroadcastPath": str(DATA / "CurrentBroadcast.json"),
+            "CurrentExpeditionPath": str(DATA / "CurrentExpedition.json"),
+            "CurrentIncidentPath": str(DATA / "CurrentIncident.json"),
+            "StreamEventsPath": str(DATA / "StreamEvents.json"),
+            "StreamSessionPath": str(DATA / "StreamSession.json"),
+            "MarkerLogPath": str(DATA / "MarkerLog.md"),
             "FootnotesPath": str(DATA / "footnotes.txt"),
+            "FieldNoteCounterPath": str(DATA / "FieldNoteCounter.txt"),
+            "ExpeditionCounterPath": str(DATA / "ExpeditionCounter.txt"),
+            "IncidentCounterPath": str(DATA / "IncidentCounter.txt"),
             "NarratorContentPath": str(DATA / "natural_history_narrator.json"),
+            "CountersFolder": str(DATA),
         }
     )
 
+    assert paths.current_broadcast == BROADCAST_USER_DATA / "CurrentBroadcast.json"
+    assert paths.current_expedition == BROADCAST_USER_DATA / "CurrentExpedition.json"
+    assert paths.current_incident == BROADCAST_USER_DATA / "CurrentIncident.json"
+    assert paths.stream_events == BROADCAST_USER_DATA / "StreamEvents.json"
+    assert paths.stream_session == BROADCAST_USER_DATA / "StreamSession.json"
+    assert paths.marker_log == BROADCAST_USER_DATA / "MarkerLog.md"
     assert paths.footnotes == BROADCAST_RESOURCES / "footnotes.txt"
+    assert paths.field_note_counter == BROADCAST_USER_DATA / "FieldNoteCounter.txt"
+    assert paths.expedition_counter == BROADCAST_USER_DATA / "ExpeditionCounter.txt"
+    assert paths.incident_counter == BROADCAST_USER_DATA / "IncidentCounter.txt"
     assert paths.narrator_content == BROADCAST_RESOURCES / "natural_history_narrator.json"
+    assert paths.counters_folder == BROADCAST_USER_DATA
