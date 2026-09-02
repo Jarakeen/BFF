@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "content_id": "halls_of_fabrication",
+  "encounter_id": "archcustodian",
+  "encounter_name": "Archcustodian",
+  "evidence": [
+    {
+      "fact_type": "damage_window",
+      "fact_key": "vaporization_protocol_shield_cycle",
+      "value": {
+        "shield_active": {
+          "damageable": false,
+          "state": "invulnerable"
+        },
+        "shield_removed": {
+          "damageable": true,
+          "state": "burn_phase"
+        },
+        "cycle_repeats": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Archcustodian",
+      "source_locator": "Abilities - Vaporization Protocol",
+      "source_revision": "3175476",
+      "confidence": "high",
+      "notes": "Tracked source states that the active shield makes Archcustodian invulnerable and that removing it creates a burn phase before the shield returns."
+    },
+    {
+      "fact_type": "add_group",
+      "fact_key": "post_burn_factotums",
+      "value": {
+        "members": [
+          "Calefactors",
+          "Dissectors"
+        ],
+        "trigger": "after_burn_phase"
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Archcustodian",
+      "source_locator": "Abilities - Summon Factotums",
+      "source_revision": "3175476",
+      "confidence": "high",
+      "notes": "Tracked source states that Calefactors and Dissectors are summoned after each burn phase."
+    }
+  ]
+}
