@@ -18,10 +18,11 @@ DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
 class SkillComponentEffectRelationshipRepository:
     """Resolve explicit named-effect applications for coefficient components.
 
-    The repository joins two existing sources of truth:
-
-    - coefficient-local UESP tooltip evidence from ``ability.coef_description``;
-    - the canonical named-effect vocabulary from ``combat_effect``.
+    The repository joins coefficient-local UESP tooltip evidence with the
+    canonical named-effect vocabulary already present in the database. The
+    specialized ``combat_effect`` table remains preferred, while the broader
+    ``effect`` table supplements names that are canonical EffectVariant
+    identities but have not been duplicated into ``combat_effect``.
 
     It never writes rows and never infers chance, cooldown, duration, uptime, or
     current combat state. Those temporal concerns remain outside Phase 6.
@@ -38,15 +39,17 @@ class SkillComponentEffectRelationshipRepository:
         ).fetchone() is not None
 
     def _known_effect_names(self, db: sqlite3.Connection) -> tuple[str, ...]:
-        if not self._table_exists(db, "combat_effect"):
-            return ()
-        return tuple(
-            str(row[0]).strip()
+        names: set[str] = set()
+        for table in ("combat_effect", "effect"):
+            if not self._table_exists(db, table):
+                continue
             for row in db.execute(
-                "SELECT name FROM combat_effect "
-                "WHERE name IS NOT NULL AND TRIM(name) <> '' ORDER BY name"
-            )
-        )
+                f"SELECT name FROM {table} WHERE name IS NOT NULL AND TRIM(name) <> ''"
+            ):
+                name = str(row[0]).strip()
+                if name:
+                    names.add(name)
+        return tuple(sorted(names, key=str.casefold))
 
     def resolve(
         self,
@@ -57,8 +60,9 @@ class SkillComponentEffectRelationshipRepository:
             return ()
 
         with sqlite3.connect(self.database_path) as db:
-            required = ("skill_rank", "ability", "combat_effect")
-            if not all(self._table_exists(db, name) for name in required):
+            if not all(self._table_exists(db, name) for name in ("skill_rank", "ability")):
+                return ()
+            if not any(self._table_exists(db, name) for name in ("combat_effect", "effect")):
                 return ()
 
             row = db.execute(
