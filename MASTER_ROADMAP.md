@@ -270,7 +270,7 @@ Sustain Result
 - 🟢 explicit flat restoration events with cap/waste accounting
 - 🟢 heavy-attack restoration contract with verified modifier ordering and caller-supplied verified base
 - 🟢 Restoration Staff Absorb and Warden Nature's Gift event foundations
-- 🟢 deterministic same-timestamp ordering: cost → recovery → restoration
+- 🟢 deterministic same-timestamp ordering: cost → recovery tick → restoration event
 - 🟢 first-failure, shortfall, minimum resource, ending margin, total-cost, and wasted-restore diagnostics
 - 🟢 saved skill name → canonical rank → ability cost → saved-build modifier → timeline bridge
 - 🟢 deterministic saved-bar audit planner for real-build integration testing
@@ -484,40 +484,76 @@ This is an intentional supported limitation, not an unresolved Phase 6 blocker.
 ---
 
 # PHASE 7 · Conditional Effects & Proc Engine
-**Status: 🟡 Active**
+**Status: 🟢 Complete**
 
-Phase 7 executes the static component/effect relationships established in Phase 6 over time.
+Phase 7 executes the static component/effect relationships established in Phase 6 over deterministic runtime state while preserving the existing `EffectVariant` architecture as authoritative.
 
-Model:
+## Completed Phase 7 foundations
 
-- trigger occurrence and event detection
-- conditional eligibility
-- proc chance
-- cooldowns
-- durations and active windows
-- tick cadence
-- stacks and stack expiration
-- target selection / target counts
-- status-effect runtime behavior
-- proc sets and enchantments
-- conditional buffs/debuffs
-- triggered healing and resource restoration
+- 🟢 shared deterministic `RuntimeEvent` contract for Phase 6 component triggers and `EffectVariant.trigger`
+- 🟢 canonical timing/state binding for caller-active windows, explicit state windows, fixed-count duration windows, and stack-count bounds
+- 🟢 deterministic trigger eligibility and caller-supplied proc chance without hidden RNG
+- 🟢 global and per-target cooldown enforcement
+- 🟢 explicit bounded active windows from canonical duration metadata
+- 🟢 `UNIQUE`, `STACKS`, and `HIGHEST_ONLY` runtime stacking/refresh behavior without inventing alternate effect identities
+- 🟢 ordered complete runtime effect streams carrying cooldown, window, stacking, and unresolved state forward
+- 🟢 target-scoped status-effect application and active-status queries
+- 🟢 triggered resource restoration reusing the Phase 4 restoration contracts
+- 🟢 triggered healing with caller-resolved canonical healing amounts
+- 🟢 deterministic target-count enforcement and explicit target selection when candidates exceed the cap
+- 🟢 unresolved runtime evidence remains explicit rather than guessed
 
-The existing `EffectVariant` architecture remains authoritative for effect identity and available static metadata. Phase 7 must reuse Phase 6 component relationships rather than create a second ability-specific rule engine.
+## Closeout evidence
 
-Proc critical-eligibility policy already exists as a static foundation. Phase 7 determines **when** an eligible proc occurs, not whether its static damage formula is real.
+Final Phase 7 closeout gate on **2026-09-02** against the real local `data/eso.db`:
 
-## Initial Phase 7 priorities
+- Phase 7 boundary rows: **24**
+- need trigger resolution: **0**
+- runtime-review rows: **0**
+- timing unresolved: **0**
+- timing bound kinds:
+  - caller active window: **12**
+  - stack count: **4**
+  - explicit state window: **4**
+  - fixed count duration: **4**
+- targeted closeout regression checkpoint: **105 passed in 48.20s**
+- `python tools\check_phase7_closeout.py`: **RESULT: PASS**
 
-1. audit all Phase 6 `PHASE7_BOUNDARY` rows and existing `EffectVariant` temporal fields
-2. define one deterministic event/trigger contract shared by skills, effects, proc sets, enchantments, and resource events
-3. model duration windows and cadence independently from trigger identity
-4. add cooldown and proc-chance enforcement without assuming permanent uptime
-5. add deterministic stack state and expiration
-6. integrate status-effect application/runtime state
-7. validate against representative real skill/proc/resource examples before broadening coverage
+### Runtime capability gate
 
-**Exit criteria:** BFF can calculate deterministic or explicitly probabilistic conditional effect behavior over time without treating procs, conditional buffs, or runtime restores as permanent sheet stats.
+The closeout gate verifies all required contracts are present:
+
+- shared runtime event contract
+- component timing and state binding
+- effect trigger eligibility
+- deterministic proc chance
+- global and target cooldowns
+- active duration windows
+- stacking and refresh
+- ordered effect streams
+- status-effect runtime state
+- triggered resource restoration
+- triggered healing
+- target-count and explicit selection
+
+## Explicit Phase 7 boundaries moving forward
+
+Phase 7 intentionally does not become a general combat simulator. The following remain Phase 8 or later concerns, or explicit caller inputs when canonical source evidence is absent:
+
+- full current-player/current-target CombatState snapshots
+- health percentages and execute truth at arbitrary instants
+- positional/range eligibility and encounter geometry
+- automatic choice among multiple eligible targets when ESO targeting rules are not canonically represented
+- rotation/action scheduling
+- encounter phase state
+- broad proc-set/enchantment ingestion where canonical static metadata is still absent
+- unresolved status-duration/chance source data
+- arbitrary natural-language condition parsing
+- general combat simulation and Monte Carlo modeling
+
+Detailed closeout: `docs/phase7_conditional_runtime_closeout.md`.
+
+**Exit criteria met on 2026-09-02.** BFF can calculate deterministic or explicitly probabilistic conditional effect behavior over time without treating procs, conditional buffs, status effects, triggered healing, or runtime restores as permanent sheet stats.
 
 ---
 
