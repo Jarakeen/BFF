@@ -57,6 +57,13 @@ class SkillComponentSourceStatRule:
             raise ValueError("evidence must be non-empty")
 
 
+_COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+
+
+def _strip_color_tags(text: str) -> str:
+    return _COLOR_TAG_RE.sub("", str(text or ""))
+
+
 def _sentences(text: str) -> tuple[str, ...]:
     normalized = " ".join(str(text or "").split())
     return tuple(part.strip() for part in re.split(r"(?<=[.;])\s+", normalized) if part.strip())
@@ -98,7 +105,7 @@ def extract_source_mapped_stat_rule(
 
     raw_sentence, display_sentence = aligned
     raw_lower = raw_sentence.casefold()
-    display = " ".join(display_sentence.split())
+    display = " ".join(_strip_color_tags(display_sentence).split())
 
     if re.search(
         r"\beach\s+mace\s+increases\s+your\s+offensive\s+penetration\s+by\s+<<\s*\d+\s*>>",
