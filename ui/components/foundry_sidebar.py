@@ -8,6 +8,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_resource_path
+from services.accessibility_preferences import VISUAL_THEME_RYLO
 from services.optional_modules import broadcast_enabled
 from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_label, semantic_icon, set_button_icon
@@ -83,6 +85,22 @@ class FoundrySidebar(QWidget):
             Qt.TransformationMode.SmoothTransformation,
         )
 
+    def _brand_mark_filename(self) -> str:
+        app = QApplication.instance()
+        if app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO:
+            return "sidebar_scythe_rylo.svg"
+        return "sidebar_feather_gold.svg"
+
+    def refresh_brand_mark(self) -> None:
+        if not hasattr(self, "brand_mark"):
+            return
+        pixmap = self._asset_pixmap(self._brand_mark_filename(), 30, 50)
+        self.brand_mark.clear()
+        if not pixmap.isNull():
+            self.brand_mark.setPixmap(pixmap)
+        else:
+            self.brand_mark.setText("✦")
+
     def build_ui(self):
         self.setProperty("foundrySidebar", True)
         layout = QVBoxLayout(self)
@@ -94,16 +112,12 @@ class FoundrySidebar(QWidget):
         brand_layout.setContentsMargins(0, 0, 0, 0)
         brand_layout.setSpacing(6)
 
-        feather = QLabel()
-        feather.setFixedSize(34, 54)
-        feather.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        feather.setProperty("sidebarFeather", True)
-        feather_pixmap = self._asset_pixmap("feather_watermark.svg", 28, 50)
-        if not feather_pixmap.isNull():
-            feather.setPixmap(feather_pixmap)
-        else:
-            feather.setText("❧")
-        brand_layout.addWidget(feather, 0, Qt.AlignmentFlag.AlignTop)
+        self.brand_mark = QLabel()
+        self.brand_mark.setFixedSize(36, 54)
+        self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.brand_mark.setProperty("sidebarBrandMark", True)
+        self.refresh_brand_mark()
+        brand_layout.addWidget(self.brand_mark, 0, Qt.AlignmentFlag.AlignTop)
 
         brand_text = QVBoxLayout()
         brand_text.setContentsMargins(0, 0, 0, 0)
@@ -178,73 +192,75 @@ class FoundrySidebar(QWidget):
         plaque_layout = QHBoxLayout(plaque)
         plaque_layout.setContentsMargins(8, 6, 8, 6)
         plaque_layout.setSpacing(6)
-        mark = icon_label("gears", 20)
-        mark.setProperty("sidebarPlaqueMark", True)
-        plaque_layout.addWidget(mark, 0, Qt.AlignmentFlag.AlignTop)
-        plaque_text = QLabel("THE FOUNDRY\nLeave better records.")
-        plaque_text.setProperty("sidebarPlaqueText", True)
+        plaque_layout.addWidget(icon_label("coffee", 18))
+        plaque_text = QLabel("Field Office · Leave Better Records")
         plaque_text.setWordWrap(True)
+        plaque_text.setProperty("sidebarFooter", True)
         plaque_layout.addWidget(plaque_text, 1)
         layout.addWidget(plaque)
 
-    def build_leaf_button(self, text, page, header_style=False):
-        display = text.upper() if header_style else text
-        button = self.make_nav_button(display, indent=False, icon_name=semantic_icon(text))
-        button.clicked.connect(lambda _, p=page: self.activate(p))
-        self.buttons[page] = button
-        return button
-
-    def build_category(self, section):
-        wrapper = QWidget()
-        wrapper_layout = QVBoxLayout(wrapper)
-        wrapper_layout.setContentsMargins(0, 0, 0, 0)
-        wrapper_layout.setSpacing(1)
-
-        label = section["label"]
-        header = self.make_nav_button("▸  " + label.upper(), indent=False, icon_name=semantic_icon(label))
-        children_box = QWidget()
-        children_layout = QVBoxLayout(children_box)
-        children_layout.setContentsMargins(9, 0, 0, 0)
-        children_layout.setSpacing(1)
-
-        for child_label, page in section["children"]:
-            child_button = self.make_nav_button(child_label, indent=True, icon_name=semantic_icon(child_label))
-            child_button.clicked.connect(lambda _, p=page: self.activate(p))
-            self.buttons[page] = child_button
-            children_layout.addWidget(child_button)
-
-        children_box.setVisible(False)
-
-        def toggle(_checked=False):
-            expanded = not children_box.isVisible()
-            children_box.setVisible(expanded)
-            header.setText(("▾  " if expanded else "▸  ") + label.upper())
-
-        header.clicked.connect(toggle)
-        wrapper_layout.addWidget(header)
-        wrapper_layout.addWidget(children_box)
-        return wrapper
-
-    def make_nav_button(self, text, indent, icon_name=""):
-        button = QPushButton(text)
-        button.setProperty("nav", True)
-        button.setProperty("sidebarButton", True)
-        button.setFont(Fonts.sidebar())
-        button.setCheckable(True)
-        button.setMinimumHeight(25 if indent else 29)
-        button.setMaximumHeight(31 if indent else 33)
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-        if icon_name:
-            set_button_icon(button, icon_name, 15 if indent else 16)
-        return button
-
-    def activate(self, page):
-        for key, button in self.buttons.items():
-            button.setChecked(key == page)
-        self.pageRequested.emit(page)
-
-    def divider(self):
+    @staticmethod
+    def divider() -> QFrame:
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
         line.setProperty("sidebarDivider", True)
         return line
+
+    def build_leaf_button(self, text: str, page: str, header_style: bool = False) -> QPushButton:
+        button = QPushButton(text)
+        button.setCheckable(True)
+        button.setProperty("nav", True)
+        if header_style:
+            button.setProperty("navHeader", True)
+        icon_name = semantic_icon(text)
+        if icon_name:
+            set_button_icon(button, icon_name, 16)
+        button.clicked.connect(lambda checked=False, p=page: self.pageRequested.emit(p))
+        self.buttons[page] = button
+        return button
+
+    def build_category(self, section: dict) -> QWidget:
+        wrapper = QWidget()
+        wrapper.setProperty("navCategory", True)
+        layout = QVBoxLayout(wrapper)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
+
+        label = QPushButton(section["label"])
+        label.setCheckable(True)
+        label.setChecked(True)
+        label.setProperty("nav", True)
+        label.setProperty("navCategoryHeader", True)
+        icon_name = semantic_icon(section["label"])
+        if icon_name:
+            set_button_icon(label, icon_name, 16)
+        layout.addWidget(label)
+
+        children = QWidget()
+        children.setProperty("navChildren", True)
+        child_layout = QVBoxLayout(children)
+        child_layout.setContentsMargins(12, 0, 0, 0)
+        child_layout.setSpacing(1)
+        for text, page in section["children"]:
+            child_layout.addWidget(self.build_leaf_button(text, page))
+        layout.addWidget(children)
+        label.toggled.connect(children.setVisible)
+        return wrapper
+
+    def set_current(self, page: str) -> None:
+        for key, button in self.buttons.items():
+            button.setChecked(key == page)
+
+    def update_expedition_status(self, title: str, pulls: int, best_pull: str, coffee: str) -> None:
+        self.current_boss.setText(title or "No Expedition")
+        self.pull_count.setText(f"Pulls: {pulls}")
+        self.best_pull.setText(f"Best: {best_pull or '--'}")
+        self.coffee.setText(f"Coffee: {coffee or '--'}")
+
+    def update_system_status(self, *, obs: str | None = None, archive: str | None = None, discord: str | None = None) -> None:
+        if obs is not None and self.include_broadcast:
+            self.obs.setText(f"● OBS · {obs}")
+        if archive is not None:
+            self.archive.setText(f"● Archive · {archive}")
+        if discord is not None:
+            self.discord.setText(f"● Discord · {discord}")
