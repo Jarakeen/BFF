@@ -12,6 +12,7 @@ from services.encounter_build_capability_adapter import (
     SavedBuildEncounterCapabilityAdapter,
 )
 from services.encounter_repository import EncounterRepository
+from services.encounter_requirement_evaluation import RequirementSemantics
 from services.encounter_roster_evaluation import EncounterRosterEvaluator
 from services.encounter_service import EncounterService
 from services.saved_build_capability_service import SavedBuildCapabilityAudit
@@ -38,7 +39,7 @@ def _effect(name: str, source: str) -> EffectVariant:
     return EffectVariant(name=name, layer=EffectLayer.CAST, source=source)
 
 
-def test_real_oaxiltso_saved_build_audits_flow_into_requirement_evaluation():
+def test_real_oaxiltso_saved_build_audits_do_not_overclaim_generic_cleanse_coverage():
     adapter = SavedBuildEncounterCapabilityAdapter(
         (
             EncounterCapabilityIdentityMap(
@@ -57,13 +58,14 @@ def test_real_oaxiltso_saved_build_audits_flow_into_requirement_evaluation():
     result = evaluator.evaluate_saved_build_audits("oaxiltso", audits)
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
-    assert cleanse.classification == CoverageClassification.COVERED
-    assert cleanse.providers == ("id-Healer",)
-    assert any(row.classification == CoverageClassification.UNKNOWN for row in result.results)
+    assert cleanse.semantics == RequirementSemantics.COMPLIANCE
+    assert cleanse.classification == CoverageClassification.UNKNOWN
+    assert cleanse.providers == ()
+    assert cleanse.unknown_members == ("id-Tank", "id-Healer", "id-DD")
     assert result.is_fully_covered is False
 
 
-def test_unmapped_provider_capability_remains_unknown_through_full_orchestration():
+def test_unmapped_generic_cleanse_remains_unknown_through_full_orchestration():
     evaluator = EncounterRosterEvaluator(
         _encounter_service(),
         SavedBuildEncounterCapabilityAdapter(()),
@@ -75,6 +77,7 @@ def test_unmapped_provider_capability_remains_unknown_through_full_orchestration
     )
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
 
+    assert cleanse.semantics == RequirementSemantics.COMPLIANCE
     assert cleanse.classification == CoverageClassification.UNKNOWN
 
 
