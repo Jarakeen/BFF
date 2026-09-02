@@ -30,7 +30,13 @@ _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("stun", re.compile(r"\bstun(?:s|ned|ning)?\b", re.IGNORECASE)),
     ("immobilize", re.compile(r"\bimmobiliz(?:e|es|ed|ing)\b", re.IGNORECASE)),
     ("movement_speed", re.compile(r"\bmovement\s+speed\b", re.IGNORECASE)),
-    ("knockback", re.compile(r"\bknock(?:back|ed\s+back|s\s+back|ing\s+back)\b", re.IGNORECASE)),
+    (
+        "knockback",
+        re.compile(
+            r"\b(?:knockback|knock(?:s|ed|ing)?\s+(?:\w+\s+){0,2}?back)\b",
+            re.IGNORECASE,
+        ),
+    ),
     ("pull", re.compile(r"\bpull(?:s|ed|ing)?\b", re.IGNORECASE)),
     ("taunt", re.compile(r"\btaunt(?:s|ed|ing)?\b", re.IGNORECASE)),
     ("interrupt_immunity", re.compile(r"\binterrupt\s+immunity\b", re.IGNORECASE)),
