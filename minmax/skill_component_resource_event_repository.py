@@ -16,6 +16,7 @@ from .skill_component_text_evidence import extract_component_text_evidence
 
 
 DEFAULT_DATABASE = Path(__file__).resolve().parents[1] / "data" / "eso.db"
+_COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _CURRENT_RESTORE_RE = re.compile(
     r"\bcurrent\s+restore\s*:\s*\$(?P<number>\d+)(?!\d)",
     re.IGNORECASE,
@@ -33,7 +34,9 @@ _CURRENT_HEALTH_CONTEXT_RE = re.compile(
 
 
 def _normalize_source_text(text: str | None) -> str:
-    return " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
+    normalized = str(text or "").replace("\r", " ").replace("\n", " ")
+    normalized = _COLOR_TAG_RE.sub("", normalized)
+    return " ".join(normalized.split())
 
 
 def _has_current_restore(text: str | None, coefficient_number: int) -> bool:
