@@ -116,6 +116,7 @@ def main() -> int:
     from ui.rylo_theme_support import install as install_rylo_theme_support
     from ui.rylo_surface_icon_fix import install as install_rylo_surface_icon_fix
     from ui.theme_brand_mark_support import install as install_theme_brand_mark_support
+    from ui.rylo_raid_map_support import install as install_rylo_raid_map_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_acquisition_support import install as install_collectibles_acquisition_support
     from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
@@ -143,6 +144,9 @@ def main() -> int:
     # assignments cannot override Rylo's stone surfaces or silver card icons.
     install_rylo_surface_icon_fix(app)
     install_theme_brand_mark_support()
+    # Raid Map owns custom QGraphics painting, so it needs its own theme-aware
+    # palette after accessibility and visual-theme support are registered.
+    install_rylo_raid_map_support()
     install_collectibles_profile_support()
     install_collectibles_acquisition_support()
     install_collectibles_learned_recipe_support()
