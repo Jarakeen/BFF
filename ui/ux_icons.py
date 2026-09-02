@@ -250,7 +250,7 @@ def icon_label(name: str, size: int = 18, parent: QWidget | None = None) -> QLab
 
 
 def refresh_theme_icons(root: QWidget | QApplication | None = None) -> None:
-    """Refresh semantic icons and brand marks after an in-app theme switch."""
+    """Refresh semantic icons, page headers, and brand marks after an in-app theme switch."""
     app = QApplication.instance()
     if app is None:
         return
@@ -271,6 +271,13 @@ def refresh_theme_icons(root: QWidget | QApplication | None = None) -> None:
             value = icon(str(name))
             if not value.isNull():
                 label.setPixmap(value.pixmap(size, size))
+
+        try:
+            from ui.components.foundry_header import FoundryHeader
+            for header in top.findChildren(FoundryHeader):
+                header.refresh_visual_theme()
+        except ImportError:
+            pass
 
         try:
             from ui.components.foundry_card import FoundryCard
