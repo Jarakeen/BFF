@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -14,6 +15,10 @@ from minmax.skill_component_utility_effect_repository import SkillComponentUtili
 from tools.audit_phase6_utility_candidates import load_utility_candidates
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
+_CONTEXT_ONLY_UTILITY_RE = re.compile(
+    r"\bif\s+the\s+stun\b|\bafter\s+the\s+stun\s+ends?\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -26,6 +31,7 @@ class UtilityAuditRow:
     fragment: str
     neighboring_owner: int | None = None
     neighboring_types: tuple[str, ...] = ()
+    context_only: bool = False
 
     @property
     def promoted(self) -> bool:
@@ -37,7 +43,7 @@ class UtilityAuditRow:
 
     @property
     def accounted_for(self) -> bool:
-        return self.promoted or self.neighbor_owned
+        return self.promoted or self.neighbor_owned or self.context_only
 
 
 def _neighboring_utility_owner(
@@ -45,12 +51,7 @@ def _neighboring_utility_owner(
     skill_rank_id: int,
     coefficient_number: int,
 ) -> tuple[int | None, tuple[str, ...]]:
-    """Find an explicit utility effect on a sibling coefficient, if one owns it.
-
-    This is audit-only reconciliation. The candidate row keeps its original
-    coefficient identity; neighboring ownership prevents a broad fragment signal
-    from being misreported as an unresolved mechanic on the wrong component.
-    """
+    """Find an explicit utility effect on a sibling coefficient, if one owns it."""
 
     for sibling in range(1, 7):
         if sibling == int(coefficient_number):
@@ -59,6 +60,12 @@ def _neighboring_utility_owner(
         if effects:
             return sibling, tuple(effect.effect_type.value for effect in effects)
     return None, ()
+
+
+def _is_context_only_utility(fragment: str) -> bool:
+    """Return True when utility wording is explicitly prior-state/condition text."""
+
+    return _CONTEXT_ONLY_UTILITY_RE.search(" ".join(str(fragment or "").split())) is not None
 
 
 def load_utility_audit(
@@ -73,7 +80,10 @@ def load_utility_audit(
         effects = repository.resolve(candidate.skill_rank_id, candidate.coefficient_number)
         neighboring_owner: int | None = None
         neighboring_types: tuple[str, ...] = ()
+        context_only = False
         if not effects:
+            context_only = _is_context_only_utility(candidate.fragment)
+        if not effects and not context_only:
             neighboring_owner, neighboring_types = _neighboring_utility_owner(
                 repository,
                 candidate.skill_rank_id,
@@ -89,6 +99,7 @@ def load_utility_audit(
                 fragment=candidate.fragment,
                 neighboring_owner=neighboring_owner,
                 neighboring_types=neighboring_types,
+                context_only=context_only,
             )
         )
     return tuple(rows)
@@ -96,11 +107,13 @@ def load_utility_audit(
 
 def summarize(rows: tuple[UtilityAuditRow, ...]) -> dict[str, object]:
     promoted = [row for row in rows if row.promoted]
+    context_only = [row for row in rows if row.context_only]
     neighbor_owned = [row for row in rows if row.neighbor_owned]
     unresolved = [row for row in rows if not row.accounted_for]
     return {
         "candidates": len(rows),
         "promoted": len(promoted),
+        "context_only": len(context_only),
         "neighbor_owned": len(neighbor_owned),
         "unresolved": len(unresolved),
         "types": Counter(kind for row in promoted for kind in row.promoted_types),
@@ -125,11 +138,12 @@ def main() -> int:
     print("\n========================================")
     print(" PHASE 6 COMPONENT UTILITY EFFECTS")
     print("========================================")
-    print(f"Database:              {args.database}")
-    print(f"Candidates:            {summary['candidates']}")
-    print(f"Canonically promoted:  {summary['promoted']}")
-    print(f"Neighbor-owned signals:{summary['neighbor_owned']:>3}")
-    print(f"Still unresolved:      {summary['unresolved']}")
+    print(f"Database:               {args.database}")
+    print(f"Candidates:             {summary['candidates']}")
+    print(f"Canonically promoted:   {summary['promoted']}")
+    print(f"Context-only signals:   {summary['context_only']}")
+    print(f"Neighbor-owned signals: {summary['neighbor_owned']}")
+    print(f"Still unresolved:       {summary['unresolved']}")
 
     print("\nUTILITY TYPES")
     for kind, count in types.most_common():
@@ -143,7 +157,7 @@ def main() -> int:
     ordered = sorted(
         rows,
         key=lambda row: (
-            0 if row.promoted else 1 if row.neighbor_owned else 2,
+            0 if row.promoted else 1 if row.context_only else 2 if row.neighbor_owned else 3,
             row.skill_rank_id,
             row.coefficient_number,
         ),
@@ -157,6 +171,9 @@ def main() -> int:
         if row.promoted:
             print("status=PROMOTED")
             print(f"utility_types={','.join(row.promoted_types)}")
+        elif row.context_only:
+            print("status=CONTEXT_ONLY")
+            print("utility_types=-")
         elif row.neighbor_owned:
             print("status=NEIGHBOR_OWNED")
             print("utility_types=-")
