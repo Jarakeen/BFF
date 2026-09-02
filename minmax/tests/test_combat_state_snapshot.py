@@ -4,6 +4,8 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.runtime_event import RuntimeEvent
 from minmax.runtime_effect_eligibility import RuntimeEffectState
+from minmax.resource_state import StaticResourceState, StaticResourcePool
+from minmax.resource_costs import ResourceType
 
 def test_projects_active_windows_with_end_exclusive_boundary():
     window=RuntimeEffectActiveWindow("Major Courage","Potion",0,10)
@@ -41,3 +43,8 @@ def test_snapshot_delegates_cooldown_eligibility_to_phase7():
  event=RuntimeEvent(5,"cast","skill")
  state=CombatStateSnapshot(5,CombatantSnapshot("player"))
  assert not state.eligibility(event,effect,RuntimeEffectState(last_activation_time_seconds=0)).eligible
+
+def test_combatant_uses_phase4_static_resource_capacities():
+ resources=StaticResourceState(StaticResourcePool(ResourceType.HEALTH,100,0),StaticResourcePool(ResourceType.MAGICKA,200,0),StaticResourcePool(ResourceType.STAMINA,300,0))
+ player=CombatantSnapshot.from_static_resources("player",resources,current_health=50,current_magicka=100)
+ assert (player.maximum_health,player.maximum_magicka,player.maximum_stamina)==(100,200,300)
