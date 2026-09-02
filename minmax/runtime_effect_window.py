@@ -27,6 +27,7 @@ class RuntimeEffectActiveWindow:
     end_time_seconds: float
     target: str | None = None
     sequence: int = 0
+    magnitude: float | None = None
 
     def __post_init__(self) -> None:
         if not str(self.effect_name or "").strip():
@@ -41,6 +42,8 @@ class RuntimeEffectActiveWindow:
             raise ValueError("runtime effect window end must be after its start")
         if self.sequence < 0:
             raise ValueError("runtime effect window sequence cannot be negative")
+        if self.magnitude is not None and not math.isfinite(self.magnitude):
+            raise ValueError("runtime effect window magnitude must be finite when present")
 
     @property
     def duration_seconds(self) -> float:
@@ -92,6 +95,7 @@ def active_window_from_effect_activation(
         end_time_seconds=event.time_seconds + duration,
         target=event.target,
         sequence=event.sequence,
+        magnitude=effect.magnitude,
     )
 
 
