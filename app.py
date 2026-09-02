@@ -66,9 +66,21 @@ def _set_native_windows_icon(window, icon_path: Path) -> None:
         pass
 
 
+def _prepare_optional_module_state() -> None:
+    from services.optional_modules import broadcast_enabled
+
+    if not broadcast_enabled():
+        return
+
+    from services.broadcast_state_migration import migrate_legacy_broadcast_state
+
+    migrate_legacy_broadcast_state()
+
+
 def main() -> int:
 
     _set_windows_app_id()
+    _prepare_optional_module_state()
 
     app = QApplication(sys.argv)
 
