@@ -99,7 +99,6 @@ def main() -> int:
     app.processEvents()
 
     from ui.theme import ThemeManager
-    from ui.grimoire_theme import apply_grimoire_theme
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
     from ui.scribing_support import install as install_scribing_support
     from ui.scribing_editor_compat import install as install_scribing_editor_compat
@@ -116,6 +115,7 @@ def main() -> int:
     from ui.build_progression_scroll_fix import install as install_build_progression_scroll_fix
     from ui.icon_consistency import install as install_icon_consistency
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
+    from ui.rylo_theme_support import install as install_rylo_theme_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_acquisition_support import install as install_collectibles_acquisition_support
     from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
@@ -140,6 +140,9 @@ def main() -> int:
     install_build_progression_scroll_fix()
     install_icon_consistency(app)
     install_encounter_board_accessibility()
+    # Register the alternate visual skin and Appearance selector before the
+    # settings page or main window is constructed.
+    install_rylo_theme_support(app)
     install_collectibles_profile_support()
     # Prefer useful source-backed acquisition details on canonical collectibles.
     install_collectibles_acquisition_support()
@@ -152,12 +155,10 @@ def main() -> int:
 
     from ui.main_window import MainWindow
 
+    # Apply the persisted visual theme and independent accessibility overlay.
+    # This replaces the old unconditional Grimoire application at startup.
     theme = ThemeManager()
-
-    if not apply_grimoire_theme(app):
-        style_file = get_resource_path("assets", "themes", "bff", "foundry.qss")
-        if style_file.exists():
-            app.setStyleSheet(style_file.read_text(encoding="utf-8"))
+    theme.apply(app)
 
     window = MainWindow()
     if not foundry_icon.isNull():
