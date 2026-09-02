@@ -200,3 +200,63 @@ def test_conflicting_temporal_fact_is_not_converted_to_a_timer(tmp_path):
     assert fact.status == "conflicting"
     assert fact.value is None
     assert service.temporal_evidence("x") == ()
+
+
+def test_oaxiltso_positioning_constraints_are_source_structured_without_geometry():
+    service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+
+    constraints = service.positioning_constraints("oaxiltso")
+    by_name = {row.mechanic_name: row for row in constraints}
+
+    assert "Noxious Sludge" in by_name
+    assert "Savage Blitz" in by_name
+    assert by_name["Noxious Sludge"].target_count == 2
+    assert not hasattr(by_name["Noxious Sludge"], "coordinates")
+    assert not hasattr(by_name["Noxious Sludge"], "selected_players")
+
+
+def test_add_groups_and_damage_windows_require_exact_evidence_types(tmp_path):
+    boss = tmp_path / "eso_info" / "bosses"
+    evidence = tmp_path / "encounter_evidence"
+    boss.mkdir(parents=True)
+    evidence.mkdir()
+    (boss / "x.json").write_text(
+        '{"id":"x","mechanics":['
+        '{"name":"Summon Things","description":"summons three adds and then becomes invulnerable"}'
+        ']}'
+    )
+    (evidence / "x.json").write_text(
+        '{"encounter_id":"x","evidence":['
+        '{"fact_type":"add_group","fact_key":"wave_one",'
+        '"value":{"name":"Adds","count":3},"source_type":"guide","source_name":"A"},'
+        '{"fact_type":"damage_window","fact_key":"shielded",'
+        '"value":{"damageable":false},"source_type":"guide","source_name":"A"}'
+        ']}'
+    )
+    service = EncounterService(EncounterRepository.from_data_root(tmp_path))
+
+    add_groups = service.add_group_evidence("x")
+    windows = service.damage_window_evidence("x")
+
+    assert len(add_groups) == 1
+    assert add_groups[0].fact_key == "wave_one"
+    assert add_groups[0].value == {"name": "Adds", "count": 3}
+    assert len(windows) == 1
+    assert windows[0].fact_key == "shielded"
+    assert windows[0].value == {"damageable": False}
+
+
+def test_prose_does_not_create_add_groups_or_damage_windows(tmp_path):
+    boss = tmp_path / "eso_info" / "bosses"
+    evidence = tmp_path / "encounter_evidence"
+    boss.mkdir(parents=True)
+    evidence.mkdir()
+    (boss / "x.json").write_text(
+        '{"id":"x","mechanics":['
+        '{"name":"Summon Things","description":"summons three adds and becomes invulnerable"}'
+        ']}'
+    )
+    service = EncounterService(EncounterRepository.from_data_root(tmp_path))
+
+    assert service.add_group_evidence("x") == ()
+    assert service.damage_window_evidence("x") == ()
