@@ -558,7 +558,7 @@ Detailed closeout: `docs/phase7_conditional_runtime_closeout.md`.
 ---
 
 # PHASE 8 · Combat State
-**Status: 🟡 Active**
+**Status: 🟢 Complete**
 
 Phase 8 turns the verified static and runtime foundations into one canonical answer to a deceptively simple question: **what is true right now?**
 
@@ -600,6 +600,8 @@ Static Combat / Sustain / Encounter Consumers
 Phase 8 owns **state projection**, not action planning. It should answer what is currently true from known events and caller-supplied state. It should not automatically invent a rotation, choose the next action, simulate an encounter, or guess missing position/target-selection rules.
 
 **Exit criteria:** BFF can construct an auditable CombatState snapshot for a specific instant and use it to evaluate current player/target conditions, resources, active effects, cooldowns, stacks, and supported combat math without treating theoretical capability as current truth.
+
+**Exit criteria met on 2026-09-02.** Detailed closeout: `docs/phase8_combat_state_closeout.md`.
 
 ---
 
