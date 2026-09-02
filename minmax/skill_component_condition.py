@@ -25,6 +25,7 @@ _ORDINALS = {
 
 class SkillComponentConditionType(str, Enum):
     TARGET_HEALTH_BELOW_PERCENT = "target_health_below_percent"
+    SELF_HEALTH_BELOW_PERCENT = "self_health_below_percent"
 
 
 @dataclass(frozen=True)
@@ -51,13 +52,24 @@ _HEALTH_THRESHOLD_RE = re.compile(
     r"\b(?:below|under|less\s+than)\s+(\d+(?:\.\d+)?)\s*%\s+(?:of\s+)?(?:their|the\s+target(?:'s)?|target|enemy(?:'s)?|its)?\s*health\b",
     flags=re.IGNORECASE,
 )
+_SELF_HEALTH_THRESHOLD_RE = re.compile(
+    r"\b(?:your|the\s+caster(?:'s)?|caster(?:'s)?)\s+health\s+(?:drops?|falls?|is)\s+"
+    r"(?:below|under|less\s+than)\s+(\d+(?:\.\d+)?)\s*%\b",
+    flags=re.IGNORECASE,
+)
 _ORDINAL_HIT_RE = re.compile(
     r"\b(first|second|third|fourth|fifth|sixth)\s+(?:hit|attack|strike)\b",
     flags=re.IGNORECASE,
 )
 
 
-def _condition_from_match(*, skill_rank_id: int, coefficient_number: int, match: re.Match[str]) -> tuple[SkillComponentCondition, ...]:
+def _condition_from_match(
+    *,
+    skill_rank_id: int,
+    coefficient_number: int,
+    match: re.Match[str],
+    condition_type: SkillComponentConditionType = SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT,
+) -> tuple[SkillComponentCondition, ...]:
     percent = float(match.group(1))
     if not (0.0 < percent <= 100.0):
         return ()
@@ -65,7 +77,7 @@ def _condition_from_match(*, skill_rank_id: int, coefficient_number: int, match:
         SkillComponentCondition(
             skill_rank_id=int(skill_rank_id),
             coefficient_number=int(coefficient_number),
-            condition_type=SkillComponentConditionType.TARGET_HEALTH_BELOW_PERCENT,
+            condition_type=condition_type,
             threshold=percent / 100.0,
             evidence=match.group(0),
         ),
@@ -97,7 +109,7 @@ def explicit_ordinal_condition_owner(text: str) -> int | None:
 
     This is intentionally narrow. It recognizes only direct wording such as
     ``the second hit`` / ``third attack`` in the same sentence as a supported
-    health threshold. It never infers ordinal ownership from prose order alone.
+    target-health threshold. It never infers ordinal ownership from prose order alone.
     """
 
     normalized = " ".join(str(text or "").split())
@@ -115,7 +127,7 @@ def extract_explicit_ordinal_component_conditions(
     coefficient_number: int,
     source_text: str,
 ) -> tuple[SkillComponentCondition, ...]:
-    """Extract a health condition explicitly assigned to an ordinal hit/attack."""
+    """Extract a target-health condition explicitly assigned to an ordinal hit/attack."""
 
     normalized = " ".join(str(source_text or "").split())
     for sentence in re.split(r"(?<=[.;])\s+", normalized):
@@ -149,12 +161,21 @@ def extract_explicit_component_conditions(
     if not segment:
         return ()
 
-    match = _HEALTH_THRESHOLD_RE.search(segment)
-    if match is None:
+    self_match = _SELF_HEALTH_THRESHOLD_RE.search(segment)
+    if self_match is not None:
+        return _condition_from_match(
+            skill_rank_id=skill_rank_id,
+            coefficient_number=coefficient_number,
+            match=self_match,
+            condition_type=SkillComponentConditionType.SELF_HEALTH_BELOW_PERCENT,
+        )
+
+    target_match = _HEALTH_THRESHOLD_RE.search(segment)
+    if target_match is None:
         return ()
 
     return _condition_from_match(
         skill_rank_id=skill_rank_id,
         coefficient_number=coefficient_number,
-        match=match,
+        match=target_match,
     )
