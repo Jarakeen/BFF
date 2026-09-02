@@ -17,6 +17,8 @@ class SkillComponentTriggerType(str, Enum):
     HEAVY_ATTACK = "heavy_attack"
     LIGHT_OR_HEAVY_ATTACK = "light_or_heavy_attack"
     EFFECT_ENDED = "effect_ended"
+    DELAY_ELAPSED = "delay_elapsed"
+    CHARGE_THRESHOLD_REACHED = "charge_threshold_reached"
     STUN_ENDED = "stun_ended"
     STUN_FULL_DURATION = "stun_full_duration"
     TARGET_TAKES_DAMAGE = "target_takes_damage"
@@ -31,6 +33,7 @@ class SkillComponentTriggerRelationship:
     trigger_type: SkillComponentTriggerType
     evidence: str
     condition: str | None = None
+    trigger_count: int | None = None
     source: str = "coef_description"
 
     def __post_init__(self) -> None:
@@ -38,6 +41,8 @@ class SkillComponentTriggerRelationship:
             raise ValueError("skill_rank_id must be positive")
         if self.coefficient_number <= 0:
             raise ValueError("coefficient_number must be positive")
+        if self.trigger_count is not None and self.trigger_count <= 0:
+            raise ValueError("trigger_count must be positive when present")
         if not self.evidence:
             raise ValueError("evidence must preserve the source wording")
 
@@ -72,6 +77,24 @@ def extract_explicit_component_trigger_relationships(
 
     placeholder = rf"\${int(coefficient_number)}(?!\d)"
     condition = _condition_from_text(text)
+
+    charge_match = re.search(
+        rf"\bwhen\s+you\s+reach\s+(?P<count>\d+)\s+[^.;]{{0,40}}?charges?\b[^.;]{{0,180}}?{placeholder}",
+        text,
+        re.IGNORECASE,
+    )
+    if charge_match is not None:
+        return (
+            SkillComponentTriggerRelationship(
+                skill_rank_id=int(skill_rank_id),
+                coefficient_number=int(coefficient_number),
+                trigger_type=SkillComponentTriggerType.CHARGE_THRESHOLD_REACHED,
+                trigger_count=int(charge_match.group("count")),
+                evidence=charge_match.group(0),
+                condition=condition,
+            ),
+        )
+
     patterns: tuple[tuple[SkillComponentTriggerType, str], ...] = (
         (
             SkillComponentTriggerType.DAMAGE_OVER_TIME_EFFECT_ENDED,
@@ -112,6 +135,10 @@ def extract_explicit_component_trigger_relationships(
         (
             SkillComponentTriggerType.EFFECT_ENDED,
             rf"\b(?:when|after)\s+the\s+(?:effect|shield)\s+ends\b[^.;]{{0,180}}?{placeholder}",
+        ),
+        (
+            SkillComponentTriggerType.DELAY_ELAPSED,
+            rf"\bafter\s+\d+(?:\.\d+)?\s+seconds?\b[^.;]{{0,180}}?{placeholder}",
         ),
     )
 
