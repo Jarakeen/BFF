@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Import legacy BFF Google Sheet checkmarks into profile-aware local progress."""
+"""Import legacy BFF spreadsheet checkmarks into profile-aware local progress."""
 
 from dataclasses import dataclass
 import unicodedata
@@ -20,6 +20,19 @@ class GoogleSheetProgressImportReport:
     matched_achievements: int
     achievements_added: int
     collectible_rewards_marked: int
+    unresolved_names: tuple[str, ...]
+    ambiguous_names: tuple[str, ...]
+    missing_tabs: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AchievementProgressImportPreview:
+    source_person: str
+    target_profile: str
+    sheet_rows: int
+    checked_rows: int
+    matched_achievements: int
+    collectible_rewards: int
     unresolved_names: tuple[str, ...]
     ambiguous_names: tuple[str, ...]
     missing_tabs: tuple[str, ...]
@@ -75,17 +88,8 @@ class GoogleSheetProgressImporter:
             )
         return index
 
-    def import_checked(
-        self,
-        snapshot: GoogleSheetAchievementSnapshot,
-        *,
-        profile: str,
-    ) -> GoogleSheetProgressImportReport:
-        """Merge checked rows into one profile and return a deterministic report."""
-        target_profile = self.achievement_progress.ensure_profile(profile)
-        self.collectible_progress.ensure_profile(target_profile)
+    def _analyze(self, snapshot: GoogleSheetAchievementSnapshot):
         canonical = self._canonical_name_index()
-
         matched_ids: set[int] = set()
         collectible_ids: set[int] = set()
         unresolved: set[str] = set()
@@ -104,6 +108,39 @@ class GoogleSheetProgressImporter:
             matched_ids.add(achievement_id)
             if collectible_id is not None:
                 collectible_ids.add(collectible_id)
+
+        return matched_ids, collectible_ids, unresolved, ambiguous
+
+    def preview_checked(
+        self,
+        snapshot: GoogleSheetAchievementSnapshot,
+        *,
+        profile: str,
+    ) -> AchievementProgressImportPreview:
+        """Analyze an import without changing any local progress."""
+        matched_ids, collectible_ids, unresolved, ambiguous = self._analyze(snapshot)
+        return AchievementProgressImportPreview(
+            source_person=snapshot.person,
+            target_profile=str(profile or "").strip(),
+            sheet_rows=len(snapshot.rows),
+            checked_rows=len(snapshot.checked_rows),
+            matched_achievements=len(matched_ids),
+            collectible_rewards=len(collectible_ids),
+            unresolved_names=tuple(sorted(unresolved, key=str.casefold)),
+            ambiguous_names=tuple(sorted(ambiguous, key=str.casefold)),
+            missing_tabs=tuple(snapshot.missing_tabs),
+        )
+
+    def import_checked(
+        self,
+        snapshot: GoogleSheetAchievementSnapshot,
+        *,
+        profile: str,
+    ) -> GoogleSheetProgressImportReport:
+        """Merge checked rows into one profile and return a deterministic report."""
+        target_profile = self.achievement_progress.ensure_profile(profile)
+        self.collectible_progress.ensure_profile(target_profile)
+        matched_ids, collectible_ids, unresolved, ambiguous = self._analyze(snapshot)
 
         added = self.achievement_progress.merge_completed(target_profile, matched_ids)
         collectible_marked = 0
