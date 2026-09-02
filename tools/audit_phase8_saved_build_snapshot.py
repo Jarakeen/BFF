@@ -1,6 +1,9 @@
 from __future__ import annotations
 import argparse
+import sys
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
 from engine.config import DEFAULT_DATABASE,get_data_dir
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
