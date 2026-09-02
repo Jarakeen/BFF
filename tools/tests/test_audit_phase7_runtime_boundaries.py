@@ -87,6 +87,22 @@ def test_static_reverberation_separates_chance_cooldown_and_cadence():
     )
 
 
+def test_plain_once_every_is_cadence_not_cooldown():
+    concerns = audit.classify_runtime_concerns(
+        _row("The direwolf deals $1 Physical Damage once every 2 seconds.")
+    )
+
+    assert concerns == ("cadence",)
+
+
+def test_explicit_cooldown_wording_is_cooldown():
+    concerns = audit.classify_runtime_concerns(
+        _row("This effect has a 10 second cooldown.")
+    )
+
+    assert concerns == ("cooldown",)
+
+
 def test_crystal_fragments_tracks_chance_and_persistent_next_cast_state():
     concerns = audit.classify_runtime_concerns(
         _row(
