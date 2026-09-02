@@ -4,18 +4,22 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from services.paths import BROADCAST_RESOURCES, DATA, PROJECT_ROOT
+from services.paths import (
+    BROADCAST_RESOURCES,
+    BROADCAST_USER_DATA,
+    DATA,
+    PROJECT_ROOT,
+)
 
 
 @dataclass(frozen=True)
 class BroadcastPaths:
     """Resolved filesystem contract for the optional Broadcast module.
 
-    Broadcast callers should depend on this contract instead of constructing
-    file locations. Mutable state still points at today's on-disk layout while
-    tracked static resources can already live under ``modules/broadcast``.
-    Legacy default resource paths are translated automatically so existing
-    settings files do not need to be hand-edited during the migration.
+    Mutable Broadcast state belongs under ``user_data/broadcast``. Existing
+    settings that still point at the old ``data`` defaults are translated to
+    the new location after the startup migrator has copied their contents.
+    Custom user-selected paths remain untouched.
     """
 
     current_broadcast: Path
@@ -39,43 +43,70 @@ class BroadcastPaths:
     def from_settings(cls, settings: Mapping[str, object]) -> "BroadcastPaths":
         legacy_archive = PROJECT_ROOT / "Archive"
         return cls(
-            current_broadcast=_configured_path(
-                settings, "CurrentBroadcastPath", DATA / "CurrentBroadcast.json"
+            current_broadcast=_configured_migrated_path(
+                settings,
+                "CurrentBroadcastPath",
+                BROADCAST_USER_DATA / "CurrentBroadcast.json",
+                DATA / "CurrentBroadcast.json",
             ),
-            current_expedition=_configured_path(
-                settings, "CurrentExpeditionPath", DATA / "CurrentExpedition.json"
+            current_expedition=_configured_migrated_path(
+                settings,
+                "CurrentExpeditionPath",
+                BROADCAST_USER_DATA / "CurrentExpedition.json",
+                DATA / "CurrentExpedition.json",
             ),
-            current_incident=_configured_path(
-                settings, "CurrentIncidentPath", DATA / "CurrentIncident.json"
+            current_incident=_configured_migrated_path(
+                settings,
+                "CurrentIncidentPath",
+                BROADCAST_USER_DATA / "CurrentIncident.json",
+                DATA / "CurrentIncident.json",
             ),
-            stream_events=_configured_path(
-                settings, "StreamEventsPath", DATA / "StreamEvents.json"
+            stream_events=_configured_migrated_path(
+                settings,
+                "StreamEventsPath",
+                BROADCAST_USER_DATA / "StreamEvents.json",
+                DATA / "StreamEvents.json",
             ),
-            stream_session=_configured_path(
-                settings, "StreamSessionPath", DATA / "StreamSession.json"
+            stream_session=_configured_migrated_path(
+                settings,
+                "StreamSessionPath",
+                BROADCAST_USER_DATA / "StreamSession.json",
+                DATA / "StreamSession.json",
             ),
-            marker_log=_configured_path(
-                settings, "MarkerLogPath", DATA / "MarkerLog.md"
+            marker_log=_configured_migrated_path(
+                settings,
+                "MarkerLogPath",
+                BROADCAST_USER_DATA / "MarkerLog.md",
+                DATA / "MarkerLog.md",
             ),
-            footnotes=_configured_resource_path(
+            footnotes=_configured_migrated_path(
                 settings,
                 "FootnotesPath",
                 BROADCAST_RESOURCES / "footnotes.txt",
                 DATA / "footnotes.txt",
             ),
-            field_note_counter=_configured_path(
-                settings, "FieldNoteCounterPath", DATA / "FieldNoteCounter.txt"
+            field_note_counter=_configured_migrated_path(
+                settings,
+                "FieldNoteCounterPath",
+                BROADCAST_USER_DATA / "FieldNoteCounter.txt",
+                DATA / "FieldNoteCounter.txt",
             ),
-            expedition_counter=_configured_path(
-                settings, "ExpeditionCounterPath", DATA / "ExpeditionCounter.txt"
+            expedition_counter=_configured_migrated_path(
+                settings,
+                "ExpeditionCounterPath",
+                BROADCAST_USER_DATA / "ExpeditionCounter.txt",
+                DATA / "ExpeditionCounter.txt",
             ),
-            incident_counter=_configured_path(
-                settings, "IncidentCounterPath", DATA / "IncidentCounter.txt"
+            incident_counter=_configured_migrated_path(
+                settings,
+                "IncidentCounterPath",
+                BROADCAST_USER_DATA / "IncidentCounter.txt",
+                DATA / "IncidentCounter.txt",
             ),
             weather_folder=_configured_path(
                 settings, "WeatherFolder", DATA / "Weather"
             ),
-            narrator_content=_configured_resource_path(
+            narrator_content=_configured_migrated_path(
                 settings,
                 "NarratorContentPath",
                 BROADCAST_RESOURCES / "natural_history_narrator.json",
@@ -84,8 +115,11 @@ class BroadcastPaths:
             boss_log=_configured_path(
                 settings, "BossLogPath", legacy_archive / "BossLog.md"
             ),
-            counters_folder=_configured_path(
-                settings, "CountersFolder", DATA
+            counters_folder=_configured_migrated_path(
+                settings,
+                "CountersFolder",
+                BROADCAST_USER_DATA,
+                DATA,
             ),
             archive_folder=_configured_path(
                 settings, "ArchiveFolder", legacy_archive
@@ -109,7 +143,7 @@ def _configured_path(
     return Path(value) if value else fallback
 
 
-def _configured_resource_path(
+def _configured_migrated_path(
     settings: Mapping[str, object],
     key: str,
     fallback: Path,
