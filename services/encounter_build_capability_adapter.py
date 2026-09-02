@@ -4,6 +4,9 @@ from __future__ import annotations
 
 Capability recognition uses exact EffectVariant.name identities supplied by an
 audited mapping. This module never guesses from skill/source names or prose.
+Canonical character identity is preferred over display labels so roster evidence
+survives renames and cannot silently treat two builds for one character as two
+independent providers.
 """
 
 from dataclasses import dataclass
@@ -41,6 +44,14 @@ class SavedBuildEncounterCapabilityAdapter:
             raise ValueError("identity_maps cannot duplicate capability_type")
         self._maps = {entry.capability_type: entry.effect_names for entry in identity_maps}
 
+    @staticmethod
+    def member_id(audit: SavedBuildCapabilityAudit) -> str:
+        """Return stable roster identity, falling back only for legacy fixtures."""
+        member_id = audit.character_id or audit.character_name or audit.build_name
+        if not member_id:
+            raise ValueError("saved-build capability audit has no usable member identity")
+        return member_id
+
     def evidence_for(
         self,
         audits: tuple[SavedBuildCapabilityAudit, ...],
@@ -53,9 +64,7 @@ class SavedBuildEncounterCapabilityAdapter:
 
         rows: list[RosterCapabilityEvidence] = []
         for audit in audits:
-            member_id = audit.character_name or audit.build_name or audit.character_id
-            if not member_id:
-                raise ValueError("saved-build capability audit has no usable member identity")
+            member_id = self.member_id(audit)
 
             effects_by_name = {}
             for effect in audit.resolved_effects:
