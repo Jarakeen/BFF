@@ -61,8 +61,6 @@ def _set_native_windows_icon(window, icon_path: Path) -> None:
         user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, icon_handle)
         user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, icon_handle)
     except Exception:
-        # Qt's normal icon path remains the fallback on nonstandard Windows
-        # environments or if the native call is unavailable.
         pass
 
 
@@ -116,6 +114,7 @@ def main() -> int:
     from ui.icon_consistency import install as install_icon_consistency
     from ui.encounter_board_accessibility import install as install_encounter_board_accessibility
     from ui.rylo_theme_support import install as install_rylo_theme_support
+    from ui.rylo_surface_icon_fix import install as install_rylo_surface_icon_fix
     from ui.theme_brand_mark_support import install as install_theme_brand_mark_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_acquisition_support import install as install_collectibles_acquisition_support
@@ -132,8 +131,6 @@ def main() -> int:
     install_phase5_operations_progression_support()
     install_phase5_racial_context_support()
     install_phase5_potion_picker_support()
-    # Install the permanent non-native workspace after the older Build Editor
-    # extensions, then layer targeted layout, performance, and scroll fixes.
     install_inline_build_editor()
     install_build_workspace_edit_fix()
     install_build_workspace_tab_layout_fix()
@@ -141,26 +138,19 @@ def main() -> int:
     install_build_progression_scroll_fix()
     install_icon_consistency(app)
     install_encounter_board_accessibility()
-    # Register the alternate visual skin and Appearance selector before the
-    # settings page or main window is constructed.
     install_rylo_theme_support(app)
-    # Keep the sidebar's Foundry feather / Rylo scythe synchronized whenever
-    # ThemeManager applies a different visual theme.
+    # Install last among visual-theme layers so legacy Grimoire leather/raw SVG
+    # assignments cannot override Rylo's stone surfaces or silver card icons.
+    install_rylo_surface_icon_fix(app)
     install_theme_brand_mark_support()
     install_collectibles_profile_support()
-    # Prefer useful source-backed acquisition details on canonical collectibles.
     install_collectibles_acquisition_support()
-    # Learned recipes/plans layer on top of the profile-aware Collectibles page.
     install_collectibles_learned_recipe_support()
-    # Motifs layer after learned recipes/plans so it can delegate safely.
     install_collectibles_motif_support()
-    # Lorebooks layer last so its dedicated reader can delegate through all prior collection layers.
     install_collectibles_lorebook_support()
 
     from ui.main_window import MainWindow
 
-    # Apply the persisted visual theme and independent accessibility overlay.
-    # This replaces the old unconditional Grimoire application at startup.
     theme = ThemeManager()
     theme.apply(app)
 
