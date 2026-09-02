@@ -6,7 +6,12 @@ import random
 import re
 from pathlib import Path
 
-from services.paths import DATA
+from services.paths import PROJECT_ROOT
+
+
+_BROADCAST_NARRATOR = (
+    PROJECT_ROOT / "modules" / "broadcast" / "resources" / "natural_history_narrator.json"
+)
 
 
 class NarratorService:
@@ -14,11 +19,10 @@ class NarratorService:
 
     def __init__(self, content_path: Path):
         requested = Path(content_path)
-        fallback = DATA / "natural_history_narrator.json"
         if requested.exists():
             self.content_path = requested
-        elif fallback.exists():
-            self.content_path = fallback
+        elif _BROADCAST_NARRATOR.exists():
+            self.content_path = _BROADCAST_NARRATOR
         else:
             self.content_path = requested
 
