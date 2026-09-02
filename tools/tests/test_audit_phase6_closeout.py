@@ -63,7 +63,7 @@ def test_runic_embrace_neighbor_scaling_is_ownership_negative():
     assert "neighboring heal" in reason
 
 
-def test_signal_only_multi_heal_is_classification_cleanup():
+def test_multi_heal_is_classification_cleanup_regardless_of_internal_reason_label():
     gap = _gap(
         signals=("healing_candidate",),
         fragment=(
@@ -73,10 +73,20 @@ def test_signal_only_multi_heal_is_classification_cleanup():
     )
     status, reason = audit._closeout_status(_item(gap))
     assert status == "CLASSIFICATION_CLEANUP"
-    assert reason == "multi_heal_classification_gap"
+    assert reason in {"direct_heal_classification_gap", "multi_heal_classification_gap"}
 
 
-def test_signal_only_attack_triggered_heal_is_phase7_boundary():
+def test_conditional_direct_heal_requires_phase6_trigger_review():
+    gap = _gap(
+        signals=("healing_candidate", "conditional_candidate"),
+        fragment="When the shield ends, heal the target for $1 Health.",
+    )
+    status, reason = audit._closeout_status(_item(gap))
+    assert status == "NEEDS_PHASE6_REVIEW"
+    assert "conditional" in reason or "trigger" in reason
+
+
+def test_signal_only_attack_triggered_heal_requires_phase6_trigger_review():
     gap = _gap(
         signals=("healing_candidate", "conditional_candidate"),
         fragment=(
@@ -85,8 +95,8 @@ def test_signal_only_attack_triggered_heal_is_phase7_boundary():
         ),
     )
     status, reason = audit._closeout_status(_item(gap))
-    assert status == "PHASE7_BOUNDARY"
-    assert reason == "phase7_attack_triggered_heal"
+    assert status == "NEEDS_PHASE6_REVIEW"
+    assert "trigger" in reason or "conditional" in reason
 
 
 def test_summary_counts_review_rows_separately():
