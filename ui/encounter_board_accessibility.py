@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QBrush, QPen
-from PySide6.QtWidgets import QComboBox, QLabel
+from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from services.accessibility_preferences import (
     AccessibilityPreferences,
@@ -65,6 +65,8 @@ def install() -> None:
         return
 
     from ui.components import encounter_board as board
+    from ui.components.foundry_card import FoundryCard
+    from ui import encounters_page
 
     original_init = board.EncounterBoard.__init__
     original_add_token = board.EncounterBoard._add_token
@@ -114,6 +116,39 @@ def install() -> None:
         mode = self._accessibility_preferences.set_color_vision_mode(mode)
         apply_color_vision_mode(self, mode)
 
+    @staticmethod
+    def _button_by_text(widget, text: str):
+        for button in widget.findChildren(QPushButton):
+            if button.text() == text:
+                return button
+        return None
+
+    def _install_tooltips(self) -> None:
+        self.boss_mode.setToolTip("Choose 1 Boss or 2 Bosses. Use 2 Bosses for paired encounters such as twins.")
+        self.mini_boss_button.setToolTip("Add a mini-boss marker. Up to 6 mini-bosses may be placed.")
+        self.zone_type_combo.setToolTip("Choose the circle zone type: Danger, Safe, Stack, or Neutral.")
+        self.zone_size_combo.setToolTip("Choose a preset size for the selected or next circle zone.")
+        self.zone_radius_spin.setToolTip("Set the radius of the selected or next circle zone.")
+        self.view.setToolTip("Drag markers and circle zones to position them. Use the mouse wheel to zoom.")
+
+        help_text = {
+            "+ Tank": "Add a tank marker to the tactical board.",
+            "+ Healer": "Add a healer marker to the tactical board.",
+            "+ DD": "Add a damage-dealer marker or DD stack to the tactical board.",
+            "+ Portal": "Add a portal marker to the tactical board.",
+            "+ AOE": "Add an AOE marker to the tactical board.",
+            "+ Stack": "Add a stack-point marker to the tactical board.",
+            "Delete Selected": "Remove the currently selected marker or circle zone.",
+            "Fit Arena": "Fit the entire encounter arena in the visible board area.",
+            "+ Circle Zone": "Add a resizable circle zone using the selected type and radius.",
+            "Save Layout": "Save the current editable encounter layout.",
+            "Capture Positioning": "Capture the board image used by the Assignments positioning preview.",
+        }
+        for text, tooltip in help_text.items():
+            button = _button_by_text(self, text)
+            if button is not None:
+                button.setToolTip(tooltip)
+
     def init_with_accessibility(self, parent=None):
         original_init(self, parent)
 
@@ -131,14 +166,18 @@ def install() -> None:
         )
         self.color_vision_combo.setMinimumWidth(150)
 
-        # Keep the board controls to two horizontal menu rows. The native
-        # EncounterBoard already owns row 1 (TACTICAL BOARD) and row 2
-        # (CIRCLE ZONES), so accessibility joins row 1 rather than creating
-        # a third toolbar above them.
+        # Keep the board controls to exactly two horizontal rows.
         layout = self.layout()
         primary_toolbar = None
-        if layout is not None and layout.count():
-            primary_toolbar = layout.itemAt(0).layout()
+        zone_toolbar = None
+        hint = None
+        if layout is not None:
+            if layout.count() > 0:
+                primary_toolbar = layout.itemAt(0).layout()
+            if layout.count() > 1:
+                zone_toolbar = layout.itemAt(1).layout()
+            if layout.count() > 2:
+                hint = layout.itemAt(2).widget()
 
         if primary_toolbar is not None:
             color_label = QLabel("COLOR VISION")
@@ -146,6 +185,23 @@ def install() -> None:
             primary_toolbar.insertWidget(0, self.color_vision_combo)
             primary_toolbar.insertWidget(0, color_label)
 
+        # The old helper paragraph becomes mouse-over help on the controls.
+        if hint is not None:
+            hint.hide()
+
+        # Save and Capture belong on the second row, pinned to its far right.
+        if primary_toolbar is not None and zone_toolbar is not None:
+            save_button = _button_by_text(self, "Save Layout")
+            capture_button = _button_by_text(self, "Capture Positioning")
+            for button in (save_button, capture_button):
+                if button is not None:
+                    primary_toolbar.removeWidget(button)
+            if save_button is not None:
+                zone_toolbar.addWidget(save_button)
+            if capture_button is not None:
+                zone_toolbar.addWidget(capture_button)
+
+        _install_tooltips(self)
         apply_color_vision_mode(self, mode)
 
     def add_token_with_palette(
@@ -204,6 +260,24 @@ def install() -> None:
         painter.setBrush(QBrush(Qt.BrushStyle.NoBrush))
         painter.drawEllipse(QPointF(0, 0), self.radius + 2, self.radius + 2)
 
+    def compact_mechanics_tab(self) -> QWidget:
+        tab = QWidget()
+        root = QVBoxLayout(tab)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(8)
+
+        board_card = FoundryCard(
+            "Mechanics Map - Interactive Positioning Board",
+            "crossed-swords",
+        ).set_watermark("compass", 0.025)
+        self.encounter_board = board.EncounterBoard()
+        self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
+        board_card.addWidget(self.encounter_board)
+        root.addWidget(board_card, 1)
+
+        self._load_positioning_preview(self.encounter_board.snapshot_path)
+        return tab
+
     # QPointF is imported lazily here only to keep the compatibility layer tiny.
     from PySide6.QtCore import QPointF
 
@@ -212,5 +286,6 @@ def install() -> None:
     board.EncounterBoard._add_token = add_token_with_palette
     board.EncounterBoard._add_zone = add_zone_with_palette
     board.EncounterZone.paint = paint_zone_with_pattern
+    encounters_page.EncountersPage._mechanics_tab = compact_mechanics_tab
 
     _INSTALLED = True
