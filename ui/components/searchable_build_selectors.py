@@ -12,7 +12,7 @@ from ui.components.eligible_build_editor import EligibleBuildEditor, EligibleSki
 from services.skill_choice_service import load_skill_choices
 
 ASSET_ROOT = get_resource_path("assets", "AbilityIcons", "icons", "128")
-EDITOR_CARD_MAX_WIDTH = 1340
+EDITOR_CARD_MAX_WIDTH = 1390
 EDITOR_CARD_MARGIN = 20
 
 
@@ -125,7 +125,7 @@ class SearchableCompactCPSlot(build_editor.CompactCPSlot):
         super().__init__(*args, **kwargs)
         self.combo.setMinimumWidth(145)
         self.combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.points.setFixedWidth(44)
+        self.points.setFixedWidth(50)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
 
@@ -265,8 +265,8 @@ class SearchableBuildEditor(EligibleBuildEditor):
         host = self.window()
         if not isinstance(host, QDialog):
             return
-        host.setMinimumSize(1000, 700)
-        host.resize(1180, 840)
+        host.setMinimumSize(1050, 700)
+        host.resize(1230, 840)
         self._sync_editor_card_widths()
 
 
