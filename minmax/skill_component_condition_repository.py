@@ -23,6 +23,7 @@ def _normalize_source_text(value: object) -> str:
     text = str(value or "").replace("\r", " ").replace("\n", " ")
     text = _COLOR_TAG_RE.sub("", text)
     text = re.sub(r"\bless\s*than\b", "less than", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhealth\s*drops\b", "Health drops", text, flags=re.IGNORECASE)
     return " ".join(text.split())
 
 
