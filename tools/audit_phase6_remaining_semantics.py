@@ -26,6 +26,9 @@ from minmax.skill_component_resource_event_repository import (
 from minmax.skill_component_secondary_healing_repository import (
     SkillComponentSecondaryHealingRepository,
 )
+from minmax.skill_component_utility_effect_repository import (
+    SkillComponentUtilityEffectRepository,
+)
 from tools.audit_phase6_component_gaps import Phase6GapRow, load_phase6_gap_matrix
 
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
@@ -50,6 +53,7 @@ def _coverage_for_row(
     resources: SkillComponentResourceEventRepository,
     secondary_healing: SkillComponentSecondaryHealingRepository,
     missing_health_healing: SkillComponentMissingHealthHealingRepository,
+    utility_effects: SkillComponentUtilityEffectRepository,
 ) -> tuple[str, ...]:
     rank = row.skill_rank_id
     coef = row.coefficient_number
@@ -67,6 +71,8 @@ def _coverage_for_row(
         covered.append("damage_linked_healing")
     if missing_health_healing.resolve(rank, coef):
         covered.append("missing_health_healing")
+    if utility_effects.resolve(rank, coef):
+        covered.append("utility_effect")
 
     return tuple(covered)
 
@@ -84,6 +90,7 @@ def load_remaining_phase6_semantics(
         "resources": SkillComponentResourceEventRepository(path),
         "secondary_healing": SkillComponentSecondaryHealingRepository(path),
         "missing_health_healing": SkillComponentMissingHealthHealingRepository(path),
+        "utility_effects": SkillComponentUtilityEffectRepository(path),
     }
 
     rows: list[RemainingPhase6Row] = []
