@@ -6,11 +6,6 @@
 #
 # Purpose:
 # Foundry Settings.
-#
-# A two-column settings console inspired by the Field
-# Office wireframe while preserving the existing settings
-# keys and services.
-#
 # ==================================================
 
 from __future__ import annotations
@@ -33,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from services.optional_modules import broadcast_enabled
 from services.settings_service import SettingsService
+from ui.achievement_progress_import_page import AchievementProgressImportPage
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -45,6 +41,7 @@ class SettingsPage(QWidget):
         ("⚙", "General"),
         ("⌘", "Integrations"),
         ("▣", "Archive"),
+        ("⇄", "Data Management"),
         ("♢", "Notifications"),
         ("⌁", "Appearance"),
         ("⚒", "Advanced"),
@@ -97,6 +94,7 @@ class SettingsPage(QWidget):
             (("⚙", "General"), self._general_page),
             (("⌘", "Integrations"), self._integrations_page),
             (("▣", "Archive"), self._archive_page),
+            (("⇄", "Data Management"), self._data_management_page),
         ]
         if self.broadcast_enabled:
             sections.append((("▤", "Broadcast"), self._broadcast_page))
@@ -129,7 +127,7 @@ class SettingsPage(QWidget):
         right_column = QVBoxLayout()
         right_column.setSpacing(12)
         right_column.addWidget(self._integration_status_card())
-        right_column.addWidget(self._data_management_card())
+        right_column.addWidget(self._settings_files_card())
         right_column.addStretch(1)
         content.addLayout(right_column, 2)
 
@@ -138,12 +136,14 @@ class SettingsPage(QWidget):
 
         self._show_section(0)
 
-    def _page_shell(self, title: str) -> tuple[QWidget, QVBoxLayout]:
+    def _page_shell(self, title: str, helper: str = "") -> tuple[QWidget, QVBoxLayout]:
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
         card = FoundryCard(title.upper())
+        if helper:
+            card.addWidget(self._muted_note(helper))
         layout.addWidget(card)
         layout.addStretch(1)
         return page, card.body_layout
@@ -167,7 +167,10 @@ class SettingsPage(QWidget):
         return note
 
     def _general_page(self) -> QWidget:
-        page, layout = self._page_shell("General Settings")
+        page, layout = self._page_shell(
+            "General Settings",
+            "Set the main Foundry workspace and default export location. These paths control where Foundry looks for or writes your own working files; they do not change canonical ESO source data.",
+        )
         form = QFormLayout()
         form.setSpacing(9)
 
@@ -180,14 +183,13 @@ class SettingsPage(QWidget):
         form.addRow("Default Builds Export", self._browse_row(self.builds_export_folder, self.builds_export_browse))
 
         layout.addLayout(form)
-        note = QLabel("General application preferences will live here as the UX branch grows.")
-        note.setWordWrap(True)
-        note.setProperty("muted", True)
-        layout.addWidget(note)
         return page
 
     def _integrations_page(self) -> QWidget:
-        page, layout = self._page_shell("Integrations")
+        page, layout = self._page_shell(
+            "Integrations",
+            "Connections to outside services live here. Leave anything you do not use blank. Local achievement spreadsheet import does not require Google API credentials.",
+        )
         form = QFormLayout()
         form.setSpacing(9)
 
@@ -209,19 +211,19 @@ class SettingsPage(QWidget):
         self.google_credentials = QLineEdit()
         self.google_credentials_browse = QPushButton("Browse…")
         self.google_spreadsheet_id = QLineEdit()
-        self.google_spreadsheet_id.setPlaceholderText("Google Sheet ID")
+        self.google_spreadsheet_id.setPlaceholderText("Optional Google Sheet ID")
         form.addRow(
-            "Google Service Account JSON",
+            "Google Service Account JSON (optional)",
             self._browse_row(self.google_credentials, self.google_credentials_browse),
         )
-        form.addRow("Google Spreadsheet ID", self.google_spreadsheet_id)
+        form.addRow("Google Spreadsheet ID (optional)", self.google_spreadsheet_id)
         layout.addLayout(form)
 
-        sheet_note = self._muted_note(
-            "Achievement Sync reads the legacy tracker checkmarks for the active Jarakeen or Rylo profile. "
-            "The spreadsheet remains external; canonical ESO catalog data is never replaced by the sheet."
+        layout.addWidget(
+            self._muted_note(
+                "Google Sheets settings are only for optional live synchronization. For the normal no-API workflow, use Settings → Data Management and choose an exported .xlsx/.xlsm workbook."
+            )
         )
-        layout.addWidget(sheet_note)
 
         if self.broadcast_enabled:
             self.test_obs_button = QPushButton("Test OBS Connection")
@@ -229,7 +231,10 @@ class SettingsPage(QWidget):
         return page
 
     def _archive_page(self) -> QWidget:
-        page, layout = self._page_shell("Archive")
+        page, layout = self._page_shell(
+            "Archive",
+            "Choose where Foundry stores long-lived records and counters. Archive files are your historical records; changing these paths does not delete existing files from the old location.",
+        )
         form = QFormLayout()
         form.setSpacing(9)
 
@@ -243,8 +248,27 @@ class SettingsPage(QWidget):
         layout.addLayout(form)
         return page
 
+    def _data_management_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+        heading = FoundryCard("DATA MANAGEMENT")
+        heading.addWidget(
+            self._muted_note(
+                "Import or export profile-aware achievement progress here. Imports are previewed first, use exact canonical matching, and never replace the ESO catalog. Use exports for clean future backups and sharing between installations."
+            )
+        )
+        layout.addWidget(heading)
+        self.achievement_progress_io = AchievementProgressImportPage(self, embedded=True)
+        layout.addWidget(self.achievement_progress_io, 1)
+        return page
+
     def _broadcast_page(self) -> QWidget:
-        page, layout = self._page_shell("Broadcast")
+        page, layout = self._page_shell(
+            "Broadcast",
+            "Configure scene names used by the optional Broadcast Desk module. These values only matter when Broadcast features are enabled.",
+        )
         form = QFormLayout()
         form.setSpacing(9)
 
@@ -260,21 +284,30 @@ class SettingsPage(QWidget):
         return page
 
     def _notifications_page(self) -> QWidget:
-        page, layout = self._page_shell("Notifications")
+        page, layout = self._page_shell(
+            "Notifications",
+            "Notification preferences will control which Foundry events are allowed to interrupt you. Nothing on this screen is active yet.",
+        )
         placeholder = QLabel("Notification preferences have not been wired yet.")
         placeholder.setWordWrap(True)
         layout.addWidget(placeholder)
         return page
 
     def _appearance_page(self) -> QWidget:
-        page, layout = self._page_shell("Appearance")
+        page, layout = self._page_shell(
+            "Appearance",
+            "Visual theme, density, and display preferences belong here. Theme-specific styling is separate from the underlying game and progress data.",
+        )
         placeholder = QLabel("Theme, density, and display preferences will live here.")
         placeholder.setWordWrap(True)
         layout.addWidget(placeholder)
         return page
 
     def _advanced_page(self) -> QWidget:
-        page, layout = self._page_shell("Advanced")
+        page, layout = self._page_shell(
+            "Advanced",
+            "Direct file-path controls for troubleshooting or migrations. Most people should leave these alone unless they intentionally moved Foundry's data files.",
+        )
         form = QFormLayout()
         form.setSpacing(9)
 
@@ -289,13 +322,15 @@ class SettingsPage(QWidget):
         return page
 
     def _about_page(self) -> QWidget:
-        page, layout = self._page_shell("About & Credits")
+        page, layout = self._page_shell(
+            "About & Credits",
+            "Project identity, ownership, independence, and data-source notes.",
+        )
 
         identity = FoundryCard("BLACK FEATHER FOUNDRY")
         identity.addWidget(
             self._muted_note(
-                "Foundry Dock is an independent companion application built for personal ESO "
-                "research, planning, recordkeeping, and broadcast workflows."
+                "Foundry Dock is an independent companion application built for personal ESO research, planning, recordkeeping, and broadcast workflows."
             )
         )
         copyright_label = QLabel("© 2026 Jarakeen. All rights reserved.")
@@ -306,10 +341,7 @@ class SettingsPage(QWidget):
         independence = FoundryCard("INDEPENDENT PROJECT")
         independence.addWidget(
             self._muted_note(
-                "Black Feather Foundry is not affiliated with, endorsed by, sponsored by, or "
-                "approved by ZeniMax Media Inc. or Bethesda Softworks. The Elder Scrolls Online "
-                "and related names, marks, characters, artwork, and game content remain the "
-                "property of their respective owners."
+                "Black Feather Foundry is not affiliated with, endorsed by, sponsored by, or approved by ZeniMax Media Inc. or Bethesda Softworks. The Elder Scrolls Online and related names, marks, characters, artwork, and game content remain the property of their respective owners."
             )
         )
         layout.addWidget(independence)
@@ -317,15 +349,12 @@ class SettingsPage(QWidget):
         sources = FoundryCard("DATA & SOURCES")
         sources.addWidget(
             self._muted_note(
-                "Game facts and third-party reference material retain their original ownership "
-                "and licensing. Foundry Dock records source provenance where available and does "
-                "not claim ownership of ESO game data or third-party authored material."
+                "Game facts and third-party reference material retain their original ownership and licensing. Foundry Dock records source provenance where available and does not claim ownership of ESO game data or third-party authored material."
             )
         )
         sources.addWidget(
             self._muted_note(
-                "Original application code, interface design, documentation, workflows, and "
-                "original written material are part of the Black Feather Foundry project."
+                "Original application code, interface design, documentation, workflows, and original written material are part of the Black Feather Foundry project."
             )
         )
         layout.addWidget(sources)
@@ -338,6 +367,9 @@ class SettingsPage(QWidget):
 
     def _integration_status_card(self) -> FoundryCard:
         card = FoundryCard("INTEGRATION STATUS")
+        card.addWidget(
+            self._muted_note("Quick configuration indicators. 'Configured' means fields are present, not that an external service has been contacted successfully.")
+        )
         self.integration_labels = {}
         entries = []
         if self.broadcast_enabled:
@@ -351,19 +383,22 @@ class SettingsPage(QWidget):
         )
         for key, title in entries:
             row = QWidget()
-            layout = QHBoxLayout(row)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(QLabel(title))
-            layout.addStretch(1)
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.addWidget(QLabel(title))
+            row_layout.addStretch(1)
             state = QLabel("●  Not checked")
             state.setProperty("integrationState", True)
-            layout.addWidget(state)
+            row_layout.addWidget(state)
             card.addWidget(row)
             self.integration_labels[key] = state
         return card
 
-    def _data_management_card(self) -> FoundryCard:
-        card = FoundryCard("DATA MANAGEMENT")
+    def _settings_files_card(self) -> FoundryCard:
+        card = FoundryCard("SETTINGS FILES")
+        card.addWidget(
+            self._muted_note("Backup/import/export here refers to Foundry's application settings, not achievement progress. Achievement progress has its own tools under Data Management.")
+        )
         top = QHBoxLayout()
         bottom = QHBoxLayout()
 
@@ -461,7 +496,7 @@ class SettingsPage(QWidget):
         if self.broadcast_enabled:
             self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
             self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
-        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Not configured")
+        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.integration_labels["ai"].setText("●  Not configured")
         self.status.info("Settings loaded.")
 
@@ -495,7 +530,7 @@ class SettingsPage(QWidget):
             self.google_credentials.text().strip()
             and self.google_spreadsheet_id.text().strip()
         )
-        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Not configured")
+        self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.status.success("Settings saved.")
 
     def test_obs(self):
