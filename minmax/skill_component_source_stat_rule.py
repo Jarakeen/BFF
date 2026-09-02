@@ -3,9 +3,9 @@ from __future__ import annotations
 """Phase 6 stat rules recovered from raw placeholder-aligned source sentences.
 
 Some UESP skill rows retain ``<<N>>`` in ``raw_description`` while the matching
-``coef_description`` sentence contains the current literal value instead of
-``$N``. This module uses the raw placeholder only as a slot map, then extracts
-semantics and magnitude from the matching canonical display sentence.
+``coef_description`` prose contains a literal value instead of ``$N``. The raw
+placeholder establishes which mechanic belongs to the coefficient slot; the
+coefficientized display prose supplies the current literal magnitude.
 """
 
 import re
@@ -69,22 +69,12 @@ def _sentences(text: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in re.split(r"(?<=[.;])\s+", normalized) if part.strip())
 
 
-def _aligned_sentence(
-    *,
-    raw_description: str,
-    coef_description: str,
-    coefficient_number: int,
-) -> tuple[str, str] | None:
+def _raw_placeholder_sentence(raw_description: str, coefficient_number: int) -> str | None:
     placeholder = re.compile(rf"<<\s*{int(coefficient_number)}\s*>>")
-    raw_sentences = _sentences(raw_description)
-    coef_sentences = _sentences(coef_description)
-    for index, raw_sentence in enumerate(raw_sentences):
-        if placeholder.search(raw_sentence) is None:
-            continue
-        if index >= len(coef_sentences):
-            return None
-        return raw_sentence, coef_sentences[index]
-    return None
+    return next(
+        (sentence for sentence in _sentences(raw_description) if placeholder.search(sentence)),
+        None,
+    )
 
 
 def extract_source_mapped_stat_rule(
@@ -95,20 +85,20 @@ def extract_source_mapped_stat_rule(
     coef_description: str,
     desc_header: str = "",
 ) -> tuple[SkillComponentSourceStatRule, ...]:
-    aligned = _aligned_sentence(
-        raw_description=raw_description,
-        coef_description=coef_description,
-        coefficient_number=coefficient_number,
-    )
-    if aligned is None:
+    raw_sentence = _raw_placeholder_sentence(raw_description, coefficient_number)
+    if raw_sentence is None:
         return ()
 
-    raw_sentence, display_sentence = aligned
     raw_lower = raw_sentence.casefold()
-    display = " ".join(_strip_color_tags(display_sentence).split())
+    # UESP's raw and coefficientized strings do not always preserve identical
+    # sentence boundaries. The raw sentence is therefore used only to prove slot
+    # ownership; the distinctive literal-valued mechanic is located in the full
+    # color-normalized display text.
+    display = " ".join(_strip_color_tags(coef_description).split())
 
     if re.search(
-        r"\beach\s+mace\s+increases\s+your\s+offensive\s+penetration\s+by\s+<<\s*\d+\s*>>",
+        rf"\beach\s+mace\s+increases\s+your\s+offensive\s+penetration\s+by\s+"
+        rf"<<\s*{int(coefficient_number)}\s*>>",
         raw_lower,
         re.IGNORECASE,
     ):
@@ -127,13 +117,14 @@ def extract_source_mapped_stat_rule(
                 driver=SkillComponentSourceStatRuleDriver.DUAL_WIELD_MACES_EQUIPPED,
                 amount_basis=SkillComponentSourceStatRuleBasis.FLAT_PER_UNIT,
                 amount=float(amount_match.group(1)),
-                evidence=display,
+                evidence=amount_match.group(0),
             ),
         )
 
     death_match = re.search(
-        r"\bincreases\s+your\s+critical\s+strike\s+chance\s+against\s+enemies\s+under\s+"
-        r"(?P<threshold>\d+(?:\.\d+)?)\s*%\s+health\s+by\s+<<\s*\d+\s*>>",
+        rf"\bincreases\s+your\s+critical\s+strike\s+chance\s+against\s+enemies\s+under\s+"
+        rf"(?P<threshold>\d+(?:\.\d+)?)\s*%\s+health\s+by\s+"
+        rf"<<\s*{int(coefficient_number)}\s*>>",
         raw_lower,
         re.IGNORECASE,
     )
@@ -157,7 +148,7 @@ def extract_source_mapped_stat_rule(
                 amount_basis=SkillComponentSourceStatRuleBasis.CONDITIONAL_FRACTION,
                 amount=float(amount_match.group("amount")) / 100.0,
                 target_health_below_fraction=float(death_match.group("threshold")) / 100.0,
-                evidence=f"{desc_header}: {display}".strip(": "),
+                evidence=f"{desc_header}: {amount_match.group(0)}".strip(": "),
             ),
         )
 
