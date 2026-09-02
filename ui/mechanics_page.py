@@ -18,6 +18,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from services.accessibility_preferences import (
+    AccessibilityPreferences,
+    COLOR_VISION_FRIENDLY,
+    COLOR_VISION_STANDARD,
+)
 from services.expedition_service import ExpeditionService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -31,8 +36,12 @@ class MechanicsPage(FoundryPage):
     def __init__(self, expedition: ExpeditionService, parent=None):
         super().__init__(parent)
         self.expedition = expedition
+        self.accessibility_preferences = AccessibilityPreferences()
+        self._color_vision_mode = self.accessibility_preferences.color_vision_mode()
+        self._status_badges: dict[str, QLabel] = {}
         self._build_ui()
         self.refresh_context()
+        self._apply_color_vision_mode(self._color_vision_mode)
 
     @staticmethod
     def _placeholder(text: str, *, centered: bool = False) -> QLabel:
@@ -57,7 +66,7 @@ class MechanicsPage(FoundryPage):
 
     def _build_ui(self):
         self.header = FoundryHeader(
-            title="Boss Guide",
+            title="Mechanics",
             subtitle="Study the encounter. Document the details. Execute the plan.",
             department="Raid Engine • Mechanics",
         )
@@ -67,15 +76,27 @@ class MechanicsPage(FoundryPage):
         self.trial_combo.addItem("Current Expedition")
         self.boss_combo = QComboBox()
         self.boss_combo.addItem("Current Objective")
+        self.color_vision_combo = QComboBox()
+        self.color_vision_combo.addItem("Standard", COLOR_VISION_STANDARD)
+        self.color_vision_combo.addItem("Colorblind Friendly", COLOR_VISION_FRIENDLY)
+        initial_mode_index = self.color_vision_combo.findData(self._color_vision_mode)
+        self.color_vision_combo.setCurrentIndex(initial_mode_index if initial_mode_index >= 0 else 0)
+        self.color_vision_combo.currentIndexChanged.connect(self._color_vision_changed)
+
         self.view_all_button = QPushButton("▤  View All Bosses")
         self.header.add_context_widget(self._context_field("TRIAL", self.trial_combo))
         self.header.add_context_widget(self._context_field("BOSS", self.boss_combo))
+        self.header.add_context_widget(self._context_field("COLOR VISION", self.color_vision_combo))
         self.header.add_context_widget(self.view_all_button)
 
         workspace = QWidget()
+        workspace.setObjectName("mechanicsWorkspace")
+        self.mechanics_workspace = workspace
         root = QVBoxLayout(workspace)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
+
+        root.addWidget(self._accessibility_key())
 
         hero_row = QHBoxLayout()
         hero_row.setSpacing(8)
@@ -133,6 +154,7 @@ class MechanicsPage(FoundryPage):
         center_column.setSpacing(8)
 
         self.tabs = QTabWidget()
+        self.tabs.addTab(self._mechanics_tab(), "MECHANICS")
         self.tabs.addTab(self._abilities_tab(), "ABILITIES")
         self.tabs.addTab(self._empty_tab("Threshold-specific mechanics and phase changes will appear here."), "THRESHOLDS")
         self.tabs.addTab(self._empty_tab("Strategy notes and recommended handling will appear here."), "STRATEGY")
@@ -189,8 +211,50 @@ class MechanicsPage(FoundryPage):
         self.add_workspace(workspace)
 
         self.status = FoundryStatusBar()
-        self.status.info("Boss Guide ready. Encounter data cards are waiting for content.")
+        self.status.info("Mechanics ready. Encounter data cards are waiting for content.")
         self.set_status(self.status)
+
+    def _accessibility_key(self) -> QWidget:
+        card = FoundryCard("Status Key", "◈")
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        for role in ("success", "danger", "warning", "neutral"):
+            badge = QLabel()
+            badge.setProperty("mechanicsStatus", role)
+            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            badge.setMinimumHeight(30)
+            badge.setMinimumWidth(150)
+            self._status_badges[role] = badge
+            row.addWidget(badge)
+        row.addStretch(1)
+        card.addLayout(row)
+        self.color_vision_note = QLabel()
+        self.color_vision_note.setWordWrap(True)
+        self.color_vision_note.setProperty("muted", True)
+        card.addWidget(self.color_vision_note)
+        return card
+
+    def _mechanics_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        card = FoundryCard("Encounter Mechanics", "☠")
+        self.mechanics_table = QTableWidget(0, 5)
+        self.mechanics_table.setHorizontalHeaderLabels(("Mechanic", "Type", "You", "Group", "Notes"))
+        self.mechanics_table.setAlternatingRowColors(True)
+        self.mechanics_table.verticalHeader().setVisible(False)
+        self.mechanics_table.setMinimumHeight(300)
+        self.mechanics_table.setProperty("mechanicsTable", True)
+        card.addWidget(self.mechanics_table)
+        card.addWidget(
+            self._placeholder(
+                "Mechanic status uses icon + shape + text. Color is supplemental, so the table remains readable in grayscale."
+            )
+        )
+        layout.addWidget(card)
+        return tab
 
     def _abilities_tab(self) -> QWidget:
         tab = QWidget()
@@ -228,6 +292,130 @@ class MechanicsPage(FoundryPage):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.addWidget(self._placeholder(text, centered=True), 1)
         return tab
+
+    def _color_vision_changed(self, _index: int) -> None:
+        mode = str(self.color_vision_combo.currentData() or COLOR_VISION_STANDARD)
+        self._color_vision_mode = self.accessibility_preferences.set_color_vision_mode(mode)
+        self._apply_color_vision_mode(self._color_vision_mode)
+        if hasattr(self, "status"):
+            label = "Colorblind Friendly" if self._color_vision_mode == COLOR_VISION_FRIENDLY else "Standard"
+            self.status.success(f"Mechanics color vision mode: {label}.")
+
+    def _set_status_badge_text(self, mode: str) -> None:
+        if mode == COLOR_VISION_FRIENDLY:
+            labels = {
+                "success": "◇  ✓  SAFE / SUCCESS",
+                "danger": "⬡  ✕  FAILED / DANGER",
+                "warning": "○  !  ATTENTION / WARNING",
+                "neutral": "□  —  NOT APPLICABLE",
+            }
+            note = (
+                "Colorblind Friendly mode uses blue, orange, yellow, purple, and cyan accents with distinct shapes and icons. "
+                "No mechanic state should rely on color alone."
+            )
+        else:
+            labels = {
+                "success": "✓  SAFE / SUCCESS",
+                "danger": "✕  FAILED / DANGER",
+                "warning": "!  ATTENTION / WARNING",
+                "neutral": "○  NOT APPLICABLE",
+            }
+            note = (
+                "Standard mode keeps the familiar red/green status colors while retaining icons and text so status is still readable without color."
+            )
+        for role, text in labels.items():
+            self._status_badges[role].setText(text)
+        self.color_vision_note.setText(note)
+
+    def _apply_color_vision_mode(self, mode: str) -> None:
+        mode = mode if mode in {COLOR_VISION_STANDARD, COLOR_VISION_FRIENDLY} else COLOR_VISION_STANDARD
+        self._color_vision_mode = mode
+        self._set_status_badge_text(mode)
+
+        if mode == COLOR_VISION_FRIENDLY:
+            success = "#3C9DFF"
+            danger = "#E97917"
+            warning = "#F2C94C"
+            neutral = "#A7A7A7"
+            mode_accent = "#2BBBCB"
+        else:
+            success = "#6FAE45"
+            danger = "#D84A3A"
+            warning = "#E0A61A"
+            neutral = "#A7A7A7"
+            mode_accent = "#C8A46A"
+
+        self.mechanics_workspace.setProperty("colorVisionMode", mode)
+        self.mechanics_workspace.setStyleSheet(
+            f"""
+            QWidget#mechanicsWorkspace {{
+                background-color: #101315;
+                color: #E5E1D8;
+            }}
+            QWidget#mechanicsWorkspace QTableWidget {{
+                background-color: #111416;
+                alternate-background-color: #171B1E;
+                gridline-color: #4B4A46;
+                color: #E5E1D8;
+                selection-background-color: #30373B;
+                selection-color: #FFFFFF;
+            }}
+            QWidget#mechanicsWorkspace QHeaderView::section {{
+                background-color: #171A1C;
+                color: #D8D2C6;
+                border: 0px;
+                border-right: 1px solid #4B4A46;
+                border-bottom: 1px solid #5B554C;
+                padding: 6px;
+            }}
+            QWidget#mechanicsWorkspace QTabWidget::pane {{
+                border: 1px solid #5B554C;
+                background-color: #111416;
+            }}
+            QWidget#mechanicsWorkspace QTabBar::tab:selected {{
+                border-bottom: 2px solid {mode_accent};
+            }}
+            QLabel[mechanicsStatus="success"] {{
+                color: {success};
+                border: 1px solid {success};
+                border-radius: 12px;
+                padding: 4px 9px;
+                font-weight: 700;
+            }}
+            QLabel[mechanicsStatus="danger"] {{
+                color: {danger};
+                border: 1px solid {danger};
+                border-radius: 3px;
+                padding: 4px 9px;
+                font-weight: 700;
+            }}
+            QLabel[mechanicsStatus="warning"] {{
+                color: {warning};
+                border: 1px dashed {warning};
+                border-radius: 12px;
+                padding: 4px 9px;
+                font-weight: 700;
+            }}
+            QLabel[mechanicsStatus="neutral"] {{
+                color: {neutral};
+                border: 1px solid #666666;
+                padding: 4px 9px;
+                font-weight: 700;
+            }}
+            """
+        )
+
+    def _reload_color_vision_preference(self) -> None:
+        mode = self.accessibility_preferences.color_vision_mode()
+        self.color_vision_combo.blockSignals(True)
+        index = self.color_vision_combo.findData(mode)
+        self.color_vision_combo.setCurrentIndex(index if index >= 0 else 0)
+        self.color_vision_combo.blockSignals(False)
+        self._apply_color_vision_mode(mode)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self._reload_color_vision_preference()
 
     def refresh_context(self):
         current = self.expedition.expedition
