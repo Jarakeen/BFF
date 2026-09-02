@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from services.content_packs import resolve_collectible_icons_root
+from services.paths import DATA
 
 
 class CollectibleIconCatalog:
@@ -16,7 +17,24 @@ class CollectibleIconCatalog:
 
     def __init__(self, data_dir: str | Path):
         self.data_dir = Path(data_dir)
-        self.icon_dir = resolve_collectible_icons_root(self.data_dir)
+
+        # Runtime calls use the canonical application DATA directory, where the
+        # optional content pack must win over the transitional legacy cache.
+        # Tests and other isolated callers may pass a self-contained directory
+        # with its own ``collectible_icons`` child; preserve that long-standing
+        # contract instead of letting an installed application pack leak into
+        # the isolated fixture.
+        local_legacy = self.data_dir / "collectible_icons"
+        try:
+            is_runtime_data = self.data_dir.resolve() == DATA.resolve()
+        except OSError:
+            is_runtime_data = False
+
+        if not is_runtime_data and (local_legacy / "manifest.json").is_file():
+            self.icon_dir = local_legacy
+        else:
+            self.icon_dir = resolve_collectible_icons_root(self.data_dir)
+
         self.manifest_path = self.icon_dir / "manifest.json"
         self.entries: dict[str, dict] = {}
         self.load()
