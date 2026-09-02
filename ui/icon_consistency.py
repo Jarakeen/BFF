@@ -44,6 +44,7 @@ def _apply_settings_icons(button: QPushButton) -> None:
         "General": "settings",
         "Integrations": "gears",
         "Archive": "archive",
+        "Data Management": "square-library",
         "Broadcast": "broadcast",
         "Notifications": "warning",
         "Appearance": "sparkles",
@@ -87,7 +88,11 @@ def install(app: QApplication | None = None) -> None:
     from ui.settings_page import SettingsPage
 
     original_build_ui = SettingsPage._build_ui
-    original_data_management = SettingsPage._data_management_card
+    # Older Settings layouts exposed the right-side data controls through
+    # _data_management_card. Phase 10 moved progress import/export into a real
+    # _data_management_page section, so this compatibility hook must be
+    # optional rather than assuming the legacy method still exists.
+    original_data_management = getattr(SettingsPage, "_data_management_card", None)
 
     def build_ui_with_foundry_icons(self):
         original_build_ui(self)
@@ -95,23 +100,25 @@ def install(app: QApplication | None = None) -> None:
             _strip_legacy_prefix(button)
             _apply_settings_icons(button)
 
-    def data_management_with_foundry_icons(self):
-        card = original_data_management(self)
-        for name in ("backup_button", "export_button", "import_button", "reset_button"):
-            button = getattr(self, name, None)
-            if isinstance(button, QPushButton):
-                plain = {
-                    "backup_button": "Backup Data",
-                    "export_button": "Export Settings",
-                    "import_button": "Import Settings",
-                    "reset_button": "Reset to Defaults",
-                }[name]
-                button.setText(plain)
-                _apply_settings_icons(button)
-        return card
-
     SettingsPage._build_ui = build_ui_with_foundry_icons
-    SettingsPage._data_management_card = data_management_with_foundry_icons
+
+    if original_data_management is not None:
+        def data_management_with_foundry_icons(self):
+            card = original_data_management(self)
+            for name in ("backup_button", "export_button", "import_button", "reset_button"):
+                button = getattr(self, name, None)
+                if isinstance(button, QPushButton):
+                    plain = {
+                        "backup_button": "Backup Data",
+                        "export_button": "Export Settings",
+                        "import_button": "Import Settings",
+                        "reset_button": "Reset to Defaults",
+                    }[name]
+                    button.setText(plain)
+                    _apply_settings_icons(button)
+            return card
+
+        SettingsPage._data_management_card = data_management_with_foundry_icons
 
     filter_obj = _ButtonIconFilter(app)
     app.installEventFilter(filter_obj)
