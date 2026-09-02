@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from services.broadcast_paths import BroadcastPaths
+from services.broadcast_paths import BROADCAST_RESOURCES, BroadcastPaths
 from services.paths import DATA, PROJECT_ROOT
 
 
@@ -12,12 +12,12 @@ def test_broadcast_paths_honor_configured_settings() -> None:
         "StreamEventsPath": "C:/BFF/state/StreamEvents.json",
         "StreamSessionPath": "C:/BFF/state/StreamSession.json",
         "MarkerLogPath": "C:/BFF/state/MarkerLog.md",
-        "FootnotesPath": "C:/BFF/state/footnotes.txt",
+        "FootnotesPath": "C:/BFF/custom/footnotes.txt",
         "FieldNoteCounterPath": "C:/BFF/state/FieldNoteCounter.txt",
         "ExpeditionCounterPath": "C:/BFF/state/ExpeditionCounter.txt",
         "IncidentCounterPath": "C:/BFF/state/IncidentCounter.txt",
         "WeatherFolder": "C:/BFF/weather",
-        "NarratorContentPath": "C:/BFF/modules/broadcast/resources/narrator.json",
+        "NarratorContentPath": "C:/BFF/custom/narrator.json",
         "BossLogPath": "C:/BFF/archive/BossLog.md",
         "CountersFolder": "C:/BFF/counters",
         "ArchiveFolder": "C:/BFF/archive",
@@ -44,7 +44,7 @@ def test_broadcast_paths_honor_configured_settings() -> None:
     assert paths.session_archive_folder == Path(settings["SessionArchiveFolder"])
 
 
-def test_broadcast_paths_use_current_layout_as_fallback() -> None:
+def test_broadcast_paths_use_module_resources_and_current_state_as_fallback() -> None:
     paths = BroadcastPaths.from_settings({})
 
     assert paths.current_broadcast == DATA / "CurrentBroadcast.json"
@@ -53,12 +53,24 @@ def test_broadcast_paths_use_current_layout_as_fallback() -> None:
     assert paths.stream_events == DATA / "StreamEvents.json"
     assert paths.stream_session == DATA / "StreamSession.json"
     assert paths.marker_log == DATA / "MarkerLog.md"
-    assert paths.footnotes == DATA / "footnotes.txt"
+    assert paths.footnotes == BROADCAST_RESOURCES / "footnotes.txt"
     assert paths.field_note_counter == DATA / "FieldNoteCounter.txt"
     assert paths.expedition_counter == DATA / "ExpeditionCounter.txt"
     assert paths.incident_counter == DATA / "IncidentCounter.txt"
     assert paths.weather_folder == DATA / "Weather"
-    assert paths.narrator_content == DATA / "natural_history_narrator.json"
+    assert paths.narrator_content == BROADCAST_RESOURCES / "natural_history_narrator.json"
     assert paths.counters_folder == DATA
     assert paths.archive_folder == PROJECT_ROOT / "Archive"
     assert paths.session_archive_folder == PROJECT_ROOT / "Archive" / "Sessions"
+
+
+def test_broadcast_paths_translate_legacy_default_resource_settings() -> None:
+    paths = BroadcastPaths.from_settings(
+        {
+            "FootnotesPath": str(DATA / "footnotes.txt"),
+            "NarratorContentPath": str(DATA / "natural_history_narrator.json"),
+        }
+    )
+
+    assert paths.footnotes == BROADCAST_RESOURCES / "footnotes.txt"
+    assert paths.narrator_content == BROADCAST_RESOURCES / "natural_history_narrator.json"
