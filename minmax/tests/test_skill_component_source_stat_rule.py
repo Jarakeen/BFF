@@ -28,6 +28,17 @@ def test_twin_blade_mace_penetration_uses_raw_slot_alignment():
     assert rows[0].stats == (StatId.PHYSICAL_PENETRATION, StatId.SPELL_PENETRATION)
 
 
+def test_twin_blade_accepts_color_tagged_literal_source():
+    rows = extract_source_mapped_stat_rule(
+        skill_rank_id=5654,
+        coefficient_number=2,
+        raw_description="Each mace increases your Offensive Penetration by <<2>>.",
+        coef_description="Each mace increases your Offensive Penetration by |cffffff1487|r.",
+    )
+    assert len(rows) == 1
+    assert rows[0].amount == 1487
+
+
 def test_death_knell_preserves_threshold_amount_and_slot_requirement():
     rows = extract_source_mapped_stat_rule(
         skill_rank_id=7390,
@@ -42,6 +53,22 @@ def test_death_knell_preserves_threshold_amount_and_slot_requirement():
     assert rows[0].amount == 0.10
     assert rows[0].target_health_below_fraction == 0.33
     assert rows[0].stats == (StatId.CRITICAL_CHANCE,)
+
+
+def test_death_knell_accepts_color_tagged_literal_source():
+    rows = extract_source_mapped_stat_rule(
+        skill_rank_id=7391,
+        coefficient_number=1,
+        raw_description="Increases your Critical Strike Chance against enemies under 33% Health by <<1>>.",
+        coef_description=(
+            "Increases your Critical Strike Chance against enemies under |cffffff33|r% Health "
+            "by |cffffff20|r%."
+        ),
+        desc_header="WITH A GRAVELORD ABILITY SLOTTED",
+    )
+    assert len(rows) == 1
+    assert rows[0].amount == 0.20
+    assert rows[0].target_health_below_fraction == 0.33
 
 
 def test_raw_slot_alignment_does_not_invent_unrelated_semantics():
