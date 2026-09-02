@@ -164,6 +164,7 @@ class MainWindow(QMainWindow):
             collectibles_page = self.pages["collectibles"]
             self._refresh_collectibles_for_active_profile()
             collectibles_page.set_category(category)
+            self.sidebar.set_current(page_name)
             self.stack.setCurrentWidget(self.page_containers["collectibles"])
             return
 
@@ -179,6 +180,7 @@ class MainWindow(QMainWindow):
         elif page_name == "collectibles":
             self._refresh_collectibles_for_active_profile()
 
+        self.sidebar.set_current(page_name)
         self.stack.setCurrentWidget(self.page_containers[page_name])
 
     def wrap_page(self, page):
