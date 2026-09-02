@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
+import re
 
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtWidgets import QLabel, QPushButton, QToolButton, QWidget
+from PySide6.QtCore import QByteArray, QSize, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QToolButton, QWidget
 
 from engine.config import get_resource_path
+from services.accessibility_preferences import VISUAL_THEME_RYLO
 
 
 _ICON_ROOTS = (
@@ -118,6 +122,16 @@ _BUTTON_KEYWORDS = (
     ("import", "download"), ("start", "stopwatch"), ("analyze", "binoculars"),
 )
 
+_RYLO_DEFAULT = "#AEB7C1"
+_RYLO_ACTIVE = "#4EA3FF"
+_RYLO_DISABLED = "#6F7883"
+_RYLO_SELECTED = "#DCE4EB"
+
+
+def _is_rylo_theme() -> bool:
+    app = QApplication.instance()
+    return bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
+
 
 def icon_path(name: str) -> Path | None:
     if not name:
@@ -130,9 +144,71 @@ def icon_path(name: str) -> Path | None:
     return None
 
 
+def _recolor_svg(svg: str, tone: str) -> str:
+    """Flatten a source SVG into Rylo's matte silver icon language.
+
+    The existing library contains a mix of gold glyphs and full-canvas dark
+    backing squares. Rylo keeps the same shapes but removes those tiles and
+    treats color as state, not decoration.
+    """
+    # Remove common generated full-canvas backing paths before recoloring.
+    svg = re.sub(
+        r'<path(?=[^>]*d=["\']M0\s+0h512v512H0z["\'])[^>]*/?>',
+        '',
+        svg,
+        flags=re.IGNORECASE,
+    )
+    svg = re.sub(
+        r'<path(?=[^>]*d=["\']M0\s+0\s+h512\s+v512\s+H0\s+z["\'])[^>]*/?>',
+        '',
+        svg,
+        flags=re.IGNORECASE,
+    )
+
+    # Preserve explicit transparency, but convert visible fills/strokes to one
+    # restrained tone. This also handles exported inline style declarations.
+    svg = re.sub(r'fill=["\']#[0-9A-Fa-f]{3,8}["\']', f'fill="{tone}"', svg)
+    svg = re.sub(r'stroke=["\']#[0-9A-Fa-f]{3,8}["\']', f'stroke="{tone}"', svg)
+    svg = re.sub(r'fill\s*:\s*#[0-9A-Fa-f]{3,8}', f'fill:{tone}', svg)
+    svg = re.sub(r'stroke\s*:\s*#[0-9A-Fa-f]{3,8}', f'stroke:{tone}', svg)
+    return svg
+
+
+@lru_cache(maxsize=512)
+def _rylo_pixmap(path_text: str, tone: str, size: int) -> QPixmap:
+    path = Path(path_text)
+    try:
+        source = path.read_text(encoding="utf-8")
+    except OSError:
+        return QPixmap()
+    renderer = QSvgRenderer(QByteArray(_recolor_svg(source, tone).encode("utf-8")))
+    if not renderer.isValid():
+        return QPixmap()
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+    return pixmap
+
+
+def _rylo_icon(path: Path, size: int = 32) -> QIcon:
+    result = QIcon()
+    result.addPixmap(_rylo_pixmap(str(path), _RYLO_DEFAULT, size), QIcon.Mode.Normal, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _RYLO_ACTIVE, size), QIcon.Mode.Active, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _RYLO_SELECTED, size), QIcon.Mode.Selected, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _RYLO_DISABLED, size), QIcon.Mode.Disabled, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _RYLO_ACTIVE, size), QIcon.Mode.Normal, QIcon.State.On)
+    return result
+
+
 def icon(name: str) -> QIcon:
     path = icon_path(name)
-    return QIcon(str(path)) if path is not None else QIcon()
+    if path is None:
+        return QIcon()
+    if _is_rylo_theme() and path.suffix.casefold() == ".svg":
+        return _rylo_icon(path)
+    return QIcon(str(path))
 
 
 def semantic_icon(text: str, *, button: bool = False) -> str:
@@ -154,15 +230,45 @@ def set_button_icon(button_widget: QPushButton | QToolButton, name: str | None =
         return
     button_widget.setIcon(value)
     button_widget.setIconSize(QSize(size, size))
+    button_widget.setProperty("semanticIconName", icon_name)
 
 
 def icon_label(name: str, size: int = 18, parent: QWidget | None = None) -> QLabel:
     label = QLabel(parent)
     label.setFixedSize(size, size)
     label.setScaledContents(True)
-    path = icon_path(name)
-    if path is not None:
-        pixmap = QPixmap(str(path))
-        if not pixmap.isNull():
-            label.setPixmap(pixmap)
+    value = icon(name)
+    if not value.isNull():
+        label.setPixmap(value.pixmap(size, size))
+        label.setProperty("semanticIconName", name)
     return label
+
+
+def refresh_theme_icons(root: QWidget | QApplication | None = None) -> None:
+    """Refresh semantic icons after an in-app theme switch."""
+    app = QApplication.instance()
+    if app is None:
+        return
+    roots = app.topLevelWidgets() if root is None or isinstance(root, QApplication) else [root]
+    for top in roots:
+        for button in top.findChildren((QPushButton, QToolButton)):
+            name = button.property("semanticIconName") or semantic_icon(button.text(), button=True)
+            if name:
+                set_button_icon(button, str(name), button.iconSize().width() or 15)
+        for label in top.findChildren(QLabel):
+            name = label.property("semanticIconName")
+            if not name:
+                continue
+            size = max(1, min(label.width() or 18, label.height() or 18))
+            value = icon(str(name))
+            if not value.isNull():
+                label.setPixmap(value.pixmap(size, size))
+        # FoundryCard stores its semantic icon name and can refresh itself safely.
+        try:
+            from ui.components.foundry_card import FoundryCard
+            for card in top.findChildren(FoundryCard):
+                name = getattr(card, "_icon_name", "")
+                if name:
+                    card.set_icon(name)
+        except ImportError:
+            pass
