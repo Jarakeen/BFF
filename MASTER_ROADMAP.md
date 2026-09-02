@@ -416,22 +416,108 @@ Detailed closeout: `docs/phase5_real_build_resolution_closeout.md`.
 ---
 
 # PHASE 6 · Damage / Effect Components
-**Status: 🟢 Foundation delivered early in Phase 3 / 🟡 expansion later**
+**Status: 🟢 Complete**
 
-Per-coefficient component identity and independent damage routing now exist. Later expansion adds richer secondary damage, proc, status, execute, and utility relationships.
+Phase 6 makes coefficient-local ability semantics explicit without turning runtime combat state into static facts. It bridges per-component identity into the existing effect architecture and records static relationships that Phase 7 can execute over time.
 
-**Exit criteria:** BFF can explain each meaningful ability component and how it routes through combat math.
+## Completed Phase 6 foundations
+
+- 🟢 explicit component → named-effect applications, including status effects and named buffs/debuffs
+- 🟢 target-health and self-health threshold conditions with coefficient ownership
+- 🟢 conditional consequences such as component activation and execute-style damage amplification
+- 🟢 damage-linked secondary healing and missing-health healing
+- 🟢 shield parsing with neighbor ownership kept conservative
+- 🟢 resource restoration semantics, including coefficient, percent-missing, percent-resource, and current-display rules
+- 🟢 utility effects including stun, immobilize, movement changes, knockback, pull, taunt, and interrupt immunity
+- 🟢 dynamic damage scaling such as accumulated-damage caps and per-tick increments
+- 🟢 dynamic stat scaling such as Elder Dragon missing-health recovery
+- 🟢 explicit secondary component roles for additional damage and healing
+- 🟢 component trigger relationships for attacks, effect completion, stun completion, damage events, enemy death, delay completion, and charge thresholds
+- 🟢 current-stat bonus display semantics for armor-piece and slotted-ability passives
+- 🟢 resource-restore display semantics for Constitution and Undaunted Command
+- 🟢 coordinated damage-list parsing for Pestilent Colossus-style `$1/$2/$3` shared damage-type prose
+- 🟢 source-mapped passive stat rules for Twin Blade and Blunt and Death Knell
+- 🟢 explicit unsupported source-alignment representation instead of guessed mechanics
+
+## Phase 6 boundary discipline
+
+Phase 6 records **what the component means and what static relationship exists**. It deliberately does not execute runtime timing/state.
+
+Deferred to Phase 7/8:
+
+- trigger occurrence and event detection
+- durations and active windows
+- tick cadence and repeated-event scheduling
+- proc chance and cooldown enforcement
+- stack accumulation / expiration
+- target selection and target-count changes over time
+- current execute/health conditions
+- status-effect runtime application behavior
+- proc-set and enchantment scheduling
+- combat-state truth at a specific instant
+
+## Closeout evidence
+
+Final Phase 6 closeout gate on **2026-09-02**:
+
+- residual audit rows: **403**
+- needs Phase 6 review: **0**
+- parser-coverage rows: **0**
+- source-evidence blocked: **4**
+- unsupported source alignment: **4**
+- unresolved source blocks: **0**
+- classification cleanup: **356**
+- ownership negatives: **8**
+- Phase 7 boundaries: **35**
+- **RESULT: PASS**
+
+Targeted final regression checkpoint: **14 passed**.
+
+### Explicit retained source limitation
+
+Four Engulfing Dragonfire coefficient-3 rows use UESP special coefficient type `-73`. The normalized/raw coefficient slot is real, but UESP's raw placeholder numbering maps `<<3>>` to channel-duration prose while the coefficientized display does not expose `$3` as a trustworthy mechanic. BFF therefore records these rows as **unsupported source alignment** and does not invent a semantic mapping.
+
+This is an intentional supported limitation, not an unresolved Phase 6 blocker.
+
+**Exit criteria met on 2026-09-02.** BFF can explain each meaningful supported ability component and how its static relationships route into combat math, while unsupported source anomalies remain explicit rather than guessed.
 
 ---
 
 # PHASE 7 · Conditional Effects & Proc Engine
-**Status: 🔴**
+**Status: 🟡 Active**
 
-Model triggers, conditions, chance, cooldown, duration, stacks, targets, status effects, proc sets, enchantments, and conditional buffs/debuffs.
+Phase 7 executes the static component/effect relationships established in Phase 6 over time.
 
-Proc critical-eligibility policy exists as a static foundation, but temporal proc behavior belongs here.
+Model:
 
-**Exit criteria:** BFF can calculate expected conditional effect behavior without treating procs as permanent sheet stats.
+- trigger occurrence and event detection
+- conditional eligibility
+- proc chance
+- cooldowns
+- durations and active windows
+- tick cadence
+- stacks and stack expiration
+- target selection / target counts
+- status-effect runtime behavior
+- proc sets and enchantments
+- conditional buffs/debuffs
+- triggered healing and resource restoration
+
+The existing `EffectVariant` architecture remains authoritative for effect identity and available static metadata. Phase 7 must reuse Phase 6 component relationships rather than create a second ability-specific rule engine.
+
+Proc critical-eligibility policy already exists as a static foundation. Phase 7 determines **when** an eligible proc occurs, not whether its static damage formula is real.
+
+## Initial Phase 7 priorities
+
+1. audit all Phase 6 `PHASE7_BOUNDARY` rows and existing `EffectVariant` temporal fields
+2. define one deterministic event/trigger contract shared by skills, effects, proc sets, enchantments, and resource events
+3. model duration windows and cadence independently from trigger identity
+4. add cooldown and proc-chance enforcement without assuming permanent uptime
+5. add deterministic stack state and expiration
+6. integrate status-effect application/runtime state
+7. validate against representative real skill/proc/resource examples before broadening coverage
+
+**Exit criteria:** BFF can calculate deterministic or explicitly probabilistic conditional effect behavior over time without treating procs, conditional buffs, or runtime restores as permanent sheet stats.
 
 ---
 
