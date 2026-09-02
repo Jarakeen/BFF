@@ -41,6 +41,9 @@ build/
 # Mutable per-user application state
 /user_data/
 
+# Optional downloadable/installable content packs
+/content_packs/
+
 # ESO database is intentionally local for now
 /data/eso.db
 eso.db.pre_gear_customizationq
