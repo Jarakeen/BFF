@@ -28,10 +28,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from tools import data_paths
 from services.eso_db.eso_db_importer import EsoDbImportError, EsoDbImporter
 
 
-DEFAULT_UESP_ROOT = REPO_ROOT / "data" / "uesp"
+DEFAULT_UESP_ROOT = data_paths.UESP_DATA_ROOT
 DEFAULT_DB_PATH = REPO_ROOT / "data" / "eso.db"
 
 
