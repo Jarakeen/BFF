@@ -4,10 +4,10 @@ from __future__ import annotations
 
 Numeric source values retain their exact source text. A number is exposed only
 when its format is unambiguous; callers must handle unresolved values explicitly.
-Encounter requirements and target counts are projected only from explicit
-structured mechanic fields; this service never derives them from prose.
-Reconciled evidence remains source-qualified rather than silently promoted to
-canonical encounter truth.
+Encounter requirements, positioning flags, and target counts are projected only
+from explicit structured mechanic fields; this service never derives them from
+prose. Reconciled evidence remains source-qualified rather than silently promoted
+to canonical encounter truth.
 """
 
 from dataclasses import dataclass
@@ -59,6 +59,18 @@ class EncounterTargetConstraint:
     mechanic_id: str
     mechanic_name: str
     target_count: int
+    interpretation_status: str
+
+
+@dataclass(frozen=True)
+class EncounterPositioningConstraint:
+    """A source-structured positioning demand without invented geometry."""
+
+    constraint_id: str
+    encounter_id: str
+    mechanic_id: str
+    mechanic_name: str
+    target_count: int | None
     interpretation_status: str
 
 
@@ -179,6 +191,32 @@ class EncounterService:
             )
         return tuple(constraints)
 
+    def positioning_constraints(
+        self,
+        encounter_id: str,
+    ) -> tuple[EncounterPositioningConstraint, ...]:
+        """Return explicit positioning demands without manufacturing coordinates.
+
+        The manual encounter board remains a planning surface and is not read as
+        canonical encounter truth. This method therefore says only that a
+        mechanic requires positioning when the structured source field is true.
+        It does not invent stack locations, arena coordinates, range bands, or
+        player assignments.
+        """
+        encounter = self.get(encounter_id)
+        return tuple(
+            EncounterPositioningConstraint(
+                constraint_id=f"{mechanic.mechanic_id}:positioning",
+                encounter_id=encounter.encounter_id,
+                mechanic_id=mechanic.mechanic_id,
+                mechanic_name=mechanic.name,
+                target_count=mechanic.target_count,
+                interpretation_status=mechanic.interpretation_status,
+            )
+            for mechanic in encounter.mechanics
+            if mechanic.requires_positioning is True
+        )
+
     def evidence_facts(
         self,
         encounter_id: str,
@@ -191,6 +229,24 @@ class EncounterService:
         if not isinstance(fact_type, str) or not fact_type:
             raise ValueError("fact_type must be a non-empty exact fact type")
         return tuple(fact for fact in encounter.evidence_facts if fact.fact_type == fact_type)
+
+    def add_group_evidence(self, encounter_id: str) -> tuple[EncounterEvidenceFact, ...]:
+        """Return only explicit reconciled ``add_group`` facts.
+
+        Empty means no structured add-group evidence exists yet. Mechanic prose
+        containing words such as "summon" or an NPC name is deliberately not
+        converted into an actor or add group by this service.
+        """
+        return self.evidence_facts(encounter_id, "add_group")
+
+    def damage_window_evidence(self, encounter_id: str) -> tuple[EncounterEvidenceFact, ...]:
+        """Return only explicit reconciled ``damage_window`` facts.
+
+        Empty is unresolved coverage, not an assertion that the boss is always
+        damageable. Invulnerability or burn language in prose is left for an
+        explicit evidence-enrichment step rather than parsed here.
+        """
+        return self.evidence_facts(encounter_id, "damage_window")
 
     def temporal_evidence(self, encounter_id: str) -> tuple[EncounterTemporalEvidence, ...]:
         """Expose top-level numeric ``seconds`` fields from resolved evidence.
