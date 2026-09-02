@@ -98,7 +98,7 @@ def _closeout_status(item) -> tuple[str, str]:
     detail = detail_category(taxonomy_row)
 
     if detail == "signal_only_candidate":
-        signal_category = signal_only_category(taxonomy_row)
+        signal_category = signal_only_category(taxonomy_row.fragment, taxonomy_row.effect_kind)
         if signal_category == "multi_heal_classification_gap":
             return "CLASSIFICATION_CLEANUP", signal_category
         if signal_category == "phase7_attack_triggered_heal":
