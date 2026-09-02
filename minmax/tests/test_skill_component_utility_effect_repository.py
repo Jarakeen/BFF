@@ -13,9 +13,7 @@ def _make_db(path):
         INSERT INTO skill_rank VALUES (10, 100);
         INSERT INTO ability VALUES (
             100,
-            'Their first attack reduces their Movement Speed by 30% for 4 seconds and deals $1 Magic Damage, '
-            'their second attack immobilizes them for 3 seconds and deals $2 Magic Damage, '
-            'and their third attack stuns them for 3 seconds and deals $3 Magic Damage.'
+            'Their first attack reduces their Movement Speed by 30% for 4 seconds and deals $1 Magic Damage, their second attack immobilizes them for 3 seconds and deals $2 Magic Damage, and their third attack stuns them for 3 seconds and deals $3 Magic Damage.'
         );
         """
     )
