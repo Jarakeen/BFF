@@ -40,6 +40,31 @@ def test_repository_resolves_explicit_health_threshold(tmp_path):
     assert condition.threshold == 0.25
 
 
+def test_repository_resolves_explicit_self_health_threshold(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_rank (id INTEGER PRIMARY KEY, ability_id INTEGER NOT NULL);
+        CREATE TABLE ability (ability_id INTEGER PRIMARY KEY, coef_description TEXT);
+        INSERT INTO skill_rank VALUES (11, 110);
+        INSERT INTO ability VALUES (
+            110,
+            'WHEN SOUL ABILITY IS SLOTTED When your Health drops below 20% your soul explodes, dealing $1 Magic Damage to enemies within 8 meters of you.'
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    conditions = SkillComponentConditionRepository(path).resolve(11, 1)
+
+    assert len(conditions) == 1
+    condition = conditions[0]
+    assert condition.condition_type is SkillComponentConditionType.SELF_HEALTH_BELOW_PERCENT
+    assert condition.threshold == 0.20
+
+
 def test_repository_returns_empty_for_unknown_rank(tmp_path):
     path = tmp_path / "eso.db"
     _make_db(path)
