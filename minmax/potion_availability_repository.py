@@ -50,16 +50,19 @@ class PotionAvailabilityRepository:
     standing uptime, cooldown use, or Medicinal Use ownership.
 
     Formula provenance and support-capability resolution are intentionally
-    separate. The current developer-source location is
-    ``research/processed/alchemy_effects.json``; the historical
-    ``data/processed`` location is checked only as a migration fallback. A lean
-    install may omit both. If SQLite still contains imported formula payloads,
-    the catalog can be reconstructed from them. If formula payloads are also
-    absent, an *exact known legacy potion label* may still resolve its declared
-    trait family directly against canonical Potion EffectVariants in SQLite.
-    That proves build capability availability without inventing reagents or a
-    specific formula. Canonical formula/family identifiers still fail closed
-    when formula evidence is unavailable.
+    separate. When no processed path is supplied, the current developer-source
+    location ``research/processed/alchemy_effects.json`` is preferred and the
+    historical ``data/processed`` location is checked only as a migration
+    fallback. An explicitly supplied processed path is authoritative and never
+    replaced by repository-global data. This keeps isolated audits/tests honest
+    and prevents a requested lean-install path from silently reading another
+    corpus.
+
+    If formula payloads are unavailable, an exact known legacy potion label may
+    still resolve its declared trait family directly against canonical Potion
+    EffectVariants in SQLite. That proves build capability availability without
+    inventing reagents or a specific formula. Canonical formula/family identifiers
+    still fail closed when formula evidence is unavailable.
     """
 
     LEGACY_ALIASES: dict[str, tuple[str, ...]] = {
@@ -72,12 +75,13 @@ class PotionAvailabilityRepository:
     def __init__(
         self,
         database_path: str | Path = DEFAULT_DATABASE,
-        processed_path: str | Path = DEFAULT_PROCESSED,
+        processed_path: str | Path | None = None,
         *,
         game_update: GameUpdate | str = GameUpdate.U50,
     ) -> None:
         self.database_path = Path(database_path)
-        self.processed_path = Path(processed_path)
+        self._processed_path_explicit = processed_path is not None
+        self.processed_path = Path(processed_path) if processed_path is not None else DEFAULT_PROCESSED
         self.game_update = normalize_game_update(game_update)
 
     @staticmethod
@@ -117,11 +121,9 @@ class PotionAvailabilityRepository:
         return tuple(output)
 
     def _processed_candidates(self) -> tuple[Path, ...]:
-        return self._unique_paths(
-            self.processed_path,
-            DEFAULT_PROCESSED,
-            LEGACY_PROCESSED,
-        )
+        if self._processed_path_explicit:
+            return (self.processed_path,)
+        return self._unique_paths(DEFAULT_PROCESSED, LEGACY_PROCESSED)
 
     def _legacy_traits(self, selected_label: str) -> tuple[str, ...] | None:
         traits = self.LEGACY_ALIASES.get(self._norm(selected_label))
