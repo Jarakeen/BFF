@@ -12,6 +12,7 @@ class ConstraintStatus(str, Enum):
 
     PRESERVED = "preserved"
     IMPROVED = "improved"
+    REPAIRED = "repaired"
     WORSENED = "worsened"
     UNKNOWN = "unknown"
 
@@ -35,9 +36,11 @@ class CandidateConstraint:
 class BuildCandidateComparison:
     """Explainable baseline-vs-candidate outcome without embedding ESO math.
 
-    Callers supply measurements from authoritative engines.  This contract only
+    Callers supply measurements from authoritative engines. This contract only
     records their comparison and prevents a candidate with worsened or UNKNOWN
-    hard constraints from being treated as a rankable improvement.
+    hard constraints from being treated as rankable. A candidate may be preferred
+    either because it improves the objective while preserving constraints or
+    because it repairs a hard constraint the baseline itself violates.
     """
 
     candidate: BuildCandidate
@@ -64,6 +67,14 @@ class BuildCandidateComparison:
         )
 
     @property
+    def repaired_constraints(self) -> tuple[CandidateConstraint, ...]:
+        return tuple(
+            constraint
+            for constraint in self.constraints
+            if constraint.status is ConstraintStatus.REPAIRED
+        )
+
+    @property
     def is_rankable(self) -> bool:
         return (
             self.candidate.is_evaluable
@@ -77,3 +88,13 @@ class BuildCandidateComparison:
     def is_improvement(self) -> bool:
         delta = self.delta
         return self.is_rankable and delta is not None and delta > 0.0
+
+    @property
+    def is_constraint_repair(self) -> bool:
+        return self.is_rankable and bool(self.repaired_constraints)
+
+    @property
+    def is_preferred(self) -> bool:
+        """Return whether this candidate is a defensible recommendation over baseline."""
+
+        return self.is_improvement or self.is_constraint_repair
