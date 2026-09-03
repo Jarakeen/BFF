@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
-from services.eso_collectible_database_service import EsoCollectibleDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
 from ui.achievements_page import AchievementsPage
@@ -46,7 +45,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
-        self.collectible_service = EsoCollectibleDatabaseService(data_dir / "eso.db")
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
@@ -66,7 +64,12 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
-        collectible_browser = CollectiblesPage(service=self.collectible_service)
+        # Keep the historical constructor contract intact because the runtime
+        # antiquities compatibility layer patches CollectiblesPage.__init__.
+        # The dashboard shares the browser's already-created service instead
+        # of injecting a new keyword argument into that patched constructor.
+        collectible_browser = CollectiblesPage()
+        self.collectible_service = collectible_browser.service
         collectible_dashboard = CollectiblesDashboardPage(self.collectible_service)
         collectible_dashboard.categoryRequested.connect(
             lambda category: self.show_page(f"collectibles:{category}")
