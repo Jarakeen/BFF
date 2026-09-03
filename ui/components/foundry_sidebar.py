@@ -47,9 +47,15 @@ CORE_NAV_SECTIONS = [
         ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
     ]},
     {"label": "Raid Engine", "children": [
-        ("Overview", "operations_console"), ("Encounters", "console:1"), ("Builds", "console:2"),
-        ("Performance", "console:3"), ("Mechanics", "console:4"), ("Assignments", "roster_page"),
-        ("Optimization", "console:6"), ("Coverage", "console:7"), ("Reference Data", "console:8"),
+        ("Overview", "operations_console"),
+        ("Builds", "console:2"),
+        ("Optimization", "console:6"),
+        ("Roster", "roster_page"),
+        ("Coverage", "console:7"),
+        ("Encounters", "console:1"),
+        ("Performance", "console:3"),
+        ("Mechanics", "console:4"),
+        ("Reference Data", "console:8"),
     ]},
     ("Settings", "settings"),
 ]
