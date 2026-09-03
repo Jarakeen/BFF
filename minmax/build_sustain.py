@@ -57,6 +57,14 @@ class NamedBuildAction:
 
 
 @dataclass(frozen=True)
+class NamedBuildActionResolution:
+    """Immutable named-action plan resolved once against canonical ability costs."""
+
+    actions: tuple[PlannedBuildAction, ...]
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class BuildSustainRun:
     """Auditable Phase 4 sustain evaluation for one saved build/resource."""
 
@@ -67,6 +75,56 @@ class BuildSustainRun:
     timeline: ResourceTimelineResult
     sustain: SustainResult
     unresolved: tuple[str, ...]
+
+
+def resolve_named_build_actions(
+    actions: tuple[NamedBuildAction, ...],
+    *,
+    ability_cost_repository: AbilityCostRepository,
+) -> NamedBuildActionResolution:
+    """Resolve a stable saved-bar action plan once for repeated sustain runs.
+
+    Candidate families that do not change the activity plan can reuse this
+    immutable result while still applying candidate-specific resource pools,
+    recovery, and build cost modifiers in ``evaluate_build_sustain``.
+    """
+
+    resolved_actions: list[PlannedBuildAction] = []
+    unresolved: list[str] = []
+
+    for action in actions:
+        resolution = ability_cost_repository.resolve_name(action.skill_name)
+        if resolution.base_cost is None:
+            if resolution.unresolved:
+                unresolved.extend(
+                    f"{action.skill_name}: {message}" for message in resolution.unresolved
+                )
+            else:
+                unresolved.append(f"{action.skill_name}: action cost could not be resolved")
+            continue
+
+        # Coefficient absence is relevant to damage/healing evaluation but not
+        # to resource cost. Keep only cost-resolution failures here rather than
+        # turning a valid resource action into a false sustain warning.
+        cost_unresolved = tuple(
+            message
+            for message in resolution.unresolved
+            if not message.startswith("No coefficient rows found")
+        )
+        unresolved.extend(f"{action.skill_name}: {message}" for message in cost_unresolved)
+        resolved_actions.append(
+            PlannedBuildAction(
+                time_seconds=action.time_seconds,
+                source=resolution.name or action.skill_name,
+                base_cost=resolution.base_cost,
+                skill_line=resolution.skill_line,
+            )
+        )
+
+    return NamedBuildActionResolution(
+        actions=tuple(resolved_actions),
+        unresolved=tuple(unresolved),
+    )
 
 
 def evaluate_build_sustain(
@@ -180,49 +238,21 @@ def evaluate_named_build_sustain(
 ) -> BuildSustainRun:
     """Resolve named saved skills and run them through the Phase 4 pipeline."""
 
-    resolved_actions: list[PlannedBuildAction] = []
-    unresolved: list[str] = []
-
-    for action in actions:
-        resolution = ability_cost_repository.resolve_name(action.skill_name)
-        if resolution.base_cost is None:
-            if resolution.unresolved:
-                unresolved.extend(
-                    f"{action.skill_name}: {message}" for message in resolution.unresolved
-                )
-            else:
-                unresolved.append(f"{action.skill_name}: action cost could not be resolved")
-            continue
-
-        # Coefficient absence is relevant to damage/healing evaluation but not
-        # to resource cost. Keep only cost-resolution failures here rather than
-        # turning a valid resource action into a false sustain warning.
-        cost_unresolved = tuple(
-            message
-            for message in resolution.unresolved
-            if not message.startswith("No coefficient rows found")
-        )
-        unresolved.extend(f"{action.skill_name}: {message}" for message in cost_unresolved)
-        resolved_actions.append(
-            PlannedBuildAction(
-                time_seconds=action.time_seconds,
-                source=resolution.name or action.skill_name,
-                base_cost=resolution.base_cost,
-                skill_line=resolution.skill_line,
-            )
-        )
-
+    resolution = resolve_named_build_actions(
+        actions,
+        ability_cost_repository=ability_cost_repository,
+    )
     return evaluate_build_sustain(
         build=build,
         context=context,
         resource=resource,
         duration_seconds=duration_seconds,
-        actions=tuple(resolved_actions),
+        actions=resolution.actions,
         cost_modifier_resolver=cost_modifier_resolver,
         restoration_events=restoration_events,
         recovery_modifiers=recovery_modifiers,
         activity_at=activity_at,
         starting_amount=starting_amount,
         first_recovery_tick_seconds=first_recovery_tick_seconds,
-        additional_unresolved=tuple(unresolved),
+        additional_unresolved=resolution.unresolved,
     )
