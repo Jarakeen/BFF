@@ -48,6 +48,14 @@ def _timeline_facts(rows):
     ]
 
 
+def _load_timeline_facts(packet_paths: list[Path]):
+    facts = []
+    for path in packet_paths:
+        packet = load_encounter_evidence_packet(path)
+        facts.extend(_timeline_facts(packet.evidence))
+    return facts
+
+
 def _sum_results(results: list[EncounterWriteResult]) -> EncounterWriteResult:
     return EncounterWriteResult(
         facts_inserted=sum(row.facts_inserted for row in results),
@@ -81,10 +89,7 @@ def main() -> int:
         print(f"BLOCKED: {exc}")
         return 2
 
-    facts = []
-    for path in packet_paths:
-        _payload, rows = load_encounter_evidence_packet(path)
-        facts.extend(_timeline_facts(rows))
+    facts = _load_timeline_facts(packet_paths)
 
     candidates = build_encounter_promotion_preview(facts)
     plans = build_persistence_plan(candidates)
