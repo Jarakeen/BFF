@@ -634,18 +634,54 @@ Detailed closeout: `docs/phase9_encounter_model_closeout.md`.
 ---
 
 # PHASE 10 · Encounter Evaluation
-**Status: 🟡**
+**Status: 🟢 Complete**
 
-Combine Encounter + Requirements + Roster + Builds and produce covered, redundant, resilient, insufficient, missing, conflict, and unknown outcomes.
+Phase 10 combines Encounter + Requirements + Roster + Builds and produces covered, redundant, insufficient, missing, conflict, and unknown outcomes while preserving the boundary between collective capability and provider assignment.
 
-**Exit criteria:** BFF reliably evaluates a real roster against a real encounter.
+## Closeout evidence
+
+- real saved builds: **2**
+- unique real characters: **2**
+- authoritative exit roster: **Magrat → DF Healer** and **Susan → Necro Tank**
+- both selected builds: **0 capability-resolution gaps**
+- Oaxiltso veteran: **fully evaluable = true**
+- Oaxiltso veteran: **capability-ready = true**
+- execution rows: **7**
+- provider rows: **0**, as expected for this validation encounter
+- execution corpus: **21 encounters with requirements**
+- fully evaluable encounters: **6**
+- fully ready encounters: **6**
+- covered requirements: **25**
+- unknown requirements: **31**
+- conflicting requirements: **0**
+- focused final regression checkpoint: **16 passed in 1.65s**
+- full regression suite after final Phase 10 changes: **2031 passed in 94.10s**
+
+Phase 10 also made configured scribed-skill recipes native to the core build model and distinguishes exact canonical source boundaries from genuine capability gaps rather than treating newer canonical entity data as nonexistent.
+
+Detailed closeout: `docs/phase10_encounter_evaluation_closeout.md`.
+
+**Exit criteria met on 2026-09-02.** BFF reliably evaluates a real roster against a real encounter without selecting providers prematurely.
 
 ---
 
 # PHASE 11 · Provider Assignment
-**Status: 🔴**
+**Status: 🟡 Active**
 
 Move from “does the roster have Major Force?” to “who should provide it here?” using role, build, uptime, range, target, conditions, positioning, conflicts, stacking, redundancy, and player restrictions.
+
+Phase 11 owns **provider choice**, not whether a requirement exists and not build optimization. It should consume Phase 10 capability/evidence and produce deterministic, explainable assignments while preserving UNKNOWN where provider suitability cannot be established.
+
+Initial priorities:
+
+1. inventory existing provider/coverage/assignment code before adding a parallel planner
+2. define one canonical provider-candidate contract per requirement
+3. score or rank only from explicit evidence: role, exact capability, eligibility, range/target constraints, uptime/timing evidence, positioning, conflicts, and restrictions
+4. keep multiple viable providers visible until the assignment step actually chooses one
+5. distinguish primary provider, backup/redundant provider, and unresolved candidate states
+6. prevent the same player/build from being double-counted where simultaneous responsibilities conflict
+7. make assignment reasons auditable and deterministic
+8. validate against real saved rosters and real encounter requirements before broadening strategy logic
 
 **Exit criteria:** BFF chooses sensible providers instead of merely listing coverage.
 
