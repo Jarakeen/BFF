@@ -43,6 +43,11 @@ from tools.audit_phase12_saved_build_candidates import (
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
 
 
+def _is_dd_role(value: str) -> bool:
+    normalized = " ".join(str(value or "").strip().casefold().split())
+    return normalized in {"dd", "damage dealer", "damage"}
+
+
 def audit_saved_dd_candidates(
     *,
     database_path: Path,
@@ -53,6 +58,7 @@ def audit_saved_dd_candidates(
     duration_seconds: float,
     event: DDDamageEvent,
     target_resistance: float | None,
+    allow_role_mismatch: bool = False,
 ) -> int:
     if not database_path.exists():
         print(f"Database not found: {database_path}")
@@ -67,6 +73,15 @@ def audit_saved_dd_candidates(
     except ValueError as exc:
         print(exc)
         return 3
+
+    if not _is_dd_role(baseline_build.Role) and not allow_role_mismatch:
+        print(
+            f"Saved build {baseline_build.BuildName!r} has role "
+            f"{baseline_build.Role or '(unset)'!r}; the DD candidate audit "
+            "requires a damage-dealer build. Use --allow-role-mismatch only "
+            "for pipeline diagnostics."
+        )
+        return 6
 
     progression_resolution = MinmaxCharacterProgressionAdapter(
         build_service.canonical.catalog_service
@@ -249,6 +264,8 @@ def audit_saved_dd_candidates(
     print(f"Character:       {baseline_build.Name or '(unnamed)'}")
     print(f"Build:           {baseline_build.BuildName or '(unnamed)'}")
     print(f"Saved role:      {baseline_build.Role or '(unset)'}")
+    if not _is_dd_role(baseline_build.Role):
+        print("Role boundary:   diagnostic override; this is not a DD recommendation")
     print(f"Active bar:      {active_bar}")
     print(f"Baseline Mundus: {baseline_build.Mundus or '(unset)'}")
     print(f"Damage metric:   {baseline_damage.metric_name}")
@@ -259,6 +276,10 @@ def audit_saved_dd_candidates(
     )
     print(f"Target resistance: {_format_value(target_resistance)}")
     print(f"Sustain:         {resource.value} over {duration_seconds:g}s")
+    print(
+        "Action plan:     synthetic saved-bar stress plan; "
+        "not an observed rotation"
+    )
     print("Candidate scope: one Mundus change per candidate")
     print("Provider scope:  not evaluated; no encounter assignment context supplied")
     print("Boundary:        not rotation DPS and not raid ceiling damage")
@@ -293,8 +314,14 @@ def audit_saved_dd_candidates(
     if recommended is None:
         print("Recommendation: none.")
     else:
+        reason = (
+            "hard-constraint repair"
+            if recommended.is_constraint_repair
+            else "damage improvement"
+        )
         print(
             f"Recommendation: {_candidate_change_label(recommended)} | "
+            f"reason={reason} | "
             f"baseline={recommended.baseline_value:.3f} "
             f"candidate={recommended.candidate_value:.3f} "
             f"delta={recommended.delta:.3f}"
@@ -327,6 +354,11 @@ def _parser() -> argparse.ArgumentParser:
         default="flame",
     )
     parser.add_argument("--target-resistance", type=float, default=18_200.0)
+    parser.add_argument(
+        "--allow-role-mismatch",
+        action="store_true",
+        help="Allow a non-DD saved build for pipeline diagnostics only.",
+    )
     return parser
 
 
@@ -347,5 +379,6 @@ if __name__ == "__main__":
                 damage_type=damage_type,
             ),
             target_resistance=arguments.target_resistance,
+            allow_role_mismatch=arguments.allow_role_mismatch,
         )
     )
