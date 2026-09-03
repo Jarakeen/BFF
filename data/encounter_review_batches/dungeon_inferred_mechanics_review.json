@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "scope": "Review of dungeon inferred mechanics after disambiguating duplicated trial and dungeon content IDs.",
+  "decisions": [
+    {
+      "encounter_id": "wamasu",
+      "mechanic_name": "Charge",
+      "status": "accepted",
+      "rationale": "Conservative recommendation found every populated inferred field directly supported by the source description."
+    },
+    {
+      "encounter_id": "wamasu",
+      "mechanic_name": "Static",
+      "status": "accepted",
+      "rationale": "Conservative recommendation found every populated inferred field directly supported by the source description."
+    },
+    {
+      "encounter_id": "gargoyle",
+      "mechanic_name": "Quake",
+      "status": "rejected",
+      "rationale": "The source supports an area attack dealing physical damage to players standing within range, but it does not establish an explicit encounter positioning requirement; the current requires_positioning=true inference is not safe to canonicalize as-is."
+    }
+  ]
+}
