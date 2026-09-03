@@ -86,3 +86,46 @@ def test_resolve_name_preserves_unsupported_resource_mechanic(tmp_path) -> None:
 
     assert resolved.base_cost is None
     assert any("Unsupported resource mechanic bits" in item for item in resolved.unresolved)
+
+
+def test_resolve_name_cache_is_repository_instance_scoped(tmp_path) -> None:
+    path = _database(tmp_path)
+    repository = AbilityCostRepository(path)
+
+    first = repository.resolve_name(" Combat Prayer ")
+    assert first.base_cost is not None
+    assert first.base_cost.amount == 4590
+
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE ability SET base_cost = 3000 WHERE ability_id = 41151")
+
+    cached = repository.resolve_name("combat prayer")
+    assert cached is first
+    assert cached.base_cost is not None
+    assert cached.base_cost.amount == 4590
+
+    fresh = AbilityCostRepository(path).resolve_name("Combat Prayer")
+    assert fresh.base_cost is not None
+    assert fresh.base_cost.amount == 3000
+
+
+def test_unresolved_ability_cost_is_cached_for_repository_lifetime(tmp_path) -> None:
+    path = _database(tmp_path)
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE ability SET base_cost = 0 WHERE ability_id = 41151")
+
+    repository = AbilityCostRepository(path)
+    first = repository.resolve_name("Combat Prayer")
+    assert first.base_cost is None
+    assert any("no positive canonical base cost" in item for item in first.unresolved)
+
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE ability SET base_cost = 4590 WHERE ability_id = 41151")
+
+    cached = repository.resolve_name("Combat Prayer")
+    assert cached is first
+    assert cached.base_cost is None
+
+    fresh = AbilityCostRepository(path).resolve_name("Combat Prayer")
+    assert fresh.base_cost is not None
+    assert fresh.base_cost.amount == 4590
