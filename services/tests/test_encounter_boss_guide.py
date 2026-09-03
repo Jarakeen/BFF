@@ -180,6 +180,20 @@ def test_boss_guide_distinguishes_blank_health_record_from_missing_record(tmp_pa
     assert guide.health == ()
 
 
+def test_boss_guide_selector_summary_uses_single_persisted_index(tmp_path: Path) -> None:
+    service = EncounterBossGuideService(_database(tmp_path))
+
+    summaries = service.encounter_summaries()
+
+    assert len(summaries) == 1
+    summary = summaries[0]
+    assert summary.encounter_id == "hiath_the_battlemaster"
+    assert summary.content_id == "dragonstar_arena"
+    assert summary.content_name == "Dragonstar Arena"
+    assert summary.name == "Hiath the Battlemaster"
+    assert summary.location == "Round 10: The Champion's Arena"
+
+
 def test_boss_guide_lists_persisted_encounters(tmp_path: Path) -> None:
     service = EncounterBossGuideService(_database(tmp_path))
 
