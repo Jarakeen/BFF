@@ -34,6 +34,8 @@ class ChampionPointSkillRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        self._skill_id_cache: dict[int, tuple[ChampionPointSkillRelationship, ...]] = {}
+        self._skill_rank_cache: dict[int, tuple[ChampionPointSkillRelationship, ...]] = {}
 
     @staticmethod
     def _table_exists(db: sqlite3.Connection, name: str) -> bool:
@@ -73,13 +75,19 @@ class ChampionPointSkillRepository:
         )
 
     def get_for_skill_id(self, skill_id: int) -> tuple[ChampionPointSkillRelationship, ...]:
+        requested_skill_id = int(skill_id)
+        if requested_skill_id in self._skill_id_cache:
+            return self._skill_id_cache[requested_skill_id]
         if not self.database_path.exists():
+            self._skill_id_cache[requested_skill_id] = ()
             return ()
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
             if not self._table_exists(db, self.TABLE):
+                self._skill_id_cache[requested_skill_id] = ()
                 return ()
             if not self._table_exists(db, "champion_point") or not self._table_exists(db, "skill"):
+                self._skill_id_cache[requested_skill_id] = ()
                 return ()
             columns = self._columns(db, self.TABLE)
             condition = "cps.condition" if "condition" in columns else "NULL"
@@ -97,22 +105,30 @@ class ChampionPointSkillRepository:
                 WHERE cps.skill_id = ?
                 ORDER BY LOWER(cp.name), cps.champion_point_id
                 """,
-                (int(skill_id),),
+                (requested_skill_id,),
             ).fetchall()
-        return self._convert(rows)
+        result = self._convert(rows)
+        self._skill_id_cache[requested_skill_id] = result
+        return result
 
     def get_for_skill_rank(self, skill_rank_id: int) -> tuple[ChampionPointSkillRelationship, ...]:
+        requested_rank_id = int(skill_rank_id)
+        if requested_rank_id in self._skill_rank_cache:
+            return self._skill_rank_cache[requested_rank_id]
         if not self.database_path.exists():
+            self._skill_rank_cache[requested_rank_id] = ()
             return ()
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
             if not self._table_exists(db, "skill_rank"):
+                self._skill_rank_cache[requested_rank_id] = ()
                 return ()
             rank = db.execute(
                 "SELECT skill_id, ability_id FROM skill_rank WHERE id = ?",
-                (int(skill_rank_id),),
+                (requested_rank_id,),
             ).fetchone()
             if rank is None:
+                self._skill_rank_cache[requested_rank_id] = ()
                 return ()
 
             if (
@@ -132,13 +148,17 @@ class ChampionPointSkillRepository:
                     WHERE cps.skill_rank_id = ?
                     ORDER BY LOWER(cp.name), cps.champion_point_id
                     """,
-                    (int(skill_rank_id),),
+                    (requested_rank_id,),
                 ).fetchall()
                 if rows:
-                    return self._convert(rows)
+                    result = self._convert(rows)
+                    self._skill_rank_cache[requested_rank_id] = result
+                    return result
 
             skill_id = int(rank["skill_id"])
-        return self.get_for_skill_id(skill_id)
+        result = self.get_for_skill_id(skill_id)
+        self._skill_rank_cache[requested_rank_id] = result
+        return result
 
     def find_for_skill_rank(
         self,
