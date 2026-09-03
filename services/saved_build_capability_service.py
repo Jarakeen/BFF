@@ -187,6 +187,22 @@ class SavedBuildCapabilityService:
             return None
         return int(row[0]) if row else None
 
+    def _ability_is_crafted(self, ability_id: int) -> bool:
+        if not self.database_path.exists():
+            return False
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)")}
+                if "is_crafted" not in columns:
+                    return False
+                row = db.execute(
+                    "SELECT is_crafted FROM ability WHERE ability_id = ? LIMIT 1",
+                    (ability_id,),
+                ).fetchone()
+            return bool(row and int(row[0] or 0) == 1)
+        except (sqlite3.Error, TypeError, ValueError):
+            return False
+
     def _skill_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
         names = build.FrontBarSkills if active_bar == "front" else build.BackBarSkills
         variants: list[EffectVariant] = []
@@ -197,6 +213,11 @@ class SavedBuildCapabilityService:
             ability_id = self._ability_id(name, build.EsoClass)
             if ability_id is None:
                 unresolved.append(f"{active_bar} skill not found in canonical ability data: {name}")
+                continue
+            if self._ability_is_crafted(ability_id):
+                unresolved.append(
+                    f"{active_bar} scribed skill requires configured recipe semantics before capability resolution: {name}"
+                )
                 continue
             resolved = self.skills.resolve(ability_id)
             if hasattr(resolved, "unresolved") and hasattr(resolved, "effects"):
