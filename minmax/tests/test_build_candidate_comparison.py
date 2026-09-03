@@ -4,15 +4,16 @@ from minmax.build_candidate_comparison import (
     CandidateConstraint,
     ConstraintStatus,
 )
+from minmax.build_candidate_evaluator import rank_candidate_comparisons
 from minmax.evaluation_objective import EvaluationObjective
 from models.build_model import PlayerBuild
 
 
-def _candidate() -> BuildCandidate:
+def _candidate(candidate_id: str = "candidate-1") -> BuildCandidate:
     return BuildCandidate.from_build(
         character_id="magrat-id",
         baseline_build_id="df-healer-id",
-        candidate_id="candidate-1",
+        candidate_id=candidate_id,
         candidate_build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
         changes=(),
         candidate_source="phase12:test",
@@ -110,3 +111,39 @@ def test_unsatisfied_hard_constraint_blocks_ranking_without_calling_it_worsened(
     assert comparison.is_rankable is False
     assert comparison.is_preferred is False
     assert comparison.blocking_constraints[0].status is ConstraintStatus.UNSATISFIED
+
+
+def test_ranking_excludes_higher_value_candidate_with_unsatisfied_sustain():
+    eligible = BuildCandidateComparison(
+        candidate=_candidate("eligible"),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=110.0,
+        constraints=(
+            CandidateConstraint(
+                "magicka sustain",
+                ConstraintStatus.PRESERVED,
+                "Candidate preserves modeled magicka sustain.",
+            ),
+        ),
+    )
+    blocked = BuildCandidateComparison(
+        candidate=_candidate("blocked-higher-damage"),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=120.0,
+        constraints=(
+            CandidateConstraint(
+                "magicka sustain",
+                ConstraintStatus.UNSATISFIED,
+                "Candidate fails the modeled sustain plan.",
+            ),
+        ),
+    )
+
+    ranking = rank_candidate_comparisons((blocked, eligible))
+
+    assert blocked.candidate_value > eligible.candidate_value
+    assert blocked.is_rankable is False
+    assert ranking.ranked == (eligible,)
+    assert ranking.recommended is eligible
