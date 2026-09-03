@@ -2,16 +2,24 @@ from __future__ import annotations
 
 """Profile-aware Antiquities catalog harvested from the UESP antiquityLeads export."""
 
+import csv
 import json
 from pathlib import Path
 
 
+_FIELDS = (
+    "id", "name", "quality", "difficulty", "requires_lead", "repeatable",
+    "reward_id", "zone_id", "set_id", "set_name", "set_reward_id", "set_count",
+    "category_id", "category_name",
+)
+
+
 class AntiquityService:
     DEFAULT_PROFILE = "Default"
+    EXPECTED_RECORD_COUNT = 773
 
     def __init__(self, data_dir: Path) -> None:
         self.data_dir = Path(data_dir)
-        self.catalog_path = self.data_dir / "antiquities.json"
         self.progress_path = self.data_dir / "antiquity_progress.json"
         self._active_profile = self.DEFAULT_PROFILE
         self._records: list[dict] = []
@@ -24,6 +32,17 @@ class AntiquityService:
     @staticmethod
     def _normalize_profile_name(name) -> str:
         return " ".join(str(name or "").strip().split())
+
+    @staticmethod
+    def _as_int(value, default=0) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _as_bool(value) -> bool:
+        return str(value or "").strip().casefold() in {"1", "true", "yes"}
 
     @property
     def active_profile(self) -> str:
@@ -40,17 +59,54 @@ class AntiquityService:
         self._active_profile = self.ensure_profile(name)
         return self._active_profile
 
+    def _load_reference_rows(self) -> list[dict]:
+        rows: list[dict] = []
+        for path in sorted(self.data_dir.glob("antiquities_[0-9][0-9].csv")):
+            with path.open("r", encoding="utf-8", newline="") as handle:
+                reader = csv.reader(handle)
+                for raw in reader:
+                    if not raw or raw[0].strip().casefold() == "id":
+                        continue
+                    if len(raw) != len(_FIELDS):
+                        raise ValueError(f"{path.name}: expected {len(_FIELDS)} columns, got {len(raw)}")
+                    source = dict(zip(_FIELDS, raw))
+                    rows.append(
+                        {
+                            "id": self._as_int(source["id"]),
+                            "name": source["name"],
+                            "quality": self._as_int(source["quality"], -1),
+                            "difficulty": self._as_int(source["difficulty"], -1),
+                            "requires_lead": self._as_bool(source["requires_lead"]),
+                            "repeatable": self._as_bool(source["repeatable"]),
+                            "reward_id": self._as_int(source["reward_id"]),
+                            "zone_id": self._as_int(source["zone_id"]),
+                            "set_id": self._as_int(source["set_id"]),
+                            "set_name": source["set_name"],
+                            "set_reward_id": self._as_int(source["set_reward_id"], -1),
+                            "set_count": self._as_int(source["set_count"], -1),
+                            "category_id": self._as_int(source["category_id"]),
+                            "category_name": source["category_name"],
+                        }
+                    )
+        return rows
+
     def _load(self) -> None:
         try:
-            payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
-            self._records = list(payload.get("records") or [])
+            self._records = self._load_reference_rows()
             self._by_id = {int(row["id"]): row for row in self._records}
-            self.available = bool(self._records)
-            self.bootstrap_message = (
-                f"Antiquities catalog ready ({len(self._records):,} records)."
-                if self.available
-                else "Antiquities reference data is empty."
-            )
+            if len(self._records) != self.EXPECTED_RECORD_COUNT:
+                self.bootstrap_message = (
+                    f"Antiquities reference data is incomplete: {len(self._records):,}/"
+                    f"{self.EXPECTED_RECORD_COUNT:,} records."
+                )
+                self.available = False
+                return
+            if len(self._by_id) != len(self._records):
+                self.bootstrap_message = "Antiquities reference data contains duplicate source IDs."
+                self.available = False
+                return
+            self.available = True
+            self.bootstrap_message = f"Antiquities catalog ready ({len(self._records):,} records)."
         except (OSError, ValueError, TypeError, KeyError) as exc:
             self.bootstrap_message = f"Antiquities reference data unavailable: {exc}"
             self.available = False
@@ -91,7 +147,8 @@ class AntiquityService:
             return 0, 0
         entries = self._progress.get(self._active_profile, {})
         recovered = sum(
-            1 for row in self._records
+            1
+            for row in self._records
             if bool((entries.get(str(int(row["id"]))) or {}).get("recovered"))
         )
         return recovered, len(self._records)
@@ -100,19 +157,15 @@ class AntiquityService:
         if not self.available:
             return []
         needle = str(query or "").strip().casefold()
-        result = []
+        result: list[dict] = []
         for source in self._records:
             if needle:
                 haystack = " ".join(
-                    [
+                    (
                         str(source.get("name") or ""),
                         str(source.get("category_name") or ""),
                         str(source.get("set_name") or ""),
-                        *[
-                            f"{entry.get('speaker', '')} {entry.get('text', '')}"
-                            for entry in source.get("lore") or []
-                        ],
-                    ]
+                    )
                 ).casefold()
                 if needle not in haystack:
                     continue
@@ -135,7 +188,14 @@ class AntiquityService:
         row["notes"] = str(state.get("notes") or "")
         return row
 
-    def set_progress(self, antiquity_id: int, *, recovered: bool, recovered_on: str = "", notes: str = "") -> None:
+    def set_progress(
+        self,
+        antiquity_id: int,
+        *,
+        recovered: bool,
+        recovered_on: str = "",
+        notes: str = "",
+    ) -> None:
         antiquity_id = int(antiquity_id)
         if antiquity_id not in self._by_id:
             raise KeyError(f"Unknown antiquity ID: {antiquity_id}")
