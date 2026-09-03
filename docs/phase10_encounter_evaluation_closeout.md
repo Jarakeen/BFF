@@ -1,6 +1,6 @@
 # Phase 10 · Encounter Evaluation Closeout
 
-**Status:** Implementation-ready; final real-roster exit validation pending
+**Status:** 🟢 Complete
 
 ## Goal
 
@@ -31,17 +31,24 @@ The Phase 10 boundary remains strict:
 - corpus execution-readiness audit
 - Phase 10 closeout audit
 - multi-member orchestration regression coverage
+- native core persistence for configured scribed-skill recipes so CLI and UI read the same build evidence
+- exact canonical-source boundary handling for gear identities that exist in the canonical entity layer even when legacy `gear_set` effect rows are unavailable
 
 ## Verified real encounter path
 
-Authoritative saved build:
+### Real roster
 
-- Magrat → DF Healer
-- 11 resolved EffectVariants
-- 0 capability-resolution gaps
-- 1 retained stat/state gap: Frozen Armor passive rank is not recorded
+- **Magrat → DF Healer**
+  - 11 resolved EffectVariants
+  - 0 capability-resolution gaps
+- **Susan → Necro Tank**
+  - 3 resolved EffectVariants
+  - 0 capability-resolution gaps
+- real saved builds: **2**
+- unique real characters: **2**
+- blank/template builds ignored: **0**
 
-Oaxiltso veteran:
+### Oaxiltso veteran
 
 - Savage Blitz movement → `dodge`
 - Savage Blitz positioning → `bait_farthest`
@@ -50,10 +57,14 @@ Oaxiltso veteran:
 - Noxious Sludge positioning → `hazard_drop_management / noxious_pool`
 - Noxious Sludge cleanse → `encounter_interaction / cleanse_pool`
 - Summon Havocrel Annihilators positioning → `separate_add_from_boss`
-- fully evaluable: true
-- capability-ready: true
+- fully evaluable: **true**
+- capability-ready: **true**
+- execution rows: **7**
+- provider rows: **0**
 
-Oaxiltso hard mode:
+Provider rows are correctly zero for this validation encounter because the represented requirements are execution/compliance demands rather than provider-assignment demands. Provider selection remains Phase 11.
+
+### Oaxiltso hard mode
 
 - the five non-pool-dependent execution requirements remain covered
 - Noxious Sludge movement becomes unknown because the documented cleanse-pool interaction is disabled
@@ -62,15 +73,23 @@ Oaxiltso hard mode:
 - fully evaluable: false
 - capability-ready: false
 
-## Latest verified regression checkpoint
+## Canonical-source boundary validation
 
-User-reported focused Phase 10 checkpoint on 2026-09-02:
+The final real-roster closeout exposed three useful data-integration boundaries on Susan's saved tank build:
 
-- **68 passed in 7.21s**
+- configured `Leashing Soul`
+- configured `Goading Throw`
+- `Perfected Puncturing Remedy`
+
+The two scribed skills already had complete saved recipe evidence. Core `PlayerBuild` persistence was extended so non-UI services consume those recipes directly instead of treating them as result-name-only crafted skills.
+
+`Perfected Puncturing Remedy` is absent from the legacy `gear_set` table in the local database, but both `Puncturing Remedy` and `Perfected Puncturing Remedy` exist as exact canonical `gear_set` entities with ESO-Hub provenance. Phase 10 now distinguishes this known canonical-source boundary from a truly unknown gear identity rather than inventing missing effect rows.
+
+No unsupported magnitude, uptime, proc behavior, or provider assignment was inferred to satisfy closeout.
 
 ## Corpus execution audit
 
-Latest user-reported closeout audit:
+Final closeout audit:
 
 - encounters with requirements: **21**
 - fully evaluable encounters: **6**
@@ -81,47 +100,28 @@ Latest user-reported closeout audit:
 
 Low corpus coverage is an encounter-enrichment boundary, not a negative claim about mechanics that are not yet represented by structured evidence.
 
-## Real saved-roster inventory
+## Final regression evidence
 
-Latest local closeout audit:
+User-reported validation on 2026-09-02:
 
-- real saved builds: **1**
-- unique real characters: **1**
-- blank/template builds ignored: **1**
+- focused final source-boundary / scribing checkpoint: **16 passed in 1.65s**
+- full regression suite: **2031 passed in 94.10s**
 
-The canonical character catalog likewise contains only Magrat as a real character at this checkpoint.
-
-## Exit criterion status
+## Exit criterion
 
 Roadmap exit criterion:
 
 > BFF reliably evaluates a real roster against a real encounter.
 
-Current result:
+Final result:
 
 - PASS: real saved-build data exists
-- BLOCK: at least two unique real roster members selected
+- PASS: at least two unique real roster members selected
 - PASS: selected roster has no capability-resolution gaps
-- PASS: the selected real build is capability-ready for Oaxiltso veteran
+- PASS: the real roster is capability-ready for Oaxiltso veteran
 
-**PHASE 10 EXIT READY: false**
+**PHASE 10 EXIT READY: true**
 
-The remaining blocker is validation data, not missing evaluator architecture. One additional genuine saved character/build is required to perform the final multi-member real-roster exit evaluation without using templates or synthetic players.
+**Exit criteria met on 2026-09-02.**
 
-## Boundary moving into final validation
-
-Do not weaken the exit criterion by treating `YOUR TANK BUILD`, blank placeholders, or multiple builds belonging to the same canonical character as additional roster members.
-
-Once a second real character/build exists, rerun:
-
-```powershell
-python tools\audit_phase10_closeout.py --encounter oaxiltso --difficulty veteran
-```
-
-If multiple builds exist for either character, select one authoritative build per character explicitly:
-
-```powershell
-python tools\audit_phase10_closeout.py --encounter oaxiltso --difficulty veteran --build "DF Healer" --build "<SECOND REAL BUILD>"
-```
-
-Provider assignment remains Phase 11.
+Phase 11 begins provider assignment: determining who should provide a required capability, not merely whether the roster collectively has it.
