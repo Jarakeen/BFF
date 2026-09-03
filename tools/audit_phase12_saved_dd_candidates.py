@@ -17,6 +17,7 @@ from minmax.build_candidate_damage import measure_modeled_damage_potency
 from minmax.build_candidate_evaluator import evaluate_damage_candidate, rank_candidate_comparisons
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_mundus_objective import damage_mundus_objective_unresolved
+from minmax.build_candidate_provider_scope import build_default_raid_provider_scope
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
 from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
@@ -59,6 +60,8 @@ def audit_saved_dd_candidates(
     event: DDDamageEvent,
     target_resistance: float | None,
     allow_role_mismatch: bool = False,
+    provider_encounter: str | None = None,
+    provider_roster_build_names: tuple[str, ...] = (),
 ) -> int:
     if not database_path.exists():
         print(f"Database not found: {database_path}")
@@ -66,10 +69,14 @@ def audit_saved_dd_candidates(
     if not builds_path.exists():
         print(f"Saved builds not found: {builds_path}")
         return 2
+    if provider_roster_build_names and not str(provider_encounter or "").strip():
+        print("--provider-roster-build requires --provider-encounter")
+        return 7
 
     build_service = BuildService(builds_path)
+    saved_members = build_service.load().Members
     try:
-        baseline_build = _find_build(build_service.load().Members, build_name)
+        baseline_build = _find_build(saved_members, build_name)
     except ValueError as exc:
         print(exc)
         return 3
@@ -132,10 +139,30 @@ def audit_saved_dd_candidates(
         event=event,
         evaluation_context=evaluation_context,
     )
-    baseline_capability = SavedBuildCapabilityService(
-        build_service,
-        database_path,
-    ).audit_build(baseline_build)
+    capability_service = SavedBuildCapabilityService(build_service, database_path)
+    baseline_capability = capability_service.audit_build(baseline_build)
+
+    provider_scope = None
+    provider_roster_builds: tuple[PlayerBuild, ...] = ()
+    normalized_provider_encounter = str(provider_encounter or "").strip()
+    if normalized_provider_encounter:
+        try:
+            companion_builds = tuple(
+                _find_build(saved_members, roster_build_name)
+                for roster_build_name in provider_roster_build_names
+            )
+            provider_roster_builds = (baseline_build,) + companion_builds
+            provider_scope = build_default_raid_provider_scope(
+                encounter_id=normalized_provider_encounter,
+                member_id=character_id,
+                roster_builds=provider_roster_builds,
+                capability_service=capability_service,
+                data_root=get_data_dir(),
+                database_path=database_path,
+            )
+        except (ValueError, LookupError, OSError) as exc:
+            print(f"Provider scope could not be resolved: {exc}")
+            return 8
 
     activity_plan = create_saved_bar_activity_plan(
         baseline_build,
@@ -160,7 +187,6 @@ def audit_saved_dd_candidates(
         baseline_build,
         tuple(baseline_context.unresolved_gear_effects),
     )
-    capability_service = SavedBuildCapabilityService(build_service, database_path)
 
     def resolve_context(candidate):
         return build_candidate_context(
@@ -241,13 +267,17 @@ def audit_saved_dd_candidates(
             candidate=candidate,
             baseline_damage=baseline_damage,
             baseline_capability=baseline_capability,
-            baseline_assignments=None,
+            baseline_assignments=(
+                provider_scope.baseline_assignments if provider_scope is not None else None
+            ),
             member_id=character_id,
             capability_service=capability_service,
             resolve_context=resolve_context,
             resolve_damage=resolve_damage,
             resolve_sustain=resolve_sustain,
-            resolve_assignments=None,
+            resolve_assignments=(
+                provider_scope.assignments_for if provider_scope is not None else None
+            ),
             resolve_objective_coverage=lambda row: damage_mundus_objective_unresolved(
                 row,
                 mundus_repository,
@@ -281,7 +311,27 @@ def audit_saved_dd_candidates(
         "not an observed rotation"
     )
     print("Candidate scope: one Mundus change per candidate")
-    print("Provider scope:  not evaluated; no encounter assignment context supplied")
+    if provider_scope is None:
+        print("Provider scope:  not evaluated; no encounter assignment context supplied")
+    else:
+        roster_label = ", ".join(
+            str(build.BuildName or build.Name or "(unnamed)")
+            for build in provider_roster_builds
+        )
+        print(
+            f"Provider scope:  encounter={provider_scope.encounter_id}; "
+            f"saved roster={roster_label}; "
+            f"baseline assignment rows={len(provider_scope.baseline_assignments)}"
+        )
+        for assignment in provider_scope.baseline_assignments:
+            primaries = ", ".join(
+                provider.character_name or provider.member_id
+                for provider in assignment.primary_providers
+            ) or "none"
+            print(
+                f"Provider base:   {assignment.requirement_id}="
+                f"{assignment.status.value}; primary={primaries}"
+            )
     print("Boundary:        not rotation DPS and not raid ceiling damage")
     print(f"Baseline value:  {_format_value(baseline_damage.value)}")
     print()
@@ -359,6 +409,23 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow a non-DD saved build for pipeline diagnostics only.",
     )
+    parser.add_argument(
+        "--provider-encounter",
+        default=None,
+        help=(
+            "Optional canonical encounter id. When supplied, evaluate Phase 11 provider "
+            "responsibilities through the configured default raid-coverage overlay."
+        ),
+    )
+    parser.add_argument(
+        "--provider-roster-build",
+        action="append",
+        default=[],
+        help=(
+            "Additional saved build name in the provider roster. Repeat for each companion "
+            "build; the optimized --build is always included exactly once."
+        ),
+    )
     return parser
 
 
@@ -380,5 +447,7 @@ if __name__ == "__main__":
             ),
             target_resistance=arguments.target_resistance,
             allow_role_mismatch=arguments.allow_role_mismatch,
+            provider_encounter=arguments.provider_encounter,
+            provider_roster_build_names=tuple(arguments.provider_roster_build),
         )
     )
