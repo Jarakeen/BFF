@@ -63,9 +63,9 @@ def compare_sustain_runs(
     if not baseline.sustains:
         return CandidateConstraint(
             name=f"{resource.value} sustain",
-            status=ConstraintStatus.IMPROVED,
+            status=ConstraintStatus.REPAIRED,
             explanation=(
-                f"Candidate sustains {resource.value}; baseline does not. "
+                f"Candidate repairs failed baseline {resource.value} sustain. "
                 f"Candidate minimum={candidate.minimum_amount}, ending={candidate.ending_margin}."
             ),
         )
