@@ -55,7 +55,7 @@ def _comparison(*, unresolved=()):
     )
 
 
-def test_recommendation_prints_change_objective_constraints_and_boundaries(capsys) -> None:
+def test_recommendation_prints_plain_summary_and_technical_evidence(capsys) -> None:
     _print_dd_recommendation(
         _comparison(),
         metric_name="canonical single-event expected damage",
@@ -65,7 +65,16 @@ def test_recommendation_prints_change_objective_constraints_and_boundaries(capsy
 
     output = capsys.readouterr().out
     assert "Recommendation: The Atronach" in output
-    assert "Reason:      hard-constraint repair" in output
+    assert "In plain English:" in output
+    assert "current build runs out of Magicka" in output
+    assert "does not remove any resolved buffs, debuffs" in output
+    assert "still handle the raid jobs" in output
+    assert "does not show a damage increase" in output
+    assert "only a diagnostic damage test on a non-DD build" in output
+    assert "not your actual rotation DPS" in output
+
+    assert "Technical evidence:" in output
+    assert "Reason: hard-constraint repair" in output
     assert "Mundus: The Ritual -> The Atronach" in output
     assert "metric: canonical single-event expected damage" in output
     assert "magicka sustain: repaired" in output
@@ -89,6 +98,7 @@ def test_recommendation_prints_unresolved_candidate_evidence(capsys) -> None:
     assert "Unresolved:" in output
     assert "example unresolved assumption" in output
     assert "provider responsibilities were not evaluated" in output
+    assert "only a diagnostic damage test on a non-DD build" not in output
     assert "diagnostic role override only" not in output
 
 
