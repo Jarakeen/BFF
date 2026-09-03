@@ -59,6 +59,13 @@ def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
 
 
+def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
+    return connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (table,),
+    ).fetchone() is not None
+
+
 def _source_value(payload: dict[str, Any], key: str) -> str:
     source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
     value = source.get(key)
@@ -101,6 +108,12 @@ def _classify_plan(
     path: Path,
     plan: EncounterBootstrapPlan,
 ) -> BossEncounterBootstrapCandidate:
+    if not _table_exists(connection, "content"):
+        return BossEncounterBootstrapCandidate(
+            path, plan.encounter_id, plan.name, plan.content_id,
+            MISSING_CONTENT, "canonical content table does not exist", plan,
+        )
+
     content = connection.execute(
         "SELECT 1 FROM content WHERE id=?",
         (plan.content_id,),
@@ -109,6 +122,16 @@ def _classify_plan(
         return BossEncounterBootstrapCandidate(
             path, plan.encounter_id, plan.name, plan.content_id,
             MISSING_CONTENT, "source-declared content_id has no canonical content row", plan,
+        )
+
+    # A real local database may predate the encounter schema. Dry-run audit must
+    # remain read-only, so absence of the encounter table simply means there are
+    # no existing canonical encounter identities yet. The apply path delegates to
+    # apply_encounter_bootstrap(), which creates/extends the schema before insert.
+    if not _table_exists(connection, "encounter"):
+        return BossEncounterBootstrapCandidate(
+            path, plan.encounter_id, plan.name, plan.content_id,
+            READY, "encounter table is not present yet; identity can be inserted on apply", plan,
         )
 
     existing = connection.execute(
