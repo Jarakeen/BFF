@@ -11,8 +11,10 @@ from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.skill_effect_repository import SkillEffectRepository
 from models.build_model import PlayerBuild
+from models.scribing_recipe import ScribedSkillRecipe
 from services.build_service import BuildService
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
+from services.scribing_catalog import is_grimoire_compatible
 
 
 @dataclass(frozen=True)
@@ -208,7 +210,65 @@ class SavedBuildCapabilityService:
         except (sqlite3.Error, TypeError, ValueError):
             return False
 
-    def _skill_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
+    @classmethod
+    def _configured_scribing_recipe(
+        cls, build: PlayerBuild, result_name: str
+    ) -> ScribedSkillRecipe | None:
+        target = cls._clean(result_name).casefold()
+        for raw in getattr(build, "ScribedSkillRecipes", []) or []:
+            recipe = raw if isinstance(raw, ScribedSkillRecipe) else ScribedSkillRecipe.from_dict(raw)
+            if cls._clean(recipe.ResultName).casefold() == target:
+                return recipe
+        return None
+
+    @staticmethod
+    def _recipe_is_canonically_consistent(recipe: ScribedSkillRecipe) -> bool:
+        if not recipe.is_complete:
+            return False
+        return all(
+            is_grimoire_compatible(kind, script, recipe.Grimoire)
+            for kind, script in (
+                ("focus", recipe.Focus),
+                ("signature", recipe.Signature),
+                ("affix", recipe.Affix),
+            )
+        )
+
+    def _canonical_gear_entity_exists(self, set_name: str) -> bool:
+        if not self.database_path.exists():
+            return False
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                tables = {
+                    str(row[0])
+                    for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                }
+                if "entity" not in tables:
+                    return False
+                row = db.execute(
+                    "SELECT id FROM entity WHERE entity_type='gear_set' "
+                    "AND lower(trim(name))=lower(trim(?)) LIMIT 1",
+                    (set_name,),
+                ).fetchone()
+                if row is None:
+                    return False
+                if "entity_source" not in tables:
+                    return True
+                source = db.execute(
+                    "SELECT 1 FROM entity_source WHERE entity_id=? LIMIT 1",
+                    (row[0],),
+                ).fetchone()
+                return source is not None
+        except sqlite3.Error:
+            return False
+
+    def _skill_variants(
+        self,
+        build: PlayerBuild,
+        active_bar: str,
+        unresolved: list[str],
+        boundaries: list[str],
+    ) -> list[EffectVariant]:
         names = build.FrontBarSkills if active_bar == "front" else build.BackBarSkills
         variants: list[EffectVariant] = []
         for name in names:
@@ -220,8 +280,20 @@ class SavedBuildCapabilityService:
                 unresolved.append(f"{active_bar} skill not found in canonical ability data: {name}")
                 continue
             if self._ability_is_crafted(ability_id):
-                unresolved.append(
-                    f"{active_bar} scribed skill requires configured recipe semantics before capability resolution: {name}"
+                recipe = self._configured_scribing_recipe(build, name)
+                if recipe is None or not recipe.is_complete:
+                    unresolved.append(
+                        f"{active_bar} scribed skill requires configured recipe semantics before capability resolution: {name}"
+                    )
+                    continue
+                if not self._recipe_is_canonically_consistent(recipe):
+                    unresolved.append(
+                        f"{active_bar} scribed skill recipe conflicts with canonical script compatibility: {name}"
+                    )
+                    continue
+                boundaries.append(
+                    f"{active_bar} configured scribed skill recipe resolved; detailed scripted effect conversion deferred: "
+                    f"{name} [{recipe.Grimoire} | {recipe.Focus} | {recipe.Signature} | {recipe.Affix}]"
                 )
                 continue
             resolved = self.skills.resolve(ability_id)
@@ -232,7 +304,13 @@ class SavedBuildCapabilityService:
                 variants.extend(resolved)
         return variants
 
-    def _gear_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
+    def _gear_variants(
+        self,
+        build: PlayerBuild,
+        active_bar: str,
+        unresolved: list[str],
+        boundaries: list[str],
+    ) -> list[EffectVariant]:
         variants: list[EffectVariant] = []
         for set_name, pieces in self._active_set_counts(build, active_bar).items():
             if self.gear_repository is None:
@@ -245,6 +323,12 @@ class SavedBuildCapabilityService:
                 continue
             gear_set = self.gear_repository.get_set(set_name)
             if gear_set is None:
+                if self._canonical_gear_entity_exists(set_name):
+                    boundaries.append(
+                        f"{active_bar} gear set identity resolved from canonical entity/source data; "
+                        f"legacy gear_set effect semantics unavailable: {set_name}"
+                    )
+                    continue
                 unresolved.append(f"{active_bar} gear set not found in canonical data: {set_name}")
                 continue
             variants.extend(self.gear.resolve(gear_set.id, pieces))
@@ -278,7 +362,7 @@ class SavedBuildCapabilityService:
                 unresolved.append(f"{active_bar} static build resolution failed: {exc}")
 
             skill_gaps: list[str] = []
-            bar_skill_effects = self._skill_variants(build, active_bar, skill_gaps)
+            bar_skill_effects = self._skill_variants(build, active_bar, skill_gaps, boundaries)
             unresolved.extend(skill_gaps)
             capability_unresolved.extend(skill_gaps)
             if bar_skill_effects:
@@ -286,7 +370,7 @@ class SavedBuildCapabilityService:
                 effects.extend(bar_skill_effects)
 
             gear_gaps: list[str] = []
-            bar_gear_effects = self._gear_variants(build, active_bar, gear_gaps)
+            bar_gear_effects = self._gear_variants(build, active_bar, gear_gaps, boundaries)
             unresolved.extend(gear_gaps)
             capability_unresolved.extend(gear_gaps)
             if bar_gear_effects:
