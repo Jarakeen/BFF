@@ -5,10 +5,10 @@ from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
+from minmax.potion_availability_repository import PotionAvailabilityRepository
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.character_progression_service import CharacterProgressionService
-from services.potion_effect_repository import PotionEffectRepository
 from services.skill_effect_repository import SkillEffectRepository
 from services.gear_effect_repository import GearEffectRepository
 
@@ -54,7 +54,7 @@ class SavedBuildCapabilityService:
         self.progression = progression or CharacterProgressionService(database_path)
         self.skills = skills or SkillEffectRepository(database_path)
         self.gear = gear or GearEffectRepository(database_path)
-        self.potions = potions or PotionEffectRepository(database_path)
+        self.potions = potions or PotionAvailabilityRepository(database_path)
 
     @staticmethod
     def _clean(value) -> str:
