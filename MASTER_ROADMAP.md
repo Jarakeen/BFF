@@ -666,31 +666,72 @@ Detailed closeout: `docs/phase10_encounter_evaluation_closeout.md`.
 ---
 
 # PHASE 11 · Provider Assignment
-**Status: 🟡 Active**
+**Status: 🟢 Complete**
 
-Move from “does the roster have Major Force?” to “who should provide it here?” using role, build, uptime, range, target, conditions, positioning, conflicts, stacking, redundancy, and player restrictions.
+Phase 11 moved BFF from “does the roster have the required support capability?” to “who should provide it here?” while preserving the boundary between encounter facts, raid-support requirements, provider capability, suitability, responsibility conflicts, and later build optimization.
 
-Phase 11 owns **provider choice**, not whether a requirement exists and not build optimization. It should consume Phase 10 capability/evidence and produce deterministic, explainable assignments while preserving UNKNOWN where provider suitability cannot be established.
+## Closeout evidence
 
-Initial priorities:
+- provider-candidate contract preserves Phase 10 VIABLE / UNRESOLVED / CONFLICTING evidence
+- suitability is explicit and evidence-backed; favorable Phase 11 facts cannot promote unknown Phase 10 capability
+- assignment distinguishes assigned, unresolved selection, unresolved capability, unresolved suitability, conflict, and insufficient states
+- deterministic assignments do not use roster order as a hidden tie-breaker
+- primary, backup/redundant, unsuitable, and unresolved candidate states remain inspectable
+- explicit responsibility-conflict evidence prevents silent assumptions about double-duty
+- boss-derived compliance requirements remain separate from raid-support coverage requirements
+- canonical boss corpus audit: **490 encounters**, **56 compliance requirements**, **0 provider requirements**, **0 unknown requirement semantics**
+- default raid Coverage profile is now reusable domain data rather than a UI-only tuple
+- **1** default coverage requirement currently has exact canonical provider-capability mapping: `War Horn → force`
+- **14** default required coverage entries remain intentionally unmapped until their exact canonical effect identities are proven
 
-1. inventory existing provider/coverage/assignment code before adding a parallel planner
-2. define one canonical provider-candidate contract per requirement
-3. score or rank only from explicit evidence: role, exact capability, eligibility, range/target constraints, uptime/timing evidence, positioning, conflicts, and restrictions
-4. keep multiple viable providers visible until the assignment step actually chooses one
-5. distinguish primary provider, backup/redundant provider, and unresolved candidate states
-6. prevent the same player/build from being double-counted where simultaneous responsibilities conflict
-7. make assignment reasons auditable and deterministic
-8. validate against real saved rosters and real encounter requirements before broadening strategy logic
+### Real saved-roster validation
 
-**Exit criteria:** BFF chooses sensible providers instead of merely listing coverage.
+Oaxiltso veteran + configured default raid coverage + authoritative local roster:
+
+- **Magrat → DF Healer**: 11 resolved EffectVariants, 0 capability-resolution gaps
+- **Susan → Necro Tank**: 3 resolved EffectVariants, 0 capability-resolution gaps
+- canonical encounter mechanic rows: **7**
+- mapped raid-support provider rows: **1**
+- provider requirement: `oaxiltso:coverage:war_horn`
+- capability: `force`
+- Phase 10 coverage classification: **covered**
+- Phase 11 assignment: **assigned**
+- proven viable provider: **Magrat**
+- evidence source: **Aggressive Horn**
+- primary provider: **Magrat**
+- assignment reason: every proven viable provider is required, so the result is uniquely determined without a strategy preference
+
+### Final regression evidence
+
+User-reported validation on **2026-09-03**:
+
+- focused Phase 11 checkpoint: **39 passed in 0.69s**
+- full regression suite: **2031 passed in 73.87s**
+- real configured provider evaluation: **PASS**
+
+Detailed closeout: `docs/phase11_provider_assignment_closeout.md`.
+
+**Exit criteria met on 2026-09-03.** BFF chooses a sensible, deterministic provider from real saved-build capability evidence instead of merely listing collective coverage, while preserving unresolved states where evidence is insufficient.
 
 ---
 
 # PHASE 12 · Build Optimization
-**Status: 🔴**
+**Status: 🟡 Active**
 
 The optimizer varies gear, sets, mythics, weapons, traits, enchants, skills, morphs, ultimates, CP, Mundus, food, potions, and configuration. It does not contain ESO math itself; it asks the rules engine.
+
+Phase 12 must optimize **within the verified architecture** rather than creating a second combat model. Candidate changes must be scored through the existing build, effect, static combat, sustain, combat-state, encounter, coverage, and provider-assignment systems. UNKNOWN and unsupported mechanics remain explicit and may not be silently treated as zero-cost improvements.
+
+Initial priorities:
+
+1. inventory existing optimizer/minmax candidate-generation code before creating new search logic
+2. define one immutable build-candidate contract that preserves canonical character/build identity and records exactly what changed
+3. establish deterministic objective/result contracts before implementing broad search
+4. score candidate builds only through authoritative existing math/effect/sustain services
+5. preserve required raid coverage and Phase 11 provider responsibilities while evaluating candidate changes
+6. reject or explicitly mark candidates whose required mechanics cannot be evaluated from current evidence
+7. start with tightly bounded candidate dimensions before combining gear, skills, CP, food, potions, and configuration
+8. validate against a real saved build and require an explainable baseline-vs-candidate comparison before expanding the optimizer search space
 
 **Exit criteria:** BFF can explain why one candidate build improves expected outcome while preserving required coverage and sustain.
 
