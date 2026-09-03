@@ -168,10 +168,16 @@ class EncounterRepository:
     database_path: Path | None = None
     _boss_paths: dict[str, Path] = field(init=False, repr=False, compare=False)
     _evidence_paths: dict[str, Path] = field(init=False, repr=False, compare=False)
+    _definition_cache: dict[str, EncounterDefinition] = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_boss_paths", self._index(self.boss_root, "id"))
         object.__setattr__(self, "_evidence_paths", self._index(self.evidence_root, "encounter_id"))
+        object.__setattr__(self, "_definition_cache", {})
 
     @staticmethod
     def _index(root: Path, identity_key: str) -> dict[str, Path]:
@@ -208,6 +214,11 @@ class EncounterRepository:
     def get(self, encounter_id: str) -> EncounterDefinition:
         if not isinstance(encounter_id, str) or not encounter_id:
             raise ValueError("encounter_id must be a non-empty canonical id")
+
+        cached = self._definition_cache.get(encounter_id)
+        if cached is not None:
+            return cached
+
         boss_path = self._boss_paths.get(encounter_id)
         if boss_path is None:
             raise EncounterNotFoundError(f"No canonical encounter source for id {encounter_id!r}")
@@ -215,6 +226,7 @@ class EncounterRepository:
             boss_path,
             evidence_packet_path=self._evidence_paths.get(encounter_id),
         )
-        if self.database_path is None:
-            return definition
-        return _overlay_canonical_mechanics(definition, self.database_path)
+        if self.database_path is not None:
+            definition = _overlay_canonical_mechanics(definition, self.database_path)
+        self._definition_cache[encounter_id] = definition
+        return definition
