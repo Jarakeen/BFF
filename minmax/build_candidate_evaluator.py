@@ -11,7 +11,11 @@ from minmax.build_candidate_capability import (
     compare_capability_coverage,
     compare_provider_responsibilities,
 )
-from minmax.build_candidate_comparison import BuildCandidateComparison
+from minmax.build_candidate_comparison import (
+    BuildCandidateComparison,
+    CandidateConstraint,
+    ConstraintStatus,
+)
 from minmax.build_candidate_context import BuildCandidateContextResult
 from minmax.build_candidate_damage import ModeledDamagePotency
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
@@ -92,6 +96,30 @@ def _dedupe(messages: tuple[str, ...] | list[str]) -> tuple[str, ...]:
     return tuple(dict.fromkeys(str(message) for message in messages if str(message).strip()))
 
 
+def _provider_scope_configuration_unresolved(
+    baseline_assignments: tuple[ProviderAssignment, ...] | None,
+    resolve_assignments: AssignmentResolver | None,
+) -> tuple[str, ...]:
+    if (baseline_assignments is None) == (resolve_assignments is None):
+        return ()
+    return (
+        "Provider assignment scope is incomplete: baseline assignments and candidate "
+        "assignment resolver must be supplied together.",
+    )
+
+
+def _provider_scope_constraint(
+    messages: tuple[str, ...],
+) -> CandidateConstraint | None:
+    if not messages:
+        return None
+    return CandidateConstraint(
+        name="provider responsibilities",
+        status=ConstraintStatus.UNKNOWN,
+        explanation="Provider responsibility comparison is unresolved: " + "; ".join(messages),
+    )
+
+
 def evaluate_damage_candidate(
     *,
     candidate: BuildCandidate,
@@ -127,6 +155,10 @@ def evaluate_damage_candidate(
         )
         return DamageCandidateEvaluation(comparison, None, None, None)
 
+    provider_scope_unresolved = _provider_scope_configuration_unresolved(
+        baseline_assignments,
+        resolve_assignments,
+    )
     candidate_context = resolve_context(candidate)
     objective_coverage_unresolved = (
         resolve_objective_coverage(candidate)
@@ -152,7 +184,10 @@ def evaluate_damage_candidate(
     ]
 
     assignments: tuple[ProviderAssignment, ...] = ()
-    if baseline_assignments is not None and resolve_assignments is not None:
+    provider_configuration_constraint = _provider_scope_constraint(provider_scope_unresolved)
+    if provider_configuration_constraint is not None:
+        constraints.append(provider_configuration_constraint)
+    elif baseline_assignments is not None and resolve_assignments is not None:
         assignments = resolve_assignments(candidate_build)
         constraints.append(
             compare_provider_responsibilities(
@@ -167,6 +202,7 @@ def evaluate_damage_candidate(
         + tuple(damage_messages)
         + tuple(sustain.unresolved)
         + tuple(objective_coverage_unresolved)
+        + tuple(provider_scope_unresolved)
     )
     evidence = tuple(f"baseline: {row}" for row in baseline_damage.evidence)
     if damage is not None:
@@ -227,6 +263,10 @@ def evaluate_healing_candidate(
         )
         return HealingCandidateEvaluation(comparison, None, None, None)
 
+    provider_scope_unresolved = _provider_scope_configuration_unresolved(
+        baseline_assignments,
+        resolve_assignments,
+    )
     candidate_context = resolve_context(candidate)
     candidate_build = candidate.candidate_build
     objective_coverage_unresolved = (
@@ -235,7 +275,9 @@ def evaluate_healing_candidate(
 
     if candidate_context.context is None:
         healing = None
-        healing_messages = candidate_context.unresolved or ("Candidate calculation context is unavailable",)
+        healing_messages = candidate_context.unresolved or (
+            "Candidate calculation context is unavailable",
+        )
     else:
         healing = measure_modeled_healing_potency(
             build=candidate_build,
@@ -251,7 +293,10 @@ def evaluate_healing_candidate(
 
     assignments: tuple[ProviderAssignment, ...] = ()
     constraints = [sustain.constraint, capability_constraint]
-    if baseline_assignments is not None and resolve_assignments is not None:
+    provider_configuration_constraint = _provider_scope_constraint(provider_scope_unresolved)
+    if provider_configuration_constraint is not None:
+        constraints.append(provider_configuration_constraint)
+    elif baseline_assignments is not None and resolve_assignments is not None:
         assignments = resolve_assignments(candidate_build)
         constraints.append(
             compare_provider_responsibilities(
@@ -266,6 +311,7 @@ def evaluate_healing_candidate(
         + tuple(healing_messages)
         + tuple(sustain.unresolved)
         + tuple(objective_coverage_unresolved)
+        + tuple(provider_scope_unresolved)
     )
 
     evidence: list[str] = []
