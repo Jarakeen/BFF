@@ -7,9 +7,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QRectF, Signal
-from PySide6.QtGui import QColor, QCursor, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QCursor, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -32,6 +33,38 @@ TEAL_ACCENTS = (
     "#4A9599",
     "#287078",
 )
+
+SPRITE_COLUMNS = 6
+SPRITE_ROWS = 4
+
+# Badge artwork follows the generated 6x4 source sheet, not dashboard order.
+# Keep this semantic so future card reordering never moves the paw badge onto
+# something wholly undeserving of paws.
+CATEGORY_BADGE_INDEX = {
+    "Mounts": 0,
+    "Pets": 1,
+    "Armor Styles": 2,
+    "Hats": 3,
+    # Cells 4 and 8 are baked progress-ring art rather than category emblems;
+    # the dashboard keeps its live ring meter for Skins and Polymorphs.
+    "Costumes": 5,
+    "Personalities": 6,
+    "Emotes": 7,
+    "Mementos": 9,
+    "Furnishings": 10,
+    "Assistants": 11,
+    "Companions": 12,
+    "Body Markings": 13,
+    "Head Markings": 14,
+    "Hair": 15,
+    "Facial Hair / Horns": 16,
+    "Piercing / Jewelry": 17,
+    # Source-sheet cells 18/19/22/23 are Outfit Styles, Dyes,
+    # Non-Combat Pets and Miscellaneous. They remain available for future
+    # dashboard specs rather than being attached to unrelated current cards.
+    "Tools & Upgrades": 20,
+    "Customized Actions": 21,
+}
 
 
 @dataclass(frozen=True)
@@ -72,6 +105,62 @@ DASHBOARD_SPECS = (
     DashboardSpec("Fragments", "Fragments", ("fragment", "combination_fragment", "patron"), "vial", "✥"),
     DashboardSpec("Tools & Upgrades", "Tools & Upgrades", ("tool", "account_upgrade", "story", "skill_style"), "vial", "⚒"),
 )
+
+
+def _asset_path(filename: str) -> Path:
+    """Resolve theme art on Windows while remaining safe on case-sensitive CI."""
+    root = Path(__file__).resolve().parents[1] / "assets" / "themes"
+    preferred = root / "Bff" / "collectibles" / filename
+    if preferred.exists():
+        return preferred
+    return root / "bff" / "collectibles" / filename
+
+
+class SpriteSheet:
+    """Lazy 6x4 PNG sprite slicer with cached QPixmap cells."""
+
+    def __init__(self, path: Path, columns: int = SPRITE_COLUMNS, rows: int = SPRITE_ROWS):
+        self.path = path
+        self.columns = columns
+        self.rows = rows
+        self._sheet: QPixmap | None = None
+        self._cache: dict[int, QPixmap] = {}
+
+    @property
+    def available(self) -> bool:
+        self._load()
+        return self._sheet is not None and not self._sheet.isNull()
+
+    def _load(self) -> None:
+        if self._sheet is not None:
+            return
+        pixmap = QPixmap(str(self.path))
+        self._sheet = pixmap
+
+    def cell(self, index: int) -> QPixmap | None:
+        if index < 0 or index >= self.columns * self.rows:
+            return None
+        if index in self._cache:
+            return self._cache[index]
+        self._load()
+        if self._sheet is None or self._sheet.isNull():
+            return None
+
+        cell_width = self._sheet.width() / self.columns
+        cell_height = self._sheet.height() / self.rows
+        column = index % self.columns
+        row = index // self.columns
+        left = round(column * cell_width)
+        top = round(row * cell_height)
+        right = round((column + 1) * cell_width)
+        bottom = round((row + 1) * cell_height)
+        cropped = self._sheet.copy(left, top, right - left, bottom - top)
+        self._cache[index] = cropped
+        return cropped
+
+
+NUMBER_SPRITES = SpriteSheet(_asset_path("numbers.png"))
+BADGE_SPRITES = SpriteSheet(_asset_path("badges.png"))
 
 
 def _percent(owned: int, total: int) -> int:
@@ -237,6 +326,19 @@ class ProgressTile(QFrame):
         )
         self._build_ui()
 
+    @staticmethod
+    def _set_sprite(label: QLabel, pixmap: QPixmap | None, size: int) -> bool:
+        if pixmap is None or pixmap.isNull():
+            return False
+        scaled = pixmap.scaled(
+            size,
+            size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        label.setPixmap(scaled)
+        return True
+
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 8, 10, 8)
@@ -245,10 +347,12 @@ class ProgressTile(QFrame):
         heading = QHBoxLayout()
         number = QLabel(str(self.index))
         number.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        number.setFixedSize(24, 24)
-        number.setStyleSheet(
-            "color:#C8A46A; border:1px solid #8A6F42; border-radius:2px; font-weight:700;"
-        )
+        number.setFixedSize(32, 32)
+        number_sprite = NUMBER_SPRITES.cell(self.index - 1)
+        if not self._set_sprite(number, number_sprite, 32):
+            number.setStyleSheet(
+                "color:#C8A46A; border:1px solid #8A6F42; border-radius:2px; font-weight:700;"
+            )
         title = QLabel(self.spec.label.upper())
         title.setWordWrap(True)
         title.setStyleSheet("color:#D9B977; font-weight:700; letter-spacing:1px;")
@@ -262,11 +366,14 @@ class ProgressTile(QFrame):
 
         self.glyph = QLabel(self.spec.glyph)
         self.glyph.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.glyph.setFixedSize(54, 54)
-        self.glyph.setStyleSheet(
-            f"color:{self.accent}; font-size:27px; border:1px solid #65502F; "
-            "border-radius:27px; background:#102629;"
-        )
+        self.glyph.setFixedSize(72, 72)
+        badge_index = CATEGORY_BADGE_INDEX.get(self.spec.label)
+        badge_sprite = BADGE_SPRITES.cell(badge_index) if badge_index is not None else None
+        if not self._set_sprite(self.glyph, badge_sprite, 72):
+            self.glyph.setStyleSheet(
+                f"color:{self.accent}; font-size:27px; border:1px solid #65502F; "
+                "border-radius:36px; background:#102629;"
+            )
 
         if self.spec.meter == "ring":
             self.meter = RingMeter(self.accent)
