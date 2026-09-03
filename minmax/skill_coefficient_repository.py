@@ -50,6 +50,7 @@ class SkillCoefficientRepository:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
         self._entity_resolution_cache: dict[str, SkillRankResolution] = {}
+        self._name_resolution_cache: dict[str, SkillRankResolution] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -146,9 +147,16 @@ class SkillCoefficientRepository:
         if not requested:
             return SkillRankResolution(None, ("Skill name is required",))
 
+        cache_key = requested.casefold()
+        cached = self._name_resolution_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         with self._connect() as connection:
             if not self._table_exists(connection, "skill_rank"):
-                return SkillRankResolution(None, ("skill_rank table is unavailable",))
+                resolution = SkillRankResolution(None, ("skill_rank table is unavailable",))
+                self._name_resolution_cache[cache_key] = resolution
+                return resolution
 
             rows = connection.execute(
                 """
@@ -169,7 +177,9 @@ class SkillCoefficientRepository:
                 (requested,),
             ).fetchall()
 
-        return self._resolve_matching_rows(rows, requested, label="skill name")
+        resolution = self._resolve_matching_rows(rows, requested, label="skill name")
+        self._name_resolution_cache[cache_key] = resolution
+        return resolution
 
     def _all_rank_identity_rows(self, connection: sqlite3.Connection) -> list[sqlite3.Row]:
         if not self._table_exists(connection, "skill_rank"):
