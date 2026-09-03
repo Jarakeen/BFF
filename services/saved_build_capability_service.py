@@ -31,6 +31,11 @@ class SavedBuildCapabilityAudit:
     def resolved(self) -> bool:
         return not self.capability_unresolved
 
+    @property
+    def capability_resolution_gaps(self) -> tuple[str, ...]:
+        """Backward-compatible alias for Phase 10 capability-only gaps."""
+        return self.capability_unresolved
+
 
 class SavedBuildCapabilityService:
     """Resolve what a saved build can provide without pretending runtime uptime exists."""
