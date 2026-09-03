@@ -6,7 +6,7 @@ from .build_calculation_context import BuildCalculationContext
 from .calculation import CalculationResult, StatBreakdown
 from .dd_damage import DDDamageEvent, DDDamageResult, calculate_dd_damage
 from .dd_mitigation import calculate_dd_mitigation
-from .dd_stat_evaluation import evaluate_dd_stats
+from .dd_stat_evaluation import DDStatEvaluation, evaluate_dd_stats
 from .evaluation_context import EvaluationContext
 from .stat_ids import StatId
 
@@ -24,6 +24,7 @@ class ModeledDamagePotency:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
     damage: DDDamageResult | None = None
+    dd_stats: DDStatEvaluation | None = None
 
     def __post_init__(self) -> None:
         if not self.metric_name.strip():
@@ -105,4 +106,5 @@ def measure_modeled_damage_potency(
         metric_name="canonical single-event expected damage",
         evidence=evidence,
         damage=damage,
+        dd_stats=dd_stats,
     )
