@@ -14,6 +14,7 @@ def test_real_corpus_execution_audit_tracks_ready_and_unknown_requirements():
 
     assert audit.encounters_with_requirements > 0
     assert audit.covered_requirement_count > 0
+    # Other encounters still preserve first-class unknown execution requirements.
     assert audit.unknown_requirement_count > 0
 
     achelir = next(row for row in audit.rows if row.encounter_id == "achelir")
@@ -22,7 +23,12 @@ def test_real_corpus_execution_audit_tracks_ready_and_unknown_requirements():
     assert achelir.unknown_count == 0
     assert achelir.fully_ready is True
 
+    # Oaxiltso is the first richer real encounter whose currently structured
+    # movement, positioning, cleanse, and add-separation handling semantics are
+    # all source-backed without inventing assignments or geometry.
     oaxiltso = next(row for row in audit.rows if row.encounter_id == "oaxiltso")
-    assert oaxiltso.covered_count >= 1
-    assert oaxiltso.unknown_count >= 1
-    assert oaxiltso.fully_ready is False
+    assert oaxiltso.requirement_count == 7
+    assert oaxiltso.covered_count == 7
+    assert oaxiltso.unknown_count == 0
+    assert oaxiltso.conflict_count == 0
+    assert oaxiltso.fully_ready is True
