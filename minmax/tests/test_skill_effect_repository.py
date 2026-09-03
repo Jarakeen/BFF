@@ -101,3 +101,42 @@ def test_available_skills_are_class_only_and_collapse_ranks(tmp_path):
 
     assert skills == ((103, 'Morph Courage'), (101, 'Test Courage'))
     assert all(name not in {'Other Class', 'Passive Courage', 'Hireling'} for _, name in skills)
+
+
+def test_resolved_skill_effects_are_cached_for_repository_lifetime(tmp_path):
+    db = tmp_path / 'test.db'
+    make_db(db)
+    repo = SkillEffectRepository(db)
+
+    first = repo.resolve(101)
+    assert len(first) == 1
+    assert first[0].name == 'major_courage'
+
+    with sqlite3.connect(db) as connection:
+        connection.execute("DELETE FROM ability_effect_link WHERE ability_id=101")
+
+    assert repo.resolve(101) == first
+    assert SkillEffectRepository(db).resolve(101) == ()
+
+
+def test_missing_skill_effect_resolution_is_cached_for_repository_lifetime(tmp_path):
+    db = tmp_path / 'test.db'
+    make_db(db)
+    repo = SkillEffectRepository(db)
+
+    assert repo.resolve(999) == ()
+
+    with sqlite3.connect(db) as connection:
+        connection.execute(
+            "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (999, 'Late Skill', 'Group', 12000.0, 'Warden', 'Green Balance', 999, 1, 0, 0, 1, 0),
+        )
+        connection.execute(
+            "INSERT INTO ability_effect_link VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (599, 401, 301, 999, None, 'exact_name', 1.0),
+        )
+
+    assert repo.resolve(999) == ()
+    fresh = SkillEffectRepository(db).resolve(999)
+    assert len(fresh) == 1
+    assert fresh[0].name == 'major_courage'
