@@ -95,3 +95,16 @@ def test_sustain_constraint_repairs_failing_baseline_when_candidate_sustains() -
     )
     assert constraint.status is ConstraintStatus.REPAIRED
     assert "repairs failed baseline" in constraint.explanation
+
+
+def test_sustain_constraint_marks_shared_failure_unsatisfied() -> None:
+    constraint = compare_sustain_runs(
+        resource=ResourceType.MAGICKA,
+        baseline_run=_run(sustains=False, minimum=0, ending=0),
+        candidate_run=_run(sustains=False, minimum=0, ending=0),
+    )
+
+    assert constraint.status is ConstraintStatus.UNSATISFIED
+    assert "Baseline and candidate both fail" in constraint.explanation
+    assert "Baseline: first shortfall 120" in constraint.explanation
+    assert "candidate: first shortfall 120" in constraint.explanation
