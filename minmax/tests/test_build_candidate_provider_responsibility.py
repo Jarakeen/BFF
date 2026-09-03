@@ -1,5 +1,9 @@
+from minmax.build_candidate import BuildCandidate
 from minmax.build_candidate_capability import compare_provider_responsibilities
-from minmax.build_candidate_comparison import ConstraintStatus
+from minmax.build_candidate_comparison import BuildCandidateComparison, ConstraintStatus
+from minmax.build_candidate_evaluator import rank_candidate_comparisons
+from minmax.evaluation_objective import EvaluationObjective
+from models.build_model import PlayerBuild
 from services.encounter_provider_assignment import (
     ProviderAssignment,
     ProviderAssignmentStatus,
@@ -36,6 +40,28 @@ def _assignment(
         unresolved_candidates=(),
         conflicting_candidates=(),
         explanation="test assignment",
+    )
+
+
+def _comparison(
+    candidate_id: str,
+    candidate_value: float,
+    provider_constraint,
+) -> BuildCandidateComparison:
+    candidate = BuildCandidate.from_build(
+        character_id="magrat",
+        baseline_build_id="df-healer",
+        candidate_id=candidate_id,
+        candidate_build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
+        changes=(),
+        candidate_source="phase12:test",
+    )
+    return BuildCandidateComparison(
+        candidate=candidate,
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=candidate_value,
+        constraints=(provider_constraint,),
     )
 
 
@@ -115,3 +141,26 @@ def test_member_without_baseline_primary_duty_has_nothing_to_preserve() -> None:
 
     assert constraint.status is ConstraintStatus.PRESERVED
     assert "no assigned primary provider responsibilities" in constraint.explanation
+
+
+def test_higher_damage_candidate_is_excluded_when_provider_duty_is_reassigned() -> None:
+    baseline = (_assignment(),)
+    preserved = compare_provider_responsibilities(
+        member_id="magrat",
+        baseline_assignments=baseline,
+        candidate_assignments=(_assignment(),),
+    )
+    reassigned = compare_provider_responsibilities(
+        member_id="magrat",
+        baseline_assignments=baseline,
+        candidate_assignments=(_assignment(primary_member_ids=("susan",)),),
+    )
+    eligible = _comparison("eligible", 110.0, preserved)
+    blocked = _comparison("higher-damage-provider-loss", 125.0, reassigned)
+
+    ranking = rank_candidate_comparisons((blocked, eligible))
+
+    assert blocked.candidate_value > eligible.candidate_value
+    assert blocked.is_rankable is False
+    assert ranking.ranked == (eligible,)
+    assert ranking.recommended is eligible
