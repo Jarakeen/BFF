@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Read-only audit of encounter enrichment gaps in existing UESP boss JSON.
+"""Read-only audit of encounter enrichment gaps in existing source JSON.
 
 This deliberately does not write to eso.db or source JSON. It measures:
 - explicit and implicit threshold-transition evidence missed by the first pass
@@ -17,6 +17,8 @@ from pathlib import Path
 import re
 from typing import Any, Iterable
 
+
+CANONICAL_SOURCE_ROOT = Path("data/eso_info")
 
 PERCENT_TOKEN_RE = re.compile(r"(?i)\b(\d{1,3})\s*%")
 TRANSITION_CUE_RE = re.compile(
@@ -133,14 +135,41 @@ def content_inventory(root: Path) -> tuple[int, list[tuple[str, str, str]]]:
     return total, empty
 
 
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Audit recoverable encounter-enrichment gaps without changing data"
+    )
+    parser.add_argument(
+        "--source-root",
+        "--uesp-root",
+        dest="source_root",
+        default=str(CANONICAL_SOURCE_ROOT),
+        help=(
+            "Encounter source corpus root. Defaults to the canonical data/eso_info path. "
+            "--uesp-root remains accepted for compatibility with older commands."
+        ),
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=30,
+        help="Detailed rows to print per section; 0 means all",
+    )
+    return parser
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Audit recoverable encounter-enrichment gaps without changing data")
-    parser.add_argument("--uesp-root", default="data/uesp")
-    parser.add_argument("--limit", type=int, default=30, help="Detailed rows to print per section; 0 means all")
+    parser = build_parser()
     args = parser.parse_args()
 
-    root = Path(args.uesp_root)
+    root = Path(args.source_root)
     boss_dir = root / "bosses"
+    if not boss_dir.is_dir():
+        parser.error(
+            f"encounter source root has no bosses directory: {boss_dir}. "
+            "Use --source-root to select a different corpus."
+        )
+
     records: list[tuple[Path, dict[str, Any]]] = []
     for path in sorted(boss_dir.glob("*.json")):
         record = load_json(path)
@@ -179,6 +208,7 @@ def main() -> int:
     print("=" * 72)
     print(" ENCOUNTER ENRICHMENT GAP AUDIT - READ ONLY")
     print("=" * 72)
+    print(f"source root:                               {root}")
     print(f"boss JSON records:                         {len(records):6}")
     print(f"bosses with threshold-transition evidence:{len(threshold_bosses):6}")
     print(f"threshold-transition ability rows:         {threshold_rows:6}")
