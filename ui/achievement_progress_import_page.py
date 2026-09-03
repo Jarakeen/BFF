@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Local achievement and collectible progress import/export workspace."""
+"""Local achievement, collectible, and motif progress import/export workspace."""
 
 from pathlib import Path
 
@@ -23,9 +23,12 @@ from services.achievement_progress_export_service import AchievementProgressExpo
 from services.achievement_progress_service import AchievementProgressService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.google_sheet_progress_importer import GoogleSheetProgressImporter
+from services.learned_motif_service import LearnedMotifService
 from services.local_achievement_workbook_service import LocalAchievementWorkbookService
 from services.local_collectible_progress_importer import LocalCollectibleProgressImporter
 from services.local_collectible_workbook_service import LocalCollectibleWorkbookService
+from services.local_motif_progress_importer import LocalMotifProgressImporter
+from services.local_motif_workbook_service import LocalMotifWorkbookService
 from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -33,7 +36,7 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 
 
 class AchievementProgressImportPage(QWidget):
-    """Preview and import legacy/local achievement and collectible workbooks safely."""
+    """Preview and import legacy/local progress safely."""
 
     PEOPLE = ("Jarakeen", "Rylo")
 
@@ -44,14 +47,17 @@ class AchievementProgressImportPage(QWidget):
         self.achievement_data = EsoAchievementDatabaseService(data_dir / "eso.db")
         self.achievement_progress = AchievementProgressService(data_dir / "achievement_progress.json")
         self.collectible_progress = ProfiledCollectibleService(data_dir / "eso.db")
+        self.motif_progress = LearnedMotifService(data_dir / "eso.db")
         self.workbooks = LocalAchievementWorkbookService()
         self.collectible_workbooks = LocalCollectibleWorkbookService()
+        self.motif_workbooks = LocalMotifWorkbookService()
         self.importer = GoogleSheetProgressImporter(
             self.achievement_data,
             self.achievement_progress,
             self.collectible_progress,
         )
         self.collectible_importer = LocalCollectibleProgressImporter(self.collectible_progress)
+        self.motif_importer = LocalMotifProgressImporter(self.motif_progress)
         self.exporter = AchievementProgressExportService(
             self.achievement_data,
             self.achievement_progress,
@@ -61,11 +67,16 @@ class AchievementProgressImportPage(QWidget):
         self._previews = {}
         self._collectible_snapshots = {}
         self._collectible_previews = {}
+        self._motif_snapshots = {}
+        self._motif_previews = {}
         self._build_ui()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0) if self.embedded else root.setContentsMargins(16, 12, 16, 12)
+        if self.embedded:
+            root.setContentsMargins(0, 0, 0, 0)
+        else:
+            root.setContentsMargins(16, 12, 16, 12)
         root.setSpacing(12)
 
         if not self.embedded:
@@ -79,8 +90,8 @@ class AchievementProgressImportPage(QWidget):
         else:
             root.addWidget(
                 self._note(
-                    "Import legacy achievement and collectible progress without Google API access, preview every change before writing it, "
-                    "or export a clean canonical achievement workbook/CSV for future backups and round trips."
+                    "Import legacy achievements, standalone collectibles, and crafting motifs without Google API access. "
+                    "Everything is previewed before writing and imports are merge-only."
                 )
             )
 
@@ -95,8 +106,8 @@ class AchievementProgressImportPage(QWidget):
         source_card.addLayout(source_row)
         source_card.addWidget(
             self._note(
-                "Legacy BFF progress is supported: A = Rylo, B = Jarakeen, C = name; achievement rows also use F = points. "
-                "Standalone collectible sheets are detected conservatively and exact-matched to canonical collectible names."
+                "The legacy BFF workbook is read using its actual R/J progress blocks. Motifs are read separately from "
+                "Rylos Motifs and Jarakeens Motifs and matched by motif number plus style name."
             )
         )
         root.addWidget(source_card)
@@ -127,8 +138,8 @@ class AchievementProgressImportPage(QWidget):
         export_card = FoundryCard("CANONICAL EXPORTS")
         export_card.addWidget(
             self._note(
-                "Achievement exports are normalized and profile-aware. Collectible ownership already lives canonically in SQLite and can be "
-                "exported from the Collections tools; legacy workbook collectible rows are only a migration source."
+                "Achievement exports are normalized and profile-aware. Collectibles and motifs live canonically in SQLite; "
+                "the old workbook is only a migration source."
             )
         )
         export_row = QHBoxLayout()
@@ -173,6 +184,8 @@ class AchievementProgressImportPage(QWidget):
         self._previews.clear()
         self._collectible_snapshots.clear()
         self._collectible_previews.clear()
+        self._motif_snapshots.clear()
+        self._motif_previews.clear()
         lines = [f"Workbook: {self._source_path}", ""]
         try:
             for person in self.PEOPLE:
@@ -182,11 +195,16 @@ class AchievementProgressImportPage(QWidget):
                 collectible_preview = self.collectible_importer.preview_checked(
                     collectible_snapshot, profile=person
                 )
+                motif_snapshot = self.motif_workbooks.read_person(self._source_path, person)
+                motif_preview = self.motif_importer.preview_checked(motif_snapshot, profile=person)
+
                 self._snapshots[person] = snapshot
                 self._previews[person] = preview
                 self._collectible_snapshots[person] = collectible_snapshot
                 self._collectible_previews[person] = collectible_preview
-                lines.extend(self._preview_lines(preview, collectible_preview))
+                self._motif_snapshots[person] = motif_snapshot
+                self._motif_previews[person] = motif_preview
+                lines.extend(self._preview_lines(preview, collectible_preview, motif_preview))
         except Exception as exc:
             self.preview_text.setPlainText(f"Preview failed:\n{exc}")
             self.import_button.setEnabled(False)
@@ -198,7 +216,7 @@ class AchievementProgressImportPage(QWidget):
         self.status.success("Preview complete. No progress has been changed.")
 
     @staticmethod
-    def _preview_lines(preview, collectible_preview) -> list[str]:
+    def _preview_lines(preview, collectible_preview, motif_preview) -> list[str]:
         lines = [
             f"{preview.source_person}",
             "  Achievements",
@@ -216,9 +234,18 @@ class AchievementProgressImportPage(QWidget):
             f"    Canonical matches: {collectible_preview.matched_collectibles}",
             f"    Unmatched names: {len(collectible_preview.unresolved_names)}",
             f"    Ambiguous names: {len(collectible_preview.ambiguous_names)}",
+            "  Motifs",
+            f"    Source rows: {motif_preview.sheet_rows}",
+            f"    Completed motif rows: {motif_preview.checked_rows}",
+            f"    Canonical motif matches: {motif_preview.matched_motifs}",
+            f"    Canonical learnable items to mark: {motif_preview.learnable_items}",
+            f"    Unmatched motifs: {len(motif_preview.unresolved_names)}",
+            f"    Ambiguous motifs: {len(motif_preview.ambiguous_names)}",
         ]
         if collectible_preview.scanned_tabs:
-            lines.append("    Sheets: " + "; ".join(collectible_preview.scanned_tabs))
+            lines.append("    Collectible sheets: " + "; ".join(collectible_preview.scanned_tabs))
+        if motif_preview.source_tabs:
+            lines.append("    Motif sheets: " + "; ".join(motif_preview.source_tabs))
         if preview.unresolved_names:
             lines.append("    Achievement unmatched: " + "; ".join(preview.unresolved_names[:20]))
         if preview.ambiguous_names:
@@ -229,6 +256,10 @@ class AchievementProgressImportPage(QWidget):
                 lines.append(f"    …and {len(collectible_preview.unresolved_names) - 20} more collectible names")
         if collectible_preview.ambiguous_names:
             lines.append("    Collectible ambiguous: " + "; ".join(collectible_preview.ambiguous_names[:20]))
+        if motif_preview.unresolved_names:
+            lines.append("    Motif unmatched: " + "; ".join(motif_preview.unresolved_names[:20]))
+        if motif_preview.ambiguous_names:
+            lines.append("    Motif ambiguous: " + "; ".join(motif_preview.ambiguous_names[:20]))
         lines.append("")
         return lines
 
@@ -241,10 +272,10 @@ class AchievementProgressImportPage(QWidget):
         box.setWindowTitle("Are you really, really, really sure?")
         box.setText("Are you really, really, really sure?")
         box.setInformativeText(
-            "This will merge checked achievements and standalone collectibles into: "
+            "This will merge checked achievements, standalone collectibles, and completed motifs into: "
             + ", ".join(people)
             + ". Achievement-reward collectibles with canonical links will also be marked owned. "
-            "Nothing is deleted, and unmatched or ambiguous names will not be guessed."
+            "Nothing is deleted, and unmatched or ambiguous records will not be guessed."
         )
         yes_button = box.addButton(
             "Yes, I am really really really sure",
@@ -262,7 +293,9 @@ class AchievementProgressImportPage(QWidget):
             self.status.warning("Select at least one profile to import.")
             return
         if any(
-            person not in self._snapshots or person not in self._collectible_snapshots
+            person not in self._snapshots
+            or person not in self._collectible_snapshots
+            or person not in self._motif_snapshots
             for person in people
         ):
             self.status.warning("Preview the workbook before importing.")
@@ -283,11 +316,16 @@ class AchievementProgressImportPage(QWidget):
                 collectible_report = self.collectible_importer.import_checked(
                     self._collectible_snapshots[person], profile=person
                 )
+                motif_report = self.motif_importer.import_checked(
+                    self._motif_snapshots[person], profile=person
+                )
                 summaries.append(
                     f"{person}: {report.matched_achievements} achievements matched, "
                     f"{report.achievements_added} newly added; "
                     f"{report.collectible_rewards_marked} reward collectibles + "
-                    f"{collectible_report.collectibles_marked_owned} standalone collectibles marked owned"
+                    f"{collectible_report.collectibles_marked_owned} standalone collectibles marked owned; "
+                    f"{motif_report.matched_motifs} motifs matched / "
+                    f"{motif_report.learnable_items_marked} motif learnables marked learned"
                 )
         except Exception as exc:
             self.import_button.setText("Import Selected Profiles")
