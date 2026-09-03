@@ -147,14 +147,7 @@ def recommend_mechanic(row: InferredMechanicReviewRow) -> MechanicRecommendation
     return MechanicRecommendation(row, tuple(checks), status, rationale)
 
 
-def load_content_ids_by_type(content_root: Path, content_type: str) -> set[str]:
-    folder = {
-        "trial": "trials",
-        "dungeon": "dungeons",
-        "arena": "arenas",
-    }.get(content_type.casefold())
-    if folder is None:
-        raise ValueError(f"unsupported content type: {content_type!r}")
+def _load_folder_ids(content_root: Path, folder: str) -> set[str]:
     ids: set[str] = set()
     for path in sorted((Path(content_root) / folder).glob("*.json")):
         try:
@@ -166,6 +159,31 @@ def load_content_ids_by_type(content_root: Path, content_type: str) -> set[str]:
             if value:
                 ids.add(value)
     return ids
+
+
+def load_content_ids_by_type(content_root: Path, content_type: str) -> set[str]:
+    """Return a disjoint content-id partition despite duplicated source files.
+
+    The harvested corpus currently contains some trial records duplicated under
+    ``dungeons/``. Preserve those source files, but do not let folder duplication
+    cause one encounter to be reviewed as two different content types.
+    Trial membership wins over arena/dungeon copies; arena membership wins over
+    dungeon copies.
+    """
+
+    kind = content_type.casefold()
+    if kind not in {"trial", "dungeon", "arena"}:
+        raise ValueError(f"unsupported content type: {content_type!r}")
+
+    trial_ids = _load_folder_ids(content_root, "trials")
+    arena_ids = _load_folder_ids(content_root, "arenas") - trial_ids
+    dungeon_ids = _load_folder_ids(content_root, "dungeons") - trial_ids - arena_ids
+
+    return {
+        "trial": trial_ids,
+        "arena": arena_ids,
+        "dungeon": dungeon_ids,
+    }[kind]
 
 
 def build_recommendations(source_dir: Path, content_root: Path, *, content_type: str = "trial") -> tuple[MechanicRecommendation, ...]:
