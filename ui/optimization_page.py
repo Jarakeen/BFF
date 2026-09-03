@@ -173,7 +173,9 @@ class OptimizationPage(FoundryPage):
         }
         self.mode_description.setText(descriptions[mode])
         if hasattr(self, "team_table"):
-            self._generate_preview()
+            self._populate_team_editor(self.team_table, autofill=True)
+            self._populate_team_editor(self.team_b_table, autofill=True)
+            self._update_team_analysis()
 
     def _build_constraints(self):
         card = FoundryCard("Constraints")
@@ -547,7 +549,7 @@ class OptimizationPage(FoundryPage):
     def _generate_preview(self, *_args):
         self._populate_team_editor(self.team_table, autofill=True)
         self._populate_team_editor(self.team_b_table, autofill=True)
-        self._optimization_mode_changed(self.mode_tabs.currentIndex())
+        self._update_team_analysis()
 
     def _clear_team(self, table=None):
         target_table = table or self.team_table
