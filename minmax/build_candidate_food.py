@@ -62,6 +62,55 @@ def filter_food_candidates_for_resource(
     )
 
 
+def _normalized_description(
+    name: str,
+    provisioning_repository: ProvisioningStaticRepository,
+) -> str | None:
+    resolver = getattr(provisioning_repository, "description", None)
+    if not callable(resolver):
+        return None
+    value = resolver(name)
+    if value is None:
+        return None
+    return " ".join(str(value).split()).casefold()
+
+
+def _effect_signature(effects) -> tuple[tuple[str, str, float, str], ...]:
+    rows: list[tuple[str, str, float, str]] = []
+    for effect in effects:
+        stat = getattr(effect, "stat", None)
+        operation = getattr(effect, "operation", None)
+        unit = getattr(effect, "unit", None)
+        rows.append(
+            (
+                str(getattr(stat, "value", stat)),
+                str(getattr(operation, "value", operation)),
+                float(getattr(effect, "value", 0.0)),
+                str(getattr(unit, "value", unit)),
+            )
+        )
+    return tuple(sorted(rows))
+
+
+def _provisioning_equivalence_signature(
+    name: str,
+    effects,
+    provisioning_repository: ProvisioningStaticRepository,
+) -> tuple[str | None, tuple[tuple[str, str, float, str], ...]]:
+    """Return a conservative exact-equivalence signature for evaluation reuse.
+
+    Parsed stat effects alone are not sufficient because two consumables could
+    share the currently mapped stat package while carrying different extra
+    tooltip mechanics. Include normalized canonical tooltip text when the
+    repository exposes it so those items remain separate.
+    """
+
+    return (
+        _normalized_description(name, provisioning_repository),
+        _effect_signature(effects),
+    )
+
+
 def enumerate_food_candidates(
     *,
     baseline_build: PlayerBuild,
@@ -76,10 +125,17 @@ def enumerate_food_candidates(
     food is included only when its static character-sheet effects resolve
     cleanly; dynamic or currently unmapped consumables stay out of the bounded
     Phase 12 search rather than becoming knowingly UNKNOWN candidates.
+
+    Exact canonical mechanical equivalents are represented once. This keeps
+    the optimizer from rebuilding the same stat/recovery state for hundreds of
+    differently named consumables while preserving distinct tooltip mechanics.
     """
 
     current = provisioning_repository.canonical_name(baseline_build.Food)
     candidates: list[BuildCandidate] = []
+    seen_signatures: set[
+        tuple[str | None, tuple[tuple[str, str, float, str], ...]]
+    ] = set()
 
     for listed_name in provisioning_repository.list_names():
         name = provisioning_repository.canonical_name(listed_name)
@@ -88,6 +144,15 @@ def enumerate_food_candidates(
         effects, unresolved = provisioning_repository.resolve(name)
         if unresolved or not effects:
             continue
+
+        signature = _provisioning_equivalence_signature(
+            name,
+            effects,
+            provisioning_repository,
+        )
+        if signature in seen_signatures:
+            continue
+        seen_signatures.add(signature)
 
         candidate_build = PlayerBuild.from_dict(baseline_build.to_dict())
         candidate_build.Food = name
