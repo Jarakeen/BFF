@@ -71,3 +71,21 @@ def test_bounded_recommendation_prints_plain_english_before_technical_evidence(c
     assert "Technical evidence:" in output
     assert "magicka sustain: preserved: Technical sustain evidence." in output
     assert output.index("Plain English:") < output.index("Technical evidence:")
+
+
+def test_bounded_recommendation_reports_when_provider_scope_was_evaluated(capsys) -> None:
+    comparison = _comparison()
+    ranking = CandidateRanking(
+        comparisons=(comparison,),
+        ranked=(comparison,),
+    )
+
+    _print_recommendation(
+        "Food",
+        ranking,
+        provider_scope_evaluated=True,
+    )
+
+    output = capsys.readouterr().out
+    assert "provider assignments were checked" in output
+    assert "provider assignments are not evaluated" not in output
