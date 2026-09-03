@@ -190,8 +190,6 @@ def _placeholder_effect_kind(lower: str, coefficient_number: int) -> str | None:
     if _coordinated_damage_type(lower, coefficient_number) is not None:
         return "damage"
 
-    # Explicit non-damage scalar or duration coefficients are safely classed as
-    # utility. They deliberately carry no damage/heal routing fields.
     utility_patterns = (
         rf"\b(?:duration|for)\b[^.;]{{0,40}}?{placeholder}\s+seconds?\b",
         rf"\bcurrent\s+duration\s*:\s*{placeholder}\s+seconds?\b",
@@ -296,6 +294,7 @@ def extract_component_text_evidence(
     elif effect_kind == "heal":
         if any(phrase in lower for phrase in (
             "you and your allies",
+            "you and allies",
             "allies in the area",
             "allies in",
             "nearby allies",
@@ -318,18 +317,13 @@ def extract_component_text_evidence(
         if any(re.search(pattern, component_lower) for pattern in (
             r"\bevery\s+(?:\d+(?:\.\d+)?\s+)?seconds?\b",
             r"\bheal(?:ing|s)?\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
+            r"\$\d+(?!\d)\s+health\s+over\s+\d+(?:\.\d+)?\s+seconds?\b",
         )):
             is_dot = True
             evidence.append("current coefficient segment explicitly describes periodic healing")
         else:
             is_dot = False
             evidence.append("current coefficient is an immediate/triggered heal without periodic wording")
-
-    # Shields and utility coefficients are their own effect families. Damage
-    # routing fields stay NULL rather than being fabricated as False.
-
-    # ESO critical eligibility is deliberately unresolved here. Tooltip prose
-    # usually does not prove whether an effect can crit.
 
     return SkillComponentTextEvidence(
         coefficient_number=int(coefficient_number),
