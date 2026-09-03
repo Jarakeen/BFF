@@ -170,6 +170,36 @@ def test_evaluate_healing_candidate_combines_objective_and_hard_constraints() ->
     assert len(capability_service.calls) == 1
 
 
+def test_context_diagnostic_does_not_universally_block_resolved_evaluators() -> None:
+    candidate = _candidate("df-healer:mundus:ritual")
+
+    result = evaluate_healing_candidate(
+        candidate=candidate,
+        baseline_build=PlayerBuild(BuildName="DF Healer"),
+        baseline_healing=ModeledHealingPotency(
+            value=100.0,
+            evaluated_skills=("Combat Prayer",),
+        ),
+        baseline_capability=_audit(),
+        baseline_assignments=(),
+        member_id="magrat",
+        healing_skill_names=("Combat Prayer",),
+        tooltip_service=_TooltipService(112.0),
+        capability_service=_CapabilityService(_audit()),
+        resolve_context=lambda row: BuildCandidateContextResult(
+            candidate=row,
+            context=object(),
+            unresolved=("Passive rank is not recorded for character: Frozen Armor",),
+        ),
+        resolve_sustain=lambda context: _sustain(),
+        resolve_assignments=lambda build: (),
+    )
+
+    assert result.comparison.delta == 12.0
+    assert result.comparison.is_rankable
+    assert "Frozen Armor" not in " ".join(result.comparison.unresolved)
+
+
 def test_evaluate_healing_candidate_keeps_unresolved_sustain_unrankable() -> None:
     candidate = _candidate("df-healer:mundus:ritual")
 
