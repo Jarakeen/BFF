@@ -1,26 +1,130 @@
 from __future__ import annotations
 
-"""Deterministic read-only access to canonical encounter source records."""
+"""Deterministic read-only access to canonical encounter records."""
 
 import json
-from dataclasses import dataclass, field
+import sqlite3
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-from services.encounter_projection import EncounterDefinition, load_encounter_definition
+from services.encounter_projection import (
+    EncounterDefinition,
+    EncounterMechanic,
+    load_encounter_definition,
+)
 
 
 class EncounterSourceError(ValueError):
-    """The canonical source corpus is malformed or internally ambiguous."""
+    """The canonical encounter source or persistence layer is malformed or ambiguous."""
 
 
 class EncounterNotFoundError(LookupError):
     """No canonical boss source exists for the exact requested encounter id."""
 
 
+def _clean_name(value: object) -> str:
+    return " ".join(str(value or "").strip().split()).casefold()
+
+
+def _canonical_mechanics(
+    database_path: Path,
+    encounter_id: str,
+) -> tuple[EncounterMechanic, ...]:
+    if not database_path.exists():
+        raise EncounterSourceError(f"Canonical encounter database is missing: {database_path}")
+
+    connection = sqlite3.connect(database_path)
+    try:
+        table = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='encounter_canonical_fact'"
+        ).fetchone()
+        if table is None:
+            raise EncounterSourceError(
+                f"Canonical encounter database has no encounter_canonical_fact table: {database_path}"
+            )
+        rows = connection.execute(
+            """
+            SELECT fact_key, payload_json, review_status
+            FROM encounter_canonical_fact
+            WHERE encounter_id=? AND fact_type='mechanic_detail'
+            ORDER BY fact_key, id
+            """,
+            (encounter_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+
+    mechanics: list[EncounterMechanic] = []
+    seen_names: set[str] = set()
+    for fact_key, payload_json, review_status in rows:
+        try:
+            payload = json.loads(str(payload_json or ""))
+        except json.JSONDecodeError as exc:
+            raise EncounterSourceError(
+                f"Invalid canonical mechanic payload for {encounter_id}:{fact_key}"
+            ) from exc
+        if not isinstance(payload, dict):
+            raise EncounterSourceError(
+                f"Canonical mechanic payload is not an object for {encounter_id}:{fact_key}"
+            )
+        name = str(payload.get("name") or "").strip()
+        if not name:
+            raise EncounterSourceError(
+                f"Canonical mechanic payload has no name for {encounter_id}:{fact_key}"
+            )
+        identity = _clean_name(name)
+        if identity in seen_names:
+            raise EncounterSourceError(
+                f"Duplicate canonical mechanic name for {encounter_id}: {name!r}"
+            )
+        seen_names.add(identity)
+        mechanics.append(
+            EncounterMechanic(
+                mechanic_id=f"{encounter_id}:canonical:{fact_key}",
+                name=name,
+                description=str(payload.get("description") or ""),
+                interpretation_status=str(review_status or "reviewed"),
+                mechanic_type=payload.get("mechanic_type"),
+                damage_type=payload.get("damage_type"),
+                target_count=payload.get("target_count"),
+                requires_movement=payload.get("requires_movement"),
+                requires_positioning=payload.get("requires_positioning"),
+                requires_cleanse=payload.get("requires_cleanse"),
+                persistent_hazard=payload.get("persistent_hazard"),
+                failure_is_fatal=payload.get("failure_is_fatal"),
+                interruptible=payload.get("interruptible"),
+            )
+        )
+    return tuple(mechanics)
+
+
+def _overlay_canonical_mechanics(
+    definition: EncounterDefinition,
+    database_path: Path,
+) -> EncounterDefinition:
+    persisted = _canonical_mechanics(database_path, definition.encounter_id)
+    persisted_by_name = {_clean_name(row.name): row for row in persisted}
+
+    # Literal/source-classified mechanics remain usable. Raw inferred rows are
+    # review candidates, not canonical truth, and therefore do not flow into
+    # downstream evaluation unless a reviewed canonical fact exists for them.
+    mechanics: list[EncounterMechanic] = []
+    for row in definition.mechanics:
+        identity = _clean_name(row.name)
+        if identity in persisted_by_name:
+            continue
+        if str(row.interpretation_status or "").strip().casefold() == "inferred":
+            continue
+        mechanics.append(row)
+    mechanics.extend(persisted)
+    return replace(definition, mechanics=tuple(mechanics))
+
+
 @dataclass(frozen=True)
 class EncounterRepository:
     boss_root: Path
     evidence_root: Path
+    database_path: Path | None = None
     _boss_paths: dict[str, Path] = field(init=False, repr=False, compare=False)
     _evidence_paths: dict[str, Path] = field(init=False, repr=False, compare=False)
 
@@ -50,7 +154,12 @@ class EncounterRepository:
 
     @classmethod
     def from_data_root(cls, data_root: Path) -> "EncounterRepository":
-        return cls(data_root / "eso_info" / "bosses", data_root / "encounter_evidence")
+        database_path = data_root / "eso.db"
+        return cls(
+            data_root / "eso_info" / "bosses",
+            data_root / "encounter_evidence",
+            database_path=database_path if database_path.exists() else None,
+        )
 
     def encounter_ids(self) -> tuple[str, ...]:
         return tuple(sorted(self._boss_paths))
@@ -61,4 +170,10 @@ class EncounterRepository:
         boss_path = self._boss_paths.get(encounter_id)
         if boss_path is None:
             raise EncounterNotFoundError(f"No canonical encounter source for id {encounter_id!r}")
-        return load_encounter_definition(boss_path, evidence_packet_path=self._evidence_paths.get(encounter_id))
+        definition = load_encounter_definition(
+            boss_path,
+            evidence_packet_path=self._evidence_paths.get(encounter_id),
+        )
+        if self.database_path is None:
+            return definition
+        return _overlay_canonical_mechanics(definition, self.database_path)
