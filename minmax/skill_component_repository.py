@@ -24,6 +24,7 @@ class SkillComponentRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        self._skill_rank_cache: dict[int, tuple[SkillComponentClassification, ...]] = {}
 
     @staticmethod
     def _table_exists(db: sqlite3.Connection, name: str) -> bool:
@@ -48,12 +49,18 @@ class SkillComponentRepository:
             return SkillEffectKind.UNKNOWN
 
     def get_for_skill_rank(self, skill_rank_id: int) -> tuple[SkillComponentClassification, ...]:
+        rank_id = int(skill_rank_id)
+        if rank_id in self._skill_rank_cache:
+            return self._skill_rank_cache[rank_id]
+
         if not self.database_path.exists():
+            self._skill_rank_cache[rank_id] = ()
             return ()
 
         with sqlite3.connect(self.database_path) as db:
             db.row_factory = sqlite3.Row
             if not self._table_exists(db, self.TABLE):
+                self._skill_rank_cache[rank_id] = ()
                 return ()
 
             has_runtime_crit = self._table_exists(db, self.CRITICAL_EVIDENCE_TABLE)
@@ -91,10 +98,10 @@ class SkillComponentRepository:
                 WHERE c.skill_rank_id = ?
                 ORDER BY c.coefficient_number
                 """,
-                (int(skill_rank_id),),
+                (rank_id,),
             ).fetchall()
 
-        return tuple(
+        components = tuple(
             SkillComponentClassification(
                 skill_rank_id=int(row["skill_rank_id"]),
                 coefficient_number=int(row["coefficient_number"]),
@@ -116,6 +123,8 @@ class SkillComponentRepository:
             )
             for row in rows
         )
+        self._skill_rank_cache[rank_id] = components
+        return components
 
     def get_component(
         self,
