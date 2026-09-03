@@ -99,6 +99,72 @@ def test_boss_guide_projects_only_reviewed_canonical_timeline_kinds(tmp_path: Pa
     assert fact.evidence_count == 2
 
 
+def test_boss_guide_prefers_reviewed_timeline_over_structural_phases(tmp_path: Path) -> None:
+    database = _database(tmp_path)
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            """
+            INSERT INTO encounter_phase(
+                encounter_id, label, threshold, description, source_section
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                "xalvakka",
+                "Legacy Structural Phase",
+                "50%",
+                "Older structural extraction.",
+                "Phases",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    guide = EncounterBossGuideService(database).get("xalvakka")
+
+    assert [row.label for row in guide.structural_phases] == ["Legacy Structural Phase"]
+    assert [(row.threshold, row.label) for row in guide.phases] == [
+        ("70%", "Retreat Thresholds"),
+        ("40%", "Retreat Thresholds"),
+    ]
+    assert all("2 evidence row(s)" in row.description for row in guide.phases)
+
+
+def test_boss_guide_falls_back_to_structural_phases_without_reviewed_timeline(tmp_path: Path) -> None:
+    database = _database(tmp_path)
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute("DELETE FROM encounter_fact_evidence")
+        connection.execute(
+            "DELETE FROM encounter_canonical_fact WHERE canonical_kind IN ('phase', 'phase_transition')"
+        )
+        connection.execute(
+            """
+            INSERT INTO encounter_phase(
+                encounter_id, label, threshold, description, source_section
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                "xalvakka",
+                "Structural Phase",
+                "25%",
+                "Source-backed structural phase.",
+                "Phases",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    guide = EncounterBossGuideService(database).get("xalvakka")
+
+    assert guide.timeline_facts == ()
+    assert guide.phases == guide.structural_phases
+    assert guide.phases[0].label == "Structural Phase"
+    assert guide.phases[0].threshold == "25%"
+
+
 def test_boss_guide_rejects_malformed_canonical_timeline_payload(tmp_path: Path) -> None:
     database = _database(tmp_path)
     connection = sqlite3.connect(database)
