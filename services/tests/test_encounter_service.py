@@ -75,7 +75,7 @@ def test_oaxiltso_requirements_project_only_explicit_structured_demands():
         "cleanse",
     )
     assert all(row.target_count == 2 for row in sludge)
-    assert all(row.interpretation_status == "inferred" for row in sludge)
+    assert all(row.interpretation_status == "reviewed_single_source" for row in sludge)
 
     blitz = tuple(row for row in requirements if row.mechanic_name == "Savage Blitz")
     assert tuple(row.requirement_type for row in blitz) == ("movement", "positioning")
@@ -112,7 +112,7 @@ def test_oaxiltso_target_constraints_preserve_explicit_count_without_selecting_t
     sludge = next(row for row in constraints if row.mechanic_name == "Noxious Sludge")
     assert sludge.target_count == 2
     assert sludge.constraint_id == f"{sludge.mechanic_id}:targets"
-    assert sludge.interpretation_status == "inferred"
+    assert sludge.interpretation_status == "reviewed_single_source"
     assert not hasattr(sludge, "selected_targets")
     assert not hasattr(sludge, "targeting_rule")
 
