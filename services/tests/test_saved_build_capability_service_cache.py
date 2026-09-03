@@ -22,7 +22,8 @@ def _write_db(path: Path) -> None:
             INSERT INTO ability(ability_id, name, class_type, rank, morph, is_crafted) VALUES
                 (1001, 'Combat Prayer', 'Templar', 4, 2, 0),
                 (1002, 'Combat Prayer', 'Warden', 4, 2, 0),
-                (1003, 'Energy Orb', '', 4, 2, 0);
+                (1003, 'Energy Orb', '', 4, 2, 0),
+                (4001, 'Ulfsilds Contingency', '', 1, 0, 1);
             """
         )
 
@@ -72,3 +73,31 @@ def test_unresolved_ability_id_is_cached_for_service_lifetime(tmp_path) -> None:
 
     assert service._ability_id(" missing skill ", "templar") is None
     assert _service(path)._ability_id("Missing Skill", "Templar") == 3001
+
+
+def test_crafted_ability_check_is_cached_for_service_lifetime(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    service = _service(path)
+
+    assert service._ability_is_crafted(4001) is True
+
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE ability SET is_crafted=0 WHERE ability_id=4001")
+
+    assert service._ability_is_crafted(4001) is True
+    assert _service(path)._ability_is_crafted(4001) is False
+
+
+def test_noncrafted_ability_check_is_cached_for_service_lifetime(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    service = _service(path)
+
+    assert service._ability_is_crafted(1001) is False
+
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE ability SET is_crafted=1 WHERE ability_id=1001")
+
+    assert service._ability_is_crafted(1001) is False
+    assert _service(path)._ability_is_crafted(1001) is True
