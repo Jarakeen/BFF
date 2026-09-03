@@ -83,6 +83,16 @@ def _print_detected_real_builds(inventory) -> None:
         print(f"    - {character} | {build}")
 
 
+def _print_excluded_builds(inventory) -> None:
+    if not inventory.template_or_blank_builds:
+        return
+    print("  Ignored blank/template builds:")
+    for audit in inventory.template_or_blank_builds:
+        character = audit.character_name or "(blank character)"
+        build = audit.build_name or "(blank build)"
+        print(f"    - character={character!r} | build={build!r}")
+
+
 def main() -> int:
     args = _parser().parse_args()
     try:
@@ -119,6 +129,7 @@ def main() -> int:
     print(f"  Unique real characters:        {inventory.unique_member_count}")
     print(f"  Blank/template builds ignored: {len(inventory.template_or_blank_builds)}")
     _print_detected_real_builds(inventory)
+    _print_excluded_builds(inventory)
     if inventory.duplicate_member_ids:
         print("  Characters with multiple candidate builds:")
         for identity in inventory.duplicate_member_ids:
