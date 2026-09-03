@@ -131,6 +131,7 @@ def test_legacy_spell_power_alias_resolves_effect_family_with_two_equivalent_for
     result = PotionAvailabilityRepository(database, processed).resolve("spell power")
 
     assert result.resolved
+    assert result.capability_resolved
     assert len(result.formulas) == 2
     assert set(result.canonical_traits) == {
         "Restore Magicka",
@@ -158,6 +159,7 @@ def test_missing_processed_file_recovers_formula_catalog_from_canonical_db(tmp_p
     result = PotionAvailabilityRepository(database, missing_processed).resolve("spell power")
 
     assert result.resolved
+    assert result.capability_resolved
     assert len(result.formulas) == 2
     assert set(result.canonical_traits) == {
         "Restore Magicka",
@@ -170,6 +172,59 @@ def test_missing_processed_file_recovers_formula_catalog_from_canonical_db(tmp_p
         "spell_critical",
     }
     assert all("processed source missing" not in message for message in result.unresolved)
+
+
+def test_lean_install_resolves_exact_legacy_potion_capability_without_recipe_payloads(tmp_path: Path):
+    missing_processed = tmp_path / "omitted_from_lean_install.json"
+    database = tmp_path / "eso.db"
+    _write_db(database)
+
+    result = PotionAvailabilityRepository(database, missing_processed).resolve("spell power")
+
+    assert not result.resolved
+    assert result.capability_resolved
+    assert result.formulas == ()
+    assert result.unresolved == ()
+    assert set(result.canonical_traits) == {
+        "Restore Magicka",
+        "Increase Spell Power",
+        "Spell Critical",
+    }
+    assert {effect.name for effect in result.effects} == {
+        "restore_magicka",
+        "increase_spell_power",
+        "spell_critical",
+    }
+
+
+def test_lean_install_still_fails_closed_for_canonical_family_without_formula_evidence(tmp_path: Path):
+    missing_processed = tmp_path / "omitted_from_lean_install.json"
+    database = tmp_path / "eso.db"
+    _write_db(database)
+
+    result = PotionAvailabilityRepository(database, missing_processed).resolve(
+        "alchemy_family:u50:increase_spell_power+restore_magicka+spell_critical"
+    )
+
+    assert not result.resolved
+    assert not result.capability_resolved
+    assert result.formulas == ()
+    assert result.effects == ()
+    assert any("processed source missing" in message for message in result.unresolved)
+    assert any("no reusable formula payloads" in message for message in result.unresolved)
+
+
+def test_lean_legacy_alias_reports_missing_effect_variant_without_inventing_coverage(tmp_path: Path):
+    missing_processed = tmp_path / "omitted_from_lean_install.json"
+    database = tmp_path / "eso.db"
+    _write_db(database, omit="Spell Critical")
+
+    result = PotionAvailabilityRepository(database, missing_processed).resolve("spell power")
+
+    assert not result.resolved
+    assert not result.capability_resolved
+    assert {effect.name for effect in result.effects} == {"restore_magicka", "increase_spell_power"}
+    assert result.unresolved == ("Potion EffectVariant missing from database: Spell Critical",)
 
 
 def test_canonical_family_choice_groups_equivalent_formulas_without_picking_one(tmp_path: Path):
