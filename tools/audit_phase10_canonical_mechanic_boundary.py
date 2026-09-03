@@ -9,7 +9,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE
-from services.encounter_projection import load_encounter_definition
 from services.encounter_repository import EncounterRepository
 
 
@@ -30,6 +29,7 @@ def main() -> int:
 
     bosses = args.data_root / "eso_info" / "bosses"
     evidence = args.data_root / "encounter_evidence"
+    raw_repository = EncounterRepository(bosses, evidence)
     repository = EncounterRepository(bosses, evidence, database_path=args.database)
 
     raw_inferred: set[tuple[str, str]] = set()
@@ -37,10 +37,7 @@ def main() -> int:
     leaked: list[str] = []
 
     for encounter_id in repository.encounter_ids():
-        raw = load_encounter_definition(
-            repository._boss_paths[encounter_id],
-            evidence_packet_path=repository._evidence_paths.get(encounter_id),
-        )
+        raw = raw_repository.get(encounter_id)
         for mechanic in raw.mechanics:
             if str(mechanic.interpretation_status or "").strip().casefold() == "inferred":
                 raw_inferred.add(_key(encounter_id, mechanic.name))
@@ -82,20 +79,15 @@ def main() -> int:
     # These are the reviewed-corpus invariants established by Phase 9. Keeping
     # the exact denominator here makes later source/review drift visible rather
     # than silently changing the Phase 10 consumption contract.
-    expected = {
-        "raw_inferred": 109,
-        "accepted": 94,
-        "rejected": 15,
-    }
-    if len(raw_inferred) != expected["raw_inferred"]:
+    if len(raw_inferred) != 109:
         problems.append(
             f"raw inferred denominator changed: expected 109, found {len(raw_inferred)}"
         )
-    if len(accepted_from_inferred) != expected["accepted"]:
+    if len(accepted_from_inferred) != 94:
         problems.append(
             f"accepted canonical replacements changed: expected 94, found {len(accepted_from_inferred)}"
         )
-    if len(rejected_or_unpersisted) != expected["rejected"]:
+    if len(rejected_or_unpersisted) != 15:
         problems.append(
             f"rejected/unpersisted count changed: expected 15, found {len(rejected_or_unpersisted)}"
         )
