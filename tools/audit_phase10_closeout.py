@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from services.build_service import BuildService
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
-from services.encounter_difficulty import parse_encounter_difficulty
+from services.encounter_difficulty import normalize_encounter_difficulty
 from services.encounter_execution_audit import audit_encounter_execution
 from services.encounter_repository import EncounterRepository
 from services.encounter_roster_evaluation import EncounterRosterEvaluator
@@ -75,7 +75,7 @@ def _auto_select(inventory):
 def main() -> int:
     args = _parser().parse_args()
     try:
-        difficulty = parse_encounter_difficulty(args.difficulty)
+        difficulty = normalize_encounter_difficulty(args.difficulty)
     except ValueError as exc:
         print(exc)
         return 2
