@@ -129,6 +129,9 @@ def test_audit_candidate_labels_keep_families_explainable() -> None:
     assert _candidate_change_label(
         _comparison("Armor.Chest.Enchant", "Max Magicka", "Prismatic Defense")
     ) == "Armor.Chest.Enchant: Max Magicka -> Prismatic Defense"
+    assert _candidate_change_label(
+        _comparison("Food", "Clockwork Citrus Filet", "Witchmother's Potent Brew")
+    ) == "Food: Clockwork Citrus Filet -> Witchmother's Potent Brew"
 
 
 def test_audit_reports_all_tied_preferred_repairs(capsys) -> None:
