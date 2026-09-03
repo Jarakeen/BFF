@@ -12,9 +12,10 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.build_action_cost_modifiers import BuildActionCostModifierResolver
-from minmax.build_candidate_comparison import CandidateConstraint, ConstraintStatus
+from minmax.build_candidate_armor_trait import enumerate_armor_trait_candidates
+from minmax.build_candidate_comparison import BuildCandidateComparison, CandidateConstraint, ConstraintStatus
 from minmax.build_candidate_context import build_candidate_context
-from minmax.build_candidate_evaluator import evaluate_healing_candidate, rank_candidate_comparisons
+from minmax.build_candidate_evaluator import CandidateRanking, evaluate_healing_candidate, rank_candidate_comparisons
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
@@ -97,6 +98,62 @@ def _with_extra_unresolved(
     )
 
 
+def _candidate_change_label(comparison: BuildCandidateComparison) -> str:
+    if not comparison.candidate.changes:
+        return comparison.candidate.candidate_id
+    change = comparison.candidate.changes[0]
+    if change.path == "Mundus":
+        return str(change.after)
+    return f"{change.path}: {change.before} -> {change.after}"
+
+
+def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
+    comparisons = ranking.comparisons
+    print()
+    print(f"{title} candidates evaluated: {len(comparisons)}")
+    print(f"Rankable candidates:          {len(ranking.ranked)}")
+    print()
+
+    for index, comparison in enumerate(comparisons, start=1):
+        print(f"[{index:02d}] {_candidate_change_label(comparison)}")
+        print(f"  Candidate ID: {comparison.candidate.candidate_id}")
+        print(f"  Healing:      {_format_value(comparison.candidate_value)}")
+        print(f"  Delta:        {_format_value(comparison.delta)}")
+        print(f"  Rankable:     {comparison.is_rankable}")
+        print(f"  Improvement:  {comparison.is_improvement}")
+        print(f"  Repair:       {comparison.is_constraint_repair}")
+        for constraint in comparison.constraints:
+            print(f"  Constraint:   {constraint.name} = {constraint.status.value} | {constraint.explanation}")
+        if comparison.unresolved:
+            print("  Unresolved:")
+            for message in comparison.unresolved:
+                print(f"    - {message}")
+        if comparison.rejection_reason:
+            print(f"  Rejected:     {comparison.rejection_reason}")
+        print()
+
+    print(f"{title} deterministic rank order:")
+    if not ranking.ranked:
+        print("  (none; every candidate is blocked or unresolved)")
+    for index, comparison in enumerate(ranking.ranked, start=1):
+        label = "repair" if comparison.is_constraint_repair else "objective"
+        print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
+
+    print()
+    if ranking.recommended is None:
+        print(f"{title} recommendation: none.")
+    else:
+        recommended = ranking.recommended
+        reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
+        print(
+            f"{title} recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
+            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
+            f"delta={recommended.delta:.3f}"
+        )
+        for constraint in recommended.constraints:
+            print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
+
+
 def audit_saved_build_candidates(
     *,
     database_path: Path,
@@ -138,15 +195,23 @@ def audit_saved_build_candidates(
     progression = progression_resolution.progression
 
     mundus_repository = MundusRepository(database_path)
-    candidates = enumerate_mundus_candidates(
+    mundus_candidates = enumerate_mundus_candidates(
         baseline_build=baseline_build,
         character_id=character_id,
         baseline_build_id=baseline_build_id,
         mundus_repository=mundus_repository,
     )
-    if len(candidates) < 2:
-        print(f"Phase 12 requires at least two Mundus candidates; found {len(candidates)}")
+    armor_trait_candidates = enumerate_armor_trait_candidates(
+        baseline_build=baseline_build,
+        character_id=character_id,
+        baseline_build_id=baseline_build_id,
+    )
+    if len(mundus_candidates) < 2:
+        print(f"Phase 12 requires at least two Mundus candidates; found {len(mundus_candidates)}")
         return 5
+    if not armor_trait_candidates:
+        print("Phase 12 armor-trait candidate generation found no equipped eligible armor slots.")
+        return 6
 
     context_factory = BuildCalculationContextFactory(
         race_repository=RaceRepository(database_path),
@@ -266,28 +331,39 @@ def audit_saved_build_candidates(
             unresolved=tuple(baseline_sustain.unresolved) + tuple(candidate_run.unresolved),
         )
 
-    evaluations = tuple(
-        evaluate_healing_candidate(
-            candidate=candidate,
-            baseline_build=baseline_build,
-            baseline_healing=baseline_healing,
-            baseline_capability=baseline_capability,
-            baseline_assignments=None,
-            member_id=character_id,
-            healing_skill_names=healing_skill_names,
-            tooltip_service=tooltip_service,
-            capability_service=capability_service,
-            resolve_context=resolve_context,
-            resolve_sustain=resolve_sustain,
-            resolve_assignments=None,
-            resolve_objective_coverage=lambda row: healing_mundus_objective_unresolved(
-                row, mundus_repository
-            ),
+    def evaluate_family(candidates, *, objective_coverage=None) -> CandidateRanking:
+        evaluations = tuple(
+            evaluate_healing_candidate(
+                candidate=candidate,
+                baseline_build=baseline_build,
+                baseline_healing=baseline_healing,
+                baseline_capability=baseline_capability,
+                baseline_assignments=None,
+                member_id=character_id,
+                healing_skill_names=healing_skill_names,
+                tooltip_service=tooltip_service,
+                capability_service=capability_service,
+                resolve_context=resolve_context,
+                resolve_sustain=resolve_sustain,
+                resolve_assignments=None,
+                resolve_objective_coverage=objective_coverage,
+            )
+            for candidate in candidates
         )
-        for candidate in candidates
+        return rank_candidate_comparisons(
+            tuple(evaluation.comparison for evaluation in evaluations)
+        )
+
+    mundus_ranking = evaluate_family(
+        mundus_candidates,
+        objective_coverage=lambda row: healing_mundus_objective_unresolved(
+            row, mundus_repository
+        ),
     )
-    comparisons = tuple(evaluation.comparison for evaluation in evaluations)
-    ranking = rank_candidate_comparisons(comparisons)
+    armor_trait_ranking = evaluate_family(armor_trait_candidates)
+    overall_ranking = rank_candidate_comparisons(
+        mundus_ranking.comparisons + armor_trait_ranking.comparisons
+    )
 
     print()
     print("========================================")
@@ -307,6 +383,7 @@ def audit_saved_build_candidates(
     print(f"Proven non-heals excluded: {', '.join(excluded_skill_names) if excluded_skill_names else '(none)'}")
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; expected critical healing is not yet modeled")
+    print("Candidate scope: one changed field per candidate; Mundus and armor traits ranked separately and overall")
     print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
     print()
     print(f"Baseline healing potency: {_format_value(baseline_healing.value if baseline_healing.resolved else None)}")
@@ -323,51 +400,27 @@ def audit_saved_build_candidates(
         for message in tuple(baseline_sustain_context_unresolved) + tuple(baseline_sustain.unresolved):
             print(f"  - {message}")
 
-    print()
-    print(f"Mundus candidates evaluated: {len(comparisons)}")
-    print(f"Rankable candidates:         {len(ranking.ranked)}")
-    print()
+    _print_candidate_family("Mundus", mundus_ranking)
+    _print_candidate_family("Armor trait", armor_trait_ranking)
 
-    for index, comparison in enumerate(comparisons, start=1):
-        change = comparison.candidate.changes[0] if comparison.candidate.changes else None
-        after = change.after if change is not None else comparison.candidate.candidate_id
-        print(f"[{index:02d}] {after}")
-        print(f"  Candidate ID: {comparison.candidate.candidate_id}")
-        print(f"  Healing:      {_format_value(comparison.candidate_value)}")
-        print(f"  Delta:        {_format_value(comparison.delta)}")
-        print(f"  Rankable:     {comparison.is_rankable}")
-        print(f"  Improvement:  {comparison.is_improvement}")
-        print(f"  Repair:       {comparison.is_constraint_repair}")
-        for constraint in comparison.constraints:
-            print(f"  Constraint:   {constraint.name} = {constraint.status.value} | {constraint.explanation}")
-        if comparison.unresolved:
-            print("  Unresolved:")
-            for message in comparison.unresolved:
-                print(f"    - {message}")
-        if comparison.rejection_reason:
-            print(f"  Rejected:     {comparison.rejection_reason}")
-        print()
-
-    print("Deterministic rank order:")
-    if not ranking.ranked:
+    print()
+    print("Overall bounded one-change rank order:")
+    if not overall_ranking.ranked:
         print("  (none; every candidate is blocked or unresolved)")
-    for index, comparison in enumerate(ranking.ranked, start=1):
-        change = comparison.candidate.changes[0] if comparison.candidate.changes else None
-        after = change.after if change is not None else comparison.candidate.candidate_id
+    for index, comparison in enumerate(overall_ranking.ranked, start=1):
         label = "repair" if comparison.is_constraint_repair else "objective"
-        print(f"  {index:02d}. {after}: delta={comparison.delta:.3f} ({label})")
+        print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
 
     print()
-    if ranking.recommended is None:
-        print("Recommendation: none. No candidate is a proven-safe objective improvement or hard-constraint repair.")
+    if overall_ranking.recommended is None:
+        print("Overall recommendation: none. No candidate is a proven-safe objective improvement or hard-constraint repair.")
     else:
-        recommended = ranking.recommended
-        change = recommended.candidate.changes[0] if recommended.candidate.changes else None
-        after = change.after if change is not None else recommended.candidate.candidate_id
+        recommended = overall_ranking.recommended
         reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
         print(
-            f"Recommendation: {after} | reason={reason} | baseline={recommended.baseline_value:.3f} "
-            f"candidate={recommended.candidate_value:.3f} delta={recommended.delta:.3f}"
+            f"Overall recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
+            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
+            f"delta={recommended.delta:.3f}"
         )
         for constraint in recommended.constraints:
             print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
@@ -377,7 +430,7 @@ def audit_saved_build_candidates(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Evaluate bounded Phase 12 Mundus candidates against one real saved build."
+        description="Evaluate bounded Phase 12 Mundus and armor-trait candidates against one real saved build."
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
