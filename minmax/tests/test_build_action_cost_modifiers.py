@@ -175,3 +175,66 @@ def test_non_cost_jewelry_enchant_is_not_claimed_by_cost_resolver(tmp_path: Path
 
     assert result.modifiers.modifiers == ()
     assert result.unresolved == ()
+
+
+def test_current_phase12_irrelevant_changes_reuse_cost_modifier_resolution(tmp_path: Path) -> None:
+    resolver = _resolver(tmp_path)
+    baseline = PlayerBuild(
+        Race="Breton",
+        Mundus="The Ritual",
+        Food="Witchmother's Potent Brew",
+        Armor={
+            "Chest": {
+                "Weight": "Light",
+                "Trait": "Divines",
+                "Enchant": "Max Magicka",
+            }
+        },
+        Necklace=GearSlot(
+            Enchant="Reduce Spell Cost",
+            Trait="Swift",
+            Quality="Gold",
+            EnchantTier="Truly Superb",
+            Level="CP160",
+        ),
+    )
+
+    first = resolver.resolve(baseline)
+
+    candidate = PlayerBuild.from_dict(baseline.to_dict())
+    candidate.Mundus = "The Atronach"
+    candidate.Food = "Ghastly Eye Bowl"
+    candidate.Armor["Chest"]["Trait"] = "Infused"
+    candidate.Armor["Chest"]["Enchant"] = "Max Health"
+
+    cached = resolver.resolve(candidate)
+    assert cached is first
+
+
+def test_cost_relevant_jewelry_change_invalidates_modifier_cache(tmp_path: Path) -> None:
+    resolver = _resolver(tmp_path)
+    baseline = PlayerBuild(
+        Necklace=GearSlot(
+            Enchant="Reduce Spell Cost",
+            Trait="Swift",
+            Quality="Gold",
+            EnchantTier="Truly Superb",
+            Level="CP160",
+        )
+    )
+
+    first = resolver.resolve(baseline)
+    assert first.modifiers.modifiers[0].resources == (ResourceType.MAGICKA,)
+
+    candidate = PlayerBuild.from_dict(baseline.to_dict())
+    candidate.Necklace = GearSlot(
+        Enchant="Reduce Stamina Cost",
+        Trait="Swift",
+        Quality="Gold",
+        EnchantTier="Truly Superb",
+        Level="CP160",
+    )
+
+    changed = resolver.resolve(candidate)
+    assert changed is not first
+    assert changed.modifiers.modifiers[0].resources == (ResourceType.STAMINA,)
