@@ -23,16 +23,23 @@ class PotionAvailability:
     formulas: tuple[AlchemyFormula, ...] = ()
     effects: tuple[EffectVariant, ...] = ()
     unresolved: tuple[str, ...] = ()
+    resolved_traits: tuple[str, ...] = ()
 
     @property
     def resolved(self) -> bool:
+        """Whether both formula provenance and capability effects are resolved."""
         return bool(self.formulas) and bool(self.effects) and not self.unresolved
 
     @property
+    def capability_resolved(self) -> bool:
+        """Whether the selected potion's effect family is resolved for build capability use."""
+        return bool(self.effects) and bool(self.canonical_traits) and not self.unresolved
+
+    @property
     def canonical_traits(self) -> tuple[str, ...]:
-        if not self.formulas:
-            return ()
-        return self.formulas[0].traits
+        if self.formulas:
+            return self.formulas[0].traits
+        return self.resolved_traits
 
 
 class PotionAvailabilityRepository:
@@ -41,10 +48,15 @@ class PotionAvailabilityRepository:
     A selected potion proves availability only. It does not imply activation,
     standing uptime, cooldown use, or Medicinal Use ownership.
 
-    The processed JSON is a convenient build-time artifact, not a required
-    runtime dependency. The canonical SQLite import preserves each UESP alchemy
-    record in ``effect_variant.raw_json``; when the processed file is omitted
-    from a lean install, the catalog is reconstructed from those exact payloads.
+    Formula provenance and support-capability resolution are intentionally
+    separate. The processed JSON remains the strongest recipe-level source. A
+    lean install may omit it. If SQLite still contains imported formula payloads,
+    the catalog can be reconstructed from them. If formula payloads are also
+    absent, an *exact known legacy potion label* may still resolve its declared
+    trait family directly against canonical Potion EffectVariants in SQLite.
+    That proves build capability availability without inventing reagents or a
+    specific formula. Canonical formula/family identifiers still fail closed
+    when formula evidence is unavailable.
     """
 
     LEGACY_ALIASES: dict[str, tuple[str, ...]] = {
@@ -88,6 +100,17 @@ class PotionAvailabilityRepository:
         if "status" in text:
             return SupportEffectCategory.STATUS
         return SupportEffectCategory.OTHER
+
+    def _legacy_traits(self, selected_label: str) -> tuple[str, ...] | None:
+        traits = self.LEGACY_ALIASES.get(self._norm(selected_label))
+        if traits is None:
+            return None
+        if self.game_update is GameUpdate.U51:
+            return tuple(
+                {"Increase Spell Power": "Increase Power", "Spell Critical": "Critical"}.get(value, value)
+                for value in traits
+            )
+        return traits
 
     def _database_catalog_payload(self) -> tuple[dict[str, object] | None, tuple[str, ...]]:
         if not self.database_path.exists():
@@ -219,15 +242,10 @@ class PotionAvailabilityRepository:
                 return (), (f"Potion effect family not found for selection: {clean}",)
             return matches, ()
 
-        traits = self.LEGACY_ALIASES.get(self._norm(clean))
+        traits = self._legacy_traits(clean)
         if traits is None:
             return (), (
                 f"Potion selection is not an exact canonical formula, canonical family, or known legacy alias: {clean}",
-            )
-        if self.game_update is GameUpdate.U51:
-            traits = tuple(
-                {"Increase Spell Power": "Increase Power", "Spell Critical": "Critical"}.get(value, value)
-                for value in traits
             )
         matches = catalog.find_by_traits(*traits, exact=True)
         if not matches:
@@ -282,6 +300,21 @@ class PotionAvailabilityRepository:
 
         formulas, unresolved = self._formulas_for_selection(clean)
         if not formulas:
+            # Exact legacy labels carry a reviewed, deterministic trait-family
+            # mapping. If recipe provenance has been intentionally omitted from
+            # a lean install, resolve only the support capability against the
+            # canonical SQLite Potion EffectVariants. Do not invent reagents or
+            # claim formula-level resolution.
+            legacy_traits = self._legacy_traits(clean)
+            if legacy_traits is not None:
+                effects, effect_unresolved = self._effect_variants(legacy_traits, clean)
+                return PotionAvailability(
+                    clean,
+                    (),
+                    effects,
+                    effect_unresolved,
+                    resolved_traits=legacy_traits,
+                )
             return PotionAvailability(clean, (), (), unresolved)
 
         traits = formulas[0].traits
