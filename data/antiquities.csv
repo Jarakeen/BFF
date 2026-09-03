@@ -1,0 +1,201 @@
+id,name,icon,quality,difficulty,requires_lead,repeatable,reward_id,zone_id,set_id,set_name,set_icon,set_quality,set_reward_id,set_count,category_id,category_order,category_name,category_icon,category_count
+548,Admiral's Carved Trestle Base,/esoui/art/icons/housing_gen_crf_tmpfragmentdesk001,5,4,True,True,0,1383,39,Shipbuilders Crafting Station,/esoui/art/icons/housing_gen_crf_shipwoodworkingstation001,5,4027,3,50,15,Galen,/esoui/art/icons/icon_missing,39
+344,Aetherquartz Prayer Beads,/esoui/art/icons/justice_stolen_beads_001,5,4,True,True,0,381,16,Pearls of Ehlnofey,/esoui/art/icons/antiquities_ornate_necklace_3,6,2546,5,16,1,Auridon,/esoui/art/icons/icon_missing,14
+67,Aetherquartz Tonal Resonator,/esoui/art/icons/quest_vvardenfell_dwarven_tonal_prism,5,4,True,False,0,888,6,Ebon Dwarven Wolf,/esoui/art/icons/mounticon_dwarven_ebon_wolf,5,458,17,26,4,Craglorn,/esoui/art/treeicons/antiquities_tabicon_craglorn_up,10
+172,Akaviri Lord's Banner,/esoui/art/icons/justice_stolen_banner_001,3,2,True,True,2220,103,0,,,-1,-1,-1,12,6,The Rift,/esoui/art/icons/icon_missing,10
+310,Al-Esh Ascension Coin,/esoui/art/icons/item_coin_of_illusory_riches,5,5,True,True,2361,1160,0,,,-1,-1,-1,37,10,Western Skyrim,/esoui/art/icons/icon_missing,16
+100,Aldmeri Golden Embellishments,/esoui/art/icons/quest_goldenseal001,4,3,True,True,0,381,7,Dreams and Memories Music Box,/esoui/art/icons/housing_uni_inc_musicboxaldmerisymphonia001,5,2166,3,16,1,Auridon,/esoui/art/icons/icon_missing,14
+451,Alessian Sacramental Oil,/esoui/art/icons/quest_dun_inc_glassbottles001,5,4,True,True,0,1286,25,Belharza's Band,/esoui/art/icons/mythic_ring_belharzas_band,6,3548,5,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+63,Aligned Dwarven Plates,/esoui/art/icons/crafting_metals_dwarven_scrap,4,3,True,False,0,101,6,Ebon Dwarven Wolf,/esoui/art/icons/mounticon_dwarven_ebon_wolf,5,458,17,13,6,Eastmarch,/esoui/art/icons/icon_missing,10
+102,Alinor Allemande,/esoui/art/icons/emote_alinorallemande,5,4,True,False,2167,1011,0,,,-1,-1,-1,33,5,Summerset,/esoui/art/icons/icon_missing,9
+519,All Flags Armada Scabbard,/esoui/art/icons/u36_allflagsarmadascabbard,4,3,True,False,3997,1383,0,,,-1,-1,-1,50,15,Galen,/esoui/art/icons/icon_missing,39
+813,All Flags Navy Astrolabe,/esoui/art/icons/justice_stolen_unique_shehai_essence_box,5,4,True,True,8803,823,0,,,-1,-1,-1,30,2,Gold Coast,/esoui/art/icons/icon_missing,15
+308,Altar of Celestial Convergence,/esoui/art/icons/housing_uni_inc_antaltarcelestial001,5,4,True,True,2359,888,0,,,-1,-1,-1,26,4,Craglorn,/esoui/art/treeicons/antiquities_tabicon_craglorn_up,10
+540,Amber Heart,/esoui/art/icons/u36_amberheart,5,4,True,False,0,1383,37,Barkroot Blessing,/esoui/art/icons/skin_forestspirit,5,4028,10,50,15,Galen,/esoui/art/icons/icon_missing,39
+561,Ancestor Samite Sash,/esoui/art/icons/gear_telvanni_light_waist_a,5,4,True,True,0,1414,40,Cryptcanon Vestments,/esoui/art/icons/gear_dunmercryptpriest_chest_a,6,4199,5,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+559,Ancestor Samite Stole,/esoui/art/icons/justice_stolen_unique_psijic_stole,5,4,True,True,0,1414,40,Cryptcanon Vestments,/esoui/art/icons/gear_dunmercryptpriest_chest_a,6,4199,5,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+557,Ancestor Samite Undershirt,/esoui/art/icons/gear_dunmer_light_shirt_a,5,4,True,True,0,1414,40,Cryptcanon Vestments,/esoui/art/icons/gear_dunmercryptpriest_chest_a,6,4199,5,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+567,Ancestor Silk Ribbon,/esoui/art/icons/antiquities_u40_mythic_ancestorsilkribbon,5,4,True,True,0,1413,42,Torc of the Last Ayleid King,/esoui/art/icons/antiquities_u40_mythic_emblemofthelastking,6,4202,5,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+360,Ancestral Akaviri: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,2701,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+361,Ancestral Akaviri: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,2702,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+362,Ancestral Akaviri: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,2703,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+363,Ancestral Akaviri: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,2704,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+364,Ancestral Akaviri: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,2705,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+365,Ancestral Akaviri: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,2706,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+366,Ancestral Akaviri: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,2707,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+367,Ancestral Akaviri: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,2708,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+368,Ancestral Akaviri: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,2709,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+369,Ancestral Akaviri: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,2710,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+370,Ancestral Akaviri: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,2711,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+371,Ancestral Akaviri: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,2712,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+372,Ancestral Akaviri: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,2713,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+373,Ancestral Akaviri: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,2714,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+485,Ancestral Breton: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,3742,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+486,Ancestral Breton: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,3743,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+487,Ancestral Breton: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,3744,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+488,Ancestral Breton: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,3745,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+489,Ancestral Breton: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,3746,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+490,Ancestral Breton: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,3747,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+491,Ancestral Breton: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,3748,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+492,Ancestral Breton: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,3749,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+493,Ancestral Breton: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,3750,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+494,Ancestral Breton: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,3751,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+495,Ancestral Breton: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,3752,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+496,Ancestral Breton: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,3753,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+497,Ancestral Breton: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,3754,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+498,Ancestral Breton: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,3755,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+46,Ancestral High Elf: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,2123,537,0,,,-1,-1,-1,21,0,Khenarthi's Roost,/esoui/art/icons/icon_missing,11
+47,Ancestral High Elf: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,2124,537,0,,,-1,-1,-1,21,0,Khenarthi's Roost,/esoui/art/icons/icon_missing,11
+48,Ancestral High Elf: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,2125,383,0,,,-1,-1,-1,17,2,Grahtwood,/esoui/art/icons/icon_missing,11
+49,Ancestral High Elf: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,2126,381,0,,,-1,-1,-1,16,1,Auridon,/esoui/art/icons/icon_missing,14
+50,Ancestral High Elf: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,2127,381,0,,,-1,-1,-1,16,1,Auridon,/esoui/art/icons/icon_missing,14
+51,Ancestral High Elf: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,2128,108,0,,,-1,-1,-1,18,3,Greenshade,/esoui/art/icons/icon_missing,9
+52,Ancestral High Elf: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,2129,58,0,,,-1,-1,-1,19,4,Malabal Tor,/esoui/art/icons/icon_missing,9
+53,Ancestral High Elf: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,2130,537,0,,,-1,-1,-1,21,0,Khenarthi's Roost,/esoui/art/icons/icon_missing,11
+54,Ancestral High Elf: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,2131,382,0,,,-1,-1,-1,20,5,Reaper's March,/esoui/art/icons/icon_missing,11
+55,Ancestral High Elf: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,2132,383,0,,,-1,-1,-1,17,2,Grahtwood,/esoui/art/icons/icon_missing,11
+56,Ancestral High Elf: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,2133,382,0,,,-1,-1,-1,20,5,Reaper's March,/esoui/art/icons/icon_missing,11
+57,Ancestral High Elf: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,2134,108,0,,,-1,-1,-1,18,3,Greenshade,/esoui/art/icons/icon_missing,9
+58,Ancestral High Elf: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,2135,537,0,,,-1,-1,-1,21,0,Khenarthi's Roost,/esoui/art/icons/icon_missing,11
+59,Ancestral High Elf: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,2136,58,0,,,-1,-1,-1,19,4,Malabal Tor,/esoui/art/icons/icon_missing,9
+32,Ancestral Nord: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,2109,280,0,,,-1,-1,-1,14,0,Bleakrock Isle,/esoui/art/icons/icon_missing,8
+33,Ancestral Nord: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,2110,281,0,,,-1,-1,-1,15,1,Bal Foyen,/esoui/art/icons/icon_missing,8
+34,Ancestral Nord: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,2111,57,0,,,-1,-1,-1,10,3,Deshaan,/esoui/art/icons/icon_missing,11
+35,Ancestral Nord: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,2112,41,0,,,-1,-1,-1,9,2,Stonefalls,/esoui/art/icons/icon_missing,10
+36,Ancestral Nord: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,2113,41,0,,,-1,-1,-1,9,2,Stonefalls,/esoui/art/icons/icon_missing,10
+37,Ancestral Nord: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,2114,117,0,,,-1,-1,-1,11,4,Shadowfen,/esoui/art/icons/icon_missing,9
+38,Ancestral Nord: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,2115,103,0,,,-1,-1,-1,12,6,The Rift,/esoui/art/icons/icon_missing,10
+39,Ancestral Nord: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,2116,280,0,,,-1,-1,-1,14,0,Bleakrock Isle,/esoui/art/icons/icon_missing,8
+40,Ancestral Nord: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,2117,101,0,,,-1,-1,-1,13,6,Eastmarch,/esoui/art/icons/icon_missing,10
+41,Ancestral Nord: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,2118,57,0,,,-1,-1,-1,10,3,Deshaan,/esoui/art/icons/icon_missing,11
+42,Ancestral Nord: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,2119,101,0,,,-1,-1,-1,13,6,Eastmarch,/esoui/art/icons/icon_missing,10
+43,Ancestral Nord: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,2120,117,0,,,-1,-1,-1,11,4,Shadowfen,/esoui/art/icons/icon_missing,9
+44,Ancestral Nord: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,2121,281,0,,,-1,-1,-1,15,1,Bal Foyen,/esoui/art/icons/icon_missing,8
+45,Ancestral Nord: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,2122,103,0,,,-1,-1,-1,12,6,The Rift,/esoui/art/icons/icon_missing,10
+18,Ancestral Orc: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,2041,534,0,,,-1,-1,-1,7,0,Stros M'Kai,/esoui/art/icons/icon_missing,10
+19,Ancestral Orc: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,2042,535,0,,,-1,-1,-1,8,1,Betnikh,/esoui/art/icons/icon_missing,9
+20,Ancestral Orc: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,2043,19,0,,,-1,-1,-1,3,3,Stormhaven,/esoui/art/icons/icon_missing,10
+21,Ancestral Orc: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,2044,3,0,,,-1,-1,-1,2,2,Glenumbra,/esoui/art/icons/icon_missing,16
+22,Ancestral Orc: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,2045,3,0,,,-1,-1,-1,2,2,Glenumbra,/esoui/art/icons/icon_missing,16
+23,Ancestral Orc: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,2046,20,0,,,-1,-1,-1,4,4,Rivenspire,/esoui/art/icons/icon_missing,10
+24,Ancestral Orc: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,2047,104,0,,,-1,-1,-1,5,5,Alik'r Desert,/esoui/art/icons/icon_missing,14
+25,Ancestral Orc: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,2048,534,0,,,-1,-1,-1,7,0,Stros M'Kai,/esoui/art/icons/icon_missing,10
+26,Ancestral Orc: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,2049,92,0,,,-1,-1,-1,6,6,Bangkorai,/esoui/art/icons/icon_missing,12
+27,Ancestral Orc: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,2050,19,0,,,-1,-1,-1,3,3,Stormhaven,/esoui/art/icons/icon_missing,10
+28,Ancestral Orc: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,2051,92,0,,,-1,-1,-1,6,6,Bangkorai,/esoui/art/icons/icon_missing,12
+29,Ancestral Orc: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,2052,20,0,,,-1,-1,-1,4,4,Rivenspire,/esoui/art/icons/icon_missing,10
+30,Ancestral Orc: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,2053,535,0,,,-1,-1,-1,8,1,Betnikh,/esoui/art/icons/icon_missing,9
+31,Ancestral Orc: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,2054,104,0,,,-1,-1,-1,5,5,Alik'r Desert,/esoui/art/icons/icon_missing,14
+316,Ancestral Reach: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,2496,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+317,Ancestral Reach: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,2497,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+318,Ancestral Reach: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,2498,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+319,Ancestral Reach: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,2499,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+320,Ancestral Reach: Chests,/esoui/art/icons/quest_letter_002,4,3,True,True,2500,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+321,Ancestral Reach: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,2501,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+322,Ancestral Reach: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,2502,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+323,Ancestral Reach: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,2503,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+324,Ancestral Reach: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,2504,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+325,Ancestral Reach: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,2505,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+326,Ancestral Reach: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,2506,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+327,Ancestral Reach: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,2507,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+328,Ancestral Reach: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,2508,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+329,Ancestral Reach: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,2509,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+416,Ancient Daedric: Axes,/esoui/art/icons/quest_letter_002,2,1,True,True,3499,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+417,Ancient Daedric: Belts,/esoui/art/icons/quest_letter_002,2,1,True,True,3500,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+418,Ancient Daedric: Boots,/esoui/art/icons/quest_letter_002,2,1,True,True,3501,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+419,Ancient Daedric: Bows,/esoui/art/icons/quest_letter_002,2,1,True,True,3502,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+420,Ancient Daedric: Chest Pieces,/esoui/art/icons/quest_letter_002,4,3,True,True,3503,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+421,Ancient Daedric: Daggers,/esoui/art/icons/quest_letter_002,2,1,True,True,3504,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+422,Ancient Daedric: Gloves,/esoui/art/icons/quest_letter_002,2,1,True,True,3505,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+423,Ancient Daedric: Helmets,/esoui/art/icons/quest_letter_002,3,2,True,True,3506,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+424,Ancient Daedric: Legs,/esoui/art/icons/quest_letter_002,2,1,True,True,3507,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+425,Ancient Daedric: Maces,/esoui/art/icons/quest_letter_002,3,2,True,True,3508,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+426,Ancient Daedric: Shields,/esoui/art/icons/quest_letter_002,4,3,True,True,3509,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+427,Ancient Daedric: Shoulders,/esoui/art/icons/quest_letter_002,3,2,True,True,3510,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+428,Ancient Daedric: Staves,/esoui/art/icons/quest_letter_002,3,2,True,True,3511,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+429,Ancient Daedric: Swords,/esoui/art/icons/quest_letter_002,4,3,True,True,3512,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+239,Ancient Dragonguard Lure,/esoui/art/icons/quest_troll_lure,4,3,True,False,2287,1133,0,,,-1,-1,-1,36,9,Southern Elsweyr,/esoui/art/icons/icon_missing,8
+357,Ancient Extraction Tool,/esoui/art/icons/u28_ant_moongravefane_extractortool001,3,2,True,True,2516,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+189,Ancient Fertility Totem,/esoui/art/icons/housing_uni_inc_totemfertility001,2,1,False,True,2237,108,0,,,-1,-1,-1,18,3,Greenshade,/esoui/art/icons/icon_missing,9
+199,Ancient Fishing Rod,/esoui/art/icons/housing_uni_inc_ancientfishingrod001,3,2,True,True,2247,537,0,,,-1,-1,-1,21,0,Khenarthi's Roost,/esoui/art/icons/icon_missing,11
+513,Ancient Mariner's Sextant,/esoui/art/icons/housing_bre_inc_oldsextant001,2,1,False,True,3764,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+432,Ancient Morpholith Chisel,/esoui/art/icons/u32_ant_morpholithchisel,4,3,True,False,3515,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+587,Annotated Sporecrafter Designs,/esoui/art/icons/u38_ant_annotatedsporecrafterdesigns,5,4,True,False,0,1414,44,Spore Savant Body Marks,/esoui/art/icons/bodymarkings_u38_sporesavant_bodymarkings,5,4209,7,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+632,Antique Cipher Vestments,/esoui/art/icons/u40_ant_antiqueciphervestments001,4,3,True,False,5846,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+786,Antique Lockpicking Kit,/esoui/art/icons/housing_uni_exc_thievesguildarmory001,5,4,True,True,0,816,66,Thieves Guild Armory Station,/esoui/art/icons/housing_uni_exc_thievesguildarmory001,5,8371,5,29,7,Hew's Bane,/esoui/art/icons/icon_missing,15
+80,Antique Map of Alik'r Desert,/esoui/art/icons/housing_uni_inc_antmapalikrdesert001,2,1,True,True,2140,104,0,,,-1,-1,-1,5,5,Alik'r Desert,/esoui/art/icons/icon_missing,14
+601,Antique Map of Apocrypha,/esoui/art/icons/housing_apc_inc_map001,2,1,True,True,4282,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+87,Antique Map of Auridon,/esoui/art/icons/housing_uni_inc_antmapauridon001,2,1,True,True,2147,381,0,,,-1,-1,-1,16,1,Auridon,/esoui/art/icons/icon_missing,14
+81,Antique Map of Bangkorai,/esoui/art/icons/housing_uni_inc_antmapbangkorai001,2,1,True,True,2141,92,0,,,-1,-1,-1,6,6,Bangkorai,/esoui/art/icons/icon_missing,12
+380,Antique Map of Blackwood,/esoui/art/icons/housing_uni_inc_antiquarianmapblackwood001,2,1,True,True,2722,1261,0,,,-1,-1,-1,47,12,Blackwood,/esoui/art/icons/icon_missing,56
+314,Antique Map of Coldharbour,/esoui/art/icons/housing_uni_inc_antmapcoldharbour001,2,1,True,True,2414,347,0,,,-1,-1,-1,25,7,Coldharbour,/esoui/art/icons/icon_missing,4
+313,Antique Map of Craglorn,/esoui/art/icons/housing_uni_inc_antmapcraglorn001,2,1,True,True,2413,888,0,,,-1,-1,-1,26,4,Craglorn,/esoui/art/treeicons/antiquities_tabicon_craglorn_up,10
+83,Antique Map of Deshaan,/esoui/art/icons/housing_uni_inc_antmapdeshaan001,2,1,True,True,2143,57,0,,,-1,-1,-1,10,3,Deshaan,/esoui/art/icons/icon_missing,11
+85,Antique Map of Eastmarch,/esoui/art/icons/housing_uni_inc_antmapeastmarch001,2,1,True,True,2145,101,0,,,-1,-1,-1,13,6,Eastmarch,/esoui/art/icons/icon_missing,10
+516,Antique Map of Fargrave,/esoui/art/icons/housing_uni_inc_antiquarianmapfargrave001,2,1,True,True,0,1286,0,,,-1,-1,-1,48,13,Deadlands,/esoui/art/icons/icon_missing,40
+547,Antique Map of Fargrave,/esoui/art/icons/housing_uni_inc_antiquarianmapfargrave001,2,1,True,True,4039,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+535,Antique Map of Galen,/esoui/art/icons/housing_uni_inc_antiquarianmapgalen001,2,1,True,True,4025,1383,0,,,-1,-1,-1,50,15,Galen,/esoui/art/icons/icon_missing,39
+77,Antique Map of Glenumbra,/esoui/art/icons/housing_uni_inc_antmapglenumbra001,2,1,True,True,2137,3,0,,,-1,-1,-1,2,2,Glenumbra,/esoui/art/icons/icon_missing,16
+88,Antique Map of Grahtwood,/esoui/art/icons/housing_uni_inc_antmapgrahtwood001,2,1,True,True,2148,383,0,,,-1,-1,-1,17,2,Grahtwood,/esoui/art/icons/icon_missing,11
+89,Antique Map of Greenshade,/esoui/art/icons/housing_uni_inc_antmapgreenshade001,2,1,True,True,2149,108,0,,,-1,-1,-1,18,3,Greenshade,/esoui/art/icons/icon_missing,9
+315,Antique Map of Hew's Bane,/esoui/art/icons/housing_uni_inc_antmaphewsbane001,2,1,True,True,2416,816,0,,,-1,-1,-1,29,7,Hew's Bane,/esoui/art/icons/icon_missing,15
+512,Antique Map of High Isle,/esoui/art/icons/housing_bre_inc_map001,2,1,True,True,3763,1318,0,,,-1,-1,-1,49,14,High Isle,/esoui/art/icons/icon_missing,56
+90,Antique Map of Malabal Tor,/esoui/art/icons/housing_uni_inc_antmapmalabaltor001,2,1,True,True,2150,58,0,,,-1,-1,-1,19,4,Malabal Tor,/esoui/art/icons/icon_missing,9
+96,Antique Map of Murkmire,/esoui/art/icons/housing_uni_inc_antmapmurkmire001,2,1,True,True,2156,726,0,,,-1,-1,-1,34,8,Murkmire,/esoui/art/icons/icon_missing,10
+97,Antique Map of Northern Elsweyr,/esoui/art/icons/housing_uni_inc_antmapnorthernelsweyr001,2,1,True,True,2157,1086,0,,,-1,-1,-1,35,8,Northern Elsweyr,/esoui/art/icons/icon_missing,11
+91,Antique Map of Reaper's March,/esoui/art/icons/housing_uni_inc_antmapreapersmarch001,2,1,True,True,2151,382,0,,,-1,-1,-1,20,5,Reaper's March,/esoui/art/icons/icon_missing,11
+79,Antique Map of Rivenspire,/esoui/art/icons/housing_uni_inc_antmaprivenspire001,2,1,True,True,2139,20,0,,,-1,-1,-1,4,4,Rivenspire,/esoui/art/icons/icon_missing,10
+84,Antique Map of Shadowfen,/esoui/art/icons/housing_uni_inc_antmapshadowfen001,2,1,True,True,2144,117,0,,,-1,-1,-1,11,4,Shadowfen,/esoui/art/icons/icon_missing,9
+750,Antique Map of Solstice,/esoui/art/icons/u46_ant_antiquariansolsticemap001,2,1,True,True,7289,1502,0,,,-1,-1,-1,54,18,Solstice,/esoui/art/icons/icon_missing,59
+98,Antique Map of Southern Elsweyr,/esoui/art/icons/housing_uni_inc_antmapsouthernelsweyr001,2,1,True,True,2158,1133,0,,,-1,-1,-1,36,9,Southern Elsweyr,/esoui/art/icons/icon_missing,8
+82,Antique Map of Stonefalls,/esoui/art/icons/housing_uni_inc_antmapstonefalls001,2,1,True,True,2142,41,0,,,-1,-1,-1,9,2,Stonefalls,/esoui/art/icons/icon_missing,10
+78,Antique Map of Stormhaven,/esoui/art/icons/housing_uni_inc_antmapstormhaven001,2,1,True,True,2138,19,0,,,-1,-1,-1,3,3,Stormhaven,/esoui/art/icons/icon_missing,10
+95,Antique Map of Summerset,/esoui/art/icons/housing_uni_inc_antmapsummerset001,2,1,True,True,2155,1011,0,,,-1,-1,-1,33,5,Summerset,/esoui/art/icons/icon_missing,9
+435,Antique Map of the Deadlands,/esoui/art/icons/housing_uni_inc_antiquarianmapdeadlands001,2,1,True,True,3550,1286,0,,,-1,-1,-1,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+312,Antique Map of the Gold Coast,/esoui/art/icons/housing_uni_inc_antmapgoldcoast001,2,1,True,True,2412,823,0,,,-1,-1,-1,30,2,Gold Coast,/esoui/art/icons/icon_missing,15
+355,Antique Map of the Reach,/esoui/art/icons/housing_uni_inc_antmapthereach001,2,1,True,True,2514,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+86,Antique Map of the Rift,/esoui/art/icons/housing_uni_inc_antmaptherift001,2,1,True,True,2146,103,0,,,-1,-1,-1,12,6,The Rift,/esoui/art/icons/icon_missing,10
+577,Antique Map of the Telvanni Peninsula,/esoui/art/icons/housing_uni_inc_antiquarianmaptelvannipeninsula001,2,1,True,True,4205,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+94,Antique Map of Vvardenfell,/esoui/art/icons/housing_uni_inc_antmapvvardenfell001,2,1,True,True,2154,849,0,,,-1,-1,-1,31,2,Vvardenfell,/esoui/art/icons/icon_missing,8
+687,Antique Map of West Weald,/esoui/art/icons/housing_col_inc_antiquarianmapwestweald001,2,1,True,True,6385,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+359,Antique Map of Western Skyrim,/esoui/art/icons/housing_skr_inc_map001,2,1,True,True,2588,1160,0,,,-1,-1,-1,37,10,Western Skyrim,/esoui/art/icons/icon_missing,16
+93,Antique Map of Wrothgar,/esoui/art/icons/housing_uni_inc_antmapwrothgar001,2,1,True,True,2153,684,0,,,-1,-1,-1,28,7,Wrothgar,/esoui/art/icons/icon_missing,13
+752,Antique Xanmeer Carving Tools,/esoui/art/icons/u46_ant_xanmeercarvingtools001,3,2,True,True,7677,1502,0,,,-1,-1,-1,54,18,Solstice,/esoui/art/icons/icon_missing,59
+731,Anu Crest,/esoui/art/icons/u46_ant_anuglyph001,5,4,True,True,0,1502,61,Monomyth Reforged,/esoui/art/icons/furnishing_leyawiiinstructshrine001,5,7219,5,54,18,Solstice,/esoui/art/icons/icon_missing,59
+249,Anvil of Old Orsinium,/esoui/art/icons/housing_uni_inc_anvilofoldorsinium001,5,5,True,True,2300,684,0,,,-1,-1,-1,28,7,Wrothgar,/esoui/art/icons/icon_missing,13
+603,"Apocrypha Fossil, Arch",/esoui/art/icons/housing_apc_inc_coralarch001,2,1,True,True,4284,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+606,"Apocrypha Fossil, Bones Large",/esoui/art/icons/housing_apc_inc_bones001,3,2,True,True,4287,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+605,"Apocrypha Fossil, Nautilus",/esoui/art/icons/housing_apc_inc_fossilnautilus001,3,2,True,True,4286,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+665,"Apocrypha Fossil, Ribcage",/esoui/art/icons/housing_apc_inc_bonesribcage001,3,2,True,True,6030,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+666,"Apocrypha Fossil, Slug",/esoui/art/icons/housing_apc_inc_fossilslug001,3,2,True,True,6031,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+668,"Apocrypha Fossil, Tree",/esoui/art/icons/housing_apc_inc_fossiltree001,3,2,True,True,6033,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+667,"Apocrypha Fossil, Wall Beast",/esoui/art/icons/housing_apc_inc_fossilwallbeast001,3,2,True,True,6032,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+604,"Apocrypha Fossil, Worm",/esoui/art/icons/housing_apc_inc_fossilworm001,2,1,True,True,4285,1414,0,,,-1,-1,-1,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+653,Apocrypha Stone Base,/esoui/art/icons/u40_ant_apocryphastonebase,5,4,True,True,0,1413,51,Vision of Mora,/esoui/art/icons/mount_arcane_codex,5,6021,3,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+652,Apocrypha Tentacle Carving,/esoui/art/icons/u40_ant_apocryphatentaclecarving,5,4,True,True,0,1413,51,Vision of Mora,/esoui/art/icons/mount_arcane_codex,5,6021,3,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+226,Apostle's Scourge,/esoui/art/icons/housing_uni_inc_apostlesscourge001,3,2,True,True,2274,980,0,,,-1,-1,-1,32,2,Clockwork City,/esoui/art/icons/icon_missing,5
+228,Apraxic Decanter,/esoui/art/icons/housing_uni_inc_apraxicdecanter001,2,1,False,True,2276,1011,0,,,-1,-1,-1,33,5,Summerset,/esoui/art/icons/icon_missing,9
+185,Aquiline Calian Sphere,/esoui/art/icons/housing_uni_inc_aquilinecaliansphere001,4,3,True,False,2233,381,0,,,-1,-1,-1,16,1,Auridon,/esoui/art/icons/icon_missing,14
+644,Archival Fortune Pouch,/esoui/art/icons/u40_ant_archivalfortunepouch,3,2,True,False,5858,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+645,"Archival Fortune Pouch, Grand",/esoui/art/icons/u40_ant_archivalfortunepouchgrand,4,3,True,False,5859,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+646,"Archival Fortune Pouch, Lucky",/esoui/art/icons/u40_ant_archivalfortunepouchlucky,5,4,True,False,5860,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+658,"Archival Light Diffuser, Large",/esoui/art/icons/housing_apc_inc_eyefloater003,5,4,True,True,6023,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+661,"Archival Light Diffuser, Small",/esoui/art/icons/housing_apc_inc_eyefloater004,4,3,True,True,6026,1413,0,,,-1,-1,-1,52,17,Apocrypha,/esoui/art/icons/icon_missing,43
+352,Arkthzand Insight Vertex Shroud,/esoui/art/icons/housing_uni_exc_arkthzandinsightvertex001,5,4,True,False,2511,1207,0,,,-1,-1,-1,46,11,The Reach,/esoui/art/icons/icon_missing,30
+213,Armless Stone Effigy,/esoui/art/icons/housing_uni_inc_armlessstoneeffigy001,2,1,False,True,2261,684,0,,,-1,-1,-1,28,7,Wrothgar,/esoui/art/icons/icon_missing,13
+611,Arms of Glory,/esoui/art/icons/u38_ant_climbingvines,5,4,True,True,0,1414,46,Apocryphal Well,/esoui/art/icons/memento_u38_hermaeusmoraseye,5,4290,3,51,16,Telvanni Peninsula,/esoui/art/icons/icon_missing,67
+282,Ashen Infernace Gate,/esoui/art/icons/housing_dun_inc_ashlanderfencesticks002,4,3,True,True,2333,41,0,,,-1,-1,-1,9,2,Stonefalls,/esoui/art/icons/icon_missing,10
+473,Asp-Leather Strap,/esoui/art/icons/gear_breton_medium_waist_a,5,4,True,True,0,1318,30,Lefthander's Aegis Belt,/esoui/art/icons/mythic_belt_lefthanders_aegis_belt,6,3738,5,49,14,High Isle,/esoui/art/icons/icon_missing,56
+171,Augur's Bones,/esoui/art/icons/housing_uni_inc_augursbones001,2,1,False,True,2219,103,0,,,-1,-1,-1,12,6,The Rift,/esoui/art/icons/icon_missing,10
+440,Aureal Armor Glaze,/esoui/art/icons/crafting_runecrafter_plug_base,5,4,True,True,0,1286,23,Spaulder of Ruin,/esoui/art/icons/mythic_shoulders_spaulder_of_ruin,6,3546,5,48,13,The Deadlands,/esoui/art/icons/icon_missing,40
+118,Auri-El Metal Carvings,/esoui/art/icons/antiquities_armor_snowboots_1,5,4,True,True,0,280,9,Snow Treaders,/esoui/art/icons/mythic_heavy_feet_snowtreaders,6,2183,5,14,0,Bleakrock Isle,/esoui/art/icons/icon_missing,8
+337,Aurmine Ancestral Signet,/esoui/art/icons/antiquities_ring_pale_order_2,5,4,True,True,0,92,15,Ring of the Pale Order,/esoui/art/icons/mythic_ring_pale_order,6,2545,5,6,6,Bangkorai,/esoui/art/icons/icon_missing,12
+696,"Ayleid Arch, Wide",/esoui/art/icons/u42_ant_ayleidarchwide001,4,3,True,True,6394,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+698,"Ayleid Lens Array, Reassembled",/esoui/art/icons/u42_ant_ayleidlensarray001,4,3,True,True,6396,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+291,Ayleid Lightwell,/esoui/art/icons/housing_uni_inc_antiquityayleidlightwell001,4,3,True,True,2342,535,0,,,-1,-1,-1,8,1,Betnikh,/esoui/art/icons/icon_missing,9
+694,"Ayleid Sculpture, Complex Tree",/esoui/art/icons/u42_ant_ayleidtreetall001,3,2,True,True,6392,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+695,"Ayleid Sculpture, Grand Tree",/esoui/art/icons/u42_ant_ayleidtreetallwide001,4,3,True,True,6393,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+693,"Ayleid Sculpture, Simple Tree",/esoui/art/icons/u42_ant_ayleidtreesmall001,3,2,True,True,6391,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
+187,Ayleid Statuette,/esoui/art/icons/housing_uni_inc_ayleidstatuette001,3,2,True,True,2235,383,0,,,-1,-1,-1,17,2,Grahtwood,/esoui/art/icons/icon_missing,11
+160,Ayleid Tendrilled Eye,/esoui/art/icons/housing_uni_inc_tendrilledeye001,3,2,True,True,2208,535,0,,,-1,-1,-1,8,1,Betnikh,/esoui/art/icons/icon_missing,9
+697,"Ayleid Window, Large",/esoui/art/icons/u42_ant_ayleidwindowlarge001,4,3,True,True,6395,1443,0,,,-1,-1,-1,53,18,West Weald,/esoui/art/icons/icon_missing,42
