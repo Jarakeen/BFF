@@ -110,19 +110,15 @@ class OptimizationPage(FoundryPage):
         return box
 
     def _build_mode_tabs(self) -> None:
-        card = FoundryCard("Optimization Mode")
         self.mode_tabs = QTabBar()
-        self.mode_tabs.setExpanding(True)
+        self.mode_tabs.setExpanding(False)
+        self.mode_tabs.setDrawBase(True)
+        self.mode_tabs.setUsesScrollButtons(False)
         for mode in self._MODE_ORDER:
             self.mode_tabs.addTab(policy_for_mode(mode).title)
         self.mode_tabs.setCurrentIndex(self._MODE_ORDER.index(OptimizationMode.BUILD))
         self.mode_tabs.currentChanged.connect(self._optimization_mode_changed)
-
-        self.mode_description = QLabel()
-        self.mode_description.setWordWrap(True)
-        card.addWidget(self.mode_tabs)
-        card.addWidget(self.mode_description)
-        self.layout.addWidget(card)
+        self.layout.addWidget(self.mode_tabs)
 
     def _current_mode(self) -> OptimizationMode:
         index = self.mode_tabs.currentIndex()
@@ -153,25 +149,6 @@ class OptimizationPage(FoundryPage):
         if hasattr(self, "generate_button"):
             self.generate_button.setText(policy.action_label)
 
-        descriptions = {
-            OptimizationMode.AUDIT: (
-                "Inspect the selected saved team without silently adding players. "
-                "Report coverage gaps, redundancy, and unresolved evidence."
-            ),
-            OptimizationMode.BUILD: (
-                "Build the strongest valid team from saved players, optionally "
-                "representing unmatched slots as recruitment requirements."
-            ),
-            OptimizationMode.RECRUIT: (
-                "Create an ideal set of open role and qualification requirements. "
-                "These are recruiting targets, not fabricated players."
-            ),
-            OptimizationMode.COMPARE: (
-                "Evaluate Team A and Team B under the same encounter, uptime, "
-                "and execution assumptions."
-            ),
-        }
-        self.mode_description.setText(descriptions[mode])
         if hasattr(self, "team_table"):
             self._populate_team_editor(self.team_table, autofill=True)
             self._populate_team_editor(self.team_b_table, autofill=True)
