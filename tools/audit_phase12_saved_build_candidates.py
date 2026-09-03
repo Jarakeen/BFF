@@ -21,6 +21,10 @@ from minmax.build_candidate_food import enumerate_food_candidates
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
+from minmax.build_candidate_plain_language import (
+    constraint_plain_english,
+    recommendation_reason_plain_english,
+)
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
 from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
@@ -113,28 +117,51 @@ def _candidate_change_label(comparison: BuildCandidateComparison) -> str:
 def _print_recommendation(title: str, ranking: CandidateRanking) -> None:
     if ranking.recommended is None:
         print(f"{title} recommendation: none.")
+        print("  Plain English: No candidate in this group passed every required check with enough evidence to recommend it.")
         return
 
     recommended = ranking.recommended
-    reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
     ties = ranking.recommended_ties
+    reason = recommendation_reason_plain_english(
+        is_constraint_repair=recommended.is_constraint_repair,
+        delta=recommended.delta,
+    )
+
     if len(ties) > 1:
-        print(
-            f"{title} co-best recommendations ({len(ties)} tied) | reason={reason} | "
-            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
-            f"delta={recommended.delta:.3f}"
-        )
+        print(f"{title} co-best recommendations ({len(ties)} tied):")
         for tied in ties:
             print(f"  - {_candidate_change_label(tied)}")
     else:
-        print(
-            f"{title} recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
-            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
-            f"delta={recommended.delta:.3f}"
-        )
+        print(f"{title} recommendation: {_candidate_change_label(recommended)}")
 
+    print("  Plain English:")
+    print(f"    - {reason}")
+    if recommended.candidate.changes:
+        for change in recommended.candidate.changes:
+            print(f"    - Change {change.path} from {change.before} to {change.after}.")
     for constraint in recommended.constraints:
-        print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
+        print(f"    - {constraint_plain_english(constraint)}")
+    if recommended.unresolved:
+        print("    - Some effects are still unresolved, so the recommendation only covers what BFF can prove.")
+    else:
+        print("    - BFF has no unresolved evidence attached to this selected candidate.")
+    print("    - The healing number is a comparison score for modeled heal components, not actual HPS.")
+    print("    - Encounter-specific Phase 11 provider assignments are not evaluated in this audit.")
+
+    technical_reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
+    print("  Technical evidence:")
+    print(f"    - reason: {technical_reason}")
+    print(f"    - baseline: {recommended.baseline_value:.3f}")
+    print(f"    - candidate: {recommended.candidate_value:.3f}")
+    print(f"    - delta: {recommended.delta:.3f}")
+    for constraint in recommended.constraints:
+        print(
+            f"    - {constraint.name}: {constraint.status.value}: "
+            f"{constraint.explanation}"
+        )
+    if recommended.unresolved:
+        for message in recommended.unresolved:
+            print(f"    - unresolved: {message}")
 
 
 def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
