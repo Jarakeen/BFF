@@ -6,6 +6,60 @@ from models.build_model import PlayerBuild
 
 from .build_candidate import BuildCandidate, BuildChange
 from .provisioning_static_repository import ProvisioningStaticRepository
+from .resource_costs import ResourceType
+from .stat_ids import StatId
+
+
+_RESOURCE_STATS = {
+    ResourceType.HEALTH: frozenset({StatId.MAX_HEALTH, StatId.HEALTH_RECOVERY}),
+    ResourceType.MAGICKA: frozenset({StatId.MAX_MAGICKA, StatId.MAGICKA_RECOVERY}),
+    ResourceType.STAMINA: frozenset({StatId.MAX_STAMINA, StatId.STAMINA_RECOVERY}),
+}
+
+
+def provisioning_candidate_resources(
+    candidate: BuildCandidate,
+    provisioning_repository: ProvisioningStaticRepository,
+) -> tuple[ResourceType, ...]:
+    """Return primary resource channels touched by one provisioning candidate.
+
+    Classification is based on resolved canonical stat effects, not item naming
+    conventions. Mixed food/drinks therefore belong to every resource channel
+    they actually affect.
+    """
+
+    effects, unresolved = provisioning_repository.resolve(candidate.candidate_build.Food)
+    if unresolved:
+        return ()
+    stats = {effect.stat for effect in effects if effect.stat is not None}
+    return tuple(
+        resource
+        for resource in (ResourceType.HEALTH, ResourceType.MAGICKA, ResourceType.STAMINA)
+        if stats & _RESOURCE_STATS[resource]
+    )
+
+
+def filter_food_candidates_for_resource(
+    candidates: tuple[BuildCandidate, ...],
+    *,
+    resource: ResourceType,
+    provisioning_repository: ProvisioningStaticRepository,
+) -> tuple[BuildCandidate, ...]:
+    """Keep provisioning candidates that can change the requested resource.
+
+    This is intended for a proven failing sustain constraint. A candidate that
+    changes neither the requested maximum pool nor its recovery cannot repair
+    that resource failure, so evaluating it would be wasted work. Unknown or
+    unmapped provisioning entries are not promoted through this filter.
+    """
+
+    if resource not in _RESOURCE_STATS:
+        return candidates
+    return tuple(
+        candidate
+        for candidate in candidates
+        if resource in provisioning_candidate_resources(candidate, provisioning_repository)
+    )
 
 
 def enumerate_food_candidates(
