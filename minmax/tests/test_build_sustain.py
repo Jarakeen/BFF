@@ -1,7 +1,13 @@
+from minmax.ability_cost_repository import AbilityCostResolution
 from minmax.base_character_state import BaseCharacterState
 from minmax.build_action_cost_modifiers import BuildActionCostModifiers
 from minmax.build_calculation_context import BuildCalculationContext
-from minmax.build_sustain import PlannedBuildAction, evaluate_build_sustain
+from minmax.build_sustain import (
+    NamedBuildAction,
+    PlannedBuildAction,
+    evaluate_build_sustain,
+    resolve_named_build_actions,
+)
 from minmax.character_progression import CharacterProgression
 from minmax.resource_cost_modifiers import (
     ActionCostModifier,
@@ -21,6 +27,27 @@ class _FakeCostModifierResolver:
     def resolve(self, build, *, progression=None):
         self.calls.append((build, progression))
         return self.result
+
+
+class _FakeAbilityCostRepository:
+    def __init__(self):
+        self.calls = []
+
+    def resolve_name(self, name: str) -> AbilityCostResolution:
+        self.calls.append(name)
+        if name == "Missing Skill":
+            return AbilityCostResolution(
+                None,
+                name,
+                None,
+                ("ability cost row not found",),
+            )
+        return AbilityCostResolution(
+            _magicka_cost(),
+            "Combat Prayer",
+            "Restoration Staff",
+            ("No coefficient rows found for resolved skill rank",),
+        )
 
 
 def _context() -> BuildCalculationContext:
@@ -48,6 +75,26 @@ def _magicka_cost(amount: int = 2000):
         rank=4,
         morph=1,
     )
+
+
+def test_resolve_named_build_actions_preserves_cost_evidence_once() -> None:
+    repository = _FakeAbilityCostRepository()
+
+    resolution = resolve_named_build_actions(
+        (
+            NamedBuildAction(1.0, "Combat Prayer"),
+            NamedBuildAction(2.0, "Missing Skill"),
+        ),
+        ability_cost_repository=repository,
+    )
+
+    assert repository.calls == ["Combat Prayer", "Missing Skill"]
+    assert len(resolution.actions) == 1
+    assert resolution.actions[0].time_seconds == 1.0
+    assert resolution.actions[0].source == "Combat Prayer"
+    assert resolution.actions[0].skill_line == "Restoration Staff"
+    assert resolution.actions[0].base_cost.amount == 2000
+    assert resolution.unresolved == ("Missing Skill: ability cost row not found",)
 
 
 def test_saved_build_sustain_uses_context_pool_build_modifiers_and_recovery() -> None:
