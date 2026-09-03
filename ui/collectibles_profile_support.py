@@ -210,15 +210,17 @@ def install() -> None:
 
     # Rylo/Foundry can be switched live from Settings. The dashboard contains
     # theme-specific inline painting and sprite choices, so rebuild that one
-    # page after the ThemeManager has applied the new visual theme.
+    # page after the ThemeManager has applied the new visual theme. The existing
+    # appearance-page contract returns one QWidget; do not assume a (page, layout)
+    # tuple because the Rylo theme layer intentionally wraps that builder too.
     original_appearance_page = settings_page.SettingsPage._appearance_page
 
     def appearance_page_with_dashboard_refresh(self):
-        page, layout = original_appearance_page(self)
+        page = original_appearance_page(self)
         combo = getattr(self, "visual_theme_combo", None)
         if combo is not None:
             combo.currentIndexChanged.connect(lambda _index: _rebuild_collectibles_dashboards())
-        return page, layout
+        return page
 
     settings_page.SettingsPage._appearance_page = appearance_page_with_dashboard_refresh
 
