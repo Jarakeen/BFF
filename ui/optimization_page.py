@@ -65,6 +65,13 @@ class OptimizationPage(FoundryPage):
         self.team_source_combo.addItems(["Saved Roster", "Custom Selection", "Current Team"])
         self.header.add_context_widget(self._context_field("TEAM SOURCE", self.team_source_combo))
 
+        self.comparison_mode_combo = QComboBox()
+        self.comparison_mode_combo.addItems(["Build One Team", "Compare Two Teams"])
+        self.comparison_mode_combo.currentTextChanged.connect(self._comparison_mode_changed)
+        self.header.add_context_widget(
+            self._context_field("MODE", self.comparison_mode_combo)
+        )
+
         self.workspace = QWidget()
         self.layout = QVBoxLayout(self.workspace)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -128,25 +135,13 @@ class OptimizationPage(FoundryPage):
         self.available_card.addWidget(self.available_table)
         row.addWidget(self.available_card, 3)
 
-        self.team_card = FoundryCard("Proposed Team")
-        team_actions = QWidget()
-        team_actions_layout = QHBoxLayout(team_actions)
-        team_actions_layout.setContentsMargins(0, 0, 0, 0)
-        team_actions_layout.addStretch(1)
-        clear_button = QPushButton("Clear Team")
-        clear_button.clicked.connect(self._clear_team)
-        autofill_button = QPushButton("Auto-Fill")
-        autofill_button.clicked.connect(self._generate_preview)
-        team_actions_layout.addWidget(clear_button)
-        team_actions_layout.addWidget(autofill_button)
-        self.team_card.set_header_action(team_actions)
-        self.team_table = QTableWidget(0, 6)
-        self.team_table.setHorizontalHeaderLabels([
-            "ROLE", "PLAYER", "CLASS", "BUILD", "RESPONSIBILITIES", "STATUS"
-        ])
-        self._configure_table(self.team_table)
-        self.team_card.addWidget(self.team_table)
-        row.addWidget(self.team_card, 5)
+        self.team_tabs = QTabWidget()
+
+        self.team_card, self.team_table = self._create_team_editor("Team A")
+        self.team_b_card, self.team_b_table = self._create_team_editor("Team B")
+        self.team_tabs.addTab(self.team_card, "TEAM A")
+        self.team_tabs.addTab(self.team_b_card, "TEAM B")
+        row.addWidget(self.team_tabs, 5)
 
         analysis = QVBoxLayout()
         analysis.setSpacing(10)
@@ -177,9 +172,12 @@ class OptimizationPage(FoundryPage):
 
         self.change_card = FoundryCard("Recommended Changes")
         self.change_text = QLabel(
-            "1. Add missing support coverage.\n"
-            "2. Resolve redundant support sets.\n"
-            "3. Fill open role slots.\n"
+            "1. Add missing support coverage.
+"
+            "2. Resolve redundant support sets.
+"
+            "3. Fill open role slots.
+"
             "4. Adjust sustain and survivability for the encounter."
         )
         self.change_text.setWordWrap(True)
@@ -214,9 +212,12 @@ class OptimizationPage(FoundryPage):
 
         self.notes_card = FoundryCard("Notes")
         notes = QLabel(
-            "• This is a suggested team.\n"
-            "• Re-run after roster or build changes.\n"
-            "• Coverage and encounter requirements will feed recommendations here.\n"
+            "• This is a suggested team.
+"
+            "• Re-run after roster or build changes.
+"
+            "• Coverage and encounter requirements will feed recommendations here.
+"
             "• Farming needs can be added later if space allows."
         )
         notes.setWordWrap(True)
@@ -224,6 +225,147 @@ class OptimizationPage(FoundryPage):
         row.addWidget(self.notes_card, 2)
 
         self.layout.addLayout(row)
+
+    def _create_team_editor(self, title: str):
+        card = FoundryCard(title)
+        actions = QWidget()
+        actions_layout = QHBoxLayout(actions)
+        actions_layout.setContentsMargins(0, 0, 0, 0)
+        actions_layout.addStretch(1)
+
+        clear_button = QPushButton("Clear Team")
+        autofill_button = QPushButton("Auto-Fill")
+        actions_layout.addWidget(clear_button)
+        actions_layout.addWidget(autofill_button)
+        card.set_header_action(actions)
+
+        table = QTableWidget(0, 6)
+        table.setHorizontalHeaderLabels([
+            "ROLE", "PLAYER", "CLASS", "BUILD", "RESPONSIBILITIES", "STATUS"
+        ])
+        self._configure_table(table)
+        card.addWidget(table)
+
+        clear_button.clicked.connect(lambda: self._clear_team(table))
+        autofill_button.clicked.connect(lambda: self._autofill_team(table))
+        return card, table
+
+    def _comparison_mode_changed(self, text: str):
+        comparing = text == "Compare Two Teams"
+        self.team_tabs.setTabEnabled(1, comparing)
+        if not comparing:
+            self.team_tabs.setCurrentIndex(0)
+        self.generate_button.setText(
+            "Compare Teams" if comparing else "Generate Best Team"
+        )
+        self._update_team_analysis()
+
+    def _role_slots(self) -> list[str]:
+        if self.group_size_combo.currentText().startswith("12"):
+            return ["Main Tank", "Off Tank", "Healer 1", "Healer 2"] + [
+                f"DD {index}" for index in range(1, 9)
+            ]
+        return ["Tank", "Healer", "DD 1", "DD 2"]
+
+    def _populate_team_editor(self, table: QTableWidget, *, autofill: bool) -> None:
+        role_slots = self._role_slots()
+        builds = list(self.roster.Members)
+        table.setRowCount(len(role_slots))
+
+        self._team_combo_signal_guard = True
+        try:
+            for row, role_name in enumerate(role_slots):
+                table.setItem(row, 0, QTableWidgetItem(role_name))
+                selector = QComboBox()
+                selector.addItem("Open slot", None)
+                for index, build in enumerate(builds):
+                    player = (
+                        getattr(build, "Name", "")
+                        or getattr(build, "Gamertag", "")
+                        or "Unnamed Player"
+                    )
+                    build_name = getattr(build, "BuildName", "") or "Current Build"
+                    selector.addItem(f"{player} — {build_name}", index)
+                if autofill and row < len(builds):
+                    selector.setCurrentIndex(row + 1)
+                selector.currentIndexChanged.connect(
+                    lambda _index, current_table=table, current_row=row:
+                    self._team_selection_changed(current_table, current_row)
+                )
+                table.setCellWidget(row, 1, selector)
+                self._team_selection_changed(table, row)
+        finally:
+            self._team_combo_signal_guard = False
+
+    def _team_selection_changed(self, table: QTableWidget, row: int) -> None:
+        selector = table.cellWidget(row, 1)
+        build_index = selector.currentData() if isinstance(selector, QComboBox) else None
+        build = (
+            self.roster.Members[build_index]
+            if isinstance(build_index, int) and 0 <= build_index < len(self.roster.Members)
+            else None
+        )
+        values = (
+            (
+                getattr(build, "EsoClass", "") or "—",
+                getattr(build, "BuildName", "") or "Current Build",
+                "Capability and provider analysis pending",
+                "✓",
+            )
+            if build is not None
+            else ("—", "Open", "Any suitable build", "—")
+        )
+        for column, value in enumerate(values, start=2):
+            table.setItem(row, column, QTableWidgetItem(str(value)))
+        if not self._team_combo_signal_guard:
+            self._update_team_analysis()
+
+    @staticmethod
+    def _selected_team_count(table: QTableWidget) -> int:
+        count = 0
+        for row in range(table.rowCount()):
+            selector = table.cellWidget(row, 1)
+            if isinstance(selector, QComboBox) and selector.currentData() is not None:
+                count += 1
+        return count
+
+    def _autofill_team(self, table: QTableWidget) -> None:
+        self._populate_team_editor(table, autofill=True)
+        self._update_team_analysis()
+
+    def _update_team_analysis(self) -> None:
+        if not hasattr(self, "team_table"):
+            return
+        target = len(self._role_slots())
+        team_a_count = self._selected_team_count(self.team_table)
+        comparing = self.comparison_mode_combo.currentText() == "Compare Two Teams"
+        team_b_count = self._selected_team_count(self.team_b_table)
+
+        self.team_card.set_badge(f"{team_a_count}/{target}")
+        self.team_b_card.set_badge(f"{team_b_count}/{target}")
+
+        lines = [
+            f"Team A Slots Filled: {team_a_count}/{target}",
+            "Modeled Composition Potential: unresolved",
+        ]
+        if comparing:
+            lines.insert(1, f"Team B Slots Filled: {team_b_count}/{target}")
+            lines.append("Comparison: select an encounter model before ranking")
+        self.analysis_summary.setText("\n".join(lines))
+        self.support_text.setText(
+            "Saved-build capability evidence is available.\n"
+            "Provider assignment and declared uptime are not connected to this screen yet."
+        )
+        open_a = target - team_a_count
+        open_b = target - team_b_count if comparing else 0
+        risks = [f"⚠ Team A has {open_a} open slot(s)." if open_a else "✓ Team A size filled."]
+        if comparing:
+            risks.append(
+                f"⚠ Team B has {open_b} open slot(s)."
+                if open_b else "✓ Team B size filled."
+            )
+        risks.append("⚠ No encounter damage scenario selected; no numeric ranking produced.")
+        self.risks_text.setText("\n".join(risks))
 
     @staticmethod
     def _configure_table(table: QTableWidget):
@@ -280,53 +422,14 @@ class OptimizationPage(FoundryPage):
             self.available_table.setRowHidden(row, bool(query and query not in haystack))
 
     def _generate_preview(self, *_args):
-        target = 12 if self.group_size_combo.currentText().startswith("12") else 4
-        members = list(self.roster.Members)[:target]
-        self.team_table.setRowCount(0)
+        self._populate_team_editor(self.team_table, autofill=True)
+        self._populate_team_editor(self.team_b_table, autofill=True)
+        self._comparison_mode_changed(self.comparison_mode_combo.currentText())
 
-        if target == 12:
-            role_slots = ["Main Tank", "Off Tank", "Healer 1", "Healer 2"] + [f"DD {i}" for i in range(1, 9)]
-        else:
-            role_slots = ["Tank", "Healer", "DD 1", "DD 2"]
-
-        for index in range(target):
-            row = self.team_table.rowCount()
-            self.team_table.insertRow(row)
-            build = members[index] if index < len(members) else None
-            if build is None:
-                values = (role_slots[index], "TBD", "—", "Open", "Any suitable build", "—")
-            else:
-                name = getattr(build, "Name", "") or getattr(build, "Gamertag", "") or "Unnamed Player"
-                eso_class = getattr(build, "EsoClass", "") or "—"
-                build_name = getattr(build, "BuildName", "") or "Current Build"
-                values = (role_slots[index], name, eso_class, build_name, "Pending optimizer analysis", "✓")
-            for col, value in enumerate(values):
-                self.team_table.setItem(row, col, QTableWidgetItem(str(value)))
-
-        filled = len(members)
-        self.team_card.set_badge(f"{filled}/{target}")
-        readiness = round((filled / target) * 100) if target else 0
-        self.analysis_summary.setText(
-            f"Overall Readiness: {readiness}%\n"
-            f"Team Slots Filled: {filled}/{target}\n"
-            "Group Balance: Pending composition analysis\n"
-            "Damage Profile: Pending encounter weighting"
-        )
-        self.support_text.setText(
-            "Major Courage  •  Crusher  •  War Horn\n"
-            "Major Slayer  •  Major Vulnerability  •  Purify\n"
-            "Detailed provider coverage will come from the Coverage page."
-        )
-        open_slots = max(0, target - filled)
-        self.risks_text.setText(
-            (f"⚠ {open_slots} open team slot(s).\n" if open_slots else "✓ Team size filled.\n")
-            + "⚠ Encounter-specific buff/debuff requirements not connected yet.\n"
-            + "⚠ Gear and skill recommendations are currently placeholders."
-        )
-
-    def _clear_team(self):
-        self.team_table.setRowCount(0)
-        self.team_card.set_badge("0")
-        self.analysis_summary.setText("No proposed team. Use Auto-Fill or Generate Best Team.")
-        self.support_text.setText("Coverage analysis will appear after a team is proposed.")
-        self.risks_text.setText("No team selected.")
+    def _clear_team(self, table=None):
+        target_table = table or self.team_table
+        for row in range(target_table.rowCount()):
+            selector = target_table.cellWidget(row, 1)
+            if isinstance(selector, QComboBox):
+                selector.setCurrentIndex(0)
+        self._update_team_analysis()
