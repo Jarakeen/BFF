@@ -54,6 +54,7 @@ class EncounterBossGuide:
     location: str
     species: str
     reaction: str
+    health_record_present: bool
     health: tuple[tuple[str, str], ...]
     abilities: tuple[BossGuideAbility, ...]
     phases: tuple[BossGuidePhase, ...]
@@ -154,6 +155,7 @@ class EncounterBossGuideService:
                 """,
                 (encounter_id,),
             ).fetchone()
+            health_record_present = health_row is not None
             health = ()
             if health_row is not None:
                 health = tuple(
@@ -216,6 +218,7 @@ class EncounterBossGuideService:
                 location=str(encounter["location"] or ""),
                 species=str(encounter["species"] or ""),
                 reaction=str(encounter["reaction"] or ""),
+                health_record_present=health_record_present,
                 health=health,
                 abilities=abilities,
                 phases=phases,
