@@ -281,6 +281,11 @@ class SavedBuildCapabilityService:
                 boundaries.append(
                     f"Potion availability resolved without standing uptime: {potion_name}"
                 )
+                if potion.capability_resolved and not potion.resolved:
+                    boundaries.append(
+                        "Potion effect family resolved from exact saved-label semantics and "
+                        f"canonical database effects; recipe/formula provenance unavailable: {potion_name}"
+                    )
 
         deduped: list[EffectVariant] = []
         seen: set[tuple[str, str, str, str]] = set()
