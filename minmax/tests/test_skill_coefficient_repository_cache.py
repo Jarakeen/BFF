@@ -21,6 +21,16 @@ class _CountingRepository(SkillCoefficientRepository):
         return SkillRankResolution(None, (f"resolved {requested}",))
 
 
+class _NameConnectCountingRepository(SkillCoefficientRepository):
+    def __init__(self, database_path) -> None:
+        super().__init__(database_path)
+        self.connect_count = 0
+
+    def _connect(self):
+        self.connect_count += 1
+        return super()._connect()
+
+
 def test_entity_resolution_is_cached_by_canonical_identity(tmp_path) -> None:
     repository = _CountingRepository(tmp_path / "empty.db")
 
@@ -41,3 +51,15 @@ def test_different_entity_ids_are_resolved_independently(tmp_path) -> None:
 
     assert repository.scan_count == 2
     assert repository.resolve_count == 2
+
+
+def test_name_resolution_is_cached_case_insensitively(tmp_path) -> None:
+    repository = _NameConnectCountingRepository(tmp_path / "empty.db")
+
+    first = repository.resolve_name("Combat Prayer")
+    second = repository.resolve_name("combat prayer")
+    third = repository.resolve_name("COMBAT PRAYER")
+
+    assert first == second == third
+    assert first.unresolved == ("skill_rank table is unavailable",)
+    assert repository.connect_count == 1
