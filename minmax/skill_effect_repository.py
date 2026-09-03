@@ -22,6 +22,7 @@ class SkillEffectRepository:
 
     def __init__(self, database_path: str | Path = DEFAULT_DATABASE) -> None:
         self.database_path = Path(database_path)
+        self._resolve_cache: dict[int, tuple[EffectVariant, ...]] = {}
 
     @staticmethod
     def _ability_columns(db: sqlite3.Connection) -> set[str]:
@@ -120,12 +121,17 @@ class SkillEffectRepository:
         return tuple((ability_id, name) for ability_id, name, _rank in values)
 
     def resolve(self, ability_id: int) -> tuple[EffectVariant, ...]:
+        cache_key = int(ability_id)
+        if cache_key in self._resolve_cache:
+            return self._resolve_cache[cache_key]
         if not self.database_path.exists():
+            self._resolve_cache[cache_key] = ()
             return ()
 
         with sqlite3.connect(self.database_path) as db:
             columns = self._ability_columns(db)
             if "ability_id" not in columns:
+                self._resolve_cache[cache_key] = ()
                 return ()
 
             metadata_columns = ["name"]
@@ -135,9 +141,10 @@ class SkillEffectRepository:
             metadata_columns.append("morph" if "morph" in columns else "0 AS morph")
             metadata = db.execute(
                 f"SELECT {', '.join(metadata_columns)} FROM ability WHERE ability_id = ?",
-                (ability_id,),
+                (cache_key,),
             ).fetchone()
             if metadata is None:
+                self._resolve_cache[cache_key] = ()
                 return ()
 
             ability_name, base_ability_id, morph = metadata
@@ -166,7 +173,7 @@ class SkillEffectRepository:
                     WHERE a.ability_id = ?
                     ORDER BY ev.id, es.id
                     """,
-                    (ability_id,),
+                    (cache_key,),
                 ).fetchall()
             else:
                 rows = []
@@ -193,7 +200,7 @@ class SkillEffectRepository:
             ))
 
         for supplemental in verified_skill_effects(
-            int(base_ability_id or ability_id),
+            int(base_ability_id or cache_key),
             int(morph or 0),
         ):
             key = (
@@ -206,7 +213,9 @@ class SkillEffectRepository:
             seen.add(key)
             variants.append(supplemental)
 
-        return tuple(variants)
+        result = tuple(variants)
+        self._resolve_cache[cache_key] = result
+        return result
 
     @staticmethod
     def _category(value: str | None) -> SupportEffectCategory:
