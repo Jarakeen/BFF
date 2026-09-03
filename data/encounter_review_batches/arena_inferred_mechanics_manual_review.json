@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "scope": "Manual review of the twenty-three arena inferred mechanics left pending after conservative textual recommendations.",
+  "decisions": [
+    {
+      "encounter_id": "dark_mage",
+      "mechanic_name": "Crystal blast",
+      "status": "rejected",
+      "rationale": "Source text describes a single-target Crystal Shard-like spell that deals magic damage, stuns, and can be interrupted; it does not establish mechanic_type=area_attack."
+    },
+    {
+      "encounter_id": "flame_knight",
+      "mechanic_name": "Searing Fireball",
+      "status": "accepted",
+      "rationale": "Source text says the fireball erupts into a plus-shaped pattern of flame trails, directly supporting an area attack dealing flame damage."
+    },
+    {
+      "encounter_id": "hiath_the_battlemaster",
+      "mechanic_name": "Throw Dagger",
+      "status": "rejected",
+      "rationale": "The source supports an interruptible dagger attack, but only says Hiath backs away; it does not establish a player positioning requirement, so requires_positioning=true is unsupported."
+    },
+    {
+      "encounter_id": "hiath_the_battlemaster",
+      "mechanic_name": "Invisibility",
+      "status": "accepted",
+      "rationale": "Source text explicitly says the ability occurs more often when the player stands farther away, directly supporting a positioning mechanic and requires_positioning=true."
+    },
+    {
+      "encounter_id": "hiath_the_battlemaster",
+      "mechanic_name": "Searing Light",
+      "status": "rejected",
+      "rationale": "The source itself marks the described in-game behavior as needing verification and does not establish a spread mechanic; the current inferred mechanic_type is not safe to canonicalize."
+    },
+    {
+      "encounter_id": "hiath_the_battlemaster",
+      "mechanic_name": "Crystal blast",
+      "status": "rejected",
+      "rationale": "Source text describes a single-target Crystal Shard-like spell that deals magic damage, stuns, and can be interrupted; it does not establish mechanic_type=area_attack."
+    },
+    {
+      "encounter_id": "iozuzzunth",
+      "mechanic_name": "Fire Blast",
+      "status": "rejected",
+      "rationale": "The source explicitly supports flame damage and interruption, but it does not state that player movement is required; requires_movement=true is an unsupported inference in the current row."
+    },
+    {
+      "encounter_id": "magma_queen",
+      "mechanic_name": "Scorching Wave",
+      "status": "accepted",
+      "rationale": "Source text describes a long rectangular trail of flame projected forward, directly supporting an area attack dealing flame damage."
+    },
+    {
+      "encounter_id": "magma_queen",
+      "mechanic_name": "Summon Daedra",
+      "status": "accepted",
+      "rationale": "Source text explicitly describes a portal conjuring groups of Scamps and later a Daedroth, directly supporting the summon mechanic classification."
+    },
+    {
+      "encounter_id": "matriarch_runa",
+      "mechanic_name": "Ice Waves",
+      "status": "accepted",
+      "rationale": "Source text explicitly ties the attack to the player's current ice platform and states that the platform the player is standing on is fractured, directly supporting positioning dependence."
+    },
+    {
+      "encounter_id": "nak_tah",
+      "mechanic_name": "Thundering Presence",
+      "status": "rejected",
+      "rationale": "Source text says nearby players take damage over time from Nak'tah's self-buff, but it does not describe players spreading from one another; mechanic_type=spread is unsupported."
+    },
+    {
+      "encounter_id": "pishna_longshot",
+      "mechanic_name": "Poison Injection",
+      "status": "rejected",
+      "rationale": "The source says the attack has an initial physical hit plus a deadly poison effect that must be cleansed by standing in green pools. The current row records only physical damage and positioning while omitting the explicit cleanse/poison behavior, so it is not lossless enough to canonicalize as-is."
+    },
+    {
+      "encounter_id": "rahdgarak",
+      "mechanic_name": "Bolt",
+      "status": "accepted",
+      "rationale": "Source text explicitly says the flame bolt is used when the player is ten meters or more away, directly supporting positioning dependence and flame damage."
+    },
+    {
+      "encounter_id": "shilia",
+      "mechanic_name": "Flying Blade",
+      "status": "rejected",
+      "rationale": "The source supports interruption and bleed on hit, but only says the enemy backs away before throwing the dagger; it does not establish requires_positioning=true for the player."
+    },
+    {
+      "encounter_id": "the_pyrelord",
+      "mechanic_name": "Flame Spout",
+      "status": "accepted",
+      "rationale": "Source text explicitly instructs the player to keep moving around the boss and not stand too close while rotating fire spouts and the aura deal flame damage, directly supporting the area and positioning fields."
+    },
+    {
+      "encounter_id": "the_pyrelord",
+      "mechanic_name": "Superheat",
+      "status": "accepted",
+      "rationale": "Source text says magma covers most of the arena and explicitly identifies edge locations and named safe spots where the player can stand without burning, directly supporting area damage and positioning."
+    },
+    {
+      "encounter_id": "the_pyrelord",
+      "mechanic_name": "Ignite",
+      "status": "accepted",
+      "rationale": "Source text defines Ignite as damage caused by standing in the lava after Superheat, directly supporting a positioning mechanic dealing flame damage."
+    },
+    {
+      "encounter_id": "the_pyrelord",
+      "mechanic_name": "Brimstone Fire",
+      "status": "accepted",
+      "rationale": "Source text defines Brimstone Fire as damage dealt by standing in the Pyre, directly supporting positioning dependence."
+    },
+    {
+      "encounter_id": "vampire_lord_thisa",
+      "mechanic_name": "Dragonknight Standard",
+      "status": "accepted",
+      "rationale": "Source text makes casting depend on whether the target is already standing inside an existing standard and describes a flame-damage area, directly supporting area and positioning fields."
+    },
+    {
+      "encounter_id": "vampire_lord_thisa",
+      "mechanic_name": "Devouring Swarm",
+      "status": "accepted",
+      "rationale": "Source text says the swarm occupies an area around Thisa and damages anyone standing in that area, directly supporting an area attack whose effect depends on player position."
+    },
+    {
+      "encounter_id": "vampire_lord_thisa",
+      "mechanic_name": "Poison Mist",
+      "status": "accepted",
+      "rationale": "Source text says Thisa creates a small area around herself that damages anyone standing inside, directly supporting an area attack whose effect depends on player position."
+    },
+    {
+      "encounter_id": "xobutar_of_his_deep_graces",
+      "mechanic_name": "Summon Totem",
+      "status": "rejected",
+      "rationale": "Source text explicitly says Xobutar summons two Vampiric Totems; the current mechanic_type=positioning misclassifies the mechanic, even though the totems have fixed locations."
+    },
+    {
+      "encounter_id": "zakuryn_the_sculptor",
+      "mechanic_name": "Summon Banekin",
+      "status": "accepted",
+      "rationale": "Source text explicitly says a dark pool conjures a group of Banekin, directly supporting the summon mechanic classification."
+    }
+  ]
+}
