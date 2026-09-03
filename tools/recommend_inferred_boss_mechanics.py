@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from services.boss_inferred_mechanic_decisions import apply_accepted_recommendations
 from services.boss_inferred_mechanic_recommendations import build_recommendations
 
 
@@ -16,16 +17,16 @@ def _source_dir() -> Path:
     return next((path for path in candidates if path.exists()), candidates[-1])
 
 
-def _has_content_records(root: Path) -> bool:
-    return any(
-        any((root / folder).glob("*.json"))
-        for folder in ("trials", "dungeons", "arenas")
-    )
-
-
 def _content_root() -> Path:
     candidates = (ROOT / "research" / "eso_info", ROOT / "data" / "eso_info")
-    return next((path for path in candidates if _has_content_records(path)), candidates[-1])
+    for path in candidates:
+        if any((path / folder).glob("*.json") for folder in ("trials", "dungeons", "arenas")):
+            return path
+    return candidates[-1]
+
+
+def _manifest() -> Path:
+    return ROOT / "data" / "encounter_reviews" / "inferred_boss_mechanics.json"
 
 
 def main() -> int:
@@ -33,6 +34,12 @@ def main() -> int:
     parser.add_argument("--source-dir", type=Path, default=_source_dir())
     parser.add_argument("--content-root", type=Path, default=_content_root())
     parser.add_argument("--content-type", choices=("trial", "dungeon", "arena"), default="trial")
+    parser.add_argument("--manifest", type=Path, default=_manifest())
+    parser.add_argument(
+        "--apply-accepted",
+        action="store_true",
+        help="Change only pending manifest rows whose conservative recommendation is accepted.",
+    )
     parser.add_argument("--samples", type=int, default=30)
     args = parser.parse_args()
 
@@ -66,8 +73,22 @@ def main() -> int:
             )
             print(f"  - {item.row.encounter_id} :: {item.row.mechanic_name} | review={unclear}")
 
+    if args.apply_accepted:
+        if not args.manifest.exists():
+            print(f"\nRESULT: BLOCKED\nReview manifest does not exist: {args.manifest}")
+            return 1
+        try:
+            changed = apply_accepted_recommendations(args.manifest, recommendations)
+        except (OSError, ValueError) as exc:
+            print(f"\nRESULT: BLOCKED\nUnable to apply recommendations: {exc}")
+            return 1
+        print(f"\nManifest accepted rows changed: {changed}")
+        print(f"Manifest:                       {args.manifest}")
+        print("No canonical encounter facts were changed.")
+
     print("\nRESULT: PASS")
-    print("Read-only recommendation audit. No review manifest or canonical facts were changed.")
+    if not args.apply_accepted:
+        print("Read-only recommendation audit. No review manifest or canonical facts were changed.")
     return 0
 
 
