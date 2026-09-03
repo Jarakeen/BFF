@@ -61,11 +61,11 @@ class RequirementEvaluation:
     semantics: RequirementSemantics
     classification: CoverageClassification
     target_count: int | None
-    required_provider_count: int | None
     providers: tuple[str, ...]
     unknown_members: tuple[str, ...]
     conflicting_members: tuple[str, ...]
     explanation: str
+    required_provider_count: int | None = None
 
     @property
     def is_satisfied(self) -> bool:
@@ -211,11 +211,11 @@ class EncounterRequirementEvaluator:
                 semantics=semantics,
                 classification=CoverageClassification.UNKNOWN,
                 target_count=requirement.target_count,
-                required_provider_count=None,
                 providers=(),
                 unknown_members=roster_members,
                 conflicting_members=(),
                 explanation=reason,
+                required_provider_count=None,
             )
 
         assert required_provider_count is not None
@@ -288,9 +288,9 @@ class EncounterRequirementEvaluator:
             semantics=semantics,
             classification=classification,
             target_count=requirement.target_count,
-            required_provider_count=required_provider_count,
             providers=tuple(providers),
             unknown_members=tuple(unknown_members),
             conflicting_members=tuple(conflicting_members),
             explanation=explanation,
+            required_provider_count=required_provider_count,
         )
