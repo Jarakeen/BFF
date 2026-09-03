@@ -77,6 +77,16 @@ def test_capability_coverage_blocks_lost_resolved_effect() -> None:
     assert "major_courage" in result.explanation
 
 
+def test_capability_coverage_keeps_unresolved_baseline_unknown() -> None:
+    result = compare_capability_coverage(
+        _audit("major_courage", capability_unresolved=("baseline skill unresolved",)),
+        _audit("major_courage"),
+    )
+
+    assert result.status is ConstraintStatus.UNKNOWN
+    assert "baseline skill unresolved" in result.explanation
+
+
 def test_capability_coverage_keeps_unresolved_candidate_unknown() -> None:
     result = compare_capability_coverage(
         _audit("major_courage"),
