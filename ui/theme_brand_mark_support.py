@@ -26,10 +26,17 @@ def install() -> None:
         app = QApplication.instance()
         rylo = bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
         if rylo:
+            # The Rylo lockup needs more horizontal breathing room than the
+            # feather mark. Keep the scythe's native 2:3 proportion and widen
+            # the rail so BLACK FEATHER / FOUNDRY is not compressed beside it.
+            self.setMinimumWidth(248)
+            self.setMaximumWidth(278)
             filename = "sidebar_scythe_rylo.svg"
-            pix_w, pix_h = 48, 62
-            box_w, box_h = 54, 68
+            pix_w, pix_h = 42, 63
+            box_w, box_h = 48, 68
         else:
+            self.setMinimumWidth(215)
+            self.setMaximumWidth(248)
             filename = "sidebar_feather_gold.svg"
             pix_w, pix_h = 32, 52
             box_w, box_h = 38, 56
