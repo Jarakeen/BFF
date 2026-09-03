@@ -127,11 +127,6 @@ class OptimizationPage(FoundryPage):
         return OptimizationMode.BUILD
 
     def _effective_source_mode(self) -> str:
-        mode = self._current_mode()
-        if mode is OptimizationMode.AUDIT:
-            return "Saved Players Only"
-        if mode is OptimizationMode.RECRUIT:
-            return "Recruitment Plan Only"
         return self.team_source_combo.currentText()
 
     def _optimization_mode_changed(self, _index: int) -> None:
@@ -139,9 +134,7 @@ class OptimizationPage(FoundryPage):
         policy = policy_for_mode(mode)
         comparing = policy.uses_two_teams
 
-        self.team_source_combo.setEnabled(
-            mode in (OptimizationMode.BUILD, OptimizationMode.COMPARE)
-        )
+        self.team_source_combo.setEnabled(True)
         if hasattr(self, "team_tabs"):
             self.team_tabs.setTabEnabled(1, comparing)
             if not comparing:
