@@ -26,6 +26,15 @@ def compare_capability_coverage(
     resolving those details. Effect identity follows ``EffectVariant.name``.
     """
 
+    if baseline.capability_unresolved:
+        return CandidateConstraint(
+            name="capability_coverage",
+            status=ConstraintStatus.UNKNOWN,
+            explanation=(
+                "Baseline capability coverage is unresolved: "
+                + "; ".join(baseline.capability_unresolved)
+            ),
+        )
     if candidate.capability_unresolved:
         return CandidateConstraint(
             name="capability_coverage",
