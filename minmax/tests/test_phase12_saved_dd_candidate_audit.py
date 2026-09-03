@@ -5,6 +5,7 @@ import pytest
 from minmax.dd_damage import DDDamageEvent
 from minmax.resource_costs import ResourceType
 from tools.audit_phase12_saved_dd_candidates import (
+    _is_dd_role,
     _parser,
     audit_saved_dd_candidates,
 )
@@ -57,3 +58,23 @@ def test_saved_dd_audit_fails_clearly_when_database_is_missing(tmp_path: Path) -
     )
 
     assert result == 1
+
+
+def test_saved_dd_audit_recognizes_only_explicit_damage_roles() -> None:
+    assert _is_dd_role("DD")
+    assert _is_dd_role("damage dealer")
+    assert not _is_dd_role("Healer")
+    assert not _is_dd_role("Tank")
+    assert not _is_dd_role("")
+
+
+def test_saved_dd_audit_parser_marks_role_override_as_diagnostic() -> None:
+    args = _parser().parse_args(
+        [
+            "--build",
+            "DF Healer",
+            "--allow-role-mismatch",
+        ]
+    )
+
+    assert args.allow_role_mismatch is True
