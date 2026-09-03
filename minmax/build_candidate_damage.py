@@ -45,21 +45,31 @@ def calculation_result_from_build_context(
     if context.core_state is None:
         return None
 
-    percent_stats = {StatId.CRITICAL_CHANCE, StatId.CRITICAL_DAMAGE}
     stats: dict[StatId, StatBreakdown] = {}
     for stat in (
         StatId.WEAPON_DAMAGE,
         StatId.SPELL_DAMAGE,
         StatId.PHYSICAL_PENETRATION,
         StatId.SPELL_PENETRATION,
-        StatId.CRITICAL_CHANCE,
         StatId.CRITICAL_DAMAGE,
     ):
         trace = context.core_state.derived.get(stat)
         value = float(trace.final_value) if trace is not None else 0.0
-        if stat in percent_stats:
+        if stat is StatId.CRITICAL_DAMAGE:
             value *= 100.0
         stats[stat] = StatBreakdown(base=value)
+
+    critical_values = []
+    for stat in (
+        StatId.CRITICAL_CHANCE,
+        StatId.WEAPON_CRITICAL,
+        StatId.SPELL_CRITICAL,
+    ):
+        trace = context.core_state.derived.get(stat)
+        if trace is not None:
+            critical_values.append(float(trace.final_value))
+    critical_chance = max(critical_values, default=0.0) * 100.0
+    stats[StatId.CRITICAL_CHANCE] = StatBreakdown(base=critical_chance)
     return CalculationResult(stats=stats)
 
 
