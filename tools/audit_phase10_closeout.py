@@ -72,6 +72,17 @@ def _auto_select(inventory):
     return inventory.real_builds
 
 
+def _print_detected_real_builds(inventory) -> None:
+    if not inventory.real_builds:
+        print("  Detected real builds:           (none)")
+        return
+    print("  Detected real builds:")
+    for audit in inventory.real_builds:
+        character = audit.character_name or "(unnamed character)"
+        build = audit.build_name or "(unnamed build)"
+        print(f"    - {character} | {build}")
+
+
 def main() -> int:
     args = _parser().parse_args()
     try:
@@ -107,16 +118,27 @@ def main() -> int:
     print(f"  Real saved builds:             {inventory.real_build_count}")
     print(f"  Unique real characters:        {inventory.unique_member_count}")
     print(f"  Blank/template builds ignored: {len(inventory.template_or_blank_builds)}")
+    _print_detected_real_builds(inventory)
     if inventory.duplicate_member_ids:
         print("  Characters with multiple candidate builds:")
         for identity in inventory.duplicate_member_ids:
             print(f"    - {identity}")
+    if inventory.unique_member_count < 2:
+        print("  NOTE: no valid second --build value exists yet; save another real character/build first.")
 
     try:
         selected = _select(audits, args.build) if args.build else _auto_select(inventory)
     except ValueError as exc:
         print()
         print(f"ROSTER SELECTION ERROR: {exc}")
+        print("Valid real saved-build selections currently detected:")
+        if inventory.real_builds:
+            for audit in inventory.real_builds:
+                print(f"  --build {audit.build_name!r}")
+        else:
+            print("  (none)")
+        if inventory.unique_member_count < 2:
+            print("A second selection cannot succeed until another distinct real character/build is saved.")
         return 2
 
     if not args.build and inventory.has_ambiguous_member_builds:
@@ -189,6 +211,7 @@ def main() -> int:
     print(f"PHASE 10 EXIT READY: {ready}")
     if not ready and inventory.unique_member_count < 2:
         print("Boundary: local saved-build data does not yet contain two distinct non-template characters.")
+        print("Next action: save one additional real character/build, then rerun this audit with no --build arguments.")
     if not ready and inventory.has_ambiguous_member_builds and not args.build:
         print("Boundary: choose one authoritative saved build per character with repeated --build options.")
     print("Provider assignment remains Phase 11; this audit proves capability/readiness only.")
