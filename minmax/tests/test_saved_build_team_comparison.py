@@ -149,6 +149,9 @@ def test_shared_roster_attributes_provider_effect_to_other_member(adapter):
     assert tuple(
         row.roster_candidate.name for row in result.player_evidence
     ) == ("alpha", "beta")
+    assert tuple(
+        row.member_id for row in result.capability_evidence
+    ) == ("alpha", "beta")
 
 
 def test_roster_scenario_rejects_duplicate_member_ids():
