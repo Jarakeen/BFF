@@ -210,12 +210,9 @@ class OptimizationPage(FoundryPage):
 
         self.notes_card = FoundryCard("Notes")
         notes = QLabel(
-            "• This is a suggested team.
-"
-            "• Re-run after roster or build changes.
-"
-            "• Coverage and encounter requirements will feed recommendations here.
-"
+            "• This is a suggested team.\n"
+            "• Re-run after roster or build changes.\n"
+            "• Coverage and encounter requirements will feed recommendations here.\n"
             "• Farming needs can be added later if space allows."
         )
         notes.setWordWrap(True)
