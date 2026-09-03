@@ -9,16 +9,26 @@ class SkillLineRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
+        self._skill_line_cache: dict[tuple[str, str], str | None] = {}
+
+    @staticmethod
+    def _norm(value: str) -> str:
+        return " ".join(str(value or "").strip().casefold().split())
 
     def skill_line_for_ability_name(self, ability_name: str, *, class_name: str = "") -> str | None:
         name = str(ability_name or "").strip()
         if not name or not self.database_path.exists():
             return None
 
+        cache_key = (self._norm(name), self._norm(class_name))
+        if cache_key in self._skill_line_cache:
+            return self._skill_line_cache[cache_key]
+
         with sqlite3.connect(self.database_path) as db:
             columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
             required = {"name", "skill_line"}
             if not required.issubset(columns):
+                self._skill_line_cache[cache_key] = None
                 return None
 
             clauses = ["LOWER(TRIM(name)) = LOWER(TRIM(?))"]
@@ -41,9 +51,9 @@ class SkillLineRepository:
             ).fetchall()
 
         lines = [str(row[0]).strip() for row in rows if str(row[0] or "").strip()]
-        if len(lines) != 1:
-            return None
-        return lines[0]
+        result = lines[0] if len(lines) == 1 else None
+        self._skill_line_cache[cache_key] = result
+        return result
 
     def passive_max_rank(self, passive_name: str) -> int | None:
         """Return the highest canonical rank recorded for one player passive."""
