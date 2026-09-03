@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from minmax.recruitment import RecruitmentPlanner
 from models.build_model import BuildRoster
 from services.build_service import BuildService
 from ui.components.foundry_card import FoundryCard
@@ -30,6 +31,7 @@ class OptimizationPage(FoundryPage):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
+        self.recruitment_planner = RecruitmentPlanner()
         self.roster = BuildRoster()
         self._build_ui()
         self.refresh()
@@ -63,7 +65,13 @@ class OptimizationPage(FoundryPage):
         self.header.add_context_widget(self._context_field("GROUP SIZE", self.group_size_combo))
 
         self.team_source_combo = QComboBox()
-        self.team_source_combo.addItems(["Saved Roster", "Custom Selection", "Current Team"])
+        self.team_source_combo.addItems([
+            "Saved Players Only",
+            "Hybrid: Players + Recruitment",
+            "Recruitment Plan Only",
+        ])
+        self.team_source_combo.setCurrentText("Hybrid: Players + Recruitment")
+        self.team_source_combo.currentTextChanged.connect(self._team_source_changed)
         self.header.add_context_widget(self._context_field("TEAM SOURCE", self.team_source_combo))
 
         self.comparison_mode_combo = QComboBox()
@@ -245,6 +253,9 @@ class OptimizationPage(FoundryPage):
         autofill_button.clicked.connect(lambda: self._autofill_team(table))
         return card, table
 
+    def _team_source_changed(self, _text: str) -> None:
+        self._generate_preview()
+
     def _comparison_mode_changed(self, text: str):
         comparing = text == "Compare Two Teams"
         self.team_tabs.setTabEnabled(1, comparing)
@@ -265,6 +276,7 @@ class OptimizationPage(FoundryPage):
     def _populate_team_editor(self, table: QTableWidget, *, autofill: bool) -> None:
         role_slots = self._role_slots()
         builds = list(self.roster.Members)
+        source_mode = self.team_source_combo.currentText()
         table.setRowCount(len(role_slots))
 
         self._team_combo_signal_guard = True
@@ -281,8 +293,21 @@ class OptimizationPage(FoundryPage):
                     )
                     build_name = getattr(build, "BuildName", "") or "Current Build"
                     selector.addItem(f"{player} — {build_name}", index)
-                if autofill and row < len(builds):
-                    selector.setCurrentIndex(row + 1)
+
+                recruitment_value = f"recruitment:{row}"
+                selector.addItem(
+                    f"Recruit for {role_name}",
+                    recruitment_value,
+                )
+
+                if autofill:
+                    if source_mode == "Recruitment Plan Only":
+                        selector.setCurrentIndex(selector.findData(recruitment_value))
+                    elif row < len(builds):
+                        selector.setCurrentIndex(row + 1)
+                    elif source_mode == "Hybrid: Players + Recruitment":
+                        selector.setCurrentIndex(selector.findData(recruitment_value))
+
                 selector.currentIndexChanged.connect(
                     lambda _index, current_table=table, current_row=row:
                     self._team_selection_changed(current_table, current_row)
@@ -294,35 +319,58 @@ class OptimizationPage(FoundryPage):
 
     def _team_selection_changed(self, table: QTableWidget, row: int) -> None:
         selector = table.cellWidget(row, 1)
-        build_index = selector.currentData() if isinstance(selector, QComboBox) else None
+        selection = selector.currentData() if isinstance(selector, QComboBox) else None
         build = (
-            self.roster.Members[build_index]
-            if isinstance(build_index, int) and 0 <= build_index < len(self.roster.Members)
+            self.roster.Members[selection]
+            if isinstance(selection, int) and 0 <= selection < len(self.roster.Members)
             else None
         )
-        values = (
-            (
+
+        if isinstance(selection, str) and selection.startswith("recruitment:"):
+            role_label_item = table.item(row, 0)
+            role_label = role_label_item.text() if role_label_item else "DD"
+            requirement = self.recruitment_planner.create_requirement(
+                slot_id=selection,
+                role_label=role_label,
+            )
+            values = (
+                "Flexible",
+                "Open recruitment requirement",
+                requirement.qualification_summary,
+                "RECRUIT",
+            )
+        elif build is not None:
+            values = (
                 getattr(build, "EsoClass", "") or "—",
                 getattr(build, "BuildName", "") or "Current Build",
                 "Capability and provider analysis pending",
-                "✓",
+                "SAVED",
             )
-            if build is not None
-            else ("—", "Open", "Any suitable build", "—")
-        )
+        else:
+            values = ("—", "Open", "Any suitable build", "—")
+
         for column, value in enumerate(values, start=2):
             table.setItem(row, column, QTableWidgetItem(str(value)))
         if not self._team_combo_signal_guard:
             self._update_team_analysis()
 
     @staticmethod
-    def _selected_team_count(table: QTableWidget) -> int:
-        count = 0
+    def _team_counts(table: QTableWidget) -> tuple[int, int]:
+        real_count = 0
+        recruitment_count = 0
         for row in range(table.rowCount()):
             selector = table.cellWidget(row, 1)
-            if isinstance(selector, QComboBox) and selector.currentData() is not None:
-                count += 1
-        return count
+            selection = selector.currentData() if isinstance(selector, QComboBox) else None
+            if isinstance(selection, int):
+                real_count += 1
+            elif isinstance(selection, str) and selection.startswith("recruitment:"):
+                recruitment_count += 1
+        return real_count, recruitment_count
+
+    @classmethod
+    def _selected_team_count(cls, table: QTableWidget) -> int:
+        real_count, recruitment_count = cls._team_counts(table)
+        return real_count + recruitment_count
 
     def _autofill_team(self, table: QTableWidget) -> None:
         self._populate_team_editor(table, autofill=True)
@@ -332,32 +380,52 @@ class OptimizationPage(FoundryPage):
         if not hasattr(self, "team_table"):
             return
         target = len(self._role_slots())
-        team_a_count = self._selected_team_count(self.team_table)
+        team_a_real, team_a_recruit = self._team_counts(self.team_table)
+        team_a_count = team_a_real + team_a_recruit
         comparing = self.comparison_mode_combo.currentText() == "Compare Two Teams"
-        team_b_count = self._selected_team_count(self.team_b_table)
+        team_b_real, team_b_recruit = self._team_counts(self.team_b_table)
+        team_b_count = team_b_real + team_b_recruit
 
         self.team_card.set_badge(f"{team_a_count}/{target}")
         self.team_b_card.set_badge(f"{team_b_count}/{target}")
 
         lines = [
-            f"Team A Slots Filled: {team_a_count}/{target}",
+            (
+                f"Team A: {team_a_real} saved player(s) + "
+                f"{team_a_recruit} recruitment requirement(s)"
+            ),
             "Modeled Composition Potential: unresolved",
         ]
         if comparing:
-            lines.insert(1, f"Team B Slots Filled: {team_b_count}/{target}")
+            lines.insert(
+                1,
+                (
+                    f"Team B: {team_b_real} saved player(s) + "
+                    f"{team_b_recruit} recruitment requirement(s)"
+                ),
+            )
             lines.append("Comparison: select an encounter model before ranking")
         self.analysis_summary.setText("\n".join(lines))
         self.support_text.setText(
-            "Saved-build capability evidence is available.\n"
-            "Provider assignment and declared uptime are not connected to this screen yet."
+            "Recruitment entries are open requirements, not fabricated players.\n"
+            "Encounter capability assignments and declared uptime remain unresolved."
         )
+
         open_a = target - team_a_count
         open_b = target - team_b_count if comparing else 0
-        risks = [f"⚠ Team A has {open_a} open slot(s)." if open_a else "✓ Team A size filled."]
+        risks = [
+            f"⚠ Team A has {open_a} unplanned slot(s)."
+            if open_a else "✓ Team A has a plan for every slot."
+        ]
         if comparing:
             risks.append(
-                f"⚠ Team B has {open_b} open slot(s)."
-                if open_b else "✓ Team B size filled."
+                f"⚠ Team B has {open_b} unplanned slot(s)."
+                if open_b else "✓ Team B has a plan for every slot."
+            )
+        if team_a_recruit or (comparing and team_b_recruit):
+            risks.append(
+                "⚠ Recruitment requirements are not modeled damage contributors "
+                "until matched to canonical builds."
             )
         risks.append("⚠ No encounter damage scenario selected; no numeric ranking produced.")
         self.risks_text.setText("\n".join(risks))
@@ -404,7 +472,7 @@ class OptimizationPage(FoundryPage):
             values = (name, eso_class, role, build_name, "✓")
             for col, value in enumerate(values):
                 self.available_table.setItem(row, col, QTableWidgetItem(str(value)))
-        self.available_card.set_badge(f"{self.available_table.rowCount()} AVAILABLE")
+        self.available_card.set_badge(f"{self.available_table.rowCount()} SAVED")
 
     def _filter_available(self, text: str):
         query = text.strip().lower()
