@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import isclose
 
 from models.build_model import PlayerBuild
 
@@ -46,6 +47,34 @@ class CandidateRanking:
             if comparison.is_preferred:
                 return comparison
         return None
+
+    @property
+    def recommended_ties(self) -> tuple[BuildCandidateComparison, ...]:
+        """Return every preferred candidate equivalent to the stable first choice.
+
+        ``recommended`` remains deterministic for callers that require exactly one
+        object. This property prevents that deterministic identifier tie-break from
+        being presented as stronger ESO evidence when multiple candidates have the
+        same modeled objective and preference class.
+        """
+
+        recommended = self.recommended
+        if recommended is None or recommended.delta is None:
+            return ()
+        return tuple(
+            comparison
+            for comparison in self.ranked
+            if comparison.is_preferred
+            and comparison.delta is not None
+            and comparison.is_constraint_repair is recommended.is_constraint_repair
+            and comparison.is_improvement is recommended.is_improvement
+            and isclose(
+                float(comparison.delta),
+                float(recommended.delta),
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        )
 
 
 def _dedupe(messages: tuple[str, ...] | list[str]) -> tuple[str, ...]:
