@@ -27,6 +27,12 @@ BLOCKING_STATUSES = {
     DUPLICATE_ABILITY,
 }
 
+# The source corpus sometimes uses this literal placeholder when UESP documents
+# two distinct mechanics but does not yet know their in-game ability names. The
+# encounter_ability schema is unique by (encounter_id, name), so these rows need
+# deterministic storage labels. No ESO name is inferred.
+UNRESOLVED_ABILITY_NAME = "(?)"
+
 
 @dataclass(frozen=True)
 class BossStructuralCandidate:
@@ -98,6 +104,51 @@ def _ability_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return [row for row in rows if isinstance(row, dict)]
 
 
+def _prepared_ability_rows(payload: dict[str, Any]) -> list[tuple[dict[str, Any], str]]:
+    """Return source ability rows with deterministic DB storage names.
+
+    Only the literal UESP placeholder ``(?)`` may repeat. Repeated placeholders
+    are stored as ``(?) [1]``, ``(?) [2]``, etc. so no source row is lost while
+    making the unresolved identity explicit. All real duplicate names remain a
+    blocking source/schema conflict.
+    """
+    rows = _ability_rows(payload)
+    counts: dict[str, int] = {}
+    for row in rows:
+        name = str(row.get("name") or "").strip()
+        if name:
+            counts[name] = counts.get(name, 0) + 1
+
+    occurrence: dict[str, int] = {}
+    prepared: list[tuple[dict[str, Any], str]] = []
+    for row in rows:
+        raw_name = str(row.get("name") or "").strip()
+        if not raw_name:
+            continue
+        occurrence[raw_name] = occurrence.get(raw_name, 0) + 1
+        if raw_name == UNRESOLVED_ABILITY_NAME and counts.get(raw_name, 0) > 1:
+            storage_name = f"{raw_name} [{occurrence[raw_name]}]"
+        else:
+            storage_name = raw_name
+        prepared.append((row, storage_name))
+    return prepared
+
+
+def _duplicate_real_ability_names(payload: dict[str, Any]) -> tuple[str, ...]:
+    counts: dict[str, int] = {}
+    for row in _ability_rows(payload):
+        name = str(row.get("name") or "").strip()
+        if name:
+            counts[name] = counts.get(name, 0) + 1
+    return tuple(
+        sorted(
+            name
+            for name, count in counts.items()
+            if count > 1 and name != UNRESOLVED_ABILITY_NAME
+        )
+    )
+
+
 def _phase_rows(payload: dict[str, Any]) -> list[Any]:
     rows = payload.get("phases")
     return rows if isinstance(rows, list) else []
@@ -149,15 +200,15 @@ def _classify_source(
         )
 
     abilities = _ability_rows(payload)
-    names = [str(row.get("name") or "").strip() for row in abilities]
-    nonempty = [name for name in names if name]
-    if len(nonempty) != len(set(nonempty)):
+    real_duplicates = _duplicate_real_ability_names(payload)
+    if real_duplicates:
         return BossStructuralCandidate(
             path,
             encounter_id,
             encounter_name,
             DUPLICATE_ABILITY,
-            "source contains duplicate ability names for this encounter",
+            "source contains duplicate non-placeholder ability names: "
+            + ", ".join(real_duplicates),
             ability_count=len(abilities),
             phase_count=len(_phase_rows(payload)),
             dialogue_count=len(_dialogue_rows(payload)),
@@ -224,10 +275,14 @@ def _replace_abilities(
     source_url, revision = _source_meta(payload)
     connection.execute("DELETE FROM encounter_ability WHERE encounter_id=?", (encounter_id,))
     ids: dict[str, int] = {}
-    for row in _ability_rows(payload):
-        name = str(row.get("name") or "").strip()
-        if not name:
-            continue
+    raw_name_counts: dict[str, int] = {}
+    prepared = _prepared_ability_rows(payload)
+    for row, _ in prepared:
+        raw_name = str(row.get("name") or "").strip()
+        raw_name_counts[raw_name] = raw_name_counts.get(raw_name, 0) + 1
+
+    for row, storage_name in prepared:
+        raw_name = str(row.get("name") or "").strip()
         cursor = connection.execute(
             """
             INSERT INTO encounter_ability(
@@ -238,14 +293,17 @@ def _replace_abilities(
             """,
             (
                 encounter_id,
-                name,
+                storage_name,
                 str(row.get("description") or ""),
                 "Skills and Abilities",
                 source_url,
                 revision,
             ),
         )
-        ids[name] = int(cursor.lastrowid)
+        # Dialogue links are safe only when the source ability name is unique.
+        # Ambiguous placeholder references intentionally remain unlinked.
+        if raw_name_counts.get(raw_name, 0) == 1:
+            ids[raw_name] = int(cursor.lastrowid)
     return ids
 
 
@@ -372,12 +430,20 @@ def apply_boss_structural_import(
         for candidate in audit.ready:
             payload = _load_source(candidate.source_path)
             _replace_health(connection, candidate.encounter_id, payload)
-            ability_ids = _replace_abilities(connection, candidate.encounter_id, payload)
+            _replace_abilities(connection, candidate.encounter_id, payload)
             _replace_phases(connection, candidate.encounter_id, payload)
+            ability_ids = {
+                str(row[0]): int(row[1])
+                for row in connection.execute(
+                    "SELECT name, id FROM encounter_ability WHERE encounter_id=?",
+                    (candidate.encounter_id,),
+                ).fetchall()
+                if not str(row[0]).startswith(f"{UNRESOLVED_ABILITY_NAME} [")
+            }
             _replace_dialogue(connection, candidate.encounter_id, payload, ability_ids)
             _replace_sections(connection, candidate.encounter_id, payload)
             bosses += 1
-            abilities += len(ability_ids)
+            abilities += candidate.ability_count
             phases += candidate.phase_count
             dialogue += candidate.dialogue_count
         connection.commit()
