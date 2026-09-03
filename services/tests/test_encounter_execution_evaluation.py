@@ -44,21 +44,30 @@ def _legacy_method(fact_id: str, mechanic_name: str) -> EncounterCleanseMethod:
     )
 
 
-def test_oaxiltso_cleanse_is_build_independent_but_movement_and_positioning_stay_unknown():
+def test_oaxiltso_structured_execution_methods_are_build_independent_and_source_backed():
     result = _evaluator().evaluate("oaxiltso")
+    rows = {(row.mechanic_name, row.requirement_type): row for row in result.results}
 
-    cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
-    movement = next(row for row in result.results if row.requirement_type == "movement")
-    positioning = next(row for row in result.results if row.requirement_type == "positioning")
+    expected = {
+        ("Savage Blitz", "movement"): ("dodge", ""),
+        ("Savage Blitz", "positioning"): ("bait_farthest", ""),
+        ("Blistering Smash", "positioning"): ("avoid_hazard", ""),
+        ("Noxious Sludge", "movement"): ("move_to_interaction", "cleanse_pool"),
+        ("Noxious Sludge", "positioning"): ("hazard_drop_management", "noxious_pool"),
+        ("Noxious Sludge", "cleanse"): ("encounter_interaction", "cleanse_pool"),
+        ("Summon Havocrel Annihilators", "positioning"): ("separate_add_from_boss", ""),
+    }
 
-    assert cleanse.classification == CoverageClassification.COVERED
-    assert cleanse.handling_method == "encounter_interaction"
-    assert cleanse.interaction == "cleanse_pool"
-    assert cleanse.requires_player_build_capability is False
-    assert movement.classification == CoverageClassification.UNKNOWN
-    assert positioning.classification == CoverageClassification.UNKNOWN
-    assert result.is_fully_evaluable is False
-    assert result.is_fully_ready is False
+    assert set(rows) == set(expected)
+    for key, (method, interaction) in expected.items():
+        row = rows[key]
+        assert row.classification == CoverageClassification.COVERED
+        assert row.handling_method == method
+        assert row.interaction == interaction
+        assert row.requires_player_build_capability is False
+
+    assert result.is_fully_evaluable is True
+    assert result.is_fully_ready is True
 
 
 def test_hiath_break_free_and_standard_interrupts_are_build_independent_capabilities():
