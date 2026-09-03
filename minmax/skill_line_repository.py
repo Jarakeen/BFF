@@ -10,17 +10,19 @@ class SkillLineRepository:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
         self._skill_line_cache: dict[tuple[str, str], str | None] = {}
+        self._passive_max_rank_cache: dict[str, int | None] = {}
 
     @staticmethod
-    def _norm(value: str) -> str:
-        return " ".join(str(value or "").strip().casefold().split())
+    def _lookup_key(value: str) -> str:
+        """Mirror SQLite LOWER(TRIM(...)) lookup semantics for cache keys."""
+        return str(value or "").strip().casefold()
 
     def skill_line_for_ability_name(self, ability_name: str, *, class_name: str = "") -> str | None:
         name = str(ability_name or "").strip()
         if not name or not self.database_path.exists():
             return None
 
-        cache_key = (self._norm(name), self._norm(class_name))
+        cache_key = (self._lookup_key(name), self._lookup_key(class_name))
         if cache_key in self._skill_line_cache:
             return self._skill_line_cache[cache_key]
 
@@ -61,12 +63,18 @@ class SkillLineRepository:
         if not name or not self.database_path.exists():
             return None
 
+        cache_key = self._lookup_key(name)
+        if cache_key in self._passive_max_rank_cache:
+            return self._passive_max_rank_cache[cache_key]
+
         with sqlite3.connect(self.database_path) as db:
             skill_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill)").fetchall()}
             rank_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
             if not {"id", "name", "is_passive"}.issubset(skill_columns):
+                self._passive_max_rank_cache[cache_key] = None
                 return None
             if not {"skill_id", "rank"}.issubset(rank_columns):
+                self._passive_max_rank_cache[cache_key] = None
                 return None
             row = db.execute(
                 """
@@ -79,10 +87,14 @@ class SkillLineRepository:
                 (name,),
             ).fetchone()
 
-        if row is None or row[0] is None:
-            return None
-        try:
-            value = int(row[0])
-        except (TypeError, ValueError):
-            return None
-        return value if value > 0 else None
+        result: int | None = None
+        if row is not None and row[0] is not None:
+            try:
+                value = int(row[0])
+            except (TypeError, ValueError):
+                value = 0
+            if value > 0:
+                result = value
+
+        self._passive_max_rank_cache[cache_key] = result
+        return result
