@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Read-only boss-guide projection over persisted encounter structure.
 
-The combat/evaluation ``EncounterDefinition`` intentionally stays small.  This
+The combat/evaluation ``EncounterDefinition`` intentionally stays small. This
 module serves UI and reference-data consumers that need persisted identity,
 health, named abilities, and explicit phases without teaching those consumers to
 query SQLite directly or invent missing encounter semantics.
@@ -19,6 +19,15 @@ class EncounterBossGuideError(RuntimeError):
 
 class EncounterBossGuideNotFound(LookupError):
     """The requested canonical encounter does not exist in persistence."""
+
+
+@dataclass(frozen=True)
+class BossGuideEncounterSummary:
+    encounter_id: str
+    content_id: str
+    content_name: str
+    name: str
+    location: str
 
 
 @dataclass(frozen=True)
@@ -110,17 +119,32 @@ class EncounterBossGuideService:
             )
         return connection
 
-    def encounter_ids(self) -> tuple[str, ...]:
+    def encounter_summaries(self) -> tuple[BossGuideEncounterSummary, ...]:
+        """Return the light-weight persisted index used by boss/content selectors."""
         connection = self._connect()
         try:
             return tuple(
-                str(row[0])
+                BossGuideEncounterSummary(
+                    encounter_id=str(row["id"]),
+                    content_id=str(row["content_id"]),
+                    content_name=str(row["content_name"] or ""),
+                    name=str(row["name"] or ""),
+                    location=str(row["location"] or ""),
+                )
                 for row in connection.execute(
-                    "SELECT id FROM encounter ORDER BY name COLLATE NOCASE, id"
+                    """
+                    SELECT e.id, e.content_id, c.name AS content_name, e.name, e.location
+                    FROM encounter AS e
+                    JOIN content AS c ON c.id = e.content_id
+                    ORDER BY c.name COLLATE NOCASE, e.name COLLATE NOCASE, e.id
+                    """
                 ).fetchall()
             )
         finally:
             connection.close()
+
+    def encounter_ids(self) -> tuple[str, ...]:
+        return tuple(row.encounter_id for row in self.encounter_summaries())
 
     def get(self, encounter_id: str) -> EncounterBossGuide:
         encounter_id = str(encounter_id or "").strip()
