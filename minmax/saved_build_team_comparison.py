@@ -1,25 +1,32 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
-from minmax.build import Build
-from minmax.dd_damage import DDDamageEvent
-from minmax.dd_single_build_evaluator import DDBuildEvaluator
+from minmax.calculation import CalculationResult, StatBreakdown
+from minmax.context_factory import BuildCalculationContextFactory
+from minmax.dd_damage import DDDamageEvent, DDDamageResult, calculate_dd_damage
+from minmax.dd_mitigation import calculate_dd_mitigation
+from minmax.dd_stat_evaluation import DDStatEvaluation, evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
+from minmax.gear_set_repository import GearSetRepository
 from minmax.group_effects import GroupEffect
+from minmax.group_evaluation import GroupEvaluation
 from minmax.group_evaluator import GroupEvaluator
+from minmax.race_repository import RaceRepository
 from minmax.roster import RosterCandidate
 from minmax.role import Role
+from minmax.stat_ids import StatId
 from minmax.team_comparison import TeamComparison
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
+from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 
 
 @dataclass(frozen=True)
 class PlayerEvaluationEvidence:
-    """Traceable evidence for one player's personal damage in team comparison."""
-    
+    """Traceable static, single-event evaluation for one saved build."""
+
     player_name: str
     character_name: str
     build_name: str
@@ -27,52 +34,84 @@ class PlayerEvaluationEvidence:
     dd_event: DDDamageEvent
     evaluation_context: EvaluationContext
     dd_expected_damage: float
+    dd_stats: DDStatEvaluation
+    damage: DDDamageResult
+    static_unresolved: tuple[str, ...]
     roster_candidate: RosterCandidate
 
 
 class SavedBuildTeamComparisonAdapter:
     """
-    Adapter that loads two saved builds and compares them through TeamComparison.
-    
-    For Phase 12, this is a minimal implementation that:
-    - Accepts exact saved build names and active bars
-    - Uses DDBuildEvaluator with explicit DDDamageEvent and EvaluationContext
-    - Creates RosterCandidate instances with traceable personal_damage
-    - Does not invent rotations, trial requirements, or encounter-specific rules
+    Compare two saved-build single-member scenarios.
+
+    This is deliberately not a raid-DPS or rotation simulator. Personal damage
+    is one expected damage event evaluated from the canonical static saved-build
+    context. Group effects supplied to compare are declared effects supplied by
+    the candidate itself; a multi-member roster must attach each effect to its
+    real selected provider rather than inventing a zero-damage support player.
     """
 
-    def __init__(
-        self,
-        *,
-        builds_path: Path,
-        database_path: Path,
-    ):
+    def __init__(self, *, builds_path: Path, database_path: Path) -> None:
         self.builds_path = Path(builds_path)
         self.database_path = Path(database_path)
         self.build_service = BuildService(self.builds_path)
-        self.dd_evaluator = DDBuildEvaluator()
+        self.progression_adapter = MinmaxCharacterProgressionAdapter(
+            self.build_service.canonical.catalog_service
+        )
+        self.context_factory = BuildCalculationContextFactory(
+            race_repository=RaceRepository(self.database_path),
+            gear_set_repository=GearSetRepository(self.database_path),
+        )
 
     def _find_saved_build(self, build_name: str) -> PlayerBuild:
-        """Find a saved build by name, raising ValueError if not found."""
         roster = self.build_service.load()
         key = str(build_name or "").strip().casefold()
-        matches = [b for b in roster.Members if str(b.BuildName or "").strip().casefold() == key]
+        matches = [build for build in roster.Members if str(build.BuildName or "").strip().casefold() == key]
         if len(matches) == 1:
             return matches[0]
         if len(matches) > 1:
             raise ValueError(f"Ambiguous saved build name: {build_name!r}")
         raise ValueError(f"Saved build not found: {build_name!r}")
 
-    def _get_active_bar_skills(self, build: PlayerBuild, active_bar: str) -> tuple[str, ...]:
-        """Extract skill names from the active bar."""
-        if active_bar == "front":
-            skills = getattr(build, "FrontBarSkills", None) or ()
-        elif active_bar == "back":
-            skills = getattr(build, "BackBarSkills", None) or ()
-        else:
+    @staticmethod
+    def _normalized_active_bar(active_bar: str) -> str:
+        value = str(active_bar or "").strip().casefold()
+        if value not in {"front", "back"}:
             raise ValueError(f"Invalid active_bar: {active_bar!r}; expected 'front' or 'back'")
-        
-        return tuple(str(s or "").strip() for s in skills if str(s or "").strip())
+        return value
+
+    def _get_active_bar_skills(self, build: PlayerBuild, active_bar: str) -> tuple[str, ...]:
+        bar = self._normalized_active_bar(active_bar)
+        skills = build.FrontBarSkills if bar == "front" else build.BackBarSkills
+        return tuple(str(skill or "").strip() for skill in skills if str(skill or "").strip())
+
+    @staticmethod
+    def _role(value: str) -> Role:
+        try:
+            return Role(str(value or "").strip().casefold())
+        except ValueError:
+            return Role.DD
+
+    @staticmethod
+    def _calculation_result(snapshot) -> CalculationResult:
+        if snapshot.core_state is None:
+            raise ValueError("Canonical static context has no resolved core stat state.")
+        percent_stats = {StatId.CRITICAL_CHANCE, StatId.CRITICAL_DAMAGE}
+        stats: dict[StatId, StatBreakdown] = {}
+        for stat in (
+            StatId.WEAPON_DAMAGE,
+            StatId.SPELL_DAMAGE,
+            StatId.PHYSICAL_PENETRATION,
+            StatId.SPELL_PENETRATION,
+            StatId.CRITICAL_CHANCE,
+            StatId.CRITICAL_DAMAGE,
+        ):
+            trace = snapshot.core_state.derived.get(stat)
+            value = float(trace.final_value) if trace is not None else 0.0
+            if stat in percent_stats:
+                value *= 100.0
+            stats[stat] = StatBreakdown(base=value)
+        return CalculationResult(stats=stats)
 
     def _evaluate_player(
         self,
@@ -80,121 +119,78 @@ class SavedBuildTeamComparisonAdapter:
         active_bar: str,
         event: DDDamageEvent,
         context: EvaluationContext,
+        *,
+        group_effects: tuple[GroupEffect, ...] = (),
     ) -> PlayerEvaluationEvidence:
-        """
-        Evaluate a saved build's personal damage.
-        
-        For Phase 12, uses a minimal Build object with an empty stats dictionary.
-        The provided DDDamageEvent and EvaluationContext are the scenario inputs.
-        
-        Returns PlayerEvaluationEvidence with traceable personal damage.
-        """
-        # Validate active bar has skills
-        skills = self._get_active_bar_skills(saved_build, active_bar)
-        if not skills:
+        bar = self._normalized_active_bar(active_bar)
+        if not self._get_active_bar_skills(saved_build, bar):
+            raise ValueError(f"Saved build {saved_build.BuildName!r} has no skills on {bar} bar")
+
+        progression_resolution = self.progression_adapter.resolve(saved_build)
+        if not progression_resolution.resolved:
+            detail = "; ".join(progression_resolution.unresolved)
             raise ValueError(
-                f"Saved build {saved_build.BuildName!r} has no skills on {active_bar} bar"
+                f"Canonical character progression is required for "
+                f"{saved_build.BuildName!r}: {detail}"
             )
 
-        # For Phase 12 MVP: use minimal Build with explicit event and context
-        # Real builds would go through full character/progression pipeline
-        minimal_build = Build(name=str(saved_build.BuildName or "unnamed").strip())
-
-        # Evaluate DD damage through existing pipeline
-        dd_evaluation = self.dd_evaluator.evaluate(
-            minimal_build,
-            event,
-            context,
+        build_id = (
+            str(getattr(saved_build, "BuildId", "") or "").strip()
+            or str(saved_build.BuildName or "").strip()
         )
+        snapshot = self.context_factory.build(
+            character_id=progression_resolution.character_id,
+            build_id=build_id,
+            build=saved_build,
+            progression=progression_resolution.progression,
+            active_bar=bar,
+            target_count=context.target_count,
+            target_resistance=context.target_resistance,
+            fight_duration=context.fight_duration,
+        )
+        calculation = self._calculation_result(snapshot)
+        dd_stats = evaluate_dd_stats(calculation, context)
+        raw_damage = calculate_dd_damage(event, dd_stats)
+        mitigation = None
+        if context.target_resistance is not None and raw_damage.penetration_stat is not None:
+            mitigation = calculate_dd_mitigation(
+                target_resistance=context.target_resistance,
+                penetration=raw_damage.penetration,
+            )
+        damage = calculate_dd_damage(event, dd_stats, mitigation=mitigation)
 
-        player_name = str(saved_build.Name or "unnamed").strip()
-        character_name = str(saved_build.Name or "unnamed").strip()
-        build_name = str(saved_build.BuildName or "unnamed").strip()
-
+        player_name = str(saved_build.Name or saved_build.BuildName or "unnamed").strip()
         roster_candidate = RosterCandidate(
             name=player_name,
-            role=Role.DD,  # Phase 12 is DD-focused
+            role=self._role(saved_build.Role),
             class_name=str(saved_build.EsoClass or "Unknown"),
-            personal_damage=dd_evaluation.damage.expected_damage,
+            personal_damage=damage.final_damage,
+            group_effects=group_effects,
         )
-
         return PlayerEvaluationEvidence(
             player_name=player_name,
-            character_name=character_name,
-            build_name=build_name,
-            active_bar=active_bar,
+            character_name=player_name,
+            build_name=str(saved_build.BuildName or "unnamed").strip(),
+            active_bar=bar,
             dd_event=event,
             evaluation_context=context,
-            dd_expected_damage=dd_evaluation.damage.expected_damage,
+            dd_expected_damage=damage.final_damage,
+            dd_stats=dd_stats,
+            damage=damage,
+            static_unresolved=tuple(snapshot.unresolved_gear_effects),
             roster_candidate=roster_candidate,
         )
 
-    def compare(
-        self,
-        baseline_build_name: str,
-        baseline_active_bar: str,
-        candidate_build_name: str,
-        candidate_active_bar: str,
-        event: DDDamageEvent,
-        context: EvaluationContext | None = None,
-        group_effects: tuple[GroupEffect, ...] = (),
-    ) -> tuple[TeamComparison, PlayerEvaluationEvidence, PlayerEvaluationEvidence]:
-        """
-        Compare two saved builds through the team comparison engine.
-        
-        Returns (TeamComparison, baseline_evidence, candidate_evidence).
-        
-        Raises ValueError if builds cannot be resolved or evaluations fail.
-        """
-        if context is None:
-            context = EvaluationContext()
-
-        baseline_build = self._find_saved_build(baseline_build_name)
-        candidate_build = self._find_saved_build(candidate_build_name)
-
-        baseline_evidence = self._evaluate_player(
-            baseline_build,
-            baseline_active_bar,
-            event,
-            context,
-        )
-
-        candidate_evidence = self._evaluate_player(
-            candidate_build,
-            candidate_active_bar,
-            event,
-            context,
-        )
-
-        # Build rosters with group effects
-        baseline_roster = [baseline_evidence.roster_candidate]
-        candidate_roster = [
-            candidate_evidence.roster_candidate,
-            *[
-                RosterCandidate(
-                    name=effect.source,
-                    role=Role.DD,
-                    class_name="Support",
-                    personal_damage=0.0,
-                    group_effects=(effect,),
-                )
-                for effect in group_effects
-            ],
-        ]
-
-        # Evaluate rosters
-        baseline_eval = GroupEvaluator().evaluate(baseline_roster)
-        candidate_eval = GroupEvaluator().evaluate(candidate_roster)
-
-        # Create comparison
-        comparison = TeamComparison(
-            baseline_name=baseline_build_name,
-            candidate_name=candidate_build_name,
-            baseline_evaluation=baseline_eval,
-            candidate_evaluation=candidate_eval,
-        )
-
-        return comparison, baseline_evidence, candidate_evidence
+    @staticmethod
+    def _with_static_unresolved(
+        evaluation: GroupEvaluation,
+        evidence: PlayerEvaluationEvidence,
+    ) -> GroupEvaluation:
+        messages = tuple(dict.fromkeys(
+            tuple(evaluation.unresolved_effects)
+            + tuple(f"{evidence.build_name}: {message}" for message in evidence.static_unresolved)
+        ))
+        return replace(evaluation, unresolved_effects=messages)
 
     def compare(
         self,
@@ -206,59 +202,34 @@ class SavedBuildTeamComparisonAdapter:
         context: EvaluationContext | None = None,
         group_effects: tuple[GroupEffect, ...] = (),
     ) -> tuple[TeamComparison, PlayerEvaluationEvidence, PlayerEvaluationEvidence]:
-        """
-        Compare two saved builds through the team comparison engine.
-        
-        Returns (TeamComparison, baseline_evidence, candidate_evidence).
-        
-        Raises ValueError if builds cannot be resolved or evaluations fail.
-        """
         if context is None:
             context = EvaluationContext()
 
-        baseline_build = self._find_saved_build(baseline_build_name)
-        candidate_build = self._find_saved_build(candidate_build_name)
-
         baseline_evidence = self._evaluate_player(
-            baseline_build,
+            self._find_saved_build(baseline_build_name),
             baseline_active_bar,
             event,
             context,
         )
-
         candidate_evidence = self._evaluate_player(
-            candidate_build,
+            self._find_saved_build(candidate_build_name),
             candidate_active_bar,
             event,
             context,
+            group_effects=group_effects,
         )
-
-        # Build rosters with group effects
-        baseline_roster = [baseline_evidence.roster_candidate]
-        candidate_roster = [
-            candidate_evidence.roster_candidate,
-            *[
-                RosterCandidate(
-                    name=effect.source,
-                    role=Role.DD,
-                    class_name="Support",
-                    personal_damage=0.0,
-                    group_effects=(effect,),
-                )
-                for effect in group_effects
-            ],
-        ]
-
-        # Evaluate rosters
-        baseline_eval = GroupEvaluator().evaluate(baseline_roster)
-        candidate_eval = GroupEvaluator().evaluate(candidate_roster)
-
-        # Create comparison
+        baseline_evaluation = self._with_static_unresolved(
+            GroupEvaluator().evaluate([baseline_evidence.roster_candidate]),
+            baseline_evidence,
+        )
+        candidate_evaluation = self._with_static_unresolved(
+            GroupEvaluator().evaluate([candidate_evidence.roster_candidate]),
+            candidate_evidence,
+        )
         comparison = TeamComparison(
-            baseline_name=baseline_build_name,
-            candidate_name=candidate_build_name,
-            baseline_evaluation=baseline_eval,
-            candidate_evaluation=candidate_eval,
+            baseline_name=baseline_evidence.build_name,
+            candidate_name=candidate_evidence.build_name,
+            baseline_evaluation=baseline_evaluation,
+            candidate_evaluation=candidate_evaluation,
         )
-
         return comparison, baseline_evidence, candidate_evidence
