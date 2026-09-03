@@ -93,6 +93,16 @@ def _print_excluded_builds(inventory) -> None:
         print(f"    - character={character!r} | build={build!r}")
 
 
+def _encounter_service(database: Path) -> EncounterService:
+    return EncounterService(
+        EncounterRepository(
+            ROOT / "data" / "eso_info" / "bosses",
+            ROOT / "data" / "encounter_evidence",
+            database_path=database,
+        )
+    )
+
+
 def main() -> int:
     args = _parser().parse_args()
     try:
@@ -101,7 +111,7 @@ def main() -> int:
         print(exc)
         return 2
 
-    encounter_service = EncounterService(EncounterRepository.from_data_root(ROOT / "data"))
+    encounter_service = _encounter_service(args.database)
     if args.encounter not in encounter_service.encounter_ids():
         print(f"Unknown exact encounter id: {args.encounter}")
         return 2
