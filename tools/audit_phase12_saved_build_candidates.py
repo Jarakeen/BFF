@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.build_action_cost_modifiers import BuildActionCostModifierResolver
+from minmax.build_candidate_armor_enchant import enumerate_armor_enchant_candidates
 from minmax.build_candidate_armor_trait import enumerate_armor_trait_candidates
 from minmax.build_candidate_comparison import BuildCandidateComparison, CandidateConstraint, ConstraintStatus
 from minmax.build_candidate_context import build_candidate_context
@@ -107,6 +108,33 @@ def _candidate_change_label(comparison: BuildCandidateComparison) -> str:
     return f"{change.path}: {change.before} -> {change.after}"
 
 
+def _print_recommendation(title: str, ranking: CandidateRanking) -> None:
+    if ranking.recommended is None:
+        print(f"{title} recommendation: none.")
+        return
+
+    recommended = ranking.recommended
+    reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
+    ties = ranking.recommended_ties
+    if len(ties) > 1:
+        print(
+            f"{title} co-best recommendations ({len(ties)} tied) | reason={reason} | "
+            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
+            f"delta={recommended.delta:.3f}"
+        )
+        for tied in ties:
+            print(f"  - {_candidate_change_label(tied)}")
+    else:
+        print(
+            f"{title} recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
+            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
+            f"delta={recommended.delta:.3f}"
+        )
+
+    for constraint in recommended.constraints:
+        print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
+
+
 def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
     comparisons = ranking.comparisons
     print()
@@ -140,18 +168,7 @@ def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
         print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
 
     print()
-    if ranking.recommended is None:
-        print(f"{title} recommendation: none.")
-    else:
-        recommended = ranking.recommended
-        reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
-        print(
-            f"{title} recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
-            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
-            f"delta={recommended.delta:.3f}"
-        )
-        for constraint in recommended.constraints:
-            print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
+    _print_recommendation(title, ranking)
 
 
 def audit_saved_build_candidates(
@@ -206,12 +223,20 @@ def audit_saved_build_candidates(
         character_id=character_id,
         baseline_build_id=baseline_build_id,
     )
+    armor_enchant_candidates = enumerate_armor_enchant_candidates(
+        baseline_build=baseline_build,
+        character_id=character_id,
+        baseline_build_id=baseline_build_id,
+    )
     if len(mundus_candidates) < 2:
         print(f"Phase 12 requires at least two Mundus candidates; found {len(mundus_candidates)}")
         return 5
     if not armor_trait_candidates:
         print("Phase 12 armor-trait candidate generation found no equipped eligible armor slots.")
         return 6
+    if not armor_enchant_candidates:
+        print("Phase 12 armor-enchant candidate generation found no CP160 Truly Superb eligible armor slots.")
+        return 7
 
     context_factory = BuildCalculationContextFactory(
         race_repository=RaceRepository(database_path),
@@ -361,8 +386,11 @@ def audit_saved_build_candidates(
         ),
     )
     armor_trait_ranking = evaluate_family(armor_trait_candidates)
+    armor_enchant_ranking = evaluate_family(armor_enchant_candidates)
     overall_ranking = rank_candidate_comparisons(
-        mundus_ranking.comparisons + armor_trait_ranking.comparisons
+        mundus_ranking.comparisons
+        + armor_trait_ranking.comparisons
+        + armor_enchant_ranking.comparisons
     )
 
     print()
@@ -383,7 +411,7 @@ def audit_saved_build_candidates(
     print(f"Proven non-heals excluded: {', '.join(excluded_skill_names) if excluded_skill_names else '(none)'}")
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; expected critical healing is not yet modeled")
-    print("Candidate scope: one changed field per candidate; Mundus and armor traits ranked separately and overall")
+    print("Candidate scope: one changed field per candidate; Mundus, armor traits, and armor enchants ranked separately and overall")
     print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
     print()
     print(f"Baseline healing potency: {_format_value(baseline_healing.value if baseline_healing.resolved else None)}")
@@ -402,6 +430,7 @@ def audit_saved_build_candidates(
 
     _print_candidate_family("Mundus", mundus_ranking)
     _print_candidate_family("Armor trait", armor_trait_ranking)
+    _print_candidate_family("Armor enchant", armor_enchant_ranking)
 
     print()
     print("Overall bounded one-change rank order:")
@@ -412,25 +441,14 @@ def audit_saved_build_candidates(
         print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
 
     print()
-    if overall_ranking.recommended is None:
-        print("Overall recommendation: none. No candidate is a proven-safe objective improvement or hard-constraint repair.")
-    else:
-        recommended = overall_ranking.recommended
-        reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
-        print(
-            f"Overall recommendation: {_candidate_change_label(recommended)} | reason={reason} | "
-            f"baseline={recommended.baseline_value:.3f} candidate={recommended.candidate_value:.3f} "
-            f"delta={recommended.delta:.3f}"
-        )
-        for constraint in recommended.constraints:
-            print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
+    _print_recommendation("Overall", overall_ranking)
     print()
     return 0
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Evaluate bounded Phase 12 Mundus and armor-trait candidates against one real saved build."
+        description="Evaluate bounded Phase 12 Mundus, armor-trait, and armor-enchant candidates against one real saved build."
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
