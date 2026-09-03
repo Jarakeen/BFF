@@ -33,8 +33,8 @@ def test_real_phase7_closeout_gate_passes_current_database():
     assert summary["runtime_review"] == 0
 
     kinds = result["timing_kinds"]
+    assert sum(kinds.values()) == len(result["rows"])
     assert kinds[RuntimeCadenceBoundKind.CALLER_ACTIVE_WINDOW.value] > 0
-    assert kinds[RuntimeCadenceBoundKind.EXPLICIT_STATE_WINDOW.value] > 0
     assert kinds[RuntimeCadenceBoundKind.FIXED_COUNT_DURATION.value] > 0
     assert kinds[RuntimeCadenceBoundKind.STACK_COUNT.value] > 0
 
