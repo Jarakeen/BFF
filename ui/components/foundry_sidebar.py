@@ -35,7 +35,7 @@ BROADCAST_NAV_SECTION = {"label": "Broadcast", "children": [
 
 CORE_NAV_SECTIONS = [
     ("Achievements", "achievements", "header"),
-    {"label": "Collections", "children": [
+    {"label": "Collections", "page": "collectibles", "children": [
         ("Mounts", "collectibles:Mounts"), ("Pets", "collectibles:Pets"),
         ("Allies / Assistants", "collectibles:Allies / Assistants"), ("Houses", "collectibles:Houses"),
         ("Costumes", "collectibles:Costumes"), ("Skins", "collectibles:Skins"),
@@ -245,6 +245,9 @@ class FoundrySidebar(QWidget):
             child_layout.addWidget(self.build_leaf_button(text, page))
         layout.addWidget(children)
         label.toggled.connect(children.setVisible)
+        category_page = str(section.get("page") or "").strip()
+        if category_page:
+            label.clicked.connect(lambda checked=False, p=category_page: self.pageRequested.emit(p))
         return wrapper
 
     def set_current(self, page: str) -> None:
