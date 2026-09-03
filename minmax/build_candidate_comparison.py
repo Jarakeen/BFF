@@ -14,6 +14,7 @@ class ConstraintStatus(str, Enum):
     IMPROVED = "improved"
     REPAIRED = "repaired"
     WORSENED = "worsened"
+    UNSATISFIED = "unsatisfied"
     UNKNOWN = "unknown"
 
 
@@ -63,7 +64,11 @@ class BuildCandidateComparison:
         return tuple(
             constraint
             for constraint in self.constraints
-            if constraint.status in (ConstraintStatus.WORSENED, ConstraintStatus.UNKNOWN)
+            if constraint.status in (
+                ConstraintStatus.WORSENED,
+                ConstraintStatus.UNSATISFIED,
+                ConstraintStatus.UNKNOWN,
+            )
         )
 
     @property
