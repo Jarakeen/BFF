@@ -3,10 +3,10 @@ from __future__ import annotations
 """Phase 10 evaluation of build-independent encounter execution readiness.
 
 This layer answers whether BFF knows *how* a generic encounter action is handled
-without pretending that player execution has already occurred. Core game actions
-and encounter-provided interactions are build-independent capabilities. Movement
-and positioning remain unknown until strategy/geometry evidence exists. Player-
-skill requirements remain provider questions and are not silently satisfied here.
+without pretending that player execution has already occurred. Core game actions,
+encounter-provided interactions, and source-backed movement/positioning handling
+methods are build-independent capabilities. Player-skill requirements remain
+provider questions and are not silently satisfied here.
 """
 
 from dataclasses import dataclass
@@ -17,6 +17,11 @@ from services.encounter_cleanse_method import (
     CleanseMethodResolution,
     EncounterCleanseMethod,
     EncounterCleanseMethodService,
+)
+from services.encounter_execution_method import (
+    EncounterExecutionMethod,
+    EncounterExecutionMethodService,
+    ExecutionMethodResolution,
 )
 from services.encounter_interrupt_method import (
     EncounterInterruptMethodService,
@@ -92,19 +97,14 @@ class EncounterExecutionEvaluator:
         self._encounter_service = encounter_service
         self._cleanse_methods = EncounterCleanseMethodService(encounter_service)
         self._interrupt_methods = EncounterInterruptMethodService(encounter_service)
+        self._execution_methods = EncounterExecutionMethodService(encounter_service)
 
     @staticmethod
     def _cleanse_methods_by_requirement(
         requirements: tuple[EncounterRequirement, ...],
         methods: tuple[EncounterCleanseMethod, ...],
     ) -> dict[str, EncounterCleanseMethod]:
-        """Join cleanse methods to requirements without fuzzy mechanic matching.
-
-        Exact mechanic-name identity wins. A legacy method record may lack the
-        canonical mechanic name; in that case we permit a one-to-one association
-        only when exactly one cleanse requirement and exactly one cleanse method
-        exist. Any ambiguity remains unresolved rather than being guessed.
-        """
+        """Join cleanse methods to requirements without fuzzy mechanic matching."""
         cleanse_requirements = tuple(
             requirement
             for requirement in requirements
@@ -142,12 +142,24 @@ class EncounterExecutionEvaluator:
             row.mechanic_name: row
             for row in self._interrupt_methods.methods(encounter_id)
         }
+        execution_by_key: dict[tuple[str, str], EncounterExecutionMethod] = {}
+        execution_conflicts: set[tuple[str, str]] = set()
+        for row in self._execution_methods.methods(encounter_id):
+            key = (row.mechanic_name, row.requirement_type)
+            if key in execution_by_key:
+                previous = execution_by_key[key]
+                if previous.method != row.method or previous.resolution != row.resolution:
+                    execution_conflicts.add(key)
+                continue
+            execution_by_key[key] = row
 
         rows = tuple(
             self._evaluate_requirement(
                 requirement,
                 cleanse_by_requirement_id=cleanse_by_requirement_id,
                 interrupt_by_name=interrupt_by_name,
+                execution_by_key=execution_by_key,
+                execution_conflicts=execution_conflicts,
             )
             for requirement in requirements
         )
@@ -174,12 +186,58 @@ class EncounterExecutionEvaluator:
         *,
         cleanse_by_requirement_id: dict[str, EncounterCleanseMethod],
         interrupt_by_name: dict,
+        execution_by_key: dict[tuple[str, str], EncounterExecutionMethod],
+        execution_conflicts: set[tuple[str, str]],
     ) -> ExecutionRequirementEvaluation:
         if requirement.requirement_type in {"movement", "positioning"}:
-            return self._unknown(
-                requirement,
-                "The encounter requires execution/positioning, but Phase 10 has no "
-                "source-backed strategy or geometry evidence proving roster compliance.",
+            key = (requirement.mechanic_name, requirement.requirement_type)
+            if key in execution_conflicts:
+                return ExecutionRequirementEvaluation(
+                    requirement.requirement_id,
+                    requirement.encounter_id,
+                    requirement.mechanic_id,
+                    requirement.mechanic_name,
+                    requirement.requirement_type,
+                    CoverageClassification.CONFLICT,
+                    "",
+                    "",
+                    False,
+                    "Conflicting structured evidence exists for the execution handling method.",
+                )
+            method = execution_by_key.get(key)
+            if method is None:
+                return self._unknown(
+                    requirement,
+                    "The encounter requires execution/positioning, but Phase 10 has no "
+                    "source-backed handling method for this requirement.",
+                )
+            if method.resolution == ExecutionMethodResolution.CONFLICTING:
+                return ExecutionRequirementEvaluation(
+                    requirement.requirement_id,
+                    requirement.encounter_id,
+                    requirement.mechanic_id,
+                    requirement.mechanic_name,
+                    requirement.requirement_type,
+                    CoverageClassification.CONFLICT,
+                    "",
+                    "",
+                    False,
+                    "Conflicting source evidence exists for the execution handling method.",
+                )
+            if method.resolution != ExecutionMethodResolution.RESOLVED or method.method is None:
+                return self._unknown(requirement, "Execution handling method is unresolved.")
+            return ExecutionRequirementEvaluation(
+                requirement.requirement_id,
+                requirement.encounter_id,
+                requirement.mechanic_id,
+                requirement.mechanic_name,
+                requirement.requirement_type,
+                CoverageClassification.COVERED,
+                method.method.value,
+                method.interaction,
+                False,
+                "A coarse build-independent handling method is source-backed. This proves "
+                "the mechanic is understood, not that players will execute the strategy correctly.",
             )
 
         if requirement.requirement_type == "cleanse":
