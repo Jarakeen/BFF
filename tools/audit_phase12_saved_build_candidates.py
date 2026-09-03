@@ -19,6 +19,7 @@ from minmax.build_candidate_healing import ModeledHealingPotency, measure_modele
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
+from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepository
@@ -196,6 +197,10 @@ def audit_saved_build_candidates(
         ability_cost_repository=ability_cost_repository,
         cost_modifier_resolver=cost_modifier_resolver,
     )
+    baseline_sustain_context_unresolved = sustain_relevant_context_unresolved(
+        baseline_build,
+        tuple(baseline_context.unresolved_gear_effects),
+    )
 
     def resolve_context(candidate):
         return build_candidate_context(
@@ -207,7 +212,7 @@ def audit_saved_build_candidates(
         )
 
     def resolve_sustain(candidate_context):
-        if candidate_context.context is None or candidate_context.unresolved:
+        if candidate_context.context is None:
             unresolved = candidate_context.unresolved or ("Candidate calculation context is unavailable",)
             return BuildCandidateSustainComparison(
                 baseline_run=baseline_sustain,
@@ -219,8 +224,29 @@ def audit_saved_build_candidates(
                 ),
                 unresolved=tuple(unresolved),
             )
+
+        candidate_build = candidate_context.candidate.candidate_build
+        context_unresolved = (
+            tuple(baseline_sustain_context_unresolved)
+            + sustain_relevant_context_unresolved(
+                candidate_build,
+                tuple(candidate_context.unresolved),
+            )
+        )
+        if context_unresolved:
+            return BuildCandidateSustainComparison(
+                baseline_run=baseline_sustain,
+                candidate_run=None,
+                constraint=CandidateConstraint(
+                    name=f"{resource.value} sustain",
+                    status=ConstraintStatus.UNKNOWN,
+                    explanation="Sustain comparison is unresolved: " + "; ".join(context_unresolved),
+                ),
+                unresolved=tuple(context_unresolved),
+            )
+
         candidate_run = evaluate_named_build_sustain(
-            build=candidate_context.candidate.candidate_build,
+            build=candidate_build,
             context=candidate_context.context,
             resource=resource,
             duration_seconds=duration_seconds,
@@ -292,9 +318,9 @@ def audit_saved_build_candidates(
         print("Baseline capability unresolved:")
         for message in baseline_capability.capability_unresolved:
             print(f"  - {message}")
-    if baseline_sustain.unresolved:
+    if baseline_sustain.unresolved or baseline_sustain_context_unresolved:
         print("Baseline sustain unresolved:")
-        for message in baseline_sustain.unresolved:
+        for message in tuple(baseline_sustain_context_unresolved) + tuple(baseline_sustain.unresolved):
             print(f"  - {message}")
 
     print()
