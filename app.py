@@ -75,6 +75,22 @@ def _prepare_optional_module_state() -> None:
     migrate_legacy_broadcast_state()
 
 
+def _close_pyinstaller_boot_splash() -> None:
+    """Close PyInstaller's boot splash only after the Qt splash is visible.
+
+    The module exists only in a splash-enabled frozen build. Keeping the boot
+    splash alive until this point prevents a bright/blank handoff gap during
+    startup for photosensitive users.
+    """
+    try:
+        import pyi_splash
+
+        if pyi_splash.is_alive():
+            pyi_splash.close()
+    except (ImportError, RuntimeError):
+        pass
+
+
 def main() -> int:
 
     _set_windows_app_id()
@@ -95,6 +111,7 @@ def main() -> int:
     splash = create_startup_splash()
     splash.show()
     app.processEvents()
+    _close_pyinstaller_boot_splash()
 
     from ui.theme import ThemeManager
     from ui.components.searchable_build_selectors import install as install_searchable_selectors
