@@ -28,6 +28,9 @@ class ProvisioningStaticRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
+        self._list_names_cache: tuple[str, ...] | None = None
+        self._description_cache: dict[str, str | None] = {}
+        self._resolve_cache: dict[str, tuple[tuple[Effect, ...], tuple[str, ...]]] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -95,6 +98,8 @@ class ProvisioningStaticRepository:
         intentionally does not claim that every listed tooltip is stat-mapped;
         callers that need evaluable foods still pass each name through ``resolve``.
         """
+        if self._list_names_cache is not None:
+            return self._list_names_cache
 
         names: dict[str, str] = {}
         with self._connect() as connection:
@@ -124,7 +129,10 @@ class ProvisioningStaticRepository:
                     if name:
                         names.setdefault(name.casefold(), name)
 
-        return tuple(sorted(names.values(), key=lambda value: (value.casefold(), value)))
+        self._list_names_cache = tuple(
+            sorted(names.values(), key=lambda value: (value.casefold(), value))
+        )
+        return self._list_names_cache
 
     def _from_entity_source(self, connection: sqlite3.Connection, name: str) -> str | None:
         if not self._table_exists(connection, "entity") or not self._table_exists(connection, "entity_source"):
@@ -192,8 +200,13 @@ class ProvisioningStaticRepository:
         selected = self.canonical_name(name)
         if not selected:
             return None
+        cache_key = selected.casefold()
+        if cache_key in self._description_cache:
+            return self._description_cache[cache_key]
         with self._connect() as connection:
-            return self._from_entity_source(connection, selected) or self._from_dedicated_table(connection, selected)
+            description = self._from_entity_source(connection, selected) or self._from_dedicated_table(connection, selected)
+        self._description_cache[cache_key] = description
+        return description
 
     @staticmethod
     def _effect(name: str, stat: StatId, value: float) -> Effect:
@@ -209,9 +222,17 @@ class ProvisioningStaticRepository:
         selected = self.canonical_name(name)
         if not selected:
             return [], []
+        cache_key = selected.casefold()
+        cached = self._resolve_cache.get(cache_key)
+        if cached is not None:
+            effects, unresolved = cached
+            return list(effects), list(unresolved)
+
         description = self.description(selected)
         if not description:
-            return [], [f"Food/Drink not found in canonical provisioning data: {selected}"]
+            result = ((), (f"Food/Drink not found in canonical provisioning data: {selected}",))
+            self._resolve_cache[cache_key] = result
+            return [], list(result[1])
 
         text = self._clean(description)
         effects: list[Effect] = []
@@ -267,5 +288,10 @@ class ProvisioningStaticRepository:
             if effect.stat is not None:
                 deduped[effect.stat] = effect
         if deduped:
-            return list(deduped.values()), []
-        return [], [f"Food/Drink has no mapped static character-sheet stats: {selected}: {text}"]
+            result = (tuple(deduped.values()), ())
+            self._resolve_cache[cache_key] = result
+            return list(result[0]), []
+
+        result = ((), (f"Food/Drink has no mapped static character-sheet stats: {selected}: {text}",))
+        self._resolve_cache[cache_key] = result
+        return [], list(result[1])
