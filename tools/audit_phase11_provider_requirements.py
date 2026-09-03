@@ -9,12 +9,12 @@ if str(REPO_ROOT) not in sys.path:
 
 from services.encounter_repository import EncounterRepository
 from services.encounter_service import EncounterService
-from services.paths import RESEARCH
+from services.paths import DATA
 from services.phase11_provider_requirement_audit import Phase11ProviderRequirementAudit
 
 
 def main() -> int:
-    service = EncounterService(EncounterRepository.from_data_root(RESEARCH))
+    service = EncounterService(EncounterRepository.from_data_root(DATA))
     audit = Phase11ProviderRequirementAudit(service).audit()
 
     print("=" * 76)
