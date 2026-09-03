@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
+
+import pytest
 
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
@@ -89,3 +92,40 @@ def test_real_oaxiltso_saved_build_audits_do_not_overclaim_generic_cleanse_cover
     assert execution_cleanse.requires_player_build_capability is False
     assert result.execution_evaluation.unknown == ()
     assert result.execution_evaluation.is_fully_ready is True
+
+
+def test_distinct_multi_member_roster_evaluates_one_encounter_once():
+    evaluator = EncounterRosterEvaluator(
+        _encounter_service(),
+        SavedBuildEncounterCapabilityAdapter(()),
+    )
+    audits = (
+        _audit("Tank"),
+        _audit("Healer"),
+        _audit("DD1"),
+        _audit("DD2"),
+    )
+
+    result = evaluator.evaluate_saved_build_audits("achelir", audits)
+
+    assert result.encounter_id == "achelir"
+    assert result.execution_evaluation.is_fully_ready is True
+    interrupt = next(
+        row for row in result.execution_evaluation.results
+        if row.requirement_type == "interrupt"
+    )
+    assert interrupt.classification == CoverageClassification.COVERED
+    assert interrupt.handling_method == "core_bash"
+    assert result.is_fully_covered is True
+
+
+def test_multiple_selected_builds_for_same_character_are_rejected():
+    evaluator = EncounterRosterEvaluator(
+        _encounter_service(),
+        SavedBuildEncounterCapabilityAdapter(()),
+    )
+    first = _audit("Magrat")
+    second = replace(first, build_name="Magrat Alternate")
+
+    with pytest.raises(ValueError, match="one authoritative build per roster member"):
+        evaluator.evaluate_saved_build_audits("achelir", (first, second))
