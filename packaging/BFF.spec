@@ -33,11 +33,15 @@ with boot_splash_path.open("wb") as handle:
     handle.write(pixels)
 
 # Read-only UI resources are bundled into PyInstaller's extraction directory.
-# Writable application data (especially data/eso.db) is deliberately NOT
-# bundled; the build scripts place it beside FoundryDock.exe where engine.config finds it.
+# The friend package still places the working data/eso.db beside FoundryDock.exe,
+# but a second read-only seed is bundled so a frozen app can recover when a user
+# accidentally separates the EXE from its data folder.  engine.config only
+# provisions this seed when the external database is absent and never overwrites
+# an existing database.
 datas = [
     (str(project_root / "assets"), "assets"),
     (str(project_root / "bff.ico"), "."),
+    (str(project_root / "data" / "eso.db"), "_seed_data"),
 ]
 
 a = Analysis(
