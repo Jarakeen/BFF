@@ -14,9 +14,11 @@ from minmax.build_candidate_comparison import (
 )
 from minmax.build_candidate_context import BuildCandidateContextResult
 from minmax.build_candidate_evaluator import (
+    evaluate_damage_candidate,
     evaluate_healing_candidate,
     rank_candidate_comparisons,
 )
+from minmax.build_candidate_damage import ModeledDamagePotency
 from minmax.build_candidate_healing import ModeledHealingPotency
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison
 from minmax.evaluation_objective import EvaluationObjective
@@ -301,3 +303,111 @@ def test_candidate_ranking_is_deterministic_and_excludes_blocked_candidates() ->
         "candidate-b",
     ]
     assert result.recommended is best
+
+
+def test_evaluate_damage_candidate_uses_authoritative_metric_and_constraints() -> None:
+    candidate = _candidate("dd:mundus:thief")
+    capability_service = _CapabilityService(_audit())
+
+    result = evaluate_damage_candidate(
+        candidate=candidate,
+        baseline_damage=ModeledDamagePotency(
+            value=100.0,
+            metric_name="single-event expected damage",
+            evidence=("baseline canonical DD event = 100",),
+        ),
+        baseline_capability=_audit(),
+        baseline_assignments=(),
+        member_id="dd-1",
+        capability_service=capability_service,
+        resolve_context=lambda row: BuildCandidateContextResult(
+            candidate=row,
+            context=object(),
+            unresolved=(),
+        ),
+        resolve_damage=lambda context: ModeledDamagePotency(
+            value=112.0,
+            metric_name="single-event expected damage",
+            evidence=("candidate canonical DD event = 112",),
+        ),
+        resolve_sustain=lambda context: _sustain(),
+        resolve_assignments=lambda build: (),
+    )
+
+    assert result.comparison.objective is EvaluationObjective.DAMAGE
+    assert result.comparison.baseline_value == 100.0
+    assert result.comparison.candidate_value == 112.0
+    assert result.comparison.delta == 12.0
+    assert result.comparison.is_rankable
+    assert result.comparison.is_improvement
+    assert [row.name for row in result.comparison.constraints] == [
+        "magicka sustain",
+        "capability_coverage",
+        "provider_responsibility",
+    ]
+    assert result.comparison.evidence == (
+        "baseline: baseline canonical DD event = 100",
+        "candidate: candidate canonical DD event = 112",
+    )
+
+
+def test_damage_candidate_does_not_call_metric_a_raid_dps_ceiling() -> None:
+    result = evaluate_damage_candidate(
+        candidate=_candidate("dd:mundus:thief"),
+        baseline_damage=ModeledDamagePotency(
+            value=100.0,
+            metric_name="single-event expected damage",
+        ),
+        baseline_capability=_audit(),
+        baseline_assignments=None,
+        member_id="dd-1",
+        capability_service=_CapabilityService(_audit()),
+        resolve_context=lambda row: BuildCandidateContextResult(
+            candidate=row,
+            context=object(),
+            unresolved=(),
+        ),
+        resolve_damage=lambda context: ModeledDamagePotency(
+            value=105.0,
+            metric_name="single-event expected damage",
+        ),
+        resolve_sustain=lambda context: _sustain(),
+        resolve_assignments=None,
+    )
+
+    assert result.damage is not None
+    assert result.damage.metric_name == "single-event expected damage"
+    assert "DPS" not in result.damage.metric_name
+    assert result.comparison.is_rankable
+
+
+def test_unresolved_damage_metric_blocks_candidate_ranking() -> None:
+    result = evaluate_damage_candidate(
+        candidate=_candidate("dd:mundus:unknown"),
+        baseline_damage=ModeledDamagePotency(
+            value=100.0,
+            metric_name="single-event expected damage",
+        ),
+        baseline_capability=_audit(),
+        baseline_assignments=None,
+        member_id="dd-1",
+        capability_service=_CapabilityService(_audit()),
+        resolve_context=lambda row: BuildCandidateContextResult(
+            candidate=row,
+            context=object(),
+            unresolved=(),
+        ),
+        resolve_damage=lambda context: ModeledDamagePotency(
+            value=120.0,
+            metric_name="single-event expected damage",
+            unresolved=("damage type for selected event is unresolved",),
+        ),
+        resolve_sustain=lambda context: _sustain(),
+        resolve_assignments=None,
+    )
+
+    assert result.comparison.candidate_value is None
+    assert not result.comparison.is_rankable
+    assert result.comparison.unresolved == (
+        "damage type for selected event is unresolved",
+    )
