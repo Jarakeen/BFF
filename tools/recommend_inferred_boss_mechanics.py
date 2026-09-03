@@ -16,9 +16,16 @@ def _source_dir() -> Path:
     return next((path for path in candidates if path.exists()), candidates[-1])
 
 
+def _has_content_records(root: Path) -> bool:
+    return any(
+        any((root / folder).glob("*.json"))
+        for folder in ("trials", "dungeons", "arenas")
+    )
+
+
 def _content_root() -> Path:
     candidates = (ROOT / "research" / "eso_info", ROOT / "data" / "eso_info")
-    return next((path for path in candidates if path.exists()), candidates[-1])
+    return next((path for path in candidates if _has_content_records(path)), candidates[-1])
 
 
 def main() -> int:
