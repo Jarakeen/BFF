@@ -49,6 +49,16 @@ class EncounterMechanic:
     persistent_hazard: bool | None
     failure_is_fatal: bool | None
     interruptible: bool | None
+    requirement_subjects: tuple[tuple[str, str], ...] = ()
+
+    def requirement_subject(self, requirement_type: str) -> str | None:
+        """Return an explicitly reviewed subject for one requirement, if present.
+
+        Missing metadata intentionally preserves the historical mechanic contract.
+        Subject ownership is therefore opt-in canonical truth rather than an
+        inference from the mechanic name, description, or mechanic type.
+        """
+        return dict(self.requirement_subjects).get(requirement_type)
 
 
 @dataclass(frozen=True)
