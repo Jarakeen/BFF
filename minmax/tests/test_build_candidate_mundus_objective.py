@@ -1,7 +1,10 @@
 from types import SimpleNamespace
 
 from minmax.build_candidate import BuildCandidate
-from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
+from minmax.build_candidate_mundus_objective import (
+    damage_mundus_objective_unresolved,
+    healing_mundus_objective_unresolved,
+)
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 
@@ -61,3 +64,34 @@ def test_healing_objective_allows_noncritical_mundus_dimension() -> None:
         }
     )
     assert healing_mundus_objective_unresolved(_candidate("The Mage"), repo) == ()
+
+
+def test_damage_objective_blocks_resource_mundus_for_power_only_event() -> None:
+    repo = _MundusRepository(
+        {
+            "The Mage": (
+                SimpleNamespace(stat_id=StatId.MAX_MAGICKA.value),
+            )
+        }
+    )
+
+    unresolved = damage_mundus_objective_unresolved(_candidate("The Mage"), repo)
+
+    assert unresolved
+    assert "ability resource scaling is unresolved" in unresolved[0]
+
+
+def test_damage_objective_allows_stats_modeled_by_dd_event() -> None:
+    repo = _MundusRepository(
+        {
+            "The Thief": (
+                SimpleNamespace(stat_id=StatId.CRITICAL_CHANCE.value),
+            ),
+            "The Lover": (
+                SimpleNamespace(stat_id=StatId.SPELL_PENETRATION.value),
+            ),
+        }
+    )
+
+    assert damage_mundus_objective_unresolved(_candidate("The Thief"), repo) == ()
+    assert damage_mundus_objective_unresolved(_candidate("The Lover"), repo) == ()
