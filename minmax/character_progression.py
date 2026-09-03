@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 MAX_ATTRIBUTE_POINTS = 64
@@ -90,6 +90,15 @@ class CharacterProgression:
     owned_skill_lines: tuple[str, ...] = ()
     passive_ranks: dict[str, int] | None = None
     passive_cp_points: dict[str, int] | None = None
+    _owned_skill_line_lookup: frozenset[str] = field(
+        init=False, repr=False, compare=False, default_factory=frozenset
+    )
+    _passive_rank_lookup: dict[str, int] | None = field(
+        init=False, repr=False, compare=False, default=None
+    )
+    _passive_cp_lookup: dict[str, int] | None = field(
+        init=False, repr=False, compare=False, default=None
+    )
 
     def __post_init__(self) -> None:
         if isinstance(self.level, bool) or not isinstance(self.level, int):
@@ -106,15 +115,36 @@ class CharacterProgression:
                 continue
             seen.add(key)
             normalized.append(name)
-        object.__setattr__(self, "owned_skill_lines", tuple(normalized))
-        object.__setattr__(self, "passive_ranks", _normalize_progression_map(self.passive_ranks))
-        object.__setattr__(self, "passive_cp_points", _normalize_progression_map(self.passive_cp_points))
+        normalized_skill_lines = tuple(normalized)
+        passive_ranks = _normalize_progression_map(self.passive_ranks)
+        passive_cp_points = _normalize_progression_map(self.passive_cp_points)
+
+        object.__setattr__(self, "owned_skill_lines", normalized_skill_lines)
+        object.__setattr__(self, "passive_ranks", passive_ranks)
+        object.__setattr__(self, "passive_cp_points", passive_cp_points)
+        object.__setattr__(
+            self,
+            "_owned_skill_line_lookup",
+            frozenset(name.casefold() for name in normalized_skill_lines),
+        )
+        object.__setattr__(
+            self,
+            "_passive_rank_lookup",
+            None
+            if passive_ranks is None
+            else {name.casefold(): rank for name, rank in passive_ranks.items()},
+        )
+        object.__setattr__(
+            self,
+            "_passive_cp_lookup",
+            None
+            if passive_cp_points is None
+            else {name.casefold(): points for name, points in passive_cp_points.items()},
+        )
 
     def owns_skill_line(self, skill_line: str) -> bool:
         requested = str(skill_line or "").strip().casefold()
-        return bool(requested) and any(
-            owned.casefold() == requested for owned in self.owned_skill_lines
-        )
+        return bool(requested) and requested in self._owned_skill_line_lookup
 
     @staticmethod
     def _lookup(mapping: dict[str, int] | None, name: str) -> int | None:
@@ -123,16 +153,13 @@ class CharacterProgression:
         requested = " ".join(str(name or "").strip().split()).casefold()
         if not requested:
             return None
-        for stored_name, value in mapping.items():
-            if stored_name.casefold() == requested:
-                return value
-        return None
+        return mapping.get(requested)
 
     def passive_rank(self, passive_name: str) -> int | None:
-        return self._lookup(self.passive_ranks, passive_name)
+        return self._lookup(self._passive_rank_lookup, passive_name)
 
     def passive_cp_allocation(self, cp_name: str) -> int | None:
-        return self._lookup(self.passive_cp_points, cp_name)
+        return self._lookup(self._passive_cp_lookup, cp_name)
 
     @property
     def has_explicit_passive_progression(self) -> bool:
