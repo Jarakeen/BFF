@@ -55,8 +55,6 @@ def test_bounded_recommendation_prints_plain_english_before_technical_evidence(c
     ranking = CandidateRanking(
         comparisons=(comparison,),
         ranked=(comparison,),
-        recommended=comparison,
-        recommended_ties=(comparison,),
     )
 
     _print_recommendation("Food", ranking)
