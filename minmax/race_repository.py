@@ -13,8 +13,19 @@ class RaceRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        # Instance-scoped caches preserve one canonical DB snapshot for the
+        # repository lifetime while allowing a fresh repository to observe
+        # later database changes.
+        self._race_by_name_cache: dict[str, Race | None] = {}
+        self._race_by_id_cache: dict[int, Race | None] = {}
+        self._stats_cache: dict[int, tuple[RaceStat, ...]] = {}
+        self._stat_map_cache: dict[int, dict[str, float]] = {}
 
     def get_race(self, name: str) -> Race | None:
+        key = str(name)
+        if key in self._race_by_name_cache:
+            return self._race_by_name_cache[key]
+
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
                 """
@@ -29,12 +40,17 @@ class RaceRepository:
                 (name,),
             ).fetchone()
 
-        if row is None:
-            return None
-
-        return self._to_race(row)
+        result = None if row is None else self._to_race(row)
+        self._race_by_name_cache[key] = result
+        if result is not None:
+            self._race_by_id_cache.setdefault(int(result.id), result)
+        return result
 
     def get_race_by_id(self, race_id: int) -> Race | None:
+        key = int(race_id)
+        if key in self._race_by_id_cache:
+            return self._race_by_id_cache[key]
+
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
                 """
@@ -49,12 +65,18 @@ class RaceRepository:
                 (race_id,),
             ).fetchone()
 
-        if row is None:
-            return None
-
-        return self._to_race(row)
+        result = None if row is None else self._to_race(row)
+        self._race_by_id_cache[key] = result
+        if result is not None:
+            self._race_by_name_cache.setdefault(str(result.name), result)
+        return result
 
     def get_stats(self, race_id: int) -> list[RaceStat]:
+        key = int(race_id)
+        cached = self._stats_cache.get(key)
+        if cached is not None:
+            return list(cached)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -70,11 +92,18 @@ class RaceRepository:
                 (race_id,),
             ).fetchall()
 
-        return [self._to_race_stat(row) for row in rows]
+        result = tuple(self._to_race_stat(row) for row in rows)
+        self._stats_cache[key] = result
+        return list(result)
 
     def get_stat_map(self, race_id: int) -> dict[str, float]:
         """Return structured racial stat contributions keyed by StatId value."""
-        return {stat.stat: float(stat.value) for stat in self.get_stats(race_id)}
+        key = int(race_id)
+        cached = self._stat_map_cache.get(key)
+        if cached is None:
+            cached = {stat.stat: float(stat.value) for stat in self.get_stats(race_id)}
+            self._stat_map_cache[key] = cached
+        return dict(cached)
 
     def get_stat_map_by_name(self, name: str) -> dict[str, float]:
         """Resolve a race by name and return its structured stat contributions."""
