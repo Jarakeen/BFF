@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 
+from models.scribing_recipe import ScribedSkillRecipe
+
 ARMOR_SLOTS: list[str] = ["Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet"]
 ARMOR_TRAITS: list[str] = ["", "Divines", "Reinforced", "Well-Fitted", "Impenetrable", "Infused", "Training", "Nirnhoned", "Sturdy", "Invigorating"]
 WEAPON_TRAITS: list[str] = ["", "Precise", "Charged", "Powered", "Defending", "Training", "Sharpened", "Decisive", "Infused", "Nirnhoned"]
@@ -170,10 +172,11 @@ class PlayerBuild:
     ChampionPoints: list[ChampionPointEntry] = field(default_factory=list)
     FrontBarSkills: list[str] = field(default_factory=_empty_bar)
     BackBarSkills: list[str] = field(default_factory=_empty_bar)
-    # Scribed skills are character access, not a bar slot by themselves.
-    # Script configuration will be modeled separately; this list answers which
-    # crafted/grimoire skills are available to this build for bar selection.
+    # ScribedSkills remains the compatibility mirror used by older builds/UI.
     ScribedSkills: list[str] = field(default_factory=list)
+    # Complete recipe configuration belongs in the core model so CLI services
+    # see the same evidence the desktop editor persists.
+    ScribedSkillRecipes: list[ScribedSkillRecipe] = field(default_factory=list)
     Food: str = ""
     Potion: str = ""
     Notes: str = ""
@@ -199,6 +202,8 @@ class PlayerBuild:
         return errors
 
     def to_dict(self) -> dict:
+        recipes = [recipe for recipe in self.ScribedSkillRecipes if recipe.ResultName.strip()]
+        scribed_names = [recipe.ResultName.strip() for recipe in recipes] or list(self.ScribedSkills)
         return {
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
@@ -211,9 +216,10 @@ class PlayerBuild:
             "Necklace": self.Necklace.to_dict(), "Ring1": self.Ring1.to_dict(), "Ring2": self.Ring2.to_dict(),
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
             "FrontBarSkills": self.FrontBarSkills, "BackBarSkills": self.BackBarSkills,
-            "ScribedSkills": list(self.ScribedSkills),
+            "ScribedSkills": scribed_names,
             "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
+            "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
         }
 
     @classmethod
@@ -223,6 +229,16 @@ class PlayerBuild:
         for slot, value in (data.get("Armor") or {}).items():
             if slot in armor and isinstance(value, dict):
                 armor[slot] = {str(key): str(item or "") for key, item in value.items()}
+        scribed_names = [str(name).strip() for name in (data.get("ScribedSkills") or []) if str(name).strip()]
+        raw_recipes = data.get("ScribedSkillRecipes")
+        if raw_recipes is None:
+            recipes = [ScribedSkillRecipe.from_legacy_name(name) for name in scribed_names]
+        else:
+            recipes = [
+                ScribedSkillRecipe.from_dict(value)
+                for value in raw_recipes
+                if isinstance(value, dict) and ScribedSkillRecipe.from_dict(value).ResultName
+            ]
         return cls(
             Name=str(data.get("Name", "") or ""), Gamertag=str(data.get("Gamertag", "") or ""),
             BuildName=str(data.get("BuildName", "") or ""), ImagePath=str(data.get("ImagePath", "") or ""),
@@ -241,7 +257,8 @@ class PlayerBuild:
             Necklace=GearSlot.from_dict(data.get("Necklace")), Ring1=GearSlot.from_dict(data.get("Ring1")), Ring2=GearSlot.from_dict(data.get("Ring2")),
             ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
             FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(), BackBarSkills=data.get("BackBarSkills") or _empty_bar(),
-            ScribedSkills=[str(name).strip() for name in (data.get("ScribedSkills") or []) if str(name).strip()],
+            ScribedSkills=scribed_names,
+            ScribedSkillRecipes=recipes,
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
             BossLoadouts=[BossLoadout.from_dict(b) for b in data.get("BossLoadouts", [])],
         )
