@@ -12,7 +12,7 @@ from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.skill_effect_repository import SkillEffectRepository
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
-from services.character_progression_service import CharacterProgressionService
+from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,31 @@ class SavedBuildCapabilityService:
 
     _INTENTIONAL_STATIC_BOUNDARY_PREFIXES = (
         "Potion selected; activation/uptime is not part of static build state:",
+        "Conditional racial passive bonus requires combat-state model:",
+        "Racial ability-cost reduction requires cost-stat model:",
+        "Non-combat racial passive outside combat capability audit:",
     )
+    _CP_DYNAMIC_PREFIX = "Champion Point is dynamic or not yet stat-mapped:"
+    _CP_DEFERRED_BOUNDARY_REASONS = {
+        "battle mastery": "status-effect chance model",
+        "flawless ritual": "status-effect chance model",
+        "elemental aegis": "typed incoming-damage mitigation model",
+        "hardy": "typed incoming-damage mitigation model",
+        "preparation": "attacker-type incoming-damage mitigation model",
+        "mighty": "attack-damage-type conditional offensive model",
+        "war mage": "attack-damage-type conditional offensive model",
+        "bashing brutality": "bash-damage combat utility channel",
+        "defiance": "Break Free cost combat utility channel",
+        "savage defense": "Bash cost combat utility channel",
+        "sprinter": "Sprint cost combat utility channel",
+        "tumbling": "Roll Dodge cost combat utility channel",
+        "hasty": "conditional movement-speed model",
+        "nimble protector": "conditional movement-speed model",
+        "celerity": "movement-speed model",
+        "mystic tenacity": "incoming status-effect duration model",
+        "tempered soul": "resurrection-state model",
+        "piercing gaze": "stealth-detection/PvP utility model",
+    }
 
     def __init__(
         self,
@@ -53,7 +77,9 @@ class SavedBuildCapabilityService:
         self.builds = builds
         self.database_path = Path(database_path)
         self.context_factory = context_factory or Phase5BuildCalculationContextFactory(self.database_path)
-        self.progression = progression or CharacterProgressionService(self.database_path)
+        self.progression = progression or MinmaxCharacterProgressionAdapter(
+            builds.canonical.catalog_service
+        )
         self.skills = skills or SkillEffectRepository(self.database_path)
         self.gear_repository = None if gear is not None else GearSetRepository(self.database_path)
         self.gear = gear or GearSetEffectVariantResolver(self.gear_repository)
@@ -91,15 +117,42 @@ class SavedBuildCapabilityService:
             text = str(message)
             if any(text.startswith(prefix) for prefix in cls._INTENTIONAL_STATIC_BOUNDARY_PREFIXES):
                 boundaries.append(text)
+            elif text.endswith("requires status-effect chance model"):
+                boundaries.append(text)
             else:
                 unresolved.append(text)
         return unresolved, boundaries
 
-    @classmethod
-    def _partition_context_messages_with_cp(cls, messages) -> tuple[list[str], list[str]]:
-        unresolved, boundaries = cls._partition_context_messages(messages)
+    def _cp_discipline(self, cp_name: str) -> int | None:
+        if not self.database_path.exists():
+            return None
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                row = db.execute(
+                    "SELECT discipline_id FROM champion_point WHERE lower(trim(name)) = lower(trim(?)) LIMIT 1",
+                    (cp_name,),
+                ).fetchone()
+            return int(row[0]) if row and row[0] is not None else None
+        except sqlite3.Error:
+            return None
+
+    def _partition_context_messages_with_cp(self, messages) -> tuple[list[str], list[str]]:
+        unresolved, boundaries = self._partition_context_messages(messages)
         kept: list[str] = []
         for text in unresolved:
+            if text.startswith(self._CP_DYNAMIC_PREFIX):
+                cp_name = self._clean(text[len(self._CP_DYNAMIC_PREFIX):])
+                if self._cp_discipline(cp_name) == 3:
+                    boundaries.append(
+                        f"Non-combat Champion Point outside combat capability audit: {cp_name}"
+                    )
+                    continue
+                reason = self._CP_DEFERRED_BOUNDARY_REASONS.get(cp_name.casefold())
+                if reason:
+                    boundaries.append(
+                        f"Deferred Champion Point capability ({reason}): {cp_name}"
+                    )
+                    continue
             if text.startswith("Champion Point star ") and "does not resolve to a canonical effect" in text:
                 boundaries.append(text)
             else:
