@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "name": "Jarakeen encounter strategy archive 2026-09-03",
+  "purpose": "Source registry for user-collected encounter guides and strategy visuals. Raw archive remains external; hashes bind staged evidence to exact source files.",
+  "sources": [
+    {
+      "archive_member": "ash_titan.txt",
+      "sha256": "b27a9850048183c5ae3a52ea48c784c93cd63c33e14cfc0bbded8ee209c994ad",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Ash Titan"
+    },
+    {
+      "archive_member": "bahsei.txt",
+      "sha256": "738093f04b7377121c914f91a36d323f65ca7754c7092d892479b41994675aa6",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Flame-Herald Bahsei"
+    },
+    {
+      "archive_member": "Fiche de raid _ Rochebosque (Rockgrove) - TESO - ESOAZ.htm",
+      "sha256": "aa1c12f6b1271819ca21ef1bc636613b947e2b25bdff992525198943487b525c",
+      "source_name": "ESOAZ",
+      "language": "fr",
+      "source_url": "https://esoaz.com/2020/01/27/raid-rochebosque-teso/",
+      "content_hint": "Rockgrove"
+    },
+    {
+      "archive_member": "Flesh Abomination (Rockgrove)",
+      "sha256": "4e377263e60c5edcc69cfe91a2e9a50cb856bbe8f31b66fc43c20de848668553",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Flesh Abomination"
+    },
+    {
+      "archive_member": "Guida Rockgrove Veteran Hard Mode - Ordine di Shor, Gilda Italiana Multigaming.htm",
+      "sha256": "093cfd94f2e88a45dd7d2ac6f5b06f9caf4d5c787450e2b0ea7636f9ad291b74",
+      "source_name": "Ordine di Shor",
+      "language": "it",
+      "source_url": "https://www.ordinedishor.it/guida-rockgrove-veteran-hard-mode/",
+      "content_hint": "Rockgrove"
+    },
+    {
+      "archive_member": "Havocrel Annihilator.txt",
+      "sha256": "9a0c2fcbe649da200d7e36243a86a9fd2aeaaa8ae43d3e9a86b48052c252b79f",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Havocrel Annihilator"
+    },
+    {
+      "archive_member": "ka-falgravn-phase1.avif",
+      "sha256": "37aa086695a231a7357e01368562f55d5a7c7a5b7b162fdd3c8d31329b01089f",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis",
+      "encounter_hint": "Lord Falgravn"
+    },
+    {
+      "archive_member": "ka-falgravn-phase2.avif",
+      "sha256": "52e27ffec0ea81ecf6ab76bef0083a63d629b2d1902f098f08bc2fc1c3a17d1f",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis",
+      "encounter_hint": "Lord Falgravn"
+    },
+    {
+      "archive_member": "ka-falgravn-phase3-labeled.avif",
+      "sha256": "7e41188a23e3f4ec0068a3291ab57299ea09d9c726c185d01e11430ea1343102",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis",
+      "encounter_hint": "Lord Falgravn"
+    },
+    {
+      "archive_member": "ka-generic.avif",
+      "sha256": "05ceb8d2fd10acafd55c9788bd12364d01e7e97c19c12f977a6b2427e1520c27",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis"
+    },
+    {
+      "archive_member": "ka-overview.avif",
+      "sha256": "c56bbf8441ca4508b0a3aeb15a83241d6a00cf08b0081da066e7d8cac0a1d490",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis"
+    },
+    {
+      "archive_member": "ka-vrol-fog.png",
+      "sha256": "7b8d60b25cf596231f532b5349f849b069df52d282524f5e3e43fdf061d0a5d6",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Kyne's Aegis",
+      "encounter_hint": "Vrol"
+    },
+    {
+      "archive_member": "kynes_aegis.md",
+      "sha256": "5866ac5857ae0dcbd32258a483b01273ab0c8d57623035a64b28765abda6d3a0",
+      "source_name": "Saved Kyne's Aegis mechanics guide",
+      "language": "en",
+      "content_hint": "Kyne's Aegis"
+    },
+    {
+      "archive_member": "lokkestiiz-Hard-Mode-1-768x576.png",
+      "sha256": "14625d0aeeae1c5fba9c8402b9b82f648ae227ce344cdc0b639b6dd00b08b57b",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Sunspire",
+      "encounter_hint": "Lokkestiiz"
+    },
+    {
+      "archive_member": "Nilandia's Guide to vDSR.md",
+      "sha256": "85ea3ce585bcc5283f7c8f7f2f3ce243286edc007e6e3d27c56ccb7a42861f7d",
+      "source_name": "Nilandia's Guide to Veteran Dreadsail Reef",
+      "language": "en",
+      "content_hint": "Dreadsail Reef"
+    },
+    {
+      "archive_member": "Nilandia's Guide to vSE.md",
+      "sha256": "1d962ce7331163b9ad09b6e68790347e1a5b47897cf5aec8565e288333f2bc88",
+      "source_name": "Nilandia's Guide to Veteran Sanity's Edge",
+      "language": "en",
+      "content_hint": "Sanity's Edge"
+    },
+    {
+      "archive_member": "Oaxiltso.txt",
+      "sha256": "457d576abbfb601f542ec0cdfa0e7ba83ecf8e0bf5189acadd3e87e86127937b",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Oaxiltso"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-7y91z8gi3x5f1.webp",
+      "sha256": "98ed899280ba7dee171607486627bbb5249eaba439396e341c2dca261551b351",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-fkseyh8k3x5f1.webp",
+      "sha256": "8d710f43fd5b0d5fb2db7dd346ca685e46a71696138b13514d663c3975420972",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-hhsuknqq3x5f1.webp",
+      "sha256": "17be604afd2c26205d779c4a3a4afa2d9118db34af916c91148d4d948746290e",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-kwoaas9n3x5f1.webp",
+      "sha256": "6c924417aab810a492ce53c500f311fab0ce10ead90403570de769044bc9fdb6",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-prjvtt5p3x5f1.webp",
+      "sha256": "d8ba322d3f1d7dc46a0d1757386d8c3f92cdea313c32050bdc9f6f221c2ac76f",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "ossein-cage-time-trial-mechanics-enemies-and-strategy-maps-v0-ujf9tfql3x5f1.webp",
+      "sha256": "4378dff75eba7a9ac9f02411a713d614515048897724b2c20206e2652c78ab69",
+      "source_name": "Saved Ossein Cage strategy visual",
+      "content_hint": "Ossein Cage"
+    },
+    {
+      "archive_member": "rockgrove.md",
+      "sha256": "32daf0d724a8202af4545cc2236cdc94d22a66e16accf28304088d57ed482623",
+      "source_name": "Saved Rockgrove mechanics guide",
+      "language": "en",
+      "content_hint": "Rockgrove"
+    },
+    {
+      "archive_member": "Rockgrove.png",
+      "sha256": "c6b8ed52835e7f4fc5fb449b76dce8d66bbac1153d58b5b26244e8c99d97c3e3",
+      "source_name": "Saved Rockgrove strategy visual",
+      "content_hint": "Rockgrove"
+    },
+    {
+      "archive_member": "secondo-boss-HM-768x650.png",
+      "sha256": "a7b6149c29d79f7eff5a0fe838d3038f9b317023f918e4056bb3fab499acd5f7",
+      "source_name": "Saved strategy visual",
+      "content_hint": "Sunspire"
+    },
+    {
+      "archive_member": "Sunspire Veteran Hard Mode Guide - Order of Shor, Italian Guild Multigaming.htm",
+      "sha256": "63b39d97a68fe8df42394e90920523c2c940465cfac8e10bbb5314fc32c23789",
+      "source_name": "Ordine di Shor",
+      "language": "it",
+      "source_url": "https://www.ordinedishor.it/guida-sunspire-veteran-hard-mode/",
+      "content_hint": "Sunspire"
+    },
+    {
+      "archive_member": "SUNSPIRE_OPTIMIZATION_BIBLE.md",
+      "sha256": "102093f666de57a238cb9f5ee9a30582b34a0f3b0aff164e1022595fe428c02a",
+      "source_name": "Saved Sunspire mechanics and optimization guide",
+      "language": "en",
+      "content_hint": "Sunspire"
+    },
+    {
+      "archive_member": "Xalvakka.txt",
+      "sha256": "f43f70a8f6db11a2637ed15f105eb6445deced776fcd93354feaffbc42e1e03c",
+      "source_name": "Saved boss reference extract",
+      "language": "en",
+      "content_hint": "Rockgrove",
+      "encounter_hint": "Xalvakka"
+    }
+  ]
+}
