@@ -49,6 +49,63 @@ def _is_dd_role(value: str) -> bool:
     return normalized in {"dd", "damage dealer", "damage"}
 
 
+def _print_dd_recommendation(
+    recommended,
+    *,
+    metric_name: str,
+    role_mismatch: bool,
+    provider_scope_evaluated: bool,
+) -> None:
+    """Print Phase 12-sized reasoning without implying rotation or raid-ceiling DPS."""
+
+    if recommended is None:
+        print("Recommendation: none.")
+        return
+
+    reason = (
+        "hard-constraint repair"
+        if recommended.is_constraint_repair
+        else "damage improvement"
+    )
+    print(f"Recommendation: {_candidate_change_label(recommended)}")
+    print(f"  Reason:      {reason}")
+    print("  Changed:")
+    if recommended.candidate.changes:
+        for change in recommended.candidate.changes:
+            print(f"    - {change.path}: {change.before} -> {change.after}")
+    else:
+        print("    - no serialized build changes recorded")
+    print("  Expected modeled improvement:")
+    print(f"    - metric: {metric_name}")
+    print(f"    - baseline: {_format_value(recommended.baseline_value)}")
+    print(f"    - candidate: {_format_value(recommended.candidate_value)}")
+    print(f"    - delta: {_format_value(recommended.delta)}")
+    print("  Constraints:")
+    if recommended.constraints:
+        for constraint in recommended.constraints:
+            print(
+                f"    - {constraint.name}: {constraint.status.value} | "
+                f"{constraint.explanation}"
+            )
+    else:
+        print("    - none evaluated")
+    print("  Unresolved:")
+    if recommended.unresolved:
+        for message in recommended.unresolved:
+            print(f"    - {message}")
+    else:
+        print("    - none in the selected candidate evidence")
+    print("  Boundaries:")
+    print("    - modeled value is not rotation DPS or raid ceiling damage")
+    print("    - encounter-specific skill uptime is not modeled by this audit")
+    if provider_scope_evaluated:
+        print("    - Phase 11 provider responsibilities were evaluated for the supplied encounter roster")
+    else:
+        print("    - provider responsibilities were not evaluated; no encounter assignment scope was supplied")
+    if role_mismatch:
+        print("    - diagnostic role override only; this is not a DD recommendation for the saved healer/tank role")
+
+
 def audit_saved_dd_candidates(
     *,
     database_path: Path,
@@ -359,23 +416,13 @@ def audit_saved_dd_candidates(
             f"delta={comparison.delta:.3f}"
         )
 
-    recommended = ranking.recommended
     print()
-    if recommended is None:
-        print("Recommendation: none.")
-    else:
-        reason = (
-            "hard-constraint repair"
-            if recommended.is_constraint_repair
-            else "damage improvement"
-        )
-        print(
-            f"Recommendation: {_candidate_change_label(recommended)} | "
-            f"reason={reason} | "
-            f"baseline={recommended.baseline_value:.3f} "
-            f"candidate={recommended.candidate_value:.3f} "
-            f"delta={recommended.delta:.3f}"
-        )
+    _print_dd_recommendation(
+        ranking.recommended,
+        metric_name=baseline_damage.metric_name,
+        role_mismatch=not _is_dd_role(baseline_build.Role),
+        provider_scope_evaluated=provider_scope is not None,
+    )
     return 0
 
 
