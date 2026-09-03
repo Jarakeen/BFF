@@ -1,0 +1,101 @@
+id,name,quality,difficulty,requires_lead,repeatable,reward_id,zone_id,set_id,set_name,set_reward_id,set_count,category_id,category_name
+548,Admiral's Carved Trestle Base,5,4,1,1,0,1383,39,Shipbuilders Crafting Station,4027,3,50,Galen
+344,Aetherquartz Prayer Beads,5,4,1,1,0,381,16,Pearls of Ehlnofey,2546,5,16,Auridon
+67,Aetherquartz Tonal Resonator,5,4,1,0,0,888,6,Ebon Dwarven Wolf,458,17,26,Craglorn
+172,Akaviri Lord's Banner,3,2,1,1,2220,103,0,,-1,-1,12,The Rift
+310,Al-Esh Ascension Coin,5,5,1,1,2361,1160,0,,-1,-1,37,Western Skyrim
+100,Aldmeri Golden Embellishments,4,3,1,1,0,381,7,Dreams and Memories Music Box,2166,3,16,Auridon
+451,Alessian Sacramental Oil,5,4,1,1,0,1286,25,Belharza's Band,3548,5,48,The Deadlands
+63,Aligned Dwarven Plates,4,3,1,0,0,101,6,Ebon Dwarven Wolf,458,17,13,Eastmarch
+102,Alinor Allemande,5,4,1,0,2167,1011,0,,-1,-1,33,Summerset
+519,All Flags Armada Scabbard,4,3,1,0,3997,1383,0,,-1,-1,50,Galen
+813,All Flags Navy Astrolabe,5,4,1,1,8803,823,0,,-1,-1,30,Gold Coast
+308,Altar of Celestial Convergence,5,4,1,1,2359,888,0,,-1,-1,26,Craglorn
+540,Amber Heart,5,4,1,0,0,1383,37,Barkroot Blessing,4028,10,50,Galen
+561,Ancestor Samite Sash,5,4,1,1,0,1414,40,Cryptcanon Vestments,4199,5,51,Telvanni Peninsula
+559,Ancestor Samite Stole,5,4,1,1,0,1414,40,Cryptcanon Vestments,4199,5,51,Telvanni Peninsula
+557,Ancestor Samite Undershirt,5,4,1,1,0,1414,40,Cryptcanon Vestments,4199,5,51,Telvanni Peninsula
+567,Ancestor Silk Ribbon,5,4,1,1,0,1413,42,Torc of the Last Ayleid King,4202,5,52,Apocrypha
+360,Ancestral Akaviri: Axes,2,1,1,1,2701,1261,0,,-1,-1,47,Blackwood
+361,Ancestral Akaviri: Belts,2,1,1,1,2702,1261,0,,-1,-1,47,Blackwood
+362,Ancestral Akaviri: Boots,2,1,1,1,2703,1261,0,,-1,-1,47,Blackwood
+363,Ancestral Akaviri: Bows,2,1,1,1,2704,1261,0,,-1,-1,47,Blackwood
+364,Ancestral Akaviri: Chests,4,3,1,1,2705,1261,0,,-1,-1,47,Blackwood
+365,Ancestral Akaviri: Daggers,2,1,1,1,2706,1261,0,,-1,-1,47,Blackwood
+366,Ancestral Akaviri: Gloves,2,1,1,1,2707,1261,0,,-1,-1,47,Blackwood
+367,Ancestral Akaviri: Helmets,3,2,1,1,2708,1261,0,,-1,-1,47,Blackwood
+368,Ancestral Akaviri: Legs,2,1,1,1,2709,1261,0,,-1,-1,47,Blackwood
+369,Ancestral Akaviri: Maces,3,2,1,1,2710,1261,0,,-1,-1,47,Blackwood
+370,Ancestral Akaviri: Shields,4,3,1,1,2711,1261,0,,-1,-1,47,Blackwood
+371,Ancestral Akaviri: Shoulders,3,2,1,1,2712,1261,0,,-1,-1,47,Blackwood
+372,Ancestral Akaviri: Staves,3,2,1,1,2713,1261,0,,-1,-1,47,Blackwood
+373,Ancestral Akaviri: Swords,4,3,1,1,2714,1261,0,,-1,-1,47,Blackwood
+485,Ancestral Breton: Axes,2,1,1,1,3742,1318,0,,-1,-1,49,High Isle
+486,Ancestral Breton: Belts,2,1,1,1,3743,1318,0,,-1,-1,49,High Isle
+487,Ancestral Breton: Boots,2,1,1,1,3744,1318,0,,-1,-1,49,High Isle
+488,Ancestral Breton: Bows,2,1,1,1,3745,1318,0,,-1,-1,49,High Isle
+489,Ancestral Breton: Chests,4,3,1,1,3746,1318,0,,-1,-1,49,High Isle
+490,Ancestral Breton: Daggers,2,1,1,1,3747,1318,0,,-1,-1,49,High Isle
+491,Ancestral Breton: Gloves,2,1,1,1,3748,1318,0,,-1,-1,49,High Isle
+492,Ancestral Breton: Helmets,3,2,1,1,3749,1318,0,,-1,-1,49,High Isle
+493,Ancestral Breton: Legs,2,1,1,1,3750,1318,0,,-1,-1,49,High Isle
+494,Ancestral Breton: Maces,3,2,1,1,3751,1318,0,,-1,-1,49,High Isle
+495,Ancestral Breton: Shields,4,3,1,1,3752,1318,0,,-1,-1,49,High Isle
+496,Ancestral Breton: Shoulders,3,2,1,1,3753,1318,0,,-1,-1,49,High Isle
+497,Ancestral Breton: Staves,3,2,1,1,3754,1318,0,,-1,-1,49,High Isle
+498,Ancestral Breton: Swords,4,3,1,1,3755,1318,0,,-1,-1,49,High Isle
+46,Ancestral High Elf: Axes,2,1,1,1,2123,537,0,,-1,-1,21,Khenarthi's Roost
+47,Ancestral High Elf: Belts,2,1,1,1,2124,537,0,,-1,-1,21,Khenarthi's Roost
+48,Ancestral High Elf: Boots,2,1,1,1,2125,383,0,,-1,-1,17,Grahtwood
+49,Ancestral High Elf: Bows,2,1,1,1,2126,381,0,,-1,-1,16,Auridon
+50,Ancestral High Elf: Chests,4,3,1,1,2127,381,0,,-1,-1,16,Auridon
+51,Ancestral High Elf: Daggers,2,1,1,1,2128,108,0,,-1,-1,18,Greenshade
+52,Ancestral High Elf: Gloves,2,1,1,1,2129,58,0,,-1,-1,19,Malabal Tor
+53,Ancestral High Elf: Helmets,3,2,1,1,2130,537,0,,-1,-1,21,Khenarthi's Roost
+54,Ancestral High Elf: Legs,2,1,1,1,2131,382,0,,-1,-1,20,Reaper's March
+55,Ancestral High Elf: Maces,3,2,1,1,2132,383,0,,-1,-1,17,Grahtwood
+56,Ancestral High Elf: Shields,4,3,1,1,2133,382,0,,-1,-1,20,Reaper's March
+57,Ancestral High Elf: Shoulders,3,2,1,1,2134,108,0,,-1,-1,18,Greenshade
+58,Ancestral High Elf: Staves,3,2,1,1,2135,537,0,,-1,-1,21,Khenarthi's Roost
+59,Ancestral High Elf: Swords,4,3,1,1,2136,58,0,,-1,-1,19,Malabal Tor
+32,Ancestral Nord: Axes,2,1,1,1,2109,280,0,,-1,-1,14,Bleakrock Isle
+33,Ancestral Nord: Belts,2,1,1,1,2110,281,0,,-1,-1,15,Bal Foyen
+34,Ancestral Nord: Boots,2,1,1,1,2111,57,0,,-1,-1,10,Deshaan
+35,Ancestral Nord: Bows,2,1,1,1,2112,41,0,,-1,-1,9,Stonefalls
+36,Ancestral Nord: Chests,4,3,1,1,2113,41,0,,-1,-1,9,Stonefalls
+37,Ancestral Nord: Daggers,2,1,1,1,2114,117,0,,-1,-1,11,Shadowfen
+38,Ancestral Nord: Gloves,2,1,1,1,2115,103,0,,-1,-1,12,The Rift
+39,Ancestral Nord: Helmets,3,2,1,1,2116,280,0,,-1,-1,14,Bleakrock Isle
+40,Ancestral Nord: Legs,2,1,1,1,2117,101,0,,-1,-1,13,Eastmarch
+41,Ancestral Nord: Maces,3,2,1,1,2118,57,0,,-1,-1,10,Deshaan
+42,Ancestral Nord: Shields,4,3,1,1,2119,101,0,,-1,-1,13,Eastmarch
+43,Ancestral Nord: Shoulders,3,2,1,1,2120,117,0,,-1,-1,11,Shadowfen
+44,Ancestral Nord: Staves,3,2,1,1,2121,281,0,,-1,-1,15,Bal Foyen
+45,Ancestral Nord: Swords,4,3,1,1,2122,103,0,,-1,-1,12,The Rift
+18,Ancestral Orc: Axes,2,1,1,1,2041,534,0,,-1,-1,7,Stros M'Kai
+19,Ancestral Orc: Belts,2,1,1,1,2042,535,0,,-1,-1,8,Betnikh
+20,Ancestral Orc: Boots,2,1,1,1,2043,19,0,,-1,-1,3,Stormhaven
+21,Ancestral Orc: Bows,2,1,1,1,2044,3,0,,-1,-1,2,Glenumbra
+22,Ancestral Orc: Chests,4,3,1,1,2045,3,0,,-1,-1,2,Glenumbra
+23,Ancestral Orc: Daggers,2,1,1,1,2046,20,0,,-1,-1,4,Rivenspire
+24,Ancestral Orc: Gloves,2,1,1,1,2047,104,0,,-1,-1,5,Alik'r Desert
+25,Ancestral Orc: Helmets,3,2,1,1,2048,534,0,,-1,-1,7,Stros M'Kai
+26,Ancestral Orc: Legs,2,1,1,1,2049,92,0,,-1,-1,6,Bangkorai
+27,Ancestral Orc: Maces,3,2,1,1,2050,19,0,,-1,-1,3,Stormhaven
+28,Ancestral Orc: Shields,4,3,1,1,2051,92,0,,-1,-1,6,Bangkorai
+29,Ancestral Orc: Shoulders,3,2,1,1,2052,20,0,,-1,-1,4,Rivenspire
+30,Ancestral Orc: Staves,3,2,1,1,2053,535,0,,-1,-1,8,Betnikh
+31,Ancestral Orc: Swords,4,3,1,1,2054,104,0,,-1,-1,5,Alik'r Desert
+316,Ancestral Reach: Axes,2,1,1,1,2496,1207,0,,-1,-1,46,The Reach
+317,Ancestral Reach: Belts,2,1,1,1,2497,1207,0,,-1,-1,46,The Reach
+318,Ancestral Reach: Boots,2,1,1,1,2498,1207,0,,-1,-1,46,The Reach
+319,Ancestral Reach: Bows,2,1,1,1,2499,1207,0,,-1,-1,46,The Reach
+320,Ancestral Reach: Chests,4,3,1,1,2500,1207,0,,-1,-1,46,The Reach
+321,Ancestral Reach: Daggers,2,1,1,1,2501,1207,0,,-1,-1,46,The Reach
+322,Ancestral Reach: Gloves,2,1,1,1,2502,1207,0,,-1,-1,46,The Reach
+323,Ancestral Reach: Helmets,3,2,1,1,2503,1207,0,,-1,-1,46,The Reach
+324,Ancestral Reach: Legs,2,1,1,1,2504,1207,0,,-1,-1,46,The Reach
+325,Ancestral Reach: Maces,3,2,1,1,2505,1207,0,,-1,-1,46,The Reach
+326,Ancestral Reach: Shields,4,3,1,1,2506,1207,0,,-1,-1,46,The Reach
+327,Ancestral Reach: Shoulders,3,2,1,1,2507,1207,0,,-1,-1,46,The Reach
+328,Ancestral Reach: Staves,3,2,1,1,2508,1207,0,,-1,-1,46,The Reach
