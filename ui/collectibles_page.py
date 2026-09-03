@@ -37,10 +37,11 @@ class CollectiblesPage(QWidget):
 
     DEFAULT_CATEGORY = "Mounts"
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, service=None):
         super().__init__(parent)
         self.data_dir = get_data_dir()
-        self.service = EsoCollectibleDatabaseService(self.data_dir / "eso.db")
+        self._owns_service = service is None
+        self.service = service or EsoCollectibleDatabaseService(self.data_dir / "eso.db")
         self.icon_catalog = CollectibleIconCatalog(self.data_dir)
         self.category = self.DEFAULT_CATEGORY
         self.current_collectible_id: int | None = None
@@ -383,5 +384,6 @@ class CollectiblesPage(QWidget):
         self.save_progress.setEnabled(False)
 
     def closeEvent(self, event):
-        self.service.close()
+        if self._owns_service:
+            self.service.close()
         super().closeEvent(event)
