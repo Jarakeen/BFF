@@ -24,6 +24,7 @@ from services.encounter_requirement_evaluation import (
     EncounterRequirementEvaluator,
     RequirementEvaluation,
     RequirementSemantics,
+    RosterCapabilityEvidence,
 )
 from services.encounter_service import EncounterService
 from services.saved_build_capability_service import SavedBuildCapabilityAudit
@@ -38,6 +39,7 @@ class EncounterRosterEvaluationReport:
     cleanse_methods: tuple[EncounterCleanseMethod, ...]
     interrupt_methods: tuple[EncounterInterruptMethod, ...]
     difficulty: EncounterDifficulty = EncounterDifficulty.VETERAN
+    capability_evidence: tuple[RosterCapabilityEvidence, ...] = ()
 
     @property
     def encounter_id(self) -> str:
@@ -161,4 +163,5 @@ class EncounterRosterEvaluator:
             cleanse_methods=self._cleanse_methods.methods(encounter_id),
             interrupt_methods=self._interrupt_methods.methods(encounter_id),
             difficulty=selected_difficulty,
+            capability_evidence=evidence,
         )
