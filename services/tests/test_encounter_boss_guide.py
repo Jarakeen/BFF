@@ -17,6 +17,11 @@ def _database(tmp_path: Path) -> Path:
     path = tmp_path / "eso.db"
     connection = sqlite3.connect(path)
     try:
+        # encounter_ability.existing_ability_id references the canonical ability
+        # table that exists in the real ESO database. The focused fixture needs
+        # the parent table even though these test rows intentionally leave the
+        # foreign-key value NULL.
+        connection.execute("CREATE TABLE ability(id INTEGER PRIMARY KEY)")
         ensure_encounter_schema(connection)
         connection.execute(
             """
@@ -143,6 +148,7 @@ def test_boss_guide_projects_persisted_structure_without_inference(tmp_path: Pat
     assert guide.location == "Round 10: The Champion's Arena"
     assert guide.species == "Human"
     assert guide.reaction == "Hostile"
+    assert guide.health_record_present is True
     assert guide.health == (("normal", "1,515,587"), ("veteran", "6,114,800"))
     assert [row.name for row in guide.abilities] == ["Agony", "Invisibility"]
     assert guide.abilities[0].interruptible is True
@@ -154,6 +160,24 @@ def test_boss_guide_projects_persisted_structure_without_inference(tmp_path: Pat
     assert guide.phases[0].threshold == "25%"
     assert guide.source_url == "https://example.test/hiath"
     assert guide.source_revision_id == "boss-rev"
+
+
+def test_boss_guide_distinguishes_blank_health_record_from_missing_record(tmp_path: Path) -> None:
+    database = _database(tmp_path)
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "UPDATE encounter_health SET normal=NULL, veteran=NULL, hardmode=NULL WHERE encounter_id=?",
+            ("hiath_the_battlemaster",),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    guide = EncounterBossGuideService(database).get("hiath_the_battlemaster")
+
+    assert guide.health_record_present is True
+    assert guide.health == ()
 
 
 def test_boss_guide_lists_persisted_encounters(tmp_path: Path) -> None:
