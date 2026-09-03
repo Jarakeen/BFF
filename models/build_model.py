@@ -137,7 +137,14 @@ class BossLoadout:
     @classmethod
     def from_dict(cls, data: dict | None) -> "BossLoadout":
         data = dict(data or {})
-        return cls(BossName=str(data.get("BossName", data.get("Boss", "")) or ""), FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(), BackBarSkills=data.get("BackBarSkills") or _empty_bar(), Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""))
+        return cls(
+            BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
+            FrontBarSkills=list(data.get("FrontBarSkills") or _empty_bar()),
+            BackBarSkills=list(data.get("BackBarSkills") or _empty_bar()),
+            Food=str(data.get("Food", "") or ""),
+            Potion=str(data.get("Potion", "") or ""),
+            Notes=str(data.get("Notes", "") or ""),
+        )
 
 
 @dataclass
@@ -210,12 +217,13 @@ class PlayerBuild:
             "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
             "AttributeHealth": self.AttributeHealth, "AttributeMagicka": self.AttributeMagicka,
-            "AttributeStamina": self.AttributeStamina, "Armor": self.Armor,
+            "AttributeStamina": self.AttributeStamina,
+            "Armor": {slot: dict(values) for slot, values in self.Armor.items()},
             "FrontBarWeapon": self.FrontBarWeapon.to_dict(), "FrontBarOffHand": self.FrontBarOffHand.to_dict(),
             "BackBarWeapon": self.BackBarWeapon.to_dict(), "BackBarOffHand": self.BackBarOffHand.to_dict(),
             "Necklace": self.Necklace.to_dict(), "Ring1": self.Ring1.to_dict(), "Ring2": self.Ring2.to_dict(),
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
-            "FrontBarSkills": self.FrontBarSkills, "BackBarSkills": self.BackBarSkills,
+            "FrontBarSkills": list(self.FrontBarSkills), "BackBarSkills": list(self.BackBarSkills),
             "ScribedSkills": scribed_names,
             "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
@@ -256,7 +264,8 @@ class PlayerBuild:
             BackBarOffHand=GearSlot.from_dict(data.get("BackBarOffHand")),
             Necklace=GearSlot.from_dict(data.get("Necklace")), Ring1=GearSlot.from_dict(data.get("Ring1")), Ring2=GearSlot.from_dict(data.get("Ring2")),
             ChampionPoints=[ChampionPointEntry.from_dict(cp) for cp in data.get("ChampionPoints", [])],
-            FrontBarSkills=data.get("FrontBarSkills") or _empty_bar(), BackBarSkills=data.get("BackBarSkills") or _empty_bar(),
+            FrontBarSkills=list(data.get("FrontBarSkills") or _empty_bar()),
+            BackBarSkills=list(data.get("BackBarSkills") or _empty_bar()),
             ScribedSkills=scribed_names,
             ScribedSkillRecipes=recipes,
             Food=str(data.get("Food", "") or ""), Potion=str(data.get("Potion", "") or ""), Notes=str(data.get("Notes", "") or ""),
