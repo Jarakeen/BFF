@@ -49,6 +49,47 @@ def _is_dd_role(value: str) -> bool:
     return normalized in {"dd", "damage dealer", "damage"}
 
 
+def _plain_constraint_explanation(constraint: CandidateConstraint) -> str:
+    name = str(constraint.name or "").strip().casefold()
+    status = constraint.status
+
+    if "sustain" in name:
+        resource = name.replace("sustain", "").strip() or "resource"
+        label = resource.title()
+        if status is ConstraintStatus.REPAIRED:
+            return f"Your current build runs out of {label} in this test, but this change fixes that problem."
+        if status is ConstraintStatus.UNSATISFIED:
+            return f"This setup still runs out of {label} in the test, so it cannot be recommended."
+        if status is ConstraintStatus.WORSENED:
+            return f"This change makes your {label} sustain worse, so it is blocked."
+        if status is ConstraintStatus.UNKNOWN:
+            return f"BFF cannot prove that this setup can sustain its {label} use, so it will not guess."
+        if status is ConstraintStatus.IMPROVED:
+            return f"This change improves your modeled {label} sustain."
+        if status is ConstraintStatus.PRESERVED:
+            return f"This change keeps your modeled {label} sustain intact."
+
+    if name == "capability_coverage":
+        if status is ConstraintStatus.PRESERVED:
+            return "This change does not remove any resolved buffs, debuffs, or other useful capabilities your current build provides."
+        if status is ConstraintStatus.IMPROVED:
+            return "This change keeps everything your current build already provides and adds at least one resolved capability."
+        if status is ConstraintStatus.WORSENED:
+            return "This change removes a useful capability from the current build, so it is blocked."
+        if status is ConstraintStatus.UNKNOWN:
+            return "BFF cannot prove that all of your current build's useful capabilities are still present, so it will not guess."
+
+    if name in {"provider_responsibility", "provider responsibilities"}:
+        if status is ConstraintStatus.PRESERVED:
+            return "You can still handle the raid jobs this build was already assigned to provide."
+        if status is ConstraintStatus.WORSENED:
+            return "This change would stop you from reliably doing one of your assigned raid jobs, so it is blocked."
+        if status is ConstraintStatus.UNKNOWN:
+            return "BFF does not have enough evidence to prove that you can still handle every assigned raid job, so it will not guess."
+
+    return constraint.explanation
+
+
 def _print_dd_recommendation(
     recommended,
     *,
@@ -56,54 +97,64 @@ def _print_dd_recommendation(
     role_mismatch: bool,
     provider_scope_evaluated: bool,
 ) -> None:
-    """Print Phase 12-sized reasoning without implying rotation or raid-ceiling DPS."""
+    """Print a plain-English summary followed by exact Phase 12 evidence."""
 
     if recommended is None:
         print("Recommendation: none.")
         return
 
-    reason = (
-        "hard-constraint repair"
-        if recommended.is_constraint_repair
-        else "damage improvement"
-    )
+    reason = "hard-constraint repair" if recommended.is_constraint_repair else "damage improvement"
     print(f"Recommendation: {_candidate_change_label(recommended)}")
-    print(f"  Reason:      {reason}")
-    print("  Changed:")
+    print("  In plain English:")
+    if recommended.is_constraint_repair:
+        print("    - This option is recommended because it fixes a required problem in the current build, even if the damage comparison itself does not increase.")
+    else:
+        print("    - This option improves the selected damage comparison and still passes all required checks.")
+    for constraint in recommended.constraints:
+        print(f"    - {_plain_constraint_explanation(constraint)}")
+    if recommended.candidate_value is not None and recommended.baseline_value is not None:
+        if abs(float(recommended.candidate_value) - float(recommended.baseline_value)) <= 1e-9:
+            print("    - This particular test does not show a damage increase from the change.")
+        elif recommended.candidate_value > recommended.baseline_value:
+            print("    - This particular comparison also shows a modeled damage increase.")
+    if role_mismatch:
+        print("    - This is only a diagnostic damage test on a non-DD build. It does not mean BFF recommends changing that healer or tank into a DD.")
+    print("    - The damage number below is a standardized comparison value, not your actual rotation DPS.")
+
+    print("  Technical evidence:")
+    print(f"    Reason: {reason}")
+    print("    Changed:")
     if recommended.candidate.changes:
         for change in recommended.candidate.changes:
-            print(f"    - {change.path}: {change.before} -> {change.after}")
+            print(f"      - {change.path}: {change.before} -> {change.after}")
     else:
-        print("    - no serialized build changes recorded")
-    print("  Expected modeled improvement:")
-    print(f"    - metric: {metric_name}")
-    print(f"    - baseline: {_format_value(recommended.baseline_value)}")
-    print(f"    - candidate: {_format_value(recommended.candidate_value)}")
-    print(f"    - delta: {_format_value(recommended.delta)}")
-    print("  Constraints:")
+        print("      - no serialized build changes recorded")
+    print("    Expected modeled improvement:")
+    print(f"      - metric: {metric_name}")
+    print(f"      - baseline: {_format_value(recommended.baseline_value)}")
+    print(f"      - candidate: {_format_value(recommended.candidate_value)}")
+    print(f"      - delta: {_format_value(recommended.delta)}")
+    print("    Constraints:")
     if recommended.constraints:
         for constraint in recommended.constraints:
-            print(
-                f"    - {constraint.name}: {constraint.status.value} | "
-                f"{constraint.explanation}"
-            )
+            print(f"      - {constraint.name}: {constraint.status.value} | {constraint.explanation}")
     else:
-        print("    - none evaluated")
-    print("  Unresolved:")
+        print("      - none evaluated")
+    print("    Unresolved:")
     if recommended.unresolved:
         for message in recommended.unresolved:
-            print(f"    - {message}")
+            print(f"      - {message}")
     else:
-        print("    - none in the selected candidate evidence")
-    print("  Boundaries:")
-    print("    - modeled value is not rotation DPS or raid ceiling damage")
-    print("    - encounter-specific skill uptime is not modeled by this audit")
+        print("      - none in the selected candidate evidence")
+    print("    Boundaries:")
+    print("      - modeled value is not rotation DPS or raid ceiling damage")
+    print("      - encounter-specific skill uptime is not modeled by this audit")
     if provider_scope_evaluated:
-        print("    - Phase 11 provider responsibilities were evaluated for the supplied encounter roster")
+        print("      - Phase 11 provider responsibilities were evaluated for the supplied encounter roster")
     else:
-        print("    - provider responsibilities were not evaluated; no encounter assignment scope was supplied")
+        print("      - provider responsibilities were not evaluated; no encounter assignment scope was supplied")
     if role_mismatch:
-        print("    - diagnostic role override only; this is not a DD recommendation for the saved healer/tank role")
+        print("      - diagnostic role override only; this is not a DD recommendation for the saved healer/tank role")
 
 
 def audit_saved_dd_candidates(
@@ -324,21 +375,14 @@ def audit_saved_dd_candidates(
             candidate=candidate,
             baseline_damage=baseline_damage,
             baseline_capability=baseline_capability,
-            baseline_assignments=(
-                provider_scope.baseline_assignments if provider_scope is not None else None
-            ),
+            baseline_assignments=(provider_scope.baseline_assignments if provider_scope is not None else None),
             member_id=character_id,
             capability_service=capability_service,
             resolve_context=resolve_context,
             resolve_damage=resolve_damage,
             resolve_sustain=resolve_sustain,
-            resolve_assignments=(
-                provider_scope.assignments_for if provider_scope is not None else None
-            ),
-            resolve_objective_coverage=lambda row: damage_mundus_objective_unresolved(
-                row,
-                mundus_repository,
-            ),
+            resolve_assignments=(provider_scope.assignments_for if provider_scope is not None else None),
+            resolve_objective_coverage=lambda row: damage_mundus_objective_unresolved(row, mundus_repository),
         ).comparison
         for candidate in candidates
     )
@@ -356,39 +400,19 @@ def audit_saved_dd_candidates(
     print(f"Active bar:      {active_bar}")
     print(f"Baseline Mundus: {baseline_build.Mundus or '(unset)'}")
     print(f"Damage metric:   {baseline_damage.metric_name}")
-    print(
-        f"Event:           base={event.base_value:g}; "
-        f"scaling={event.scaling_coefficient:g}; "
-        f"type={event.damage_type or 'untyped'}"
-    )
+    print(f"Event:           base={event.base_value:g}; scaling={event.scaling_coefficient:g}; type={event.damage_type or 'untyped'}")
     print(f"Target resistance: {_format_value(target_resistance)}")
     print(f"Sustain:         {resource.value} over {duration_seconds:g}s")
-    print(
-        "Action plan:     synthetic saved-bar stress plan; "
-        "not an observed rotation"
-    )
+    print("Action plan:     synthetic saved-bar stress plan; not an observed rotation")
     print("Candidate scope: one Mundus change per candidate")
     if provider_scope is None:
         print("Provider scope:  not evaluated; no encounter assignment context supplied")
     else:
-        roster_label = ", ".join(
-            str(build.BuildName or build.Name or "(unnamed)")
-            for build in provider_roster_builds
-        )
-        print(
-            f"Provider scope:  encounter={provider_scope.encounter_id}; "
-            f"saved roster={roster_label}; "
-            f"baseline assignment rows={len(provider_scope.baseline_assignments)}"
-        )
+        roster_label = ", ".join(str(build.BuildName or build.Name or "(unnamed)") for build in provider_roster_builds)
+        print(f"Provider scope:  encounter={provider_scope.encounter_id}; saved roster={roster_label}; baseline assignment rows={len(provider_scope.baseline_assignments)}")
         for assignment in provider_scope.baseline_assignments:
-            primaries = ", ".join(
-                provider.character_name or provider.member_id
-                for provider in assignment.primary_providers
-            ) or "none"
-            print(
-                f"Provider base:   {assignment.requirement_id}="
-                f"{assignment.status.value}; primary={primaries}"
-            )
+            primaries = ", ".join(provider.character_name or provider.member_id for provider in assignment.primary_providers) or "none"
+            print(f"Provider base:   {assignment.requirement_id}={assignment.status.value}; primary={primaries}")
     print("Boundary:        not rotation DPS and not raid ceiling damage")
     print(f"Baseline value:  {_format_value(baseline_damage.value)}")
     print()
@@ -399,10 +423,7 @@ def audit_saved_dd_candidates(
         print(f"  Delta:       {_format_value(comparison.delta)}")
         print(f"  Rankable:    {comparison.is_rankable}")
         for constraint in comparison.constraints:
-            print(
-                f"  Constraint:  {constraint.name}={constraint.status.value} | "
-                f"{constraint.explanation}"
-            )
+            print(f"  Constraint:  {constraint.name}={constraint.status.value} | {constraint.explanation}")
         for message in comparison.unresolved:
             print(f"  Unresolved:  {message}")
         print()
@@ -411,10 +432,7 @@ def audit_saved_dd_candidates(
     if not ranking.ranked:
         print("  (none; every candidate is blocked or unresolved)")
     for index, comparison in enumerate(ranking.ranked, start=1):
-        print(
-            f"  {index:02d}. {_candidate_change_label(comparison)}: "
-            f"delta={comparison.delta:.3f}"
-        )
+        print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f}")
 
     print()
     _print_dd_recommendation(
@@ -428,51 +446,21 @@ def audit_saved_dd_candidates(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Rank bounded Mundus candidates for one named saved build through "
-            "canonical static DD and sustain evaluation."
-        )
+        description=("Rank bounded Mundus candidates for one named saved build through canonical static DD and sustain evaluation.")
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", required=True)
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
-    parser.add_argument(
-        "--resource",
-        choices=("health", "magicka", "stamina"),
-        default="magicka",
-    )
+    parser.add_argument("--resource", choices=("health", "magicka", "stamina"), default="magicka")
     parser.add_argument("--duration", type=float, default=20.0)
     parser.add_argument("--base-value", type=float, default=1000.0)
     parser.add_argument("--scaling-coefficient", type=float, default=1.0)
-    parser.add_argument(
-        "--damage-type",
-        choices=("untyped", "physical", "poison", "disease", "bleed", "magical", "flame", "frost", "shock"),
-        default="flame",
-    )
+    parser.add_argument("--damage-type", choices=("untyped", "physical", "poison", "disease", "bleed", "magical", "flame", "frost", "shock"), default="flame")
     parser.add_argument("--target-resistance", type=float, default=18_200.0)
-    parser.add_argument(
-        "--allow-role-mismatch",
-        action="store_true",
-        help="Allow a non-DD saved build for pipeline diagnostics only.",
-    )
-    parser.add_argument(
-        "--provider-encounter",
-        default=None,
-        help=(
-            "Optional canonical encounter id. When supplied, evaluate Phase 11 provider "
-            "responsibilities through the configured default raid-coverage overlay."
-        ),
-    )
-    parser.add_argument(
-        "--provider-roster-build",
-        action="append",
-        default=[],
-        help=(
-            "Additional saved build name in the provider roster. Repeat for each companion "
-            "build; the optimized --build is always included exactly once."
-        ),
-    )
+    parser.add_argument("--allow-role-mismatch", action="store_true", help="Allow a non-DD saved build for pipeline diagnostics only.")
+    parser.add_argument("--provider-encounter", default=None, help="Optional canonical encounter id. When supplied, evaluate Phase 11 provider responsibilities through the configured default raid-coverage overlay.")
+    parser.add_argument("--provider-roster-build", action="append", default=[], help="Additional saved build name in the provider roster. Repeat for each companion build; the optimized --build is always included exactly once.")
     return parser
 
 
