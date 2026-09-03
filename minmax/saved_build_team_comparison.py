@@ -3,13 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from minmax.build_candidate_damage import (
-    calculation_result_from_build_context,
-    measure_modeled_damage_potency,
-)
+from minmax.build_candidate_damage import measure_modeled_damage_potency
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.dd_damage import DDDamageEvent, DDDamageResult
-from minmax.dd_stat_evaluation import DDStatEvaluation, evaluate_dd_stats
+from minmax.dd_stat_evaluation import DDStatEvaluation
 from minmax.evaluation_context import EvaluationContext
 from minmax.gear_set_repository import GearSetRepository
 from minmax.group_effects import GroupEffect
@@ -202,16 +199,17 @@ class SavedBuildTeamComparisonAdapter:
             event=event,
             evaluation_context=context,
         )
-        if not damage_metric.resolved or damage_metric.damage is None:
+        if (
+            not damage_metric.resolved
+            or damage_metric.damage is None
+            or damage_metric.dd_stats is None
+        ):
             detail = "; ".join(damage_metric.unresolved) or "damage metric unavailable"
             raise ValueError(
                 f"Canonical DD evaluation failed for {saved_build.BuildName!r}: {detail}"
             )
         damage = damage_metric.damage
-        dd_stats = evaluate_dd_stats(
-            calculation_result_from_build_context(snapshot),
-            context,
-        )
+        dd_stats = damage_metric.dd_stats
 
         player_name = str(saved_build.Name or saved_build.BuildName or "unnamed").strip()
         roster_candidate = RosterCandidate(
