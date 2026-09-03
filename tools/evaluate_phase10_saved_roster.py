@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from services.build_service import BuildService
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
+from services.encounter_difficulty import normalize_encounter_difficulty
 from services.encounter_repository import EncounterRepository
 from services.encounter_roster_evaluation import EncounterRosterEvaluator
 from services.encounter_service import EncounterService
@@ -23,6 +24,11 @@ def _parser() -> argparse.ArgumentParser:
         description="Evaluate a real saved-build roster against one Phase 10 encounter."
     )
     parser.add_argument("encounter_id", help="Exact canonical encounter id.")
+    parser.add_argument(
+        "--difficulty",
+        default="veteran",
+        help="Encounter difficulty: normal, veteran/vet, hardmode/hm. Default: veteran.",
+    )
     parser.add_argument(
         "--build",
         action="append",
@@ -79,6 +85,11 @@ def _identity(audit) -> str:
 
 def main() -> int:
     args = _parser().parse_args()
+    try:
+        difficulty = normalize_encounter_difficulty(args.difficulty)
+    except ValueError as exc:
+        print(exc)
+        return 2
 
     encounter_service = EncounterService(
         EncounterRepository.from_data_root(ROOT / "data")
@@ -121,10 +132,15 @@ def main() -> int:
         encounter_service,
         SavedBuildEncounterCapabilityAdapter(()),
     )
-    report = evaluator.evaluate_saved_build_audits(args.encounter_id, audits)
+    report = evaluator.evaluate_saved_build_audits(
+        args.encounter_id,
+        audits,
+        difficulty=difficulty,
+    )
 
     print("PHASE 10 REAL SAVED-ROSTER ENCOUNTER EVALUATION")
     print(f"Encounter: {args.encounter_id}")
+    print(f"Difficulty: {report.difficulty.value}")
     print(f"Builds: {args.builds}")
     print(f"Database: {args.database}")
     print(f"Selected roster members: {len(audits)}")
