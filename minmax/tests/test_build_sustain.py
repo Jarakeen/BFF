@@ -50,17 +50,17 @@ class _FakeAbilityCostRepository:
         )
 
 
-def _context() -> BuildCalculationContext:
+def _context(*, max_magicka: int = 10000, magicka_recovery: int = 1000) -> BuildCalculationContext:
     return BuildCalculationContext(
         character_id="character-1",
         build_id="build-1",
         progression=CharacterProgression(owned_skill_lines=("Restoration Staff",)),
         character_state=BaseCharacterState(
             max_health=20000,
-            max_magicka=10000,
+            max_magicka=max_magicka,
             max_stamina=9000,
             health_recovery=300,
-            magicka_recovery=1000,
+            magicka_recovery=magicka_recovery,
             stamina_recovery=700,
             traces={},
         ),
@@ -95,6 +95,73 @@ def test_resolve_named_build_actions_preserves_cost_evidence_once() -> None:
     assert resolution.actions[0].skill_line == "Restoration Staff"
     assert resolution.actions[0].base_cost.amount == 2000
     assert resolution.unresolved == ("Missing Skill: ability cost row not found",)
+
+
+def test_resolve_named_build_actions_reuses_same_plan_per_repository() -> None:
+    repository = _FakeAbilityCostRepository()
+    actions = (
+        NamedBuildAction(1.0, "Combat Prayer"),
+        NamedBuildAction(2.0, "Missing Skill"),
+    )
+
+    first = resolve_named_build_actions(actions, ability_cost_repository=repository)
+    second = resolve_named_build_actions(actions, ability_cost_repository=repository)
+
+    assert first is second
+    assert repository.calls == ["Combat Prayer", "Missing Skill"]
+
+
+def test_resolve_named_build_actions_invalidates_for_changed_plan_or_repository() -> None:
+    repository = _FakeAbilityCostRepository()
+    original = (NamedBuildAction(1.0, "Combat Prayer"),)
+    changed = (NamedBuildAction(2.0, "Combat Prayer"),)
+
+    first = resolve_named_build_actions(original, ability_cost_repository=repository)
+    second = resolve_named_build_actions(changed, ability_cost_repository=repository)
+    fresh_repository = _FakeAbilityCostRepository()
+    third = resolve_named_build_actions(original, ability_cost_repository=fresh_repository)
+
+    assert first is not second
+    assert first is not third
+    assert repository.calls == ["Combat Prayer", "Combat Prayer"]
+    assert fresh_repository.calls == ["Combat Prayer"]
+
+
+def test_reused_action_plan_keeps_candidate_pool_and_recovery_specific() -> None:
+    repository = _FakeAbilityCostRepository()
+    actions = (
+        NamedBuildAction(1.0, "Combat Prayer"),
+        NamedBuildAction(3.0, "Combat Prayer"),
+    )
+    resolution = resolve_named_build_actions(actions, ability_cost_repository=repository)
+    resolver = _FakeCostModifierResolver(BuildActionCostModifiers())
+    build = PlayerBuild(Name="Test Healer", BuildName="Sustain")
+
+    baseline = evaluate_build_sustain(
+        build=build,
+        context=_context(max_magicka=5000, magicka_recovery=500),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=4.0,
+        actions=resolution.actions,
+        cost_modifier_resolver=resolver,
+        additional_unresolved=resolution.unresolved,
+    )
+    candidate = evaluate_build_sustain(
+        build=build,
+        context=_context(max_magicka=9000, magicka_recovery=1500),
+        resource=ResourceType.MAGICKA,
+        duration_seconds=4.0,
+        actions=resolution.actions,
+        cost_modifier_resolver=resolver,
+        additional_unresolved=resolution.unresolved,
+    )
+
+    assert repository.calls == ["Combat Prayer", "Combat Prayer"]
+    assert baseline.timeline.starting_amount == 5000
+    assert candidate.timeline.starting_amount == 9000
+    assert [tick.amount for tick in baseline.recovery_ticks] == [500, 500]
+    assert [tick.amount for tick in candidate.recovery_ticks] == [1500, 1500]
+    assert baseline.timeline.ending_amount != candidate.timeline.ending_amount
 
 
 def test_saved_build_sustain_uses_context_pool_build_modifiers_and_recovery() -> None:
