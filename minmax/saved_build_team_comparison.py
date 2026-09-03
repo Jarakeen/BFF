@@ -9,7 +9,7 @@ from minmax.build_candidate_damage import (
 )
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.dd_damage import DDDamageEvent, DDDamageResult
-from minmax.dd_stat_evaluation import DDStatEvaluation
+from minmax.dd_stat_evaluation import DDStatEvaluation, evaluate_dd_stats
 from minmax.evaluation_context import EvaluationContext
 from minmax.gear_set_repository import GearSetRepository
 from minmax.group_effects import GroupEffect
