@@ -11,10 +11,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from services.paths import PROCESSED, RAW_DATA
 from tools.import_uesp_alchemy_effects_v3 import EXPECTED_EFFECTS
 
-DEFAULT_PROCESSED = get_data_dir() / "processed" / "alchemy_effects.json"
-DEFAULT_RAW = get_data_dir() / "raw"
+DEFAULT_PROCESSED = PROCESSED / "alchemy_effects.json"
+DEFAULT_RAW = RAW_DATA
+LEGACY_PROCESSED = get_data_dir() / "processed" / "alchemy_effects.json"
+LEGACY_RAW = get_data_dir() / "raw"
 
 LEGACY_SPELL_POWER_COMPONENTS = (
     "Restore Magicka",
@@ -103,13 +106,33 @@ def _likely_raw_files(raw_dir: Path, name: str) -> tuple[str, ...]:
     return tuple(sorted(matches, key=str.casefold))
 
 
+def _unique_paths(*paths: Path) -> tuple[Path, ...]:
+    output: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = str(path.resolve()).casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(path)
+    return tuple(output)
+
+
 def audit(*, database_path: Path, processed_path: Path, raw_dir: Path) -> int:
+    processed_candidates = _unique_paths(processed_path, DEFAULT_PROCESSED, LEGACY_PROCESSED)
+    raw_candidates = _unique_paths(raw_dir, DEFAULT_RAW, LEGACY_RAW)
+
     print("========================================")
     print(" PHASE 5 POTION SOURCE RECOVERY AUDIT")
     print("========================================")
-    print(f"Database:       {database_path}")
-    print(f"Processed JSON: {processed_path}")
-    print(f"Raw directory:  {raw_dir}")
+    print(f"Database: {database_path}")
+    print()
+
+    print("Source path candidates (migration-aware):")
+    for path in processed_candidates:
+        print(f"  processed: {'PRESENT' if path.exists() else 'missing'} | {path}")
+    for path in raw_candidates:
+        print(f"  raw:       {'PRESENT' if path.exists() else 'missing'} | {path}")
     print()
 
     print("Saved legacy shorthand: spell power")
@@ -123,27 +146,29 @@ def audit(*, database_path: Path, processed_path: Path, raw_dir: Path) -> int:
         marker = "yes" if name in EXPECTED_EFFECTS else "no"
         print(f"  - {name} | V3 EXPECTED_EFFECTS={marker}")
 
-    processed = _processed_inventory(processed_path)
     print()
-    print("Processed source inventory:")
-    if not processed_path.exists():
-        print("  processed alchemy JSON: MISSING")
-    elif not processed:
-        print("  processed alchemy JSON: present but unreadable/empty")
-    else:
-        print(f"  processed alchemy JSON: present | effects={len(processed)}")
-    for name in tuple(dict.fromkeys(LEGACY_SPELL_POWER_COMPONENTS + U51_POWER_COMPONENTS)):
-        row = processed.get(name.casefold())
-        if row is None:
-            print(f"  - {name}: absent")
-            continue
-        tiers = row.get("potion_tiers") if isinstance(row.get("potion_tiers"), list) else []
-        formulas = row.get("formulas") if isinstance(row.get("formulas"), list) else []
-        sources = row.get("source_files") if isinstance(row.get("source_files"), list) else []
-        print(
-            f"  - {name}: present | potion_tiers={len(tiers)} | "
-            f"formulas={len(formulas)} | sources={len(sources)}"
-        )
+    print("Processed source inventories:")
+    for candidate in processed_candidates:
+        processed = _processed_inventory(candidate)
+        print(f"  {candidate}")
+        if not candidate.exists():
+            print("    processed alchemy JSON: MISSING")
+        elif not processed:
+            print("    processed alchemy JSON: present but unreadable/empty")
+        else:
+            print(f"    processed alchemy JSON: present | effects={len(processed)}")
+        for name in tuple(dict.fromkeys(LEGACY_SPELL_POWER_COMPONENTS + U51_POWER_COMPONENTS)):
+            row = processed.get(name.casefold())
+            if row is None:
+                print(f"    - {name}: absent")
+                continue
+            tiers = row.get("potion_tiers") if isinstance(row.get("potion_tiers"), list) else []
+            formulas = row.get("formulas") if isinstance(row.get("formulas"), list) else []
+            sources = row.get("source_files") if isinstance(row.get("source_files"), list) else []
+            print(
+                f"    - {name}: present | potion_tiers={len(tiers)} | "
+                f"formulas={len(formulas)} | sources={len(sources)}"
+            )
 
     print()
     print("SQLite effect inventory:")
@@ -160,28 +185,31 @@ def audit(*, database_path: Path, processed_path: Path, raw_dir: Path) -> int:
 
     print()
     print("Likely raw source files by filename:")
-    if not raw_dir.exists():
-        print("  raw directory missing")
-    else:
+    for candidate in raw_candidates:
+        print(f"  {candidate}")
+        if not candidate.exists():
+            print("    raw directory missing")
+            continue
         any_match = False
         for name in LEGACY_SPELL_POWER_COMPONENTS:
-            matches = _likely_raw_files(raw_dir, name)
+            matches = _likely_raw_files(candidate, name)
             if not matches:
-                print(f"  - {name}: none")
+                print(f"    - {name}: none")
                 continue
             any_match = True
-            print(f"  - {name}: {len(matches)}")
+            print(f"    - {name}: {len(matches)}")
             for item in matches[:10]:
-                print(f"      {item}")
+                print(f"        {item}")
         if not any_match:
-            print("  No legacy component filenames matched. Source pages may use generic UESP filenames.")
+            print("    No legacy component filenames matched. Source pages may use generic UESP filenames.")
 
     print()
     print("Interpretation boundary:")
     print("  - This audit is read-only.")
+    print("  - research/raw and research/processed are the current developer-source paths.")
+    print("  - legacy data/raw and data/processed are checked only for migration recovery.")
     print("  - A saved potion selection proves availability, not active uptime.")
     print("  - Potion components must come from the active source corpus/database, not from the saved label alone.")
-    print("  - V3 EXPECTED_EFFECTS coverage is reported above; omitted historical traits may enter through supplementary source records.")
     print("  - U51 consolidates the power/critical trait names, so the eventual resolver must tolerate versioned source names.")
     return 0
 
