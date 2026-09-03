@@ -94,6 +94,7 @@ class BuildActionCostModifierResolver:
     ) -> None:
         self.jewelry_cost_repository = jewelry_cost_repository
         self.jewelry_trait_repository = jewelry_trait_repository
+        self._resolve_cache: dict[tuple[object, ...], BuildActionCostModifiers] = {}
 
     @staticmethod
     def _armor_weight_count(build: PlayerBuild, weight: str) -> int:
@@ -111,6 +112,38 @@ class BuildActionCostModifierResolver:
     @staticmethod
     def _medium_armor_count(build: PlayerBuild) -> int:
         return BuildActionCostModifierResolver._armor_weight_count(build, "medium")
+
+    @staticmethod
+    def _slot_cache_key(slot: GearSlot) -> tuple[str, str, str, str, str]:
+        return tuple(
+            str(value or "").strip().casefold()
+            for value in (
+                slot.Enchant,
+                slot.Trait,
+                slot.Quality,
+                slot.EnchantTier,
+                slot.Level,
+            )
+        )
+
+    @classmethod
+    def _resolve_cache_key(
+        cls,
+        build: PlayerBuild,
+        progression: CharacterProgression | None,
+    ) -> tuple[object, ...]:
+        light_owned = None if progression is None else progression.owns_skill_line("Light Armor")
+        medium_owned = None if progression is None else progression.owns_skill_line("Medium Armor")
+        return (
+            str(build.Race or "").strip().casefold(),
+            cls._light_armor_count(build),
+            cls._medium_armor_count(build),
+            light_owned,
+            medium_owned,
+            cls._slot_cache_key(build.Necklace),
+            cls._slot_cache_key(build.Ring1),
+            cls._slot_cache_key(build.Ring2),
+        )
 
     @staticmethod
     def _standing_passive_modifiers(
@@ -223,6 +256,11 @@ class BuildActionCostModifierResolver:
         *,
         progression: CharacterProgression | None = None,
     ) -> BuildActionCostModifiers:
+        cache_key = self._resolve_cache_key(build, progression)
+        cached = self._resolve_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         standing_modifiers, standing_unresolved = self._standing_passive_modifiers(
             build,
             progression,
@@ -283,7 +321,9 @@ class BuildActionCostModifierResolver:
                 )
             modifiers.extend(resolved)
 
-        return BuildActionCostModifiers(
+        result = BuildActionCostModifiers(
             modifiers=ActionCostModifierSet(tuple(modifiers)),
             unresolved=tuple(unresolved),
         )
+        self._resolve_cache[cache_key] = result
+        return result
