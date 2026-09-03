@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
+from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
+from minmax.gear_set_repository import GearSetRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
+from minmax.skill_effect_repository import SkillEffectRepository
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.character_progression_service import CharacterProgressionService
-from services.skill_effect_repository import SkillEffectRepository
-from services.gear_effect_repository import GearEffectRepository
 
 
 @dataclass(frozen=True)
@@ -49,12 +51,13 @@ class SavedBuildCapabilityService:
         potions=None,
     ) -> None:
         self.builds = builds
-        database_path = Path(database_path)
-        self.context_factory = context_factory or Phase5BuildCalculationContextFactory(database_path)
-        self.progression = progression or CharacterProgressionService(database_path)
-        self.skills = skills or SkillEffectRepository(database_path)
-        self.gear = gear or GearEffectRepository(database_path)
-        self.potions = potions or PotionAvailabilityRepository(database_path)
+        self.database_path = Path(database_path)
+        self.context_factory = context_factory or Phase5BuildCalculationContextFactory(self.database_path)
+        self.progression = progression or CharacterProgressionService(self.database_path)
+        self.skills = skills or SkillEffectRepository(self.database_path)
+        self.gear_repository = None if gear is not None else GearSetRepository(self.database_path)
+        self.gear = gear or GearSetEffectVariantResolver(self.gear_repository)
+        self.potions = potions or PotionAvailabilityRepository(self.database_path)
 
     @staticmethod
     def _clean(value) -> str:
@@ -103,6 +106,34 @@ class SavedBuildCapabilityService:
                 kept.append(text)
         return kept, boundaries
 
+    def _ability_id(self, name: str, class_name: str) -> int | None:
+        if not self.database_path.exists():
+            return None
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)")}
+                if not {"ability_id", "name"}.issubset(columns):
+                    return None
+                clauses = ["lower(trim(name)) = lower(trim(?))"]
+                params: list[object] = [name]
+                if class_name and "class_type" in columns:
+                    clauses.append(
+                        "(trim(coalesce(class_type,'')) = '' OR lower(trim(class_type)) = lower(trim(?)))"
+                    )
+                    params.append(class_name)
+                order = (
+                    "rank DESC, morph DESC, ability_id DESC"
+                    if {"rank", "morph"}.issubset(columns)
+                    else "ability_id DESC"
+                )
+                row = db.execute(
+                    f"SELECT ability_id FROM ability WHERE {' AND '.join(clauses)} ORDER BY {order} LIMIT 1",
+                    params,
+                ).fetchone()
+        except sqlite3.Error:
+            return None
+        return int(row[0]) if row else None
+
     def _skill_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
         names = build.FrontBarSkills if active_bar == "front" else build.BackBarSkills
         variants: list[EffectVariant] = []
@@ -110,17 +141,34 @@ class SavedBuildCapabilityService:
             name = self._clean(name)
             if not name:
                 continue
-            resolved = self.skills.resolve(name)
-            unresolved.extend(resolved.unresolved)
-            variants.extend(resolved.effects)
+            ability_id = self._ability_id(name, build.EsoClass)
+            if ability_id is None:
+                unresolved.append(f"{active_bar} skill not found in canonical ability data: {name}")
+                continue
+            resolved = self.skills.resolve(ability_id)
+            if hasattr(resolved, "unresolved") and hasattr(resolved, "effects"):
+                unresolved.extend(resolved.unresolved)
+                variants.extend(resolved.effects)
+            else:
+                variants.extend(resolved)
         return variants
 
     def _gear_variants(self, build: PlayerBuild, active_bar: str, unresolved: list[str]) -> list[EffectVariant]:
         variants: list[EffectVariant] = []
         for set_name, pieces in self._active_set_counts(build, active_bar).items():
-            resolved = self.gear.resolve(set_name, active_pieces=pieces)
-            unresolved.extend(resolved.unresolved)
-            variants.extend(resolved.effects)
+            if self.gear_repository is None:
+                resolved = self.gear.resolve(set_name, active_pieces=pieces)
+                if hasattr(resolved, "unresolved") and hasattr(resolved, "effects"):
+                    unresolved.extend(resolved.unresolved)
+                    variants.extend(resolved.effects)
+                else:
+                    variants.extend(resolved)
+                continue
+            gear_set = self.gear_repository.get_set(set_name)
+            if gear_set is None:
+                unresolved.append(f"{active_bar} gear set not found in canonical data: {set_name}")
+                continue
+            variants.extend(self.gear.resolve(gear_set.id, pieces))
         return variants
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
@@ -210,4 +258,12 @@ class SavedBuildCapabilityService:
             unresolved=tuple(dict.fromkeys(unresolved)),
             capability_unresolved=tuple(dict.fromkeys(capability_unresolved)),
             boundaries=tuple(dict.fromkeys(boundaries)),
+        )
+
+    def audit_roster(self) -> tuple[SavedBuildCapabilityAudit, ...]:
+        roster = self.builds.load()
+        return tuple(
+            self.audit_build(build)
+            for build in roster.Members
+            if self._clean(build.Name) or self._clean(build.Gamertag) or self._clean(build.BuildName)
         )
