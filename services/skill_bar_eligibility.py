@@ -36,12 +36,17 @@ def is_player_active(skill: dict) -> bool:
     """Return whether a skill can participate in active-bar eligibility.
 
     Raw crafted rows remain excluded because they do not identify one actual
-    configured scribed ability. A synthetic/configured scribed entry is allowed
-    only when it carries the complete recipe payload injected for this build.
+    configured scribed ability. The Build editor may explicitly mark a raw
+    crafted row as selected for this saved build; that marker affects only UI
+    eligibility and does not promote missing recipe semantics into capability
+    truth. A synthetic/configured scribed entry is allowed when it carries the
+    complete recipe payload injected for this build.
     """
     if _int(skill.get("is_player")) != 1 or _int(skill.get("is_passive")) != 0 or not _text(skill.get("name")):
         return False
     if _int(skill.get("is_crafted")) == 0:
+        return True
+    if bool(skill.get("editor_selectable_scribed")):
         return True
     recipe = skill.get("scribing_recipe")
     return isinstance(recipe, dict) and all(
