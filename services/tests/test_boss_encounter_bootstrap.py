@@ -27,6 +27,33 @@ def _db() -> sqlite3.Connection:
     return db
 
 
+def _pre_encounter_db() -> sqlite3.Connection:
+    db = sqlite3.connect(":memory:")
+    db.execute(
+        """
+        CREATE TABLE content (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            slug TEXT NOT NULL UNIQUE,
+            content_type TEXT NOT NULL,
+            summary TEXT DEFAULT '',
+            location TEXT DEFAULT '',
+            source_url TEXT,
+            source_page_title TEXT,
+            source_revision_id TEXT,
+            retrieved_at TEXT,
+            source_license TEXT
+        )
+        """
+    )
+    db.execute(
+        "INSERT INTO content(id, name, slug, content_type) VALUES (?, ?, ?, ?)",
+        ("halls_of_fabrication", "Halls of Fabrication", "halls-of-fabrication", "trial"),
+    )
+    db.commit()
+    return db
+
+
 def _write_boss(path: Path, *, content_id: str = "halls_of_fabrication") -> None:
     path.write_text(
         json.dumps(
@@ -64,6 +91,18 @@ def test_audit_marks_source_declared_content_ready(tmp_path: Path) -> None:
     assert row.content_id == "halls_of_fabrication"
     assert row.plan is not None
     assert row.plan.source_revision_id == "3175476"
+
+
+def test_audit_is_read_only_when_encounter_table_does_not_exist(tmp_path: Path) -> None:
+    db = _pre_encounter_db()
+    _write_boss(tmp_path / "archcustodian.json")
+
+    audit = audit_boss_encounter_bootstrap(db, tmp_path)
+
+    assert audit.candidates[0].status == READY
+    assert db.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='encounter'"
+    ).fetchone() is None
 
 
 def test_audit_refuses_to_infer_missing_content(tmp_path: Path) -> None:
