@@ -103,6 +103,21 @@ def _encounter_service(database: Path) -> EncounterService:
     )
 
 
+def _print_execution_rows(report) -> None:
+    print("  Execution detail:")
+    if not report.execution_evaluation.results:
+        print("    (none)")
+        return
+    for row in report.execution_evaluation.results:
+        method = row.handling_method or "unresolved"
+        interaction = f" / {row.interaction}" if row.interaction else ""
+        print(
+            f"    {row.classification.value.upper():11} "
+            f"{row.mechanic_name} [{row.requirement_type}] -> {method}{interaction}"
+        )
+        print(f"      {row.explanation}")
+
+
 def main() -> int:
     args = _parser().parse_args()
     try:
@@ -213,6 +228,7 @@ def main() -> int:
         print(f"  Capability-ready: {report.is_fully_covered}")
         print(f"  Execution rows:   {len(report.execution_evaluation.results)}")
         print(f"  Provider rows:    {len(report.provider_results)}")
+        _print_execution_rows(report)
 
     roster_size_ok = len(selected_real) >= 2 and not duplicate_selected
     capability_sources_ok = bool(selected_real) and all(
