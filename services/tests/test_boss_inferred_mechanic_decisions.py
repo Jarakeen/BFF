@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 
 from services.boss_inferred_mechanic_decisions import (
     ACCEPTED,
     PENDING,
+    REJECTED,
     InferredMechanicDecision,
+    apply_accepted_recommendations,
     audit_decisions,
     build_pending_decision_manifest,
     load_decisions,
@@ -99,3 +102,78 @@ def test_load_decisions_normalizes_status(tmp_path: Path) -> None:
 
     rows = load_decisions(manifest)
     assert rows[0].status == ACCEPTED
+
+
+@dataclass(frozen=True)
+class _ReviewRow:
+    encounter_id: str
+    mechanic_name: str
+
+
+@dataclass(frozen=True)
+class _Recommendation:
+    row: _ReviewRow
+    recommended_status: str
+    rationale: str
+
+
+def test_apply_accepted_recommendations_changes_only_pending_rows(tmp_path: Path) -> None:
+    manifest = tmp_path / "review.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "decisions": [
+                    {
+                        "encounter_id": "oaxiltso",
+                        "mechanic_name": "Savage Blitz",
+                        "status": PENDING,
+                        "rationale": "",
+                    },
+                    {
+                        "encounter_id": "oaxiltso",
+                        "mechanic_name": "Fiery Stomp",
+                        "status": REJECTED,
+                        "rationale": "Human review rejected this classification.",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    recommendations = [
+        _Recommendation(
+            row=_ReviewRow("oaxiltso", "Savage Blitz"),
+            recommended_status=ACCEPTED,
+            rationale="All populated inferred fields are directly supported by the source description.",
+        ),
+        _Recommendation(
+            row=_ReviewRow("oaxiltso", "Fiery Stomp"),
+            recommended_status=ACCEPTED,
+            rationale="Automated recommendation must not overwrite human review.",
+        ),
+    ]
+
+    assert apply_accepted_recommendations(manifest, recommendations) == 1
+    rows = {row.mechanic_name: row for row in load_decisions(manifest)}
+    assert rows["Savage Blitz"].status == ACCEPTED
+    assert rows["Savage Blitz"].rationale.startswith("All populated")
+    assert rows["Fiery Stomp"].status == REJECTED
+    assert rows["Fiery Stomp"].rationale == "Human review rejected this classification."
+
+
+def test_apply_accepted_recommendations_rejects_missing_manifest_key(tmp_path: Path) -> None:
+    manifest = tmp_path / "review.json"
+    manifest.write_text(json.dumps({"decisions": []}), encoding="utf-8")
+    recommendation = _Recommendation(
+        row=_ReviewRow("oaxiltso", "Savage Blitz"),
+        recommended_status=ACCEPTED,
+        rationale="Supported.",
+    )
+
+    try:
+        apply_accepted_recommendations(manifest, [recommendation])
+    except ValueError as exc:
+        assert "missing from manifest" in str(exc)
+    else:
+        raise AssertionError("missing recommendation key should block manifest mutation")
