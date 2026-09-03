@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from weakref import WeakKeyDictionary
 
 from models.build_model import PlayerBuild
 
@@ -64,6 +65,12 @@ class NamedBuildActionResolution:
     unresolved: tuple[str, ...] = ()
 
 
+_NAMED_ACTION_PLAN_CACHE: WeakKeyDictionary[
+    AbilityCostRepository,
+    dict[tuple[NamedBuildAction, ...], NamedBuildActionResolution],
+] = WeakKeyDictionary()
+
+
 @dataclass(frozen=True)
 class BuildSustainRun:
     """Auditable Phase 4 sustain evaluation for one saved build/resource."""
@@ -84,15 +91,21 @@ def resolve_named_build_actions(
 ) -> NamedBuildActionResolution:
     """Resolve a stable saved-bar action plan once for repeated sustain runs.
 
-    Candidate families that do not change the activity plan can reuse this
-    immutable result while still applying candidate-specific resource pools,
-    recovery, and build cost modifiers in ``evaluate_build_sustain``.
+    Resolution is cached for the lifetime of the supplied ability-cost repository.
+    That gives repeated candidate evaluations one immutable action plan while a
+    fresh repository still observes later canonical database changes.
     """
+
+    action_key = tuple(actions)
+    repository_cache = _NAMED_ACTION_PLAN_CACHE.setdefault(ability_cost_repository, {})
+    cached = repository_cache.get(action_key)
+    if cached is not None:
+        return cached
 
     resolved_actions: list[PlannedBuildAction] = []
     unresolved: list[str] = []
 
-    for action in actions:
+    for action in action_key:
         resolution = ability_cost_repository.resolve_name(action.skill_name)
         if resolution.base_cost is None:
             if resolution.unresolved:
@@ -121,10 +134,12 @@ def resolve_named_build_actions(
             )
         )
 
-    return NamedBuildActionResolution(
+    result = NamedBuildActionResolution(
         actions=tuple(resolved_actions),
         unresolved=tuple(unresolved),
     )
+    repository_cache[action_key] = result
+    return result
 
 
 def evaluate_build_sustain(
