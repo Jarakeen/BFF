@@ -17,7 +17,10 @@ from minmax.build_candidate_armor_trait import enumerate_armor_trait_candidates
 from minmax.build_candidate_comparison import BuildCandidateComparison, CandidateConstraint, ConstraintStatus
 from minmax.build_candidate_context import build_candidate_context
 from minmax.build_candidate_evaluator import CandidateRanking, evaluate_healing_candidate, rank_candidate_comparisons
-from minmax.build_candidate_food import enumerate_food_candidates
+from minmax.build_candidate_food import (
+    enumerate_food_candidates,
+    filter_food_candidates_for_resource,
+)
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
@@ -378,6 +381,20 @@ def audit_saved_build_candidates(
         tuple(baseline_context.unresolved_gear_effects),
     )
 
+    evaluated_food_candidates = food_candidates
+    food_resource_filter_applied = False
+    if (
+        not baseline_sustain_context_unresolved
+        and not baseline_sustain.unresolved
+        and not baseline_sustain.sustain.sustains
+    ):
+        evaluated_food_candidates = filter_food_candidates_for_resource(
+            food_candidates,
+            resource=resource,
+            provisioning_repository=provisioning_repository,
+        )
+        food_resource_filter_applied = True
+
     def resolve_context(candidate):
         return build_candidate_context(
             candidate=candidate,
@@ -476,7 +493,7 @@ def audit_saved_build_candidates(
     )
     armor_trait_ranking = evaluate_family(armor_trait_candidates)
     armor_enchant_ranking = evaluate_family(armor_enchant_candidates)
-    food_ranking = evaluate_family(food_candidates)
+    food_ranking = evaluate_family(evaluated_food_candidates)
     overall_ranking = rank_candidate_comparisons(
         mundus_ranking.comparisons
         + armor_trait_ranking.comparisons
@@ -504,6 +521,15 @@ def audit_saved_build_candidates(
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; expected critical healing is not yet modeled")
     print("Candidate scope: one changed field per candidate; Mundus, armor traits, armor enchants, and food ranked separately and overall")
+    print(f"Provisioning candidates discovered: {len(food_candidates)}")
+    print(f"Provisioning candidates evaluated:  {len(evaluated_food_candidates)}")
+    if food_resource_filter_applied:
+        print(
+            f"Provisioning pruning: baseline {resource.value} sustain is resolved and failing; "
+            f"only candidates affecting {resource.value} pool/recovery were evaluated"
+        )
+    else:
+        print("Provisioning pruning: not applied")
     if provider_scope is None:
         print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
     else:
