@@ -130,6 +130,13 @@ class SearchableCompactCPSlot(build_editor.CompactCPSlot):
 
 
 class SearchableSkillBarRow(EligibleSkillBarRow):
+    """Searchable bar picker that also exposes raw scribing grimoires for editing.
+
+    Runtime combat eligibility continues to require a complete configured
+    scribing recipe. The build editor is allowed to record the source-backed
+    crafted skill name first so users can finish the recipe in Scribed Skills.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
@@ -141,6 +148,71 @@ class SearchableSkillBarRow(EligibleSkillBarRow):
             row.setAlignment(Qt.AlignmentFlag.AlignVCenter)
             for index in range(row.count()):
                 row.setStretch(index, 1)
+
+    @staticmethod
+    def _int(value, default=0) -> int:
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return default
+
+    def _raw_crafted_choices(self, slot_index: int) -> list[dict]:
+        wants_ultimate = slot_index == 5
+        selected_class = str(getattr(self, "_selected_class", "") or "").strip().casefold()
+        choices: dict[str, dict] = {}
+        for skill in self.all_skill_choices:
+            if not isinstance(skill, dict):
+                continue
+            name = str(skill.get("name", "") or "").strip()
+            if not name:
+                continue
+            if self._int(skill.get("is_crafted")) != 1:
+                continue
+            if self._int(skill.get("is_player")) != 1 or self._int(skill.get("is_passive")) != 0:
+                continue
+            if (self._int(skill.get("base_mechanic")) == 8) != wants_ultimate:
+                continue
+            owner = str(skill.get("class_type", "") or "").strip().casefold()
+            if owner and owner != selected_class:
+                continue
+            # Fully configured synthetic skills are already supplied by the
+            # canonical eligibility path; this fallback is only for raw source rows.
+            recipe = skill.get("scribing_recipe")
+            if isinstance(recipe, dict) and all(
+                str(recipe.get(field, "") or "").strip()
+                for field in ("ResultName", "Grimoire", "Focus", "Signature", "Affix")
+            ):
+                continue
+            choices.setdefault(name.casefold(), skill)
+        return sorted(choices.values(), key=lambda skill: str(skill.get("name", "")).casefold())
+
+    def _rebuild_combos(self):
+        current_values = [field.currentText().strip() for field in self.fields]
+        super()._rebuild_combos()
+        for index, field in enumerate(self.fields):
+            existing = {
+                field.itemText(item_index).strip().casefold()
+                for item_index in range(field.count())
+                if field.itemText(item_index).strip()
+            }
+            for skill in self._raw_crafted_choices(index):
+                name = str(skill.get("name", "") or "").strip()
+                if name.casefold() in existing:
+                    continue
+                field.addItem(name, skill)
+                field.setItemData(
+                    field.count() - 1,
+                    "Scribed skill source. Configure Focus/Signature/Affix in the Scribed Skills tab for canonical combat effects.",
+                    Qt.ItemDataRole.ToolTipRole,
+                )
+                icon = _icon_for_skill(skill)
+                if not icon.isNull():
+                    field.setItemIcon(field.count() - 1, icon)
+                existing.add(name.casefold())
+            if current_values[index]:
+                match = field.findText(current_values[index], Qt.MatchFlag.MatchExactly)
+                if match >= 0:
+                    field.setCurrentIndex(match)
 
 
 class SearchableBuildEditor(EligibleBuildEditor):
@@ -155,6 +227,15 @@ class SearchableBuildEditor(EligibleBuildEditor):
         self._sync_editor_card_widths()
         QTimer.singleShot(0, self._compact_host_dialog)
         QTimer.singleShot(0, self._sync_editor_card_widths)
+
+    def _set_weapon_row_visible(self, key: str, visible: bool):
+        # Base visibility toggling restores every widget in an off-hand row.
+        # SearchableGearSlotRow intentionally hides legacy Set 2 everywhere,
+        # so keep it hidden when an off-hand row becomes visible.
+        super()._set_weapon_row_visible(key, visible)
+        row = getattr(self, "gear_rows", {}).get(key)
+        if row is not None and hasattr(row, "set2_combo"):
+            row.set2_combo.setVisible(False)
 
     def _editor_cards(self) -> list:
         root = self.layout()
