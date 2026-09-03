@@ -18,11 +18,13 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
+from services.eso_collectible_database_service import EsoCollectibleDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
 from ui.achievements_page import AchievementsPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
+from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
 from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
@@ -44,6 +46,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
+        self.collectible_service = EsoCollectibleDatabaseService(data_dir / "eso.db")
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
@@ -63,9 +66,16 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
+        collectible_browser = CollectiblesPage(service=self.collectible_service)
+        collectible_dashboard = CollectiblesDashboardPage(self.collectible_service)
+        collectible_dashboard.categoryRequested.connect(
+            lambda category: self.show_page(f"collectibles:{category}")
+        )
+
         core_pages = {
             "achievements": AchievementsPage(),
-            "collectibles": CollectiblesPage(),
+            "collectibles": collectible_dashboard,
+            "collectibles_browser": collectible_browser,
             "roster_page": RosterPage(),
             "operations_console": OperationsConsole(expedition=self.expedition_service),
             "console:1": EncountersPage(expedition=self.expedition_service),
@@ -105,10 +115,10 @@ class MainWindow(QMainWindow):
         self.sidebar.pageRequested.connect(self.show_page)
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
-        collectibles_page = self.pages.get("collectibles")
+        collectibles_page = self.pages.get("collectibles_browser")
         if collectibles_page is None or not collectibles_page.has_pending_changes():
             return True
-        if self.stack.currentWidget() is not self.page_containers.get("collectibles"):
+        if self.stack.currentWidget() is not self.page_containers.get("collectibles_browser"):
             return True
 
         box = QMessageBox(self)
@@ -132,28 +142,25 @@ class MainWindow(QMainWindow):
         return False
 
     def _refresh_collectibles_for_active_profile(self) -> None:
-        """Show collectible ownership for the same named profile as Achievements.
-
-        Achievement imports can write collectible rewards through a separate
-        ProfiledCollectibleService instance. The long-lived Collectibles page
-        otherwise starts on its own ``Default`` profile, making valid imported
-        ownership look absent. Keep the two profile views aligned when the
-        same named profile is available.
-        """
+        """Keep collection browser/dashboard aligned with the achievement profile."""
         achievements_page = self.pages.get("achievements")
-        collectibles_page = self.pages.get("collectibles")
+        collectibles_page = self.pages.get("collectibles_browser")
+        dashboard = self.pages.get("collectibles")
         service = getattr(collectibles_page, "service", None)
         progress = getattr(achievements_page, "achievement_progress_service", None)
-        if service is None or progress is None or not hasattr(service, "set_active_profile"):
-            return
 
-        profile = str(progress.active_profile or "").strip()
-        if profile:
-            service.set_active_profile(profile)
-            reload_combo = getattr(collectibles_page, "_reload_profile_combo", None)
-            if callable(reload_combo):
-                reload_combo(profile)
-        collectibles_page.refresh()
+        if service is not None and progress is not None and hasattr(service, "set_active_profile"):
+            profile = str(progress.active_profile or "").strip()
+            if profile:
+                service.set_active_profile(profile)
+                reload_combo = getattr(collectibles_page, "_reload_profile_combo", None)
+                if callable(reload_combo):
+                    reload_combo(profile)
+
+        if collectibles_page is not None:
+            collectibles_page.refresh()
+        if dashboard is not None:
+            dashboard.refresh()
 
     def show_page(self, page_name: str):
         if not self._confirm_collectible_navigation(page_name):
@@ -161,11 +168,11 @@ class MainWindow(QMainWindow):
 
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
-            collectibles_page = self.pages["collectibles"]
+            collectibles_page = self.pages["collectibles_browser"]
             self._refresh_collectibles_for_active_profile()
             collectibles_page.set_category(category)
             self.sidebar.set_current(page_name)
-            self.stack.setCurrentWidget(self.page_containers["collectibles"])
+            self.stack.setCurrentWidget(self.page_containers["collectibles_browser"])
             return
 
         if page_name not in self.page_containers:
@@ -173,8 +180,7 @@ class MainWindow(QMainWindow):
             return
 
         # Settings -> Data Management can import progress through a separate
-        # service instance. Refresh the long-lived pages when they become
-        # visible so those external writes appear immediately.
+        # service instance. Refresh the long-lived pages when they become visible.
         if page_name == "achievements":
             self.pages["achievements"].refresh()
         elif page_name == "collectibles":
