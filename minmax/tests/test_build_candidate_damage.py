@@ -40,6 +40,8 @@ def test_measure_damage_uses_canonical_stats_and_explicit_event():
     assert result.metric_name == "canonical single-event expected damage"
     assert result.value == 6250.0
     assert result.damage is not None
+    assert result.dd_stats is not None
+    assert result.dd_stats.weapon_damage == 2000.0
     assert result.damage.offensive_power == 4000.0
     assert result.damage.final_damage == result.value
     assert any("event base=1000" in row for row in result.evidence)
