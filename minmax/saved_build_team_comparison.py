@@ -75,10 +75,19 @@ class SavedBuildRosterScenario:
 
 
 @dataclass(frozen=True)
+class RosterMemberCapabilityEvidence:
+    """Resolved capability evidence for one selected roster member."""
+
+    member_id: str
+    audit: SavedBuildCapabilityAudit
+
+
+@dataclass(frozen=True)
 class SavedBuildRosterEvaluation:
     scenario: SavedBuildRosterScenario
     group_evaluation: GroupEvaluation
     player_evidence: tuple[PlayerEvaluationEvidence, ...]
+    capability_evidence: tuple[RosterMemberCapabilityEvidence, ...]
 
 
 @dataclass(frozen=True)
@@ -106,6 +115,7 @@ class SavedBuildTeamComparisonAdapter:
         database_path: Path,
         progression_adapter=None,
         context_factory=None,
+        capability_service=None,
     ) -> None:
         self.builds_path = Path(builds_path)
         self.database_path = Path(database_path)
@@ -116,6 +126,10 @@ class SavedBuildTeamComparisonAdapter:
         self.context_factory = context_factory or BuildCalculationContextFactory(
             race_repository=RaceRepository(self.database_path),
             gear_set_repository=GearSetRepository(self.database_path),
+        )
+        self.capability_service = capability_service or SavedBuildCapabilityService(
+            self.build_service,
+            self.database_path,
         )
 
     def _find_saved_build(self, build_name: str) -> PlayerBuild:
@@ -259,11 +273,13 @@ class SavedBuildTeamComparisonAdapter:
 
         evidence_rows: list[PlayerEvaluationEvidence] = []
         roster: list[RosterCandidate] = []
+        capability_rows: list[RosterMemberCapabilityEvidence] = []
         static_unresolved: list[str] = []
 
         for member in scenario.members:
+            saved_build = self._find_saved_build(member.build_name)
             evidence = self._evaluate_player(
-                self._find_saved_build(member.build_name),
+                saved_build,
                 member.active_bar,
                 event,
                 context,
@@ -273,6 +289,12 @@ class SavedBuildTeamComparisonAdapter:
             evidence = replace(evidence, roster_candidate=candidate)
             evidence_rows.append(evidence)
             roster.append(candidate)
+            capability_rows.append(
+                RosterMemberCapabilityEvidence(
+                    member_id=member.member_id.strip(),
+                    audit=self.capability_service.audit_build(saved_build),
+                )
+            )
             static_unresolved.extend(
                 f"{member.member_id.strip()} ({evidence.build_name}): {message}"
                 for message in evidence.static_unresolved
@@ -289,6 +311,7 @@ class SavedBuildTeamComparisonAdapter:
             scenario=scenario,
             group_evaluation=evaluation,
             player_evidence=tuple(evidence_rows),
+            capability_evidence=tuple(capability_rows),
         )
 
     def compare_rosters(
