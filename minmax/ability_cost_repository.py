@@ -30,6 +30,7 @@ class AbilityCostRepository:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
         self.skill_repository = SkillCoefficientRepository(database_path)
+        self._resolve_name_cache: dict[str, AbilityCostResolution] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -49,6 +50,16 @@ class AbilityCostRepository:
         if not requested:
             return AbilityCostResolution(None, "", None, ("Skill name is required",))
 
+        cache_key = requested.casefold()
+        cached = self._resolve_name_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        resolved = self._resolve_name_uncached(requested)
+        self._resolve_name_cache[cache_key] = resolved
+        return resolved
+
+    def _resolve_name_uncached(self, requested: str) -> AbilityCostResolution:
         skill = self.skill_repository.resolve_name(requested)
         if skill.rank is None:
             return AbilityCostResolution(None, requested, None, skill.unresolved)
