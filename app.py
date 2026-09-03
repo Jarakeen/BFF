@@ -4,9 +4,9 @@ import sys
 from pathlib import Path
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
-from engine.config import get_resource_path
+from engine.config import ensure_default_database, get_resource_path
 
 
 def _set_windows_app_id() -> None:
@@ -91,6 +91,26 @@ def _close_pyinstaller_boot_splash() -> None:
         pass
 
 
+def _prepare_packaged_database() -> bool:
+    """Provision the frozen database or show a recoverable startup message."""
+
+    try:
+        ensure_default_database()
+        return True
+    except OSError as exc:
+        _close_pyinstaller_boot_splash()
+        QMessageBox.critical(
+            None,
+            "FoundryDock data unavailable",
+            "FoundryDock could not prepare its ESO database.\n\n"
+            "Please extract the complete BFF-Friend.zip into a normal folder "
+            "and run FoundryDock.exe from that folder. Administrator access is "
+            "not required.\n\n"
+            f"Details: {exc}",
+        )
+        return False
+
+
 def main() -> int:
 
     _set_windows_app_id()
@@ -105,6 +125,9 @@ def main() -> int:
     foundry_icon = QIcon(str(app_icon)) if app_icon.exists() else QIcon()
     if not foundry_icon.isNull():
         app.setWindowIcon(foundry_icon)
+
+    if not _prepare_packaged_database():
+        return 2
 
     from ui.startup_splash import create_startup_splash
 
