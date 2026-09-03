@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from minmax.calculation import CalculationResult, StatBreakdown
+from minmax.build_candidate_damage import (
+    calculation_result_from_build_context,
+    measure_modeled_damage_potency,
+)
 from minmax.context_factory import BuildCalculationContextFactory
-from minmax.dd_damage import DDDamageEvent, DDDamageResult, calculate_dd_damage
-from minmax.dd_mitigation import calculate_dd_mitigation
-from minmax.dd_stat_evaluation import DDStatEvaluation, evaluate_dd_stats
+from minmax.dd_damage import DDDamageEvent, DDDamageResult
+from minmax.dd_stat_evaluation import DDStatEvaluation
 from minmax.evaluation_context import EvaluationContext
 from minmax.gear_set_repository import GearSetRepository
 from minmax.group_effects import GroupEffect
@@ -16,7 +18,6 @@ from minmax.group_evaluator import GroupEvaluator
 from minmax.race_repository import RaceRepository
 from minmax.roster import RosterCandidate
 from minmax.role import Role
-from minmax.stat_ids import StatId
 from minmax.team_comparison import TeamComparison
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
@@ -161,27 +162,6 @@ class SavedBuildTeamComparisonAdapter:
         except ValueError:
             return Role.DD
 
-    @staticmethod
-    def _calculation_result(snapshot) -> CalculationResult:
-        if snapshot.core_state is None:
-            raise ValueError("Canonical static context has no resolved core stat state.")
-        percent_stats = {StatId.CRITICAL_CHANCE, StatId.CRITICAL_DAMAGE}
-        stats: dict[StatId, StatBreakdown] = {}
-        for stat in (
-            StatId.WEAPON_DAMAGE,
-            StatId.SPELL_DAMAGE,
-            StatId.PHYSICAL_PENETRATION,
-            StatId.SPELL_PENETRATION,
-            StatId.CRITICAL_CHANCE,
-            StatId.CRITICAL_DAMAGE,
-        ):
-            trace = snapshot.core_state.derived.get(stat)
-            value = float(trace.final_value) if trace is not None else 0.0
-            if stat in percent_stats:
-                value *= 100.0
-            stats[stat] = StatBreakdown(base=value)
-        return CalculationResult(stats=stats)
-
     def _evaluate_player(
         self,
         saved_build: PlayerBuild,
@@ -217,16 +197,21 @@ class SavedBuildTeamComparisonAdapter:
             target_resistance=context.target_resistance,
             fight_duration=context.fight_duration,
         )
-        calculation = self._calculation_result(snapshot)
-        dd_stats = evaluate_dd_stats(calculation, context)
-        raw_damage = calculate_dd_damage(event, dd_stats)
-        mitigation = None
-        if context.target_resistance is not None and raw_damage.penetration_stat is not None:
-            mitigation = calculate_dd_mitigation(
-                target_resistance=context.target_resistance,
-                penetration=raw_damage.penetration,
+        damage_metric = measure_modeled_damage_potency(
+            context=snapshot,
+            event=event,
+            evaluation_context=context,
+        )
+        if not damage_metric.resolved or damage_metric.damage is None:
+            detail = "; ".join(damage_metric.unresolved) or "damage metric unavailable"
+            raise ValueError(
+                f"Canonical DD evaluation failed for {saved_build.BuildName!r}: {detail}"
             )
-        damage = calculate_dd_damage(event, dd_stats, mitigation=mitigation)
+        damage = damage_metric.damage
+        dd_stats = evaluate_dd_stats(
+            calculation_result_from_build_context(snapshot),
+            context,
+        )
 
         player_name = str(saved_build.Name or saved_build.BuildName or "unnamed").strip()
         roster_candidate = RosterCandidate(
