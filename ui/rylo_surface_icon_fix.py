@@ -29,6 +29,30 @@ QFrame[bookPanel="true"], QWidget[bookPanel="true"] {
     border-radius: 1px;
 }
 
+/* Build/profile identity labels must not inherit old teal title plates. */
+QFrame[foundryCard="true"] QLabel[pageTitle="true"],
+QFrame[foundryCard="true"] QLabel[pageSubtitle="true"],
+QLabel[pageTitle="true"], QLabel[pageSubtitle="true"] {
+    background: transparent;
+    background-image: none;
+}
+
+/* Final item selection override. Older Grimoire selectors used teal here. */
+QListWidget::item:selected,
+QTreeWidget::item:selected,
+QTableWidget::item:selected,
+QTableView::item:selected {
+    background-color: #303236;
+    color: #F0ECE7;
+}
+QListWidget::item:selected:active,
+QTreeWidget::item:selected:active,
+QTableWidget::item:selected:active,
+QTableView::item:selected:active {
+    background-color: #34373A;
+    color: #FFFFFF;
+}
+
 /* Note/detail plates are intentionally dark and quieter than the stone cards. */
 QFrame[parchment="true"], QWidget[parchment="true"],
 QFrame[foundryNoteCard="true"], QWidget[foundryNoteCard="true"] {
@@ -112,6 +136,17 @@ def install(app: QApplication) -> None:
         )
 
     theme_manager.ThemeManager.stylesheet_for_preferences = stylesheet_with_final_rylo_surfaces
+
+    # The uploaded SVG library is the canonical shape library for both visual
+    # themes. Foundry renders the source gold; Rylo renders the same shapes as
+    # worn steel. Never use old-gold for a selected Rylo icon, otherwise an
+    # expanded/checkable navigation button quietly turns the whole rail gold.
+    from ui import ux_icons
+
+    ux_icons._RYLO_DEFAULT = "#AEB3B7"
+    ux_icons._RYLO_ACTIVE = "#D7D9DA"
+    ux_icons._RYLO_SELECTED = "#D7D9DA"
+    ux_icons._RYLO_DISABLED = "#676B70"
 
     # FoundryCard historically loaded source SVGs into QPixmap directly. Route
     # header icons through the theme-aware renderer so Rylo gets matte steel.
