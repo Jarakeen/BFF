@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "scope": "Manual review of the ten trial inferred mechanics left pending after conservative textual recommendations.",
+  "decisions": [
+    {
+      "encounter_id": "flame_herald_bahsei",
+      "mechanic_name": "Death Touch/Kiss of Death",
+      "status": "accepted",
+      "rationale": "Source text describes moving swirls that apply the curse on contact and explode onto nearby players, directly supporting an area hazard whose safe handling depends on player separation/positioning."
+    },
+    {
+      "encounter_id": "flame_herald_bahsei",
+      "mechanic_name": "Sickle Strike",
+      "status": "rejected",
+      "rationale": "Source text describes an attack aimed at the taunted target and does not establish an area attack; the current inferred mechanic_type=area_attack is not source-supported."
+    },
+    {
+      "encounter_id": "flame_herald_bahsei",
+      "mechanic_name": "Summon Behemoth",
+      "status": "accepted",
+      "rationale": "Source text explicitly describes a Fire Behemoth entering from the Oblivion portal at fixed health thresholds, supporting the add-spawn/summon mechanic classification."
+    },
+    {
+      "encounter_id": "oaxiltso",
+      "mechanic_name": "Blistering Smash",
+      "status": "rejected",
+      "rationale": "The source supports an area attack and lingering hazard, but it says the attack can be performed near or farther from the target; it does not establish requires_positioning=true, so the current inferred row is not lossless."
+    },
+    {
+      "encounter_id": "oaxiltso",
+      "mechanic_name": "Noxious Sludge",
+      "status": "accepted",
+      "rationale": "Source text explicitly names two targets, prioritizes farthest players, requires walking into pools to cleanse, and states that pools remain poisonous for a duration, supporting movement, positioning, cleanse, target-count, and persistence fields."
+    },
+    {
+      "encounter_id": "oaxiltso",
+      "mechanic_name": "Summon Havocrel Annihilators",
+      "status": "accepted",
+      "rationale": "Source text explicitly describes Havocrel Annihilators entering at health thresholds and states that boss/add proximity causes enrage and that the last add can be held away, supporting summon and positioning fields."
+    },
+    {
+      "encounter_id": "tideborn_taleria",
+      "mechanic_name": "Rapid Deluge/Deluge Eruption",
+      "status": "rejected",
+      "rationale": "Source text says Rapid Deluge targets five players normally but six on hard mode; the current unscoped target_count=5 loses a documented difficulty-specific value and is not safe to canonicalize as-is."
+    },
+    {
+      "encounter_id": "xalvakka",
+      "mechanic_name": "Corrupted Blast",
+      "status": "rejected",
+      "rationale": "Source text describes a spell flung at targets and does not establish an area attack; the current inferred mechanic_type=area_attack is unsupported."
+    },
+    {
+      "encounter_id": "xalvakka",
+      "mechanic_name": "Soul Resonance",
+      "status": "rejected",
+      "rationale": "The source supports cleansing and careful synergy placement, but the row conflates magical damage-over-time with a later physical glob explosion and marks failure_is_fatal=true without explicit source support; the current inferred row is not lossless."
+    },
+    {
+      "encounter_id": "xalvakka",
+      "mechanic_name": "Split",
+      "status": "accepted",
+      "rationale": "Source text requires players to distinguish the real Xalvakka by standing very close, and the phase description documents limited safe ground around copies, directly supporting the positioning requirement."
+    }
+  ]
+}
