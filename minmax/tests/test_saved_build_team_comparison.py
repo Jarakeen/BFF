@@ -8,7 +8,11 @@ from minmax.dd_damage import DDDamageEvent
 from minmax.evaluation_context import EvaluationContext
 from minmax.group_effects import GroupEffect
 from minmax.role import Role
-from minmax.saved_build_team_comparison import (\n    SavedBuildRosterMember,\n    SavedBuildRosterScenario,\n    SavedBuildTeamComparisonAdapter,\n)
+from minmax.saved_build_team_comparison import (
+    SavedBuildRosterMember,
+    SavedBuildRosterScenario,
+    SavedBuildTeamComparisonAdapter,
+)
 from minmax.stat_ids import StatId
 
 
