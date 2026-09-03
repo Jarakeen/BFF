@@ -1,48 +1,77 @@
 # ==================================================
 # Black Feather Foundry
 # ui/collectibles_dashboard_page.py
-# Fantasy-flavored overview for collectible completion.
+# Dense fantasy progress overview for collectible completion.
 # ==================================================
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from dataclasses import dataclass
+
+from PySide6.QtCore import Qt, QRectF, Signal
+from PySide6.QtGui import QColor, QCursor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QProgressBar,
-    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from services.eso_collectible_database_service import SIDEBAR_CATEGORIES
-from ui.components.foundry_card import FoundryCard
-from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 
 
-_CATEGORY_FLAVOR = {
-    "Mounts": ("Stable Ledger", "Hooves, paws, claws, and several transportation decisions of questionable legality."),
-    "Pets": ("Menagerie", "Tiny companions acquired through heroism, commerce, and an alarming lack of impulse control."),
-    "Allies / Assistants": ("Retinue", "People who follow you around because apparently adventuring alone was too peaceful."),
-    "Houses": ("Estates", "A completely reasonable number of properties for one wandering adventurer."),
-    "Costumes": ("Wardrobe", "Battle-ready attire, ceremonial finery, and clothes nobody packed sensibly."),
-    "Skins": ("Arcane Visages", "Evidence that 'looking normal' was never a serious design constraint."),
-    "Polymorphs": ("Borrowed Shapes", "Become something else for a while. Paperwork remains unchanged."),
-    "Personalities": ("Mannerisms", "Because standing normally is apparently beneath us."),
-    "Hairstyles & Adornments": ("Vanity Cabinet", "Hair, markings, jewelry, and the eternal war against visual restraint."),
-    "Mementos": ("Curio Shelf", "Magical souvenirs with no practical reason to be this satisfying."),
-    "Emotes": ("Gesture Grimoire", "A scholarly archive of waving, dancing, pointing, and other critical battlefield functions."),
-    "Customized Actions": ("Ritual Flourishes", "Ordinary actions, now with significantly more theater."),
-    "Weapon Styles": ("Armory Display", "The enemy was already defeated. Looking good was the follow-up mechanic."),
-    "Armor Styles": ("Outfit Archive", "For when defeating Tamriel is not enough and the silhouette must also be correct."),
-    "Furnishings": ("Vault of Things", "Objects acquired for houses that were acquired to hold the objects. Elegant system."),
-    "Fragments": ("Relic Fragments", "Several small things patiently waiting to become one larger thing."),
-    "Tools & Upgrades": ("Oddments & Upgrades", "Useful account curiosities that refused to fit politely anywhere else."),
-}
+TEAL_ACCENTS = (
+    "#2F7A80",
+    "#3D898D",
+    "#59AEB3",
+    "#397D83",
+    "#4A9599",
+    "#287078",
+)
+
+
+@dataclass(frozen=True)
+class DashboardSpec:
+    label: str
+    route: str
+    type_keys: tuple[str, ...]
+    meter: str
+    glyph: str
+
+
+# The first 24 cards mirror the visual mockup, but this list is deliberately
+# extensible. New collectible groups can be appended without changing layout
+# code; the grid simply flows into additional rows.
+DASHBOARD_SPECS = (
+    DashboardSpec("Mounts", "Mounts", ("mount",), "bar", "♞"),
+    DashboardSpec("Pets", "Pets", ("pet",), "ring", "✦"),
+    DashboardSpec("Armor Styles", "Armor Styles", ("armor_style",), "shield", "◆"),
+    DashboardSpec("Weapon Styles", "Weapon Styles", ("weapon_style",), "bar", "†"),
+    DashboardSpec("Skins", "Skins", ("skin",), "ring", "◉"),
+    DashboardSpec("Costumes", "Costumes", ("costume",), "bar", "♜"),
+    DashboardSpec("Personalities", "Personalities", ("personality",), "shield", "☽"),
+    DashboardSpec("Emotes", "Emotes", ("emote",), "bar", "✧"),
+    DashboardSpec("Polymorphs", "Polymorphs", ("polymorph",), "ring", "◌"),
+    DashboardSpec("Mementos", "Mementos", ("memento",), "bar", "⌘"),
+    DashboardSpec("Furnishings", "Furnishings", ("furnishing",), "shield", "⌂"),
+    DashboardSpec("Assistants", "Allies / Assistants", ("assistant",), "bar", "♟"),
+    DashboardSpec("Companions", "Allies / Assistants", ("companion",), "ring", "♢"),
+    DashboardSpec("Body Markings", "Hairstyles & Adornments", ("body_marking",), "bar", "◇"),
+    DashboardSpec("Head Markings", "Hairstyles & Adornments", ("head_marking",), "bar", "◈"),
+    DashboardSpec("Hair", "Hairstyles & Adornments", ("hair",), "bar", "≈"),
+    DashboardSpec("Hats", "Hairstyles & Adornments", ("hat",), "ring", "△"),
+    DashboardSpec("Facial Accessories", "Hairstyles & Adornments", ("facial_accessory",), "bar", "✣"),
+    DashboardSpec("Facial Hair / Horns", "Hairstyles & Adornments", ("facial_hair_horns",), "bar", "⌁"),
+    DashboardSpec("Piercing / Jewelry", "Hairstyles & Adornments", ("piercing_jewelry",), "ring", "◊"),
+    DashboardSpec("Houses", "Houses", ("house",), "shield", "⌂"),
+    DashboardSpec("Customized Actions", "Customized Actions", ("customized_action",), "shield", "✤"),
+    DashboardSpec("Fragments", "Fragments", ("fragment", "combination_fragment", "patron"), "vial", "✥"),
+    DashboardSpec("Tools & Upgrades", "Tools & Upgrades", ("tool", "account_upgrade", "story", "skill_style"), "vial", "⚒"),
+)
 
 
 def _percent(owned: int, total: int) -> int:
@@ -55,165 +84,388 @@ def _progress_epithet(percent: int, total: int) -> str:
     if total <= 0:
         return "No catalog entries yet"
     if percent >= 100:
-        return "Archive complete. Suspiciously competent."
+        return "Archive complete"
     if percent >= 80:
         return "Nearly legendary"
     if percent >= 60:
-        return "A formidable hoard"
+        return "Formidable hoard"
     if percent >= 40:
-        return "The vault is filling"
+        return "Vault is filling"
     if percent >= 20:
-        return "A respectable beginning"
+        return "Respectable beginning"
     if percent > 0:
-        return "The first relics are secured"
+        return "First relics secured"
     return "Unexplored territory"
 
 
+class RingMeter(QWidget):
+    def __init__(self, accent: str, parent=None):
+        super().__init__(parent)
+        self.value = 0
+        self.accent = QColor(accent)
+        self.setFixedSize(76, 76)
+
+    def setValue(self, value: int) -> None:
+        self.value = max(0, min(100, int(value)))
+        self.update()
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        rect = QRectF(8, 8, self.width() - 16, self.height() - 16)
+        painter.setPen(QPen(QColor("#24383A"), 8))
+        painter.drawArc(rect, 0, 360 * 16)
+        painter.setPen(QPen(self.accent, 8))
+        painter.drawArc(rect, 90 * 16, -round(360 * 16 * self.value / 100))
+        painter.setPen(QColor("#E8D0A0"))
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSize(11)
+        painter.setFont(font)
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, f"{self.value}%")
+
+
+class ShieldMeter(QWidget):
+    def __init__(self, accent: str, parent=None):
+        super().__init__(parent)
+        self.value = 0
+        self.accent = QColor(accent)
+        self.setFixedSize(84, 78)
+
+    def setValue(self, value: int) -> None:
+        self.value = max(0, min(100, int(value)))
+        self.update()
+
+    def _shield_path(self) -> QPainterPath:
+        w = float(self.width())
+        h = float(self.height())
+        path = QPainterPath()
+        path.moveTo(w * 0.15, h * 0.10)
+        path.lineTo(w * 0.85, h * 0.10)
+        path.lineTo(w * 0.82, h * 0.60)
+        path.quadTo(w * 0.70, h * 0.82, w * 0.50, h * 0.94)
+        path.quadTo(w * 0.30, h * 0.82, w * 0.18, h * 0.60)
+        path.closeSubpath()
+        return path
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        path = self._shield_path()
+        painter.fillPath(path, QColor("#10282C"))
+        painter.setPen(QPen(QColor("#8A6F42"), 2))
+        painter.drawPath(path)
+
+        painter.save()
+        painter.setClipPath(path)
+        fill_height = self.height() * self.value / 100
+        painter.fillRect(
+            0,
+            self.height() - fill_height,
+            self.width(),
+            fill_height,
+            self.accent,
+        )
+        painter.restore()
+        painter.setPen(QColor("#E8D0A0"))
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSize(11)
+        painter.setFont(font)
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, f"{self.value}%")
+
+
+class VialMeter(QWidget):
+    def __init__(self, accent: str, parent=None):
+        super().__init__(parent)
+        self.value = 0
+        self.accent = QColor(accent)
+        self.setFixedSize(58, 88)
+
+    def setValue(self, value: int) -> None:
+        self.value = max(0, min(100, int(value)))
+        self.update()
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        tube = QRectF(18, 10, 22, 68)
+        painter.setBrush(QColor("#10262A"))
+        painter.setPen(QPen(QColor("#8A6F42"), 2))
+        painter.drawRoundedRect(tube, 8, 8)
+        inner = tube.adjusted(4, 4, -4, -4)
+        fill_height = inner.height() * self.value / 100
+        painter.fillRect(
+            QRectF(inner.left(), inner.bottom() - fill_height, inner.width(), fill_height),
+            self.accent,
+        )
+        painter.setBrush(QColor("#A98752"))
+        painter.drawRect(QRectF(14, 5, 30, 8))
+        painter.setPen(QColor("#E8D0A0"))
+        font = painter.font()
+        font.setBold(True)
+        font.setPointSize(9)
+        painter.setFont(font)
+        painter.drawText(QRectF(0, 68, self.width(), 20), Qt.AlignmentFlag.AlignCenter, f"{self.value}%")
+
+
+class ProgressTile(QFrame):
+    clicked = Signal(str)
+
+    def __init__(self, spec: DashboardSpec, index: int, parent=None):
+        super().__init__(parent)
+        self.spec = spec
+        self.index = index
+        self.percent = 0
+        self.owned = 0
+        self.total = 0
+        self.accent = TEAL_ACCENTS[(index - 1) % len(TEAL_ACCENTS)]
+        self.setProperty("collectibleDashboardTile", True)
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.setMinimumSize(178, 154)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.setStyleSheet(
+            "QFrame[collectibleDashboardTile='true'] {"
+            " background-color: rgba(12, 31, 34, 210);"
+            " border: 1px solid #765D35;"
+            " border-radius: 4px;"
+            "}"
+            "QFrame[collectibleDashboardTile='true']:hover {"
+            " background-color: rgba(19, 54, 58, 225);"
+            " border: 1px solid #B8945F;"
+            "}"
+        )
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(4)
+
+        heading = QHBoxLayout()
+        number = QLabel(str(self.index))
+        number.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        number.setFixedSize(24, 24)
+        number.setStyleSheet(
+            "color:#C8A46A; border:1px solid #8A6F42; border-radius:2px; font-weight:700;"
+        )
+        title = QLabel(self.spec.label.upper())
+        title.setWordWrap(True)
+        title.setStyleSheet("color:#D9B977; font-weight:700; letter-spacing:1px;")
+        heading.addWidget(number)
+        heading.addWidget(title, 1)
+        layout.addLayout(heading)
+
+        center = QHBoxLayout()
+        center.setContentsMargins(0, 0, 0, 0)
+        center.setSpacing(8)
+
+        self.glyph = QLabel(self.spec.glyph)
+        self.glyph.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.glyph.setFixedSize(54, 54)
+        self.glyph.setStyleSheet(
+            f"color:{self.accent}; font-size:27px; border:1px solid #65502F; "
+            "border-radius:27px; background:#102629;"
+        )
+
+        if self.spec.meter == "ring":
+            self.meter = RingMeter(self.accent)
+            center.addStretch(1)
+            center.addWidget(self.glyph)
+            center.addWidget(self.meter)
+            center.addStretch(1)
+        elif self.spec.meter == "shield":
+            self.meter = ShieldMeter(self.accent)
+            center.addStretch(1)
+            center.addWidget(self.glyph)
+            center.addWidget(self.meter)
+            center.addStretch(1)
+        elif self.spec.meter == "vial":
+            self.meter = VialMeter(self.accent)
+            center.addStretch(1)
+            center.addWidget(self.glyph)
+            center.addWidget(self.meter)
+            center.addStretch(1)
+        else:
+            self.meter = QProgressBar()
+            self.meter.setRange(0, 100)
+            self.meter.setTextVisible(False)
+            self.meter.setFixedHeight(13)
+            self.meter.setStyleSheet(
+                "QProgressBar {background:#0A1719; border:1px solid #6E5733; border-radius:5px;}"
+                f"QProgressBar::chunk {{background:{self.accent}; border-radius:4px;}}"
+            )
+            center.addStretch(1)
+            center.addWidget(self.glyph)
+            center.addStretch(1)
+
+        layout.addLayout(center, 1)
+        if self.spec.meter == "bar":
+            layout.addWidget(self.meter)
+
+        self.count_label = QLabel("0 / 0")
+        self.count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.count_label.setStyleSheet("color:#E5D8BD; font-weight:600;")
+        self.state_label = QLabel("Unexplored territory")
+        self.state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.state_label.setStyleSheet("color:#7EB6B5; font-size:10px;")
+        layout.addWidget(self.count_label)
+        layout.addWidget(self.state_label)
+
+    def set_progress(self, owned: int, total: int) -> None:
+        self.owned = int(owned)
+        self.total = int(total)
+        self.percent = _percent(self.owned, self.total)
+        self.meter.setValue(self.percent)
+        self.count_label.setText(f"{self.owned:,} / {self.total:,}")
+        self.state_label.setText(_progress_epithet(self.percent, self.total))
+        self.setToolTip(f"Open {self.spec.route} · {self.owned:,}/{self.total:,} collected")
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit(self.spec.route)
+        super().mouseReleaseEvent(event)
+
+
 class CollectiblesDashboardPage(QWidget):
-    """Main Collections landing page summarizing every sidebar category."""
+    """Main Collections landing page styled after the fantasy dashboard mockup."""
 
     categoryRequested = Signal(str)
+    GRID_COLUMNS = 6
 
     def __init__(self, service, parent=None):
         super().__init__(parent)
         self.service = service
-        self._category_widgets: dict[str, tuple[FoundryCard, QProgressBar, QLabel, QLabel]] = {}
-        self.build_ui()
+        self._tiles: list[ProgressTile] = []
+        self._build_ui()
         self.refresh()
 
-    def build_ui(self) -> None:
-        self.header = FoundryHeader(
-            title="Collectibles",
-            subtitle="A field ledger of everything acquired, adopted, unlocked, worn, summoned, displayed, or otherwise dragged home.",
-            department="Collections",
-        )
+    def _build_ui(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(18, 14, 18, 12)
+        root.setSpacing(10)
 
-        self.overall_card = FoundryCard("Collection Chronicle")
-        self.overall_card.set_watermark("feather", 0.10)
-        self.overall_count = QLabel("0 / 0 secured")
-        self.overall_count.setProperty("collectibleDashboardHero", True)
-        self.overall_count.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        top = QHBoxLayout()
+        top.setSpacing(14)
+
+        title_block = QVBoxLayout()
+        title = QLabel("COLLECTIBLES DASHBOARD")
+        title.setStyleSheet("color:#D4AA6A; font-size:28px; font-weight:700; letter-spacing:2px;")
+        subtitle = QLabel("ACCOUNT PROGRESS OVERVIEW")
+        subtitle.setStyleSheet("color:#59AEB3; font-size:14px; letter-spacing:2px;")
+        rule = QLabel("────── ✦ ──────")
+        rule.setStyleSheet("color:#8A6F42;")
+        title_block.addWidget(title)
+        title_block.addWidget(subtitle)
+        title_block.addWidget(rule)
+        top.addLayout(title_block, 2)
+
+        overall_box = QFrame()
+        overall_box.setStyleSheet(
+            "QFrame {background:rgba(11, 32, 35, 220); border:1px solid #765D35; border-radius:4px;}"
+        )
+        overall_layout = QVBoxLayout(overall_box)
+        overall_layout.setContentsMargins(12, 8, 12, 8)
+        overall_label = QLabel("✥  OVERALL PROGRESS")
+        overall_label.setStyleSheet("color:#D4AA6A; font-weight:700; letter-spacing:1px;")
         self.overall_progress = QProgressBar()
         self.overall_progress.setRange(0, 100)
-        self.overall_progress.setTextVisible(True)
-        self.overall_progress.setMinimumHeight(28)
-        self.overall_progress.setProperty("collectibleDashboardProgress", True)
-        self.overall_epithet = QLabel("Consulting the vault ledgers...")
-        self.overall_epithet.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.overall_epithet.setProperty("muted", True)
-        self.overall_card.addWidget(self.overall_count)
-        self.overall_card.addWidget(self.overall_progress)
-        self.overall_card.addWidget(self.overall_epithet)
-
-        intro = QLabel(
-            "Each ledger below reflects saved ownership progress. Open one to inspect the collection, mark finds, "
-            "or discover exactly how many mounts Tamriel expects one person to store somewhere."
+        self.overall_progress.setFixedHeight(22)
+        self.overall_progress.setStyleSheet(
+            "QProgressBar {background:#0A1719; border:1px solid #6E5733; border-radius:6px; color:#E8D0A0; text-align:center;}"
+            "QProgressBar::chunk {background:#3F9395; border-radius:5px;}"
         )
-        intro.setWordWrap(True)
-        intro.setProperty("muted", True)
+        self.overall_count = QLabel("0 / 0 collectibles secured")
+        self.overall_count.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.overall_count.setStyleSheet("color:#E5D8BD;")
+        overall_layout.addWidget(overall_label)
+        overall_layout.addWidget(self.overall_progress)
+        overall_layout.addWidget(self.overall_count)
+        top.addWidget(overall_box, 2)
 
-        self.grid = QGridLayout()
-        self.grid.setContentsMargins(0, 0, 0, 0)
-        self.grid.setHorizontalSpacing(12)
-        self.grid.setVerticalSpacing(12)
-        self.grid.setColumnStretch(0, 1)
-        self.grid.setColumnStretch(1, 1)
+        quote = QFrame()
+        quote.setStyleSheet(
+            "QFrame {background:#D8BF91; border:1px solid #765D35; border-radius:3px;}"
+        )
+        quote_layout = QVBoxLayout(quote)
+        quote_layout.setContentsMargins(12, 10, 12, 10)
+        quote_text = QLabel("“Every discovery\nadds to your legend.”")
+        quote_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        quote_text.setStyleSheet("color:#302719; font-size:12px; font-style:italic; font-weight:600;")
+        quote_layout.addWidget(quote_text)
+        top.addWidget(quote, 1)
+        root.addLayout(top)
 
-        for index, (category, _sort_order) in enumerate(SIDEBAR_CATEGORIES):
-            card = self._build_category_card(category)
-            self.grid.addWidget(card, index // 2, index % 2)
+        divider = QFrame()
+        divider.setFrameShape(QFrame.Shape.HLine)
+        divider.setStyleSheet("color:#6E5733;")
+        root.addWidget(divider)
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(7)
+        grid.setVerticalSpacing(7)
+        for column in range(self.GRID_COLUMNS):
+            grid.setColumnStretch(column, 1)
+
+        for index, spec in enumerate(DASHBOARD_SPECS, start=1):
+            tile = ProgressTile(spec, index)
+            tile.clicked.connect(self.categoryRequested.emit)
+            self._tiles.append(tile)
+            row = (index - 1) // self.GRID_COLUMNS
+            column = (index - 1) % self.GRID_COLUMNS
+            grid.addWidget(tile, row, column)
+
+        root.addLayout(grid)
+
+        footer = QLabel("✦  New discoveries await beyond the known.  ✦")
+        footer.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        footer.setStyleSheet("color:#59AEB3; font-size:11px; letter-spacing:1px;")
+        root.addWidget(footer)
 
         self.status = FoundryStatusBar()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(12)
-        layout.addWidget(self.header)
-        layout.addWidget(self.overall_card)
-        layout.addWidget(intro)
-        layout.addLayout(self.grid)
-        layout.addWidget(self.status)
+        root.addWidget(self.status)
 
-    def _build_category_card(self, category: str) -> FoundryCard:
-        title, flavor = _CATEGORY_FLAVOR.get(category, (category, "Collection progress."))
-        card = FoundryCard(title)
-        card.set_watermark("compass", 0.06)
-        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
-        category_name = QLabel(category)
-        category_name.setProperty("collectibleDashboardCategory", True)
-        category_name.setWordWrap(True)
-
-        flavor_label = QLabel(flavor)
-        flavor_label.setWordWrap(True)
-        flavor_label.setProperty("muted", True)
-
-        progress = QProgressBar()
-        progress.setRange(0, 100)
-        progress.setTextVisible(True)
-        progress.setMinimumHeight(22)
-        progress.setProperty("collectibleDashboardProgress", True)
-
-        count_label = QLabel("0 / 0 collected")
-        count_label.setProperty("collectibleDashboardCount", True)
-        state_label = QLabel("Unexplored territory")
-        state_label.setProperty("muted", True)
-
-        footer = QHBoxLayout()
-        footer.addWidget(count_label)
-        footer.addStretch(1)
-        footer.addWidget(state_label)
-
-        open_button = QPushButton(f"Open {category}")
-        open_button.setProperty("primary", True)
-        open_button.clicked.connect(
-            lambda checked=False, value=category: self.categoryRequested.emit(value)
-        )
-
-        card.addWidget(category_name)
-        card.addWidget(flavor_label)
-        card.addWidget(progress)
-        card.addLayout(footer)
-        card.addWidget(open_button)
-
-        self._category_widgets[category] = (card, progress, count_label, state_label)
-        return card
+    def _progress_for_types(self, type_keys: tuple[str, ...]) -> tuple[int, int]:
+        if not self.service.available or not type_keys:
+            return 0, 0
+        placeholders = ",".join("?" for _ in type_keys)
+        row = self.service.connection.execute(
+            f"""
+            SELECT
+                SUM(CASE WHEN COALESCE(p.owned, 0) = 1 THEN 1 ELSE 0 END) AS owned_count,
+                COUNT(*) AS total_count
+            FROM collectible c
+            LEFT JOIN collectible_progress p ON p.collectible_id = c.id
+            WHERE c.canonical_type_key IN ({placeholders})
+            """,
+            tuple(type_keys),
+        ).fetchone()
+        return int(row["owned_count"] or 0), int(row["total_count"] or 0)
 
     def refresh(self) -> None:
         if not self.service.available:
             self.overall_progress.setValue(0)
             self.overall_progress.setFormat("Catalog unavailable")
             self.overall_count.setText("Collection ledger unavailable")
-            self.overall_epithet.setText(self.service.bootstrap_message or "Collectible reference data is unavailable.")
-            for category, (_card, progress, count_label, state_label) in self._category_widgets.items():
-                progress.setValue(0)
-                progress.setFormat("Unavailable")
-                count_label.setText("0 / 0 collected")
-                state_label.setText("Ledger unavailable")
+            for tile in self._tiles:
+                tile.set_progress(0, 0)
             self.status.warning(self.service.bootstrap_message or "Collectible reference data is unavailable.")
             return
 
-        owned_total = 0
-        catalog_total = 0
-        populated_categories = 0
-
-        for category, (_card, progress, count_label, state_label) in self._category_widgets.items():
-            owned, total = self.service.progress_summary(category)
-            percent = _percent(owned, total)
-            progress.setValue(percent)
-            progress.setFormat(f"{percent}%")
-            count_label.setText(f"{owned:,} / {total:,} collected")
-            state_label.setText(_progress_epithet(percent, total))
-            owned_total += owned
-            catalog_total += total
-            if total:
-                populated_categories += 1
-
-        overall_percent = _percent(owned_total, catalog_total)
+        overall_owned, overall_total = self.service.progress_summary()
+        overall_percent = _percent(overall_owned, overall_total)
         self.overall_progress.setValue(overall_percent)
-        self.overall_progress.setFormat(f"{overall_percent}% complete")
-        self.overall_count.setText(f"{owned_total:,} / {catalog_total:,} collectibles secured")
-        self.overall_epithet.setText(_progress_epithet(overall_percent, catalog_total))
-        self.overall_card.set_badge(f"{overall_percent}%")
+        self.overall_progress.setFormat(f"{overall_percent}%")
+        self.overall_count.setText(f"{overall_owned:,} / {overall_total:,} collectibles secured")
+
+        populated = 0
+        for tile in self._tiles:
+            owned, total = self._progress_for_types(tile.spec.type_keys)
+            tile.set_progress(owned, total)
+            if total:
+                populated += 1
+
         self.status.info(
-            f"{populated_categories} collection ledgers · {owned_total:,}/{catalog_total:,} total collectibles secured."
+            f"{populated} populated dashboard ledgers · {overall_owned:,}/{overall_total:,} total collectibles secured."
         )
