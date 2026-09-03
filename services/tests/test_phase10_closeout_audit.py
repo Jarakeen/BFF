@@ -9,8 +9,12 @@ def _audit(character: str, build: str, identity: str) -> SavedBuildCapabilityAud
         character_name=character,
         build_name=build,
         character_id=identity,
+        resolved_sources=(),
         resolved_effects=(),
+        conditional_sources=(),
         unresolved=(),
+        capability_unresolved=(),
+        boundaries=(),
     )
 
 
