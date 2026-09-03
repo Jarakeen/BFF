@@ -9,6 +9,7 @@ from .build_calculation_context import BuildCalculationContext
 from .build_candidate_comparison import CandidateConstraint, ConstraintStatus
 from .build_candidate_context import BuildCandidateContextResult
 from .build_sustain import BuildSustainRun, PlannedBuildAction, evaluate_build_sustain
+from .build_sustain_relevance import sustain_relevant_context_unresolved
 from .conditional_recovery import TimedRecoveryModifier
 from .recovery_timing import RecoveryActivityResolver
 from .resource_costs import ResourceType
@@ -105,14 +106,17 @@ def evaluate_candidate_sustain(
 ) -> BuildCandidateSustainComparison:
     """Run baseline and candidate through the existing Phase 4 sustain pipeline.
 
-    Phase 12 supplies orchestration only.  Static resource state, action costs,
+    Phase 12 supplies orchestration only. Static resource state, action costs,
     cost modifiers, recovery timing, restoration events, and timeline semantics
-    remain owned by the existing Phase 4 implementation.
+    remain owned by the existing Phase 4 implementation. Shared-context
+    diagnostics are filtered only through the explicit Phase 4 relevance rules;
+    unrelated stat-channel gaps do not become sustain failures.
     """
 
-    unresolved = tuple(baseline_context.unresolved_gear_effects) + tuple(candidate_context.unresolved)
-    if candidate_context.context is None or unresolved:
-        evidence = unresolved or ("Candidate calculation context is unavailable",)
+    if candidate_context.context is None:
+        evidence = candidate_context.unresolved or (
+            "Candidate calculation context is unavailable",
+        )
         return BuildCandidateSustainComparison(
             baseline_run=None,
             candidate_run=None,
@@ -121,7 +125,30 @@ def evaluate_candidate_sustain(
                 status=ConstraintStatus.UNKNOWN,
                 explanation="Sustain comparison is unresolved: " + "; ".join(evidence),
             ),
-            unresolved=evidence,
+            unresolved=tuple(evidence),
+        )
+
+    candidate_build = candidate_context.candidate.candidate_build
+    context_unresolved = (
+        sustain_relevant_context_unresolved(
+            baseline_build,
+            tuple(baseline_context.unresolved_gear_effects),
+        )
+        + sustain_relevant_context_unresolved(
+            candidate_build,
+            tuple(candidate_context.unresolved),
+        )
+    )
+    if context_unresolved:
+        return BuildCandidateSustainComparison(
+            baseline_run=None,
+            candidate_run=None,
+            constraint=CandidateConstraint(
+                name=f"{resource.value} sustain",
+                status=ConstraintStatus.UNKNOWN,
+                explanation="Sustain comparison is unresolved: " + "; ".join(context_unresolved),
+            ),
+            unresolved=context_unresolved,
         )
 
     baseline_run = evaluate_build_sustain(
@@ -138,7 +165,7 @@ def evaluate_candidate_sustain(
         first_recovery_tick_seconds=first_recovery_tick_seconds,
     )
     candidate_run = evaluate_build_sustain(
-        build=candidate_context.candidate.candidate_build,
+        build=candidate_build,
         context=candidate_context.context,
         resource=resource,
         duration_seconds=duration_seconds,
