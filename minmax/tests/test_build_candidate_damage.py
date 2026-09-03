@@ -87,3 +87,27 @@ def test_measure_damage_refuses_context_without_core_stats():
     assert result.unresolved == (
         "Canonical static context has no resolved core stat state.",
     )
+
+
+def test_measure_damage_uses_higher_typed_critical_channel():
+    baseline = measure_modeled_damage_potency(
+        context=_context(),
+        event=DDDamageEvent(base_value=1000.0),
+        evaluation_context=EvaluationContext(),
+    )
+    thief_like = measure_modeled_damage_potency(
+        context=_context(
+            **{
+                StatId.WEAPON_CRITICAL: 0.62,
+                StatId.SPELL_CRITICAL: 0.62,
+            }
+        ),
+        event=DDDamageEvent(base_value=1000.0),
+        evaluation_context=EvaluationContext(),
+    )
+
+    assert baseline.dd_stats is not None
+    assert thief_like.dd_stats is not None
+    assert baseline.dd_stats.critical_chance == 50.0
+    assert thief_like.dd_stats.critical_chance == 62.0
+    assert thief_like.value > baseline.value
