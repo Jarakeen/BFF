@@ -19,6 +19,8 @@ PENDING = "pending"
 ACCEPTED = "accepted"
 REJECTED = "rejected"
 VALID_STATUSES = {PENDING, ACCEPTED, REJECTED}
+VALID_REQUIREMENT_TYPES = {"movement", "positioning", "cleanse", "interrupt"}
+VALID_REQUIREMENT_SUBJECTS = {"player", "boss", "unknown"}
 
 
 @dataclass(frozen=True)
@@ -27,10 +29,34 @@ class InferredMechanicDecision:
     mechanic_name: str
     status: str
     rationale: str = ""
+    requirement_subjects: tuple[tuple[str, str], ...] = ()
 
     @property
     def key(self) -> tuple[str, str]:
         return (self.encounter_id, self.mechanic_name)
+
+
+def _requirement_subjects(raw: object, *, index: int) -> tuple[tuple[str, str], ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, dict):
+        raise ValueError(f"review decision #{index} requirement_subjects must be an object")
+
+    subjects: list[tuple[str, str]] = []
+    for raw_requirement_type, raw_subject in raw.items():
+        requirement_type = str(raw_requirement_type or "").strip().casefold()
+        subject = str(raw_subject or "").strip().casefold()
+        if requirement_type not in VALID_REQUIREMENT_TYPES:
+            raise ValueError(
+                f"review decision #{index} has unsupported requirement subject key: "
+                f"{requirement_type!r}"
+            )
+        if subject not in VALID_REQUIREMENT_SUBJECTS:
+            raise ValueError(
+                f"review decision #{index} has unsupported requirement subject: {subject!r}"
+            )
+        subjects.append((requirement_type, subject))
+    return tuple(sorted(subjects))
 
 
 @dataclass(frozen=True)
@@ -109,6 +135,9 @@ def load_decisions(path: Path) -> tuple[InferredMechanicDecision, ...]:
                 mechanic_name=mechanic_name,
                 status=status,
                 rationale=rationale,
+                requirement_subjects=_requirement_subjects(
+                    raw.get("requirement_subjects"), index=index
+                ),
             )
         )
     return tuple(decisions)
