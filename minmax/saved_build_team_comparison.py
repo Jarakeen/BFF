@@ -21,6 +21,10 @@ from minmax.team_comparison import TeamComparison
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
+from services.saved_build_capability_service import (
+    SavedBuildCapabilityAudit,
+    SavedBuildCapabilityService,
+)
 
 
 @dataclass(frozen=True)
