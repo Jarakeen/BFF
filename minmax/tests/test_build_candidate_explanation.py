@@ -137,6 +137,29 @@ def test_higher_objective_with_lost_provider_duty_is_explained_as_blocked() -> N
     assert explanation.constraints[0].status is ConstraintStatus.WORSENED
 
 
+def test_unknown_provider_duty_is_explained_as_unresolved_not_known_failure() -> None:
+    comparison = BuildCandidateComparison(
+        candidate=_candidate(),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=125.0,
+        constraints=(
+            CandidateConstraint(
+                "provider responsibilities",
+                ConstraintStatus.UNKNOWN,
+                "Provider responsibility comparison is unresolved.",
+            ),
+        ),
+    )
+
+    explanation = BuildCandidateExplanation.from_comparison(comparison)
+
+    assert explanation.delta == 25.0
+    assert explanation.is_rankable is False
+    assert explanation.is_preferred is False
+    assert explanation.recommendation_reason is CandidateRecommendationReason.UNRESOLVED
+
+
 def test_unresolved_objective_is_never_explained_as_a_recommendation() -> None:
     comparison = BuildCandidateComparison(
         candidate=_candidate(),
