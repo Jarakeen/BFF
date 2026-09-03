@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """One-call Phase 10 orchestration for encounter requirements vs saved-build audits."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from services.encounter_build_capability_adapter import (
@@ -99,16 +100,26 @@ class EncounterRosterEvaluator:
     Canonical character identity is used for roster membership. Provider coverage,
     difficulty-aware execution readiness, cleanse methods, and interrupt methods
     are returned together so callers do not have to reinterpret generic mechanics.
+
+    Stronger provider semantics and provider cardinality must be supplied explicitly
+    by callers from source-backed encounter evidence. Generic movement, positioning,
+    cleanse, and interrupt requirements keep their compliance semantics.
     """
 
     def __init__(
         self,
         encounter_service: EncounterService,
         build_capability_adapter: SavedBuildEncounterCapabilityAdapter,
+        requirement_semantics: Mapping[str, RequirementSemantics] | None = None,
+        required_provider_counts: Mapping[str, int] | None = None,
     ) -> None:
         self._encounter_service = encounter_service
         self._adapter = build_capability_adapter
-        self._evaluator = EncounterRequirementEvaluator(encounter_service)
+        self._evaluator = EncounterRequirementEvaluator(
+            encounter_service,
+            requirement_semantics=requirement_semantics,
+            required_provider_counts=required_provider_counts,
+        )
         self._execution_evaluator = DifficultyAwareEncounterExecutionEvaluator(encounter_service)
         self._cleanse_methods = EncounterCleanseMethodService(encounter_service)
         self._interrupt_methods = EncounterInterruptMethodService(encounter_service)
