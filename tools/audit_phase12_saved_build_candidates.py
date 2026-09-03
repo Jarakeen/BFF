@@ -17,6 +17,7 @@ from minmax.build_candidate_armor_trait import enumerate_armor_trait_candidates
 from minmax.build_candidate_comparison import BuildCandidateComparison, CandidateConstraint, ConstraintStatus
 from minmax.build_candidate_context import build_candidate_context
 from minmax.build_candidate_evaluator import CandidateRanking, evaluate_healing_candidate, rank_candidate_comparisons
+from minmax.build_candidate_food import enumerate_food_candidates
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
 from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
@@ -28,6 +29,7 @@ from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.mundus_repository import MundusRepository
+from minmax.provisioning_static_repository import ProvisioningStaticRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
 from minmax.saved_build_activity import create_saved_bar_activity_plan
@@ -212,6 +214,7 @@ def audit_saved_build_candidates(
     progression = progression_resolution.progression
 
     mundus_repository = MundusRepository(database_path)
+    provisioning_repository = ProvisioningStaticRepository(database_path)
     mundus_candidates = enumerate_mundus_candidates(
         baseline_build=baseline_build,
         character_id=character_id,
@@ -228,6 +231,12 @@ def audit_saved_build_candidates(
         character_id=character_id,
         baseline_build_id=baseline_build_id,
     )
+    food_candidates = enumerate_food_candidates(
+        baseline_build=baseline_build,
+        character_id=character_id,
+        baseline_build_id=baseline_build_id,
+        provisioning_repository=provisioning_repository,
+    )
     if len(mundus_candidates) < 2:
         print(f"Phase 12 requires at least two Mundus candidates; found {len(mundus_candidates)}")
         return 5
@@ -237,6 +246,9 @@ def audit_saved_build_candidates(
     if not armor_enchant_candidates:
         print("Phase 12 armor-enchant candidate generation found no CP160 Truly Superb eligible armor slots.")
         return 7
+    if not food_candidates:
+        print("Phase 12 food candidate generation found no alternative canonical static provisioning entries.")
+        return 8
 
     context_factory = BuildCalculationContextFactory(
         race_repository=RaceRepository(database_path),
@@ -387,10 +399,12 @@ def audit_saved_build_candidates(
     )
     armor_trait_ranking = evaluate_family(armor_trait_candidates)
     armor_enchant_ranking = evaluate_family(armor_enchant_candidates)
+    food_ranking = evaluate_family(food_candidates)
     overall_ranking = rank_candidate_comparisons(
         mundus_ranking.comparisons
         + armor_trait_ranking.comparisons
         + armor_enchant_ranking.comparisons
+        + food_ranking.comparisons
     )
 
     print()
@@ -405,13 +419,14 @@ def audit_saved_build_candidates(
     print(f"Build ID:       {baseline_build_id}")
     print(f"Active bar:     {active_bar}")
     print(f"Baseline Mundus: {baseline_build.Mundus or '(unset)'}")
+    print(f"Baseline Food:   {baseline_build.Food or '(unset)'}")
     print(f"Sustain:        {resource.value} over {duration_seconds:g}s")
     print(f"Bar skills:     {', '.join(bar_skill_names) if bar_skill_names else '(none)'}")
     print(f"Healing skills: {', '.join(healing_skill_names) if healing_skill_names else '(none)'}")
     print(f"Proven non-heals excluded: {', '.join(excluded_skill_names) if excluded_skill_names else '(none)'}")
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; expected critical healing is not yet modeled")
-    print("Candidate scope: one changed field per candidate; Mundus, armor traits, and armor enchants ranked separately and overall")
+    print("Candidate scope: one changed field per candidate; Mundus, armor traits, armor enchants, and food ranked separately and overall")
     print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
     print()
     print(f"Baseline healing potency: {_format_value(baseline_healing.value if baseline_healing.resolved else None)}")
@@ -431,6 +446,7 @@ def audit_saved_build_candidates(
     _print_candidate_family("Mundus", mundus_ranking)
     _print_candidate_family("Armor trait", armor_trait_ranking)
     _print_candidate_family("Armor enchant", armor_enchant_ranking)
+    _print_candidate_family("Food", food_ranking)
 
     print()
     print("Overall bounded one-change rank order:")
@@ -448,7 +464,7 @@ def audit_saved_build_candidates(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Evaluate bounded Phase 12 Mundus, armor-trait, and armor-enchant candidates against one real saved build."
+        description="Evaluate bounded Phase 12 Mundus, armor-trait, armor-enchant, and food candidates against one real saved build."
     )
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
