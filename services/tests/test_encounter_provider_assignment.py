@@ -8,6 +8,11 @@ from services.encounter_provider_candidate import (
     ProviderCandidateSet,
     ProviderCandidateStatus,
 )
+from services.encounter_provider_suitability import (
+    ProviderSuitability,
+    ProviderSuitabilitySet,
+    ProviderSuitabilityStatus,
+)
 
 
 def _candidate(member_id: str, status: ProviderCandidateStatus) -> ProviderCandidate:
@@ -34,6 +39,20 @@ def _set(
         required_provider_count=required_provider_count,
         coverage_classification=CoverageClassification.COVERED,
         candidates=candidates,
+    )
+
+
+def _suitability_set(
+    *rows: tuple[ProviderCandidate, ProviderSuitabilityStatus],
+) -> ProviderSuitabilitySet:
+    return ProviderSuitabilitySet(
+        requirement_id="req-1",
+        encounter_id="encounter-1",
+        requirement_type="major_force",
+        candidates=tuple(
+            ProviderSuitability(candidate=candidate, status=status, evidence=())
+            for candidate, status in rows
+        ),
     )
 
 
@@ -95,3 +114,79 @@ def test_assignment_reports_insufficient_only_after_candidates_are_fully_assesse
     assert result.status == ProviderAssignmentStatus.INSUFFICIENT
     assert result.primary_providers == ()
     assert result.backup_providers == (viable,)
+
+
+def test_assignment_uses_explicit_suitability_to_choose_primary_and_backup():
+    preferred = _candidate("char-a", ProviderCandidateStatus.VIABLE)
+    backup = _candidate("char-b", ProviderCandidateStatus.VIABLE)
+    candidates = _set((preferred, backup))
+    suitability = _suitability_set(
+        (preferred, ProviderSuitabilityStatus.SUITABLE),
+        (backup, ProviderSuitabilityStatus.UNASSESSED),
+    )
+
+    result = EncounterProviderAssignmentService().assign((candidates,), (suitability,))[0]
+
+    assert result.status == ProviderAssignmentStatus.ASSIGNED
+    assert result.primary_providers == (preferred,)
+    assert result.backup_providers == (backup,)
+
+
+def test_assignment_does_not_break_tie_between_multiple_explicitly_suitable_providers():
+    first = _candidate("char-a", ProviderCandidateStatus.VIABLE)
+    second = _candidate("char-b", ProviderCandidateStatus.VIABLE)
+    candidates = _set((first, second))
+    suitability = _suitability_set(
+        (first, ProviderSuitabilityStatus.SUITABLE),
+        (second, ProviderSuitabilityStatus.SUITABLE),
+    )
+
+    result = EncounterProviderAssignmentService().assign((candidates,), (suitability,))[0]
+
+    assert result.status == ProviderAssignmentStatus.UNRESOLVED_SELECTION
+    assert result.primary_providers == ()
+    assert result.backup_providers == (first, second)
+
+
+def test_assignment_can_eliminate_explicitly_unsuitable_provider_without_guessing():
+    rejected = _candidate("char-a", ProviderCandidateStatus.VIABLE)
+    remaining = _candidate("char-b", ProviderCandidateStatus.VIABLE)
+    candidates = _set((rejected, remaining))
+    suitability = _suitability_set(
+        (rejected, ProviderSuitabilityStatus.UNSUITABLE),
+        (remaining, ProviderSuitabilityStatus.UNASSESSED),
+    )
+
+    result = EncounterProviderAssignmentService().assign((candidates,), (suitability,))[0]
+
+    assert result.status == ProviderAssignmentStatus.ASSIGNED
+    assert result.primary_providers == (remaining,)
+    assert result.unsuitable_candidates == (rejected,)
+
+
+def test_assignment_preserves_unknown_suitability_when_it_can_fill_required_slot():
+    unresolved = _candidate("char-a", ProviderCandidateStatus.VIABLE)
+    candidates = _set((unresolved,))
+    suitability = _suitability_set(
+        (unresolved, ProviderSuitabilityStatus.UNRESOLVED),
+    )
+
+    result = EncounterProviderAssignmentService().assign((candidates,), (suitability,))[0]
+
+    assert result.status == ProviderAssignmentStatus.UNRESOLVED_SUITABILITY
+    assert result.primary_providers == ()
+    assert result.suitability_unresolved_candidates == (unresolved,)
+
+
+def test_assignment_reports_insufficient_after_explicit_suitability_rejection():
+    rejected = _candidate("char-a", ProviderCandidateStatus.VIABLE)
+    candidates = _set((rejected,))
+    suitability = _suitability_set(
+        (rejected, ProviderSuitabilityStatus.UNSUITABLE),
+    )
+
+    result = EncounterProviderAssignmentService().assign((candidates,), (suitability,))[0]
+
+    assert result.status == ProviderAssignmentStatus.INSUFFICIENT
+    assert result.primary_providers == ()
+    assert result.unsuitable_candidates == (rejected,)
