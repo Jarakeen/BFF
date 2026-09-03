@@ -84,3 +84,76 @@ def test_unknown_effect_kind_stays_unknown(tmp_path):
     assert component.is_dot is None
     assert component.is_aoe is None
     assert component.can_crit is None
+
+
+def test_skill_rank_components_are_cached_for_repository_lifetime(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_component_classification (
+            skill_rank_id INTEGER NOT NULL,
+            coefficient_number INTEGER NOT NULL,
+            effect_kind TEXT NOT NULL,
+            damage_type TEXT,
+            is_dot INTEGER,
+            is_aoe INTEGER,
+            can_crit INTEGER,
+            source TEXT,
+            confidence REAL
+        );
+        INSERT INTO skill_component_classification VALUES
+            (123, 1, 'heal', NULL, NULL, NULL, 1, 'verified fixture', 1.0);
+        """
+    )
+    db.commit()
+    db.close()
+
+    repo = SkillComponentRepository(path)
+    first = repo.get_for_skill_rank(123)
+
+    db = sqlite3.connect(path)
+    db.execute("DELETE FROM skill_component_classification WHERE skill_rank_id = 123")
+    db.commit()
+    db.close()
+
+    second = repo.get_for_skill_rank(123)
+
+    assert first == second
+    assert len(second) == 1
+    assert second[0].effect_kind is SkillEffectKind.HEAL
+
+
+def test_empty_skill_rank_component_result_is_cached(tmp_path):
+    path = tmp_path / "eso.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE skill_component_classification (
+            skill_rank_id INTEGER NOT NULL,
+            coefficient_number INTEGER NOT NULL,
+            effect_kind TEXT NOT NULL,
+            damage_type TEXT,
+            is_dot INTEGER,
+            is_aoe INTEGER,
+            can_crit INTEGER,
+            source TEXT,
+            confidence REAL
+        );
+        """
+    )
+    db.commit()
+    db.close()
+
+    repo = SkillComponentRepository(path)
+    assert repo.get_for_skill_rank(999) == ()
+
+    db = sqlite3.connect(path)
+    db.execute(
+        "INSERT INTO skill_component_classification VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (999, 1, "heal", None, None, None, 1, "late fixture", 1.0),
+    )
+    db.commit()
+    db.close()
+
+    assert repo.get_for_skill_rank(999) == ()
