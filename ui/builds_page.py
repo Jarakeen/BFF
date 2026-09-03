@@ -467,25 +467,26 @@ class BuildsPage(FoundryPage):
 
     def _editor(self, build: PlayerBuild | None = None) -> BuildEditor:
         skills = self.reference.list_skills()
-        allowed_scribed = {
-            str(name).strip().casefold()
-            for name in getattr(build, "ScribedSkills", [])
-            if str(name).strip()
-        } if build is not None else set()
-        skill_choices = []
-        for skill in skills:
-            if not isinstance(skill, dict) or not str(skill.get("name", "")).strip():
-                continue
-            try:
-                is_crafted = int(skill.get("is_crafted") or 0) == 1
-            except (TypeError, ValueError):
-                is_crafted = False
-            if is_crafted and str(skill.get("name") or "").strip().casefold() not in allowed_scribed:
-                continue
-            skill_choices.append(skill)
+        skill_choices = [
+            skill
+            for skill in skills
+            if isinstance(skill, dict) and str(skill.get("name", "")).strip()
+        ]
         cp = self.reference.list_champion_points()
         cp_choices = [point for point in cp if isinstance(point, dict) and str(point.get("name", "")).strip()]
-        return BuildEditor(race_choices=self.reference.list_race_names(), set_choices=self.reference.list_gear_set_names(), skill_choices=skill_choices, cp_choices=cp_choices)
+        editor = BuildEditor(
+            race_choices=self.reference.list_race_names(),
+            set_choices=self.reference.list_gear_set_names(),
+            skill_choices=skill_choices,
+            cp_choices=cp_choices,
+        )
+        # GearSlotRow is a controller object whose child fields are inserted into
+        # BuildEditor's visible grid. Keep the controller parented and hidden so
+        # Qt cannot surface it as a stray top-level/floating form widget.
+        for row in getattr(editor, "gear_rows", {}).values():
+            row.setParent(editor)
+            row.hide()
+        return editor
 
     def _edit_selected(self):
         if not self.roster.Members:
@@ -512,7 +513,25 @@ class BuildsPage(FoundryPage):
         editor.cancelRequested.connect(dialog.reject)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             updated = editor.model
-            updated.ScribedSkills = list(getattr(build, "ScribedSkills", []))
+            existing_scribed = [
+                str(name).strip()
+                for name in getattr(build, "ScribedSkills", [])
+                if str(name).strip()
+            ]
+            canonical_scribed = {
+                name.casefold(): name
+                for name in self._scribed_skill_names()
+            }
+            slotted_names = list(updated.FrontBarSkills) + list(updated.BackBarSkills)
+            for loadout in updated.BossLoadouts:
+                slotted_names.extend(loadout.FrontBarSkills)
+                slotted_names.extend(loadout.BackBarSkills)
+            used_scribed = [
+                canonical_scribed[str(name).strip().casefold()]
+                for name in slotted_names
+                if str(name).strip().casefold() in canonical_scribed
+            ]
+            updated.ScribedSkills = list(dict.fromkeys(existing_scribed + used_scribed))
             self.roster.Members[self.selected_index] = updated
             self._save()
             self._refresh_roster()
