@@ -10,6 +10,12 @@ class ArmorGlyphEffectRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        self._item_cache: dict[tuple[int, bool], tuple[Effect, ...]] = {}
+        self._name_cache: dict[tuple[str, bool], tuple[Effect, ...]] = {}
+
+    @staticmethod
+    def _name_key(value: str) -> str:
+        return str(value or "").strip().casefold()
 
     def get_armor_glyph_effect(
         self,
@@ -17,6 +23,11 @@ class ArmorGlyphEffectRepository:
         *,
         use_max_value: bool = True,
     ) -> list[Effect]:
+        cache_key = (int(item_id), bool(use_max_value))
+        cached = self._item_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -36,7 +47,9 @@ class ArmorGlyphEffectRepository:
                 (item_id,),
             ).fetchall()
 
-        return self._map_rows(rows, use_max_value=use_max_value)
+        effects = tuple(self._map_rows(rows, use_max_value=use_max_value))
+        self._item_cache[cache_key] = effects
+        return list(effects)
 
     def get_armor_glyph_effect_by_name(
         self,
@@ -51,6 +64,11 @@ class ArmorGlyphEffectRepository:
         max-tier armor glyphs, so choosing the highest recorded value for each
         effect type is deterministic and avoids pretending lower tiers are max.
         """
+        cache_key = (self._name_key(glyph_name), bool(use_max_value))
+        cached = self._name_cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -81,7 +99,9 @@ class ArmorGlyphEffectRepository:
                 continue
             seen_effect_types.add(effect_type)
             strongest.append(row)
-        return self._map_rows(strongest, use_max_value=use_max_value)
+        effects = tuple(self._map_rows(strongest, use_max_value=use_max_value))
+        self._name_cache[cache_key] = effects
+        return list(effects)
 
     @staticmethod
     def _map_rows(rows, *, use_max_value: bool) -> list[Effect]:
