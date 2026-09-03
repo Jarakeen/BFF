@@ -36,8 +36,12 @@ def _audit(
         character_name=name,
         build_name=f"{name} Build",
         character_id=f"id-{name}",
+        resolved_sources=(),
         resolved_effects=tuple(effects),
+        conditional_sources=(),
         unresolved=tuple(unresolved),
+        capability_unresolved=tuple(unresolved),
+        boundaries=(),
     )
 
 
