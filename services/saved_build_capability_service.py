@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -93,10 +95,22 @@ class SavedBuildCapabilityService:
         self.potions = potions or PotionAvailabilityRepository(self.database_path)
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
         self._ability_is_crafted_cache: dict[int, bool] = {}
+        # Instance-scoped on purpose: a new service/process sees a fresh database snapshot.
+        self._audit_cache: dict[str, SavedBuildCapabilityAudit] = {}
 
     @staticmethod
     def _clean(value) -> str:
         return " ".join(str(value or "").strip().split())
+
+    @staticmethod
+    def _build_cache_key(build: PlayerBuild) -> str:
+        payload = json.dumps(
+            build.to_dict(),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
 
     @staticmethod
     def _active_set_counts(build: PlayerBuild, active_bar: str) -> dict[str, int]:
@@ -353,6 +367,11 @@ class SavedBuildCapabilityService:
         return variants
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
+        cache_key = self._build_cache_key(build)
+        cached = self._audit_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         unresolved: list[str] = []
         capability_unresolved: list[str] = []
         boundaries: list[str] = []
@@ -429,7 +448,7 @@ class SavedBuildCapabilityService:
         conditional = tuple(
             sorted({effect.source for effect in deduped if effect.condition or effect.trigger})
         )
-        return SavedBuildCapabilityAudit(
+        result = SavedBuildCapabilityAudit(
             character_name=build.Name,
             build_name=build.BuildName,
             character_id=progression.character_id,
@@ -440,6 +459,8 @@ class SavedBuildCapabilityService:
             capability_unresolved=tuple(dict.fromkeys(capability_unresolved)),
             boundaries=tuple(dict.fromkeys(boundaries)),
         )
+        self._audit_cache[cache_key] = result
+        return result
 
     def audit_roster(self) -> tuple[SavedBuildCapabilityAudit, ...]:
         roster = self.builds.load()
