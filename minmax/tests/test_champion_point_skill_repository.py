@@ -121,3 +121,23 @@ def test_missing_relationship_tables_fail_closed(tmp_path):
     assert repo.get_for_skill_id(10) == ()
     assert repo.get_for_skill_rank(100) == ()
     assert repo.explicitly_applies(skill_id=10, champion_point_name='Rejuvenator') is False
+
+
+def test_relationship_results_are_cached_per_repository_instance(tmp_path):
+    path = tmp_path / 'eso.db'
+    _db(path)
+    repo = ChampionPointSkillRepository(path)
+
+    first_rank = repo.get_for_skill_rank(100)
+    first_base = repo.get_for_skill_id(10)
+
+    db = sqlite3.connect(path)
+    db.execute("DELETE FROM champion_point_skill_rank WHERE skill_rank_id = 100")
+    db.execute("DELETE FROM champion_point_skill WHERE skill_id = 10")
+    db.commit()
+    db.close()
+
+    assert repo.get_for_skill_rank(100) == first_rank
+    assert repo.get_for_skill_id(10) == first_base
+    assert ChampionPointSkillRepository(path).get_for_skill_rank(100) == ()
+    assert ChampionPointSkillRepository(path).get_for_skill_id(10) == ()
