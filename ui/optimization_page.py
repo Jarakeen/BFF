@@ -10,12 +10,14 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTabBar,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from engine.config import get_data_dir
+from minmax.optimization_mode import OptimizationMode, policy_for_mode
 from minmax.recruitment import RecruitmentPlanner
 from models.build_model import BuildRoster
 from services.build_service import BuildService
@@ -27,6 +29,13 @@ from ui.foundry_page import FoundryPage
 
 class OptimizationPage(FoundryPage):
     """Raid Engine team-building and optimization workspace."""
+
+    _MODE_ORDER = (
+        OptimizationMode.AUDIT,
+        OptimizationMode.BUILD,
+        OptimizationMode.RECRUIT,
+        OptimizationMode.COMPARE,
+    )
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -74,19 +83,13 @@ class OptimizationPage(FoundryPage):
         self.team_source_combo.currentTextChanged.connect(self._team_source_changed)
         self.header.add_context_widget(self._context_field("TEAM SOURCE", self.team_source_combo))
 
-        self.comparison_mode_combo = QComboBox()
-        self.comparison_mode_combo.addItems(["Build One Team", "Compare Two Teams"])
-        self.comparison_mode_combo.currentTextChanged.connect(self._comparison_mode_changed)
-        self.header.add_context_widget(
-            self._context_field("MODE", self.comparison_mode_combo)
-        )
-
         self.workspace = QWidget()
         self.layout = QVBoxLayout(self.workspace)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(10)
         self.add_workspace(self.workspace)
 
+        self._build_mode_tabs()
         self._build_constraints()
         self._build_main_row()
         self._build_recommendations_row()
@@ -105,6 +108,72 @@ class OptimizationPage(FoundryPage):
         layout.addWidget(label)
         layout.addWidget(widget)
         return box
+
+    def _build_mode_tabs(self) -> None:
+        card = FoundryCard("Optimization Mode")
+        self.mode_tabs = QTabBar()
+        self.mode_tabs.setExpanding(True)
+        for mode in self._MODE_ORDER:
+            self.mode_tabs.addTab(policy_for_mode(mode).title)
+        self.mode_tabs.setCurrentIndex(self._MODE_ORDER.index(OptimizationMode.BUILD))
+        self.mode_tabs.currentChanged.connect(self._optimization_mode_changed)
+
+        self.mode_description = QLabel()
+        self.mode_description.setWordWrap(True)
+        card.addWidget(self.mode_tabs)
+        card.addWidget(self.mode_description)
+        self.layout.addWidget(card)
+
+    def _current_mode(self) -> OptimizationMode:
+        index = self.mode_tabs.currentIndex()
+        if 0 <= index < len(self._MODE_ORDER):
+            return self._MODE_ORDER[index]
+        return OptimizationMode.BUILD
+
+    def _effective_source_mode(self) -> str:
+        mode = self._current_mode()
+        if mode is OptimizationMode.AUDIT:
+            return "Saved Players Only"
+        if mode is OptimizationMode.RECRUIT:
+            return "Recruitment Plan Only"
+        return self.team_source_combo.currentText()
+
+    def _optimization_mode_changed(self, _index: int) -> None:
+        mode = self._current_mode()
+        policy = policy_for_mode(mode)
+        comparing = policy.uses_two_teams
+
+        self.team_source_combo.setEnabled(
+            mode in (OptimizationMode.BUILD, OptimizationMode.COMPARE)
+        )
+        if hasattr(self, "team_tabs"):
+            self.team_tabs.setTabEnabled(1, comparing)
+            if not comparing:
+                self.team_tabs.setCurrentIndex(0)
+        if hasattr(self, "generate_button"):
+            self.generate_button.setText(policy.action_label)
+
+        descriptions = {
+            OptimizationMode.AUDIT: (
+                "Inspect the selected saved team without silently adding players. "
+                "Report coverage gaps, redundancy, and unresolved evidence."
+            ),
+            OptimizationMode.BUILD: (
+                "Build the strongest valid team from saved players, optionally "
+                "representing unmatched slots as recruitment requirements."
+            ),
+            OptimizationMode.RECRUIT: (
+                "Create an ideal set of open role and qualification requirements. "
+                "These are recruiting targets, not fabricated players."
+            ),
+            OptimizationMode.COMPARE: (
+                "Evaluate Team A and Team B under the same encounter, uptime, "
+                "and execution assumptions."
+            ),
+        }
+        self.mode_description.setText(descriptions[mode])
+        if hasattr(self, "team_table"):
+            self._generate_preview()
 
     def _build_constraints(self):
         card = FoundryCard("Constraints")
@@ -254,17 +323,8 @@ class OptimizationPage(FoundryPage):
         return card, table
 
     def _team_source_changed(self, _text: str) -> None:
-        self._generate_preview()
-
-    def _comparison_mode_changed(self, text: str):
-        comparing = text == "Compare Two Teams"
-        self.team_tabs.setTabEnabled(1, comparing)
-        if not comparing:
-            self.team_tabs.setCurrentIndex(0)
-        self.generate_button.setText(
-            "Compare Teams" if comparing else "Generate Best Team"
-        )
-        self._update_team_analysis()
+        if hasattr(self, "team_table"):
+            self._generate_preview()
 
     def _role_slots(self) -> list[str]:
         if self.group_size_combo.currentText().startswith("12"):
@@ -276,7 +336,7 @@ class OptimizationPage(FoundryPage):
     def _populate_team_editor(self, table: QTableWidget, *, autofill: bool) -> None:
         role_slots = self._role_slots()
         builds = list(self.roster.Members)
-        source_mode = self.team_source_combo.currentText()
+        source_mode = self._effective_source_mode()
         table.setRowCount(len(role_slots))
 
         self._team_combo_signal_guard = True
@@ -382,7 +442,7 @@ class OptimizationPage(FoundryPage):
         target = len(self._role_slots())
         team_a_real, team_a_recruit = self._team_counts(self.team_table)
         team_a_count = team_a_real + team_a_recruit
-        comparing = self.comparison_mode_combo.currentText() == "Compare Two Teams"
+        comparing = policy_for_mode(self._current_mode()).uses_two_teams
         team_b_real, team_b_recruit = self._team_counts(self.team_b_table)
         team_b_count = team_b_real + team_b_recruit
 
@@ -487,7 +547,7 @@ class OptimizationPage(FoundryPage):
     def _generate_preview(self, *_args):
         self._populate_team_editor(self.team_table, autofill=True)
         self._populate_team_editor(self.team_b_table, autofill=True)
-        self._comparison_mode_changed(self.comparison_mode_combo.currentText())
+        self._optimization_mode_changed(self.mode_tabs.currentIndex())
 
     def _clear_team(self, table=None):
         target_table = table or self.team_table
