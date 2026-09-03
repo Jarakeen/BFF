@@ -61,5 +61,7 @@ def sustain_relevant_context_unresolved(
 
 
 def _key(value: object) -> str:
-    text = str(value or "").strip().casefold().replace("_", " ").replace("-", " ")
-    return " ".join(text.split())
+    """Normalize CP identity across display names and compact canonical keys."""
+
+    text = str(value or "").strip().casefold()
+    return "".join(character for character in text if character.isalnum())
