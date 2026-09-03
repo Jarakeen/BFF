@@ -51,14 +51,21 @@ class SavedBuildTeamComparisonAdapter:
     real selected provider rather than inventing a zero-damage support player.
     """
 
-    def __init__(self, *, builds_path: Path, database_path: Path) -> None:
+    def __init__(
+        self,
+        *,
+        builds_path: Path,
+        database_path: Path,
+        progression_adapter=None,
+        context_factory=None,
+    ) -> None:
         self.builds_path = Path(builds_path)
         self.database_path = Path(database_path)
         self.build_service = BuildService(self.builds_path)
-        self.progression_adapter = MinmaxCharacterProgressionAdapter(
+        self.progression_adapter = progression_adapter or MinmaxCharacterProgressionAdapter(
             self.build_service.canonical.catalog_service
         )
-        self.context_factory = BuildCalculationContextFactory(
+        self.context_factory = context_factory or BuildCalculationContextFactory(
             race_repository=RaceRepository(self.database_path),
             gear_set_repository=GearSetRepository(self.database_path),
         )
