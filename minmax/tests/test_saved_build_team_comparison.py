@@ -8,7 +8,7 @@ from minmax.dd_damage import DDDamageEvent
 from minmax.evaluation_context import EvaluationContext
 from minmax.group_effects import GroupEffect
 from minmax.role import Role
-from minmax.saved_build_team_comparison import SavedBuildTeamComparisonAdapter
+from minmax.saved_build_team_comparison import (\n    SavedBuildRosterMember,\n    SavedBuildRosterScenario,\n    SavedBuildTeamComparisonAdapter,\n)
 from minmax.stat_ids import StatId
 
 
@@ -105,3 +105,97 @@ def test_missing_build_and_empty_bar_fail_clearly(adapter):
         adapter.compare("missing", "front", "Build Beta", "front", DDDamageEvent(1))
     with pytest.raises(ValueError, match="has no skills"):
         adapter.compare("Build Alpha", "back", "Build Beta", "front", DDDamageEvent(1))
+
+
+
+def test_shared_roster_attributes_provider_effect_to_other_member(adapter):
+    scenario = SavedBuildRosterScenario(
+        name="Two-player roster",
+        members=(
+            SavedBuildRosterMember(
+                member_id="alpha",
+                build_name="Build Alpha",
+                active_bar="front",
+                group_effects=(GroupEffect(
+                    source="Alpha support effect",
+                    effect_type="damage_amplification",
+                    value=10.0,
+                    affected_roles=frozenset({Role.DD}),
+                    affects_source=False,
+                ),),
+            ),
+            SavedBuildRosterMember(
+                member_id="beta",
+                build_name="Build Beta",
+                active_bar="front",
+            ),
+        ),
+    )
+
+    result = adapter.evaluate_roster(
+        scenario,
+        DDDamageEvent(base_value=1000.0),
+        EvaluationContext(),
+    )
+
+    contribution = result.group_evaluation.effect_contributions[0]
+    assert contribution.source_name == "alpha"
+    assert contribution.recipient_names == ("beta",)
+    assert contribution.damage_added > 0.0
+    assert tuple(
+        row.roster_candidate.name for row in result.player_evidence
+    ) == ("alpha", "beta")
+
+
+def test_roster_scenario_rejects_duplicate_member_ids():
+    with pytest.raises(ValueError, match="must be unique"):
+        SavedBuildRosterScenario(
+            name="Invalid",
+            members=(
+                SavedBuildRosterMember("same", "Build Alpha", "front"),
+                SavedBuildRosterMember("SAME", "Build Beta", "front"),
+            ),
+        )
+
+
+def test_compare_rosters_uses_shared_member_contributions(adapter):
+    team_a = SavedBuildRosterScenario(
+        name="Team A",
+        members=(
+            SavedBuildRosterMember("a-alpha", "Build Alpha", "front"),
+            SavedBuildRosterMember("a-beta", "Build Beta", "front"),
+        ),
+    )
+    team_b = SavedBuildRosterScenario(
+        name="Team B",
+        members=(
+            SavedBuildRosterMember(
+                "b-alpha",
+                "Build Alpha",
+                "front",
+                group_effects=(GroupEffect(
+                    source="Alpha support effect",
+                    effect_type="damage_amplification",
+                    value=10.0,
+                    affected_roles=frozenset({Role.DD}),
+                    affects_source=False,
+                ),),
+            ),
+            SavedBuildRosterMember("b-beta", "Build Beta", "front"),
+        ),
+    )
+
+    result = adapter.compare_rosters(
+        team_a,
+        team_b,
+        DDDamageEvent(base_value=1000.0),
+        EvaluationContext(),
+    )
+
+    assert result.comparison.rankable
+    assert result.comparison.preferred_team_name == "Team B"
+    assert result.comparison.modeled_damage_delta > 0.0
+    assert (
+        result.candidate.group_evaluation.effect_contributions[0].recipient_names
+        == ("b-beta",)
+    )
