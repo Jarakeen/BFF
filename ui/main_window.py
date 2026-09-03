@@ -7,12 +7,15 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QStackedWidget,
+    QTableWidgetItem,
     QWidget,
 )
 
@@ -75,17 +78,31 @@ class MainWindow(QMainWindow):
             lambda category: self.show_page(f"collectibles:{category}")
         )
 
+        roster_page = RosterPage()
+        roster_page.header.title.setText("Roster")
+        roster_page.header.subtitle.setText("Team members, optimized assignments, responsibilities, and readiness.")
+        roster_page.header.department.setText("RAID ENGINE • ROSTER")
+
+        optimization_page = OptimizationPage()
+        send_team_button = QPushButton("Send Team to Roster")
+        send_team_button.setProperty("primary", True)
+        send_team_button.setToolTip(
+            "Send the currently selected optimization team into Roster as an assignment plan."
+        )
+        send_team_button.clicked.connect(self._send_optimized_team_to_roster)
+        optimization_page.header.add_context_widget(send_team_button)
+
         core_pages = {
             "achievements": AchievementsPage(),
             "collectibles": collectible_dashboard,
             "collectibles_browser": collectible_browser,
-            "roster_page": RosterPage(),
+            "roster_page": roster_page,
             "operations_console": OperationsConsole(expedition=self.expedition_service),
             "console:1": EncountersPage(expedition=self.expedition_service),
             "console:2": BuildsPage(),
             "console:3": CapabilitiesPage(),
             "console:4": MechanicsPage(expedition=self.expedition_service),
-            "console:6": OptimizationPage(),
+            "console:6": optimization_page,
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
             "settings": SettingsPage(),
@@ -164,6 +181,134 @@ class MainWindow(QMainWindow):
             collectibles_page.refresh()
         if dashboard is not None:
             dashboard.refresh()
+
+    @staticmethod
+    def _build_identity(build) -> tuple[str, str, str]:
+        player = (
+            getattr(build, "Name", "")
+            or getattr(build, "Gamertag", "")
+            or "Unnamed Player"
+        )
+        character = getattr(build, "CharacterName", "") or player
+        build_name = getattr(build, "BuildName", "") or "Current Build"
+        return str(player), str(character), str(build_name)
+
+    def _current_optimized_team_plan(self) -> list[dict[str, str]]:
+        page = self.pages.get("console:6")
+        if page is None or not hasattr(page, "team_table"):
+            return []
+
+        table = page.team_table
+        if hasattr(page, "team_tabs") and page.team_tabs.currentIndex() == 1:
+            table = page.team_b_table
+
+        rows: list[dict[str, str]] = []
+        for row in range(table.rowCount()):
+            role_item = table.item(row, 0)
+            role = role_item.text() if role_item is not None else f"Slot {row + 1}"
+            selector = table.cellWidget(row, 1)
+            selection = selector.currentData() if isinstance(selector, QComboBox) else None
+
+            if isinstance(selection, int) and 0 <= selection < len(page.roster.Members):
+                build = page.roster.Members[selection]
+                player, character, build_name = self._build_identity(build)
+                rows.append({
+                    "kind": "saved",
+                    "slot": role,
+                    "player": player,
+                    "character": character,
+                    "class": str(getattr(build, "EsoClass", "") or "—"),
+                    "build": build_name,
+                })
+            elif isinstance(selection, str) and selection.startswith("recruitment:"):
+                rows.append({
+                    "kind": "recruitment",
+                    "slot": role,
+                    "player": "Recruitment Needed",
+                    "character": "—",
+                    "class": "Flexible",
+                    "build": "Open requirement",
+                })
+        return rows
+
+    @staticmethod
+    def _matching_roster_member(roster_page, plan_row: dict[str, str]):
+        player = plan_row.get("player", "").strip().lower()
+        character = plan_row.get("character", "").strip().lower()
+        for member in roster_page.members:
+            candidates = {
+                str(member.PlayerName or "").strip().lower(),
+                str(member.CharacterName or "").strip().lower(),
+            }
+            if player in candidates or (character and character != "—" and character in candidates):
+                return member
+        return None
+
+    def _send_optimized_team_to_roster(self) -> None:
+        plan = self._current_optimized_team_plan()
+        optimization_page = self.pages.get("console:6")
+        if not plan:
+            if optimization_page is not None:
+                optimization_page.status.warning(
+                    "No planned team slots are selected. Generate or select a team before sending it to Roster."
+                )
+            return
+
+        roster_page = self.pages["roster_page"]
+        roster_page.optimized_team_plan = tuple(plan)
+        roster_page.tabs.setCurrentIndex(0)
+        roster_page.assignment_table.setRowCount(0)
+
+        matched = 0
+        recruitment = 0
+        missing_records = 0
+        for plan_row in plan:
+            row = roster_page.assignment_table.rowCount()
+            roster_page.assignment_table.insertRow(row)
+            member = None
+            if plan_row["kind"] == "saved":
+                member = self._matching_roster_member(roster_page, plan_row)
+                matched += int(member is not None)
+                missing_records += int(member is None)
+            else:
+                recruitment += 1
+
+            if plan_row["kind"] == "recruitment":
+                notes = "Optimization recruitment requirement; no roster person was fabricated."
+                ready = "OPEN"
+                secondary = "Recruit / qualify candidate"
+            elif member is None:
+                notes = "Saved optimized build; matching personnel record not found in Roster."
+                ready = "⚠"
+                secondary = "Add or match roster record"
+            else:
+                notes = "Imported from Team Optimization"
+                ready = "✓" if member.Status == "Active" else "•"
+                secondary = roster_page._secondary_assignment(plan_row["slot"])
+
+            values = [
+                plan_row["player"],
+                plan_row["slot"],
+                plan_row["class"],
+                plan_row["build"],
+                "Optimized team slot",
+                secondary,
+                "—",
+                notes,
+                ready,
+            ]
+            for col, value in enumerate(values):
+                item = QTableWidgetItem(str(value))
+                if col in {0, 1, 2, 3, 8}:
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                roster_page.assignment_table.setItem(row, col, item)
+
+        roster_page.status.success(
+            f"Optimization plan loaded: {len(plan)} slot(s), {matched} matched roster member(s), "
+            f"{recruitment} recruitment requirement(s), {missing_records} unmatched saved build(s). "
+            "Personnel records were not overwritten."
+        )
+        self.show_page("roster_page")
 
     def show_page(self, page_name: str):
         if not self._confirm_collectible_navigation(page_name):
