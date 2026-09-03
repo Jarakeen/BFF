@@ -95,6 +95,12 @@ def evaluate_healing_candidate(
     and Phase 11 provider assignment remain owned by their existing services.
     A candidate that cannot prove its objective or every hard constraint remains
     unrankable.
+
+    ``BuildCalculationContext`` may contain diagnostics for stat/mechanic channels
+    unrelated to the current objective or hard constraints. Those raw context
+    diagnostics are not promoted into a universal Phase 12 veto. Each consuming
+    evaluator is responsible for returning the unresolved evidence relevant to
+    the channel it actually evaluates.
     """
 
     if not candidate.is_evaluable:
@@ -154,7 +160,6 @@ def evaluate_healing_candidate(
     )
     unresolved = _dedupe(
         tuple(baseline_healing.unresolved)
-        + tuple(candidate_context.unresolved)
         + tuple(healing_constraint_messages)
         + tuple(sustain.unresolved)
     )
