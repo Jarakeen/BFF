@@ -13,6 +13,7 @@ from minmax.skill_component_classification import SkillEffectKind
 from models.build_model import PlayerBuild
 from tools.audit_phase12_saved_build_candidates import (
     _candidate_change_label,
+    _parser,
     _print_recommendation,
     _select_verified_healing_skills,
     _with_extra_unresolved,
@@ -129,6 +130,14 @@ def test_audit_candidate_labels_keep_families_explainable() -> None:
     assert _candidate_change_label(
         _comparison("Armor.Chest.Enchant", "Max Magicka", "Prismatic Defense")
     ) == "Armor.Chest.Enchant: Max Magicka -> Prismatic Defense"
+    assert _candidate_change_label(
+        _comparison("Food", "Clockwork Citrus Filet", "Witchmother's Potent Brew")
+    ) == "Food: Clockwork Citrus Filet -> Witchmother's Potent Brew"
+
+
+def test_audit_parser_advertises_food_candidate_family() -> None:
+    description = _parser().description or ""
+    assert "food" in description.casefold()
 
 
 def test_audit_reports_all_tied_preferred_repairs(capsys) -> None:
