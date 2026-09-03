@@ -54,6 +54,22 @@ def compare_sustain_runs(
             if failure is not None
             else "candidate resource timeline does not sustain"
         )
+        if not baseline.sustains:
+            baseline_failure = baseline.first_failure
+            baseline_detail = (
+                f"first shortfall {baseline_failure.shortfall} at "
+                f"{baseline_failure.time_seconds:g}s from {baseline_failure.source}"
+                if baseline_failure is not None
+                else "baseline resource timeline does not sustain"
+            )
+            return CandidateConstraint(
+                name=f"{resource.value} sustain",
+                status=ConstraintStatus.UNSATISFIED,
+                explanation=(
+                    f"Baseline and candidate both fail {resource.value} sustain. "
+                    f"Baseline: {baseline_detail}; candidate: {detail}."
+                ),
+            )
         return CandidateConstraint(
             name=f"{resource.value} sustain",
             status=ConstraintStatus.WORSENED,
