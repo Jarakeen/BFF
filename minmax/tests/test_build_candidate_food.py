@@ -50,6 +50,25 @@ class _ResourceProvisioningRepository:
         return effects.get(name, []), []
 
 
+class _EquivalentProvisioningRepository:
+    def __init__(self, *, distinct_tooltips: bool) -> None:
+        self.distinct_tooltips = distinct_tooltips
+
+    def list_names(self):
+        return ("First Tonic", "Second Tonic")
+
+    def canonical_name(self, name):
+        return str(name or "").strip()
+
+    def resolve(self, _name):
+        return [SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=500.0)], []
+
+    def description(self, name):
+        if self.distinct_tooltips and name == "Second Tonic":
+            return "Increase Magicka Recovery by 500. Also grants a distinct extra mechanic."
+        return "Increase Magicka Recovery by 500."
+
+
 def test_food_candidates_use_only_resolved_canonical_foods() -> None:
     baseline = PlayerBuild(Name="Magrat", BuildName="DF Healer", Food="clockwork citrus")
 
@@ -129,4 +148,35 @@ def test_magicka_filter_keeps_magicka_and_mixed_candidates_only() -> None:
     assert tuple(candidate.candidate_build.Food for candidate in filtered) == (
         "Hybrid Meal",
         "Magicka Drink",
+    )
+
+
+def test_exact_equivalent_provisioning_candidates_are_evaluated_once() -> None:
+    repo = _EquivalentProvisioningRepository(distinct_tooltips=False)
+
+    candidates = enumerate_food_candidates(
+        baseline_build=PlayerBuild(BuildName="DF Healer", Food="Baseline"),
+        character_id="magrat",
+        baseline_build_id="DF Healer",
+        provisioning_repository=repo,
+    )
+
+    assert tuple(candidate.candidate_build.Food for candidate in candidates) == (
+        "First Tonic",
+    )
+
+
+def test_matching_static_stats_do_not_collapse_distinct_tooltip_mechanics() -> None:
+    repo = _EquivalentProvisioningRepository(distinct_tooltips=True)
+
+    candidates = enumerate_food_candidates(
+        baseline_build=PlayerBuild(BuildName="DF Healer", Food="Baseline"),
+        character_id="magrat",
+        baseline_build_id="DF Healer",
+        provisioning_repository=repo,
+    )
+
+    assert tuple(candidate.candidate_build.Food for candidate in candidates) == (
+        "First Tonic",
+        "Second Tonic",
     )
