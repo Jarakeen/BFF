@@ -41,6 +41,13 @@ class SavedBuildCapabilityAudit:
         return self.capability_unresolved
 
 
+@dataclass(frozen=True)
+class _CapabilityComponent:
+    effects: tuple[EffectVariant, ...] = ()
+    unresolved: tuple[str, ...] = ()
+    boundaries: tuple[str, ...] = ()
+
+
 class SavedBuildCapabilityService:
     """Resolve what a saved build can provide without pretending runtime uptime exists."""
 
@@ -95,22 +102,56 @@ class SavedBuildCapabilityService:
         self.potions = potions or PotionAvailabilityRepository(self.database_path)
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
         self._ability_is_crafted_cache: dict[int, bool] = {}
-        # Instance-scoped on purpose: a new service/process sees a fresh database snapshot.
+        # All caches are deliberately instance-scoped. A new service/process sees
+        # a fresh canonical data snapshot rather than inheriting stale evidence.
         self._audit_cache: dict[str, SavedBuildCapabilityAudit] = {}
+        self._progression_cache: dict[tuple[object, ...], object] = {}
+        self._skill_component_cache: dict[str, _CapabilityComponent] = {}
+        self._gear_component_cache: dict[tuple[str, tuple[tuple[str, int], ...]], _CapabilityComponent] = {}
 
     @staticmethod
     def _clean(value) -> str:
         return " ".join(str(value or "").strip().split())
 
     @staticmethod
-    def _build_cache_key(build: PlayerBuild) -> str:
+    def _canonical_hash(value: object) -> str:
         payload = json.dumps(
-            build.to_dict(),
+            value,
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=False,
         ).encode("utf-8")
         return hashlib.sha256(payload).hexdigest()
+
+    @classmethod
+    def _build_cache_key(cls, build: PlayerBuild) -> str:
+        return cls._canonical_hash(build.to_dict())
+
+    @staticmethod
+    def _progression_cache_key(build: PlayerBuild) -> tuple[object, ...]:
+        # MinmaxCharacterProgressionAdapter.resolve consumes only canonical
+        # character identity plus the saved build's explicit attributes.
+        return (
+            str(getattr(build, "CharacterId", "") or "").strip(),
+            str(build.Name or ""),
+            str(build.Gamertag or ""),
+            int(getattr(build, "AttributeHealth", 0) or 0),
+            int(getattr(build, "AttributeMagicka", 0) or 0),
+            int(getattr(build, "AttributeStamina", 0) or 0),
+        )
+
+    @classmethod
+    def _skill_component_cache_key(cls, build: PlayerBuild, active_bar: str) -> str:
+        names = build.FrontBarSkills if active_bar == "front" else build.BackBarSkills
+        payload = build.to_dict()
+        return cls._canonical_hash(
+            {
+                "active_bar": active_bar,
+                "eso_class": build.EsoClass,
+                "skills": list(names),
+                "scribed_skill_recipes": payload.get("ScribedSkillRecipes", []),
+            }
+        )
 
     @staticmethod
     def _active_set_counts(build: PlayerBuild, active_bar: str) -> dict[str, int]:
@@ -131,6 +172,12 @@ class SavedBuildCapabilityService:
         pieces = 2 if "staff" in SavedBuildCapabilityService._clean(weapon.WeaponType).casefold() else 1
         add(weapon.Set, pieces)
         return counts
+
+    @classmethod
+    def _gear_component_cache_key(
+        cls, build: PlayerBuild, active_bar: str
+    ) -> tuple[str, tuple[tuple[str, int], ...]]:
+        return active_bar, tuple(sorted(cls._active_set_counts(build, active_bar).items()))
 
     @classmethod
     def _partition_context_messages(cls, messages) -> tuple[list[str], list[str]]:
@@ -294,6 +341,15 @@ class SavedBuildCapabilityService:
         except sqlite3.Error:
             return False
 
+    def _progression_resolution(self, build: PlayerBuild):
+        cache_key = self._progression_cache_key(build)
+        cached = self._progression_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        result = self.progression.resolve(build)
+        self._progression_cache[cache_key] = result
+        return result
+
     def _skill_variants(
         self,
         build: PlayerBuild,
@@ -336,6 +392,22 @@ class SavedBuildCapabilityService:
                 variants.extend(resolved)
         return variants
 
+    def _skill_component(self, build: PlayerBuild, active_bar: str) -> _CapabilityComponent:
+        cache_key = self._skill_component_cache_key(build, active_bar)
+        cached = self._skill_component_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        unresolved: list[str] = []
+        boundaries: list[str] = []
+        effects = tuple(self._skill_variants(build, active_bar, unresolved, boundaries))
+        result = _CapabilityComponent(
+            effects=effects,
+            unresolved=tuple(unresolved),
+            boundaries=tuple(boundaries),
+        )
+        self._skill_component_cache[cache_key] = result
+        return result
+
     def _gear_variants(
         self,
         build: PlayerBuild,
@@ -366,6 +438,22 @@ class SavedBuildCapabilityService:
             variants.extend(self.gear.resolve(gear_set.id, pieces))
         return variants
 
+    def _gear_component(self, build: PlayerBuild, active_bar: str) -> _CapabilityComponent:
+        cache_key = self._gear_component_cache_key(build, active_bar)
+        cached = self._gear_component_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        unresolved: list[str] = []
+        boundaries: list[str] = []
+        effects = tuple(self._gear_variants(build, active_bar, unresolved, boundaries))
+        result = _CapabilityComponent(
+            effects=effects,
+            unresolved=tuple(unresolved),
+            boundaries=tuple(boundaries),
+        )
+        self._gear_component_cache[cache_key] = result
+        return result
+
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
         cache_key = self._build_cache_key(build)
         cached = self._audit_cache.get(cache_key)
@@ -378,7 +466,7 @@ class SavedBuildCapabilityService:
         sources: list[str] = []
         effects: list[EffectVariant] = []
 
-        progression = self.progression.resolve(build)
+        progression = self._progression_resolution(build)
         unresolved.extend(progression.unresolved)
 
         for active_bar in ("front", "back"):
@@ -398,21 +486,21 @@ class SavedBuildCapabilityService:
             except Exception as exc:
                 unresolved.append(f"{active_bar} static build resolution failed: {exc}")
 
-            skill_gaps: list[str] = []
-            bar_skill_effects = self._skill_variants(build, active_bar, skill_gaps, boundaries)
-            unresolved.extend(skill_gaps)
-            capability_unresolved.extend(skill_gaps)
-            if bar_skill_effects:
+            skill_component = self._skill_component(build, active_bar)
+            unresolved.extend(skill_component.unresolved)
+            capability_unresolved.extend(skill_component.unresolved)
+            boundaries.extend(skill_component.boundaries)
+            if skill_component.effects:
                 sources.append(f"{active_bar}:skills")
-                effects.extend(bar_skill_effects)
+                effects.extend(skill_component.effects)
 
-            gear_gaps: list[str] = []
-            bar_gear_effects = self._gear_variants(build, active_bar, gear_gaps, boundaries)
-            unresolved.extend(gear_gaps)
-            capability_unresolved.extend(gear_gaps)
-            if bar_gear_effects:
+            gear_component = self._gear_component(build, active_bar)
+            unresolved.extend(gear_component.unresolved)
+            capability_unresolved.extend(gear_component.unresolved)
+            boundaries.extend(gear_component.boundaries)
+            if gear_component.effects:
                 sources.append(f"{active_bar}:gear")
-                effects.extend(bar_gear_effects)
+                effects.extend(gear_component.effects)
 
         potion_name = self._clean(build.Potion)
         if potion_name:
