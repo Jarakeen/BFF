@@ -35,7 +35,7 @@ BROADCAST_NAV_SECTION = {"label": "Broadcast", "children": [
 
 CORE_NAV_SECTIONS = [
     ("Achievements", "achievements", "header"),
-    {"label": "Collections", "children": [
+    {"label": "Collections", "page": "collectibles", "children": [
         ("Mounts", "collectibles:Mounts"), ("Pets", "collectibles:Pets"),
         ("Allies / Assistants", "collectibles:Allies / Assistants"), ("Houses", "collectibles:Houses"),
         ("Costumes", "collectibles:Costumes"), ("Skins", "collectibles:Skins"),
@@ -234,6 +234,10 @@ class FoundrySidebar(QWidget):
         icon_name = semantic_icon(section["label"])
         if icon_name:
             set_button_icon(label, icon_name, 16)
+        if section.get("page"):
+            label.clicked.connect(
+                lambda checked=False, page=section["page"]: self.pageRequested.emit(page)
+            )
         layout.addWidget(label)
 
         children = QWidget()
