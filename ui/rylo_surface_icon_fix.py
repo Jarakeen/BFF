@@ -271,6 +271,94 @@ def install(app: QApplication) -> None:
     FoundrySidebar.build_leaf_button = leaf_with_rylo_icon
     FoundrySidebar.build_category = category_with_rylo_icons
 
+    # The permanent Builds workspace compatibility layer historically forces
+    # Foundry's #0C171B teal onto tabs, scroll areas, editors, and child panels
+    # with a local stylesheet. That bypasses the Rylo QSS entirely. Replace the
+    # hard-coded surface only for Rylo; preserve the original behavior for the
+    # Foundry theme.
+    from ui import build_editor_inline_compat
+
+    original_force_dark_surface = build_editor_inline_compat._force_dark_surface
+
+    def force_theme_dark_surface(widget) -> None:
+        if app.property("visualTheme") != VISUAL_THEME_RYLO:
+            original_force_dark_surface(widget)
+            return
+        from PySide6.QtGui import QColor, QPalette
+
+        surface = "#0B0B0D"
+        widget.setAutoFillBackground(True)
+        palette = widget.palette()
+        palette.setColor(QPalette.ColorRole.Window, QColor(surface))
+        palette.setColor(QPalette.ColorRole.Base, QColor(surface))
+        widget.setPalette(palette)
+        widget.setStyleSheet(f"background-color: {surface};")
+
+    build_editor_inline_compat._force_dark_surface = force_theme_dark_surface
+
+    # BuildEditor gear-slot pictograms came from ESO gear art rather than the
+    # supplied semantic SVG library, so they remained gold under Rylo. Use the
+    # user's themed SVG shapes for Rylo while leaving Foundry's existing ESO
+    # gear art untouched.
+    from widgets.build_editor import BuildEditor
+
+    original_gear_icon = BuildEditor._gear_icon
+    original_editor_identity_card = BuildEditor._build_identity_card
+
+    slot_icons = {
+        "head": "viking-helmet",
+        "shoulders": "spiked-shoulder-armor",
+        "chest": "leather-armor",
+        "hands": "mailed-fist",
+        "waist": "metal-skirt",
+        "legs": "greaves",
+        "feet": "metal-boot",
+        "neck": "heart-necklace",
+        "ring1": "ring",
+        "ring2": "ring",
+        "front_main_hand": "sword",
+        "front_off_hand": "shield",
+        "back_main_hand": "sword",
+        "back_off_hand": "shield",
+    }
+
+    def gear_icon_with_rylo_svg(self, slot):
+        if app.property("visualTheme") != VISUAL_THEME_RYLO:
+            return original_gear_icon(self, slot)
+
+        from PySide6.QtCore import QSize, Qt
+        from PySide6.QtWidgets import QLabel
+
+        label = QLabel()
+        label.setFixedSize(22, 22)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_name = slot_icons.get(str(slot).casefold(), "builds")
+        value = ux_icons.icon(icon_name)
+        if not value.isNull():
+            label.setPixmap(value.pixmap(QSize(18, 18), QIcon.Mode.Normal, QIcon.State.Off))
+            label.setProperty("semanticIconName", icon_name)
+            label.setToolTip(icon_name.replace("-", " ").title())
+        return label
+
+    def editor_identity_card_with_rylo_details(self):
+        card = original_editor_identity_card(self)
+        if app.property("visualTheme") != VISUAL_THEME_RYLO:
+            return card
+
+        from PySide6.QtWidgets import QWidget
+
+        # The attribute separators were also hard-coded brass. Convert only the
+        # decorative separators; ESO item-quality colors remain semantic data.
+        for child in card.findChildren(QWidget):
+            style = child.styleSheet()
+            normalized = style.replace(" ", "").lower()
+            if "rgba(200,164,106,90)" in normalized:
+                child.setStyleSheet("background-color: rgba(104, 109, 114, 125);")
+        return card
+
+    BuildEditor._gear_icon = gear_icon_with_rylo_svg
+    BuildEditor._build_identity_card = editor_identity_card_with_rylo_details
+
     # The Builds identity plate is a legacy QFrame created outside FoundryCard.
     # Give it an explicit Rylo surface so the old leather-teal rule cannot win
     # through selector specificity or a stale local style.
