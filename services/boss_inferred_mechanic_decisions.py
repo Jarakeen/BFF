@@ -114,6 +114,76 @@ def load_decisions(path: Path) -> tuple[InferredMechanicDecision, ...]:
     return tuple(decisions)
 
 
+def apply_accepted_recommendations(
+    manifest_path: Path,
+    recommendations: Iterable[object],
+) -> int:
+    """Apply accepted recommendations to pending manifest rows only.
+
+    Existing accepted/rejected human decisions are preserved. Recommendation
+    objects must expose ``row.encounter_id``, ``row.mechanic_name``,
+    ``recommended_status``, and ``rationale``. Duplicate/missing accepted keys
+    are rejected instead of being guessed around.
+    """
+    manifest_path = Path(manifest_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not isinstance(payload.get("decisions"), list):
+        raise ValueError("review manifest has no decisions array")
+
+    rows = payload["decisions"]
+    by_key: dict[tuple[str, str], dict[str, Any]] = {}
+    for index, raw in enumerate(rows, start=1):
+        if not isinstance(raw, dict):
+            raise ValueError(f"review decision #{index} must be an object")
+        key = (
+            str(raw.get("encounter_id") or "").strip(),
+            str(raw.get("mechanic_name") or "").strip(),
+        )
+        if not all(key):
+            raise ValueError(f"review decision #{index} is missing encounter_id/mechanic_name")
+        if key in by_key:
+            raise ValueError(f"duplicate review decision key: {key[0]} :: {key[1]}")
+        by_key[key] = raw
+
+    accepted: dict[tuple[str, str], str] = {}
+    for item in recommendations:
+        if str(getattr(item, "recommended_status", "")).casefold() != ACCEPTED:
+            continue
+        row = getattr(item, "row", None)
+        key = (
+            str(getattr(row, "encounter_id", "")).strip(),
+            str(getattr(row, "mechanic_name", "")).strip(),
+        )
+        rationale = str(getattr(item, "rationale", "")).strip()
+        if not all(key) or not rationale:
+            raise ValueError("accepted recommendation is missing key or rationale")
+        if key in accepted:
+            raise ValueError(f"duplicate accepted recommendation: {key[0]} :: {key[1]}")
+        accepted[key] = rationale
+
+    missing = sorted(key for key in accepted if key not in by_key)
+    if missing:
+        encounter_id, mechanic_name = missing[0]
+        raise ValueError(f"accepted recommendation missing from manifest: {encounter_id} :: {mechanic_name}")
+
+    changed = 0
+    for key, rationale in accepted.items():
+        raw = by_key[key]
+        status = str(raw.get("status") or "").strip().casefold()
+        if status != PENDING:
+            continue
+        raw["status"] = ACCEPTED
+        raw["rationale"] = rationale
+        changed += 1
+
+    if changed:
+        manifest_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    return changed
+
+
 def audit_decisions(
     source_dir: Path,
     decisions: Iterable[InferredMechanicDecision],
