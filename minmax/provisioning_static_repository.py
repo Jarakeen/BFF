@@ -88,6 +88,44 @@ class ProvisioningStaticRepository:
                     return str(value)
         return None
 
+    def list_names(self) -> tuple[str, ...]:
+        """Return deterministic provisioning names present in canonical data.
+
+        This is a read-only catalogue view for bounded candidate enumeration. It
+        intentionally does not claim that every listed tooltip is stat-mapped;
+        callers that need evaluable foods still pass each name through ``resolve``.
+        """
+
+        names: dict[str, str] = {}
+        with self._connect() as connection:
+            if self._table_exists(connection, "entity"):
+                for row in connection.execute(
+                    """
+                    SELECT DISTINCT name
+                    FROM entity
+                    WHERE entity_type IN ('food', 'drink', 'provisioning')
+                      AND TRIM(COALESCE(name, '')) <> ''
+                    """
+                ).fetchall():
+                    name = str(row["name"] or "").strip()
+                    if name:
+                        names.setdefault(name.casefold(), name)
+
+            for table in ("food", "foods", "provisioning", "consumable"):
+                if not self._table_exists(connection, table):
+                    continue
+                columns = self._columns(connection, table)
+                if "name" not in columns:
+                    continue
+                for row in connection.execute(
+                    f"SELECT DISTINCT name FROM {table} WHERE TRIM(COALESCE(name, '')) <> ''"
+                ).fetchall():
+                    name = str(row["name"] or "").strip()
+                    if name:
+                        names.setdefault(name.casefold(), name)
+
+        return tuple(sorted(names.values(), key=lambda value: (value.casefold(), value)))
+
     def _from_entity_source(self, connection: sqlite3.Connection, name: str) -> str | None:
         if not self._table_exists(connection, "entity") or not self._table_exists(connection, "entity_source"):
             return None
