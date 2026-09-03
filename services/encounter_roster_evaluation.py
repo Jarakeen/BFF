@@ -11,10 +11,9 @@ from services.encounter_cleanse_method import (
     EncounterCleanseMethod,
     EncounterCleanseMethodService,
 )
-from services.encounter_execution_evaluation import (
-    EncounterExecutionEvaluation,
-    EncounterExecutionEvaluator,
-)
+from services.encounter_difficulty import EncounterDifficulty, normalize_encounter_difficulty
+from services.encounter_execution_difficulty import DifficultyAwareEncounterExecutionEvaluator
+from services.encounter_execution_evaluation import EncounterExecutionEvaluation
 from services.encounter_interrupt_method import (
     EncounterInterruptMethod,
     EncounterInterruptMethodService,
@@ -37,6 +36,7 @@ class EncounterRosterEvaluationReport:
     execution_evaluation: EncounterExecutionEvaluation
     cleanse_methods: tuple[EncounterCleanseMethod, ...]
     interrupt_methods: tuple[EncounterInterruptMethod, ...]
+    difficulty: EncounterDifficulty = EncounterDifficulty.VETERAN
 
     @property
     def encounter_id(self) -> str:
@@ -97,7 +97,7 @@ class EncounterRosterEvaluator:
 
     This orchestrator does not assign providers or invent capability mappings.
     Canonical character identity is used for roster membership. Provider coverage,
-    build-independent execution readiness, cleanse methods, and interrupt methods
+    difficulty-aware execution readiness, cleanse methods, and interrupt methods
     are returned together so callers do not have to reinterpret generic mechanics.
     """
 
@@ -109,7 +109,7 @@ class EncounterRosterEvaluator:
         self._encounter_service = encounter_service
         self._adapter = build_capability_adapter
         self._evaluator = EncounterRequirementEvaluator(encounter_service)
-        self._execution_evaluator = EncounterExecutionEvaluator(encounter_service)
+        self._execution_evaluator = DifficultyAwareEncounterExecutionEvaluator(encounter_service)
         self._cleanse_methods = EncounterCleanseMethodService(encounter_service)
         self._interrupt_methods = EncounterInterruptMethodService(encounter_service)
 
@@ -117,7 +117,9 @@ class EncounterRosterEvaluator:
         self,
         encounter_id: str,
         audits: tuple[SavedBuildCapabilityAudit, ...],
+        difficulty: EncounterDifficulty | str = EncounterDifficulty.VETERAN,
     ) -> EncounterRosterEvaluationReport:
+        selected_difficulty = normalize_encounter_difficulty(difficulty)
         roster_members = tuple(self._adapter.member_id(audit) for audit in audits)
         if len(roster_members) != len(set(roster_members)):
             raise ValueError(
@@ -141,7 +143,11 @@ class EncounterRosterEvaluator:
         )
         return EncounterRosterEvaluationReport(
             requirement_evaluation=requirement_evaluation,
-            execution_evaluation=self._execution_evaluator.evaluate(encounter_id),
+            execution_evaluation=self._execution_evaluator.evaluate(
+                encounter_id,
+                selected_difficulty,
+            ),
             cleanse_methods=self._cleanse_methods.methods(encounter_id),
             interrupt_methods=self._interrupt_methods.methods(encounter_id),
+            difficulty=selected_difficulty,
         )
