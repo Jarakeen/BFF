@@ -5,6 +5,7 @@ from pathlib import Path
 
 from services.boss_inferred_mechanic_recommendations import (
     build_recommendations,
+    load_content_ids_by_type,
     recommend_mechanic,
 )
 from services.boss_inferred_mechanic_review import InferredMechanicReviewRow
@@ -81,3 +82,23 @@ def test_build_recommendations_filters_to_requested_content_type(tmp_path: Path)
     recommendations = build_recommendations(bosses, root, content_type="trial")
     assert len(recommendations) == 1
     assert recommendations[0].row.encounter_id == "oaxiltso"
+
+
+def test_content_type_partition_excludes_trial_duplicates_from_dungeons(tmp_path: Path) -> None:
+    root = tmp_path / "eso_info"
+    trials = root / "trials"
+    dungeons = root / "dungeons"
+    arenas = root / "arenas"
+    trials.mkdir(parents=True)
+    dungeons.mkdir()
+    arenas.mkdir()
+
+    (trials / "rockgrove.json").write_text(json.dumps({"id": "rockgrove"}), encoding="utf-8")
+    (dungeons / "rockgrove.json").write_text(json.dumps({"id": "rockgrove"}), encoding="utf-8")
+    (dungeons / "fungal_grotto.json").write_text(json.dumps({"id": "fungal_grotto"}), encoding="utf-8")
+    (arenas / "maelstrom_arena.json").write_text(json.dumps({"id": "maelstrom_arena"}), encoding="utf-8")
+    (dungeons / "maelstrom_arena.json").write_text(json.dumps({"id": "maelstrom_arena"}), encoding="utf-8")
+
+    assert load_content_ids_by_type(root, "trial") == {"rockgrove"}
+    assert load_content_ids_by_type(root, "arena") == {"maelstrom_arena"}
+    assert load_content_ids_by_type(root, "dungeon") == {"fungal_grotto"}
