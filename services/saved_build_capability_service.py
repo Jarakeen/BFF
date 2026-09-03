@@ -92,6 +92,7 @@ class SavedBuildCapabilityService:
         self.gear = gear or GearSetEffectVariantResolver(self.gear_repository)
         self.potions = potions or PotionAvailabilityRepository(self.database_path)
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
+        self._ability_is_crafted_cache: dict[int, bool] = {}
 
     @staticmethod
     def _clean(value) -> str:
@@ -205,20 +206,27 @@ class SavedBuildCapabilityService:
         return result
 
     def _ability_is_crafted(self, ability_id: int) -> bool:
+        cache_key = int(ability_id)
+        if cache_key in self._ability_is_crafted_cache:
+            return self._ability_is_crafted_cache[cache_key]
         if not self.database_path.exists():
+            self._ability_is_crafted_cache[cache_key] = False
             return False
         try:
             with sqlite3.connect(self.database_path) as db:
                 columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)")}
                 if "is_crafted" not in columns:
+                    self._ability_is_crafted_cache[cache_key] = False
                     return False
                 row = db.execute(
                     "SELECT is_crafted FROM ability WHERE ability_id = ? LIMIT 1",
                     (ability_id,),
                 ).fetchone()
-            return bool(row and int(row[0] or 0) == 1)
+            result = bool(row and int(row[0] or 0) == 1)
         except (sqlite3.Error, TypeError, ValueError):
-            return False
+            result = False
+        self._ability_is_crafted_cache[cache_key] = result
+        return result
 
     @classmethod
     def _configured_scribing_recipe(
