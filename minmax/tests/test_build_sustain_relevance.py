@@ -34,6 +34,31 @@ def test_sustain_relevance_keeps_selected_unmapped_cp_fail_closed() -> None:
     assert result == ("Champion Point is dynamic or not yet stat-mapped: BattleMastery",)
 
 
+def test_sustain_relevance_drops_selected_cp_proven_outside_resource_timeline() -> None:
+    build = PlayerBuild(
+        ChampionPoints=[
+            ChampionPointEntry(Name="Breakfall", Points="50"),
+            ChampionPointEntry(Name="Liquid Efficiency", Points="50"),
+            ChampionPointEntry(Name="Rationer", Points="30"),
+            ChampionPointEntry(Name="Master Gatherer", Points="75"),
+            ChampionPointEntry(Name="Celerity", Points="50"),
+        ]
+    )
+
+    result = sustain_relevant_context_unresolved(
+        build,
+        (
+            "Champion Point is dynamic or not yet stat-mapped: Breakfall",
+            "Champion Point is dynamic or not yet stat-mapped: LiquidEfficiency",
+            "Champion Point is dynamic or not yet stat-mapped: Rationer",
+            "Champion Point is dynamic or not yet stat-mapped: Master Gatherer",
+            "Champion Point is dynamic or not yet stat-mapped: Celerity",
+        ),
+    )
+
+    assert result == ()
+
+
 def test_sustain_relevance_keeps_unknown_recovery_passive_gap() -> None:
     build = PlayerBuild()
 
