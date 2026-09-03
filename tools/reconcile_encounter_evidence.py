@@ -10,34 +10,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from services.encounter_evidence import EncounterEvidence, reconcile_encounter_evidence
-
-
-def _load_packet(path: Path) -> tuple[dict, list[EncounterEvidence]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    encounter_id = str(payload.get("encounter_id", "")).strip()
-    rows: list[EncounterEvidence] = []
-
-    for raw in payload.get("evidence", []):
-        rows.append(
-            EncounterEvidence(
-                encounter_id=str(raw.get("encounter_id") or encounter_id),
-                fact_type=str(raw["fact_type"]),
-                fact_key=str(raw["fact_key"]),
-                value=raw.get("value"),
-                source_type=str(raw["source_type"]),
-                source_name=str(raw["source_name"]),
-                source_locator=str(raw.get("source_locator", "")),
-                source_revision=str(raw.get("source_revision", "")),
-                source_family=str(raw.get("source_family", "")),
-                game_update=str(raw.get("game_update", "")),
-                patch_version=str(raw.get("patch_version", "")),
-                confidence=str(raw.get("confidence", "medium")),
-                notes=str(raw.get("notes", "")),
-            )
-        )
-
-    return payload, rows
+from services.encounter_evidence import reconcile_encounter_evidence
+from services.encounter_evidence_packet import load_encounter_evidence_packet
 
 
 def _display_value(value) -> str:
@@ -56,7 +30,8 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    payload, evidence = _load_packet(args.packet)
+    packet = load_encounter_evidence_packet(args.packet)
+    evidence = list(packet.evidence)
     facts = reconcile_encounter_evidence(evidence)
     if args.status:
         facts = [fact for fact in facts if fact.status == args.status]
@@ -65,8 +40,8 @@ def main() -> int:
     print(" ENCOUNTER EVIDENCE RECONCILIATION - READ ONLY")
     print("=" * 76)
     print(f"packet:          {args.packet}")
-    print(f"content:         {payload.get('content_id', '(unknown)')}")
-    print(f"encounter:       {payload.get('encounter_name', payload.get('encounter_id', '(unknown)'))}")
+    print(f"content:         {packet.content_id or '(unknown)'}")
+    print(f"encounter:       {packet.encounter_name}")
     print(f"evidence rows:   {len(evidence)}")
 
     all_facts = reconcile_encounter_evidence(evidence)
