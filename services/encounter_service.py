@@ -91,6 +91,19 @@ class EncounterTemporalEvidence:
     distinct_values: int
 
 
+def _is_player_requirement(mechanic, requirement_type: str, required: bool | None) -> bool:
+    """Return whether one structured demand belongs in the player requirement set.
+
+    Historical mechanics have no explicit subject metadata and therefore retain
+    their existing behavior. Only an explicit reviewed ``boss`` subject suppresses
+    a demand from the player-facing requirement set. ``unknown`` remains visible
+    rather than being silently treated as non-player behavior.
+    """
+    if required is not True:
+        return False
+    return mechanic.requirement_subject(requirement_type) != "boss"
+
+
 class EncounterService:
     def __init__(self, repository: EncounterRepository) -> None:
         self._repository = repository
@@ -133,13 +146,13 @@ class EncounterService:
         )
 
     def requirements(self, encounter_id: str) -> tuple[EncounterRequirement, ...]:
-        """Return demands represented explicitly by structured mechanic fields.
+        """Return player demands represented explicitly by structured mechanic fields.
 
-        ``None`` and ``False`` do not become requirements. In particular, prose
-        such as "should be dodged" does not create an invented ``dodge`` demand
-        because the current canonical mechanic contract has no structured dodge
-        field. Later phases may evaluate these requirements, but this method does
-        not choose a provider, player, target, position, or response.
+        ``None`` and ``False`` do not become requirements. Canonical mechanics may
+        additionally identify the subject of a demand. A demand explicitly owned
+        by the boss is not projected as a player requirement; absent ownership
+        metadata preserves the historical contract. This service never infers a
+        subject from mechanic prose or names.
         """
         encounter = self.get(encounter_id)
         requirements = []
@@ -151,7 +164,7 @@ class EncounterService:
                 ("interrupt", mechanic.interruptible),
             )
             for requirement_type, required in structured_demands:
-                if required is not True:
+                if not _is_player_requirement(mechanic, requirement_type, required):
                     continue
                 requirements.append(
                     EncounterRequirement(
@@ -195,13 +208,12 @@ class EncounterService:
         self,
         encounter_id: str,
     ) -> tuple[EncounterPositioningConstraint, ...]:
-        """Return explicit positioning demands without manufacturing coordinates.
+        """Return explicit player positioning demands without manufacturing coordinates.
 
         The manual encounter board remains a planning surface and is not read as
-        canonical encounter truth. This method therefore says only that a
-        mechanic requires positioning when the structured source field is true.
-        It does not invent stack locations, arena coordinates, range bands, or
-        player assignments.
+        canonical encounter truth. Boss-owned positioning behavior is excluded
+        only when an explicit reviewed subject says so; missing subject metadata
+        preserves historical behavior.
         """
         encounter = self.get(encounter_id)
         return tuple(
@@ -214,7 +226,7 @@ class EncounterService:
                 interpretation_status=mechanic.interpretation_status,
             )
             for mechanic in encounter.mechanics
-            if mechanic.requires_positioning is True
+            if _is_player_requirement(mechanic, "positioning", mechanic.requires_positioning)
         )
 
     def evidence_facts(
