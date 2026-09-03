@@ -7,6 +7,7 @@ from typing import Any
 from minmax.build_candidate_comparison import (
     BuildCandidateComparison,
     CandidateConstraint,
+    ConstraintStatus,
 )
 
 
@@ -34,7 +35,7 @@ class ExplainedBuildChange:
 class BuildCandidateExplanation:
     """Structured Phase 12 explanation derived only from comparison evidence.
 
-    This contract intentionally performs no ESO math and invents no score.  It
+    This contract intentionally performs no ESO math and invents no score. It
     exposes the immutable candidate changes, authoritative objective measurements,
     hard-constraint results, and unresolved evidence already carried by the
     comparison so every presentation layer can explain the same recommendation.
@@ -70,10 +71,23 @@ class BuildCandidateExplanation:
             for change in comparison.candidate.changes
         )
 
-        if comparison.rejection_reason or comparison.blocking_constraints:
-            reason = CandidateRecommendationReason.BLOCKED
-        elif comparison.unresolved or comparison.delta is None:
+        has_unknown_constraint = any(
+            constraint.status is ConstraintStatus.UNKNOWN
+            for constraint in comparison.constraints
+        )
+        has_known_blocking_constraint = any(
+            constraint.status
+            in (
+                ConstraintStatus.WORSENED,
+                ConstraintStatus.UNSATISFIED,
+            )
+            for constraint in comparison.constraints
+        )
+
+        if comparison.unresolved or has_unknown_constraint or comparison.delta is None:
             reason = CandidateRecommendationReason.UNRESOLVED
+        elif comparison.rejection_reason or has_known_blocking_constraint:
+            reason = CandidateRecommendationReason.BLOCKED
         elif comparison.is_constraint_repair:
             reason = CandidateRecommendationReason.HARD_CONSTRAINT_REPAIR
         elif comparison.is_improvement:
