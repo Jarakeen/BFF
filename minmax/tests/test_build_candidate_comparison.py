@@ -147,3 +147,43 @@ def test_ranking_excludes_higher_value_candidate_with_unsatisfied_sustain():
     assert blocked.is_rankable is False
     assert ranking.ranked == (eligible,)
     assert ranking.recommended is eligible
+
+
+def test_ranking_excludes_higher_value_candidate_with_unresolved_evidence():
+    eligible = BuildCandidateComparison(
+        candidate=_candidate("eligible-resolved"),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=108.0,
+        constraints=(
+            CandidateConstraint(
+                "magicka sustain",
+                ConstraintStatus.PRESERVED,
+                "Candidate preserves modeled magicka sustain.",
+            ),
+        ),
+    )
+    unresolved = BuildCandidateComparison(
+        candidate=_candidate("unresolved-higher-damage"),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=130.0,
+        constraints=(
+            CandidateConstraint(
+                "magicka sustain",
+                ConstraintStatus.PRESERVED,
+                "Candidate preserves modeled magicka sustain.",
+            ),
+        ),
+        unresolved=(
+            "Candidate has an unresolved objective consequence that may change the result.",
+        ),
+    )
+
+    ranking = rank_candidate_comparisons((unresolved, eligible))
+
+    assert unresolved.candidate_value > eligible.candidate_value
+    assert unresolved.is_rankable is False
+    assert unresolved.is_preferred is False
+    assert ranking.ranked == (eligible,)
+    assert ranking.recommended is eligible
