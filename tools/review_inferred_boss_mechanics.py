@@ -24,7 +24,7 @@ def _default_source_dir() -> Path:
         ROOT / "data" / "eso_info" / "bosses",
     )
     for candidate in candidates:
-        if candidate.exists():
+        if any(candidate.glob("*.json")):
             return candidate
     return candidates[-1]
 
