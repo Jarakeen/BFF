@@ -90,3 +90,23 @@ def test_missing_objective_measurement_is_not_rankable():
     )
     assert comparison.delta is None
     assert comparison.is_rankable is False
+
+
+def test_unsatisfied_hard_constraint_blocks_ranking_without_calling_it_worsened():
+    comparison = BuildCandidateComparison(
+        candidate=_candidate(),
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=100.0,
+        candidate_value=120.0,
+        constraints=(
+            CandidateConstraint(
+                "magicka sustain",
+                ConstraintStatus.UNSATISFIED,
+                "Baseline and candidate both fail the modeled sustain plan.",
+            ),
+        ),
+    )
+
+    assert comparison.is_rankable is False
+    assert comparison.is_preferred is False
+    assert comparison.blocking_constraints[0].status is ConstraintStatus.UNSATISFIED
