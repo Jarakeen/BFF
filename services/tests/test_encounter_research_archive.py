@@ -36,6 +36,7 @@ def _database(tmp_path: Path) -> Path:
             (
                 ("oaxiltso", "Oaxiltso", "rockgrove"),
                 ("xalvakka", "Xalvakka", "rockgrove"),
+                ("wamasu", "Wamasu", "rockgrove"),
             ),
         )
         connection.commit()
@@ -51,6 +52,7 @@ def _zip(tmp_path: Path) -> tuple[Path, dict[str, bytes]]:
             "Oaxiltso\n"
             "At 90% health, Oaxiltso summons an add every 30 seconds.\n"
             "The group should interrupt the channel.\n"
+            "Move away from the wamasu add before it explodes.\n"
         ).encode(),
         "strats/guide.htm": (
             "<html lang='fr-FR'><head><title>Guide Rochebosque</title>"
@@ -115,11 +117,17 @@ def test_research_archive_stages_multilingual_encounter_candidates(tmp_path: Pat
     assert any(row.trigger_type == "boss_health" and row.trigger_value == "90%" for row in oaxiltso)
     assert any(row.trigger_type == "repeat_interval" and row.trigger_value == "30 seconds" for row in oaxiltso)
     assert any(row.event_type == "interrupt" for row in oaxiltso)
+    assert any("wamasu add" in row.evidence_text for row in oaxiltso)
+    assert not [row for row in bundle.candidates if row.encounter_id == "wamasu"]
 
     xalvakka = [row for row in bundle.candidates if row.encounter_id == "xalvakka"]
     assert xalvakka
     assert all(row.source_language == "fr" for row in xalvakka)
     assert any("50%" in row.evidence_text for row in xalvakka)
+    assert any(
+        row.trigger_type == "boss_health" and row.trigger_value == "50%"
+        for row in xalvakka
+    )
 
     french_source = next(row for row in bundle.sources if row.language == "fr")
     assert french_source.source_url == "https://example.test/fr-guide"
