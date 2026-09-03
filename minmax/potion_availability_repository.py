@@ -83,6 +83,8 @@ class PotionAvailabilityRepository:
         self._processed_path_explicit = processed_path is not None
         self.processed_path = Path(processed_path) if processed_path is not None else DEFAULT_PROCESSED
         self.game_update = normalize_game_update(game_update)
+        self._catalog_cache: dict[bool, AlchemyFormulaCatalog] = {}
+        self._resolution_cache: dict[str, PotionAvailability] = {}
 
     @staticmethod
     def _norm(value: str) -> str:
@@ -207,6 +209,10 @@ class PotionAvailabilityRepository:
         return {"effects": effects}, ()
 
     def _catalog(self, *, allow_legacy_alias: bool = False) -> AlchemyFormulaCatalog:
+        cached = self._catalog_cache.get(bool(allow_legacy_alias))
+        if cached is not None:
+            return cached
+
         payload: dict[str, object] | None = None
         source_errors: list[str] = []
 
@@ -228,17 +234,21 @@ class PotionAvailabilityRepository:
         if payload is None:
             payload, db_errors = self._database_catalog_payload()
             if payload is None:
-                return AlchemyFormulaCatalog(
+                catalog = AlchemyFormulaCatalog(
                     (),
                     self.game_update,
                     tuple(dict.fromkeys((*source_errors, *db_errors))),
                 )
+                self._catalog_cache[bool(allow_legacy_alias)] = catalog
+                return catalog
 
-        return AlchemyFormulaCatalog.from_processed_payload(
+        catalog = AlchemyFormulaCatalog.from_processed_payload(
             payload,
             game_update=self.game_update,
             allow_legacy_alias=allow_legacy_alias,
         )
+        self._catalog_cache[bool(allow_legacy_alias)] = catalog
+        return catalog
 
     def _formulas_for_selection(self, selected_label: str) -> tuple[tuple[AlchemyFormula, ...], tuple[str, ...]]:
         clean = " ".join(str(selected_label or "").strip().split())
@@ -325,33 +335,41 @@ class PotionAvailabilityRepository:
         if not clean:
             return PotionAvailability(selected_label="")
 
+        cache_key = self._norm(clean)
+        cached = self._resolution_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         formulas, unresolved = self._formulas_for_selection(clean)
         if not formulas:
-            # Exact legacy labels carry a reviewed, deterministic trait-family
-            # mapping. If recipe provenance has been intentionally omitted from
-            # a lean install, resolve only the support capability against the
-            # canonical SQLite Potion EffectVariants. Do not invent reagents or
-            # claim formula-level resolution.
             legacy_traits = self._legacy_traits(clean)
             if legacy_traits is not None:
                 effects, effect_unresolved = self._effect_variants(legacy_traits, clean)
-                return PotionAvailability(
+                result = PotionAvailability(
                     clean,
                     (),
                     effects,
                     effect_unresolved,
                     resolved_traits=legacy_traits,
                 )
-            return PotionAvailability(clean, (), (), unresolved)
+                self._resolution_cache[cache_key] = result
+                return result
+            result = PotionAvailability(clean, (), (), unresolved)
+            self._resolution_cache[cache_key] = result
+            return result
 
         traits = formulas[0].traits
         if any(set(formula.traits) != set(traits) for formula in formulas[1:]):
-            return PotionAvailability(
+            result = PotionAvailability(
                 clean,
                 formulas,
                 (),
                 (f"Potion formula family has inconsistent effect traits: {clean}",),
             )
+            self._resolution_cache[cache_key] = result
+            return result
 
         effects, db_unresolved = self._effect_variants(traits, clean)
-        return PotionAvailability(clean, formulas, effects, db_unresolved)
+        result = PotionAvailability(clean, formulas, effects, db_unresolved)
+        self._resolution_cache[cache_key] = result
+        return result
