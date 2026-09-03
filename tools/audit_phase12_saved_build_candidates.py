@@ -17,6 +17,7 @@ from minmax.build_candidate_context import build_candidate_context
 from minmax.build_candidate_evaluator import evaluate_healing_candidate, rank_candidate_comparisons
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
+from minmax.build_candidate_mundus_objective import healing_mundus_objective_unresolved
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
 from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
@@ -265,25 +266,23 @@ def audit_saved_build_candidates(
             unresolved=tuple(baseline_sustain.unresolved) + tuple(candidate_run.unresolved),
         )
 
-    # Build-level Phase 12 has no exact encounter assignment to preserve yet.
-    # Capability coverage remains enforced. Phase 13 will supply encounter-specific
-    # Phase 11 assignments instead of this empty assignment context.
-    baseline_assignments = ()
-
     evaluations = tuple(
         evaluate_healing_candidate(
             candidate=candidate,
             baseline_build=baseline_build,
             baseline_healing=baseline_healing,
             baseline_capability=baseline_capability,
-            baseline_assignments=baseline_assignments,
+            baseline_assignments=None,
             member_id=character_id,
             healing_skill_names=healing_skill_names,
             tooltip_service=tooltip_service,
             capability_service=capability_service,
             resolve_context=resolve_context,
             resolve_sustain=resolve_sustain,
-            resolve_assignments=lambda _candidate_build: (),
+            resolve_assignments=None,
+            resolve_objective_coverage=lambda row: healing_mundus_objective_unresolved(
+                row, mundus_repository
+            ),
         )
         for candidate in candidates
     )
@@ -307,7 +306,8 @@ def audit_saved_build_candidates(
     print(f"Healing skills: {', '.join(healing_skill_names) if healing_skill_names else '(none)'}")
     print(f"Proven non-heals excluded: {', '.join(excluded_skill_names) if excluded_skill_names else '(none)'}")
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
-    print("Boundary:       not HPS; no encounter-specific Phase 11 assignments in this build-level audit")
+    print("Boundary:       not HPS; expected critical healing is not yet modeled")
+    print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
     print()
     print(f"Baseline healing potency: {_format_value(baseline_healing.value if baseline_healing.resolved else None)}")
     if baseline_healing.unresolved:
@@ -337,6 +337,7 @@ def audit_saved_build_candidates(
         print(f"  Delta:        {_format_value(comparison.delta)}")
         print(f"  Rankable:     {comparison.is_rankable}")
         print(f"  Improvement:  {comparison.is_improvement}")
+        print(f"  Repair:       {comparison.is_constraint_repair}")
         for constraint in comparison.constraints:
             print(f"  Constraint:   {constraint.name} = {constraint.status.value} | {constraint.explanation}")
         if comparison.unresolved:
@@ -353,17 +354,19 @@ def audit_saved_build_candidates(
     for index, comparison in enumerate(ranking.ranked, start=1):
         change = comparison.candidate.changes[0] if comparison.candidate.changes else None
         after = change.after if change is not None else comparison.candidate.candidate_id
-        print(f"  {index:02d}. {after}: delta={comparison.delta:.3f}")
+        label = "repair" if comparison.is_constraint_repair else "objective"
+        print(f"  {index:02d}. {after}: delta={comparison.delta:.3f} ({label})")
 
     print()
     if ranking.recommended is None:
-        print("Recommendation: none. No candidate is both proven-safe and an objective improvement.")
+        print("Recommendation: none. No candidate is a proven-safe objective improvement or hard-constraint repair.")
     else:
         recommended = ranking.recommended
         change = recommended.candidate.changes[0] if recommended.candidate.changes else None
         after = change.after if change is not None else recommended.candidate.candidate_id
+        reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
         print(
-            f"Recommendation: {after} | baseline={recommended.baseline_value:.3f} "
+            f"Recommendation: {after} | reason={reason} | baseline={recommended.baseline_value:.3f} "
             f"candidate={recommended.candidate_value:.3f} delta={recommended.delta:.3f}"
         )
         for constraint in recommended.constraints:
