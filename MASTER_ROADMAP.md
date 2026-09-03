@@ -743,7 +743,7 @@ Initial priorities:
 Start with semi-static rotations, then add dynamic priorities, duration/recast windows, resource awareness, proc alignment, execute, movement, interruptions, and mechanic handling.
 
 **Exit criteria:** BFF can produce/evaluate a realistic rotation from verified skill behavior and resource constraints.
-
+including healing rotations as well
 ---
 
 # PHASE 14 · Combat Simulation
