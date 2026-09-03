@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,19 +12,12 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.build_action_cost_modifiers import BuildActionCostModifierResolver
-from minmax.build_candidate_capability import compare_provider_responsibilities
 from minmax.build_candidate_comparison import CandidateConstraint, ConstraintStatus
 from minmax.build_candidate_context import build_candidate_context
-from minmax.build_candidate_evaluator import (
-    evaluate_healing_candidate,
-    rank_candidate_comparisons,
-)
-from minmax.build_candidate_healing import measure_modeled_healing_potency
+from minmax.build_candidate_evaluator import evaluate_healing_candidate, rank_candidate_comparisons
+from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_mundus import enumerate_mundus_candidates
-from minmax.build_candidate_sustain import (
-    BuildCandidateSustainComparison,
-    compare_sustain_runs,
-)
+from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.gear_set_repository import GearSetRepository
@@ -34,6 +28,7 @@ from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
 from minmax.saved_build_activity import create_saved_bar_activity_plan
 from minmax.saved_build_skill_tooltip_service import SavedBuildSkillTooltipService
+from minmax.skill_component_classification import SkillEffectKind
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
@@ -57,8 +52,47 @@ def _skills_for_bar(build: PlayerBuild, active_bar: str) -> tuple[str, ...]:
     return tuple(str(value or "").strip() for value in values if str(value or "").strip())
 
 
+def _select_verified_healing_skills(
+    skill_names: tuple[str, ...],
+    tooltip_service: SavedBuildSkillTooltipService,
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    selected: list[str] = []
+    excluded: list[str] = []
+    unresolved: list[str] = []
+    for skill_name in skill_names:
+        resolution = tooltip_service.coefficients.resolve_name(skill_name)
+        if resolution.rank is None:
+            messages = resolution.unresolved or ("skill identity unresolved",)
+            unresolved.extend(f"{skill_name}: {message}" for message in messages)
+            continue
+        components = tooltip_service.components.get_for_skill_rank(resolution.rank.skill_rank_id)
+        if not components:
+            unresolved.append(f"{skill_name}: component classification unavailable")
+            continue
+        if any(component.effect_kind is SkillEffectKind.HEAL for component in components):
+            selected.append(skill_name)
+            continue
+        if any(component.effect_kind is SkillEffectKind.UNKNOWN for component in components):
+            unresolved.append(f"{skill_name}: effect kind unresolved for one or more components")
+            continue
+        excluded.append(skill_name)
+    return tuple(selected), tuple(excluded), tuple(dict.fromkeys(unresolved))
+
+
 def _format_value(value: float | None) -> str:
     return "UNKNOWN" if value is None else f"{value:.3f}"
+
+
+def _with_extra_unresolved(
+    result: ModeledHealingPotency,
+    messages: tuple[str, ...],
+) -> ModeledHealingPotency:
+    if not messages:
+        return result
+    return replace(
+        result,
+        unresolved=tuple(dict.fromkeys(tuple(result.unresolved) + tuple(messages))),
+    )
 
 
 def audit_saved_build_candidates(
@@ -125,13 +159,19 @@ def audit_saved_build_candidates(
         fight_duration=duration_seconds,
     )
 
-    healing_skill_names = _skills_for_bar(baseline_build, active_bar)
+    bar_skill_names = _skills_for_bar(baseline_build, active_bar)
     tooltip_service = SavedBuildSkillTooltipService(database_path)
-    baseline_healing = measure_modeled_healing_potency(
-        build=baseline_build,
-        context=baseline_context,
-        skill_names=healing_skill_names,
-        tooltip_service=tooltip_service,
+    healing_skill_names, excluded_skill_names, healing_selection_unresolved = (
+        _select_verified_healing_skills(bar_skill_names, tooltip_service)
+    )
+    baseline_healing = _with_extra_unresolved(
+        measure_modeled_healing_potency(
+            build=baseline_build,
+            context=baseline_context,
+            skill_names=healing_skill_names,
+            tooltip_service=tooltip_service,
+        ),
+        healing_selection_unresolved,
     )
 
     capability_service = SavedBuildCapabilityService(build_service, database_path)
@@ -168,9 +208,7 @@ def audit_saved_build_candidates(
 
     def resolve_sustain(candidate_context):
         if candidate_context.context is None or candidate_context.unresolved:
-            unresolved = candidate_context.unresolved or (
-                "Candidate calculation context is unavailable",
-            )
+            unresolved = candidate_context.unresolved or ("Candidate calculation context is unavailable",)
             return BuildCandidateSustainComparison(
                 baseline_run=baseline_sustain,
                 candidate_run=None,
@@ -181,7 +219,6 @@ def audit_saved_build_candidates(
                 ),
                 unresolved=tuple(unresolved),
             )
-
         candidate_run = evaluate_named_build_sustain(
             build=candidate_context.candidate.candidate_build,
             context=candidate_context.context,
@@ -202,9 +239,9 @@ def audit_saved_build_candidates(
             unresolved=tuple(baseline_sustain.unresolved) + tuple(candidate_run.unresolved),
         )
 
-    # This audit is build-level, not encounter-specific. With no encounter supplied,
-    # Phase 11 has no exact provider assignments to preserve. Capability coverage still
-    # protects support effects. Encounter-specific optimization belongs to Phase 13.
+    # Build-level Phase 12 has no exact encounter assignment to preserve yet.
+    # Capability coverage remains enforced. Phase 13 will supply encounter-specific
+    # Phase 11 assignments instead of this empty assignment context.
     baseline_assignments = ()
 
     evaluations = tuple(
@@ -238,9 +275,11 @@ def audit_saved_build_candidates(
     print(f"Build:          {baseline_build.BuildName or '(unnamed)'}")
     print(f"Build ID:       {baseline_build_id}")
     print(f"Active bar:     {active_bar}")
-    print(f"Baseline Mundus:{' ' if baseline_build.Mundus else '  '}{baseline_build.Mundus or '(unset)'}")
+    print(f"Baseline Mundus: {baseline_build.Mundus or '(unset)'}")
     print(f"Sustain:        {resource.value} over {duration_seconds:g}s")
+    print(f"Bar skills:     {', '.join(bar_skill_names) if bar_skill_names else '(none)'}")
     print(f"Healing skills: {', '.join(healing_skill_names) if healing_skill_names else '(none)'}")
+    print(f"Proven non-heals excluded: {', '.join(excluded_skill_names) if excluded_skill_names else '(none)'}")
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; no encounter-specific Phase 11 assignments in this build-level audit")
     print()
@@ -273,10 +312,7 @@ def audit_saved_build_candidates(
         print(f"  Rankable:     {comparison.is_rankable}")
         print(f"  Improvement:  {comparison.is_improvement}")
         for constraint in comparison.constraints:
-            print(
-                f"  Constraint:   {constraint.name} = {constraint.status.value} | "
-                f"{constraint.explanation}"
-            )
+            print(f"  Constraint:   {constraint.name} = {constraint.status.value} | {constraint.explanation}")
         if comparison.unresolved:
             print("  Unresolved:")
             for message in comparison.unresolved:
@@ -305,10 +341,7 @@ def audit_saved_build_candidates(
             f"candidate={recommended.candidate_value:.3f} delta={recommended.delta:.3f}"
         )
         for constraint in recommended.constraints:
-            print(
-                f"  - {constraint.name}: {constraint.status.value}: "
-                f"{constraint.explanation}"
-            )
+            print(f"  - {constraint.name}: {constraint.status.value}: {constraint.explanation}")
     print()
     return 0
 
@@ -321,11 +354,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--build", default="DF Healer")
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
-    parser.add_argument(
-        "--resource",
-        choices=("health", "magicka", "stamina"),
-        default="magicka",
-    )
+    parser.add_argument("--resource", choices=("health", "magicka", "stamina"), default="magicka")
     parser.add_argument("--duration", type=float, default=20.0)
     return parser
 
