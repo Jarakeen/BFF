@@ -61,6 +61,7 @@ class RequirementEvaluation:
     semantics: RequirementSemantics
     classification: CoverageClassification
     target_count: int | None
+    required_provider_count: int | None
     providers: tuple[str, ...]
     unknown_members: tuple[str, ...]
     conflicting_members: tuple[str, ...]
@@ -119,12 +120,18 @@ class EncounterRequirementEvaluator:
     Phase 9's generic actions default to COMPLIANCE. Callers may register stronger
     source-backed semantics for richer requirement types such as ``group_cleanse``
     or ``ranged_interrupt`` without changing the evaluator itself.
+
+    Provider cardinality is keyed by exact ``requirement_id``. It is deliberately
+    separate from a mechanic's ``target_count``: two affected targets do not imply
+    that two build providers are required. Provider requirements default to one
+    provider unless stronger explicit evidence supplies a different cardinality.
     """
 
     def __init__(
         self,
         encounter_service: EncounterService,
         requirement_semantics: Mapping[str, RequirementSemantics] | None = None,
+        required_provider_counts: Mapping[str, int] | None = None,
     ) -> None:
         self._encounter_service = encounter_service
         semantics = dict(_DEFAULT_REQUIREMENT_SEMANTICS)
@@ -137,8 +144,23 @@ class EncounterRequirementEvaluator:
                 semantics[str(requirement_type)] = semantic
         self._requirement_semantics = semantics
 
+        provider_counts: dict[str, int] = {}
+        if required_provider_counts:
+            for requirement_id, count in required_provider_counts.items():
+                if not str(requirement_id).strip():
+                    raise ValueError("provider cardinality keys must be non-empty requirement ids")
+                if not isinstance(count, int) or isinstance(count, bool) or count <= 0:
+                    raise ValueError("provider cardinality values must be positive integers")
+                provider_counts[str(requirement_id)] = count
+        self._required_provider_counts = provider_counts
+
     def semantics_for(self, requirement_type: str) -> RequirementSemantics:
         return self._requirement_semantics.get(requirement_type, RequirementSemantics.UNKNOWN)
+
+    def required_provider_count_for(self, requirement: EncounterRequirement) -> int | None:
+        if self.semantics_for(requirement.requirement_type) != RequirementSemantics.PROVIDER_CAPABILITY:
+            return None
+        return self._required_provider_counts.get(requirement.requirement_id, 1)
 
     def evaluate(
         self,
@@ -171,6 +193,7 @@ class EncounterRequirementEvaluator:
         evidence: tuple[RosterCapabilityEvidence, ...],
     ) -> RequirementEvaluation:
         semantics = self.semantics_for(requirement.requirement_type)
+        required_provider_count = self.required_provider_count_for(requirement)
 
         if semantics != RequirementSemantics.PROVIDER_CAPABILITY:
             reason = (
@@ -188,12 +211,14 @@ class EncounterRequirementEvaluator:
                 semantics=semantics,
                 classification=CoverageClassification.UNKNOWN,
                 target_count=requirement.target_count,
+                required_provider_count=None,
                 providers=(),
                 unknown_members=roster_members,
                 conflicting_members=(),
                 explanation=reason,
             )
 
+        assert required_provider_count is not None
         rows_by_member: dict[str, list[RosterCapabilityEvidence]] = {
             member_id: [] for member_id in roster_members
         }
@@ -223,27 +248,35 @@ class EncounterRequirementEvaluator:
         if conflicting_members:
             classification = CoverageClassification.CONFLICT
             explanation = "Conflicting capability evidence exists for one or more roster members."
-        elif providers:
+        elif len(providers) >= required_provider_count:
+            extra = len(providers) - required_provider_count
             classification = (
                 CoverageClassification.REDUNDANT
-                if len(providers) > 1
+                if extra > 0
                 else CoverageClassification.COVERED
             )
             explanation = (
-                f"{len(providers)} roster member(s) have explicit support for "
-                f"{requirement.requirement_type}."
+                f"{len(providers)} proven provider(s) satisfy the explicit requirement "
+                f"for {required_provider_count} provider(s) of {requirement.requirement_type}."
             )
         elif unknown_members:
             classification = CoverageClassification.UNKNOWN
             explanation = (
-                "No supported provider is proven, but one or more roster members "
-                "still have unresolved capability evidence."
+                f"{len(providers)} proven provider(s) are below the required "
+                f"{required_provider_count}, but unresolved roster evidence could still "
+                "change the provider count."
+            )
+        elif providers:
+            classification = CoverageClassification.INSUFFICIENT
+            explanation = (
+                f"Only {len(providers)} proven provider(s) are available; the requirement "
+                f"explicitly needs {required_provider_count}."
             )
         else:
             classification = CoverageClassification.MISSING
             explanation = (
                 f"Every roster member is explicitly assessed and none support "
-                f"{requirement.requirement_type}."
+                f"{requirement.requirement_type}; {required_provider_count} provider(s) are required."
             )
 
         return RequirementEvaluation(
@@ -255,6 +288,7 @@ class EncounterRequirementEvaluator:
             semantics=semantics,
             classification=classification,
             target_count=requirement.target_count,
+            required_provider_count=required_provider_count,
             providers=tuple(providers),
             unknown_members=tuple(unknown_members),
             conflicting_members=tuple(conflicting_members),
