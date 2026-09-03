@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from services.encounter_evidence import EncounterEvidence
 from services.encounter_persistence_writer import EncounterWriteResult
-from tools.write_encounter_timeline_facts import _sum_results, _timeline_facts
+from tools.write_encounter_timeline_facts import (
+    _load_timeline_facts,
+    _sum_results,
+    _timeline_facts,
+)
 
 
 def _row(*, fact_type: str, fact_key: str, value, source: str) -> EncounterEvidence:
@@ -76,6 +83,48 @@ def test_timeline_filter_preserves_reconciliation_status_for_promotion_policy() 
     assert facts["agreed"].value == {"thresholds": ["50%"]}
     assert facts["conflict"].status == "conflicting"
     assert facts["conflict"].value is None
+
+
+def test_timeline_writer_loads_packet_object_evidence(tmp_path: Path) -> None:
+    packet = tmp_path / "boss.json"
+    packet.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "content_id": "trial",
+                "encounter_id": "boss",
+                "encounter_name": "Boss",
+                "evidence": [
+                    {
+                        "fact_type": "transition",
+                        "fact_key": "threshold",
+                        "value": {"thresholds": ["50%"]},
+                        "source_type": "guide",
+                        "source_name": "A",
+                        "confidence": "high",
+                    },
+                    {
+                        "fact_type": "transition",
+                        "fact_key": "threshold",
+                        "value": {"thresholds": ["50%"]},
+                        "source_type": "guide",
+                        "source_name": "B",
+                        "confidence": "high",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    facts = _load_timeline_facts([packet])
+
+    assert len(facts) == 1
+    assert facts[0].encounter_id == "boss"
+    assert facts[0].fact_type == "transition"
+    assert facts[0].fact_key == "threshold"
+    assert facts[0].status == "corroborated"
+    assert facts[0].value == {"thresholds": ["50%"]}
 
 
 def test_sum_results_combines_atomic_writer_counts() -> None:
