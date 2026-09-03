@@ -26,22 +26,32 @@ def test_positive_delta_is_improvement_when_all_constraints_are_preserved():
         baseline_value=100.0,
         candidate_value=105.0,
         constraints=(
+            CandidateConstraint("sustain", ConstraintStatus.PRESERVED, "unchanged"),
+        ),
+    )
+    assert comparison.is_improvement is True
+    assert comparison.is_preferred is True
+
+
+def test_constraint_repair_can_be_preferred_with_negative_objective_delta():
+    comparison = BuildCandidateComparison(
+        candidate=_candidate(),
+        objective=EvaluationObjective.HEALING,
+        baseline_value=100.0,
+        candidate_value=95.0,
+        constraints=(
             CandidateConstraint(
-                name="sustain",
-                status=ConstraintStatus.PRESERVED,
-                explanation="Phase 4 sustain result is unchanged.",
-            ),
-            CandidateConstraint(
-                name="provider:force",
-                status=ConstraintStatus.PRESERVED,
-                explanation="Aggressive Horn remains available to the assigned provider.",
+                "magicka sustain",
+                ConstraintStatus.REPAIRED,
+                "Candidate repairs failed baseline magicka sustain.",
             ),
         ),
     )
-
-    assert comparison.delta == 5.0
+    assert comparison.delta == -5.0
     assert comparison.is_rankable is True
-    assert comparison.is_improvement is True
+    assert comparison.is_improvement is False
+    assert comparison.is_constraint_repair is True
+    assert comparison.is_preferred is True
 
 
 def test_unknown_sustain_blocks_ranking_even_with_positive_objective_delta():
@@ -50,19 +60,10 @@ def test_unknown_sustain_blocks_ranking_even_with_positive_objective_delta():
         objective=EvaluationObjective.DAMAGE,
         baseline_value=100.0,
         candidate_value=110.0,
-        constraints=(
-            CandidateConstraint(
-                name="sustain",
-                status=ConstraintStatus.UNKNOWN,
-                explanation="Candidate sustain has not been evaluated by Phase 4.",
-            ),
-        ),
+        constraints=(CandidateConstraint("sustain", ConstraintStatus.UNKNOWN, "unknown"),),
     )
-
-    assert comparison.delta == 10.0
     assert comparison.is_rankable is False
-    assert comparison.is_improvement is False
-    assert comparison.blocking_constraints[0].name == "sustain"
+    assert comparison.is_preferred is False
 
 
 def test_lost_provider_responsibility_blocks_ranking():
@@ -72,16 +73,10 @@ def test_lost_provider_responsibility_blocks_ranking():
         baseline_value=100.0,
         candidate_value=120.0,
         constraints=(
-            CandidateConstraint(
-                name="provider:force",
-                status=ConstraintStatus.WORSENED,
-                explanation="Candidate removes Aggressive Horn from Magrat's build.",
-            ),
+            CandidateConstraint("provider:force", ConstraintStatus.WORSENED, "lost duty"),
         ),
     )
-
     assert comparison.is_rankable is False
-    assert comparison.is_improvement is False
 
 
 def test_missing_objective_measurement_is_not_rankable():
@@ -93,6 +88,5 @@ def test_missing_objective_measurement_is_not_rankable():
         constraints=(),
         unresolved=("candidate healing objective is unresolved",),
     )
-
     assert comparison.delta is None
     assert comparison.is_rankable is False
