@@ -12,13 +12,14 @@ from services.boss_inferred_mechanic_review import audit_inferred_boss_mechanics
 
 
 def _default_source_dir() -> Path:
-    for candidate in (
+    candidates = (
         ROOT / "research" / "eso_info" / "bosses",
         ROOT / "data" / "eso_info" / "bosses",
-    ):
-        if candidate.exists():
+    )
+    for candidate in candidates:
+        if any(candidate.glob("*.json")):
             return candidate
-    return ROOT / "data" / "eso_info" / "bosses"
+    return candidates[-1]
 
 
 def main() -> int:
