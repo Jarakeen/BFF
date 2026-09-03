@@ -14,6 +14,7 @@ place this logic lives.
 
 from __future__ import annotations
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -54,6 +55,35 @@ def get_resource_path(*parts: str) -> Path:
         base = get_app_root()
 
     return base.joinpath(*parts)
+
+
+def ensure_default_database() -> Path:
+    """Ensure a frozen install has its external canonical ESO database.
+
+    Friend builds normally ship ``data/eso.db`` beside the executable.  A user
+    can still accidentally separate the EXE from that folder, so frozen builds
+    also contain a read-only seed copy under ``_seed_data``.  Provision that
+    seed only when the external database is missing.  Existing databases are
+    never replaced, which keeps updater runs from overwriting user state.
+
+    Source/development runs deliberately do not provision anything; their
+    checked-out ``data/eso.db`` remains authoritative.
+    """
+
+    target = get_data_dir() / "eso.db"
+    if target.is_file() or not getattr(sys, "frozen", False):
+        return target
+
+    seed = get_resource_path("_seed_data", "eso.db")
+    if not seed.is_file():
+        raise FileNotFoundError(
+            f"FoundryDock database is missing at {target} and the bundled seed "
+            f"database is unavailable at {seed}."
+        )
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(seed, target)
+    return target
 
 
 DEFAULT_DATABASE = get_data_dir() / "eso.db"
