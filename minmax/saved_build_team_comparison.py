@@ -40,6 +40,50 @@ class PlayerEvaluationEvidence:
     roster_candidate: RosterCandidate
 
 
+@dataclass(frozen=True)
+class SavedBuildRosterMember:
+    """One explicitly selected saved build in a modeled roster."""
+
+    member_id: str
+    build_name: str
+    active_bar: str
+    group_effects: tuple[GroupEffect, ...] = ()
+
+
+@dataclass(frozen=True)
+class SavedBuildRosterScenario:
+    """A named 2-12 member roster evaluated under one shared scenario."""
+
+    name: str
+    members: tuple[SavedBuildRosterMember, ...]
+
+    def __post_init__(self) -> None:
+        if not self.name.strip():
+            raise ValueError("Roster scenario name is required.")
+        if not 2 <= len(self.members) <= 12:
+            raise ValueError("A saved-build roster scenario requires 2 to 12 members.")
+        member_ids = [member.member_id.strip() for member in self.members]
+        if any(not member_id for member_id in member_ids):
+            raise ValueError("Every roster member requires a non-empty member_id.")
+        folded = [member_id.casefold() for member_id in member_ids]
+        if len(folded) != len(set(folded)):
+            raise ValueError("Roster member_id values must be unique.")
+
+
+@dataclass(frozen=True)
+class SavedBuildRosterEvaluation:
+    scenario: SavedBuildRosterScenario
+    group_evaluation: GroupEvaluation
+    player_evidence: tuple[PlayerEvaluationEvidence, ...]
+
+
+@dataclass(frozen=True)
+class SavedBuildRosterComparison:
+    comparison: TeamComparison
+    baseline: SavedBuildRosterEvaluation
+    candidate: SavedBuildRosterEvaluation
+
+
 class SavedBuildTeamComparisonAdapter:
     """
     Compare two saved-build single-member scenarios.
@@ -198,6 +242,72 @@ class SavedBuildTeamComparisonAdapter:
             + tuple(f"{evidence.build_name}: {message}" for message in evidence.static_unresolved)
         ))
         return replace(evaluation, unresolved_effects=messages)
+
+    def evaluate_roster(
+        self,
+        scenario: SavedBuildRosterScenario,
+        event: DDDamageEvent,
+        context: EvaluationContext | None = None,
+    ) -> SavedBuildRosterEvaluation:
+        """Evaluate selected saved builds together as one shared roster."""
+        if context is None:
+            context = EvaluationContext()
+
+        evidence_rows: list[PlayerEvaluationEvidence] = []
+        roster: list[RosterCandidate] = []
+        static_unresolved: list[str] = []
+
+        for member in scenario.members:
+            evidence = self._evaluate_player(
+                self._find_saved_build(member.build_name),
+                member.active_bar,
+                event,
+                context,
+                group_effects=member.group_effects,
+            )
+            candidate = replace(evidence.roster_candidate, name=member.member_id.strip())
+            evidence = replace(evidence, roster_candidate=candidate)
+            evidence_rows.append(evidence)
+            roster.append(candidate)
+            static_unresolved.extend(
+                f"{member.member_id.strip()} ({evidence.build_name}): {message}"
+                for message in evidence.static_unresolved
+            )
+
+        evaluation = GroupEvaluator().evaluate(roster)
+        evaluation = replace(
+            evaluation,
+            unresolved_effects=tuple(
+                dict.fromkeys(tuple(evaluation.unresolved_effects) + tuple(static_unresolved))
+            ),
+        )
+        return SavedBuildRosterEvaluation(
+            scenario=scenario,
+            group_evaluation=evaluation,
+            player_evidence=tuple(evidence_rows),
+        )
+
+    def compare_rosters(
+        self,
+        baseline: SavedBuildRosterScenario,
+        candidate: SavedBuildRosterScenario,
+        event: DDDamageEvent,
+        context: EvaluationContext | None = None,
+    ) -> SavedBuildRosterComparison:
+        """Compare two explicitly selected saved-build rosters."""
+        baseline_evaluation = self.evaluate_roster(baseline, event, context)
+        candidate_evaluation = self.evaluate_roster(candidate, event, context)
+        comparison = TeamComparison(
+            baseline_name=baseline.name,
+            candidate_name=candidate.name,
+            baseline_evaluation=baseline_evaluation.group_evaluation,
+            candidate_evaluation=candidate_evaluation.group_evaluation,
+        )
+        return SavedBuildRosterComparison(
+            comparison=comparison,
+            baseline=baseline_evaluation,
+            candidate=candidate_evaluation,
+        )
 
     def compare(
         self,
