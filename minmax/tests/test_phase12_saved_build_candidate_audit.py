@@ -1,8 +1,13 @@
 from types import SimpleNamespace
 
+from minmax.build_candidate import BuildCandidate, BuildChange
+from minmax.build_candidate_comparison import BuildCandidateComparison
 from minmax.build_candidate_healing import ModeledHealingPotency
+from minmax.evaluation_objective import EvaluationObjective
 from minmax.skill_component_classification import SkillEffectKind
+from models.build_model import PlayerBuild
 from tools.audit_phase12_saved_build_candidates import (
+    _candidate_change_label,
     _select_verified_healing_skills,
     _with_extra_unresolved,
 )
@@ -63,3 +68,38 @@ def test_audit_skill_selection_unresolved_evidence_blocks_baseline_metric() -> N
     assert updated.value == 123.0
     assert updated.unresolved == ("Unknown: effect kind unresolved",)
     assert updated.resolved is False
+
+
+def _comparison(path: str, before: str, after: str) -> BuildCandidateComparison:
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Mundus="The Ritual")
+    candidate = BuildCandidate.from_build(
+        character_id="magrat",
+        baseline_build_id="DF Healer",
+        candidate_id="candidate",
+        candidate_build=build,
+        changes=(
+            BuildChange.from_values(
+                path=path,
+                before=before,
+                after=after,
+                source="test",
+            ),
+        ),
+        candidate_source="test",
+    )
+    return BuildCandidateComparison(
+        candidate=candidate,
+        objective=EvaluationObjective.HEALING,
+        baseline_value=100.0,
+        candidate_value=101.0,
+        constraints=(),
+    )
+
+
+def test_audit_candidate_labels_keep_families_explainable() -> None:
+    assert _candidate_change_label(
+        _comparison("Mundus", "The Ritual", "The Mage")
+    ) == "The Mage"
+    assert _candidate_change_label(
+        _comparison("Armor.Shoulders.Trait", "Infused", "Divines")
+    ) == "Armor.Shoulders.Trait: Infused -> Divines"
