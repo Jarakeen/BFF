@@ -81,6 +81,7 @@ class EncounterBossGuide:
     health: tuple[tuple[str, str], ...]
     abilities: tuple[BossGuideAbility, ...]
     phases: tuple[BossGuidePhase, ...]
+    structural_phases: tuple[BossGuidePhase, ...]
     timeline_facts: tuple[BossGuideTimelineFact, ...]
     source_url: str
     source_page_title: str
@@ -129,6 +130,84 @@ def _timeline_payload(raw: object, *, fact_id: int) -> dict[str, Any]:
             f"Canonical timeline fact {fact_id} payload_json must be a JSON object"
         )
     return payload
+
+
+def _title_from_key(value: str) -> str:
+    return str(value or "").replace("_", " ").strip().title() or "Timeline Event"
+
+
+def _reviewed_timeline_phases(
+    facts: tuple[BossGuideTimelineFact, ...],
+) -> tuple[BossGuidePhase, ...]:
+    """Project reviewed canonical timeline facts into UI-ready phase rows.
+
+    Canonical timeline facts take precedence over structural ``encounter_phase``
+    rows when present. This projection uses only explicit payload fields and
+    never invents timestamps, thresholds, or strategy.
+    """
+    rows: list[BossGuidePhase] = []
+    for fact in facts:
+        payload = fact.payload
+        label = str(
+            payload.get("label")
+            or payload.get("name")
+            or _title_from_key(fact.fact_key)
+        ).strip()
+        description = str(payload.get("description") or payload.get("detail") or "").strip()
+        provenance = (
+            f"Reviewed canonical {fact.canonical_kind.replace('_', ' ')} supported by "
+            f"{fact.evidence_count} evidence row(s)."
+        )
+        detail = f"{description} {provenance}".strip() if description else provenance
+
+        if fact.canonical_kind == "phase":
+            threshold = str(payload.get("starts_at") or payload.get("threshold") or "").strip()
+            rows.append(
+                BossGuidePhase(
+                    phase_id=fact.fact_id * 1000,
+                    label=label,
+                    threshold=threshold,
+                    description=detail,
+                    source_section="Reviewed canonical timeline",
+                    source_url="",
+                    source_revision_id="",
+                )
+            )
+            continue
+
+        if fact.canonical_kind == "phase_transition":
+            raw_thresholds = payload.get("thresholds")
+            thresholds: list[str] = []
+            if isinstance(raw_thresholds, (list, tuple)):
+                thresholds = [
+                    str(value).strip()
+                    for value in raw_thresholds
+                    if str(value).strip()
+                ]
+            else:
+                single = str(
+                    payload.get("threshold") or payload.get("starts_at") or ""
+                ).strip()
+                if single:
+                    thresholds = [single]
+
+            if not thresholds:
+                thresholds = [""]
+
+            for index, threshold in enumerate(thresholds, start=1):
+                rows.append(
+                    BossGuidePhase(
+                        phase_id=fact.fact_id * 1000 + index,
+                        label=label,
+                        threshold=threshold,
+                        description=detail,
+                        source_section="Reviewed canonical timeline",
+                        source_url="",
+                        source_revision_id="",
+                    )
+                )
+
+    return tuple(rows)
 
 
 class EncounterBossGuideService:
@@ -244,7 +323,7 @@ class EncounterBossGuideService:
                 ).fetchall()
             )
 
-            phases = tuple(
+            structural_phases = tuple(
                 BossGuidePhase(
                     phase_id=int(row["id"]),
                     label=str(row["label"] or ""),
@@ -293,6 +372,9 @@ class EncounterBossGuideService:
                 ).fetchall()
             )
 
+            reviewed_phases = _reviewed_timeline_phases(timeline_facts)
+            phases = reviewed_phases or structural_phases
+
             return EncounterBossGuide(
                 encounter_id=str(encounter["id"]),
                 content_id=str(encounter["content_id"]),
@@ -306,6 +388,7 @@ class EncounterBossGuideService:
                 health=health,
                 abilities=abilities,
                 phases=phases,
+                structural_phases=structural_phases,
                 timeline_facts=timeline_facts,
                 source_url=str(encounter["source_url"] or ""),
                 source_page_title=str(encounter["source_page_title"] or ""),
