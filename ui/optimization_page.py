@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -172,12 +173,9 @@ class OptimizationPage(FoundryPage):
 
         self.change_card = FoundryCard("Recommended Changes")
         self.change_text = QLabel(
-            "1. Add missing support coverage.
-"
-            "2. Resolve redundant support sets.
-"
-            "3. Fill open role slots.
-"
+            "1. Add missing support coverage.\n"
+            "2. Resolve redundant support sets.\n"
+            "3. Fill open role slots.\n"
             "4. Adjust sustain and survivability for the encounter."
         )
         self.change_text.setWordWrap(True)
