@@ -63,6 +63,7 @@ class ChampionPointStaticRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
+        self._record_cache: dict[str, ChampionPointRecord | None] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -89,6 +90,10 @@ class ChampionPointStaticRepository:
         )
 
     def get(self, name: str) -> ChampionPointRecord | None:
+        requested = str(name).strip()
+        if requested in self._record_cache:
+            return self._record_cache[requested]
+
         with self._connect() as connection:
             row = connection.execute(
                 """
@@ -97,11 +102,11 @@ class ChampionPointStaticRepository:
                 FROM champion_point
                 WHERE name = ?
                 """,
-                (str(name).strip(),),
+                (requested,),
             ).fetchone()
-        if row is None:
-            return None
-        return self._record_from_row(row)
+        record = None if row is None else self._record_from_row(row)
+        self._record_cache[requested] = record
+        return record
 
     def non_slottable_records(self) -> tuple[ChampionPointRecord, ...]:
         """Return every always-active Champion Point passive in the database."""
