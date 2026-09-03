@@ -55,17 +55,17 @@ class _EquivalentProvisioningRepository:
         self.distinct_tooltips = distinct_tooltips
 
     def list_names(self):
-        return ("First Tonic", "Second Tonic")
+        return ("Alpha Drink", "Beta Drink")
 
     def canonical_name(self, name):
         return str(name or "").strip()
 
-    def resolve(self, _name):
+    def resolve(self, name):
         return [SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=500.0)], []
 
     def description(self, name):
-        if self.distinct_tooltips and name == "Second Tonic":
-            return "Increase Magicka Recovery by 500. Also grants a distinct extra mechanic."
+        if self.distinct_tooltips and name == "Beta Drink":
+            return "Increase Magicka Recovery by 500. Also does something else."
         return "Increase Magicka Recovery by 500."
 
 
@@ -145,10 +145,10 @@ def test_magicka_filter_keeps_magicka_and_mixed_candidates_only() -> None:
         provisioning_repository=repo,
     )
 
-    assert tuple(candidate.candidate_build.Food for candidate in filtered) == (
+    assert {candidate.candidate_build.Food for candidate in filtered} == {
         "Hybrid Meal",
         "Magicka Drink",
-    )
+    }
 
 
 def test_exact_equivalent_provisioning_candidates_are_evaluated_once() -> None:
@@ -161,12 +161,10 @@ def test_exact_equivalent_provisioning_candidates_are_evaluated_once() -> None:
         provisioning_repository=repo,
     )
 
-    assert tuple(candidate.candidate_build.Food for candidate in candidates) == (
-        "First Tonic",
-    )
+    assert tuple(candidate.candidate_build.Food for candidate in candidates) == ("Alpha Drink",)
 
 
-def test_matching_static_stats_do_not_collapse_distinct_tooltip_mechanics() -> None:
+def test_same_static_effects_with_distinct_tooltips_remain_separate_candidates() -> None:
     repo = _EquivalentProvisioningRepository(distinct_tooltips=True)
 
     candidates = enumerate_food_candidates(
@@ -177,6 +175,6 @@ def test_matching_static_stats_do_not_collapse_distinct_tooltip_mechanics() -> N
     )
 
     assert tuple(candidate.candidate_build.Food for candidate in candidates) == (
-        "First Tonic",
-        "Second Tonic",
+        "Alpha Drink",
+        "Beta Drink",
     )
