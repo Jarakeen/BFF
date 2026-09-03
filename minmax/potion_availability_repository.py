@@ -14,7 +14,8 @@ from .support_target_type import SupportTargetType
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATABASE = ROOT / "data" / "eso.db"
-DEFAULT_PROCESSED = ROOT / "data" / "processed" / "alchemy_effects.json"
+DEFAULT_PROCESSED = ROOT / "research" / "processed" / "alchemy_effects.json"
+LEGACY_PROCESSED = ROOT / "data" / "processed" / "alchemy_effects.json"
 
 
 @dataclass(frozen=True)
@@ -49,8 +50,10 @@ class PotionAvailabilityRepository:
     standing uptime, cooldown use, or Medicinal Use ownership.
 
     Formula provenance and support-capability resolution are intentionally
-    separate. The processed JSON remains the strongest recipe-level source. A
-    lean install may omit it. If SQLite still contains imported formula payloads,
+    separate. The current developer-source location is
+    ``research/processed/alchemy_effects.json``; the historical
+    ``data/processed`` location is checked only as a migration fallback. A lean
+    install may omit both. If SQLite still contains imported formula payloads,
     the catalog can be reconstructed from them. If formula payloads are also
     absent, an *exact known legacy potion label* may still resolve its declared
     trait family directly against canonical Potion EffectVariants in SQLite.
@@ -100,6 +103,25 @@ class PotionAvailabilityRepository:
         if "status" in text:
             return SupportEffectCategory.STATUS
         return SupportEffectCategory.OTHER
+
+    @staticmethod
+    def _unique_paths(*paths: Path) -> tuple[Path, ...]:
+        output: list[Path] = []
+        seen: set[str] = set()
+        for path in paths:
+            key = str(path.resolve()).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            output.append(path)
+        return tuple(output)
+
+    def _processed_candidates(self) -> tuple[Path, ...]:
+        return self._unique_paths(
+            self.processed_path,
+            DEFAULT_PROCESSED,
+            LEGACY_PROCESSED,
+        )
 
     def _legacy_traits(self, selected_label: str) -> tuple[str, ...] | None:
         traits = self.LEGACY_ALIASES.get(self._norm(selected_label))
@@ -184,19 +206,22 @@ class PotionAvailabilityRepository:
 
     def _catalog(self, *, allow_legacy_alias: bool = False) -> AlchemyFormulaCatalog:
         payload: dict[str, object] | None = None
-        source_errors: tuple[str, ...] = ()
+        source_errors: list[str] = []
 
-        if self.processed_path.exists():
+        for candidate in self._processed_candidates():
+            if not candidate.exists():
+                source_errors.append(f"Alchemy processed source missing: {candidate}")
+                continue
             try:
-                loaded = json.loads(self.processed_path.read_text(encoding="utf-8"))
-                if isinstance(loaded, dict):
-                    payload = loaded
-                else:
-                    source_errors = ("Alchemy processed source is not a JSON object",)
+                loaded = json.loads(candidate.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
-                source_errors = (f"Alchemy processed source unreadable: {exc}",)
-        else:
-            source_errors = (f"Alchemy processed source missing: {self.processed_path}",)
+                source_errors.append(f"Alchemy processed source unreadable ({candidate}): {exc}")
+                continue
+            if not isinstance(loaded, dict):
+                source_errors.append(f"Alchemy processed source is not a JSON object: {candidate}")
+                continue
+            payload = loaded
+            break
 
         if payload is None:
             payload, db_errors = self._database_catalog_payload()
