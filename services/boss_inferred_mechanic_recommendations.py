@@ -52,7 +52,7 @@ def _support_mechanic_type(row: InferredMechanicReviewRow) -> FieldSupport:
         "charge": (r"\bcharge(?:s|d|ing)?\b", r"rush(?:es|ed|ing)? forward"),
         "summon": (r"\bsummon(?:s|ed|ing)?\b", r"\bspawns?\b", r"calls? .* aid"),
         "spread": (r"spread out", r"move away from", r"separate from"),
-        "cleanse": (r"cleanse", r"purif", r"remove the effect"),
+        "cleanse": (r"cleans(?:e|ed|es|ing)", r"purif", r"remove the effect"),
         "movement": (r"move", r"dodge", r"avoid", r"step out", r"run"),
         "positioning": (r"position", r"stand in", r"stand on", r"farthest", r"closest", r"behind", r"in front"),
         "hazard": (r"hazard", r"lingering", r"damage over time", r"remains? on the ground"),
@@ -102,8 +102,15 @@ def _support_bool(field: str, value: bool | None, description: str) -> FieldSupp
     patterns = {
         "requires_movement": (r"move", r"dodge", r"avoid", r"run", r"step out", r"walk into"),
         "requires_positioning": (r"position", r"stand in", r"stand on", r"farthest", r"closest", r"behind", r"in front", r"corner"),
-        "requires_cleanse": (r"cleanse", r"remove the effect", r"purif"),
-        "persistent_hazard": (r"lingering", r"damage over time", r"remains?", r"persistent", r"pool", r"rune"),
+        "requires_cleanse": (r"cleans(?:e|ed|es|ing)", r"remove the effect", r"purif"),
+        "persistent_hazard": (
+            r"lingering",
+            r"damage over time",
+            r"remains? (?:on|in)",
+            r"persists?",
+            r"persistent",
+            r"continues? to (?:deal|damage|remain)",
+        ),
         "failure_is_fatal": (r"lethal", r"instant(?:ly)? kill", r"fatal", r"will kill"),
         "interruptible": (r"interrupt", r"can be interrupted", r"must be interrupted"),
     }
