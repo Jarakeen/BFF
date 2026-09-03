@@ -41,7 +41,8 @@ def _slug(value: str) -> str:
     return text
 
 
-def _payload(row: InferredMechanicReviewRow) -> dict[str, object]:
+def _source_payload(row: InferredMechanicReviewRow) -> dict[str, object]:
+    """Return only the structured value extracted from the source record."""
     return {
         "name": row.mechanic_name,
         "mechanic_type": row.mechanic_type,
@@ -57,6 +58,17 @@ def _payload(row: InferredMechanicReviewRow) -> dict[str, object]:
     }
 
 
+def _canonical_payload(
+    row: InferredMechanicReviewRow,
+    decision: InferredMechanicDecision,
+) -> dict[str, object]:
+    """Add explicit human-review semantics without rewriting source evidence."""
+    payload = _source_payload(row)
+    if decision.requirement_subjects:
+        payload["requirement_subjects"] = dict(decision.requirement_subjects)
+    return payload
+
+
 def build_reviewed_single_source_plans(
     rows: Iterable[InferredMechanicReviewRow],
     decisions: Iterable[InferredMechanicDecision],
@@ -65,7 +77,9 @@ def build_reviewed_single_source_plans(
 
     Every source row must have exactly one matching decision. Pending/rejected
     rows are skipped. Accepted rows require rationale and source provenance.
-    Duplicate source or decision keys are refused.
+    Duplicate source or decision keys are refused. Requirement-subject metadata
+    is canonical review semantics and is intentionally not copied into the raw
+    source-value evidence payload.
     """
 
     row_by_key: dict[tuple[str, str], InferredMechanicReviewRow] = {}
@@ -115,10 +129,16 @@ def build_reviewed_single_source_plans(
             canonical_kind=CANONICAL_MECHANIC_DETAIL,
             fact_type="mechanic_detail",
             fact_key=fact_key,
-            payload_json=_json(_payload(row)),
+            payload_json=_json(_canonical_payload(row, decision)),
             review_status=REVIEW_STATUS,
             valid_from_update="",
             valid_from_patch="",
+        )
+        subject_note = (
+            "\nreview_requirement_subjects="
+            + _json(dict(decision.requirement_subjects))
+            if decision.requirement_subjects
+            else ""
         )
         evidence = PlannedEvidenceRow(
             canonical_fact_ref=logical_ref,
@@ -129,11 +149,12 @@ def build_reviewed_single_source_plans(
             game_update="",
             patch_version="",
             confidence="reviewed",
-            source_value_json=_json(_payload(row)),
+            source_value_json=_json(_source_payload(row)),
             notes=(
                 f"source_family={SOURCE_FAMILY}\n"
                 f"review_status={REVIEW_STATUS}\n"
                 f"review_rationale={decision.rationale.strip()}"
+                f"{subject_note}"
             ),
         )
         plans.append(EncounterPersistencePlan(fact=fact, evidence=(evidence,)))
