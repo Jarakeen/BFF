@@ -91,6 +91,7 @@ class SavedBuildCapabilityService:
         self.gear_repository = None if gear is not None else GearSetRepository(self.database_path)
         self.gear = gear or GearSetEffectVariantResolver(self.gear_repository)
         self.potions = potions or PotionAvailabilityRepository(self.database_path)
+        self._ability_id_cache: dict[tuple[str, str], int | None] = {}
 
     @staticmethod
     def _clean(value) -> str:
@@ -167,12 +168,19 @@ class SavedBuildCapabilityService:
         return kept, boundaries
 
     def _ability_id(self, name: str, class_name: str) -> int | None:
+        cache_key = (
+            str(name or "").strip().casefold(),
+            str(class_name or "").strip().casefold(),
+        )
+        if cache_key in self._ability_id_cache:
+            return self._ability_id_cache[cache_key]
         if not self.database_path.exists():
             return None
         try:
             with sqlite3.connect(self.database_path) as db:
                 columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)")}
                 if not {"ability_id", "name"}.issubset(columns):
+                    self._ability_id_cache[cache_key] = None
                     return None
                 clauses = ["lower(trim(name)) = lower(trim(?))"]
                 params: list[object] = [name]
@@ -192,7 +200,9 @@ class SavedBuildCapabilityService:
                 ).fetchone()
         except sqlite3.Error:
             return None
-        return int(row[0]) if row else None
+        result = int(row[0]) if row else None
+        self._ability_id_cache[cache_key] = result
+        return result
 
     def _ability_is_crafted(self, ability_id: int) -> bool:
         if not self.database_path.exists():
