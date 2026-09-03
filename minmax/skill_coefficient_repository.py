@@ -49,6 +49,7 @@ class SkillCoefficientRepository:
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = str(database_path)
+        self._entity_resolution_cache: dict[str, SkillRankResolution] = {}
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.database_path)
@@ -128,11 +129,17 @@ class SkillCoefficientRepository:
         if not requested:
             return SkillRankResolution(None, ("Ability entity ID is required",))
 
+        cached = self._entity_resolution_cache.get(requested)
+        if cached is not None:
+            return cached
+
         with self._connect() as connection:
             rows = self._all_rank_identity_rows(connection)
 
         matches = [row for row in rows if ability_entity_id(str(row["name"] or "")) == requested]
-        return self._resolve_matching_rows(matches, requested, label="ability entity ID")
+        resolution = self._resolve_matching_rows(matches, requested, label="ability entity ID")
+        self._entity_resolution_cache[requested] = resolution
+        return resolution
 
     def resolve_name(self, name: str) -> SkillRankResolution:
         requested = str(name or "").strip()
