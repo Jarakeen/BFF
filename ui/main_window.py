@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from services.encounter_boss_guide import EncounterBossGuideService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
@@ -48,6 +49,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
+        self.encounter_boss_guide_service = EncounterBossGuideService(data_dir / "eso.db")
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
         self.broadcast_enabled = broadcast_enabled()
         self.setWindowTitle("Black Feather Foundry Field Office")
@@ -101,7 +103,10 @@ class MainWindow(QMainWindow):
             "console:1": EncountersPage(expedition=self.expedition_service),
             "console:2": BuildsPage(),
             "console:3": CapabilitiesPage(),
-            "console:4": MechanicsPage(expedition=self.expedition_service),
+            "console:4": MechanicsPage(
+                expedition=self.expedition_service,
+                guide_service=self.encounter_boss_guide_service,
+            ),
             "console:6": optimization_page,
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
@@ -333,6 +338,8 @@ class MainWindow(QMainWindow):
             self.pages["achievements"].refresh()
         elif page_name == "collectibles":
             self._refresh_collectibles_for_active_profile()
+        elif page_name == "console:4":
+            self.pages["console:4"].refresh_context()
 
         self.sidebar.set_current(page_name)
         self.stack.setCurrentWidget(self.page_containers[page_name])
