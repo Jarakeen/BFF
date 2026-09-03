@@ -25,6 +25,7 @@ from minmax.build_candidate_plain_language import (
     constraint_plain_english,
     recommendation_reason_plain_english,
 )
+from minmax.build_candidate_provider_scope import build_default_raid_provider_scope
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison, compare_sustain_runs
 from minmax.build_sustain import evaluate_named_build_sustain
 from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
@@ -114,7 +115,12 @@ def _candidate_change_label(comparison: BuildCandidateComparison) -> str:
     return f"{change.path}: {change.before} -> {change.after}"
 
 
-def _print_recommendation(title: str, ranking: CandidateRanking) -> None:
+def _print_recommendation(
+    title: str,
+    ranking: CandidateRanking,
+    *,
+    provider_scope_evaluated: bool = False,
+) -> None:
     if ranking.recommended is None:
         print(f"{title} recommendation: none.")
         print("  Plain English: No candidate in this group passed every required check with enough evidence to recommend it.")
@@ -146,7 +152,10 @@ def _print_recommendation(title: str, ranking: CandidateRanking) -> None:
     else:
         print("    - BFF has no unresolved evidence attached to this selected candidate.")
     print("    - The healing number is a comparison score for modeled heal components, not actual HPS.")
-    print("    - Encounter-specific Phase 11 provider assignments are not evaluated in this audit.")
+    if provider_scope_evaluated:
+        print("    - Encounter-specific Phase 11 provider assignments were checked for this recommendation.")
+    else:
+        print("    - Encounter-specific Phase 11 provider assignments are not evaluated in this audit.")
 
     technical_reason = "hard-constraint repair" if recommended.is_constraint_repair else "objective improvement"
     print("  Technical evidence:")
@@ -164,7 +173,12 @@ def _print_recommendation(title: str, ranking: CandidateRanking) -> None:
             print(f"    - unresolved: {message}")
 
 
-def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
+def _print_candidate_family(
+    title: str,
+    ranking: CandidateRanking,
+    *,
+    provider_scope_evaluated: bool = False,
+) -> None:
     comparisons = ranking.comparisons
     print()
     print(f"{title} candidates evaluated: {len(comparisons)}")
@@ -197,7 +211,11 @@ def _print_candidate_family(title: str, ranking: CandidateRanking) -> None:
         print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
 
     print()
-    _print_recommendation(title, ranking)
+    _print_recommendation(
+        title,
+        ranking,
+        provider_scope_evaluated=provider_scope_evaluated,
+    )
 
 
 def audit_saved_build_candidates(
@@ -208,6 +226,8 @@ def audit_saved_build_candidates(
     active_bar: str,
     resource: ResourceType,
     duration_seconds: float,
+    provider_encounter: str | None = None,
+    provider_roster_build_names: tuple[str, ...] = (),
 ) -> int:
     if not database_path.exists():
         print(f"Database not found: {database_path}")
@@ -215,10 +235,14 @@ def audit_saved_build_candidates(
     if not builds_path.exists():
         print(f"Saved builds not found: {builds_path}")
         return 2
+    if provider_roster_build_names and not str(provider_encounter or "").strip():
+        print("--provider-roster-build requires --provider-encounter")
+        return 9
 
     build_service = BuildService(builds_path)
+    saved_members = build_service.load().Members
     try:
-        baseline_build = _find_build(build_service.load().Members, build_name)
+        baseline_build = _find_build(saved_members, build_name)
     except ValueError as exc:
         print(exc)
         return 3
@@ -307,6 +331,28 @@ def audit_saved_build_candidates(
 
     capability_service = SavedBuildCapabilityService(build_service, database_path)
     baseline_capability = capability_service.audit_build(baseline_build)
+
+    provider_scope = None
+    provider_roster_builds: tuple[PlayerBuild, ...] = ()
+    normalized_provider_encounter = str(provider_encounter or "").strip()
+    if normalized_provider_encounter:
+        try:
+            companion_builds = tuple(
+                _find_build(saved_members, roster_build_name)
+                for roster_build_name in provider_roster_build_names
+            )
+            provider_roster_builds = (baseline_build,) + companion_builds
+            provider_scope = build_default_raid_provider_scope(
+                encounter_id=normalized_provider_encounter,
+                member_id=character_id,
+                roster_builds=provider_roster_builds,
+                capability_service=capability_service,
+                data_root=get_data_dir(),
+                database_path=database_path,
+            )
+        except (ValueError, LookupError, OSError) as exc:
+            print(f"Provider scope could not be resolved: {exc}")
+            return 10
 
     activity_plan = create_saved_bar_activity_plan(
         baseline_build,
@@ -402,14 +448,18 @@ def audit_saved_build_candidates(
                 baseline_build=baseline_build,
                 baseline_healing=baseline_healing,
                 baseline_capability=baseline_capability,
-                baseline_assignments=None,
+                baseline_assignments=(
+                    provider_scope.baseline_assignments if provider_scope is not None else None
+                ),
                 member_id=character_id,
                 healing_skill_names=healing_skill_names,
                 tooltip_service=tooltip_service,
                 capability_service=capability_service,
                 resolve_context=resolve_context,
                 resolve_sustain=resolve_sustain,
-                resolve_assignments=None,
+                resolve_assignments=(
+                    provider_scope.assignments_for if provider_scope is not None else None
+                ),
                 resolve_objective_coverage=objective_coverage,
             )
             for candidate in candidates
@@ -454,7 +504,27 @@ def audit_saved_build_candidates(
     print("Objective:      modeled healing-component potency (one application per verified heal component)")
     print("Boundary:       not HPS; expected critical healing is not yet modeled")
     print("Candidate scope: one changed field per candidate; Mundus, armor traits, armor enchants, and food ranked separately and overall")
-    print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
+    if provider_scope is None:
+        print("Provider scope: not evaluated; no encounter-specific Phase 11 assignment context supplied")
+    else:
+        roster_label = ", ".join(
+            str(build.BuildName or build.Name or "(unnamed)")
+            for build in provider_roster_builds
+        )
+        print(
+            f"Provider scope: encounter={provider_scope.encounter_id}; "
+            f"saved roster={roster_label}; "
+            f"baseline assignment rows={len(provider_scope.baseline_assignments)}"
+        )
+        for assignment in provider_scope.baseline_assignments:
+            primaries = ", ".join(
+                provider.character_name or provider.member_id
+                for provider in assignment.primary_providers
+            ) or "none"
+            print(
+                f"Provider base: {assignment.requirement_id}="
+                f"{assignment.status.value}; primary={primaries}"
+            )
     print()
     print(f"Baseline healing potency: {_format_value(baseline_healing.value if baseline_healing.resolved else None)}")
     if baseline_healing.unresolved:
@@ -470,10 +540,11 @@ def audit_saved_build_candidates(
         for message in tuple(baseline_sustain_context_unresolved) + tuple(baseline_sustain.unresolved):
             print(f"  - {message}")
 
-    _print_candidate_family("Mundus", mundus_ranking)
-    _print_candidate_family("Armor trait", armor_trait_ranking)
-    _print_candidate_family("Armor enchant", armor_enchant_ranking)
-    _print_candidate_family("Food", food_ranking)
+    provider_scope_evaluated = provider_scope is not None
+    _print_candidate_family("Mundus", mundus_ranking, provider_scope_evaluated=provider_scope_evaluated)
+    _print_candidate_family("Armor trait", armor_trait_ranking, provider_scope_evaluated=provider_scope_evaluated)
+    _print_candidate_family("Armor enchant", armor_enchant_ranking, provider_scope_evaluated=provider_scope_evaluated)
+    _print_candidate_family("Food", food_ranking, provider_scope_evaluated=provider_scope_evaluated)
 
     print()
     print("Overall bounded one-change rank order:")
@@ -484,7 +555,11 @@ def audit_saved_build_candidates(
         print(f"  {index:02d}. {_candidate_change_label(comparison)}: delta={comparison.delta:.3f} ({label})")
 
     print()
-    _print_recommendation("Overall", overall_ranking)
+    _print_recommendation(
+        "Overall",
+        overall_ranking,
+        provider_scope_evaluated=provider_scope_evaluated,
+    )
     print()
     return 0
 
@@ -499,6 +574,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--active-bar", choices=("front", "back"), default="front")
     parser.add_argument("--resource", choices=("health", "magicka", "stamina"), default="magicka")
     parser.add_argument("--duration", type=float, default=20.0)
+    parser.add_argument(
+        "--provider-encounter",
+        default=None,
+        help=(
+            "Optional canonical encounter id. When supplied, evaluate Phase 11 provider "
+            "responsibilities through the configured default raid-coverage overlay."
+        ),
+    )
+    parser.add_argument(
+        "--provider-roster-build",
+        action="append",
+        default=[],
+        help=(
+            "Additional saved build name in the provider roster. Repeat for each companion "
+            "build; the optimized --build is always included exactly once."
+        ),
+    )
     return parser
 
 
@@ -512,5 +604,7 @@ if __name__ == "__main__":
             active_bar=arguments.active_bar,
             resource=ResourceType(arguments.resource),
             duration_seconds=arguments.duration,
+            provider_encounter=arguments.provider_encounter,
+            provider_roster_build_names=tuple(arguments.provider_roster_build),
         )
     )
