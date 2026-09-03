@@ -22,8 +22,44 @@ class EncounterNotFoundError(LookupError):
     """No canonical boss source exists for the exact requested encounter id."""
 
 
+_REQUIREMENT_TYPES = frozenset({"movement", "positioning", "cleanse", "interrupt"})
+_REQUIREMENT_SUBJECTS = frozenset({"player", "boss", "unknown"})
+
+
 def _clean_name(value: object) -> str:
     return " ".join(str(value or "").strip().split()).casefold()
+
+
+def _requirement_subjects(
+    payload: dict,
+    *,
+    encounter_id: str,
+    fact_key: str,
+) -> tuple[tuple[str, str], ...]:
+    raw = payload.get("requirement_subjects")
+    if raw is None:
+        return ()
+    if not isinstance(raw, dict):
+        raise EncounterSourceError(
+            f"Canonical mechanic requirement_subjects must be an object for {encounter_id}:{fact_key}"
+        )
+
+    subjects: list[tuple[str, str]] = []
+    for raw_requirement_type, raw_subject in raw.items():
+        requirement_type = str(raw_requirement_type or "").strip().casefold()
+        subject = str(raw_subject or "").strip().casefold()
+        if requirement_type not in _REQUIREMENT_TYPES:
+            raise EncounterSourceError(
+                f"Unsupported canonical mechanic requirement subject key {requirement_type!r} "
+                f"for {encounter_id}:{fact_key}"
+            )
+        if subject not in _REQUIREMENT_SUBJECTS:
+            raise EncounterSourceError(
+                f"Unsupported canonical mechanic requirement subject {subject!r} "
+                f"for {encounter_id}:{fact_key}:{requirement_type}"
+            )
+        subjects.append((requirement_type, subject))
+    return tuple(sorted(subjects))
 
 
 def _canonical_mechanics(
@@ -93,6 +129,11 @@ def _canonical_mechanics(
                 persistent_hazard=payload.get("persistent_hazard"),
                 failure_is_fatal=payload.get("failure_is_fatal"),
                 interruptible=payload.get("interruptible"),
+                requirement_subjects=_requirement_subjects(
+                    payload,
+                    encounter_id=encounter_id,
+                    fact_key=str(fact_key),
+                ),
             )
         )
     return tuple(mechanics)
