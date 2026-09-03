@@ -51,7 +51,6 @@ def test_oaxiltso_structured_execution_methods_are_build_independent_and_source_
     expected = {
         ("Savage Blitz", "movement"): ("dodge", ""),
         ("Savage Blitz", "positioning"): ("bait_farthest", ""),
-        ("Blistering Smash", "positioning"): ("avoid_hazard", ""),
         ("Noxious Sludge", "movement"): ("move_to_interaction", "cleanse_pool"),
         ("Noxious Sludge", "positioning"): ("hazard_drop_management", "noxious_pool"),
         ("Noxious Sludge", "cleanse"): ("encounter_interaction", "cleanse_pool"),
@@ -59,6 +58,7 @@ def test_oaxiltso_structured_execution_methods_are_build_independent_and_source_
     }
 
     assert set(rows) == set(expected)
+    assert not any(row.mechanic_name == "Blistering Smash" for row in result.results)
     for key, (method, interaction) in expected.items():
         row = rows[key]
         assert row.classification == CoverageClassification.COVERED
@@ -70,7 +70,7 @@ def test_oaxiltso_structured_execution_methods_are_build_independent_and_source_
     assert result.is_fully_ready is True
 
 
-def test_hiath_break_free_and_standard_interrupts_are_build_independent_capabilities():
+def test_hiath_break_free_and_reviewed_interrupts_are_build_independent_capabilities():
     result = _evaluator().evaluate("hiath_the_battlemaster")
 
     cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
@@ -80,21 +80,16 @@ def test_hiath_break_free_and_standard_interrupts_are_build_independent_capabili
     assert cleanse.handling_method == "core_action"
     assert cleanse.interaction == "break_free"
     assert cleanse.requires_player_build_capability is False
-    assert len(interrupts) == 3
+    assert len(interrupts) == 2
     assert all(row.classification == CoverageClassification.COVERED for row in interrupts)
     assert all(row.handling_method == "core_bash" for row in interrupts)
     assert all(row.requires_player_build_capability is False for row in interrupts)
 
 
-def test_xalvakka_soul_purge_synergy_is_ready_without_inventing_purge_skill_requirement():
+def test_xalvakka_rejected_raw_cleanse_does_not_reach_execution_evaluation():
     result = _evaluator().evaluate("xalvakka")
 
-    cleanse = next(row for row in result.results if row.requirement_type == "cleanse")
-
-    assert cleanse.classification == CoverageClassification.COVERED
-    assert cleanse.handling_method == "encounter_interaction"
-    assert cleanse.interaction == "soul_purge_synergy"
-    assert cleanse.requires_player_build_capability is False
+    assert not any(row.requirement_type == "cleanse" for row in result.results)
 
 
 def test_real_standard_interrupt_requirement_is_covered_by_global_core_action_rule():
