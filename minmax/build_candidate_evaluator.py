@@ -13,6 +13,7 @@ from minmax.build_candidate_capability import (
 )
 from minmax.build_candidate_comparison import BuildCandidateComparison
 from minmax.build_candidate_context import BuildCandidateContextResult
+from minmax.build_candidate_damage import ModeledDamagePotency
 from minmax.build_candidate_healing import ModeledHealingPotency, measure_modeled_healing_potency
 from minmax.build_candidate_sustain import BuildCandidateSustainComparison
 from minmax.evaluation_objective import EvaluationObjective
@@ -25,6 +26,16 @@ ContextResolver = Callable[[BuildCandidate], BuildCandidateContextResult]
 SustainResolver = Callable[[BuildCandidateContextResult], BuildCandidateSustainComparison]
 AssignmentResolver = Callable[[PlayerBuild], tuple[ProviderAssignment, ...]]
 ObjectiveCoverageResolver = Callable[[BuildCandidate], tuple[str, ...]]
+DamageResolver = Callable[[BuildCandidateContextResult], ModeledDamagePotency]
+
+
+@dataclass(frozen=True)
+class DamageCandidateEvaluation:
+    comparison: BuildCandidateComparison
+    damage: ModeledDamagePotency | None
+    sustain: BuildCandidateSustainComparison | None
+    capability: SavedBuildCapabilityAudit | None
+    assignments: tuple[ProviderAssignment, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,6 +90,104 @@ class CandidateRanking:
 
 def _dedupe(messages: tuple[str, ...] | list[str]) -> tuple[str, ...]:
     return tuple(dict.fromkeys(str(message) for message in messages if str(message).strip()))
+
+
+def evaluate_damage_candidate(
+    *,
+    candidate: BuildCandidate,
+    baseline_damage: ModeledDamagePotency,
+    baseline_capability: SavedBuildCapabilityAudit,
+    baseline_assignments: tuple[ProviderAssignment, ...] | None,
+    member_id: str,
+    capability_service: SavedBuildCapabilityService,
+    resolve_context: ContextResolver,
+    resolve_damage: DamageResolver,
+    resolve_sustain: SustainResolver,
+    resolve_assignments: AssignmentResolver | None,
+    resolve_objective_coverage: ObjectiveCoverageResolver | None = None,
+) -> DamageCandidateEvaluation:
+    """Score one build candidate with authoritative DD and constraint evidence.
+
+    This function performs orchestration only. The damage resolver owns the
+    selected verified metric, so Phase 12 never relabels a single-event result
+    as rotation DPS or a raid ceiling.
+    """
+
+    if not candidate.is_evaluable:
+        reason = f"Candidate is not evaluable: {candidate.evaluation_state.value}"
+        unresolved = candidate.unresolved or (reason,)
+        comparison = BuildCandidateComparison(
+            candidate=candidate,
+            objective=EvaluationObjective.DAMAGE,
+            baseline_value=baseline_damage.value if baseline_damage.resolved else None,
+            candidate_value=None,
+            constraints=(),
+            unresolved=_dedupe(tuple(unresolved)),
+            rejection_reason=reason,
+        )
+        return DamageCandidateEvaluation(comparison, None, None, None)
+
+    candidate_context = resolve_context(candidate)
+    objective_coverage_unresolved = (
+        resolve_objective_coverage(candidate)
+        if resolve_objective_coverage is not None
+        else ()
+    )
+
+    if candidate_context.context is None:
+        damage = None
+        damage_messages = candidate_context.unresolved or (
+            "Candidate calculation context is unavailable",
+        )
+    else:
+        damage = resolve_damage(candidate_context)
+        damage_messages = damage.unresolved
+
+    sustain = resolve_sustain(candidate_context)
+    candidate_build = candidate.candidate_build
+    capability = capability_service.audit_build(candidate_build)
+    constraints = [
+        sustain.constraint,
+        compare_capability_coverage(baseline_capability, capability),
+    ]
+
+    assignments: tuple[ProviderAssignment, ...] = ()
+    if baseline_assignments is not None and resolve_assignments is not None:
+        assignments = resolve_assignments(candidate_build)
+        constraints.append(
+            compare_provider_responsibilities(
+                member_id=member_id,
+                baseline_assignments=baseline_assignments,
+                candidate_assignments=assignments,
+            )
+        )
+
+    unresolved = _dedupe(
+        tuple(baseline_damage.unresolved)
+        + tuple(damage_messages)
+        + tuple(sustain.unresolved)
+        + tuple(objective_coverage_unresolved)
+    )
+    evidence = tuple(f"baseline: {row}" for row in baseline_damage.evidence)
+    if damage is not None:
+        evidence += tuple(f"candidate: {row}" for row in damage.evidence)
+
+    comparison = BuildCandidateComparison(
+        candidate=candidate,
+        objective=EvaluationObjective.DAMAGE,
+        baseline_value=baseline_damage.value if baseline_damage.resolved else None,
+        candidate_value=damage.value if damage is not None and damage.resolved else None,
+        constraints=tuple(constraints),
+        evidence=evidence,
+        unresolved=unresolved,
+    )
+    return DamageCandidateEvaluation(
+        comparison=comparison,
+        damage=damage,
+        sustain=sustain,
+        capability=capability,
+        assignments=assignments,
+    )
 
 
 def evaluate_healing_candidate(
