@@ -14,7 +14,10 @@ from services.boss_inferred_mechanic_recommendations import build_recommendation
 
 def _source_dir() -> Path:
     candidates = (ROOT / "research" / "eso_info" / "bosses", ROOT / "data" / "eso_info" / "bosses")
-    return next((path for path in candidates if path.exists()), candidates[-1])
+    for path in candidates:
+        if any(path.glob("*.json")):
+            return path
+    return candidates[-1]
 
 
 def _content_root() -> Path:
