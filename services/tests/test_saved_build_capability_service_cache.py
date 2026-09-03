@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
+from models.scribing_recipe import ScribedSkillRecipe
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
 
@@ -172,7 +173,7 @@ def test_identical_build_content_reuses_cached_capability_audit(tmp_path) -> Non
     assert context_factory.calls == 2
 
 
-def test_candidate_family_changes_force_fresh_capability_audits(tmp_path) -> None:
+def test_candidate_family_changes_rebuild_context_but_reuse_stable_components(tmp_path) -> None:
     path = tmp_path / "eso.db"
     _write_db(path)
     service, progression, context_factory = _audit_service(path)
@@ -200,9 +201,102 @@ def test_candidate_family_changes_force_fresh_capability_audits(tmp_path) -> Non
     for candidate in variants:
         service.audit_build(candidate)
 
-    assert progression.calls == 5
-    assert context_factory.calls == 10
+    # Five distinct build snapshots still receive five candidate-specific audits
+    # and ten front/back static-context builds.
     assert len(service._audit_cache) == 5
+    assert context_factory.calls == 10
+
+    # These candidate families do not change character identity/attributes,
+    # bar skills/recipes, or active set counts, so those stable components are
+    # resolved once and shared across the five audits.
+    assert progression.calls == 1
+    assert len(service._progression_cache) == 1
+    assert len(service._skill_component_cache) == 2
+    assert len(service._gear_component_cache) == 2
+
+
+def test_skill_component_key_invalidates_on_skill_or_recipe_change(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    service, _, _ = _audit_service(path)
+    baseline = PlayerBuild(
+        Name="Magrat",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        FrontBarSkills=["Combat Prayer", "", "", "", "", ""],
+    )
+
+    food_only = PlayerBuild.from_dict(baseline.to_dict())
+    food_only.Food = "Ghastly Eye Bowl"
+    assert service._skill_component_cache_key(baseline, "front") == service._skill_component_cache_key(
+        food_only, "front"
+    )
+
+    changed_skill = PlayerBuild.from_dict(baseline.to_dict())
+    changed_skill.FrontBarSkills[0] = "Energy Orb"
+    assert service._skill_component_cache_key(baseline, "front") != service._skill_component_cache_key(
+        changed_skill, "front"
+    )
+
+    changed_recipe = PlayerBuild.from_dict(baseline.to_dict())
+    changed_recipe.ScribedSkillRecipes = [
+        ScribedSkillRecipe(
+            ResultName="Ulfsilds Contingency",
+            Grimoire="Ulfsild's Contingency",
+            Focus="Healing",
+            Signature="Class Mastery",
+            Affix="Heroism",
+        )
+    ]
+    assert service._skill_component_cache_key(baseline, "front") != service._skill_component_cache_key(
+        changed_recipe, "front"
+    )
+
+
+def test_gear_component_key_ignores_trait_enchant_but_invalidates_on_set_change(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    service, _, _ = _audit_service(path)
+    baseline = PlayerBuild(Name="Magrat", BuildName="DF Healer", EsoClass="Warden")
+    baseline.Armor["Head"]["Set"] = "Spell Power Cure"
+
+    trait = PlayerBuild.from_dict(baseline.to_dict())
+    trait.Armor["Head"]["Trait"] = "Divines"
+    enchant = PlayerBuild.from_dict(baseline.to_dict())
+    enchant.Armor["Head"]["Enchant"] = "Max Magicka"
+
+    baseline_key = service._gear_component_cache_key(baseline, "front")
+    assert service._gear_component_cache_key(trait, "front") == baseline_key
+    assert service._gear_component_cache_key(enchant, "front") == baseline_key
+
+    changed_set = PlayerBuild.from_dict(baseline.to_dict())
+    changed_set.Armor["Head"]["Set"] = "Master Architect"
+    assert service._gear_component_cache_key(changed_set, "front") != baseline_key
+
+
+def test_progression_component_key_invalidates_on_identity_or_attribute_change(tmp_path) -> None:
+    path = tmp_path / "eso.db"
+    _write_db(path)
+    service, _, _ = _audit_service(path)
+    baseline = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="DF Healer",
+        AttributeMagicka=64,
+    )
+
+    food_only = PlayerBuild.from_dict(baseline.to_dict())
+    food_only.Food = "Ghastly Eye Bowl"
+    assert service._progression_cache_key(food_only) == service._progression_cache_key(baseline)
+
+    changed_name = PlayerBuild.from_dict(baseline.to_dict())
+    changed_name.Name = "Susan"
+    assert service._progression_cache_key(changed_name) != service._progression_cache_key(baseline)
+
+    changed_attributes = PlayerBuild.from_dict(baseline.to_dict())
+    changed_attributes.AttributeMagicka = 63
+    changed_attributes.AttributeHealth = 1
+    assert service._progression_cache_key(changed_attributes) != service._progression_cache_key(baseline)
 
 
 def test_build_identity_is_part_of_capability_audit_cache_key(tmp_path) -> None:
@@ -228,6 +322,9 @@ def test_capability_audit_cache_is_service_instance_scoped(tmp_path) -> None:
     assert first_progression.calls == 1
     assert second_progression.calls == 1
     assert first_service._audit_cache is not second_service._audit_cache
+    assert first_service._progression_cache is not second_service._progression_cache
+    assert first_service._skill_component_cache is not second_service._skill_component_cache
+    assert first_service._gear_component_cache is not second_service._gear_component_cache
 
 
 def test_cached_scribed_skill_audit_preserves_fail_closed_boundary(tmp_path) -> None:
