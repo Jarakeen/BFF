@@ -12,7 +12,7 @@ This module deliberately does *not* translate source text, resolve conflicts,
 write encounter_canonical_fact, or infer strategies from images.
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 from html.parser import HTMLParser
 import json
@@ -35,9 +35,12 @@ _PERCENT_RE = re.compile(r"(?<!\d)(\d{1,3})\s*%")
 _TIME_RE = re.compile(
     r"(?i)\b(\d+(?:\.\d+)?)\s*(seconds?|secs?|sec|s|minutes?|mins?|min|m)\b"
 )
-_APPROX_RE = re.compile(r"(?i)\b(?:about|around|approximately|approx\.?|roughly|nearly)\b|~")
+_APPROX_RE = re.compile(
+    r"(?i)\b(?:about|around|approximately|approx\.?|roughly|nearly|"
+    r"environ|approximativement|circa|all'incirca)\b|~"
+)
 _CANDIDATE_CUE_RE = re.compile(
-    r"(?i)\b(?:phase|intermission|threshold|execute|enrage|"
+    r"(?i)\b(?:phase|fase|intermission|threshold|execute|enrage|"
     r"spawn(?:s|ed|ing)?|summon(?:s|ed|ing)?|appears?|enters?|adds?|"
     r"interrupt(?:ed|ible|ing)?|bash|block(?:ed|ing)?|dodge(?:d|roll)?|"
     r"cleanse(?:d|s)?|purge(?:d|s)?|spread|stack|move(?:s|d|ment)?|"
@@ -54,6 +57,8 @@ _LANGUAGE_WORDS = {
 
 
 class _HTMLTextExtractor(HTMLParser):
+    """Extract readable text while preserving HTML headings as Markdown headings."""
+
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.language = ""
@@ -61,6 +66,7 @@ class _HTMLTextExtractor(HTMLParser):
         self.title = ""
         self._in_title = False
         self._ignored_depth = 0
+        self._heading_depth = 0
         self._text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs) -> None:
@@ -74,7 +80,10 @@ class _HTMLTextExtractor(HTMLParser):
             self._in_title = True
         if tag in {"script", "style", "noscript"}:
             self._ignored_depth += 1
-        if tag in {"p", "div", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6", "br"}:
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self._heading_depth += 1
+            self._text.append("\n# ")
+        elif tag in {"p", "div", "li", "tr", "br"}:
             self._text.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
@@ -83,7 +92,11 @@ class _HTMLTextExtractor(HTMLParser):
             self._in_title = False
         if tag in {"script", "style", "noscript"} and self._ignored_depth:
             self._ignored_depth -= 1
-        if tag in {"p", "div", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6"}:
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            if self._heading_depth:
+                self._heading_depth -= 1
+            self._text.append("\n")
+        elif tag in {"p", "div", "li", "tr"}:
             self._text.append("\n")
 
     def handle_data(self, data: str) -> None:
@@ -286,7 +299,9 @@ def _encounters(database: Path) -> tuple[_EncounterIdentity, ...]:
         connection.close()
 
 
-def _encounter_lookup(encounters: Iterable[_EncounterIdentity]) -> tuple[dict[str, _EncounterIdentity], dict[str, _EncounterIdentity]]:
+def _encounter_lookup(
+    encounters: Iterable[_EncounterIdentity],
+) -> tuple[dict[str, _EncounterIdentity], dict[str, _EncounterIdentity]]:
     by_id: dict[str, _EncounterIdentity] = {}
     by_name: dict[str, _EncounterIdentity] = {}
     for row in encounters:
@@ -302,14 +317,56 @@ def _manifest_encounter(row: _ManifestRow | None, by_id, by_name) -> _EncounterI
     return by_id.get(key) or by_name.get(key)
 
 
-def _encounter_in_text(text: str, encounters: Iterable[_EncounterIdentity]) -> _EncounterIdentity | None:
-    normalized = f" {_normalized_identity(text)} "
+def _source_encounters(
+    manifest_row: _ManifestRow | None,
+    encounters: tuple[_EncounterIdentity, ...],
+) -> tuple[_EncounterIdentity, ...]:
+    """Limit name resolution to the manifest-declared content when available."""
+    if manifest_row is None or not manifest_row.content_hint:
+        return encounters
+    hint = _normalized_identity(manifest_row.content_hint)
+    scoped = tuple(
+        row
+        for row in encounters
+        if hint in {
+            _normalized_identity(row.content_id),
+            _normalized_identity(row.content_name),
+        }
+    )
+    return scoped or encounters
+
+
+def _encounter_in_text(
+    text: str,
+    encounters: Iterable[_EncounterIdentity],
+    *,
+    strong: bool = False,
+) -> _EncounterIdentity | None:
+    """Resolve an encounter name without allowing generic prose to hijack context.
+
+    ``strong`` is used for headings and filenames. Single-word/short encounter
+    names require an exact normalized line match; longer identities may appear
+    inside a descriptive heading such as ``Boss 3 - Lord Falgravn``.
+    """
+    normalized = _normalized_identity(text)
+    if not normalized:
+        return None
+
     for row in encounters:
-        name = _normalized_identity(row.encounter_name)
-        if len(name) < 4:
-            continue
-        if f" {name} " in normalized:
+        names = {
+            _normalized_identity(row.encounter_name),
+            _normalized_identity(row.encounter_id),
+        }
+        names.discard("")
+        if normalized in names:
             return row
+        if not strong:
+            continue
+        for name in names:
+            if len(name) < 9 or " " not in name:
+                continue
+            if f" {name} " in f" {normalized} ":
+                return row
     return None
 
 
@@ -327,7 +384,7 @@ def _event_type(text: str) -> str:
         return "adds"
     if any(word in lowered for word in ("one-shot", "one shot", "fatal", "wipe", "enrage")):
         return "danger"
-    if any(word in lowered for word in ("phase", "intermission", "threshold", "execute")):
+    if any(word in lowered for word in ("phase", "fase", "intermission", "threshold", "execute")):
         return "phase"
     return "mechanic"
 
@@ -339,8 +396,13 @@ def _trigger_rows(text: str) -> list[tuple[str, str, bool]]:
     for value in _PERCENT_RE.findall(text):
         trigger = "boss_health" if (
             "health" in lowered
+            or "santé" in lowered
+            or "salute" in lowered
             or " hp" in lowered
-            or re.search(rf"(?i)\b(?:at|reaches?|below|under|above)\s+{re.escape(value)}\s*%", text)
+            or re.search(
+                rf"(?i)\b(?:at|reaches?|below|under|above|à|al|sotto)\s+{re.escape(value)}\s*%",
+                text,
+            )
         ) else "percent_unspecified"
         rows.append((trigger, f"{value}%", approximate))
 
@@ -363,22 +425,33 @@ def _trigger_rows(text: str) -> list[tuple[str, str, bool]]:
 
 
 def _candidate_lines(text: str) -> Iterable[tuple[str, bool]]:
-    """Yield normalized logical blocks and whether each was a Markdown heading."""
+    """Yield logical blocks; short lines are retained so boss headings survive."""
     for raw in text.splitlines():
         raw = raw.strip()
         if not raw:
             continue
         heading_match = _HEADING_RE.match(raw)
         if heading_match:
-            yield _clean_line(heading_match.group(1)), True
+            line = _clean_line(heading_match.group(1))
+            if line:
+                yield line, True
             continue
         line = _clean_line(raw)
-        if len(line) >= 12:
+        if line:
             yield line, False
 
 
-def _candidate_id(source_id: str, encounter_id: str, event_type: str, trigger_type: str, trigger_value: str, evidence: str) -> str:
-    payload = "\n".join((source_id, encounter_id, event_type, trigger_type, trigger_value, evidence))
+def _candidate_id(
+    source_id: str,
+    encounter_id: str,
+    event_type: str,
+    trigger_type: str,
+    trigger_value: str,
+    evidence: str,
+) -> str:
+    payload = "\n".join(
+        (source_id, encounter_id, event_type, trigger_type, trigger_value, evidence)
+    )
     return sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
@@ -407,7 +480,11 @@ def import_research_archive(
             raw = zipped.read(info)
             digest = sha256(raw).hexdigest()
             manifest_row = manifest.get(short_member) or manifest.get(member)
-            if manifest_row is not None and manifest_row.sha256 and manifest_row.sha256 != digest:
+            if (
+                manifest_row is not None
+                and manifest_row.sha256
+                and manifest_row.sha256 != digest
+            ):
                 raise RuntimeError(
                     f"encounter research archive member hash mismatch: {short_member}"
                 )
@@ -423,17 +500,21 @@ def import_research_archive(
                         sha256=digest,
                         byte_count=len(raw),
                         media_type=media_type,
-                        language=(manifest_row.language if manifest_row else "") or "non_text",
+                        language=(manifest_row.language if manifest_row else "")
+                        or "non_text",
                         title=Path(short_member).stem,
                         source_url=(manifest_row.source_url if manifest_row else ""),
-                        source_name=(manifest_row.source_name if manifest_row else "") or "User research archive",
+                        source_name=(manifest_row.source_name if manifest_row else "")
+                        or "User research archive",
                         content_hint=(manifest_row.content_hint if manifest_row else ""),
                         encounter_hint=(manifest_row.encounter_hint if manifest_row else ""),
                     )
                 )
                 continue
 
-            text, explicit_language, title, canonical_url = _decode_text(short_member, raw)
+            text, explicit_language, title, canonical_url = _decode_text(
+                short_member, raw
+            )
             language = (
                 (manifest_row.language if manifest_row else "")
                 or _detect_language(text, explicit_language)
@@ -447,26 +528,50 @@ def import_research_archive(
                 media_type=media_type,
                 language=language,
                 title=title or Path(short_member).stem,
-                source_url=(manifest_row.source_url if manifest_row else "") or canonical_url,
-                source_name=(manifest_row.source_name if manifest_row else "") or "User research archive",
+                source_url=(manifest_row.source_url if manifest_row else "")
+                or canonical_url,
+                source_name=(manifest_row.source_name if manifest_row else "")
+                or "User research archive",
                 content_hint=(manifest_row.content_hint if manifest_row else ""),
                 encounter_hint=(manifest_row.encounter_hint if manifest_row else ""),
             )
             sources.append(source)
 
+            scoped_encounters = _source_encounters(manifest_row, encounter_rows)
             current_encounter = _manifest_encounter(manifest_row, by_id, by_name)
-            file_encounter = current_encounter or _encounter_in_text(Path(short_member).stem, encounter_rows)
+            file_encounter = current_encounter or _encounter_in_text(
+                Path(short_member).stem,
+                scoped_encounters,
+                strong=True,
+            )
             if file_encounter is not None:
                 current_encounter = file_encounter
 
             for line, is_heading in _candidate_lines(text):
-                named_encounter = _encounter_in_text(line, encounter_rows)
+                named_encounter = None
+                if is_heading:
+                    named_encounter = _encounter_in_text(
+                        line,
+                        scoped_encounters,
+                        strong=True,
+                    )
+                elif len(line) <= 120:
+                    # Plain text boss-name lines are common in saved extracts,
+                    # but ordinary prose must never switch encounter context.
+                    named_encounter = _encounter_in_text(
+                        line,
+                        scoped_encounters,
+                        strong=False,
+                    )
+
                 if named_encounter is not None:
                     current_encounter = named_encounter
-                    if is_heading or len(line) <= 180:
-                        # Encounter headings establish context but are not facts by themselves.
-                        if not (_PERCENT_RE.search(line) or _TIME_RE.search(line) or _CANDIDATE_CUE_RE.search(line)):
-                            continue
+                    if not (
+                        _PERCENT_RE.search(line)
+                        or _TIME_RE.search(line)
+                        or _CANDIDATE_CUE_RE.search(line)
+                    ):
+                        continue
 
                 triggers = _trigger_rows(line)
                 if not triggers:
@@ -504,7 +609,6 @@ def import_research_archive(
                         )
                     )
 
-    # Stable de-duplication protects repeated identical prose within saved pages.
     unique_candidates = {row.candidate_id: row for row in candidates}
     return EncounterResearchBundle(
         schema_version=1,
@@ -516,7 +620,10 @@ def import_research_archive(
     )
 
 
-def write_research_bundle(bundle: EncounterResearchBundle, output_path: Path) -> Path:
+def write_research_bundle(
+    bundle: EncounterResearchBundle,
+    output_path: Path,
+) -> Path:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
