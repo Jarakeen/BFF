@@ -19,17 +19,17 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
+from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
 
-CORE_COVERAGE = (
-    "Major Courage", "Major Vulnerability", "Major Berserk", "Major Breach",
-    "Major Slayer", "Crusher", "Minor Brittle", "Minor Maim", "War Horn",
-    "Orbs", "Purify", "Magickasteal", "Minor Resolve", "Minor Intellect",
-    "Minor Force",
+CORE_COVERAGE = tuple(
+    row.display_name
+    for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements
+    if row.required
 )
 
 ALIASES = {
