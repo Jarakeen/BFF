@@ -63,7 +63,7 @@ def test_armor_trait_candidates_exclude_unresolved_trait_classes_and_empty_slots
     changed_traits = {candidate.changes[0].after for candidate in candidates}
     assert changed_traits <= set(MODELED_ARMOR_TRAITS)
     assert not {"Sturdy", "Well-Fitted", "Training"} & changed_traits
-    assert all("chest" not in candidate.candidate.candidate_id.casefold() for candidate in candidates)
+    assert all("chest" not in candidate.candidate_id.casefold() for candidate in candidates)
 
 
 def test_armor_trait_candidate_ids_are_deterministic_and_unique() -> None:
