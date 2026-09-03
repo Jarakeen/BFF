@@ -15,8 +15,15 @@ class GearSetRepository:
 
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
+        self._set_name_cache: dict[str, GearSet | None] = {}
+        self._set_id_cache: dict[int, GearSet | None] = {}
+        self._bonuses_cache: dict[int, tuple[GearSetBonus, ...]] = {}
 
     def get_set(self, name: str) -> GearSet | None:
+        cache_key = str(name)
+        if cache_key in self._set_name_cache:
+            return self._set_name_cache[cache_key]
+
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
                 """
@@ -31,12 +38,17 @@ class GearSetRepository:
                 (name,),
             ).fetchone()
 
-        if row is None:
-            return None
-
-        return self._to_gear_set(row)
+        result = None if row is None else self._to_gear_set(row)
+        self._set_name_cache[cache_key] = result
+        if result is not None:
+            self._set_id_cache[result.id] = result
+        return result
 
     def get_set_by_id(self, set_id: int) -> GearSet | None:
+        cache_key = int(set_id)
+        if cache_key in self._set_id_cache:
+            return self._set_id_cache[cache_key]
+
         with sqlite3.connect(self.database_path) as connection:
             row = connection.execute(
                 """
@@ -51,12 +63,17 @@ class GearSetRepository:
                 (set_id,),
             ).fetchone()
 
-        if row is None:
-            return None
-
-        return self._to_gear_set(row)
+        result = None if row is None else self._to_gear_set(row)
+        self._set_id_cache[cache_key] = result
+        if result is not None:
+            self._set_name_cache[result.name] = result
+        return result
 
     def get_bonuses(self, set_id: int) -> list[GearSetBonus]:
+        cache_key = int(set_id)
+        if cache_key in self._bonuses_cache:
+            return list(self._bonuses_cache[cache_key])
+
         with sqlite3.connect(self.database_path) as connection:
             rows = connection.execute(
                 """
@@ -72,7 +89,9 @@ class GearSetRepository:
                 (set_id,),
             ).fetchall()
 
-        return [self._to_gear_set_bonus(row) for row in rows]
+        bonuses = tuple(self._to_gear_set_bonus(row) for row in rows)
+        self._bonuses_cache[cache_key] = bonuses
+        return list(bonuses)
 
     def get_bonus(self, set_id: int, piece_count: int) -> GearSetBonus | None:
         with sqlite3.connect(self.database_path) as connection:
