@@ -8,6 +8,26 @@ _POTION_BOUNDARY_PREFIX = "Potion selected; activation/uptime is not part of sta
 _FROZEN_ARMOR_GAP = "Passive rank is not recorded for character: Frozen Armor"
 _MOVEMENT_SPEED_MARKER = "movement_speed unresolved"
 
+# Selected CP that are explicitly outside the current resource timeline. These
+# do not change resource pools, recovery, action costs, or scheduled restoration
+# in the saved-bar sustain model:
+# - Breakfall: fall-damage mitigation;
+# - Liquid Efficiency: item-consumption chance, while potion activations are not
+#   scheduled by this runner;
+# - Rationer: food/drink duration only, not the magnitude of an already-active
+#   provisioning stat effect;
+# - Master Gatherer: harvesting time;
+# - Celerity: movement speed.
+_NON_SUSTAIN_DYNAMIC_CP_KEYS = frozenset(
+    {
+        "breakfall",
+        "liquidefficiency",
+        "rationer",
+        "mastergatherer",
+        "celerity",
+    }
+)
+
 
 def sustain_relevant_context_unresolved(
     build: PlayerBuild,
@@ -21,12 +41,15 @@ def sustain_relevant_context_unresolved(
     model is explicit in existing architecture:
 
     - unmapped Champion Points not selected on the saved build are unrelated;
+    - selected CP with mechanics explicitly outside this resource timeline are
+      also unrelated to the current sustain result;
     - potion activation/uptime is not auto-scheduled by the sustain runner;
     - Warden Frozen Armor contributes resistance only;
     - movement speed is outside the current character-sheet resource/cost layer.
 
-    Selected unmapped CP remains unresolved because it may represent a mechanic
-    the player actually equipped. Every other unknown is preserved fail-closed.
+    Any other selected unmapped CP remains unresolved because it may represent a
+    mechanic the player actually equipped. Every other unknown is preserved
+    fail-closed.
     """
 
     selected_cp = {
@@ -45,7 +68,10 @@ def sustain_relevant_context_unresolved(
 
         if message.startswith(_CP_DYNAMIC_PREFIX):
             cp_name = message[len(_CP_DYNAMIC_PREFIX):].strip()
-            if _key(cp_name) not in selected_cp:
+            cp_key = _key(cp_name)
+            if cp_key not in selected_cp:
+                continue
+            if cp_key in _NON_SUSTAIN_DYNAMIC_CP_KEYS:
                 continue
 
         if message.startswith(_POTION_BOUNDARY_PREFIX):
