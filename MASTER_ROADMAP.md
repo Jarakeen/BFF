@@ -318,7 +318,7 @@ Static Combat / Sustain / Encounter Consumers
 ---
 
 # PHASE 9 · Encounter Model
-**Status: 🟢 Engine complete / 🟡 Retrospective corpus hardening**
+**Status: 🟢 Complete**
 
 Phase 9 owns the deterministic, source-backed encounter model for boss identity, structural encounter data, mechanics, phases, requirements, positioning demands, timers, transitions, target-count constraints, add groups, damage windows, canonical facts, evidence, and unresolved/conflicting state.
 
@@ -341,15 +341,13 @@ The original closeout on **2026-09-02** proved the encounter architecture and pr
 
 Detailed historical closeout: `docs/phase9_encounter_model_closeout.md`.
 
-That closeout was sufficient to prove the **engine**, but under the hardened roadmap standard it did not fully close the **required corpus review/persistence gate**. The phrase “low coverage is an enrichment gap” was too permissive because later encounter-aware optimization depends on the truth of those mechanics.
+## Retrospective hardening closeout
 
-## Retrospective hardening completed
-
-The later corpus audit established:
+The hardened corpus review and persistence gate completed on **2026-09-03**:
 
 - boss source files: **490**;
-- canonical boss encounter identities: **490 / 490 committed**;
-- inferred mechanic rows requiring explicit semantic review: **109 across 35 bosses**;
+- canonical boss encounter identities: **490 / 490**;
+- inferred mechanic rows requiring semantic review: **109 across 35 bosses**;
 - review decisions: **109 / 109**;
 - accepted: **94**;
 - rejected as currently inferred: **15**;
@@ -358,31 +356,23 @@ The later corpus audit established:
 - UESP evidence rows persisted: **94**;
 - rejected rows persisted as canonical facts: **0**;
 - first apply: **94 facts inserted / 94 evidence rows inserted**;
-- second apply: **0 inserted / 94 facts existing / 94 evidence rows existing**, proving idempotency.
+- second apply: **0 inserted / 94 facts existing / 94 evidence rows existing**, proving idempotency;
+- post-persistence audit: **94 / 94 canonical facts matched**, **94 / 94 evidence rows matched**, **0 missing**, **0 conflicting**;
+- focused persisted-mechanic audit tests: **3 passed in 0.22s**;
+- structural source audit: **490 / 490 health**, **2070 / 2070 abilities**, **4 / 4 explicit phases**, **2274 / 2274 dialogue rows**, **2450 / 2450 section rows**, **0 problems**;
+- structural dry run: **490 ready**, **0 blocked**;
+- controlled structural apply created a SQLite backup before write and independently verified the same exact counts after commit.
 
-The reviewed-single-source path remains deliberately separate from corroboration-based promotion. Human review does not impersonate a second source.
+The reviewed-single-source path remains deliberately separate from corroboration-based promotion. Human review does not impersonate a second source. Inferred mechanics remain outside the structural-import shortcut.
 
-## Remaining Phase 9 hardening gates
+Detailed retrospective closeout: `docs/phase9_retrospective_hardening_closeout.md`.
 
-Phase 9 returns to plain **🟢 Complete** only after both are recorded:
-
-1. **Post-persistence canonical audit**
-   - expected reviewed-single-source facts: 94;
-   - expected matching canonical facts: 94;
-   - expected matching evidence rows: 94;
-   - missing/conflicting canonical or evidence rows: 0.
-
-2. **Structural boss-row verification**
-   - confirm whether the prepared 490-boss structural import of abilities, explicit phases, and dialogue was actually applied to the canonical database;
-   - if not applied, perform dry run → backup → controlled apply → post-write audit;
-   - inferred mechanics must remain outside the structural-import shortcut.
-
-**Hardened Phase 9 exit criteria:** the required boss corpus has canonical identities, source-backed structural data is verified in storage, every inferred mechanic has an explicit decision, accepted single-source mechanics are persisted with provenance, rejected/unsupported rows remain outside canonical truth, and post-write audits prove the database matches the reviewed plan.
+**Hardened Phase 9 exit criteria met on 2026-09-03.**
 
 ---
 
 # PHASE 10 · Encounter Evaluation
-**Status: 🟢 Engine complete / 🟡 Retrospective revalidation required**
+**Status: 🟢 Complete**
 
 Phase 10 combines Encounter + Requirements + Roster + Builds and produces covered, redundant, insufficient, missing, conflict, and unknown outcomes while preserving the boundary between collective capability and provider assignment.
 
@@ -394,31 +384,62 @@ Historical closeout evidence:
 - both selected builds: **0 capability-resolution gaps**;
 - Oaxiltso veteran: **fully evaluable = true**;
 - Oaxiltso veteran: **capability-ready = true**;
-- execution rows: **7**;
 - provider rows: **0**, as expected for that validation encounter;
-- execution corpus: **21 encounters with requirements**;
-- fully evaluable encounters: **6**;
-- fully ready encounters: **6**;
-- covered requirements: **25**;
-- unknown requirements: **31**;
-- conflicting requirements: **0**;
 - focused final checkpoint: **16 passed in 1.65s**;
 - full suite after final historical Phase 10 changes: **2031 passed in 94.10s**;
-- detailed closeout: `docs/phase10_encounter_evaluation_closeout.md`.
+- detailed historical closeout: `docs/phase10_encounter_evaluation_closeout.md`.
 
-The evaluator architecture remains complete. However, Phase 9's later corpus hardening materially changes canonical encounter inputs, so the hardened dependency rule requires a retrospective integration rerun.
+## Retrospective revalidation after Phase 9 hardening
 
-## Phase 10 retrospective gate
+The dependency-impact rerun completed on **2026-09-03** against the reviewed canonical mechanic corpus.
 
-After Phase 9 hardening closes:
+Canonical consumption boundary:
 
-- rerun at least one real canonicalized encounter through Encounter + Requirements + Roster + Builds;
-- prefer Oaxiltso for continuity plus one additional encounter whose mechanics entered through the reviewed-single-source path;
-- verify covered/unknown/conflict outcomes remain explainable;
-- record focused test output and the real integration result;
-- do not require provider assignment here; that remains Phase 11.
+- raw inferred source mechanics: **109**;
+- canonical mechanic facts: **94**;
+- accepted inferred replacements: **94**;
+- rejected/unpersisted inferred: **15**;
+- canonical facts without raw inferred source rows: **0**;
+- raw inferred downstream leaks: **0**;
+- result: **PASS**.
 
-**Hardened Phase 10 exit criteria:** BFF reliably evaluates a real roster against canonically persisted encounter facts and requirements, preserves unknown/conflicting evidence, and remains valid after upstream encounter-corpus hardening.
+Focused regression checkpoint:
+
+- **38 passed in 3.34s**.
+
+Current canonical-filtered execution corpus:
+
+- encounters with requirements: **18**;
+- fully evaluable encounters: **6**;
+- fully ready encounters: **6**;
+- covered requirements: **20**;
+- unknown requirements: **24**;
+- conflicting requirements: **0**.
+
+Real roster revalidation used **Magrat → DF Healer** and **Susan → Necro Tank**, with **0 capability-resolution gaps** on both selected builds.
+
+Oaxiltso veteran control result:
+
+- fully evaluable: **true**;
+- capability-ready: **true**;
+- execution rows: **6**;
+- provider rows: **0**;
+- Phase 10 exit ready: **true**.
+
+Hiath the Battlemaster veteran boundary result:
+
+- execution rows: **5**;
+- covered: Agony interrupt, Purifying Light cleanse, Solar Disturbance interrupt;
+- unknown: Invisibility positioning because no source-backed execution-method fact is persisted;
+- unknown: Roll Dodge movement because the source describes **Hiath's own roll dodge**, exposing an actor-semantics limitation in the current requirement contract rather than a player movement action;
+- conflicting requirements: **0**;
+- provider rows: **0**.
+
+The Hiath result is an expected preserved-UNKNOWN boundary, not a reason to manufacture player execution semantics. Phase 10's promise is correct evaluation and explicit uncertainty, not universal encounter completeness.
+
+Detailed retrospective closeout: `docs/phase10_retrospective_revalidation_closeout.md`.
+
+**Hardened Phase 10 exit criteria met on 2026-09-03.**
 
 ---
 
