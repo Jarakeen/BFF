@@ -467,38 +467,35 @@ Phase 11 does not automatically reopen for Phase 9 mechanic enrichment because p
 ---
 
 # PHASE 12 · Build Optimization
-**Status: 🟡 Active**
+**Status: 🟢 Complete**
 
-The optimizer varies gear, sets, mythics, weapons, traits, enchants, skills, morphs, ultimates, CP, Mundus, food, potions, and configuration. It does not contain ESO math itself; it asks the rules engine.
+Phase 12 established the authoritative bounded build-optimization path. The optimizer represents exact immutable candidate changes, delegates ESO math and capability evidence to existing engine services, keeps hard constraints separate from objective score, and ranks only candidates that have enough evidence to be rankable.
 
-Phase 12 must optimize **within the verified architecture** rather than creating a second combat model. Candidate changes must be scored through existing build, effect, static combat, sustain, combat-state, encounter, coverage, and provider-assignment systems. UNKNOWN and unsupported mechanics remain explicit and may not be silently treated as zero-cost improvements.
+The closed real-data scope is deliberately bounded one-change optimization for Mundus, armor traits, armor enchants, and food/drink. The candidate/evaluator contracts are reusable for later gear-set, mythic, weapon, skill, morph, ultimate, CP, potion, and configuration expansion; Phase 12 closeout does not pretend those broader combinatorial dimensions are already exhaustively searched.
 
-## Active priorities
+Closeout evidence on **2026-09-03**:
 
-1. inventory existing optimizer/minmax candidate-generation code before creating new search logic;
-2. define one immutable build-candidate contract preserving canonical character/build identity and exact changes;
-3. establish deterministic objective/result contracts before broad search;
-4. score candidates only through authoritative existing math/effect/sustain services;
-5. preserve required raid coverage and Phase 11 provider responsibilities while evaluating changes;
-6. reject or explicitly mark candidates whose required mechanics cannot be evaluated;
-7. start with tightly bounded candidate dimensions before combining gear, skills, CP, food, potions, and configuration;
-8. validate against a real saved build and require an explainable baseline-vs-candidate comparison.
+- one immutable `BuildCandidate` / `BuildChange` representation preserves canonical identity and exact before/after changes;
+- deterministic candidate generation and ranking use explicit named objective metrics with no hidden fallback score;
+- `WORSENED`, `UNSATISFIED`, and `UNKNOWN` hard-constraint states block ranking rather than becoming point penalties;
+- candidate scoring delegates to existing static build/healing, sustain, capability, encounter-evaluation, and provider-assignment services;
+- required capability coverage and baseline provider responsibility remain explicit gates;
+- unsupported or unresolved evidence cannot win by being treated as zero;
+- real saved build **Magrat → DF Healer** completed baseline → candidates → scoring → ranking → explanation with Oaxiltso provider context and **Necro Tank** roster support;
+- winning recommendation: **Witchmother's Potent Brew → Ghastly Eye Bowl**;
+- winning healing comparison delta: **+2150.139**;
+- winning Magicka sustain: **repaired**, minimum **3573**, ending **6314**;
+- capability coverage: **preserved**;
+- provider responsibility: **preserved**;
+- selected-candidate unresolved evidence: **none**;
+- provisioning search hardening reduced the real audit from **121 discovered** to **73 evaluated** candidates without changing the winner or hard-constraint conclusions;
+- focused optimizer/performance checkpoint: **117 passed in 8.94s**;
+- final full regression checkpoint: **2232 passed in 87.58s**;
+- detailed closeout: `docs/phase12_build_optimization_closeout.md`.
 
-## Hardened Phase 12 exit criteria
+The healing value used by the closeout audit is a modeled comparison score, not HPS. The healer/DD role boundary remains explicit; diagnostic role mismatch does not become a valid healer recommendation.
 
-Phase 12 may close only when all of the following are true:
-
-- one authoritative immutable candidate representation exists;
-- candidate generation is deterministic for identical inputs;
-- objective metrics are explicit and named, with no hidden fallback score;
-- the optimizer delegates ESO math to authoritative engine services rather than duplicating formulas;
-- unsupported/unknown candidate consequences remain explicit and cannot win by being treated as zero;
-- required raid coverage and assigned provider responsibilities are preserved or the candidate is explicitly rejected/degraded;
-- at least one real saved build completes baseline → candidates → scoring → ranking → explanation;
-- winning-candidate reasoning lists changed inputs, expected improvement, sustain/coverage tradeoffs, and unresolved assumptions;
-- focused optimizer tests are green;
-- a full regression checkpoint is recorded before Phase 12 is marked complete;
-- any Phase 9/10 dependency required by the selected optimization mode is green under the hardened roadmap standard.
+**Hardened Phase 12 exit criteria met on 2026-09-03.**
 
 ---
 
