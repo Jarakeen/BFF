@@ -1,6 +1,9 @@
 from models.top_team_model import TopTeamPlayer, TopTeamResult
 from services.team_prescription_observed_templates import ObservedTeamTemplateStore
-from services.top_team_template_intake import TopTeamTemplateIntake
+from services.top_team_template_intake import (
+    OBSERVED_TEAM_TEMPLATE_FILENAME,
+    TopTeamTemplateIntake,
+)
 
 
 class _FakeTopTeamService:
@@ -42,6 +45,12 @@ def _intake(tmp_path):
         tmp_path / "team_prescription_observed_templates.json"
     )
     return TopTeamTemplateIntake(store), store
+
+
+def test_intake_for_data_dir_owns_standard_observed_template_path(tmp_path) -> None:
+    intake = TopTeamTemplateIntake.for_data_dir(tmp_path)
+
+    assert intake.store.path == tmp_path / OBSERVED_TEAM_TEMPLATE_FILENAME
 
 
 def test_intake_can_save_observed_setup_without_requesting_mundus(tmp_path) -> None:
