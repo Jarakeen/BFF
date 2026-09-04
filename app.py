@@ -218,6 +218,7 @@ def main() -> int:
     from ui.application_update_support import install as install_application_update_support
     from ui.team_prescription_pipeline_support import install as install_team_prescription_pipeline_support
     from ui.team_prescription_template_support import install as install_team_prescription_template_support
+    from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
 
     install_searchable_selectors()
     install_scribing_support()
@@ -263,6 +264,8 @@ def main() -> int:
     install_team_prescription_pipeline_support()
     # Template sources wrap the saved-player prescription and fill remaining chairs.
     install_team_prescription_template_support()
+    # Optimization modes get editable, mode-specific starting choices last.
+    install_team_optimization_mode_defaults()
 
     from ui.main_window import MainWindow
 
