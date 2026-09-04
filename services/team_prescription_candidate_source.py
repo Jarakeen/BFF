@@ -194,6 +194,11 @@ def evaluate_open_slot_candidate_source(
     service owns only source orchestration, role boundaries, immutable snapshots, and
     explicit failure reporting. It never invents a baseline, objective value, player,
     provider assignment, or unsupported ESO mechanic.
+
+    Saved-player anchors and chairs that already hold a complete prescribed build
+    snapshot are not open candidate targets. This lets multiple template sources run
+    in priority order without a later, weaker source replacing an earlier complete
+    recommendation.
     """
 
     candidate_ids = [candidate.candidate_id for candidate in candidates]
@@ -216,7 +221,7 @@ def evaluate_open_slot_candidate_source(
     }
 
     for assignment in roster.assignments:
-        if assignment.player_name is not None:
+        if assignment.player_name is not None or assignment.prescribed_build is not None:
             continue
         required_role = slot_role_family(assignment.slot_name)
         build_constraint = normalized_build_constraints.get(
