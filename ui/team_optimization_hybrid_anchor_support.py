@@ -42,3 +42,10 @@ def install() -> None:
         _generate_with_hybrid_visible_players_preserved
     )
     _INSTALLED = True
+
+    # Install last in the existing team-support chain. The underlying prescription
+    # machinery remains available, but its direct composition-building UI is removed
+    # from Optimization now that Comp Builder owns that responsibility.
+    from ui.team_optimization_role_cleanup import install as install_role_cleanup
+
+    install_role_cleanup()
