@@ -49,6 +49,7 @@ CORE_NAV_SECTIONS = [
     {"label": "Raid Engine", "children": [
         ("Overview", "operations_console"),
         ("Builds", "console:2"),
+        ("Rotations", "rotations"),
         ("Optimization", "console:6"),
         ("Roster", "roster_page"),
         ("Coverage", "console:7"),
