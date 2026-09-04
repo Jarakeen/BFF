@@ -180,7 +180,7 @@ def _merge_pair_guides(guides: tuple[EncounterBossGuide, ...]) -> EncounterBossG
 
 
 def _configure_ability_table(self) -> None:
-    """Give wrapped ability descriptions enough horizontal room to be readable."""
+    """Keep wrapped ability descriptions readable even in a narrow split pane."""
     table = getattr(self, "abilities_table", None)
     if table is None:
         return
@@ -192,12 +192,16 @@ def _configure_ability_table(self) -> None:
     header.setMinimumSectionSize(70)
     header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
     header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-    header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+    # Stretch made Description absorb all remaining pressure from the timeline
+    # pane, which could collapse it to a few characters. Give it a real width
+    # and let the table use horizontal scrolling when the page is tighter.
+    header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
     header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
     header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
     header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive)
 
-    table.setColumnWidth(0, 250)
+    table.setColumnWidth(0, 230)
+    table.setColumnWidth(2, 380)
     table.setColumnWidth(3, 145)
     table.setColumnWidth(5, 120)
     table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
