@@ -347,6 +347,46 @@ class EncounterResearchStore:
                 )
         return tuple(candidates)
 
+    def update_candidate(
+        self,
+        candidate_id: str,
+        *,
+        content_id: str | None = None,
+        encounter_id: str | None = None,
+        fact_type: str | None = None,
+        fact_key: str | None = None,
+        reviewer_note: str | None = None,
+    ) -> EncounterResearchCandidate:
+        """Edit reviewer-owned candidate metadata without changing source evidence."""
+        payload = self._load()
+        for index, raw in enumerate(payload.get("candidates", [])):
+            if str(raw.get("candidate_id", "")) != candidate_id:
+                continue
+
+            updated = dict(raw)
+            if content_id is not None:
+                updated["content_id"] = str(content_id).strip()
+            if encounter_id is not None:
+                updated["encounter_id"] = str(encounter_id).strip()
+            if fact_type is not None:
+                normalized_type = str(fact_type).strip().casefold()
+                if not normalized_type:
+                    raise ValueError("fact_type must be non-empty")
+                updated["fact_type"] = normalized_type
+            if fact_key is not None:
+                normalized_key = str(fact_key).strip().casefold()
+                if not normalized_key:
+                    raise ValueError("fact_key must be non-empty")
+                updated["fact_key"] = normalized_key
+            if reviewer_note is not None:
+                updated["reviewer_note"] = str(reviewer_note)
+
+            payload["candidates"][index] = updated
+            self._save(payload)
+            return EncounterResearchCandidate(**updated)
+
+        raise KeyError(f"Unknown encounter research candidate: {candidate_id}")
+
     def set_candidate_status(
         self,
         candidate_id: str,
@@ -363,7 +403,7 @@ class EncounterResearchStore:
                 continue
             raw = dict(raw)
             raw["status"] = normalized
-            raw["reviewer_note"] = str(reviewer_note or "")
+            raw["reviewer_note"] = str(reviewer_note or raw.get("reviewer_note", ""))
             payload["candidates"][index] = raw
             self._save(payload)
             return EncounterResearchCandidate(**raw)
