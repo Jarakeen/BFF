@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 from ui.components.foundry_card import FoundryCard
 from ui.components.team_progress_panels import (
@@ -51,10 +51,18 @@ def _comp_refresh_coverage_with_progress(self, *args) -> None:
     _refresh_comp_progress(self)
 
 
+def _rename_comp_actions_card(page) -> None:
+    for card in page.findChildren(FoundryCard):
+        if card.title_label.text().strip() == "Roster Handoff":
+            card.set_title("Actions")
+            return
+
+
 def _comp_init_with_progress(self, parent=None) -> None:
     assert _ORIGINAL_COMP_INIT is not None
     _ORIGINAL_COMP_INIT(self, parent)
 
+    _rename_comp_actions_card(self)
     card, grid = make_coverage_card()
     self.progress_coverage_card = card
     self.progress_coverage_grid = grid
@@ -83,19 +91,20 @@ def _selected_optimization_builds(page) -> tuple:
 
 def _optimization_details_text(page) -> str:
     target = len(page._role_slots())
-    saved, recruits = page._team_counts(
+    table = (
         page.team_b_table
         if hasattr(page, "team_tabs") and page.team_tabs.currentIndex() == 1
         else page.team_table
     )
+    saved, recruits = page._team_counts(table)
     goal = page.goal_combo.currentText().strip() or "Custom Goal"
     return (
-        f"Tanks / Healers / DD follow the loaded team structure.\n\n"
+        "2 Tanks • 2 Healers • 8 Damage Dealers\n\n"
         f"PRIMARY OBJECTIVE\n• {goal}\n\n"
         f"TEAM STATE\n• {saved} saved player(s)\n"
         f"• {recruits} open recruit chair(s)\n"
         f"• {saved + recruits}/{target} planned slot(s)\n\n"
-        "Coverage below is resolved from the selected saved builds, not inferred from class alone."
+        "Coverage is resolved from the selected saved builds, not inferred from class alone."
     )
 
 
@@ -138,7 +147,7 @@ def _build_optimization_progress_row(page) -> QWidget:
 
     actions = FoundryCard("Actions", "➜")
     note = QLabel(
-        "This page improves an existing team. Keep the composition locked for build-only gains, or deliberately unlock broader changes."
+        "Improve the existing team here. Keep composition locks on for build-only gains, or deliberately unlock broader changes."
     )
     note.setWordWrap(True)
     actions.addWidget(note)
