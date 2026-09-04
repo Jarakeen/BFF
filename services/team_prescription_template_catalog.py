@@ -10,6 +10,7 @@ from services.team_prescription_candidate_source import (
     PrescribedObjectiveMeasurement,
     PrescribedOpenSlotCandidate,
 )
+from services.team_prescription_slot_constraints import build_gear_set_names
 from services.team_role_autofill import normalize_team_role
 
 
@@ -36,6 +37,18 @@ def _score_map(value: object) -> dict[str, float]:
     return result
 
 
+def _known_skills(build: PlayerBuild) -> tuple[str, ...]:
+    values: list[str] = []
+    seen: set[str] = set()
+    for raw in (*build.FrontBarSkills, *build.BackBarSkills):
+        text = _clean(raw)
+        key = text.casefold()
+        if text and key not in seen:
+            seen.add(key)
+            values.append(text)
+    return tuple(values)
+
+
 @dataclass(frozen=True)
 class TeamPrescriptionTemplate:
     template_id: str
@@ -49,6 +62,7 @@ class TeamPrescriptionTemplate:
     slot_scores: dict[str, float]
     goal_scores: dict[str, float]
     build_json: str
+    complete_build: bool = False
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -89,12 +103,28 @@ class TeamPrescriptionTemplate:
         return score
 
     def to_candidate(self) -> PrescribedOpenSlotCandidate:
+        build = self.build
+        metadata = {
+            "complete_build": bool(self.complete_build),
+            "template_kind": "published_reference_template",
+            "observed_class": build.EsoClass,
+            "observed_gear_sets": list(build_gear_set_names(build)),
+            "observed_skills": list(_known_skills(build)),
+            "observed_mundus": build.Mundus,
+            "unknown_fields": list(self.unresolved),
+            "source_name": self.source_name,
+            "source_url": self.source_url,
+            "retrieved_at": self.retrieved_at,
+            "game_update": self.game_update,
+            "catalog_version": self.catalog_version,
+        }
         return PrescribedOpenSlotCandidate.from_build(
             candidate_id=self.template_id,
-            candidate_build=self.build,
+            candidate_build=build,
             candidate_source=(
                 f"{self.source_name} | {self.catalog_version} | {self.game_update}"
             ),
+            candidate_metadata=metadata,
         )
 
 
@@ -111,9 +141,12 @@ class TeamPrescriptionTemplateCatalog:
 
     Templates are candidate-generation evidence, not canonical ESO math. They are
     deliberately ranked by an explicit catalog/source score only after the canonical
-    saved-player candidate pass has had the opportunity to fill a chair. The selected
-    build snapshot retains source limitations so a reference template cannot silently
-    become a claim that BFF calculated a full best-in-slot build from first principles.
+    saved-player candidate pass has had the opportunity to fill a chair.
+
+    ``complete_build`` is an explicit catalog declaration. Merely deserializing into
+    ``PlayerBuild`` does not make a reference setup complete because model defaults can
+    legitimately leave race, gear, traits, CP, food, potion, or bars empty. Only a
+    template intentionally marked complete may become a saveable prescribed snapshot.
     """
 
     def __init__(self, path: str | Path):
@@ -176,6 +209,7 @@ class TeamPrescriptionTemplateCatalog:
                         sort_keys=True,
                         separators=(",", ":"),
                     ),
+                    complete_build=bool(raw_template.get("complete_build", False)),
                     unresolved=tuple(
                         _clean(item)
                         for item in (raw_template.get("unresolved") or ())
@@ -226,6 +260,7 @@ class TemplateCatalogObjectiveEvaluator:
             f"source={template.source_name}",
             f"source_url={template.source_url}",
             f"retrieved_at={template.retrieved_at or 'unresolved'}",
+            f"complete_build={str(template.complete_build).lower()}",
             "boundary=reference-template source score; not canonical damage/HPS/tank math",
             *tuple(f"template limitation: {item}" for item in template.unresolved),
         )
