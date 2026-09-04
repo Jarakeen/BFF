@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QPlainTextEdit,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -24,12 +27,92 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
 
+class SustainGraph(QWidget):
+    """Compact 60-second sustain graph that renders only supplied evidence."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._points: tuple[tuple[float, float], ...] = ()
+        self.setMinimumHeight(210)
+        self.setToolTip("60-second resource projection from evaluated rotation evidence.")
+
+    def set_points(self, points) -> None:
+        cleaned: list[tuple[float, float]] = []
+        for time_seconds, value in points or ():
+            time_value = max(0.0, min(60.0, float(time_seconds)))
+            cleaned.append((time_value, float(value)))
+        self._points = tuple(sorted(cleaned))
+        self.update()
+
+    def clear_points(self) -> None:
+        self._points = ()
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        palette = self.palette()
+        text_color = palette.color(self.foregroundRole())
+        muted = QColor(text_color)
+        muted.setAlpha(120)
+        grid_color = QColor(text_color)
+        grid_color.setAlpha(45)
+        line_color = QColor(184, 154, 91)
+
+        rect = QRectF(self.rect()).adjusted(44, 14, -14, -30)
+        if rect.width() <= 0 or rect.height() <= 0:
+            return
+
+        painter.setPen(QPen(grid_color, 1))
+        for second in (0, 15, 30, 45, 60):
+            x = rect.left() + rect.width() * (second / 60.0)
+            painter.drawLine(QPointF(x, rect.top()), QPointF(x, rect.bottom()))
+            painter.setPen(muted)
+            painter.drawText(QRectF(x - 18, rect.bottom() + 5, 36, 18), Qt.AlignmentFlag.AlignCenter, f"{second}s")
+            painter.setPen(QPen(grid_color, 1))
+
+        for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+            y = rect.bottom() - rect.height() * fraction
+            painter.drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y))
+
+        if not self._points:
+            painter.setPen(muted)
+            painter.drawText(
+                rect,
+                Qt.AlignmentFlag.AlignCenter,
+                "Awaiting evaluated 60s sustain evidence",
+            )
+            return
+
+        values = [value for _, value in self._points]
+        low = min(values)
+        high = max(values)
+        if high <= low:
+            high = low + 1.0
+
+        path = QPainterPath()
+        for index, (time_seconds, value) in enumerate(self._points):
+            x = rect.left() + rect.width() * (time_seconds / 60.0)
+            y = rect.bottom() - rect.height() * ((value - low) / (high - low))
+            point = QPointF(x, y)
+            if index == 0:
+                path.moveTo(point)
+            else:
+                path.lineTo(point)
+
+        painter.setPen(QPen(line_color, 2))
+        painter.drawPath(path)
+        painter.setPen(muted)
+        painter.drawText(QRectF(0, rect.top() - 2, 40, 18), Qt.AlignmentFlag.AlignRight, f"{high:g}")
+        painter.drawText(QRectF(0, rect.bottom() - 14, 40, 18), Qt.AlignmentFlag.AlignRight, f"{low:g}")
+
+
 class RotationDashboardPage(FoundryPage):
     """Phase 13 rotation workspace for one saved character/build.
 
-    The dashboard deliberately distinguishes saved-build facts from generated
-    rotation evidence. Until a RotationPlan is supplied, timing/resource panels
-    stay unresolved instead of manufacturing a plausible-looking parse.
+    Saved-build facts can be configured here immediately. Generated timing and
+    sustain evidence is rendered only after the rotation engine supplies it.
     """
 
     def __init__(self, parent=None):
@@ -44,7 +127,7 @@ class RotationDashboardPage(FoundryPage):
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
             title="Rotation Dashboard",
-            subtitle="Plan, inspect, and validate a saved build's combat sequence.",
+            subtitle="Generate, inspect, and tune a saved build's combat sequence.",
             department="Raid Engine • Rotations",
         )
         self.set_header(self.header)
@@ -53,15 +136,8 @@ class RotationDashboardPage(FoundryPage):
         self.character_combo.setMinimumWidth(180)
         self.build_combo = QComboBox()
         self.build_combo.setMinimumWidth(210)
-        self.mode_combo = QComboBox()
-        self.mode_combo.addItems(["Semi-static", "Priority", "Encounter-aware"])
-        self.mode_combo.setCurrentIndex(0)
-        self.mode_combo.setEnabled(False)
-        self.mode_combo.setToolTip("Additional rotation modes will unlock as Phase 13 scheduling is wired into this page.")
-
         self.header.add_context_widget(self._context_field("CHARACTER", self.character_combo))
         self.header.add_context_widget(self._context_field("BUILD", self.build_combo))
-        self.header.add_context_widget(self._context_field("MODE", self.mode_combo))
 
         self.character_combo.currentIndexChanged.connect(self._character_changed)
         self.build_combo.currentIndexChanged.connect(self._refresh_build_context)
@@ -74,7 +150,6 @@ class RotationDashboardPage(FoundryPage):
         grid.setColumnStretch(0, 3)
         grid.setColumnStretch(1, 2)
 
-        # Main timeline. No synthetic timings are displayed before a plan exists.
         timeline_card = FoundryCard("Rotation Timeline", "◇").set_watermark("compass", 0.035)
         self.timeline_table = QTableWidget(0, 5)
         self.timeline_table.setHorizontalHeaderLabels(["Time", "Bar", "Action", "Type", "State"])
@@ -85,14 +160,14 @@ class RotationDashboardPage(FoundryPage):
         self.timeline_table.setMinimumHeight(300)
         timeline_card.addWidget(self.timeline_table)
         self.timeline_hint = QLabel(
-            "No generated rotation plan yet. Slotted abilities appear at right; timings remain unresolved until the Phase 13 planner supplies a RotationPlan."
+            "No generated rotation plan yet. Timings stay unresolved until the Phase 13 planner supplies a RotationPlan."
         )
         self.timeline_hint.setWordWrap(True)
         self.timeline_hint.setProperty("muted", True)
         timeline_card.addWidget(self.timeline_hint)
         grid.addWidget(timeline_card, 0, 0)
 
-        priority_card = FoundryCard("Ability Priority", "☷").set_watermark("compass", 0.035)
+        priority_card = FoundryCard("Ability Priority List", "☷").set_watermark("compass", 0.035)
         self.priority_table = QTableWidget(0, 4)
         self.priority_table.setHorizontalHeaderLabels(["Bar", "Slot", "Ability", "Priority"])
         self.priority_table.verticalHeader().setVisible(False)
@@ -102,44 +177,86 @@ class RotationDashboardPage(FoundryPage):
         priority_card.addWidget(self.priority_table)
         grid.addWidget(priority_card, 0, 1)
 
-        resource_card = FoundryCard("Resources & Ultimate", "◈").set_watermark("compass", 0.04)
+        sustain_card = FoundryCard("Sustain over 60s", "◈").set_watermark("compass", 0.04)
+        self.sustain_graph = SustainGraph()
+        sustain_card.addWidget(self.sustain_graph)
         self.resource_summary = QLabel()
         self.resource_summary.setWordWrap(True)
-        resource_card.addWidget(self.resource_summary)
+        sustain_card.addWidget(self.resource_summary)
         self.resource_detail = QLabel(
-            "Sustain window, minimum resource, reserve protection, potion timing, and ultimate alignment will populate from evaluated rotation evidence."
+            "Minimum resource, reserve protection, potion timing, and ultimate alignment populate from evaluated rotation evidence."
         )
         self.resource_detail.setWordWrap(True)
         self.resource_detail.setProperty("muted", True)
-        resource_card.addWidget(self.resource_detail)
-        grid.addWidget(resource_card, 1, 0)
+        sustain_card.addWidget(self.resource_detail)
+        grid.addWidget(sustain_card, 1, 0)
 
-        consumables_card = FoundryCard("Food & Potions", "✦").make_parchment().set_watermark("feather", 0.08)
-        self.food_value = self._value_label()
-        self.potion_value = self._value_label()
-        self.consumable_note = QLabel(
-            "Uses the selected saved build. Rotation-specific suggestions will appear here only when optimization has evidence to support them."
-        )
-        self.consumable_note.setWordWrap(True)
-        consumables_card.addWidget(self._labelled_value("FOOD", self.food_value))
-        consumables_card.addWidget(self._labelled_value("POTION", self.potion_value))
-        consumables_card.addWidget(self.consumable_note)
-        grid.addWidget(consumables_card, 1, 1)
+        settings_card = FoundryCard("Rotation Setup", "◆").set_watermark("compass", 0.035)
+        settings_grid = QGridLayout()
+        settings_grid.setContentsMargins(0, 0, 0, 0)
+        settings_grid.setHorizontalSpacing(8)
+        settings_grid.setVerticalSpacing(6)
 
-        notes_card = FoundryCard("Rotation Notes", "✎").make_parchment().set_watermark("feather", 0.08)
+        self.execute_spin = QSpinBox()
+        self.execute_spin.setRange(0, 100)
+        self.execute_spin.setValue(25)
+        self.execute_spin.setSuffix("%")
+
+        self.rotation_type_combo = QComboBox()
+        self.rotation_type_combo.addItems(["Static", "Semi-static", "Dynamic"])
+        self.rotation_type_combo.setCurrentText("Semi-static")
+
+        self.target_type_combo = QComboBox()
+        self.target_type_combo.addItems(["Single Target", "AoE"])
+
+        self.potion_combo = QComboBox()
+        self.potion_combo.setEditable(True)
+        self.potion_combo.setMinimumContentsLength(18)
+
+        self.potion_on_cooldown = QCheckBox("Use potion on cooldown")
+        self.potion_on_cooldown.setChecked(True)
+
+        settings_grid.addWidget(self._field_label("EXECUTE STARTS"), 0, 0)
+        settings_grid.addWidget(self.execute_spin, 1, 0)
+        settings_grid.addWidget(self._field_label("ROTATION TYPE"), 0, 1)
+        settings_grid.addWidget(self.rotation_type_combo, 1, 1)
+        settings_grid.addWidget(self._field_label("TARGET TYPE"), 2, 0)
+        settings_grid.addWidget(self.target_type_combo, 3, 0)
+        settings_grid.addWidget(self._field_label("POTION"), 2, 1)
+        settings_grid.addWidget(self.potion_combo, 3, 1)
+        settings_grid.addWidget(self.potion_on_cooldown, 4, 0, 1, 2)
+        settings_card.addLayout(settings_grid)
+        grid.addWidget(settings_card, 1, 1)
+
+        notes_card = FoundryCard("Rotation Notes", "✎").set_watermark("feather", 0.05)
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText(
             "Personal reminders, weave notes, execute changes, mechanic swaps, recovery rules..."
         )
-        self.notes_edit.setMaximumHeight(105)
+        self.notes_edit.setMaximumHeight(95)
         notes_card.addWidget(self.notes_edit)
         grid.addWidget(notes_card, 2, 0)
+
+        right_lower = QWidget()
+        right_lower_layout = QGridLayout(right_lower)
+        right_lower_layout.setContentsMargins(0, 0, 0, 0)
+        right_lower_layout.setHorizontalSpacing(8)
+        right_lower_layout.setVerticalSpacing(8)
+
+        consumables_card = FoundryCard("Food & Potions", "✦").set_watermark("feather", 0.035)
+        consumables_card.setMaximumHeight(150)
+        self.food_value = self._value_label()
+        self.potion_value = self._value_label()
+        consumables_card.addWidget(self._labelled_value("FOOD", self.food_value))
+        consumables_card.addWidget(self._labelled_value("SAVED POTION", self.potion_value))
+        right_lower_layout.addWidget(consumables_card, 0, 0)
 
         summary_card = FoundryCard("Build Summary", "◆").set_watermark("compass", 0.04)
         self.build_summary = QLabel()
         self.build_summary.setWordWrap(True)
         summary_card.addWidget(self.build_summary)
-        grid.addWidget(summary_card, 2, 1)
+        right_lower_layout.addWidget(summary_card, 1, 0)
+        grid.addWidget(right_lower, 2, 1)
 
         action_row = QHBoxLayout()
         action_row.setContentsMargins(0, 0, 0, 0)
@@ -147,7 +264,7 @@ class RotationDashboardPage(FoundryPage):
         self.generate_button.setProperty("primary", True)
         self.generate_button.setEnabled(False)
         self.generate_button.setToolTip(
-            "The dashboard is ready; generator wiring will enable this when the Phase 13 planner owns a real saved-build schedule."
+            "Generator wiring will enable this when the Phase 13 planner owns the complete saved-build schedule path."
         )
         self.clear_plan_button = QPushButton("Clear Plan")
         self.clear_plan_button.clicked.connect(self.clear_rotation_plan)
@@ -171,6 +288,12 @@ class RotationDashboardPage(FoundryPage):
         layout.addWidget(label)
         layout.addWidget(widget)
         return box
+
+    @staticmethod
+    def _field_label(title: str) -> QLabel:
+        label = QLabel(title)
+        label.setProperty("sidebarHeading", True)
+        return label
 
     @staticmethod
     def _value_label() -> QLabel:
@@ -251,8 +374,10 @@ class RotationDashboardPage(FoundryPage):
         if build is None:
             self.food_value.setText("—")
             self.potion_value.setText("—")
+            self.potion_combo.clear()
             self.build_summary.setText("No saved build selected.")
             self.resource_summary.setText("Rotation evidence: unavailable")
+            self.sustain_graph.clear_points()
             self.status.warning("No saved build is available for the selected character.")
             return
 
@@ -267,8 +392,18 @@ class RotationDashboardPage(FoundryPage):
                 for column, value in enumerate(values):
                     self.priority_table.setItem(row, column, QTableWidgetItem(value))
 
-        self.food_value.setText(str(getattr(build, "Food", "") or "Not selected"))
-        self.potion_value.setText(str(getattr(build, "Potion", "") or "Not selected"))
+        food = str(getattr(build, "Food", "") or "Not selected")
+        potion = str(getattr(build, "Potion", "") or "Not selected")
+        self.food_value.setText(food)
+        self.potion_value.setText(potion)
+        self.potion_combo.blockSignals(True)
+        self.potion_combo.clear()
+        if potion != "Not selected":
+            self.potion_combo.addItem(potion)
+        self.potion_combo.addItem("None")
+        if potion != "Not selected":
+            self.potion_combo.setCurrentText(potion)
+        self.potion_combo.blockSignals(False)
 
         character = self._character_name(build)
         build_name = self._build_name(build)
@@ -287,9 +422,10 @@ class RotationDashboardPage(FoundryPage):
         )
         self.resource_summary.setText(
             "Rotation evidence: awaiting generated plan\n"
-            "Resource budget: unresolved\n"
+            "60s resource curve: unresolved\n"
             "Ultimate timing: unresolved"
         )
+        self.sustain_graph.clear_points()
         if self.rotation_plan is None:
             self.status.info(f"Loaded saved build: {character} • {build_name}.")
 
@@ -315,7 +451,7 @@ class RotationDashboardPage(FoundryPage):
             f"Unresolved: {len(plan.unresolved)}. Assumptions: {len(plan.assumptions)}."
         )
         self.resource_summary.setText(
-            "Rotation schedule loaded. Resource and ultimate consequence panels remain unresolved until evaluated evidence is supplied."
+            "Rotation schedule loaded. The 60s sustain graph remains unresolved until evaluated resource evidence is supplied."
         )
         if plan.unresolved:
             self.status.warning(
@@ -324,12 +460,28 @@ class RotationDashboardPage(FoundryPage):
         else:
             self.status.success("Rotation plan loaded with no schedule-level unresolved items.")
 
+    def set_sustain_series(self, points) -> None:
+        """Render evaluated resource evidence as (time_seconds, resource_value) pairs."""
+        self.sustain_graph.set_points(points)
+
+    def rotation_settings(self) -> dict[str, object]:
+        """Return the current user-selected generation controls without guessing semantics."""
+        return {
+            "execute_percent": int(self.execute_spin.value()),
+            "rotation_type": self.rotation_type_combo.currentText(),
+            "target_type": self.target_type_combo.currentText(),
+            "potion": self.potion_combo.currentText().strip(),
+            "potion_on_cooldown": self.potion_on_cooldown.isChecked(),
+        }
+
     def clear_rotation_plan(self, *, refresh: bool = True) -> None:
         self.rotation_plan = None
         if hasattr(self, "timeline_table"):
             self.timeline_table.setRowCount(0)
             self.timeline_hint.setText(
-                "No generated rotation plan yet. Slotted abilities appear at right; timings remain unresolved until the Phase 13 planner supplies a RotationPlan."
+                "No generated rotation plan yet. Timings stay unresolved until the Phase 13 planner supplies a RotationPlan."
             )
+        if hasattr(self, "sustain_graph"):
+            self.sustain_graph.clear_points()
         if refresh and hasattr(self, "build_summary"):
             self._refresh_build_context()
