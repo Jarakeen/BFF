@@ -57,6 +57,7 @@ CORE_NAV_SECTIONS = [
         ("Performance", "console:3"),
         ("Mechanics", "console:4"),
         ("Reference Data", "console:8"),
+        ("Timers", "timers"),
     ]},
     ("Settings", "settings"),
 ]

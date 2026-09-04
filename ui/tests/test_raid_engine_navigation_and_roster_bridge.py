@@ -12,6 +12,7 @@ def test_raid_engine_menu_matches_workflow_order():
     assert section["children"] == [
         ("Overview", "operations_console"),
         ("Builds", "console:2"),
+        ("Rotations", "rotations"),
         ("Optimization", "console:6"),
         ("Roster", "roster_page"),
         ("Coverage", "console:7"),
@@ -19,6 +20,7 @@ def test_raid_engine_menu_matches_workflow_order():
         ("Performance", "console:3"),
         ("Mechanics", "console:4"),
         ("Reference Data", "console:8"),
+        ("Timers", "timers"),
     ]
 
 

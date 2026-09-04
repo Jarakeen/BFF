@@ -25,6 +25,7 @@ from services.eso_achievement_database_service import EsoAchievementDatabaseServ
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
 from ui.achievements_page import AchievementsPage
+from ui.asylum_perfecta_timer_page import AsylumPerfectaTimerPage
 from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
@@ -112,6 +113,7 @@ class MainWindow(QMainWindow):
             "console:6": optimization_page,
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
+            "timers": AsylumPerfectaTimerPage(),
             "settings": SettingsPage(),
             "incident": IncidentPage(),
         }
@@ -342,6 +344,8 @@ class MainWindow(QMainWindow):
             self._refresh_collectibles_for_active_profile()
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
+        elif page_name == "timers":
+            self.pages["timers"].refresh_context()
 
         self.sidebar.set_current(page_name)
         self.stack.setCurrentWidget(self.page_containers[page_name])
