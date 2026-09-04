@@ -185,6 +185,7 @@ foreach ($ContentType in @("trial", "dungeon", "arena")) {
     Invoke-PythonStep "Apply conservative $ContentType review recommendations" @(
         "tools\recommend_inferred_boss_mechanics.py",
         "--source-dir", $BossSourceDir,
+        "--content-root", $ContentRoot,
         "--content-type", $ContentType,
         "--manifest", $ManifestPath,
         "--apply-accepted"
