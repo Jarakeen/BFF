@@ -97,3 +97,30 @@ def test_review_status_changes_without_canonical_promotion(tmp_path: Path) -> No
     assert updated.status == "approved"
     assert updated.reviewer_note == "Verified against second source later."
     assert store.counts()["approved"] == 1
+
+
+def test_reviewer_can_assign_and_normalize_candidate_without_changing_evidence(tmp_path: Path) -> None:
+    source = tmp_path / "guide.txt"
+    source.write_text("Interrupt the cast.\n", encoding="utf-8")
+    store = EncounterResearchStore(tmp_path / "data")
+    store.import_path(source)
+    candidate = store.candidates()[0]
+    original_evidence = candidate.evidence_text
+    original_value = candidate.value
+
+    updated = store.update_candidate(
+        candidate.candidate_id,
+        content_id="dreadsail_reef",
+        encounter_id="reef_guardian",
+        fact_type="Interrupt",
+        fact_key="Guardian Interrupt",
+        reviewer_note="Boss assignment verified during review.",
+    )
+
+    assert updated.content_id == "dreadsail_reef"
+    assert updated.encounter_id == "reef_guardian"
+    assert updated.fact_type == "interrupt"
+    assert updated.fact_key == "guardian interrupt"
+    assert updated.reviewer_note == "Boss assignment verified during review."
+    assert updated.evidence_text == original_evidence
+    assert updated.value == original_value
