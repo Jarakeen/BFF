@@ -50,9 +50,14 @@ def install() -> None:
 
     install_role_cleanup()
 
-    # Comp Builder and Optimization deliberately share the same progress scoreboard.
-    # On the builder it represents explicitly declared planned coverage; on
-    # Optimization it represents evidence found in the selected saved builds.
+    # Comp Builder owns the planned coverage scoreboard; the shared progress layer
+    # keeps its evidence-driven checkmarks refreshed.
     from ui.team_progress_support import install as install_team_progress_support
 
     install_team_progress_support()
+
+    # ESO Logs composition evidence is additive: imported observed snapshots can
+    # inform Comp Builder classes without overwriting responsibilities/providers.
+    from ui.comp_builder_esologs_support import install as install_comp_builder_esologs
+
+    install_comp_builder_esologs()
