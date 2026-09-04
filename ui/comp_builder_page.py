@@ -101,7 +101,6 @@ class CompBuilderPage(FoundryPage):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(10)
 
-        # Main working row: large matrix on the left, compact actions/details rail on the right.
         top = QHBoxLayout()
         top.setSpacing(10)
 
@@ -160,8 +159,6 @@ class CompBuilderPage(FoundryPage):
         actions_card.addLayout(action_buttons)
         side.addWidget(actions_card, 0)
 
-        # Summary and detail are one card now. The class/provider/mechanic summary is
-        # refreshed into coverage_label so there is no second competing summary box.
         context_card = FoundryCard("Composition Details & Summary", "✦")
         self.trial_label = QLabel()
         self.trial_label.setWordWrap(True)
@@ -177,8 +174,6 @@ class CompBuilderPage(FoundryPage):
         top.addLayout(side, 3)
         root.addLayout(top, 1)
 
-        # Lower row: progress scoreboard beside provenance. Evidence stays visible
-        # without taking the prime upper-right workspace away from editing/actions.
         lower = QHBoxLayout()
         lower.setSpacing(10)
 
@@ -509,7 +504,7 @@ class CompBuilderPage(FoundryPage):
                     role=str(raw_slot.get("role", "")).strip(),
                     preferred_class=str(raw_slot.get("preferred_class", "Any class")).strip() or "Any class",
                     alternative_classes=tuple(raw_slot.get("alternative_classes") or ()),
-                    required_responsibilities=tuple(raw_slot.get("required_responsibilities") or ()),
+                    responsibilities=tuple(raw_slot.get("required_responsibilities") or ()),
                     optional_responsibilities=tuple(raw_slot.get("optional_responsibilities") or ()),
                     provider_requirements=tuple(raw_slot.get("provider_requirements") or ()),
                     mechanic_jobs=tuple(raw_slot.get("mechanic_jobs") or ()),
