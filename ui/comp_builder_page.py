@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
+import json
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -33,6 +35,7 @@ from services.team_composition_catalog import (
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.team_progress_panels import make_coverage_card
 from ui.foundry_page import FoundryPage
 
 
@@ -67,6 +70,7 @@ class CompBuilderPage(FoundryPage):
         data_dir = get_data_dir()
         self.catalog = TeamCompositionCatalog(data_dir / "team_compositions.json")
         self.snapshot = self.catalog.load()
+        self.user_template_path = data_dir / "team_composition_user_templates.json"
         self.plan_service = GeneratedRosterPlanService(EsoDatabase(data_dir / "eso.db"))
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
@@ -97,6 +101,7 @@ class CompBuilderPage(FoundryPage):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(10)
 
+        # Main working row: large matrix on the left, compact actions/details rail on the right.
         top = QHBoxLayout()
         top.setSpacing(10)
 
@@ -136,51 +141,59 @@ class CompBuilderPage(FoundryPage):
         side = QVBoxLayout()
         side.setSpacing(10)
 
-        context_card = FoundryCard("Composition Details", "✦")
-        self.trial_label = QLabel()
-        self.trial_label.setWordWrap(True)
-        self.summary_label = QLabel()
-        self.summary_label.setWordWrap(True)
-        context_card.addWidget(self.trial_label)
-        context_card.addWidget(self.summary_label)
-        side.addWidget(context_card)
-
-        evidence_card = FoundryCard("Evidence & Provenance", "⌁")
-        self.evidence_text = QTextEdit()
-        self.evidence_text.setReadOnly(True)
-        self.evidence_text.setMinimumHeight(220)
-        evidence_card.addWidget(self.evidence_text)
-        side.addWidget(evidence_card, 1)
-
-        top.addLayout(side, 3)
-        root.addLayout(top, 1)
-
-        bottom = QHBoxLayout()
-        bottom.setSpacing(10)
-
-        coverage_card = FoundryCard("Coverage Summary", "⚑")
-        self.coverage_label = QLabel()
-        self.coverage_label.setWordWrap(True)
-        coverage_card.addWidget(self.coverage_label)
-        bottom.addWidget(coverage_card, 2)
-
         actions_card = FoundryCard("Actions", "➜")
+        actions_card.setMaximumHeight(178)
         name_row = QHBoxLayout()
         name_row.addWidget(QLabel("PLAN NAME"))
         self.plan_name_input = QLineEdit()
         name_row.addWidget(self.plan_name_input, 1)
         actions_card.addLayout(name_row)
-        note = QLabel(
-            "Edit chair duties here. Send the requirements to Roster when the composition is ready; no player or complete build is fabricated."
-        )
-        note.setWordWrap(True)
-        actions_card.addWidget(note)
-        self.send_button = QPushButton("Send Composition to Roster")
-        self.send_button.setProperty("primary", True)
-        actions_card.addWidget(self.send_button)
-        bottom.addWidget(actions_card, 2)
 
-        root.addLayout(bottom)
+        action_buttons = QHBoxLayout()
+        self.send_button = QPushButton("Send to Roster")
+        self.send_button.setProperty("primary", True)
+        self.save_template_button = QPushButton("Save")
+        self.load_template_button = QPushButton("Load")
+        action_buttons.addWidget(self.send_button, 2)
+        action_buttons.addWidget(self.save_template_button, 1)
+        action_buttons.addWidget(self.load_template_button, 1)
+        actions_card.addLayout(action_buttons)
+        side.addWidget(actions_card, 0)
+
+        # Summary and detail are one card now. The class/provider/mechanic summary is
+        # refreshed into coverage_label so there is no second competing summary box.
+        context_card = FoundryCard("Composition Details & Summary", "✦")
+        self.trial_label = QLabel()
+        self.trial_label.setWordWrap(True)
+        self.summary_label = QLabel()
+        self.summary_label.setWordWrap(True)
+        self.coverage_label = QLabel()
+        self.coverage_label.setWordWrap(True)
+        context_card.addWidget(self.trial_label)
+        context_card.addWidget(self.summary_label)
+        context_card.addWidget(self.coverage_label)
+        side.addWidget(context_card, 1)
+
+        top.addLayout(side, 3)
+        root.addLayout(top, 1)
+
+        # Lower row: progress scoreboard beside provenance. Evidence stays visible
+        # without taking the prime upper-right workspace away from editing/actions.
+        lower = QHBoxLayout()
+        lower.setSpacing(10)
+
+        self.progress_coverage_card, self.progress_coverage_grid = make_coverage_card()
+        lower.addWidget(self.progress_coverage_card, 7)
+
+        evidence_card = FoundryCard("Evidence & Provenance", "⌁")
+        self.evidence_text = QTextEdit()
+        self.evidence_text.setReadOnly(True)
+        self.evidence_text.setMinimumHeight(190)
+        self.evidence_text.setMaximumHeight(270)
+        evidence_card.addWidget(self.evidence_text)
+        lower.addWidget(evidence_card, 3)
+
+        root.addLayout(lower)
         self.add_workspace(workspace)
 
         self.status = FoundryStatusBar()
@@ -191,6 +204,8 @@ class CompBuilderPage(FoundryPage):
         self.recommended_button.clicked.connect(self._load_recommended)
         self.reset_button.clicked.connect(self._load_flexible)
         self.send_button.clicked.connect(self._send_to_roster)
+        self.save_template_button.clicked.connect(self._save_user_template)
+        self.load_template_button.clicked.connect(self._load_user_template)
 
     @staticmethod
     def _context_field(title: str, widget: QWidget) -> QWidget:
@@ -349,6 +364,28 @@ class CompBuilderPage(FoundryPage):
         item = self.matrix_table.item(row, column)
         return item.text().strip() if item is not None else ""
 
+    @staticmethod
+    def _split_values(value: str) -> tuple[str, ...]:
+        normalized = str(value or "").replace("•", ",")
+        return tuple(part.strip() for part in normalized.split(",") if part.strip())
+
+    def _current_slot_payloads(self) -> list[dict[str, object]]:
+        rows: list[dict[str, object]] = []
+        for row in range(self.matrix_table.rowCount()):
+            rows.append(
+                {
+                    "slot_name": self._cell_text(row, 0),
+                    "role": self._cell_text(row, 1),
+                    "preferred_class": self._selected_class(row),
+                    "alternative_classes": list(self._split_values(self._cell_text(row, 3))),
+                    "required_responsibilities": list(self._split_values(self._cell_text(row, 4))),
+                    "optional_responsibilities": list(self._split_values(self._cell_text(row, 5))),
+                    "provider_requirements": list(self._split_values(self._cell_text(row, 6))),
+                    "mechanic_jobs": list(self._split_values(self._cell_text(row, 7))),
+                }
+            )
+        return rows
+
     def _refresh_coverage(self, *_args) -> None:
         classes = Counter(
             selected
@@ -386,6 +423,118 @@ class CompBuilderPage(FoundryPage):
             f"DECLARED PROVIDER RESPONSIBILITIES\n{provider_summary}\n\n"
             f"MECHANIC JOBS\n{job_summary}"
         )
+
+    def _read_user_templates(self) -> dict[str, object]:
+        if not self.user_template_path.is_file():
+            return {"schema_version": 1, "templates": []}
+        try:
+            raw = json.loads(self.user_template_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"schema_version": 1, "templates": []}
+        if not isinstance(raw, dict) or not isinstance(raw.get("templates"), list):
+            return {"schema_version": 1, "templates": []}
+        return raw
+
+    def _save_user_template(self, *_args) -> None:
+        name = self.plan_name_input.text().strip()
+        if not name:
+            self.status.warning("Give the composition a plan name before saving it.")
+            return
+
+        raw = self._read_user_templates()
+        templates = [
+            row
+            for row in raw.get("templates", [])
+            if isinstance(row, dict) and str(row.get("name", "")).casefold() != name.casefold()
+        ]
+        templates.append(
+            {
+                "name": name,
+                "goal": self.goal_combo.currentText().strip() or "Custom Goal",
+                "difficulty": self.difficulty_combo.currentText().strip(),
+                "slots": self._current_slot_payloads(),
+            }
+        )
+        payload = {"schema_version": 1, "templates": templates}
+        try:
+            self.user_template_path.write_text(
+                json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            self.status.error(f"Could not save composition template: {exc}")
+            return
+        self.status.success(f"Saved composition template: {name}.")
+
+    def _load_user_template(self, *_args) -> None:
+        raw = self._read_user_templates()
+        templates = [row for row in raw.get("templates", []) if isinstance(row, dict)]
+        names = sorted(str(row.get("name", "")).strip() for row in templates if str(row.get("name", "")).strip())
+        if not names:
+            self.status.info("No saved composition templates exist yet.")
+            return
+
+        name, accepted = QInputDialog.getItem(
+            self,
+            "Load Composition Template",
+            "Template",
+            names,
+            0,
+            False,
+        )
+        if not accepted or not name:
+            return
+        selected = next(
+            row for row in templates if str(row.get("name", "")).strip() == name
+        )
+
+        goal = str(selected.get("goal", "")).strip()
+        difficulty = str(selected.get("difficulty", "")).strip()
+        if goal and self.goal_combo.findText(goal) >= 0:
+            self.goal_combo.blockSignals(True)
+            self.goal_combo.setCurrentText(goal)
+            self.goal_combo.blockSignals(False)
+        if difficulty and self.difficulty_combo.findText(difficulty) >= 0:
+            self.difficulty_combo.blockSignals(True)
+            self.difficulty_combo.setCurrentText(difficulty)
+            self.difficulty_combo.blockSignals(False)
+
+        slots: list[CompositionSlot] = []
+        for raw_slot in selected.get("slots", []):
+            if not isinstance(raw_slot, dict):
+                continue
+            slots.append(
+                CompositionSlot(
+                    slot_name=str(raw_slot.get("slot_name", "")).strip(),
+                    role=str(raw_slot.get("role", "")).strip(),
+                    preferred_class=str(raw_slot.get("preferred_class", "Any class")).strip() or "Any class",
+                    alternative_classes=tuple(raw_slot.get("alternative_classes") or ()),
+                    required_responsibilities=tuple(raw_slot.get("required_responsibilities") or ()),
+                    optional_responsibilities=tuple(raw_slot.get("optional_responsibilities") or ()),
+                    provider_requirements=tuple(raw_slot.get("provider_requirements") or ()),
+                    mechanic_jobs=tuple(raw_slot.get("mechanic_jobs") or ()),
+                )
+            )
+        if not slots:
+            self.status.warning(f"Saved composition template {name!r} has no usable slots.")
+            return
+
+        self.current_template = None
+        self.current_slots = tuple(slots)
+        self._render_slots(self.current_slots)
+        self.plan_name_input.setText(name)
+        self.trial_label.setText(
+            f"TRIAL\n{GOAL_TRIALS.get(goal, 'Custom Trial')}\n\nGOAL\n{goal or 'Custom Goal'}\n\nDIFFICULTY\n{difficulty or 'Unresolved'}"
+        )
+        self.summary_label.setText(
+            f"Saved user composition\n{len(slots)} raid chairs\n\n"
+            "This is a locally saved planning template, not external reference evidence."
+        )
+        self.evidence_text.setPlainText(
+            "User-saved composition template. No external provenance is asserted for edits stored in this local template."
+        )
+        self._refresh_coverage()
+        self.status.success(f"Loaded composition template: {name}.")
 
     def _send_to_roster(self, *_args) -> None:
         goal = self.goal_combo.currentText().strip() or "Custom Goal"
