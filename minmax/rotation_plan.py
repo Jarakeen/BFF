@@ -9,7 +9,9 @@ class RotationActionKind(str, Enum):
     """Explicit action categories understood by the Phase 13 schedule contract.
 
     The contract classifies scheduled intent only. Consequence calculation remains
-    owned by the existing combat, sustain, and runtime-effect systems.
+    owned by the existing combat, sustain, and runtime-effect systems. The same
+    schedule contract is intentionally role-neutral so damage, support, tank, and
+    healing rotations do not grow competing action models.
     """
 
     SKILL = "skill"
@@ -35,8 +37,20 @@ class RotationAction:
         time_seconds = float(self.time_seconds)
         if not math.isfinite(time_seconds) or time_seconds < 0:
             raise ValueError("rotation action time must be finite and non-negative")
+        object.__setattr__(self, "time_seconds", time_seconds)
+
         if self.sequence < 0:
             raise ValueError("rotation action sequence cannot be negative")
+
+        try:
+            kind = (
+                self.kind
+                if isinstance(self.kind, RotationActionKind)
+                else RotationActionKind(str(self.kind))
+            )
+        except ValueError as exc:
+            raise ValueError(f"unsupported rotation action kind: {self.kind!r}") from exc
+        object.__setattr__(self, "kind", kind)
 
         if self.bar is not None:
             normalized_bar = str(self.bar).strip().casefold()
@@ -45,19 +59,19 @@ class RotationAction:
             object.__setattr__(self, "bar", normalized_bar)
 
         normalized_name = str(self.name or "").strip()
-        requires_name = self.kind in {
+        requires_name = kind in {
             RotationActionKind.SKILL,
             RotationActionKind.ULTIMATE,
             RotationActionKind.POTION,
         }
         if requires_name and not normalized_name:
-            raise ValueError(f"{self.kind.value} rotation action requires a name")
+            raise ValueError(f"{kind.value} rotation action requires a name")
         if normalized_name:
             object.__setattr__(self, "name", normalized_name)
         else:
             object.__setattr__(self, "name", None)
 
-        if self.kind is RotationActionKind.BAR_SWAP and self.bar is None:
+        if kind is RotationActionKind.BAR_SWAP and self.bar is None:
             raise ValueError("bar-swap rotation action requires the destination bar")
 
 
