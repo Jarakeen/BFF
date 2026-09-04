@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from services.encounter_identity_corrections import boss_title_is_excluded
 from services.uesp.enriched_parser import EnrichedUespParser
 from services.uesp.uesp_client import UespClient, UespClientError
 from services.uesp.uesp_store import UespStore
@@ -81,8 +82,20 @@ def import_content(
     page = _get_page(client, title, force)
     content = parser.parse_content(page, content_type)
     discovered_titles = _boss_links(parser, page)
-    boss_titles = _merge_boss_titles(discovered_titles, explicit_boss_titles)
+    merged_titles = _merge_boss_titles(discovered_titles, explicit_boss_titles)
+    boss_titles = [
+        boss_title
+        for boss_title in merged_titles
+        if not boss_title_is_excluded(content.id, boss_title)
+    ]
     boss_ids: list[str] = []
+
+    excluded_count = len(merged_titles) - len(boss_titles)
+    if excluded_count:
+        print(
+            "BOSS IDENTITY CORRECTION: "
+            f"excluded {excluded_count} reviewed false boss title(s) from {content.name}"
+        )
 
     if explicit_boss_titles:
         print(
