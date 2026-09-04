@@ -39,6 +39,17 @@ class _FakeClient:
     def __init__(self):
         self.query_calls = []
         self.aura_calls = []
+        self.trial_zone_calls = 0
+
+    def get_trial_zones(self):
+        self.trial_zone_calls += 1
+        return [
+            {
+                "id": 15,
+                "name": "Dreadsail Reef",
+                "encounters": [{"id": 123, "name": "Taleria"}],
+            }
+        ]
 
     def _query(self, query, variables):
         self.query_calls.append((query, variables))
@@ -114,6 +125,23 @@ class _FakeClient:
             {"name": "Major Resolve", "totalUptime": 9000},
             {"name": "The Ritual", "totalUptime": 9000},
         ]
+
+
+def test_top_team_trial_picker_delegates_to_clients_trial_only_filter():
+    client = _FakeClient()
+    service = TopTeamService(client)
+
+    trials = service.list_trials()
+
+    assert trials == [
+        {
+            "id": 15,
+            "name": "Dreadsail Reef",
+            "encounters": [{"id": 123, "name": "Taleria"}],
+        }
+    ]
+    assert client.trial_zone_calls == 1
+    assert client.query_calls == []
 
 
 def test_top_team_initial_fetch_restores_class_and_skills_without_eager_aura_calls():
