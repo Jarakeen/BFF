@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from services.generated_roster_plan_service import GeneratedRosterPlanSlot
+
 
 _INSTALLED = False
 _ORIGINAL_INIT = None
@@ -66,13 +68,72 @@ def _init_refocused(self, parent=None) -> None:
     _refocus_optimization_ui(self)
 
 
+def _send_visible_optimization_team_to_roster(window) -> None:
+    """Persist the visible Optimization team as a generated roster plan.
+
+    This intentionally ignores ``current_prescription``. Once composition creation
+    moves to Comp Builder, the Optimization page's source of truth is the team the
+    user is actually viewing/editing (Team A or Team B).
+    """
+
+    optimization_page = window.pages.get("console:6")
+    plan_rows = window._current_optimized_team_plan()
+    if not plan_rows:
+        if optimization_page is not None:
+            optimization_page.status.warning(
+                "No team slots are selected. Load or assemble a team before sending it to Roster."
+            )
+        return
+
+    slots = tuple(
+        GeneratedRosterPlanSlot(
+            slot_name=row.get("slot", ""),
+            kind=("saved" if row.get("kind") == "saved" else "open_recruit"),
+            player_name=row.get("player", "") or "Recruitment Needed",
+            character_name=row.get("character", ""),
+            eso_class=row.get("class", "") or "Any class",
+            build_name=row.get("build", "") or "Open requirement",
+            gear_summary="",
+            unresolved=(
+                "Open recruitment requirement from Optimization."
+                if row.get("kind") != "saved"
+                else ""
+            ),
+        )
+        for row in plan_rows
+    )
+
+    goal = optimization_page.goal_combo.currentText().strip() or "Custom Goal"
+    roster_page = window.pages["roster_page"]
+    plan = roster_page.generated_plan_service.save_plan(
+        name=f"{goal} Optimized Team",
+        goal=goal,
+        difficulty=optimization_page.difficulty_combo.currentText(),
+        slots=slots,
+    )
+    roster_page._refresh_generated_plan_choices(plan.name)
+    roster_page.view_combo.setCurrentText("Generated Team")
+    roster_page.tabs.setCurrentIndex(0)
+    roster_page._populate_assignment_table()
+
+    saved = sum(1 for slot in slots if slot.kind == "saved")
+    recruits = len(slots) - saved
+    optimization_page.status.success(
+        f"Sent {plan.name} to Roster: {saved} saved player(s), "
+        f"{recruits} open recruit slot(s)."
+    )
+    window.show_page("roster_page")
+
+
 def install() -> None:
     global _INSTALLED, _ORIGINAL_INIT
     if _INSTALLED:
         return
 
     from ui.optimization_page import OptimizationPage
+    from ui.main_window import MainWindow
 
     _ORIGINAL_INIT = OptimizationPage.__init__
     OptimizationPage.__init__ = _init_refocused
+    MainWindow._send_optimized_team_to_roster = _send_visible_optimization_team_to_roster
     _INSTALLED = True
