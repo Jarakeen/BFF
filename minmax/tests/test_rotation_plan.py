@@ -41,15 +41,17 @@ def test_rotation_plan_orders_actions_deterministically() -> None:
     assert plan.unresolved == ("cast time not yet projected",)
 
 
-def test_rotation_action_normalizes_names_and_bars() -> None:
+def test_rotation_action_normalizes_names_bars_kinds_and_time() -> None:
     action = RotationAction(
-        time_seconds=1.0,
+        time_seconds=1,
         sequence=0,
-        kind=RotationActionKind.SKILL,
+        kind="skill",
         name="  Combat Prayer  ",
         bar=" FRONT ",
     )
 
+    assert action.time_seconds == 1.0
+    assert action.kind is RotationActionKind.SKILL
     assert action.name == "Combat Prayer"
     assert action.bar == "front"
 
@@ -109,6 +111,11 @@ def test_rotation_contract_rejects_invalid_identity_timing_and_action_requiremen
             sequence=0,
             kind=RotationActionKind.LIGHT_ATTACK,
             bar="side",
+        ),
+        lambda: RotationAction(
+            time_seconds=0.0,
+            sequence=0,
+            kind="dance",
         ),
     )
 
