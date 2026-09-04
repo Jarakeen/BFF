@@ -441,22 +441,18 @@ class EsoLogsClient:
         this encounter -- i.e. the top-ranking team's pull, not one
         player's best parse.
 
-        `leaderboard: LogsOnly` ranks whole kills rather than
-        individual character performances; each ranking entry carries
-        a `report` pointer back to the source log. The exact shape of
-        that pointer (single object vs a rankings array of per-log
-        rows) has not been verified against a live response from this
-        environment -- this method tries the shapes documented for
-        the v2 API and raises a clear EsoLogsApiError naming what it
-        actually got back if neither matches, rather than guessing.
+        `zone_id` is retained in the public method signature for
+        call-site compatibility, but Encounter.characterRankings does
+        not accept zoneID and it must not be sent to ESO Logs.
         """
 
+        del zone_id
+
         query = """
-        query TopLog($zoneID: Int!, $encounterID: Int!) {
+        query TopLog($encounterID: Int!) {
           worldData {
             encounter(id: $encounterID) {
               characterRankings(
-                zoneID: $zoneID
                 leaderboard: LogsOnly
               )
             }
@@ -464,7 +460,7 @@ class EsoLogsClient:
         }
         """
 
-        data = self._query(query, {"zoneID": int(zone_id), "encounterID": int(encounter_id)})
+        data = self._query(query, {"encounterID": int(encounter_id)})
 
         encounter = ((data.get("worldData") or {}).get("encounter")) or {}
 
