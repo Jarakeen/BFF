@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from typing import Any
 import unicodedata
 
 from models.build_model import PlayerBuild
@@ -70,6 +71,17 @@ def parse_required_gear_sets(value: str) -> tuple[str, ...]:
     return tuple(values)
 
 
+def _metadata_strings(metadata: dict[str, Any], key: str) -> tuple[str, ...]:
+    value = metadata.get(key)
+    if not isinstance(value, (list, tuple, set)):
+        return ()
+    return tuple(
+        text
+        for text in (str(item or "").strip() for item in value)
+        if text
+    )
+
+
 @dataclass(frozen=True)
 class PrescribedSlotBuildConstraint:
     """User-required ingredients for one prescribed roster chair.
@@ -96,13 +108,37 @@ class PrescribedSlotBuildConstraint:
         object.__setattr__(self, "required_gear_sets", gear_sets)
 
     def mismatch_reasons(self, build: PlayerBuild) -> tuple[str, ...]:
+        return self.mismatch_reasons_for_candidate(build, {})
+
+    def mismatch_reasons_for_candidate(
+        self,
+        build: PlayerBuild,
+        metadata: dict[str, Any] | None,
+    ) -> tuple[str, ...]:
+        """Check hard ingredients using canonical build or explicit observations.
+
+        Partial ESO Logs templates deliberately keep unverified slot placement out of
+        ``PlayerBuild``. Their exact observed set names therefore live in candidate
+        metadata. Those observations may satisfy a required-set gate, but missing
+        evidence never does.
+        """
+
+        metadata = metadata or {}
         reasons: list[str] = []
-        if self.required_class and _identity(build.EsoClass) != _identity(
+        candidate_class = (
+            str(build.EsoClass or "").strip()
+            or str(metadata.get("observed_class") or "").strip()
+        )
+        if self.required_class and _identity(candidate_class) != _identity(
             self.required_class
         ):
             reasons.append(f"requires class {self.required_class}")
 
-        available = {_gear_identity(name) for name in build_gear_set_names(build)}
+        available_names = (
+            *build_gear_set_names(build),
+            *_metadata_strings(metadata, "observed_gear_sets"),
+        )
+        available = {_gear_identity(name) for name in available_names}
         missing = tuple(
             name
             for name in self.required_gear_sets
@@ -114,6 +150,13 @@ class PrescribedSlotBuildConstraint:
 
     def matches(self, build: PlayerBuild) -> bool:
         return not self.mismatch_reasons(build)
+
+    def matches_candidate(
+        self,
+        build: PlayerBuild,
+        metadata: dict[str, Any] | None,
+    ) -> bool:
+        return not self.mismatch_reasons_for_candidate(build, metadata)
 
     @property
     def summary(self) -> str:
