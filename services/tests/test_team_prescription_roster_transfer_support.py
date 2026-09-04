@@ -16,8 +16,8 @@ from ui.team_prescription_roster_transfer_support import (
 
 def _page():
     tank = PlayerBuild(
-        Name="Tank Player",
-        CharacterName="Bone Tank",
+        Name="Bone Tank",
+        Gamertag="Tank Player",
         BuildName="YOUR TANK BUILD",
         EsoClass="Necromancer",
         Role="Tank",
@@ -38,7 +38,7 @@ def _page():
         assignments=(
             PrescribedRosterAssignment(
                 slot_name="Main Tank",
-                player_name="Tank Player",
+                player_name="Bone Tank",
                 source_build_name="YOUR TANK BUILD",
                 prescribed_role="Tank",
             ),
@@ -94,7 +94,7 @@ def test_prescription_projection_preserves_saved_player_and_concrete_recruit_req
 
     assert len(slots) == 3
     assert slots[0].kind == "saved"
-    assert slots[0].player_name == "Tank Player"
+    assert slots[0].player_name == "Bone Tank"
     assert slots[0].character_name == "Bone Tank"
     assert slots[0].eso_class == "Necromancer"
     assert slots[0].build_name == "YOUR TANK BUILD"
@@ -118,7 +118,7 @@ def test_concise_preview_stays_one_line_per_slot_instead_of_dumping_all_unresolv
 
     preview = concise_prescription_preview(page.current_prescription)
 
-    assert "Main Tank: Tank Player — YOUR TANK BUILD" in preview
+    assert "Main Tank: Bone Tank — YOUR TANK BUILD" in preview
     assert "Healer 1: RECRUIT — Warden • Brittle Warden" in preview
     assert "DD 1: RECRUIT — unresolved" in preview
     assert "Saved players: 1" in preview
