@@ -37,6 +37,12 @@ def _score_map(value: object) -> dict[str, float]:
     return result
 
 
+def _display_goal_name(value: object) -> str:
+    """Render normalized catalog goal keys as readable achievement names."""
+
+    return _clean(value).title()
+
+
 def _known_skills(build: PlayerBuild) -> tuple[str, ...]:
     values: list[str] = []
     seen: set[str] = set()
@@ -131,7 +137,9 @@ class TeamPrescriptionTemplate:
             "retrieved_at": self.retrieved_at,
             "game_update": self.game_update,
             "catalog_version": self.catalog_version,
-            "supported_goals": list(self.goal_scores.keys()),
+            "supported_goals": [
+                _display_goal_name(goal_name) for goal_name in self.goal_scores.keys()
+            ],
         }
         return PrescribedOpenSlotCandidate.from_build(
             candidate_id=self.template_id,
@@ -269,7 +277,9 @@ class TemplateCatalogObjectiveEvaluator:
         }[role]
 
         if not template.supports_goal(self.goal):
-            supported = ", ".join(template.goal_scores.keys()) or "generic"
+            supported = ", ".join(
+                _display_goal_name(goal_name) for goal_name in template.goal_scores.keys()
+            ) or "Generic"
             return PrescribedObjectiveMeasurement(
                 objective=objective,
                 value=None,
