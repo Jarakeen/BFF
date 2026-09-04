@@ -219,6 +219,7 @@ def main() -> int:
     from ui.team_prescription_pipeline_support import install as install_team_prescription_pipeline_support
     from ui.team_prescription_template_support import install as install_team_prescription_template_support
     from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
+    from ui.team_optimization_hybrid_anchor_support import install as install_team_optimization_hybrid_anchor_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -264,8 +265,10 @@ def main() -> int:
     install_team_prescription_pipeline_support()
     # Template sources wrap the saved-player prescription and fill remaining chairs.
     install_team_prescription_template_support()
-    # Optimization modes get editable, mode-specific starting choices last.
+    # Optimization modes get editable, mode-specific starting choices.
     install_team_optimization_mode_defaults()
+    # A visibly partial Hybrid team means keep those selected players and recruit the rest.
+    install_team_optimization_hybrid_anchor_support()
 
     from ui.main_window import MainWindow
 
