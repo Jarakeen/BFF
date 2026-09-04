@@ -3,7 +3,10 @@ from __future__ import annotations
 from PySide6.QtWidgets import QTableWidgetItem
 
 from engine.config import get_data_dir
-from services.team_prescription import PrescriptionDimension
+from services.team_prescription import (
+    PrescriptionDimension,
+    TeamPrescriptionScope,
+)
 from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
 from services.team_prescription_slot_constraints import project_slot_build_constraints
 from services.team_prescription_template_sources import apply_team_template_sources
@@ -11,6 +14,28 @@ from services.team_prescription_template_sources import apply_team_template_sour
 
 _INSTALLED = False
 _ORIGINAL_GENERATE = None
+_ORIGINAL_SCOPE = None
+
+
+def _complete_prescription_scope(self) -> TeamPrescriptionScope:
+    """Honor existing locks while allowing a truly complete build prescription."""
+
+    assert _ORIGINAL_SCOPE is not None
+    original = _ORIGINAL_SCOPE(self)
+    dimensions = list(original.dimensions)
+    if not self.constraint_boxes["Keep Current Builds"].isChecked():
+        for dimension in (
+            PrescriptionDimension.RACE,
+            PrescriptionDimension.SKILLS,
+            PrescriptionDimension.MORPHS,
+            PrescriptionDimension.CHAMPION_POINTS,
+            PrescriptionDimension.MUNDUS,
+            PrescriptionDimension.FOOD,
+            PrescriptionDimension.POTION,
+        ):
+            if dimension not in dimensions:
+                dimensions.append(dimension)
+    return TeamPrescriptionScope(dimensions=tuple(dimensions))
 
 
 def _ensure_template_base(page) -> None:
@@ -186,11 +211,13 @@ def _generate_prescription_with_templates(self, *args):
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_GENERATE
+    global _INSTALLED, _ORIGINAL_GENERATE, _ORIGINAL_SCOPE
     if _INSTALLED:
         return
     from ui.optimization_page import OptimizationPage
 
     _ORIGINAL_GENERATE = OptimizationPage._generate_prescription_preview
+    _ORIGINAL_SCOPE = OptimizationPage._prescription_scope
+    OptimizationPage._prescription_scope = _complete_prescription_scope
     OptimizationPage._generate_prescription_preview = _generate_prescription_with_templates
     _INSTALLED = True
