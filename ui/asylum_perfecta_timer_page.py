@@ -2,9 +2,8 @@ from __future__ import annotations
 
 """Asylum Sanctorium +2 Perfecta console timer.
 
-This page is intentionally designed as an operational companion for console play:
-large controls, manual event confirmation, and readable countdowns instead of an
-editor-heavy desktop workflow.
+Compact, large-control raid companion intended to fit in the normal BFF window
+without vertical scrolling during play.
 """
 
 import time
@@ -35,7 +34,7 @@ from services.asylum_sanctorium_timer import (
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.foundry_page import FoundryPage
-from ui.ux_icons import set_button_icon
+from ui.ux_icons import icon as themed_icon, set_button_icon
 
 
 _ARTWORK_CANDIDATES = {
@@ -61,6 +60,7 @@ _ARTWORK_CANDIDATES = {
     ),
     "protector": (
         "ornate_bronze_guardian_helmet_emblem.png",
+        "protector_helmet.png",
         "protector.png",
         "protectors.png",
     ),
@@ -80,7 +80,16 @@ def _artwork_path(kind: str):
 
 
 class TimerArtwork(QLabel):
-    """Timer art that keeps Foundry gold but mutes toward steel in Rylo."""
+    """Compact timer art with a reliable semantic-icon fallback."""
+
+    _FALLBACK_ICONS = {
+        "llothis": "boss",
+        "felms": "boss",
+        "olms": "boss",
+        "storm": "stopwatch",
+        "protector": "shield",
+        "hourglass": "hourglass",
+    }
 
     def __init__(self, kind: str, width: int, height: int, parent=None):
         super().__init__(parent)
@@ -93,20 +102,28 @@ class TimerArtwork(QLabel):
         self.setScaledContents(False)
         self.refresh_theme(False)
 
-    def refresh_theme(self, rylo: bool) -> None:
-        if self._rylo == rylo and self.pixmap() is not None and not self.pixmap().isNull():
+    def _fallback(self) -> None:
+        self.clear()
+        icon = themed_icon(self._FALLBACK_ICONS.get(self.kind, "boss"))
+        if not icon.isNull():
+            side = max(24, min(self._target_width, self._target_height) - 8)
+            self.setPixmap(icon.pixmap(side, side))
             return
+        self.setText(self.kind.replace("_", " ").title())
+        self.setProperty("pageSubtitle", True)
+
+    def refresh_theme(self, rylo: bool) -> None:
         self._rylo = rylo
         path = _artwork_path(self.kind)
         if path is None:
-            self.clear()
-            self.setText(self.kind.replace("_", " ").title())
-            self.setProperty("pageSubtitle", True)
+            self._fallback()
             return
 
         pixmap = QPixmap(str(path))
         if pixmap.isNull():
+            self._fallback()
             return
+
         pixmap = pixmap.scaled(
             self._target_width,
             self._target_height,
@@ -119,23 +136,23 @@ class TimerArtwork(QLabel):
             painter = QPainter(tinted)
             painter.drawPixmap(0, 0, pixmap)
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
-            painter.fillRect(tinted.rect(), QColor(112, 125, 134, 100))
+            painter.fillRect(tinted.rect(), QColor(112, 125, 134, 92))
             painter.end()
             pixmap = tinted
         self.setPixmap(pixmap)
 
 
-class EnrageTimeline(QWidget):
-    """Full-width green-to-red enrage track with a moving current-time marker."""
+class EnrageBar(QWidget):
+    """Short, theme-aware green-to-red enrage bar with a moving marker."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._remaining = float(MINI_ENRAGE_SECONDS)
         self._active = False
         self._rylo = False
-        self.setMinimumHeight(48)
-        self.setMaximumHeight(54)
-        self.setToolTip("3:00 active · 1:30 health check · 0:30 execute · 0:00 enrage")
+        self.setFixedHeight(22)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setToolTip("3:00 spawn · 1:30 health check · 0:30 execute · 0:00 enrage")
 
     def set_state(self, remaining: float, *, active: bool, rylo: bool) -> None:
         self._remaining = max(0.0, min(float(MINI_ENRAGE_SECONDS), float(remaining)))
@@ -148,67 +165,35 @@ class EnrageTimeline(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        left = 10.0
-        right = max(left + 10.0, self.width() - 10.0)
-        bar_top = 8.0
-        bar_height = 10.0
-        bar_rect = QRectF(left, bar_top, right - left, bar_height)
+        left = 4.0
+        right = max(left + 8.0, self.width() - 4.0)
+        rect = QRectF(left, 6.0, right - left, 9.0)
 
         if self._rylo:
-            start, middle, execute, end = (
-                QColor("#637C70"), QColor("#A4976D"), QColor("#9C6E4A"), QColor("#8D4F4F")
-            )
-            text_color = QColor("#B8BDC1")
-            marker_color = QColor("#E0E0DE")
+            colors = ("#637C70", "#A4976D", "#9C6E4A", "#8D4F4F")
+            marker = QColor("#E0E0DE")
+            border = QColor("#64686B")
         else:
-            start, middle, execute, end = (
-                QColor("#3DAA66"), QColor("#D5B14C"), QColor("#D8873D"), QColor("#C34B42")
-            )
-            text_color = QColor("#C9B07A")
-            marker_color = QColor("#F0E7D6")
+            colors = ("#3DAA66", "#D5B14C", "#D8873D", "#C34B42")
+            marker = QColor("#F0E7D6")
+            border = QColor("#8A6B43")
 
         gradient = QLinearGradient(left, 0, right, 0)
-        gradient.setColorAt(0.0, start)
-        gradient.setColorAt(0.50, middle)
-        gradient.setColorAt(0.84, execute)
-        gradient.setColorAt(1.0, end)
-        painter.setPen(QPen(QColor("#8A6B43" if not self._rylo else "#64686B"), 1.0))
+        gradient.setColorAt(0.0, QColor(colors[0]))
+        gradient.setColorAt(0.50, QColor(colors[1]))
+        gradient.setColorAt(5.0 / 6.0, QColor(colors[2]))
+        gradient.setColorAt(1.0, QColor(colors[3]))
+        painter.setPen(QPen(border, 1.0))
         painter.setBrush(gradient)
-        painter.drawRoundedRect(bar_rect, 5.0, 5.0)
+        painter.drawRoundedRect(rect, 4.0, 4.0)
 
-        # Elapsed position runs left (spawn) to right (enrage).
         elapsed_ratio = 1.0 - (self._remaining / float(MINI_ENRAGE_SECONDS))
         marker_x = left + elapsed_ratio * (right - left)
-        painter.setPen(QPen(marker_color, 2.0))
-        painter.drawLine(int(marker_x), 4, int(marker_x), 23)
+        painter.setPen(QPen(marker, 2.0))
+        painter.drawLine(int(marker_x), 2, int(marker_x), 19)
 
         if not self._active:
-            painter.fillRect(bar_rect, QColor(7, 15, 17, 150))
-
-        painter.setPen(text_color)
-        font = painter.font()
-        font.setPointSize(8)
-        painter.setFont(font)
-        labels = (
-            (0.0, "3:00\nSPAWN"),
-            (0.50, "1:30\nCHECK"),
-            (5.0 / 6.0, "0:30\nEXECUTE"),
-            (1.0, "0:00\nENRAGE"),
-        )
-        for ratio, text in labels:
-            x = left + ratio * (right - left)
-            width = 58.0
-            if ratio == 0.0:
-                x = left
-            elif ratio == 1.0:
-                x = right - width
-            else:
-                x -= width / 2.0
-            painter.drawText(
-                QRectF(x, 23.0, width, 25.0),
-                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                text,
-            )
+            painter.fillRect(rect, QColor(7, 15, 17, 145))
         painter.end()
 
 
@@ -231,6 +216,7 @@ class AsylumPerfectaTimerPage(FoundryPage):
                 icon="stopwatch",
             )
         )
+        self.workspace_layout.setSpacing(5)
         self._build_workspace()
 
         self._ticker = QTimer(self)
@@ -240,7 +226,7 @@ class AsylumPerfectaTimerPage(FoundryPage):
         self._refresh()
 
     @staticmethod
-    def _big_label(text: str = "--:--", size: int = 46) -> QLabel:
+    def _big_label(text: str = "--:--", size: int = 40) -> QLabel:
         label = QLabel(text)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setProperty("timerClock", True)
@@ -257,10 +243,11 @@ class AsylumPerfectaTimerPage(FoundryPage):
     @staticmethod
     def _large_button(text: str, icon: str = "") -> QPushButton:
         button = QPushButton(text)
-        button.setMinimumHeight(48)
+        button.setMinimumHeight(54)
+        button.setMinimumWidth(150)
         button.setProperty("primary", True)
         if icon:
-            set_button_icon(button, icon, 19)
+            set_button_icon(button, icon, 20)
         return button
 
     def _art(self, kind: str, width: int, height: int) -> TimerArtwork:
@@ -268,24 +255,39 @@ class AsylumPerfectaTimerPage(FoundryPage):
         self._artwork_labels.append(label)
         return label
 
+    @staticmethod
+    def _milestone_label(top: str, bottom: str) -> QWidget:
+        box = QWidget()
+        layout = QVBoxLayout(box)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        a = QLabel(top)
+        b = QLabel(bottom)
+        for label in (a, b):
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setProperty("timerMilestone", True)
+        layout.addWidget(a)
+        layout.addWidget(b)
+        return box
+
     def _build_workspace(self) -> None:
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(8)
-        grid.setVerticalSpacing(8)
+        grid.setHorizontalSpacing(6)
+        grid.setVerticalSpacing(6)
         for column in range(12):
             grid.setColumnStretch(column, 1)
 
-        # Hero timer mirrors the mockup: oversized hourglass, master clock,
-        # deaths, and status in one broad card.
         run_card = FoundryCard("Perfecta Run Timer", "hourglass")
-        run_card.setMinimumHeight(178)
+        run_card.setMinimumHeight(122)
+        run_card.setMaximumHeight(142)
         run_row = QHBoxLayout()
-        run_row.setSpacing(14)
-        run_row.addWidget(self._art("hourglass", 118, 132), 0, Qt.AlignmentFlag.AlignCenter)
+        run_row.setSpacing(10)
+        run_row.addWidget(self._art("hourglass", 78, 92), 0, Qt.AlignmentFlag.AlignCenter)
 
         clock_box = QVBoxLayout()
-        self.run_clock = self._big_label("15:00", 64)
+        clock_box.setSpacing(0)
+        self.run_clock = self._big_label("15:00", 54)
         clock_box.addWidget(self.run_clock)
         remaining = QLabel("REMAINING  (15:00)")
         remaining.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -294,36 +296,35 @@ class AsylumPerfectaTimerPage(FoundryPage):
         run_row.addLayout(clock_box, 3)
 
         deaths_box = QVBoxLayout()
+        deaths_box.setSpacing(0)
         deaths_box.addWidget(self._muted("DEATHS"))
-        self.deaths_label = self._big_label("0", 38)
+        self.deaths_label = self._big_label("0", 32)
         deaths_box.addWidget(self.deaths_label)
         run_row.addLayout(deaths_box, 1)
 
         status_box = QVBoxLayout()
+        status_box.setSpacing(0)
         status_box.addWidget(self._muted("STATUS"))
-        self.run_status = self._big_label("READY", 22)
+        self.run_status = self._big_label("READY", 18)
         status_box.addWidget(self.run_status)
         run_row.addLayout(status_box, 1)
         run_card.addLayout(run_row)
         grid.addWidget(run_card, 0, 0, 1, 8)
 
         quick_card = FoundryCard("Quick Actions", "stopwatch")
+        quick_card.setMinimumHeight(122)
+        quick_card.setMaximumHeight(142)
         quick = QGridLayout()
+        quick.setSpacing(5)
         self.start_button = self._large_button("Start Perfecta", "stopwatch")
         self.start_button.clicked.connect(self._start_or_pause)
         self.death_button = self._large_button("Add Death", "death-skull")
         self.death_button.clicked.connect(self._add_death)
         self.reset_button = self._large_button("Reset Encounter", "refresh")
         self.reset_button.clicked.connect(self._reset)
-        self.kite_button = self._large_button("Kite Happened", "refresh")
-        self.kite_button.clicked.connect(self._mark_kite)
-        self.protector_button = self._large_button("Protector Died", "check-mark")
-        self.protector_button.clicked.connect(self._mark_protector)
         quick.addWidget(self.start_button, 0, 0, 1, 2)
         quick.addWidget(self.death_button, 1, 0)
         quick.addWidget(self.reset_button, 1, 1)
-        quick.addWidget(self.kite_button, 2, 0)
-        quick.addWidget(self.protector_button, 2, 1)
         quick_card.addLayout(quick)
         grid.addWidget(quick_card, 0, 8, 1, 4)
 
@@ -333,15 +334,16 @@ class AsylumPerfectaTimerPage(FoundryPage):
         grid.addWidget(self.felms_widgets["card"], 1, 6, 1, 6)
 
         olms_card = FoundryCard("Saint Olms", "boss")
-        olms_card.setMinimumHeight(190)
+        olms_card.setMaximumHeight(186)
         olms_row = QHBoxLayout()
-        olms_row.setSpacing(10)
-        olms_row.addWidget(self._art("olms", 145, 155), 0, Qt.AlignmentFlag.AlignCenter)
+        olms_row.setSpacing(8)
+        olms_row.addWidget(self._art("olms", 88, 104), 0, Qt.AlignmentFlag.AlignCenter)
         olms_details = QVBoxLayout()
+        olms_details.setSpacing(2)
         self.olms_health = QLabel("100%")
         self.olms_health.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.olms_health.setProperty("timerClock", True)
-        self.olms_health.setStyleSheet("font-size: 34px; font-weight: 700;")
+        self.olms_health.setStyleSheet("font-size: 28px; font-weight: 700;")
         olms_details.addWidget(self.olms_health)
         self.olms_slider = QSlider(Qt.Orientation.Horizontal)
         self.olms_slider.setRange(0, 100)
@@ -352,112 +354,97 @@ class AsylumPerfectaTimerPage(FoundryPage):
         self.olms_next_jump.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.olms_next_jump.setProperty("timerAccent", True)
         olms_details.addWidget(self.olms_next_jump)
-        thresholds = self._muted("90%      75%      50%      25%")
+        thresholds = self._muted("90%   ·   75%   ·   50%   ·   25%")
         thresholds.setAlignment(Qt.AlignmentFlag.AlignCenter)
         olms_details.addWidget(thresholds)
         olms_row.addLayout(olms_details, 1)
         olms_card.addLayout(olms_row)
-        grid.addWidget(olms_card, 2, 0, 1, 5)
+        grid.addWidget(olms_card, 2, 0, 1, 4)
 
         storm_card = FoundryCard("Storm the Heavens", "stopwatch")
+        storm_card.setMaximumHeight(186)
         storm_box = QVBoxLayout()
-        storm_box.addWidget(self._art("storm", 110, 100), 0, Qt.AlignmentFlag.AlignCenter)
-        self.kite_clock = self._big_label("~00:34", 31)
+        storm_box.setSpacing(1)
+        storm_box.addWidget(self._art("storm", 68, 68), 0, Qt.AlignmentFlag.AlignCenter)
+        self.kite_clock = self._big_label("~00:34", 27)
         storm_box.addWidget(self.kite_clock)
-        hint = self._muted("Predictive kite window · ~34 sec")
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        storm_box.addWidget(hint)
+        self.kite_button = self._large_button("Kite Happened", "refresh")
+        self.kite_button.clicked.connect(self._mark_kite)
+        storm_box.addWidget(self.kite_button)
         storm_card.addLayout(storm_box)
-        grid.addWidget(storm_card, 2, 5, 1, 3)
+        grid.addWidget(storm_card, 2, 4, 1, 4)
 
         protector_card = FoundryCard("Protectors", "shield")
+        protector_card.setMaximumHeight(186)
         protector_box = QVBoxLayout()
-        protector_box.addWidget(self._art("protector", 110, 100), 0, Qt.AlignmentFlag.AlignCenter)
-        self.protector_clock = self._big_label("~00:10", 31)
+        protector_box.setSpacing(1)
+        protector_box.addWidget(self._art("protector", 68, 68), 0, Qt.AlignmentFlag.AlignCenter)
+        self.protector_clock = self._big_label("~00:10", 27)
         protector_box.addWidget(self.protector_clock)
-        hint = self._muted("Since last protector death · ~8–12 sec")
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        protector_box.addWidget(hint)
+        self.protector_button = self._large_button("Protector Died", "check-mark")
+        self.protector_button.clicked.connect(self._mark_protector)
+        protector_box.addWidget(self.protector_button)
         protector_card.addLayout(protector_box)
         grid.addWidget(protector_card, 2, 8, 1, 4)
 
-        llothis_mechs = FoundryCard("Llothis Mechanics", "crossed-swords")
-        llothis_mechs.addWidget(self._mechanic_row("Oppressive Bolts", "12+ sec · INTERRUPT"))
-        llothis_mechs.addWidget(self._mechanic_row("Defiled Blast / Cone", "20–24 sec"))
-        llothis_mechs.addWidget(self._mechanic_row("Teleport", "25–35 sec"))
-        grid.addWidget(llothis_mechs, 3, 0, 1, 4)
-
-        felms_mechs = FoundryCard("Felms Mechanics", "crossed-swords")
-        felms_mechs.addWidget(self._mechanic_row("Teleport Strike / Jumps", "~20 sec"))
-        felms_mechs.addWidget(self._mechanic_row("Targeting", "Furthest player"))
-        felms_mechs.addWidget(self._mechanic_row("Mini Enrage", "3:00 active"))
-        grid.addWidget(felms_mechs, 3, 4, 1, 4)
-
-        general = FoundryCard("General Timers", "hourglass")
-        general.addWidget(self._mechanic_row("Kite / Storm", "~34 sec"))
-        general.addWidget(self._mechanic_row("Protector Spawn", "~8–12 sec"))
-        general.addWidget(self._mechanic_row("Mini Respawn", "1:00"))
-        general.addWidget(self._mechanic_row("Mini Enrage", "3:00"))
-        general.addWidget(self._mechanic_row("Enrage Stack", "+1 every 0:20 · max 6"))
-        grid.addWidget(general, 3, 8, 1, 4)
-
-        notes = FoundryCard("Perfecta Notes", "feather").make_parchment()
-        notes.addWidget(
-            self._muted(
-                "• Llothis first activation follows Olms' first jump.\n"
-                "• Felms first activation follows Olms' second jump, around 75%.\n"
-                "• Check mini health at 1:30 remaining; call execute at 0:30.\n"
-                "• Deactivation starts a 1:00 respawn timer; at 0:15, prepare for the mini to return.\n"
-                "• Perfecta target: 15:00 and no group deaths. Manual event buttons remain the source of truth."
-            )
-        )
-        grid.addWidget(notes, 4, 0, 1, 12)
+        mechanics = FoundryCard("Mechanic Reference", "crossed-swords")
+        mechanics.setMaximumHeight(108)
+        mech_row = QHBoxLayout()
+        mech_row.setSpacing(16)
+        ll = self._muted("LLOTHIS  ·  Bolts 12+ sec  ·  Cone 20–24  ·  Teleport 25–35")
+        fe = self._muted("FELMS  ·  Jump cycle ~20 sec  ·  Targets furthest player")
+        gen = self._muted("MINIS  ·  Enrage 3:00  ·  Respawn 1:00  ·  stacks +20 sec")
+        mech_row.addWidget(ll, 2)
+        mech_row.addWidget(fe, 2)
+        mech_row.addWidget(gen, 2)
+        mechanics.addLayout(mech_row)
+        grid.addWidget(mechanics, 3, 0, 1, 12)
 
         self.add_workspace_layout(grid)
 
-    def _mechanic_row(self, left_text: str, right_text: str) -> QWidget:
-        row = QWidget()
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(2, 2, 2, 2)
-        left = QLabel(left_text)
-        left.setProperty("timerMechanicName", True)
-        right = QLabel(right_text)
-        right.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        right.setProperty("pageSubtitle", True)
-        layout.addWidget(left, 1)
-        layout.addWidget(right)
-        return row
-
-    def _mini_card(self, title: str, key: str, artwork_kind: str) -> dict[str, object]:
+    def _mini_card(self, title: str, key: str, art_kind: str) -> dict[str, object]:
         card = FoundryCard(title, "boss")
-        card.setMinimumHeight(255)
-        outer = QHBoxLayout()
-        outer.setSpacing(12)
-        outer.addWidget(self._art(artwork_kind, 170, 190), 0, Qt.AlignmentFlag.AlignTop)
+        card.setMinimumHeight(232)
+        card.setMaximumHeight(252)
+
+        root = QHBoxLayout()
+        root.setSpacing(10)
+        root.addWidget(self._art(art_kind, 108, 128), 0, Qt.AlignmentFlag.AlignTop)
 
         center = QVBoxLayout()
+        center.setSpacing(2)
         state = QLabel("WAITING")
         state.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        state.setProperty("timerStateBadge", True)
+        state.setStyleSheet("font-size: 18px; font-weight: 700;")
         center.addWidget(state)
 
-        clock = self._big_label("--:--", 48)
+        clock = self._big_label("--:--", 36)
         center.addWidget(clock)
-        caption = QLabel("Waiting for first activation")
+        caption = QLabel("WAITING FOR FIRST ACTIVATION")
         caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
         caption.setProperty("timerAccent", True)
         center.addWidget(caption)
 
-        timeline = EnrageTimeline()
-        center.addWidget(timeline)
+        bar = EnrageBar()
+        center.addWidget(bar)
+
+        milestones = QHBoxLayout()
+        milestones.setContentsMargins(0, 0, 0, 0)
+        milestones.setSpacing(0)
+        milestones.addWidget(self._milestone_label("3:00", "SPAWN"), 1)
+        milestones.addWidget(self._milestone_label("1:30", "CHECK"), 1)
+        milestones.addWidget(self._milestone_label("0:30", "EXECUTE"), 1)
+        milestones.addWidget(self._milestone_label("0:00", "ENRAGE"), 1)
+        center.addLayout(milestones)
 
         callout = QLabel("Waiting for first activation")
         callout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        callout.setWordWrap(True)
-        callout.setProperty("timerCallout", True)
+        callout.setWordWrap(False)
+        callout.setStyleSheet("font-size: 15px; font-weight: 600;")
         center.addWidget(callout)
 
         actions = QHBoxLayout()
+        actions.setSpacing(8)
         active = self._large_button(f"Mark {key} Active", "stopwatch")
         inactive = self._large_button(f"Mark {key} Deactivated", "check-mark")
         if key == "Llothis":
@@ -466,33 +453,34 @@ class AsylumPerfectaTimerPage(FoundryPage):
         else:
             active.clicked.connect(lambda: self._set_mini_active("felms"))
             inactive.clicked.connect(lambda: self._set_mini_inactive("felms"))
-        actions.addWidget(active)
-        actions.addWidget(inactive)
+        actions.addWidget(active, 1)
+        actions.addWidget(inactive, 1)
         center.addLayout(actions)
-        outer.addLayout(center, 2)
+        root.addLayout(center, 1)
 
-        events = QVBoxLayout()
+        side = QVBoxLayout()
+        side.setSpacing(4)
         heading = QLabel("LAST / NEXT EVENTS")
         heading.setProperty("timerAccent", True)
-        events.addWidget(heading)
+        side.addWidget(heading)
         if key == "Llothis":
-            entries = ("Bolts    12+ sec", "Cone     20–24", "Teleport 25–35")
+            side.addWidget(self._muted("Bolts     12+ sec"))
+            side.addWidget(self._muted("Cone      20–24"))
+            side.addWidget(self._muted("Teleport  25–35"))
         else:
-            entries = ("Jumps    ~20 sec", "Target   Furthest", "Return   0:15 warn")
-        for entry in entries:
-            label = self._muted(entry)
-            label.setMinimumWidth(116)
-            events.addWidget(label)
-        events.addStretch()
-        outer.addLayout(events, 1)
+            side.addWidget(self._muted("Jumps     ~20 sec"))
+            side.addWidget(self._muted("Target    Furthest"))
+            side.addWidget(self._muted("Return    0:15 warn"))
+        side.addStretch(1)
+        root.addLayout(side)
 
-        card.addLayout(outer)
+        card.addLayout(root)
         return {
             "card": card,
             "state": state,
             "clock": clock,
             "caption": caption,
-            "timeline": timeline,
+            "bar": bar,
             "callout": callout,
             "active": active,
             "inactive": inactive,
@@ -502,45 +490,13 @@ class AsylumPerfectaTimerPage(FoundryPage):
         app = QApplication.instance()
         return bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
 
-    def _apply_visual_theme(self) -> None:
+    def _refresh_theme(self) -> bool:
         rylo = self._is_rylo()
-        if self._rylo_state == rylo:
-            return
-        self._rylo_state = rylo
-
-        if rylo:
-            accent = "#B88A3C"
-            clock = "#E0E0DE"
-            callout = "#C8C6C1"
-            state_border = "#676B70"
-        else:
-            accent = "#C8A46A"
-            clock = "#E5ECEB"
-            callout = "#D8D0C0"
-            state_border = "#8A6F3D"
-
-        self.setStyleSheet(
-            f"""
-            QWidget#asylumPerfectaTimerPage QLabel[timerAccent=\"true\"] {{
-                color: {accent}; font-weight: 700; letter-spacing: 1px;
-            }}
-            QWidget#asylumPerfectaTimerPage QLabel[timerClock=\"true\"] {{
-                color: {clock};
-            }}
-            QWidget#asylumPerfectaTimerPage QLabel[timerCallout=\"true\"] {{
-                color: {callout}; font-size: 16px; font-weight: 600;
-            }}
-            QWidget#asylumPerfectaTimerPage QLabel[timerStateBadge=\"true\"] {{
-                border: 1px solid {state_border}; border-radius: 4px;
-                padding: 5px 12px; font-size: 17px; font-weight: 700;
-            }}
-            QWidget#asylumPerfectaTimerPage QLabel[timerMechanicName=\"true\"] {{
-                font-weight: 600;
-            }}
-            """
-        )
-        for artwork in self._artwork_labels:
-            artwork.refresh_theme(rylo)
+        if rylo != self._rylo_state:
+            self._rylo_state = rylo
+            for art in self._artwork_labels:
+                art.refresh_theme(rylo)
+        return rylo
 
     def _tick(self) -> None:
         now = time.monotonic()
@@ -590,13 +546,12 @@ class AsylumPerfectaTimerPage(FoundryPage):
         self.model.olms_health_percent = int(value)
         self._refresh()
 
-    def _refresh_mini(self, mini, widgets: dict[str, object]) -> None:
+    def _refresh_mini(self, mini, widgets: dict[str, object], rylo: bool) -> None:
         state_label: QLabel = widgets["state"]
         clock: QLabel = widgets["clock"]
         caption: QLabel = widgets["caption"]
-        timeline: EnrageTimeline = widgets["timeline"]
+        bar: EnrageBar = widgets["bar"]
         callout: QLabel = widgets["callout"]
-        rylo = bool(self._rylo_state)
 
         state_label.setText(mini.state.value.upper())
         callout.setText(mini.callout)
@@ -604,80 +559,56 @@ class AsylumPerfectaTimerPage(FoundryPage):
         if mini.state == MiniState.WAITING:
             clock.setText("--:--")
             caption.setText("WAITING FOR FIRST ACTIVATION")
-            timeline.set_state(MINI_ENRAGE_SECONDS, active=False, rylo=rylo)
-            self._set_state_badge(state_label, "waiting")
+            bar.set_state(MINI_ENRAGE_SECONDS, active=False, rylo=rylo)
+            state_label.setStyleSheet("font-size: 18px; font-weight: 700;")
             return
 
         if mini.state == MiniState.INACTIVE:
             remaining = mini.respawn_remaining or 0.0
             clock.setText(format_clock(remaining))
-            caption.setText(f"UNTIL RESPAWN ({format_clock(MINI_RESPAWN_SECONDS)})")
-            timeline.set_state(MINI_ENRAGE_SECONDS, active=False, rylo=rylo)
-            self._set_state_badge(state_label, "inactive")
+            caption.setText(f"UNTIL RESPAWN  ({format_clock(MINI_RESPAWN_SECONDS)})")
+            bar.set_state(MINI_ENRAGE_SECONDS, active=False, rylo=rylo)
+            color = "#A4976D" if rylo else "#C8A46A"
+            state_label.setStyleSheet(f"font-size: 18px; font-weight: 700; color: {color};")
             return
 
         remaining = mini.enrage_remaining or 0.0
         clock.setText(format_clock(remaining))
-        caption.setText("TO ENRAGE (03:00)" if mini.state == MiniState.ACTIVE else "ENRAGED")
-        timeline.set_state(remaining, active=True, rylo=rylo)
+        caption.setText("TO ENRAGE  (03:00)" if mini.state == MiniState.ACTIVE else "ENRAGED")
+        bar.set_state(remaining, active=True, rylo=rylo)
         if mini.state == MiniState.ENRAGED:
-            self._set_state_badge(state_label, "enraged")
+            color = "#8D4F4F" if rylo else "#D96A5B"
         elif remaining <= 30:
-            self._set_state_badge(state_label, "danger")
+            color = "#9C6E4A" if rylo else "#E0A24C"
         else:
-            self._set_state_badge(state_label, "active")
-
-    def _set_state_badge(self, label: QLabel, state: str) -> None:
-        rylo = self._is_rylo()
-        if rylo:
-            palette = {
-                "waiting": ("#1A1C1D", "#8A8F93", "#60666A"),
-                "inactive": ("#2A231C", "#C1A168", "#755D3B"),
-                "active": ("#1C2823", "#AFC7B8", "#637C70"),
-                "danger": ("#30231B", "#C9A175", "#9C6E4A"),
-                "enraged": ("#301D1D", "#D0A0A0", "#8D4F4F"),
-            }
-        else:
-            palette = {
-                "waiting": ("#0B1719", "#AAB2AE", "#4F6565"),
-                "inactive": ("#2B2215", "#E0BD79", "#8A6A35"),
-                "active": ("#143826", "#D8F1E1", "#2F9A5C"),
-                "danger": ("#432716", "#FFD39C", "#D17A32"),
-                "enraged": ("#481D1A", "#FFD0C9", "#B8483F"),
-            }
-        bg, fg, border = palette[state]
-        label.setStyleSheet(
-            f"background-color: {bg}; color: {fg}; border: 1px solid {border}; "
-            "border-radius: 4px; padding: 5px 12px; font-size: 17px; font-weight: 700;"
-        )
+            color = "#637C70" if rylo else "#76B68B"
+        state_label.setStyleSheet(f"font-size: 18px; font-weight: 700; color: {color};")
 
     def _refresh(self) -> None:
-        self._apply_visual_theme()
+        rylo = self._refresh_theme()
         self.run_clock.setText(format_clock(self.model.perfecta_remaining))
         self.deaths_label.setText(str(self.model.deaths))
         self.run_status.setText(self.model.perfecta_status)
         self.start_button.setText("Pause Perfecta" if self.model.running else "Start Perfecta")
-        set_button_icon(self.start_button, "stopwatch", 19)
+        set_button_icon(self.start_button, "stopwatch", 20)
 
-        self._refresh_mini(self.model.llothis, self.llothis_widgets)
-        self._refresh_mini(self.model.felms, self.felms_widgets)
+        self._refresh_mini(self.model.llothis, self.llothis_widgets, rylo)
+        self._refresh_mini(self.model.felms, self.felms_widgets, rylo)
 
         self.olms_health.setText(f"{self.model.olms_health_percent}%")
         next_jump = self.model.next_olms_jump
         self.olms_next_jump.setText(
-            f"NEXT JUMP: {next_jump}%" if next_jump is not None else "EXECUTE · NO FURTHER HEALTH JUMP"
+            f"NEXT JUMP: {next_jump}%" if next_jump is not None else "EXECUTE · NO FURTHER JUMP"
         )
         self.kite_clock.setText(f"~{format_clock(self.model.kite_window_seconds)}")
         self.protector_clock.setText(f"~{format_clock(self.model.protector_window_seconds)}")
 
         failed = self.model.perfecta_status.startswith("FAILED")
-        failed_color = "#A96666" if self._is_rylo() else "#D96A5B"
-        good_color = "#AEB3B7" if self._is_rylo() else "#76B6B0"
-        self.run_status.setStyleSheet(
-            f"font-size: 22px; font-weight: 700; color: {failed_color if failed else good_color};"
-        )
+        if failed:
+            color = "#8D4F4F" if rylo else "#D96A5B"
+        else:
+            color = "#AEB3B7" if rylo else "#76B6B0"
+        self.run_status.setStyleSheet(f"font-size: 18px; font-weight: 700; color: {color};")
 
     def refresh_context(self) -> None:
-        """Navigation/theme hook kept for future encounter-driven timer profiles."""
-        self._rylo_state = None
         self._refresh()
