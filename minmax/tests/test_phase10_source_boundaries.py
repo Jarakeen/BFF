@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from models.build_model import GearSlot, PlayerBuild
 from models.scribing_recipe import ScribedSkillRecipe
+from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
 
@@ -19,11 +20,16 @@ class _UnusedGearResolver:
 
 
 def _service(database_path):
-    service = SavedBuildCapabilityService.__new__(SavedBuildCapabilityService)
-    service.database_path = database_path
+    service = SavedBuildCapabilityService(
+        BuildService(database_path.parent / "builds.json"),
+        database_path,
+        context_factory=SimpleNamespace(),
+        progression=SimpleNamespace(),
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=_UnusedGearResolver(),
+        potions=SimpleNamespace(),
+    )
     service.gear_repository = _MissingGearRepository()
-    service.gear = _UnusedGearResolver()
-    service.skills = SimpleNamespace(resolve=lambda *_args, **_kwargs: ())
     return service
 
 
