@@ -34,6 +34,18 @@ from .warden_passive_input_resolver import WardenPassiveInputResolver
 class BuildCalculationContextFactory:
     """Create one calculation snapshot from a canonical build and character state."""
 
+    _GEAR_SLOT_CACHE_FIELDS = (
+        "Set",
+        "Set2",
+        "Trait",
+        "Enchant",
+        "Weight",
+        "Quality",
+        "EnchantTier",
+        "Level",
+        "WeaponType",
+    )
+
     def __init__(
         self,
         calculator: BaseCharacterCalculator | None = None,
@@ -93,6 +105,7 @@ class BuildCalculationContextFactory:
             if gear_set_repository is not None
             else None
         )
+        self._gear_resolution_cache: dict[tuple[object, ...], GearCalculationInputs] = {}
         self.static_build_resolver = StaticBuildInputResolver(
             mundus_repository,
             champion_point_repository=champion_point_repository,
@@ -223,6 +236,59 @@ class BuildCalculationContextFactory:
         clean = tuple(message for message in messages if message and message not in result.unresolved)
         return replace(result, unresolved=result.unresolved + clean) if clean else result
 
+    @classmethod
+    def _gear_slot_cache_key(cls, slot) -> tuple[str, ...]:
+        return tuple(
+            str(getattr(slot, field_name, "") or "")
+            for field_name in cls._GEAR_SLOT_CACHE_FIELDS
+        )
+
+    @classmethod
+    def _gear_resolution_cache_key(
+        cls,
+        build: PlayerBuild,
+        active_bar: str,
+    ) -> tuple[object, ...]:
+        normalized_bar = str(active_bar or "front").casefold()
+        main, offhand = build.active_weapon_slots(normalized_bar)
+        armor = tuple(
+            (
+                str(slot_name),
+                tuple(
+                    sorted(
+                        (str(key), str(value or ""))
+                        for key, value in entry.items()
+                    )
+                ),
+            )
+            for slot_name, entry in sorted(build.Armor.items())
+        )
+        return (
+            normalized_bar,
+            armor,
+            cls._gear_slot_cache_key(main),
+            cls._gear_slot_cache_key(offhand),
+            cls._gear_slot_cache_key(build.Necklace),
+            cls._gear_slot_cache_key(build.Ring1),
+            cls._gear_slot_cache_key(build.Ring2),
+        )
+
+    def _resolved_gear_inputs(
+        self,
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+    ) -> GearCalculationInputs:
+        if self.gear_resolver is None:
+            return GearCalculationInputs()
+        cache_key = self._gear_resolution_cache_key(build, active_bar)
+        cached = self._gear_resolution_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        resolved = self.gear_resolver.resolve(build, active_bar=active_bar)
+        self._gear_resolution_cache[cache_key] = resolved
+        return resolved
+
     def _gear_inputs(
         self,
         build: PlayerBuild,
@@ -232,11 +298,7 @@ class BuildCalculationContextFactory:
         combat_state: CombatState,
         incoming_attack: IncomingAttackState,
     ) -> GearCalculationInputs:
-        gear = (
-            self.gear_resolver.resolve(build, active_bar=active_bar)
-            if self.gear_resolver is not None
-            else GearCalculationInputs()
-        )
+        gear = self._resolved_gear_inputs(build, active_bar=active_bar)
         gear = self.block_item_resolver.apply(gear, build)
         gear = self.base_item_resolver.apply(gear, build, active_bar=active_bar)
         gear = self.static_build_resolver.apply(
