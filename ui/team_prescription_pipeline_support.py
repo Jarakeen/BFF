@@ -12,6 +12,7 @@ from services.team_prescription_saved_build_evaluator import (
     build_saved_player_prescription_candidates,
 )
 from services.team_role_autofill import normalize_team_role
+from services.team_prescription_slot_constraints import project_slot_build_constraints
 
 
 _INSTALLED = False
@@ -128,6 +129,7 @@ def _generate_prescription_preview(self, *_args):
     source_mode = self._effective_source_mode()
     saved_builds = tuple(self.roster.Members)
     goal = self.goal_combo.currentText().strip() or "Custom Goal"
+    build_constraints = self._prescription_build_constraints()
 
     if source_mode != "Recruitment Plan Only" and not saved_builds:
         self.current_prescription = None
@@ -145,6 +147,10 @@ def _generate_prescription_preview(self, *_args):
             slot_labels=tuple(self._role_slots()),
             builds=(),
             scope=self._prescription_scope(),
+        )
+        prescription = project_slot_build_constraints(
+            roster=prescription,
+            constraints=tuple(build_constraints.values()),
         )
         self.current_prescription = prescription
         self.change_text.setText("\n".join(format_prescribed_roster_preview(prescription)))
@@ -171,6 +177,10 @@ def _generate_prescription_preview(self, *_args):
         builds=anchor_builds,
         scope=self._prescription_scope(),
     )
+    base = project_slot_build_constraints(
+        roster=base,
+        constraints=tuple(build_constraints.values()),
+    )
 
     if self.constraint_boxes["Lock Players"].isChecked():
         prescription = base
@@ -185,6 +195,7 @@ def _generate_prescription_preview(self, *_args):
             roster=base,
             candidates=build_saved_player_prescription_candidates(saved_builds),
             evaluate_objective=evaluator,
+            build_constraints_by_slot=build_constraints,
         )
         prescription = pipeline.final_roster
 
@@ -204,6 +215,12 @@ def _generate_prescription_preview(self, *_args):
         "an authoritative tank objective exists. Encounter-provider allocation also stays "
         "explicit until this page has a canonical encounter selection."
     )
+    if build_constraints:
+        ingredients = "; ".join(
+            f"{constraint.slot_name}: {constraint.summary}"
+            for constraint in build_constraints.values()
+        )
+        message += f" Required team-slot ingredients preserved: {ingredients}."
     if unresolved_count or source_unresolved:
         self.status.warning(message)
     else:

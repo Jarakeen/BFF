@@ -10,6 +10,7 @@ from models.build_model import PlayerBuild
 
 from .team_prescription import PrescribedRoster
 from .team_role_autofill import normalize_team_role, slot_role_family
+from .team_prescription_slot_constraints import PrescribedSlotBuildConstraint
 
 
 @dataclass(frozen=True)
@@ -150,6 +151,7 @@ def evaluate_open_slot_candidate_source(
     candidates: tuple[PrescribedOpenSlotCandidate, ...],
     evaluate_objective: OpenSlotObjectiveEvaluator,
     resolve_provider_requirements: OpenSlotProviderResolver | None = None,
+    build_constraints_by_slot: dict[str, PrescribedSlotBuildConstraint] | None = None,
 ) -> PrescribedCandidateSourceResult:
     """Evaluate real build templates for every compatible open roster slot.
 
@@ -163,6 +165,12 @@ def evaluate_open_slot_candidate_source(
     if len(candidate_ids) != len(set(candidate_ids)):
         raise ValueError("open-slot candidate source contains duplicate candidate_id values")
 
+    build_constraints_by_slot = build_constraints_by_slot or {}
+    normalized_build_constraints = {
+        str(slot_name).strip().casefold(): constraint
+        for slot_name, constraint in build_constraints_by_slot.items()
+        if str(slot_name).strip()
+    }
     by_slot: dict[str, tuple[PrescribedOpenSlotCandidateEvidence, ...]] = {}
     unresolved: list[str] = []
 
@@ -176,10 +184,17 @@ def evaluate_open_slot_candidate_source(
         if assignment.player_name is not None:
             continue
         required_role = slot_role_family(assignment.slot_name)
+        build_constraint = normalized_build_constraints.get(
+            assignment.slot_name.casefold()
+        )
         compatible = tuple(
             candidate
             for candidate in candidates
             if normalize_team_role(candidate.candidate_build.Role) == required_role
+            and (
+                build_constraint is None
+                or build_constraint.matches(candidate.candidate_build)
+            )
             and not (
                 candidate.player_name
                 and candidate.player_name.casefold() in anchored_players
@@ -209,9 +224,15 @@ def evaluate_open_slot_candidate_source(
             )
         by_slot[assignment.slot_name] = tuple(rows)
         if not compatible:
-            unresolved.append(
-                f"{assignment.slot_name}: no role-compatible open-slot build template is available"
-            )
+            if build_constraint is None:
+                unresolved.append(
+                    f"{assignment.slot_name}: no role-compatible open-slot build template is available"
+                )
+            else:
+                unresolved.append(
+                    f"{assignment.slot_name}: no role-compatible open-slot build template "
+                    f"satisfies required ingredients {build_constraint.summary}"
+                )
         elif not rows:
             unresolved.append(
                 f"{assignment.slot_name}: no role-compatible build template produced "

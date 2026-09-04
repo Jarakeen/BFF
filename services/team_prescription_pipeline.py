@@ -19,6 +19,7 @@ from .team_prescription_candidate_source import (
     PrescribedOpenSlotCandidate,
     evaluate_open_slot_candidate_source,
 )
+from .team_prescription_slot_constraints import PrescribedSlotBuildConstraint
 
 
 @dataclass(frozen=True)
@@ -83,6 +84,7 @@ def run_automatic_team_prescription_candidate_pipeline(
     evaluate_objective: OpenSlotObjectiveEvaluator,
     resolve_provider_requirements: OpenSlotProviderResolver | None = None,
     provider_requirements_by_slot: dict[str, tuple[str, ...]] | None = None,
+    build_constraints_by_slot: dict[str, PrescribedSlotBuildConstraint] | None = None,
 ) -> TeamPrescriptionPipelineResult:
     """Generate honest open-slot evidence, then run the existing prescription path."""
 
@@ -91,6 +93,7 @@ def run_automatic_team_prescription_candidate_pipeline(
         candidates=candidates,
         evaluate_objective=evaluate_objective,
         resolve_provider_requirements=resolve_provider_requirements,
+        build_constraints_by_slot=build_constraints_by_slot,
     )
     inputs = tuple(
         PrescribedCandidatePoolInput(slot_name=slot_name, open_slot=evidence)

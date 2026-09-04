@@ -25,6 +25,10 @@ from services.team_prescription import PrescriptionDimension, TeamPrescriptionSc
 from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
 from services.team_prescription_preview import format_prescribed_roster_preview
 from services.team_role_autofill import build_role_compatible_autofill
+from services.team_prescription_slot_constraints import (
+    PrescribedSlotBuildConstraint,
+    parse_required_gear_sets,
+)
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -175,7 +179,70 @@ class OptimizationPage(FoundryPage):
         self.generate_button.clicked.connect(self._generate_prescription_preview)
         row.addWidget(self.generate_button)
         card.addLayout(row)
+
+        ingredients = QHBoxLayout()
+        ingredients.setSpacing(10)
+        ingredients.addWidget(QLabel("BUILD AROUND"))
+        self.required_slot_combo = QComboBox()
+        self.required_slot_combo.addItems(self._role_slots())
+        ingredients.addWidget(self.required_slot_combo)
+
+        ingredients.addWidget(QLabel("CLASS"))
+        self.required_class_combo = QComboBox()
+        self.required_class_combo.addItems(
+            [
+                "Any class",
+                "Arcanist",
+                "Dragonknight",
+                "Necromancer",
+                "Nightblade",
+                "Sorcerer",
+                "Templar",
+                "Warden",
+            ]
+        )
+        ingredients.addWidget(self.required_class_combo)
+
+        ingredients.addWidget(QLabel("REQUIRED SET(S)"))
+        self.required_gear_input = QLineEdit()
+        self.required_gear_input.setPlaceholderText(
+            "Serpent's Disdain, Pillager's Profit"
+        )
+        ingredients.addWidget(self.required_gear_input, 1)
+        card.addLayout(ingredients)
+        self.group_size_combo.currentTextChanged.connect(
+            self._refresh_required_slot_choices
+        )
         self.layout.addWidget(card)
+
+    def _refresh_required_slot_choices(self, _text: str = "") -> None:
+        if not hasattr(self, "required_slot_combo"):
+            return
+        selected = self.required_slot_combo.currentText()
+        self.required_slot_combo.clear()
+        self.required_slot_combo.addItems(self._role_slots())
+        index = self.required_slot_combo.findText(selected)
+        if index >= 0:
+            self.required_slot_combo.setCurrentIndex(index)
+
+    def _prescription_build_constraints(
+        self,
+    ) -> dict[str, PrescribedSlotBuildConstraint]:
+        required_class = self.required_class_combo.currentText().strip()
+        if required_class == "Any class":
+            required_class = ""
+        required_gear_sets = parse_required_gear_sets(
+            self.required_gear_input.text()
+        )
+        if not required_class and not required_gear_sets:
+            return {}
+        slot_name = self.required_slot_combo.currentText().strip()
+        constraint = PrescribedSlotBuildConstraint(
+            slot_name=slot_name,
+            required_class=required_class or None,
+            required_gear_sets=required_gear_sets,
+        )
+        return {slot_name: constraint}
 
     def _build_main_row(self):
         row = QHBoxLayout()

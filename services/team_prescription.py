@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import json
+
+from models.build_model import PlayerBuild
 
 
 class PrescriptionDimension(str, Enum):
@@ -81,6 +84,7 @@ class PrescribedRosterAssignment:
     prescribed_role: str
     changes: tuple[PrescribedBuildChange, ...] = ()
     unresolved: tuple[str, ...] = ()
+    prescribed_build_json: str | None = None
 
     def __post_init__(self) -> None:
         slot = str(self.slot_name or "").strip()
@@ -95,6 +99,21 @@ class PrescribedRosterAssignment:
             if self.source_build_name is None
             else str(self.source_build_name).strip() or None
         )
+        prescribed_build_json = (
+            None
+            if self.prescribed_build_json is None
+            else str(self.prescribed_build_json).strip() or None
+        )
+        if prescribed_build_json is not None:
+            try:
+                payload = json.loads(prescribed_build_json)
+                if not isinstance(payload, dict):
+                    raise ValueError
+                PlayerBuild.from_dict(payload)
+            except (TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise ValueError(
+                    "prescribed roster assignment contains an invalid build snapshot"
+                ) from exc
         changes = tuple(self.changes)
         dimensions = [change.dimension for change in changes]
         if len(set(dimensions)) != len(dimensions):
@@ -102,6 +121,7 @@ class PrescribedRosterAssignment:
         object.__setattr__(self, "slot_name", slot)
         object.__setattr__(self, "player_name", player)
         object.__setattr__(self, "source_build_name", source)
+        object.__setattr__(self, "prescribed_build_json", prescribed_build_json)
         object.__setattr__(self, "prescribed_role", role)
         object.__setattr__(self, "changes", changes)
         object.__setattr__(
@@ -112,6 +132,12 @@ class PrescribedRosterAssignment:
 
     def change_for(self, dimension: PrescriptionDimension) -> PrescribedBuildChange | None:
         return next((change for change in self.changes if change.dimension is dimension), None)
+
+    @property
+    def prescribed_build(self) -> PlayerBuild | None:
+        if self.prescribed_build_json is None:
+            return None
+        return PlayerBuild.from_dict(json.loads(self.prescribed_build_json))
 
 
 @dataclass(frozen=True)

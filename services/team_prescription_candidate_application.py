@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 
 from models.build_model import PlayerBuild
 
@@ -53,6 +54,15 @@ def _change(
         current_value=None,
         prescribed_value=normalized,
         reason=reason,
+    )
+
+
+def _build_snapshot_json(build: PlayerBuild) -> str:
+    return json.dumps(
+        build.to_dict(),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
     )
 
 
@@ -127,6 +137,7 @@ def apply_ranked_candidate_to_prescribed_roster(
             prescribed_role=current.prescribed_role,
             changes=(),
             unresolved=(),
+            prescribed_build_json=evidence.open_slot.candidate.candidate_build_json,
         )
         assumptions = tuple(dict.fromkeys((*roster.assumptions, objective_reason)))
     else:
@@ -144,6 +155,11 @@ def apply_ranked_candidate_to_prescribed_roster(
             prescribed_role=current.prescribed_role,
             changes=changes,
             unresolved=(),
+            prescribed_build_json=(
+                evidence.open_slot.candidate.candidate_build_json
+                if evidence.open_slot is not None
+                else _build_snapshot_json(build)
+            ),
         )
         assumptions = roster.assumptions
 
