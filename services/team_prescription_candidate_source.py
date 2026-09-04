@@ -1,0 +1,206 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+import json
+
+from minmax.build_candidate_comparison import CandidateConstraint, ConstraintStatus
+from minmax.evaluation_objective import EvaluationObjective
+from models.build_model import PlayerBuild
+
+from .team_prescription import PrescribedRoster
+from .team_role_autofill import normalize_team_role, slot_role_family
+
+
+@dataclass(frozen=True)
+class PrescribedOpenSlotCandidate:
+    """Immutable build template for an open roster chair.
+
+    This is deliberately not a Phase 12 ``BuildCandidate``.  An open chair has no
+    authoritative baseline build, so representing it as a baseline mutation would
+    manufacture comparison evidence that does not exist.
+    """
+
+    candidate_id: str
+    candidate_build_json: str
+    candidate_source: str
+
+    @classmethod
+    def from_build(
+        cls,
+        *,
+        candidate_id: str,
+        candidate_build: PlayerBuild,
+        candidate_source: str,
+    ) -> "PrescribedOpenSlotCandidate":
+        normalized_id = str(candidate_id or "").strip()
+        normalized_source = str(candidate_source or "").strip()
+        if not normalized_id:
+            raise ValueError("open-slot candidate_id is required")
+        if not normalized_source:
+            raise ValueError("open-slot candidate_source is required")
+        return cls(
+            candidate_id=normalized_id,
+            candidate_build_json=json.dumps(
+                candidate_build.to_dict(),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ),
+            candidate_source=normalized_source,
+        )
+
+    @property
+    def candidate_build(self) -> PlayerBuild:
+        return PlayerBuild.from_dict(json.loads(self.candidate_build_json))
+
+
+@dataclass(frozen=True)
+class PrescribedObjectiveMeasurement:
+    """Absolute, canonical objective evidence for one open-slot build template."""
+
+    objective: EvaluationObjective
+    value: float | None
+    metric_name: str
+    constraints: tuple[CandidateConstraint, ...]
+    evidence: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
+    rejection_reason: str | None = None
+
+    def __post_init__(self) -> None:
+        metric_name = str(self.metric_name or "").strip()
+        if not metric_name:
+            raise ValueError("open-slot objective metric_name is required")
+        if self.value is not None and float(self.value) < 0:
+            raise ValueError("open-slot objective value cannot be negative")
+        object.__setattr__(self, "metric_name", metric_name)
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(str(item).strip() for item in self.unresolved if str(item).strip()),
+        )
+
+    @property
+    def blocking_constraints(self) -> tuple[CandidateConstraint, ...]:
+        return tuple(
+            constraint
+            for constraint in self.constraints
+            if constraint.status
+            in (
+                ConstraintStatus.WORSENED,
+                ConstraintStatus.UNSATISFIED,
+                ConstraintStatus.UNKNOWN,
+            )
+        )
+
+    @property
+    def is_rankable(self) -> bool:
+        return (
+            self.value is not None
+            and not self.blocking_constraints
+            and not self.unresolved
+            and not self.rejection_reason
+        )
+
+
+@dataclass(frozen=True)
+class PrescribedOpenSlotCandidateEvidence:
+    candidate: PrescribedOpenSlotCandidate
+    measurement: PrescribedObjectiveMeasurement
+    provider_requirement_ids: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        provider_ids = tuple(
+            dict.fromkeys(
+                value
+                for value in (
+                    str(item or "").strip() for item in self.provider_requirement_ids
+                )
+                if value
+            )
+        )
+        object.__setattr__(self, "provider_requirement_ids", provider_ids)
+
+
+OpenSlotObjectiveEvaluator = Callable[
+    [PrescribedOpenSlotCandidate, str], PrescribedObjectiveMeasurement
+]
+OpenSlotProviderResolver = Callable[
+    [PrescribedOpenSlotCandidate, str], tuple[str, ...]
+]
+
+
+@dataclass(frozen=True)
+class PrescribedCandidateSourceResult:
+    evidence_by_slot: dict[str, tuple[PrescribedOpenSlotCandidateEvidence, ...]]
+    unresolved: tuple[str, ...] = ()
+
+
+def evaluate_open_slot_candidate_source(
+    *,
+    roster: PrescribedRoster,
+    candidates: tuple[PrescribedOpenSlotCandidate, ...],
+    evaluate_objective: OpenSlotObjectiveEvaluator,
+    resolve_provider_requirements: OpenSlotProviderResolver | None = None,
+) -> PrescribedCandidateSourceResult:
+    """Evaluate real build templates for every compatible open roster slot.
+
+    The supplied evaluator must use an existing canonical role-specific engine.  This
+    service owns only source orchestration, role boundaries, immutable snapshots, and
+    explicit failure reporting.  It never invents a baseline, objective value, player,
+    provider assignment, or unsupported ESO mechanic.
+    """
+
+    candidate_ids = [candidate.candidate_id for candidate in candidates]
+    if len(candidate_ids) != len(set(candidate_ids)):
+        raise ValueError("open-slot candidate source contains duplicate candidate_id values")
+
+    by_slot: dict[str, tuple[PrescribedOpenSlotCandidateEvidence, ...]] = {}
+    unresolved: list[str] = []
+
+    for assignment in roster.assignments:
+        if assignment.player_name is not None:
+            continue
+        required_role = slot_role_family(assignment.slot_name)
+        compatible = tuple(
+            candidate
+            for candidate in candidates
+            if normalize_team_role(candidate.candidate_build.Role) == required_role
+        )
+        rows: list[PrescribedOpenSlotCandidateEvidence] = []
+        for candidate in compatible:
+            try:
+                measurement = evaluate_objective(candidate, assignment.slot_name)
+                provider_ids = (
+                    resolve_provider_requirements(candidate, assignment.slot_name)
+                    if resolve_provider_requirements is not None
+                    else ()
+                )
+            except Exception as exc:
+                unresolved.append(
+                    f"{assignment.slot_name}: candidate {candidate.candidate_id!r} "
+                    f"could not be evaluated: {exc}"
+                )
+                continue
+            rows.append(
+                PrescribedOpenSlotCandidateEvidence(
+                    candidate=candidate,
+                    measurement=measurement,
+                    provider_requirement_ids=provider_ids,
+                )
+            )
+        by_slot[assignment.slot_name] = tuple(rows)
+        if not compatible:
+            unresolved.append(
+                f"{assignment.slot_name}: no role-compatible open-slot build template is available"
+            )
+        elif not rows:
+            unresolved.append(
+                f"{assignment.slot_name}: no role-compatible build template produced "
+                "objective evidence"
+            )
+
+    return PrescribedCandidateSourceResult(
+        evidence_by_slot=by_slot,
+        unresolved=tuple(dict.fromkeys(unresolved)),
+    )

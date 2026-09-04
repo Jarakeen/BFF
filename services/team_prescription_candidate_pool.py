@@ -6,12 +6,14 @@ from minmax.build_candidate_comparison import BuildCandidateComparison
 
 from .team_prescription import PrescribedRoster
 from .team_prescription_candidate_ranking import PrescribedSlotCandidateEvidence
+from .team_prescription_candidate_source import PrescribedOpenSlotCandidateEvidence
 
 
 @dataclass(frozen=True)
 class PrescribedCandidatePoolInput:
     slot_name: str
-    comparison: BuildCandidateComparison
+    comparison: BuildCandidateComparison | None = None
+    open_slot: PrescribedOpenSlotCandidateEvidence | None = None
     provider_requirement_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
@@ -19,6 +21,10 @@ class PrescribedCandidatePoolInput:
         if not slot_name:
             raise ValueError("Candidate pool slot_name is required")
         object.__setattr__(self, "slot_name", slot_name)
+        if (self.comparison is None) == (self.open_slot is None):
+            raise ValueError(
+                "candidate pool input requires exactly one of comparison or open_slot"
+            )
 
         provider_ids = tuple(
             str(requirement_id).strip()
@@ -69,7 +75,12 @@ def build_prescribed_candidate_pools(
                 f"Candidate pool input cannot replace anchored slot {item.slot_name!r}"
             )
 
-        candidate_id = str(item.comparison.candidate.candidate_id).strip()
+        candidate_id = (
+            item.comparison.candidate.candidate_id
+            if item.comparison is not None
+            else item.open_slot.candidate.candidate_id
+        )
+        candidate_id = str(candidate_id).strip()
         seen = candidate_ids_by_slot.setdefault(key, set())
         if candidate_id in seen:
             raise ValueError(
@@ -80,7 +91,15 @@ def build_prescribed_candidate_pools(
         grouped.setdefault(key, []).append(
             PrescribedSlotCandidateEvidence(
                 comparison=item.comparison,
-                provider_requirement_ids=item.provider_requirement_ids,
+                open_slot=item.open_slot,
+                provider_requirement_ids=(
+                    item.provider_requirement_ids
+                    or (
+                        item.open_slot.provider_requirement_ids
+                        if item.open_slot is not None
+                        else ()
+                    )
+                ),
             )
         )
 

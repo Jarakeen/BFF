@@ -4,19 +4,24 @@ from dataclasses import dataclass
 from math import isclose
 
 from minmax.build_candidate_comparison import BuildCandidateComparison
-from minmax.build_candidate_evaluator import rank_candidate_comparisons
 
 from .team_role_autofill import normalize_team_role, slot_role_family
+from .team_prescription_candidate_source import PrescribedOpenSlotCandidateEvidence
 
 
 @dataclass(frozen=True)
 class PrescribedSlotCandidateEvidence:
-    """One Phase 12 candidate plus team-scale evidence for one roster slot."""
+    """One comparable candidate evidence shape for a prescribed roster slot."""
 
-    comparison: BuildCandidateComparison
+    comparison: BuildCandidateComparison | None = None
+    open_slot: PrescribedOpenSlotCandidateEvidence | None = None
     provider_requirement_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if (self.comparison is None) == (self.open_slot is None):
+            raise ValueError(
+                "prescribed slot evidence requires exactly one of comparison or open_slot"
+            )
         normalized = tuple(
             dict.fromkeys(
                 value
@@ -27,6 +32,53 @@ class PrescribedSlotCandidateEvidence:
             )
         )
         object.__setattr__(self, "provider_requirement_ids", normalized)
+
+    @property
+    def candidate_id(self) -> str:
+        if self.comparison is not None:
+            return self.comparison.candidate.candidate_id
+        assert self.open_slot is not None
+        return self.open_slot.candidate.candidate_id
+
+    @property
+    def candidate_build(self):
+        if self.comparison is not None:
+            return self.comparison.candidate.candidate_build
+        assert self.open_slot is not None
+        return self.open_slot.candidate.candidate_build
+
+    @property
+    def is_rankable(self) -> bool:
+        if self.comparison is not None:
+            return self.comparison.is_rankable
+        assert self.open_slot is not None
+        return self.open_slot.measurement.is_rankable
+
+    @property
+    def is_preferred(self) -> bool:
+        if self.comparison is not None:
+            return self.comparison.is_preferred
+        return self.is_rankable
+
+    @property
+    def ranking_value(self) -> float | None:
+        if self.comparison is not None:
+            return self.comparison.delta
+        assert self.open_slot is not None
+        return self.open_slot.measurement.value
+
+    @property
+    def evidence_kind(self) -> str:
+        return "baseline comparison" if self.comparison is not None else "absolute objective"
+
+    @property
+    def preference_class(self) -> tuple[bool, bool]:
+        if self.comparison is not None:
+            return (
+                self.comparison.is_constraint_repair,
+                self.comparison.is_improvement,
+            )
+        return (False, True)
 
 
 @dataclass(frozen=True)
@@ -55,11 +107,11 @@ def rank_prescribed_slot_candidates(
 ) -> PrescribedSlotCandidateRanking:
     """Rank one prescribed roster slot without weakening Phase 12 constraints.
 
-    Phase 12 remains authoritative for whether a build comparison is rankable.
-    This layer adds only roster-scale gates: exact role-family compatibility and
-    explicit provider requirements allocated to this slot. Objective ordering is
-    delegated back to Phase 12. Equivalent top candidates remain unresolved rather
-    than using identifier order as stronger gameplay evidence.
+    Phase 12 remains authoritative when an anchored-player build comparison is
+    supplied. Open chairs use absolute canonical objective evidence because they have
+    no honest baseline. This layer adds the roster-scale role/provider gates and
+    refuses to compare the two unlike score types. Equivalent top candidates remain
+    unresolved rather than using identifier order as stronger gameplay evidence.
     """
 
     normalized_slot = str(slot_name or "").strip()
@@ -80,11 +132,10 @@ def rank_prescribed_slot_candidates(
     rejected: list[PrescribedSlotCandidateRejection] = []
 
     for evidence in candidates:
-        comparison = evidence.comparison
-        candidate_id = comparison.candidate.candidate_id
+        candidate_id = evidence.candidate_id
         reasons: list[str] = []
 
-        candidate_role = normalize_team_role(comparison.candidate.candidate_build.Role)
+        candidate_role = normalize_team_role(evidence.candidate_build.Role)
         if candidate_role != required_role:
             reasons.append(
                 f"role mismatch: slot requires {required_role}, candidate role is "
@@ -101,8 +152,12 @@ def rank_prescribed_slot_candidates(
                 "missing required provider evidence: " + ", ".join(missing_provider_ids)
             )
 
-        if not comparison.is_rankable:
-            reasons.append("Phase 12 comparison is not rankable")
+        if not evidence.is_rankable:
+            reasons.append(
+                "Phase 12 comparison is not rankable"
+                if evidence.comparison is not None
+                else "absolute objective is not rankable"
+            )
 
         if reasons:
             rejected.append(
@@ -115,35 +170,47 @@ def rank_prescribed_slot_candidates(
 
         eligible.append(evidence)
 
-    ranking = rank_candidate_comparisons(
-        tuple(evidence.comparison for evidence in eligible)
+    kinds = {evidence.evidence_kind for evidence in eligible}
+    if len(kinds) > 1:
+        return PrescribedSlotCandidateRanking(
+            slot_name=normalized_slot,
+            required_role=required_role,
+            required_provider_requirement_ids=required_provider_ids,
+            eligible=tuple(eligible),
+            rejected=tuple(rejected),
+            recommended=None,
+            recommended_ties=(),
+            unresolved=(
+                f"{normalized_slot}: baseline deltas and absolute open-slot objective "
+                "values cannot be ranked together",
+            ),
+        )
+
+    ranked = tuple(
+        sorted(
+            (evidence for evidence in eligible if evidence.is_preferred),
+            key=lambda evidence: (
+                -float(evidence.ranking_value or 0.0),
+                evidence.candidate_id.casefold(),
+                evidence.candidate_id,
+            ),
+        )
     )
-    evidence_by_id = {
-        evidence.comparison.candidate.candidate_id: evidence for evidence in eligible
-    }
-    recommended_comparison = ranking.recommended
-    recommended = (
-        evidence_by_id[recommended_comparison.candidate.candidate_id]
-        if recommended_comparison is not None
-        else None
-    )
+    recommended = ranked[0] if ranked else None
 
     recommended_ties: tuple[PrescribedSlotCandidateEvidence, ...] = ()
     unresolved: tuple[str, ...] = ()
-    if recommended is not None and recommended.comparison.delta is not None:
-        top_delta = float(recommended.comparison.delta)
+    if recommended is not None and recommended.ranking_value is not None:
+        top_value = float(recommended.ranking_value)
         tied = tuple(
             evidence
             for evidence in eligible
-            if evidence.comparison.is_preferred
-            and evidence.comparison.delta is not None
-            and evidence.comparison.is_constraint_repair
-            is recommended.comparison.is_constraint_repair
-            and evidence.comparison.is_improvement
-            is recommended.comparison.is_improvement
+            if evidence.is_preferred
+            and evidence.ranking_value is not None
+            and evidence.preference_class == recommended.preference_class
             and isclose(
-                float(evidence.comparison.delta),
-                top_delta,
+                float(evidence.ranking_value),
+                top_value,
                 rel_tol=0.0,
                 abs_tol=1e-9,
             )

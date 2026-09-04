@@ -96,18 +96,26 @@ def apply_ranked_candidate_to_prescribed_roster(
         )
         return replace(roster, assignments=tuple(assignments))
 
-    comparison = ranking.recommended.comparison
-    build = comparison.candidate.candidate_build
+    evidence = ranking.recommended
+    comparison = evidence.comparison
+    build = evidence.candidate_build
     provider_ids = ranking.recommended.provider_requirement_ids
     provider_reason = (
         " and satisfies allocated provider requirements " + ", ".join(provider_ids)
         if provider_ids
         else ""
     )
+    if comparison is not None:
+        objective_detail = f"modeled objective delta {comparison.delta:+.3f}"
+    else:
+        assert evidence.open_slot is not None
+        measurement = evidence.open_slot.measurement
+        objective_detail = (
+            f"absolute {measurement.metric_name} {float(measurement.value):.3f}"
+        )
     objective_reason = (
-        f"Phase 12 ranked candidate {comparison.candidate.candidate_id!r} for "
-        f"{current.slot_name} with modeled objective delta {comparison.delta:+.3f}"
-        f"{provider_reason}."
+        f"Evidence ranked candidate {evidence.candidate_id!r} for "
+        f"{current.slot_name} with {objective_detail}{provider_reason}."
     )
 
     proposed = (
