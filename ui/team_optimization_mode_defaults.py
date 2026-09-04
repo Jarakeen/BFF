@@ -33,11 +33,11 @@ _MODE_DEFAULTS = {
     ),
     OptimizationMode.BUILD: OptimizationModeDefaults(
         team_source="Hybrid: Players + Recruitment",
-        lock_players=False,
-        lock_roles=False,
-        lock_classes=False,
+        lock_players=True,
+        lock_roles=True,
+        lock_classes=True,
         keep_current_builds=False,
-        allow_role_swap=True,
+        allow_role_swap=False,
         allow_gear_changes=True,
     ),
     OptimizationMode.RECRUIT: OptimizationModeDefaults(
@@ -110,22 +110,18 @@ def _preset_state(mode: OptimizationMode) -> dict[str, object]:
 
 def _set_help_text(page) -> None:
     page.team_source_combo.setToolTip(
-        "A sensible source is selected automatically for each Optimization mode. "
-        "You can change it at any time."
+        "Choose where the team being optimized comes from. Comp Builder owns composition creation; "
+        "Optimization works on an existing team or comparison set."
     )
     hints = {
-        "Lock Players": (
-            "Freeze the exact selected players even when no recruit chairs are present. "
-            "In Hybrid mode, a mixed team of saved players plus recruitment chairs "
-            "already preserves those visible saved players automatically."
-        ),
-        "Lock Roles": "Prevent the prescription from recommending role changes.",
-        "Lock Classes": "Prevent class recommendations from changing for prescribed chairs.",
+        "Lock Players": "Keep the selected people fixed while optimizing their assigned team.",
+        "Lock Roles": "Keep each selected player's current roster role fixed.",
+        "Lock Classes": "Keep each selected character's class fixed.",
         "Keep Current Builds": (
-            "Keep current saved builds. Turn this off when you want BFF to prescribe "
-            "gear, skills, Mundus, CP, food, potion, and other build dimensions."
+            "Keep current saved builds. Turn this off when you want BFF to evaluate "
+            "gear, skills, Mundus, CP, food, potion, and other build changes."
         ),
-        "Allow Role Swap": "Allow role changes when the current mode and evidence support them.",
+        "Allow Role Swap": "Allow role changes only when you deliberately want broader optimization.",
         "Allow Gear Changes": "Allow gear-set and equipment recommendations.",
     }
     for name, text in hints.items():
