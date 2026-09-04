@@ -49,12 +49,13 @@ def build_prescribed_candidate_pools(
     roster: PrescribedRoster,
     inputs: tuple[PrescribedCandidatePoolInput, ...],
 ) -> PrescribedCandidatePoolResult:
-    """Group already-evaluated Phase 12 candidates by open prescribed slot.
+    """Group already-evaluated Phase 12 candidates by genuinely open prescribed slot.
 
     This adapter intentionally does not generate objective values or candidate builds.
     Those remain the responsibility of the existing Phase 12 evaluators/providers.
-    It also refuses evidence for anchored or unknown slots so a hypothetical candidate
-    cannot silently replace a real saved player.
+    It refuses evidence for saved-player anchors, complete prescribed build snapshots,
+    or unknown slots so a later candidate source cannot silently replace a filled
+    chair.
     """
 
     assignments = {
@@ -73,6 +74,10 @@ def build_prescribed_candidate_pools(
         if assignment.player_name is not None:
             raise ValueError(
                 f"Candidate pool input cannot replace anchored slot {item.slot_name!r}"
+            )
+        if assignment.prescribed_build is not None:
+            raise ValueError(
+                f"Candidate pool input cannot replace prescribed build slot {item.slot_name!r}"
             )
 
         candidate_id = (
@@ -106,7 +111,7 @@ def build_prescribed_candidate_pools(
     pools: dict[str, tuple[PrescribedSlotCandidateEvidence, ...]] = {}
     unresolved: list[str] = []
     for assignment in roster.assignments:
-        if assignment.player_name is not None:
+        if assignment.player_name is not None or assignment.prescribed_build is not None:
             continue
         entries = tuple(grouped.get(assignment.slot_name.casefold(), ()))
         pools[assignment.slot_name] = entries

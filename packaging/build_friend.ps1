@@ -58,6 +58,7 @@ $PersonalDataFiles = @(
     "builds.json",
     "characters.json",
     "capabilities.json",
+    "team_prescription_observed_templates.json",
     "achievement_progress.json",
     "antiquity_progress.json",
     "current_achievement_run.json",

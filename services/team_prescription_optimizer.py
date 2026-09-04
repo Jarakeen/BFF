@@ -59,9 +59,10 @@ def optimize_prescribed_roster_candidates(
 
     Candidate generation and Phase 12 evaluation stay authoritative in their
     existing services. A missing pool is reported as unresolved rather than
-    converted into a fabricated recommendation. Anchored saved players are never
-    replaced here, and a real saved player can be consumed by at most one roster
-    chair even when that player has several saved builds in the candidate pool.
+    converted into a fabricated recommendation. Anchored saved players and chairs
+    that already hold a complete prescribed build snapshot are never replaced here,
+    and a real saved player can be consumed by at most one roster chair even when
+    that player has several saved builds in the candidate pool.
     """
 
     provider_requirements_by_slot = provider_requirements_by_slot or {}
@@ -85,7 +86,7 @@ def optimize_prescribed_roster_candidates(
     }
 
     for assignment in roster.assignments:
-        if assignment.player_name is not None:
+        if assignment.player_name is not None or assignment.prescribed_build is not None:
             decisions.append(
                 PrescribedSlotOptimization(
                     slot_name=assignment.slot_name,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import json
+from typing import Any
 
 from models.build_model import PlayerBuild
 
@@ -37,6 +38,17 @@ def _gear_summary(build: PlayerBuild) -> str:
         add(slot.Set)
         add(slot.Set2)
     return " + ".join(names)
+
+
+def _metadata_list(metadata: dict[str, Any], key: str) -> tuple[str, ...]:
+    value = metadata.get(key)
+    if not isinstance(value, (list, tuple, set)):
+        return ()
+    return tuple(
+        text
+        for text in (str(item or "").strip() for item in value)
+        if text
+    )
 
 
 def _change(
@@ -122,13 +134,13 @@ def apply_ranked_candidate_to_prescribed_roster(
         f"{current.slot_name} with {objective_detail}{provider_reason}."
     )
 
-    saved_player_name = (
-        evidence.open_slot.candidate.player_name
-        if evidence.open_slot is not None
-        else None
+    open_candidate = (
+        evidence.open_slot.candidate if evidence.open_slot is not None else None
     )
+    saved_player_name = open_candidate.player_name if open_candidate is not None else None
 
     assignments = list(roster.assignments)
+    new_assignment_unresolved: tuple[str, ...] = ()
     if saved_player_name:
         assignments[target_index] = PrescribedRosterAssignment(
             slot_name=current.slot_name,
@@ -137,9 +149,72 @@ def apply_ranked_candidate_to_prescribed_roster(
             prescribed_role=current.prescribed_role,
             changes=(),
             unresolved=(),
-            prescribed_build_json=evidence.open_slot.candidate.candidate_build_json,
+            prescribed_build_json=open_candidate.candidate_build_json,
         )
         assumptions = tuple(dict.fromkeys((*roster.assumptions, objective_reason)))
+    elif open_candidate is not None and not open_candidate.has_complete_build_snapshot:
+        metadata = open_candidate.candidate_metadata
+        observed_gear = " + ".join(_metadata_list(metadata, "observed_gear_sets"))
+        observed_skills = " / ".join(_metadata_list(metadata, "observed_skills"))
+        observed_mundus = str(metadata.get("observed_mundus") or build.Mundus or "").strip()
+        proposed = (
+            _change(
+                roster,
+                dimension=PrescriptionDimension.CLASS,
+                value=(build.EsoClass or str(metadata.get("observed_class") or "")),
+                reason=objective_reason,
+            ),
+            _change(
+                roster,
+                dimension=PrescriptionDimension.BUILD,
+                value=build.BuildName,
+                reason=objective_reason,
+            ),
+            _change(
+                roster,
+                dimension=PrescriptionDimension.GEAR,
+                value=observed_gear,
+                reason=objective_reason,
+            ),
+            _change(
+                roster,
+                dimension=PrescriptionDimension.SKILLS,
+                value=observed_skills,
+                reason=objective_reason,
+            ),
+            _change(
+                roster,
+                dimension=PrescriptionDimension.MUNDUS,
+                value=observed_mundus,
+                reason=objective_reason,
+            ),
+        )
+        changes = tuple(change for change in proposed if change is not None)
+        unknown_fields = _metadata_list(metadata, "unknown_fields")
+        if unknown_fields:
+            new_assignment_unresolved = (
+                f"{current.slot_name}: observed template leaves unresolved: "
+                + ", ".join(unknown_fields),
+            )
+        assignments[target_index] = PrescribedRosterAssignment(
+            slot_name=current.slot_name,
+            player_name=None,
+            source_build_name=build.BuildName.strip() or None,
+            prescribed_role=current.prescribed_role,
+            changes=changes,
+            unresolved=new_assignment_unresolved,
+            prescribed_build_json=None,
+        )
+        source_note = str(metadata.get("source_url") or open_candidate.candidate_source).strip()
+        assumptions = tuple(
+            dict.fromkeys(
+                (
+                    *roster.assumptions,
+                    objective_reason,
+                    f"{current.slot_name}: partial template source {source_note}",
+                )
+            )
+        )
     else:
         proposed = (
             _change(roster, dimension=PrescriptionDimension.CLASS, value=build.EsoClass, reason=objective_reason),
@@ -156,8 +231,8 @@ def apply_ranked_candidate_to_prescribed_roster(
             changes=changes,
             unresolved=(),
             prescribed_build_json=(
-                evidence.open_slot.candidate.candidate_build_json
-                if evidence.open_slot is not None
+                open_candidate.candidate_build_json
+                if open_candidate is not None
                 else _build_snapshot_json(build)
             ),
         )
@@ -167,6 +242,10 @@ def apply_ranked_candidate_to_prescribed_roster(
     remaining_unresolved = tuple(
         item for item in roster.unresolved if not str(item).casefold().startswith(prefix)
     )
+    if new_assignment_unresolved:
+        remaining_unresolved = tuple(
+            dict.fromkeys((*remaining_unresolved, *new_assignment_unresolved))
+        )
     return replace(
         roster,
         assignments=tuple(assignments),

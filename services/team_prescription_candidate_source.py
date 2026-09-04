@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import json
+from typing import Any
 
 from minmax.build_candidate_comparison import CandidateConstraint, ConstraintStatus
 from minmax.evaluation_objective import EvaluationObjective
@@ -24,12 +25,18 @@ class PrescribedOpenSlotCandidate:
     ``player_name`` is optional because open-slot candidates may be either reusable
     build templates or real saved-player builds. When present, downstream roster
     optimization must treat that player as consumable exactly once.
+
+    ``candidate_metadata_json`` carries provenance and partial observations that do
+    not belong in a canonical ``PlayerBuild``. This is how an ESO Logs observation
+    can honestly say "these sets/skills were observed" without fabricating gear-slot
+    placement, traits, CP, food, or any other unobserved build field.
     """
 
     candidate_id: str
     candidate_build_json: str
     candidate_source: str
     player_name: str | None = None
+    candidate_metadata_json: str = "{}"
 
     @classmethod
     def from_build(
@@ -39,6 +46,7 @@ class PrescribedOpenSlotCandidate:
         candidate_build: PlayerBuild,
         candidate_source: str,
         player_name: str | None = None,
+        candidate_metadata: dict[str, Any] | None = None,
     ) -> "PrescribedOpenSlotCandidate":
         normalized_id = str(candidate_id or "").strip()
         normalized_source = str(candidate_source or "").strip()
@@ -47,6 +55,9 @@ class PrescribedOpenSlotCandidate:
             raise ValueError("open-slot candidate_id is required")
         if not normalized_source:
             raise ValueError("open-slot candidate_source is required")
+        metadata = candidate_metadata or {}
+        if not isinstance(metadata, dict):
+            raise ValueError("open-slot candidate metadata must be a JSON object")
         return cls(
             candidate_id=normalized_id,
             candidate_build_json=json.dumps(
@@ -57,11 +68,35 @@ class PrescribedOpenSlotCandidate:
             ),
             candidate_source=normalized_source,
             player_name=normalized_player,
+            candidate_metadata_json=json.dumps(
+                metadata,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ),
         )
 
     @property
     def candidate_build(self) -> PlayerBuild:
         return PlayerBuild.from_dict(json.loads(self.candidate_build_json))
+
+    @property
+    def candidate_metadata(self) -> dict[str, Any]:
+        try:
+            value = json.loads(self.candidate_metadata_json or "{}")
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"candidate {self.candidate_id!r} contains invalid metadata JSON"
+            ) from exc
+        if not isinstance(value, dict):
+            raise ValueError(
+                f"candidate {self.candidate_id!r} metadata must be a JSON object"
+            )
+        return value
+
+    @property
+    def has_complete_build_snapshot(self) -> bool:
+        return bool(self.candidate_metadata.get("complete_build", True))
 
 
 @dataclass(frozen=True)
@@ -159,6 +194,11 @@ def evaluate_open_slot_candidate_source(
     service owns only source orchestration, role boundaries, immutable snapshots, and
     explicit failure reporting. It never invents a baseline, objective value, player,
     provider assignment, or unsupported ESO mechanic.
+
+    Saved-player anchors and chairs that already hold a complete prescribed build
+    snapshot are not open candidate targets. This lets multiple template sources run
+    in priority order without a later, weaker source replacing an earlier complete
+    recommendation.
     """
 
     candidate_ids = [candidate.candidate_id for candidate in candidates]
@@ -181,7 +221,7 @@ def evaluate_open_slot_candidate_source(
     }
 
     for assignment in roster.assignments:
-        if assignment.player_name is not None:
+        if assignment.player_name is not None or assignment.prescribed_build is not None:
             continue
         required_role = slot_role_family(assignment.slot_name)
         build_constraint = normalized_build_constraints.get(
@@ -193,7 +233,10 @@ def evaluate_open_slot_candidate_source(
             if normalize_team_role(candidate.candidate_build.Role) == required_role
             and (
                 build_constraint is None
-                or build_constraint.matches(candidate.candidate_build)
+                or build_constraint.matches_candidate(
+                    candidate.candidate_build,
+                    candidate.candidate_metadata,
+                )
             )
             and not (
                 candidate.player_name
