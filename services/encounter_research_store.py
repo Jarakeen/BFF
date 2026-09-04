@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import uuid
@@ -218,19 +218,19 @@ class EncounterResearchStore:
                 for info in bundle.infolist():
                     if info.is_dir():
                         continue
-                    member = Path(info.filename)
+                    member = PurePosixPath(info.filename)
                     if member.is_absolute() or ".." in member.parts:
                         continue
                     if member.suffix.lower() not in SUPPORTED_SUFFIXES:
                         continue
-                    destination = extract_root / member
+                    destination = extract_root.joinpath(*member.parts)
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     with bundle.open(info) as src, destination.open("wb") as dst:
                         shutil.copyfileobj(src, dst)
                     imported.append(
                         self._register_source(
                             destination,
-                            original_name=str(member),
+                            original_name=member.as_posix(),
                             content_hint=content_hint,
                             encounter_hint=encounter_hint,
                             language=language,
