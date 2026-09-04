@@ -26,7 +26,7 @@ from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
 from ui.achievements_page import AchievementsPage
 from ui.asylum_perfecta_timer_page import AsylumPerfectaTimerPage
-from ui.builds_page import BuildsPage
+from ui.themed_builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
@@ -40,7 +40,7 @@ from ui.mechanics_page import MechanicsPage
 from ui.operations_console import OperationsConsole
 from ui.optimization_page import OptimizationPage
 from ui.reference_data_page import ReferenceDataPage
-from ui.roster_page import RosterPage
+from ui.themed_roster_page import RosterPage
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.settings_page import SettingsPage
 
