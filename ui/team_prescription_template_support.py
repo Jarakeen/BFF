@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from PySide6.QtWidgets import QTableWidgetItem
+
 from engine.config import get_data_dir
+from services.team_prescription import PrescriptionDimension
 from services.team_prescription_template_sources import apply_team_template_sources
 
 
@@ -20,6 +23,80 @@ def _needs_template_candidates(page) -> bool:
         and not assignment.changes
         for assignment in prescription.assignments
     )
+
+
+def _change_value(assignment, dimension: PrescriptionDimension) -> str:
+    change = assignment.change_for(dimension)
+    return "" if change is None else str(change.prescribed_value or "").strip()
+
+
+def _change_reason(assignment) -> str:
+    for change in assignment.changes:
+        reason = str(change.reason or "").strip()
+        if reason:
+            return reason
+    return "Observed template evidence; complete build fields remain unresolved."
+
+
+def _append_partial_template_rows(page, roster) -> None:
+    partial = tuple(
+        assignment
+        for assignment in roster.assignments
+        if assignment.player_name is None
+        and assignment.prescribed_build is None
+        and bool(assignment.changes)
+    )
+    if not partial:
+        return
+
+    gear_placeholder = (
+        page.gear_table.rowCount() == 1
+        and page.gear_table.item(0, 0) is not None
+        and page.gear_table.item(0, 0).text() == "—"
+    )
+    skill_placeholder = (
+        page.skill_table.rowCount() == 1
+        and page.skill_table.item(0, 0) is not None
+        and page.skill_table.item(0, 0).text() == "—"
+    )
+    if gear_placeholder:
+        page.gear_table.setRowCount(0)
+    if skill_placeholder:
+        page.skill_table.setRowCount(0)
+
+    for assignment in partial:
+        class_name = _change_value(assignment, PrescriptionDimension.CLASS)
+        build_name = _change_value(assignment, PrescriptionDimension.BUILD)
+        gear = _change_value(assignment, PrescriptionDimension.GEAR)
+        skills = _change_value(assignment, PrescriptionDimension.SKILLS)
+        mundus = _change_value(assignment, PrescriptionDimension.MUNDUS)
+        reason = _change_reason(assignment)
+        subject = assignment.slot_name
+
+        gear_bits = [value for value in (gear, build_name, class_name, mundus) if value]
+        gear_row = page.gear_table.rowCount()
+        page.gear_table.insertRow(gear_row)
+        for column, value in enumerate(
+            (
+                subject,
+                " | ".join(gear_bits) if gear_bits else "Partial observed setup",
+                reason,
+            )
+        ):
+            page.gear_table.setItem(gear_row, column, QTableWidgetItem(str(value)))
+
+        skill_row = page.skill_table.rowCount()
+        page.skill_table.insertRow(skill_row)
+        unresolved = "; ".join(assignment.unresolved) or "—"
+        for column, value in enumerate(
+            (
+                subject,
+                skills or "No observed skills in template",
+                "—",
+                f"{reason} Unresolved: {unresolved}" if unresolved != "—" else reason,
+            )
+        ):
+            page.skill_table.setItem(skill_row, column, QTableWidgetItem(str(value)))
 
 
 def _generate_prescription_with_templates(self, *args):
@@ -51,6 +128,7 @@ def _generate_prescription_with_templates(self, *args):
         return
 
     _finalize_prescription_ui(self, result.final_roster)
+    _append_partial_template_rows(self, result.final_roster)
     complete_count = sum(
         1
         for assignment in result.final_roster.assignments
