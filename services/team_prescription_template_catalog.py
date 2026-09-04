@@ -96,6 +96,20 @@ class TeamPrescriptionTemplate:
     def build(self) -> PlayerBuild:
         return PlayerBuild.from_dict(json.loads(self.build_json))
 
+    def supports_goal(self, goal: str) -> bool:
+        """Return whether this template is eligible for the requested goal.
+
+        Empty ``goal_scores`` means the template is intentionally generic. Once a
+        template declares one or more goal-specific scores, those keys become an
+        allow-list rather than optional bonuses. This prevents a Sunspire/Godslayer
+        reference from leaking into Swashbuckler Supreme merely because it has a
+        positive base score.
+        """
+
+        if not self.goal_scores:
+            return True
+        return _clean(goal).casefold() in self.goal_scores
+
     def score_for(self, *, goal: str, slot_name: str) -> float:
         score = float(self.base_score)
         score += self.slot_scores.get(_clean(slot_name).casefold(), 0.0)
@@ -117,6 +131,7 @@ class TeamPrescriptionTemplate:
             "retrieved_at": self.retrieved_at,
             "game_update": self.game_update,
             "catalog_version": self.catalog_version,
+            "supported_goals": list(self.goal_scores.keys()),
         }
         return PrescribedOpenSlotCandidate.from_build(
             candidate_id=self.template_id,
@@ -252,6 +267,25 @@ class TemplateCatalogObjectiveEvaluator:
             "healer": EvaluationObjective.HEALING,
             "tank": EvaluationObjective.SURVIVABILITY,
         }[role]
+
+        if not template.supports_goal(self.goal):
+            supported = ", ".join(template.goal_scores.keys()) or "generic"
+            return PrescribedObjectiveMeasurement(
+                objective=objective,
+                value=None,
+                metric_name="versioned reference-template score",
+                constraints=(),
+                evidence=(
+                    f"template={template.template_id}",
+                    f"requested_goal={self.goal or 'unresolved'}",
+                    f"supported_goals={supported}",
+                ),
+                rejection_reason=(
+                    f"template {template.template_id!r} is scoped to {supported} and "
+                    f"cannot be used for {self.goal or 'an unresolved goal'}"
+                ),
+            )
+
         score = template.score_for(goal=self.goal, slot_name=slot_name)
         evidence = (
             f"template={template.template_id}",
