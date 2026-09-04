@@ -18,6 +18,8 @@ import shutil
 import uuid
 import zipfile
 
+from services.encounter_evidence import EncounterEvidence
+
 
 SUPPORTED_TEXT_SUFFIXES = {".txt", ".md", ".html", ".htm"}
 SUPPORTED_MAP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
@@ -112,6 +114,38 @@ class EncounterResearchStore:
         result["sources"] = len(self.sources())
         result["candidates"] = sum(result.get(status, 0) for status in STATUS_VALUES)
         return result
+
+    def approved_evidence(self) -> tuple[EncounterEvidence, ...]:
+        """Expose approved, boss-assigned candidates to existing reconciliation.
+
+        This is an adapter only. It does not write evidence packets or canonical
+        facts. Candidates without an encounter id stay in Research until the
+        reviewer assigns them to a boss.
+        """
+        sources = {row.source_id: row for row in self.sources()}
+        rows: list[EncounterEvidence] = []
+        for candidate in self.candidates():
+            if candidate.status != "approved" or not candidate.encounter_id.strip():
+                continue
+            source = sources.get(candidate.source_id)
+            if source is None:
+                continue
+            rows.append(
+                EncounterEvidence(
+                    encounter_id=candidate.encounter_id,
+                    fact_type=candidate.fact_type,
+                    fact_key=candidate.fact_key,
+                    value=candidate.value,
+                    source_type=source.source_type,
+                    source_name=source.original_name,
+                    source_locator=source.stored_path,
+                    source_revision=source.sha256,
+                    source_family=source.sha256,
+                    confidence="medium",
+                    notes=candidate.reviewer_note or candidate.evidence_text,
+                )
+            )
+        return tuple(rows)
 
     @staticmethod
     def _digest(path: Path) -> str:
