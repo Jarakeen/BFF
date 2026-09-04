@@ -38,11 +38,11 @@ def apply_team_template_sources(
 ) -> TeamTemplateSourcePassResult:
     """Fill open chairs from local versioned template evidence.
 
-    Complete published templates run first because they can safely become a complete
-    prescribed build snapshot. User-curated observed-performance templates run second
-    and fill only chairs that remain open. An observed template may therefore produce
-    a useful partial prescription without displacing a complete template that already
-    satisfied the same chair and hard ingredient constraints.
+    Published/curated templates have first priority. Their explicit ``complete_build``
+    declaration determines whether the result is a saveable full snapshot or a partial
+    recommendation. Once either form is selected for a chair, the lower-priority
+    user-curated observed-performance source does not overwrite it. Observed ESO Logs
+    templates therefore fill only chairs that remain genuinely open.
     """
 
     root = Path(data_dir)
@@ -82,14 +82,12 @@ def apply_team_template_sources(
         unresolved.extend(result.unresolved)
 
     # A first source may report an open slot that a later source successfully fills.
-    # Only surface source-level unresolved messages whose slot is still unresolved in
+    # Only surface source-level unresolved messages whose slot is genuinely open in
     # the final roster. Global/non-slot messages remain visible.
     open_slot_prefixes = {
         assignment.slot_name.casefold() + ":"
         for assignment in current.assignments
-        if assignment.player_name is None
-        and assignment.prescribed_build is None
-        and not assignment.changes
+        if assignment.is_open_for_candidate
     }
     filtered: list[str] = []
     for message in unresolved:
