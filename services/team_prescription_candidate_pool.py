@@ -71,9 +71,13 @@ def build_prescribed_candidate_pools(
             raise ValueError(
                 f"Candidate pool input references unknown roster slot {item.slot_name!r}"
             )
-        if assignment.player_name is not None or assignment.prescribed_build is not None:
+        if assignment.player_name is not None:
             raise ValueError(
-                f"Candidate pool input cannot replace filled slot {item.slot_name!r}"
+                f"Candidate pool input cannot replace anchored slot {item.slot_name!r}"
+            )
+        if assignment.prescribed_build is not None:
+            raise ValueError(
+                f"Candidate pool input cannot replace prescribed build slot {item.slot_name!r}"
             )
 
         candidate_id = (
