@@ -14,6 +14,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
+    QHeaderView,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -176,6 +177,31 @@ def _merge_pair_guides(guides: tuple[EncounterBossGuide, ...]) -> EncounterBossG
         retrieved_at=_joined_distinct(guide.retrieved_at for guide in ordered),
         source_license=_joined_distinct(guide.source_license for guide in ordered),
     )
+
+
+def _configure_ability_table(self) -> None:
+    """Give wrapped ability descriptions enough horizontal room to be readable."""
+    table = getattr(self, "abilities_table", None)
+    if table is None:
+        return
+
+    table.setWordWrap(True)
+    table.setTextElideMode(Qt.TextElideMode.ElideNone)
+
+    header = table.horizontalHeader()
+    header.setMinimumSectionSize(70)
+    header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
+    header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+    header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+    header.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+    header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+    header.setSectionResizeMode(5, QHeaderView.ResizeMode.Interactive)
+
+    table.setColumnWidth(0, 250)
+    table.setColumnWidth(3, 145)
+    table.setColumnWidth(5, 120)
+    table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+    table.resizeRowsToContents()
 
 
 def _map_tab(self) -> QWidget:
@@ -356,6 +382,8 @@ def install() -> None:
     def init_with_maps(self, *args, **kwargs):
         self._boss_raid_map_store = EncounterRaidMapStore(get_data_dir())
         original_page_init(self, *args, **kwargs)
+
+        _configure_ability_table(self)
 
         for index in range(self.tabs.count()):
             if self.tabs.tabText(index).strip().upper() != "NOTES":
