@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from minmax.optimization_mode import OptimizationMode
 from services.generated_roster_plan_service import GeneratedRosterPlanSlot
 
 
@@ -27,14 +28,6 @@ def _refocus_optimization_ui(page) -> None:
         "Audit, improve, and compare an existing team. Composition creation lives in Comp Builder."
     )
     page.header.department.setText("RAID ENGINE • OPTIMIZATION")
-
-    # Keep Audit / Optimize / Compare. Recruitment planning belongs to Comp Builder.
-    for index in range(page.mode_tabs.count() - 1, -1, -1):
-        title = page.mode_tabs.tabText(index)
-        if title == "Recruitment Plan":
-            page.mode_tabs.removeTab(index)
-        elif title == "Build Best Team":
-            page.mode_tabs.setTabText(index, "Optimize Team")
 
     # The old action generated a new composition/prescription from scratch. That is
     # precisely the responsibility being moved out of this page.
@@ -132,6 +125,14 @@ def install() -> None:
 
     from ui.optimization_page import OptimizationPage
     from ui.main_window import MainWindow
+
+    # Recruitment composition planning moves to Comp Builder. Keep the enum/policy
+    # for backwards compatibility, but do not expose that mode on Optimization.
+    OptimizationPage._MODE_ORDER = (
+        OptimizationMode.AUDIT,
+        OptimizationMode.BUILD,
+        OptimizationMode.COMPARE,
+    )
 
     _ORIGINAL_INIT = OptimizationPage.__init__
     OptimizationPage.__init__ = _init_refocused
