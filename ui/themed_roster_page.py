@@ -1,26 +1,230 @@
 from __future__ import annotations
 
 from pathlib import Path
+from zoneinfo import available_timezones
 
-from PySide6.QtWidgets import QFileDialog, QPushButton
+from PySide6.QtCore import QTime
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTimeEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
+from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.share_document_export import ShareDocumentExporter
+from ui.components.foundry_card import FoundryCard
 from ui.roster_page import RosterPage as BaseRosterPage
 
 
+_DAY_ORDER = (
+    ("Mon", "Monday"),
+    ("Tue", "Tuesday"),
+    ("Wed", "Wednesday"),
+    ("Thu", "Thursday"),
+    ("Fri", "Friday"),
+    ("Sat", "Saturday"),
+    ("Sun", "Sunday"),
+)
+
+_COMMON_TIMEZONES = (
+    "UTC",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "Pacific/Honolulu",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Australia/Sydney",
+    "Australia/Perth",
+    "Asia/Tokyo",
+)
+
+
 class RosterPage(BaseRosterPage):
-    """Roster page with theme-aware human sharing."""
+    """Roster page with team schedules and theme-aware human sharing."""
 
     def _build_ui(self):
         super()._build_ui()
+        self.tabs.addTab(self._build_team_schedule_tab(), "TEAM SCHEDULE")
+
         self.export_share_button = QPushButton("Export / Share")
         self.export_share_button.setProperty("primary", True)
         self.export_share_button.setToolTip(
-            "Export the visible raid assignments and personnel roster as a themed PDF."
+            "Export the visible raid assignments, team raid times, and personnel roster as a themed PDF."
         )
         self.export_share_button.clicked.connect(self._export_roster_pdf)
         self.header.add_context_widget(self.export_share_button)
+
+    def _build_team_schedule_tab(self) -> QWidget:
+        page = QWidget()
+        root = QVBoxLayout(page)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(8)
+
+        card = FoundryCard("Raid Times & Days", "stopwatch")
+        intro = QLabel(
+            "Set the recurring raid schedule for each named team. Time zones are stored explicitly so nobody has to perform international clock arithmetic in Discord."
+        )
+        intro.setWordWrap(True)
+        intro.setProperty("pageSubtitle", True)
+        card.addWidget(intro)
+
+        form = QGridLayout()
+        form.setHorizontalSpacing(10)
+        form.setVerticalSpacing(8)
+
+        form.addWidget(QLabel("TEAM"), 0, 0)
+        self.schedule_team_combo = QComboBox()
+        self.schedule_team_combo.setMinimumWidth(240)
+        self.schedule_team_combo.currentTextChanged.connect(self._load_team_schedule)
+        form.addWidget(self.schedule_team_combo, 0, 1, 1, 3)
+
+        form.addWidget(QLabel("RAID DAYS"), 1, 0)
+        days = QWidget()
+        days_layout = QHBoxLayout(days)
+        days_layout.setContentsMargins(0, 0, 0, 0)
+        days_layout.setSpacing(8)
+        self.schedule_day_checks: dict[str, QCheckBox] = {}
+        for short, long_name in _DAY_ORDER:
+            check = QCheckBox(short)
+            check.setToolTip(long_name)
+            self.schedule_day_checks[short] = check
+            days_layout.addWidget(check)
+        days_layout.addStretch(1)
+        form.addWidget(days, 1, 1, 1, 3)
+
+        form.addWidget(QLabel("START TIME"), 2, 0)
+        self.schedule_time_edit = QTimeEdit()
+        self.schedule_time_edit.setDisplayFormat("h:mm AP")
+        self.schedule_time_edit.setTime(QTime(20, 0))
+        form.addWidget(self.schedule_time_edit, 2, 1)
+
+        form.addWidget(QLabel("TIME ZONE"), 2, 2)
+        self.schedule_timezone_combo = QComboBox()
+        self.schedule_timezone_combo.setEditable(True)
+        zones = list(_COMMON_TIMEZONES)
+        seen = set(zones)
+        zones.extend(zone for zone in sorted(available_timezones()) if zone not in seen)
+        self.schedule_timezone_combo.addItems(zones)
+        self.schedule_timezone_combo.setCurrentText("America/New_York")
+        self.schedule_timezone_combo.setMinimumWidth(240)
+        form.addWidget(self.schedule_timezone_combo, 2, 3)
+        card.addLayout(form)
+
+        preview_row = QHBoxLayout()
+        preview_row.addWidget(QLabel("SHARE-SHEET PREVIEW"))
+        self.schedule_preview = QLabel("Schedule not set")
+        self.schedule_preview.setProperty("cardBadge", True)
+        preview_row.addWidget(self.schedule_preview, 1)
+        save = QPushButton("Save Team Schedule")
+        save.setProperty("primary", True)
+        save.clicked.connect(self._save_team_schedule)
+        preview_row.addWidget(save)
+        card.addLayout(preview_row)
+
+        for check in self.schedule_day_checks.values():
+            check.toggled.connect(self._update_schedule_preview)
+        self.schedule_time_edit.timeChanged.connect(self._update_schedule_preview)
+        self.schedule_timezone_combo.currentTextChanged.connect(self._update_schedule_preview)
+
+        root.addWidget(card)
+        root.addStretch(1)
+        return page
+
+    def refresh(self):
+        super().refresh()
+        if hasattr(self, "schedule_team_combo"):
+            current = self.schedule_team_combo.currentText().strip()
+            names = self.roster_service.list_team_names()
+            self.schedule_team_combo.blockSignals(True)
+            self.schedule_team_combo.clear()
+            self.schedule_team_combo.addItems(names)
+            if current and current in names:
+                self.schedule_team_combo.setCurrentText(current)
+            self.schedule_team_combo.blockSignals(False)
+            self._load_team_schedule(self.schedule_team_combo.currentText())
+
+    def _selected_days_text(self) -> str:
+        return ", ".join(
+            short for short, _ in _DAY_ORDER
+            if self.schedule_day_checks[short].isChecked()
+        )
+
+    def _set_selected_days(self, value: str) -> None:
+        selected = {piece.strip().casefold() for piece in str(value or "").split(",") if piece.strip()}
+        for short, long_name in _DAY_ORDER:
+            self.schedule_day_checks[short].setChecked(
+                short.casefold() in selected or long_name.casefold() in selected
+            )
+
+    def _load_team_schedule(self, team_name: str) -> None:
+        if not hasattr(self, "schedule_day_checks"):
+            return
+        schedule = self.roster_service.get_team_schedule(team_name)
+        for check in self.schedule_day_checks.values():
+            check.blockSignals(True)
+        self.schedule_time_edit.blockSignals(True)
+        self.schedule_timezone_combo.blockSignals(True)
+        try:
+            self._set_selected_days(schedule.RaidDays if schedule else "")
+            if schedule and schedule.RaidTime:
+                parsed = QTime.fromString(schedule.RaidTime, "h:mm AP")
+                if parsed.isValid():
+                    self.schedule_time_edit.setTime(parsed)
+            timezone = schedule.TimeZone if schedule and schedule.TimeZone else "America/New_York"
+            self.schedule_timezone_combo.setCurrentText(timezone)
+        finally:
+            for check in self.schedule_day_checks.values():
+                check.blockSignals(False)
+            self.schedule_time_edit.blockSignals(False)
+            self.schedule_timezone_combo.blockSignals(False)
+        self._update_schedule_preview()
+
+    def _current_team_schedule(self) -> TeamSchedule | None:
+        team = self.schedule_team_combo.currentText().strip()
+        if not team:
+            return None
+        return TeamSchedule(
+            TeamName=team,
+            RaidDays=self._selected_days_text(),
+            RaidTime=self.schedule_time_edit.time().toString("h:mm AP"),
+            TimeZone=self.schedule_timezone_combo.currentText().strip(),
+        )
+
+    def _update_schedule_preview(self, *_args) -> None:
+        if not hasattr(self, "schedule_preview"):
+            return
+        schedule = self._current_team_schedule()
+        self.schedule_preview.setText(schedule.display_text if schedule else "Create or assign a team first")
+
+    def _save_team_schedule(self) -> None:
+        schedule = self._current_team_schedule()
+        if schedule is None:
+            self.status.warning("Create or assign a team on the roster before saving raid times.")
+            return
+        if not schedule.RaidDays:
+            self.status.warning("Choose at least one raid day.")
+            return
+        if not schedule.TimeZone:
+            self.status.warning("Choose a time zone so the schedule is unambiguous.")
+            return
+        try:
+            self.roster_service.set_team_schedule(schedule)
+            self._update_schedule_preview()
+            self.status.success(f"Saved {schedule.TeamName}: {schedule.display_text}")
+        except Exception as exc:
+            self.status.error(f"Team schedule save failed: {exc}")
 
     def _visible_assignment_rows(self) -> list[dict[str, str]]:
         rows: list[dict[str, str]] = []
@@ -73,6 +277,7 @@ class RosterPage(BaseRosterPage):
                 assignments=self._visible_assignment_rows(),
                 title=title,
                 theme_name=theme_name,
+                team_schedules=self.roster_service.list_team_schedules(),
             )
             self.status.success(f"Exported themed roster to {path}")
         except Exception as exc:
