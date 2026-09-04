@@ -49,3 +49,10 @@ def install() -> None:
     from ui.team_optimization_role_cleanup import install as install_role_cleanup
 
     install_role_cleanup()
+
+    # Comp Builder and Optimization deliberately share the same progress scoreboard.
+    # On the builder it represents explicitly declared planned coverage; on
+    # Optimization it represents evidence found in the selected saved builds.
+    from ui.team_progress_support import install as install_team_progress_support
+
+    install_team_progress_support()
