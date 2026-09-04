@@ -78,6 +78,12 @@ class HealerRotationPolicySet:
         return tuple(item for item in self.policies if normalized in item.policy.tags)
 
 
+def _saved_bar_order(bar: str) -> int:
+    """Return canonical saved-build bar order: front before back."""
+
+    return 0 if bar == "front" else 1
+
+
 def resolve_healer_rotation_policy(
     audit: SavedBuildRotationTimingAudit,
     policies: tuple[HealerSkillPolicy, ...],
@@ -138,7 +144,10 @@ def resolve_healer_rotation_policy(
         policies=tuple(
             sorted(
                 resolved,
-                key=lambda item: (item.policy.bar, item.policy.slot),
+                key=lambda item: (
+                    _saved_bar_order(item.policy.bar),
+                    item.policy.slot,
+                ),
             )
         ),
         unresolved=tuple(unresolved),
