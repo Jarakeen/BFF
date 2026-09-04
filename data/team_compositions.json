@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "2026-09-04-u50-comp-1",
+  "catalog_version": "2026-09-04-u50-comp-2",
   "game_update": "Update 50",
   "templates": [
     {
@@ -15,7 +15,7 @@
           "name": "BTV Tools Sunspire Most Run Comp",
           "url": "https://www.btvtools.com/database/trials/sunspire",
           "retrieved_at": "2026-09-04",
-          "note": "Observed U50 top-run class-frequency evidence. BFF adapts the observed lineup to its current 2 tank / 2 healer / 8 DD raid-slot model."
+          "note": "Observed U50 top-run class-frequency evidence. BFF adapts the observed lineup to its current 2 tank / 2 healer / 8 DD raid-slot model. Provider responsibilities below are planning targets, not claims that BTV exposed complete loadouts for each chair."
         },
         {
           "name": "The Tank Club ESO Tank Class Guide",
@@ -30,96 +30,120 @@
           "role": "Tank",
           "preferred_class": "Dragonknight",
           "alternative_classes": ["Necromancer", "Sorcerer", "Arcanist", "Warden"],
-          "responsibilities": ["Boss positioning", "Primary control", "Survivability"],
-          "provider_requirements": ["Primary tank support package"]
+          "required_responsibilities": ["Boss positioning", "Primary control", "Survivability"],
+          "optional_responsibilities": ["Additional defensive utility"],
+          "provider_requirements": ["Major Breach coverage", "Minor Breach coverage", "Crowd Control"],
+          "mechanic_jobs": ["Primary boss positioning"]
         },
         {
           "slot_name": "Off Tank",
           "role": "Tank",
           "preferred_class": "Sorcerer",
           "alternative_classes": ["Necromancer", "Dragonknight", "Arcanist", "Warden"],
-          "responsibilities": ["Add control", "Off-mechanic coverage", "Utility flex"],
-          "provider_requirements": ["Secondary tank support package"]
+          "required_responsibilities": ["Add control", "Off-mechanic coverage", "Utility flex"],
+          "optional_responsibilities": ["Backup boss control"],
+          "provider_requirements": ["Crowd Control"],
+          "mechanic_jobs": ["Add pickup", "Off-tank positioning"]
         },
         {
           "slot_name": "Healer 1",
           "role": "Healer",
           "preferred_class": "Warden",
           "alternative_classes": ["Arcanist"],
-          "responsibilities": ["Raid healing", "Defensive support", "Group sustain"],
-          "provider_requirements": ["Warden support coverage"]
+          "required_responsibilities": ["Group Healer", "Group sustain", "Defensive support"],
+          "optional_responsibilities": ["Minor Brittle coverage", "Flex defensive support"],
+          "provider_requirements": ["Major Courage coverage", "Major Intellect coverage", "Major Endurance coverage"],
+          "mechanic_jobs": ["Group stack support"]
         },
         {
           "slot_name": "Healer 2",
           "role": "Healer",
           "preferred_class": "Arcanist",
           "alternative_classes": ["Warden"],
-          "responsibilities": ["Raid healing", "Offensive support", "Utility coverage"],
-          "provider_requirements": ["Arcanist support coverage"]
+          "required_responsibilities": ["Buff Healer", "Offensive support", "Utility coverage"],
+          "optional_responsibilities": ["Additional sustain", "Flex mechanic support"],
+          "provider_requirements": ["Major Slayer coverage"],
+          "mechanic_jobs": ["Off-group support"]
         },
         {
           "slot_name": "DD 1",
           "role": "DD",
           "preferred_class": "Dragonknight",
           "alternative_classes": ["Necromancer", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Support flex"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 2",
           "role": "DD",
           "preferred_class": "Dragonknight",
           "alternative_classes": ["Necromancer", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Support flex"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 3",
           "role": "DD",
           "preferred_class": "Necromancer",
           "alternative_classes": ["Dragonknight", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Support ultimate flex"],
+          "provider_requirements": ["Major Vulnerability coverage"],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 4",
           "role": "DD",
           "preferred_class": "Necromancer",
           "alternative_classes": ["Dragonknight", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Backup support ultimate"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 5",
           "role": "DD",
           "preferred_class": "Sorcerer",
           "alternative_classes": ["Dragonknight", "Necromancer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Utility flex"],
+          "provider_requirements": ["Off-Balance coverage"],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 6",
           "role": "DD",
           "preferred_class": "Sorcerer",
           "alternative_classes": ["Dragonknight", "Necromancer", "Nightblade", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Utility flex"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 7",
           "role": "DD",
           "preferred_class": "Nightblade",
           "alternative_classes": ["Dragonknight", "Necromancer", "Sorcerer", "Templar", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Execute focus"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         },
         {
           "slot_name": "DD 8",
           "role": "DD",
           "preferred_class": "Templar",
           "alternative_classes": ["Dragonknight", "Necromancer", "Sorcerer", "Nightblade", "Warden", "Arcanist"],
-          "responsibilities": ["Boss damage", "Mechanic execution"],
-          "provider_requirements": []
+          "required_responsibilities": ["Boss damage", "Mechanic execution"],
+          "optional_responsibilities": ["Utility flex"],
+          "provider_requirements": [],
+          "mechanic_jobs": []
         }
       ]
     }
