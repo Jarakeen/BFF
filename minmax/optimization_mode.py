@@ -34,8 +34,8 @@ _MODE_POLICIES = {
     ),
     OptimizationMode.BUILD: OptimizationModePolicy(
         mode=OptimizationMode.BUILD,
-        title="Build Best Team",
-        action_label="Generate Best Team",
+        title="Optimize Team",
+        action_label="Optimize Team",
         uses_two_teams=False,
         allows_saved_players=True,
         allows_recruitment=True,
