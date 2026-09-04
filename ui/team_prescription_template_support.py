@@ -67,8 +67,7 @@ def _needs_template_candidates(page) -> bool:
     if prescription is None:
         return False
     return any(
-        assignment.player_name is None
-        and assignment.prescribed_build is None
+        assignment.is_open_for_candidate
         for assignment in prescription.assignments
     )
 
@@ -83,17 +82,21 @@ def _change_reason(assignment) -> str:
         reason = str(change.reason or "").strip()
         if reason:
             return reason
-    return "Observed template evidence; complete build fields remain unresolved."
+    return "Template evidence; complete build fields remain unresolved."
 
 
-def _append_partial_template_rows(page, roster) -> None:
-    partial = tuple(
+def _partial_template_assignments(roster) -> tuple:
+    return tuple(
         assignment
         for assignment in roster.assignments
         if assignment.player_name is None
         and assignment.prescribed_build is None
-        and bool(assignment.changes)
+        and assignment.has_candidate_recommendation
     )
+
+
+def _append_partial_template_rows(page, roster) -> None:
+    partial = _partial_template_assignments(roster)
     if not partial:
         return
 
@@ -127,7 +130,7 @@ def _append_partial_template_rows(page, roster) -> None:
         for column, value in enumerate(
             (
                 subject,
-                " | ".join(gear_bits) if gear_bits else "Partial observed setup",
+                " | ".join(gear_bits) if gear_bits else "Partial template setup",
                 reason,
             )
         ):
@@ -139,7 +142,7 @@ def _append_partial_template_rows(page, roster) -> None:
         for column, value in enumerate(
             (
                 subject,
-                skills or "No observed skills in template",
+                skills or "No known skills in template",
                 "—",
                 f"{reason} Unresolved: {unresolved}" if unresolved != "—" else reason,
             )
@@ -183,23 +186,15 @@ def _generate_prescription_with_templates(self, *args):
         for assignment in result.final_roster.assignments
         if assignment.prescribed_build is not None and assignment.player_name is None
     )
-    partial_count = sum(
-        1
-        for assignment in result.final_roster.assignments
-        if assignment.player_name is None
-        and assignment.prescribed_build is None
-        and bool(assignment.changes)
-    )
+    partial_count = len(_partial_template_assignments(result.final_roster))
     open_count = sum(
         1
         for assignment in result.final_roster.assignments
-        if assignment.player_name is None
-        and assignment.prescribed_build is None
-        and not assignment.changes
+        if assignment.is_open_for_candidate
     )
     message = (
         f"Template pass applied {result.applied_count} recommendation(s): "
-        f"{complete_count} complete template build(s), {partial_count} partial observed "
+        f"{complete_count} complete template build(s), {partial_count} partial template "
         f"setup(s), {open_count} chair(s) still open. Local sources available: "
         f"{result.published_template_count} published + "
         f"{result.observed_template_count} observed."
