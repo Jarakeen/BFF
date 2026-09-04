@@ -31,24 +31,23 @@ class HealerReserveDecisionResult:
     adjustment: RotationReserveAdjustmentProposal
 
 
-def propose_healer_reserve_decision(
+def propose_healer_reserve_decision_from_protection_plan(
     *,
     plan: RotationPlan,
     bridge: HealerReserveProtectionBridgeResult,
-    priorities: tuple[ReserveProtectionPriority, ...],
+    protection_plan: RotationReserveProtectionPlan,
 ) -> HealerReserveDecisionResult:
-    """Produce a reserve-preserving healer schedule proposal for one demand.
+    """Apply an already-selected reserve-protection plan to a healer schedule.
 
-    Priorities must refer exactly to healer-policy-approved discretionary casts.
-    The bridge already excludes protected and neutral healer actions. Bindings
-    are derived only from those exact scheduled casts, so the generic adjustment
-    layer never needs healer-specific knowledge.
+    This seam lets callers use a stronger planner, such as exact resource-timeline
+    replay, without recomputing the selection through the arithmetic priority
+    planner. The supplied plan must originate from the bridge's reserve analysis.
     """
 
-    protection_plan = plan_rotation_reserve_protection(
-        analysis=bridge.reserve_analysis,
-        priorities=priorities,
-    )
+    if protection_plan.analysis is not bridge.reserve_analysis:
+        raise ValueError(
+            "healer reserve decision protection plan must use the bridge reserve analysis"
+        )
 
     discretionary_by_key = {
         (float(item.action.time_seconds), item.skill_name): item
@@ -85,4 +84,29 @@ def propose_healer_reserve_decision(
         bridge=bridge,
         protection_plan=protection_plan,
         adjustment=adjustment,
+    )
+
+
+def propose_healer_reserve_decision(
+    *,
+    plan: RotationPlan,
+    bridge: HealerReserveProtectionBridgeResult,
+    priorities: tuple[ReserveProtectionPriority, ...],
+) -> HealerReserveDecisionResult:
+    """Produce a reserve-preserving healer schedule proposal for one demand.
+
+    Priorities must refer exactly to healer-policy-approved discretionary casts.
+    The bridge already excludes protected and neutral healer actions. Bindings
+    are derived only from those exact scheduled casts, so the generic adjustment
+    layer never needs healer-specific knowledge.
+    """
+
+    protection_plan = plan_rotation_reserve_protection(
+        analysis=bridge.reserve_analysis,
+        priorities=priorities,
+    )
+    return propose_healer_reserve_decision_from_protection_plan(
+        plan=plan,
+        bridge=bridge,
+        protection_plan=protection_plan,
     )
