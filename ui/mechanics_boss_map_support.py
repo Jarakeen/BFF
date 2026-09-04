@@ -137,8 +137,6 @@ def _merge_pair_guides(guides: tuple[EncounterBossGuide, ...]) -> EncounterBossG
         for guide in ordered
         for fact in guide.timeline_facts
     )
-    # Member guides already apply reviewed-canonical precedence. Preserve that
-    # behavior while still retaining their raw structural rows separately.
     phases = tuple(
         replace(
             phase,
@@ -172,7 +170,7 @@ def _merge_pair_guides(guides: tuple[EncounterBossGuide, ...]) -> EncounterBossG
         source_url="",
         source_page_title=PAIR_NAME,
         source_revision_id=_joined_distinct(
-            guide.source_revision_id for guide in ordered,
+            (guide.source_revision_id for guide in ordered),
             separator=" + ",
         ),
         retrieved_at=_joined_distinct(guide.retrieved_at for guide in ordered),
@@ -359,9 +357,6 @@ def install() -> None:
         self._boss_raid_map_store = EncounterRaidMapStore(get_data_dir())
         original_page_init(self, *args, **kwargs)
 
-        # Existing notepad compatibility runs during _build_ui and still knows
-        # this slot as NOTES. Replace the completed tab after construction so
-        # the user's requested MAP surface wins without disturbing My Notes.
         for index in range(self.tabs.count()):
             if self.tabs.tabText(index).strip().upper() != "NOTES":
                 continue
