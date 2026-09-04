@@ -216,3 +216,9 @@ def install() -> None:
     OptimizationPage._prescription_scope = _complete_prescription_scope
     OptimizationPage._generate_prescription_preview = _generate_prescription_with_templates
     _INSTALLED = True
+
+    # Keep the recruit selector honest (there is still no human assigned) while
+    # decorating its remaining columns with the template BFF actually prescribed.
+    from ui.team_prescription_row_display_support import install as install_row_display
+
+    install_row_display()
