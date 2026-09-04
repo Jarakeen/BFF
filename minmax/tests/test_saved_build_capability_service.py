@@ -76,7 +76,7 @@ class _PotionRepository:
         return SimpleNamespace(effects=(self.effect,), unresolved=())
 
 
-def test_audit_keeps_consumable_conditional_and_not_standing_unresolved():
+def test_audit_keeps_consumable_conditional_and_not_standing_unresolved(tmp_path):
     potion_effect = EffectVariant(
         name="increase_spell_power",
         layer=EffectLayer.CONSUMABLE,
@@ -86,10 +86,15 @@ def test_audit_keeps_consumable_conditional_and_not_standing_unresolved():
         target_type=SupportTargetType.SELF,
         category=SupportEffectCategory.BUFF,
     )
-    service = SavedBuildCapabilityService.__new__(SavedBuildCapabilityService)
-    service.progression = _Progression()
-    service.context_factory = _ContextFactory()
-    service.potions = _PotionRepository(potion_effect)
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        context_factory=_ContextFactory(),
+        progression=_Progression(),
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=_PotionRepository(potion_effect),
+    )
     service._skill_variants = lambda *_args: []
     service._gear_variants = lambda *_args: []
 
