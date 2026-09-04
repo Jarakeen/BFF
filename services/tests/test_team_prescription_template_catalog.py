@@ -77,6 +77,7 @@ def test_catalog_loads_versioned_template_and_candidate_without_player_identity(
     assert candidate.candidate_metadata["template_kind"] == "published_reference_template"
     assert candidate.candidate_metadata["observed_skills"][0] == "Combat Prayer"
     assert candidate.candidate_metadata["observed_mundus"] == "The Ritual"
+    assert candidate.candidate_metadata["supported_goals"] == ["gryphon heart"]
     assert "BTV Tools" in candidate.candidate_source
 
 
@@ -110,6 +111,41 @@ def test_template_objective_score_is_explicit_source_evidence_not_combat_math(tm
     assert any("complete_build=false" in row for row in result.evidence)
     assert any("not canonical damage/HPS/tank math" in row for row in result.evidence)
     assert any("template limitation:" in row for row in result.evidence)
+
+
+def test_goal_scoped_template_is_not_rankable_for_another_achievement(tmp_path) -> None:
+    snapshot = TeamPrescriptionTemplateCatalog(
+        _write_catalog(tmp_path, _payload())
+    ).load()
+    candidate = catalog_candidates(snapshot)[0]
+
+    result = TemplateCatalogObjectiveEvaluator(
+        snapshot,
+        goal="Swashbuckler Supreme",
+    )(candidate, "Healer 1")
+
+    assert result.value is None
+    assert not result.is_rankable
+    assert result.rejection_reason is not None
+    assert "Gryphon Heart" in result.rejection_reason
+    assert "Swashbuckler Supreme" in result.rejection_reason
+
+
+def test_template_without_goal_scores_remains_generic(tmp_path) -> None:
+    payload = _payload()
+    payload["templates"][0]["goal_scores"] = {}
+    snapshot = TeamPrescriptionTemplateCatalog(
+        _write_catalog(tmp_path, payload)
+    ).load()
+    candidate = catalog_candidates(snapshot)[0]
+
+    result = TemplateCatalogObjectiveEvaluator(
+        snapshot,
+        goal="Swashbuckler Supreme",
+    )(candidate, "Healer 1")
+
+    assert result.value == 120.0
+    assert result.is_rankable
 
 
 def test_catalog_rejects_duplicate_template_ids(tmp_path) -> None:
