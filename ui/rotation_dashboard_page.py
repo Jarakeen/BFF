@@ -255,6 +255,19 @@ class RotationDashboardPage(FoundryPage):
         self.build_summary = QLabel()
         self.build_summary.setWordWrap(True)
         summary_card.addWidget(self.build_summary)
+        self.optimization_scope = QLabel(
+            "Optimization scope: Rotation generation starts with the currently saved build as-is. "
+            "Gear, skill morphs, Champion Points, Mundus, food, and potion changes are separate opt-in optimization dimensions."
+        )
+        self.optimization_scope.setWordWrap(True)
+        self.optimization_scope.setProperty("muted", True)
+        summary_card.addWidget(self.optimization_scope)
+        self.optimization_motto = QLabel(
+            "We make you better, because you're perfect just the way you are."
+        )
+        self.optimization_motto.setWordWrap(True)
+        self.optimization_motto.setProperty("muted", True)
+        summary_card.addWidget(self.optimization_motto)
         right_lower_layout.addWidget(summary_card, 1, 0)
         grid.addWidget(right_lower, 2, 1)
 
