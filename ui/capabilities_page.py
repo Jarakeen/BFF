@@ -48,7 +48,6 @@ from widgets.build_dashboard import BuildDashboard
 from services.capability_service import CapabilityService
 from services.top_team_service import TopTeamService
 from services.esologs_client import EsoLogsClient, EsoLogsApiError
-from services.top_team_service import TopTeamService
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
 from services.settings_service import SettingsService
@@ -106,23 +105,8 @@ class CapabilitiesPage(FoundryPage):
         return CapabilityService(self._build_esologs_client(), self.reference)
 
     def _build_top_team_service(self) -> TopTeamService:
+        """Rebuild on demand so credential changes apply without restart."""
         return TopTeamService(self._build_esologs_client())
-
-    def _build_top_team_service(self) -> TopTeamService:
-        """
-        Same rebuilt-on-demand rationale as _build_capability_service:
-        a Client ID/Secret change on the Settings page should take
-        effect on the card's next fetch without restarting the app.
-        """
-
-        settings = self.settings_service.load()
-
-        client = EsoLogsClient(
-            client_id=settings.get("EsoLogsClientId", ""),
-            client_secret=settings.get("EsoLogsClientSecret", ""),
-        )
-
-        return TopTeamService(client)
 
     # --------------------------------------------------
     # UI
@@ -140,22 +124,10 @@ class CapabilitiesPage(FoundryPage):
 
         self.set_header(self.header)
 
-        self.top_team_card = TopTeamCard(self._build_top_team_service)
-        self.add_workspace(self.top_team_card)
-
-        #
-        # Top Ranked Team card -- pick a trial + boss, fetch the
-        # top-ranking log's roster (role, class, gear sets, skills,
-        # mundus) from ESO Logs. Independent of the per-member
-        # watch-list editors below, so it gets a fixed (non-stretch)
-        # slot at the top of the workspace rather than competing with
-        # the editor stack for vertical space.
-        #
-
+        # Keep the compact top-team gear card fixed above the per-member editor stack.
         self.top_team_card = TopTeamCard(
             service_factory=self._build_top_team_service
         )
-
         self.workspace_layout.addWidget(self.top_team_card, 0)
 
         #
