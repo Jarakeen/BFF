@@ -1,7 +1,17 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QLabel, QSizePolicy, QTableWidgetItem
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
@@ -11,6 +21,7 @@ from services.generated_roster_plan_service import (
 )
 from services.team_prescription import PrescriptionDimension
 from services.team_prescription_slot_constraints import build_gear_set_names
+from services.team_prescription_template_inspector import find_team_template_inspection
 
 
 _INSTALLED = False
@@ -170,6 +181,129 @@ def _finalize_concise(page, prescription) -> None:
     page.change_text.setText(concise_prescription_preview(prescription))
 
 
+def _selected_template_inspection(page):
+    if (
+        page.view_combo.currentText() != "Generated Team"
+        or page.assignment_table.currentRow() < 0
+    ):
+        return None
+    row = page.assignment_table.currentRow()
+    slot_item = page.assignment_table.item(row, 1)
+    class_item = page.assignment_table.item(row, 2)
+    build_item = page.assignment_table.item(row, 3)
+    if slot_item is None or build_item is None:
+        return None
+    return find_team_template_inspection(
+        data_dir=get_data_dir(),
+        slot_name=slot_item.text(),
+        build_name=build_item.text(),
+        eso_class=class_item.text() if class_item is not None else "",
+    )
+
+
+def _update_view_template_button(page, *_args) -> None:
+    if not hasattr(page, "view_template_button"):
+        return
+    try:
+        inspection = _selected_template_inspection(page)
+    except Exception as exc:
+        page.view_template_button.setEnabled(False)
+        page.view_template_button.setToolTip(f"Template evidence could not be loaded: {exc}")
+        return
+    page.view_template_button.setEnabled(inspection is not None)
+    page.view_template_button.setToolTip(
+        "Show exactly what BFF knows about this generated template."
+        if inspection is not None
+        else "Select a generated recruit row backed by a team template."
+    )
+
+
+def _inspection_text(inspection) -> str:
+    lines = [
+        inspection.name,
+        "",
+        f"TYPE: {inspection.template_kind}",
+        f"CLASS: {inspection.eso_class}",
+        f"ROLE: {inspection.role}",
+        f"COMPLETE BUILD: {'Yes' if inspection.complete_build else 'No'}",
+        f"TEMPLATE ID: {inspection.template_id}",
+    ]
+    if inspection.catalog_version:
+        lines.append(f"CATALOG: {inspection.catalog_version}")
+    if inspection.game_update:
+        lines.append(f"GAME UPDATE: {inspection.game_update}")
+    if inspection.trial_name:
+        lines.append(f"TRIAL: {inspection.trial_name}")
+    if inspection.encounter_name:
+        lines.append(f"ENCOUNTER: {inspection.encounter_name}")
+    if inspection.observed_player_name:
+        lines.append(f"OBSERVED PLAYER: {inspection.observed_player_name}")
+    if inspection.report_code:
+        lines.append(f"REPORT: {inspection.report_code}")
+    if inspection.fight_id:
+        lines.append(f"FIGHT: {inspection.fight_id}")
+    lines.extend(
+        [
+            "",
+            "SOURCE",
+            inspection.source_name or "Unresolved source",
+            inspection.source_url or "No source URL recorded",
+            f"Retrieved: {inspection.retrieved_at or 'unresolved'}",
+            "",
+            "KNOWN",
+        ]
+    )
+    lines.extend(
+        f"✓ {field}" for field in (inspection.known_fields or ("class", "role"))
+    )
+    if inspection.gear_sets:
+        lines.extend(("", "GEAR SETS", *[f"• {value}" for value in inspection.gear_sets]))
+    if inspection.skills:
+        lines.extend(("", "SKILLS", *[f"• {value}" for value in inspection.skills]))
+    if inspection.mundus:
+        lines.extend(("", "MUNDUS", inspection.mundus))
+    lines.extend(("", "UNKNOWN / UNRESOLVED"))
+    if inspection.unknown_fields:
+        lines.extend(f"• {value}" for value in inspection.unknown_fields)
+    else:
+        lines.append("None recorded.")
+    if not inspection.complete_build:
+        lines.extend(
+            (
+                "",
+                "BOUNDARY",
+                "This is evidence for a team prescription, not a complete saved build. "
+                "BFF will not invent missing gear, traits, CP, skills, food, or other fields.",
+            )
+        )
+    return "\n".join(lines)
+
+
+def _show_selected_template(page, *_args) -> None:
+    try:
+        inspection = _selected_template_inspection(page)
+    except Exception as exc:
+        page.status.error(f"Could not inspect team template: {exc}")
+        return
+    if inspection is None:
+        page.status.info("Select a generated recruit row backed by a team template first.")
+        return
+
+    dialog = QDialog(page)
+    dialog.setWindowTitle(f"Team Template • {inspection.name}")
+    dialog.resize(680, 560)
+    layout = QVBoxLayout(dialog)
+    text = QTextEdit()
+    text.setReadOnly(True)
+    text.setPlainText(_inspection_text(inspection))
+    layout.addWidget(text, 1)
+    buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+    buttons.rejected.connect(dialog.reject)
+    buttons.clicked.connect(dialog.accept)
+    layout.addWidget(buttons)
+    dialog.exec()
+
+
 def _roster_init_with_generated_plans(self, parent=None) -> None:
     assert _ORIGINAL_ROSTER_INIT is not None
     _ORIGINAL_ROSTER_INIT(self, parent)
@@ -182,8 +316,21 @@ def _roster_init_with_generated_plans(self, parent=None) -> None:
     self.generated_plan_combo.setMinimumWidth(160)
     self.generated_plan_combo.setMaximumWidth(320)
     self.header.add_context_widget(self._context_field("GENERATED ROSTER", self.generated_plan_combo))
+    self.view_template_button = QPushButton("View Template")
+    self.view_template_button.setEnabled(False)
+    self.header.add_context_widget(self.view_template_button)
     self.view_combo.currentTextChanged.connect(self._populate_assignment_table)
+    self.view_combo.currentTextChanged.connect(lambda *_: _update_view_template_button(self))
     self.generated_plan_combo.currentTextChanged.connect(self._generated_plan_changed)
+    self.assignment_table.itemSelectionChanged.connect(
+        lambda: _update_view_template_button(self)
+    )
+    self.assignment_table.itemDoubleClicked.connect(
+        lambda *_: _show_selected_template(self)
+        if _selected_template_inspection(self) is not None
+        else None
+    )
+    self.view_template_button.clicked.connect(lambda *_: _show_selected_template(self))
     self._refresh_generated_plan_choices()
 
 
@@ -250,6 +397,7 @@ def _render_generated_plan(page) -> None:
     page.assignment_table.setRowCount(0)
     if plan is None:
         page.status.info("No generated team has been sent from Team Optimization yet.")
+        _update_view_template_button(page)
         return
 
     for slot in plan.slots:
@@ -281,6 +429,7 @@ def _render_generated_plan(page) -> None:
             page.assignment_table.setItem(row, column, item)
 
     _render_generated_summary(page, plan)
+    _update_view_template_button(page)
     page.status.success(
         f"Generated roster loaded: {plan.name} • {plan.goal} • "
         f"{len(plan.slots)} slot(s)."
@@ -297,6 +446,8 @@ def _populate_assignment_table_with_generated_plan(self, *_args) -> None:
         return
     assert _ORIGINAL_ROSTER_POPULATE is not None
     _ORIGINAL_ROSTER_POPULATE(self, *_args)
+    if hasattr(self, "view_template_button"):
+        self.view_template_button.setEnabled(False)
     # Switching away from Generated Team restores the canonical roster summary.
     if hasattr(self, "team_card") and hasattr(self, "attention_card"):
         self._refresh_summary_cards()
