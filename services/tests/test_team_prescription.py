@@ -123,3 +123,47 @@ def test_prescription_is_not_a_saved_build_mutation() -> None:
     assert assignment.source_build_name == "Existing Build"
     assert assignment.change_for(PrescriptionDimension.CLASS).current_value == "Nightblade"
     assert assignment.change_for(PrescriptionDimension.CLASS).prescribed_value == "Arcanist"
+
+
+def test_assignment_open_state_distinguishes_user_ingredients_from_candidate_recommendations() -> None:
+    gear_change = PrescribedBuildChange(
+        dimension=PrescriptionDimension.GEAR,
+        current_value=None,
+        prescribed_value="Serpent's Disdain",
+        reason="required ingredient",
+    )
+    ingredient_only = PrescribedRosterAssignment(
+        slot_name="Healer 1",
+        player_name=None,
+        source_build_name=None,
+        prescribed_role="Healer",
+        changes=(gear_change,),
+    )
+    partial_template = PrescribedRosterAssignment(
+        slot_name="Healer 1",
+        player_name=None,
+        source_build_name="Observed Warden Healer",
+        prescribed_role="Healer",
+        changes=(gear_change,),
+    )
+    complete_template = PrescribedRosterAssignment(
+        slot_name="Healer 1",
+        player_name=None,
+        source_build_name="Complete Warden Healer",
+        prescribed_role="Healer",
+        prescribed_build_json="{}",
+    )
+    saved_player = PrescribedRosterAssignment(
+        slot_name="Healer 1",
+        player_name="Keen",
+        source_build_name="DF Healer",
+        prescribed_role="Healer",
+    )
+
+    assert ingredient_only.is_open_for_candidate
+    assert not ingredient_only.has_candidate_recommendation
+    assert partial_template.has_candidate_recommendation
+    assert not partial_template.is_open_for_candidate
+    assert complete_template.has_candidate_recommendation
+    assert not complete_template.is_open_for_candidate
+    assert not saved_player.is_open_for_candidate
