@@ -7,11 +7,13 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
     QTableWidget,
     QTableWidgetItem,
     QTextEdit,
@@ -105,6 +107,7 @@ class CompBuilderPage(FoundryPage):
         top.setSpacing(10)
 
         self.matrix_card = FoundryCard("Composition Matrix", "◈")
+        self.matrix_card.setMaximumHeight(480)
         matrix_actions = QWidget()
         matrix_actions_layout = QHBoxLayout(matrix_actions)
         matrix_actions_layout.setContentsMargins(0, 0, 0, 0)
@@ -132,8 +135,11 @@ class CompBuilderPage(FoundryPage):
         self.matrix_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.matrix_table.setAlternatingRowColors(True)
         self.matrix_table.verticalHeader().setVisible(False)
+        self.matrix_table.verticalHeader().setDefaultSectionSize(32)
         self.matrix_table.horizontalHeader().setStretchLastSection(True)
-        self.matrix_table.setMinimumHeight(560)
+        # ESO trial groups cap at 12 players. Keep enough room for the full raid
+        # plus header breathing room, but never let this table stretch the page.
+        self.matrix_table.setFixedHeight(430)
         self.matrix_card.addWidget(self.matrix_table)
         top.addWidget(self.matrix_card, 7)
 
@@ -160,19 +166,32 @@ class CompBuilderPage(FoundryPage):
         side.addWidget(actions_card, 0)
 
         context_card = FoundryCard("Composition Details & Summary", "✦")
+        context_scroll = QScrollArea()
+        context_scroll.setWidgetResizable(True)
+        context_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        context_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        context_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        context_body = QWidget()
+        context_layout = QVBoxLayout(context_body)
+        context_layout.setContentsMargins(0, 0, 0, 0)
+        context_layout.setSpacing(6)
         self.trial_label = QLabel()
         self.trial_label.setWordWrap(True)
         self.summary_label = QLabel()
         self.summary_label.setWordWrap(True)
         self.coverage_label = QLabel()
         self.coverage_label.setWordWrap(True)
-        context_card.addWidget(self.trial_label)
-        context_card.addWidget(self.summary_label)
-        context_card.addWidget(self.coverage_label)
+        context_layout.addWidget(self.trial_label)
+        context_layout.addWidget(self.summary_label)
+        context_layout.addWidget(self.coverage_label)
+        context_layout.addStretch(1)
+        context_scroll.setWidget(context_body)
+        context_card.addWidget(context_scroll)
         side.addWidget(context_card, 1)
 
         top.addLayout(side, 3)
-        root.addLayout(top, 1)
+        root.addLayout(top)
 
         lower = QHBoxLayout()
         lower.setSpacing(10)
