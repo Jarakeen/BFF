@@ -115,8 +115,9 @@ def _set_help_text(page) -> None:
     )
     hints = {
         "Lock Players": (
-            "Keep the exact players currently selected in Team A. In Build Best Team, "
-            "turn this on when the people you already selected must stay in the team."
+            "Freeze the exact selected players even when no recruit chairs are present. "
+            "In Hybrid mode, a mixed team of saved players plus recruitment chairs "
+            "already preserves those visible saved players automatically."
         ),
         "Lock Roles": "Prevent the prescription from recommending role changes.",
         "Lock Classes": "Prevent class recommendations from changing for prescribed chairs.",
