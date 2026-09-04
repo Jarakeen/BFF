@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QTableWidgetItem
+from PySide6.QtWidgets import QComboBox, QSizePolicy, QTableWidgetItem
 
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
@@ -148,9 +148,20 @@ def concise_prescription_preview(prescription) -> str:
 def _build_recommendations_row_bounded(self) -> None:
     assert _ORIGINAL_BUILD_RECOMMENDATIONS_ROW is not None
     _ORIGINAL_BUILD_RECOMMENDATIONS_ROW(self)
+    self.change_text.setMinimumWidth(0)
     self.change_text.setMinimumHeight(90)
     self.change_text.setMaximumHeight(220)
+    self.change_text.setSizePolicy(
+        QSizePolicy.Policy.Ignored,
+        QSizePolicy.Policy.Preferred,
+    )
+    self.change_text.setWordWrap(True)
     self.change_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    self.change_card.setMinimumWidth(0)
+    self.change_card.setSizePolicy(
+        QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Preferred,
+    )
 
 
 def _finalize_concise(page, prescription) -> None:
@@ -168,7 +179,8 @@ def _roster_init_with_generated_plans(self, parent=None) -> None:
     if self.view_combo.findText("Generated Team") < 0:
         self.view_combo.addItem("Generated Team")
     self.generated_plan_combo = QComboBox()
-    self.generated_plan_combo.setMinimumWidth(220)
+    self.generated_plan_combo.setMinimumWidth(160)
+    self.generated_plan_combo.setMaximumWidth(320)
     self.header.add_context_widget(self._context_field("GENERATED ROSTER", self.generated_plan_combo))
     self.view_combo.currentTextChanged.connect(self._populate_assignment_table)
     self.generated_plan_combo.currentTextChanged.connect(self._generated_plan_changed)
