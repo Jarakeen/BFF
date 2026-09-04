@@ -12,21 +12,6 @@ from services.esologs_client import (
 from services.esologs_combat_importer import PLAYER_QUERY
 
 
-_ZONES_QUERY = """
-query TopTeamZones {
-  worldData {
-    zones {
-      id
-      name
-      encounters {
-        id
-        name
-      }
-    }
-  }
-}
-"""
-
 _RANKING_QUERY = """
 query TopTeamRanking($encounterID: Int!) {
   worldData {
@@ -62,28 +47,14 @@ class TopTeamService:
         return value
 
     def list_trials(self) -> list[dict]:
-        data = self.client._query(_ZONES_QUERY, {})
-        zones = (data.get("worldData") or {}).get("zones") or []
-        trials: list[dict] = []
-        for zone in zones:
-            encounters = zone.get("encounters") or []
-            if not encounters:
-                continue
-            trials.append(
-                {
-                    "id": int(zone["id"]),
-                    "name": str(zone.get("name") or f"Zone {zone['id']}"),
-                    "encounters": [
-                        {
-                            "id": int(encounter["id"]),
-                            "name": str(encounter.get("name") or f"Encounter {encounter['id']}"),
-                        }
-                        for encounter in encounters
-                        if encounter.get("id") is not None
-                    ],
-                }
-            )
-        return sorted(trials, key=lambda row: row["name"].casefold())
+        """Use the client's verified trial-only zone filter.
+
+        ``EsoLogsClient.get_trial_zones`` owns the live zone IDs and the explicit
+        trial-name allowlist. Keeping that boundary here prevents dungeons/arenas
+        returned by ``worldData.zones`` from leaking into the Performance picker.
+        """
+
+        return self.client.get_trial_zones()
 
     def get_top_team(
         self,
