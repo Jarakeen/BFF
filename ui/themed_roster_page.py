@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
-from services.share_document_export import ShareDocumentExporter
+from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
 from ui.components.foundry_card import FoundryCard
 from ui.roster_page import RosterPage as BaseRosterPage
 
@@ -271,7 +271,7 @@ class RosterPage(BaseRosterPage):
 
         try:
             theme_name = AccessibilityPreferences().visual_theme()
-            ShareDocumentExporter().export_roster(
+            TeamScheduleShareDocumentExporter().export_roster(
                 self.members,
                 path,
                 assignments=self._visible_assignment_rows(),
