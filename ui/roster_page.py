@@ -91,14 +91,25 @@ class RosterPage(FoundryPage):
         root.setSpacing(8)
 
         roster_card = FoundryCard("Player Assignments", "⚑")
+        actions = QWidget()
+        actions_layout = QHBoxLayout(actions)
+        actions_layout.setContentsMargins(0, 0, 0, 0)
+        actions_layout.setSpacing(6)
         import_button = QPushButton("Import Roster")
-        roster_card.set_header_action(import_button)
+        self.remove_assignment_button = QPushButton("Remove Selected")
+        self.remove_assignment_button.clicked.connect(self.remove_selected_assignment)
+        actions_layout.addWidget(import_button)
+        actions_layout.addWidget(self.remove_assignment_button)
+        roster_card.set_header_action(actions)
+
         self.assignment_table = QTableWidget(0, 9)
         self.assignment_table.setHorizontalHeaderLabels([
             "Player", "Role", "Class", "Build", "Primary Assignment",
             "Secondary Assignment", "Gear Needed", "Notes", "Ready",
         ])
         self.assignment_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.EditKeyPressed)
+        self.assignment_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.assignment_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.assignment_table.verticalHeader().setVisible(False)
         self.assignment_table.horizontalHeader().setStretchLastSection(True)
         self.assignment_table.setMinimumHeight(430)
@@ -200,6 +211,8 @@ class RosterPage(FoundryPage):
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(str(value))
+                if col == 0 and member.Id is not None:
+                    item.setData(Qt.ItemDataRole.UserRole, int(member.Id))
                 if col in {0, 1, 2, 3, 8}:
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.assignment_table.setItem(row, col, item)
@@ -250,6 +263,44 @@ class RosterPage(FoundryPage):
             f"Active     {active}/{len(self.members)}\n\n"
             "Gear needs and build readiness will appear here as those systems are connected."
         ))
+
+    def remove_selected_assignment(self):
+        row = self.assignment_table.currentRow()
+        if row < 0:
+            self.status.warning("Select an assignment to remove.")
+            return
+
+        player_item = self.assignment_table.item(row, 0)
+        member_id = (
+            player_item.data(Qt.ItemDataRole.UserRole)
+            if player_item is not None
+            else None
+        )
+        if member_id is None:
+            self.status.warning("The selected assignment is not linked to a roster record.")
+            return
+
+        player_name = player_item.text().strip() if player_item is not None else "this player"
+        confirm = QMessageBox.question(
+            self,
+            "Remove Assignment",
+            (
+                f"Remove {player_name or 'this player'} from Assignments?\n\n"
+                "This also removes their roster record."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            self.roster_service.delete_member(int(member_id))
+            if self.record.model.Id == int(member_id):
+                self.record.clear()
+            self.refresh()
+            self.status.success(f"Removed {player_name or 'player'} from Assignments.")
+        except Exception as exc:
+            self.status.error(f"Remove failed: {exc}")
 
     def load_member(self, member_id: int):
         member = self.roster_service.get_member(member_id)
