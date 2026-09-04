@@ -11,6 +11,7 @@ from minmax.build_candidate_comparison import CandidateConstraint, ConstraintSta
 from minmax.build_candidate_damage import measure_modeled_damage_potency
 from minmax.build_candidate_healing import measure_modeled_healing_potency
 from minmax.build_sustain import evaluate_named_build_sustain
+from minmax.build_sustain_relevance import sustain_relevant_context_unresolved
 from minmax.context_factory import BuildCalculationContextFactory
 from minmax.dd_damage import DDDamageEvent
 from minmax.evaluation_context import EvaluationContext
@@ -63,14 +64,12 @@ def build_saved_player_prescription_candidates(
             ensure_ascii=False,
         )
         digest = sha256(payload.encode("utf-8")).hexdigest()[:20]
-        player = _player_name(build)
-        build_name = str(build.BuildName or "").strip() or "Current Build"
         candidates.append(
             PrescribedOpenSlotCandidate.from_build(
                 candidate_id=f"saved:{digest}",
                 candidate_build=build,
                 candidate_source="saved-build-roster",
-                player_name=player,
+                player_name=_player_name(build),
             )
         )
     return tuple(candidates)
@@ -152,7 +151,28 @@ class SavedBuildPrescriptionObjectiveEvaluator:
         self,
         build: PlayerBuild,
         context,
+        context_unresolved: tuple[str, ...],
     ) -> tuple[tuple[CandidateConstraint, ...], tuple[str, ...]]:
+        relevant_context_unresolved = sustain_relevant_context_unresolved(
+            build,
+            context_unresolved,
+        )
+        if relevant_context_unresolved:
+            explanation = "Sustain context is unresolved: " + "; ".join(
+                relevant_context_unresolved
+            )
+            return (
+                tuple(
+                    CandidateConstraint(
+                        name=f"{resource.value} sustain",
+                        status=ConstraintStatus.UNKNOWN,
+                        explanation=explanation,
+                    )
+                    for resource in (ResourceType.MAGICKA, ResourceType.STAMINA)
+                ),
+                relevant_context_unresolved,
+            )
+
         plan = create_saved_bar_activity_plan(
             build,
             active_bar=self.settings.active_bar,
@@ -249,7 +269,11 @@ class SavedBuildPrescriptionObjectiveEvaluator:
                 constraints=(),
                 unresolved=context_unresolved,
             )
-        sustain_constraints, sustain_unresolved = self._sustain_constraints(build, context)
+        sustain_constraints, sustain_unresolved = self._sustain_constraints(
+            build,
+            context,
+            context_unresolved,
+        )
         event = DDDamageEvent(
             base_value=1000.0,
             scaling_coefficient=1.0,
@@ -264,9 +288,7 @@ class SavedBuildPrescriptionObjectiveEvaluator:
             ),
         )
         unresolved = tuple(
-            dict.fromkeys(
-                (*context_unresolved, *damage.unresolved, *sustain_unresolved)
-            )
+            dict.fromkeys((*damage.unresolved, *sustain_unresolved))
         )
         evidence = tuple(damage.evidence) + (
             f"slot={slot_name}",
@@ -305,15 +327,14 @@ class SavedBuildPrescriptionObjectiveEvaluator:
             skill_names=healing_skills,
             tooltip_service=self.tooltip_service,
         )
-        sustain_constraints, sustain_unresolved = self._sustain_constraints(build, context)
+        sustain_constraints, sustain_unresolved = self._sustain_constraints(
+            build,
+            context,
+            context_unresolved,
+        )
         unresolved = tuple(
             dict.fromkeys(
-                (
-                    *context_unresolved,
-                    *selection_unresolved,
-                    *healing.unresolved,
-                    *sustain_unresolved,
-                )
+                (*selection_unresolved, *healing.unresolved, *sustain_unresolved)
             )
         )
         evidence = tuple(healing.evidence) + (
