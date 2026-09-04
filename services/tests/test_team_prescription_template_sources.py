@@ -52,7 +52,7 @@ def _roster():
     )
 
 
-def test_observed_templates_fill_open_slot_when_no_complete_catalog_exists(tmp_path) -> None:
+def _add_observed(tmp_path, *, score: float = 123.0) -> None:
     ObservedTeamTemplateStore(
         tmp_path / "team_prescription_observed_templates.json"
     ).add_top_team_player(
@@ -60,8 +60,12 @@ def test_observed_templates_fill_open_slot_when_no_complete_catalog_exists(tmp_p
         player=_Player(),
         game_update="U50",
         retrieved_at="2026-09-04T19:00:00+00:00",
-        source_score=123.0,
+        source_score=score,
     )
+
+
+def test_observed_templates_fill_open_slot_when_no_complete_catalog_exists(tmp_path) -> None:
+    _add_observed(tmp_path)
 
     result = apply_team_template_sources(
         roster=_roster(),
@@ -106,15 +110,7 @@ def test_complete_published_template_fills_slot_before_partial_observed_template
         ),
         encoding="utf-8",
     )
-    ObservedTeamTemplateStore(
-        tmp_path / "team_prescription_observed_templates.json"
-    ).add_top_team_player(
-        result=_Result(),
-        player=_Player(),
-        game_update="U50",
-        retrieved_at="2026-09-04T19:00:00+00:00",
-        source_score=999.0,
-    )
+    _add_observed(tmp_path, score=999.0)
 
     result = apply_team_template_sources(
         roster=_roster(),
@@ -130,7 +126,7 @@ def test_complete_published_template_fills_slot_before_partial_observed_template
     assert assignment.prescribed_build is not None
 
 
-def test_published_template_without_complete_declaration_remains_partial(tmp_path) -> None:
+def test_partial_published_template_keeps_priority_over_later_observed_template(tmp_path) -> None:
     (tmp_path / "team_prescription_templates.json").write_text(
         json.dumps(
             {
@@ -159,6 +155,10 @@ def test_published_template_without_complete_declaration_remains_partial(tmp_pat
         ),
         encoding="utf-8",
     )
+    # The observed score is deliberately much larger. Source priority, not
+    # incomparable numeric score magnitude, decides whether it may replace the
+    # already-curated recommendation.
+    _add_observed(tmp_path, score=999.0)
 
     result = apply_team_template_sources(
         roster=_roster(),
@@ -167,6 +167,8 @@ def test_published_template_without_complete_declaration_remains_partial(tmp_pat
     )
 
     assignment = result.final_roster.assignments[0]
+    assert result.published_template_count == 1
+    assert result.observed_template_count == 1
     assert result.applied_count == 1
     assert assignment.source_build_name == "Partial Published Healer"
     assert assignment.prescribed_build is None
