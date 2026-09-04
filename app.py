@@ -216,6 +216,7 @@ def main() -> int:
     from ui.collectibles_lorebook_support import install as install_collectibles_lorebook_support
     from ui.collectibles_antiquity_support import install as install_collectibles_antiquity_support
     from ui.application_update_support import install as install_application_update_support
+    from ui.team_prescription_pipeline_support import install as install_team_prescription_pipeline_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -257,6 +258,8 @@ def main() -> int:
     install_collectibles_lorebook_support()
     install_collectibles_antiquity_support()
     install_application_update_support()
+    # Team prescription must be wired before MainWindow constructs OptimizationPage.
+    install_team_prescription_pipeline_support()
 
     from ui.main_window import MainWindow
 
