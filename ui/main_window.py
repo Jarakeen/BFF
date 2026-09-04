@@ -30,6 +30,7 @@ from ui.builds_page import BuildsPage
 from ui.capabilities_page import CapabilitiesPage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
+from ui.comp_builder_page import CompBuilderPage
 from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
 from ui.encounters_page import EncountersPage
@@ -87,6 +88,9 @@ class MainWindow(QMainWindow):
         roster_page.header.subtitle.setText("Team members, optimized assignments, responsibilities, and readiness.")
         roster_page.header.department.setText("RAID ENGINE • ROSTER")
 
+        comp_builder_page = CompBuilderPage()
+        comp_builder_page.rosterPlanSent.connect(self._show_generated_roster_plan)
+
         optimization_page = OptimizationPage()
         send_team_button = QPushButton("Send Team to Roster")
         send_team_button.setProperty("primary", True)
@@ -101,6 +105,7 @@ class MainWindow(QMainWindow):
             "collectibles": collectible_dashboard,
             "collectibles_browser": collectible_browser,
             "roster_page": roster_page,
+            "comp_builder": comp_builder_page,
             "operations_console": OperationsConsole(expedition=self.expedition_service),
             "console:1": EncountersPage(expedition=self.expedition_service),
             "console:2": BuildsPage(),
@@ -142,6 +147,24 @@ class MainWindow(QMainWindow):
 
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
+
+    def _show_generated_roster_plan(self, plan_name: str) -> None:
+        """Open the generated Roster view after Comp Builder persists a plan."""
+
+        roster_page = self.pages.get("roster_page")
+        if roster_page is None:
+            return
+        refresh = getattr(roster_page, "_refresh_generated_plan_choices", None)
+        if callable(refresh):
+            refresh(plan_name)
+        if hasattr(roster_page, "view_combo"):
+            roster_page.view_combo.setCurrentText("Generated Team")
+        if hasattr(roster_page, "tabs"):
+            roster_page.tabs.setCurrentIndex(0)
+        populate = getattr(roster_page, "_populate_assignment_table", None)
+        if callable(populate):
+            populate()
+        self.show_page("roster_page")
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
