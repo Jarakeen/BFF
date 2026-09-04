@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QSizePolicy, QTableWidgetItem
+from PySide6.QtWidgets import QComboBox, QLabel, QSizePolicy, QTableWidgetItem
 
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
@@ -207,6 +207,39 @@ def _generated_plan_changed(page, *_args) -> None:
         page._populate_assignment_table()
 
 
+def _render_generated_summary(page, plan) -> None:
+    tanks = sum(1 for slot in plan.slots if "tank" in slot.slot_name.casefold())
+    healers = sum(1 for slot in plan.slots if "heal" in slot.slot_name.casefold())
+    dds = max(0, len(plan.slots) - tanks - healers)
+    saved = sum(1 for slot in plan.slots if slot.kind == "saved")
+    prescribed = sum(1 for slot in plan.slots if slot.kind == "prescribed_recruit")
+    open_count = sum(1 for slot in plan.slots if slot.kind == "open_recruit")
+
+    page.attention_card.clear()
+    if open_count:
+        page.attention_card.addWidget(
+            QLabel(f"⚠  {open_count} generated slot(s) still need a concrete class/build prescription.")
+        )
+    elif prescribed:
+        page.attention_card.addWidget(
+            QLabel(f"◈  {prescribed} prescribed recruit slot(s) need players assigned.")
+        )
+    else:
+        page.attention_card.addWidget(QLabel("✓  Generated team is fully assigned."))
+
+    page.team_card.clear()
+    page.team_card.addWidget(
+        QLabel(
+            f"Tanks      {tanks}\n"
+            f"Healers    {healers}\n"
+            f"Damage     {dds}\n"
+            f"Saved      {saved}\n"
+            f"Recruits   {prescribed + open_count}\n\n"
+            f"Plan: {plan.name}"
+        )
+    )
+
+
 def _render_generated_plan(page) -> None:
     name = page.generated_plan_combo.currentText().strip()
     plan = (
@@ -247,6 +280,7 @@ def _render_generated_plan(page) -> None:
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             page.assignment_table.setItem(row, column, item)
 
+    _render_generated_summary(page, plan)
     page.status.success(
         f"Generated roster loaded: {plan.name} • {plan.goal} • "
         f"{len(plan.slots)} slot(s)."
@@ -263,6 +297,9 @@ def _populate_assignment_table_with_generated_plan(self, *_args) -> None:
         return
     assert _ORIGINAL_ROSTER_POPULATE is not None
     _ORIGINAL_ROSTER_POPULATE(self, *_args)
+    # Switching away from Generated Team restores the canonical roster summary.
+    if hasattr(self, "team_card") and hasattr(self, "attention_card"):
+        self._refresh_summary_cards()
 
 
 def _send_generated_prescription_to_roster(window) -> None:
