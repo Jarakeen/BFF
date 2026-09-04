@@ -9,7 +9,12 @@ from services.team_prescription_template_catalog import (
 )
 
 
-def _payload(*, duplicate: bool = False, schema_version: int = 1) -> dict:
+def _payload(
+    *,
+    duplicate: bool = False,
+    schema_version: int = 1,
+    complete_build: bool = False,
+) -> dict:
     template = {
         "template_id": "btv:u50:warden-healer",
         "name": "Warden Healer Reference",
@@ -19,6 +24,7 @@ def _payload(*, duplicate: bool = False, schema_version: int = 1) -> dict:
         "base_score": 100.0,
         "slot_scores": {"Healer 1": 20.0},
         "goal_scores": {"Gryphon Heart": 5.0},
+        "complete_build": complete_build,
         "unresolved": [
             "Reference source does not prove exact per-slot traits or enchants."
         ],
@@ -26,6 +32,7 @@ def _payload(*, duplicate: bool = False, schema_version: int = 1) -> dict:
             "BuildName": "Warden Healer Reference",
             "EsoClass": "Warden",
             "Role": "Healer",
+            "Mundus": "The Ritual",
             "FrontBarSkills": [
                 "Combat Prayer",
                 "Illustrious Healing",
@@ -66,7 +73,23 @@ def test_catalog_loads_versioned_template_and_candidate_without_player_identity(
     assert candidate.player_name is None
     assert candidate.candidate_build.Role == "Healer"
     assert candidate.candidate_build.EsoClass == "Warden"
+    assert not candidate.has_complete_build_snapshot
+    assert candidate.candidate_metadata["template_kind"] == "published_reference_template"
+    assert candidate.candidate_metadata["observed_skills"][0] == "Combat Prayer"
+    assert candidate.candidate_metadata["observed_mundus"] == "The Ritual"
     assert "BTV Tools" in candidate.candidate_source
+
+
+def test_catalog_only_marks_candidate_complete_when_template_declares_it(tmp_path) -> None:
+    snapshot = TeamPrescriptionTemplateCatalog(
+        _write_catalog(tmp_path, _payload(complete_build=True))
+    ).load()
+
+    template = snapshot.templates[0]
+    candidate = catalog_candidates(snapshot)[0]
+
+    assert template.complete_build
+    assert candidate.has_complete_build_snapshot
 
 
 def test_template_objective_score_is_explicit_source_evidence_not_combat_math(tmp_path) -> None:
@@ -84,6 +107,7 @@ def test_template_objective_score_is_explicit_source_evidence_not_combat_math(tm
     assert result.metric_name == "versioned reference-template score"
     assert result.constraints == ()
     assert result.is_rankable
+    assert any("complete_build=false" in row for row in result.evidence)
     assert any("not canonical damage/HPS/tank math" in row for row in result.evidence)
     assert any("template limitation:" in row for row in result.evidence)
 
