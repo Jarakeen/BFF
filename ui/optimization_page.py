@@ -21,6 +21,8 @@ from minmax.optimization_mode import OptimizationMode, policy_for_mode
 from minmax.recruitment import RecruitmentPlanner
 from models.build_model import BuildRoster
 from services.build_service import BuildService
+from services.team_prescription import PrescriptionDimension, TeamPrescriptionScope
+from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
 from services.team_role_autofill import build_role_compatible_autofill
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -43,6 +45,8 @@ class OptimizationPage(FoundryPage):
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.recruitment_planner = RecruitmentPlanner()
         self.roster = BuildRoster()
+        self.current_prescription = None
+        self.constraint_boxes: dict[str, QCheckBox] = {}
         self._build_ui()
         self.refresh()
 
@@ -162,11 +166,12 @@ class OptimizationPage(FoundryPage):
         ):
             box = QCheckBox(text)
             box.setChecked(checked)
+            self.constraint_boxes[text] = box
             row.addWidget(box)
         row.addStretch(1)
         self.generate_button = QPushButton("Generate Best Team")
         self.generate_button.setProperty("primary", True)
-        self.generate_button.clicked.connect(self._generate_preview)
+        self.generate_button.clicked.connect(self._generate_prescription_preview)
         row.addWidget(self.generate_button)
         card.addLayout(row)
         self.layout.addWidget(card)
@@ -187,7 +192,6 @@ class OptimizationPage(FoundryPage):
         row.addWidget(self.available_card, 3)
 
         self.team_tabs = QTabWidget()
-
         self.team_card, self.team_table = self._create_team_editor("Team A")
         self.team_b_card, self.team_b_table = self._create_team_editor("Team B")
         self.team_tabs.addTab(self.team_card, "TEAM A")
@@ -221,12 +225,10 @@ class OptimizationPage(FoundryPage):
         row = QHBoxLayout()
         row.setSpacing(10)
 
-        self.change_card = FoundryCard("Recommended Changes")
+        self.change_card = FoundryCard("Prescription Preview")
         self.change_text = QLabel(
-            "1. Add missing support coverage.\n"
-            "2. Resolve redundant support sets.\n"
-            "3. Fill open role slots.\n"
-            "4. Adjust sustain and survivability for the encounter."
+            "Click Generate Best Team to create a non-destructive roster prescription.\n"
+            "Saved builds remain unchanged until a later explicit acceptance step."
         )
         self.change_text.setWordWrap(True)
         self.change_card.addWidget(self.change_text)
@@ -503,7 +505,7 @@ class OptimizationPage(FoundryPage):
         self._generate_preview()
         self.status.info(
             f"Team Builder ready • {len(self.roster.Members)} saved build(s) available. "
-            "Recommendations marked as pending are layout placeholders until optimizer logic is connected."
+            "Generate Best Team now creates a non-destructive prescription preview."
         )
 
     def _populate_available(self):
@@ -529,6 +531,58 @@ class OptimizationPage(FoundryPage):
                 if self.available_table.item(row, col) is not None
             ).lower()
             self.available_table.setRowHidden(row, bool(query and query not in haystack))
+
+    def _prescription_scope(self) -> TeamPrescriptionScope:
+        dimensions: list[PrescriptionDimension] = []
+        if (
+            self.constraint_boxes["Allow Role Swap"].isChecked()
+            and not self.constraint_boxes["Lock Roles"].isChecked()
+        ):
+            dimensions.append(PrescriptionDimension.ROLE)
+        if not self.constraint_boxes["Lock Classes"].isChecked():
+            dimensions.append(PrescriptionDimension.CLASS)
+        if not self.constraint_boxes["Keep Current Builds"].isChecked():
+            dimensions.append(PrescriptionDimension.BUILD)
+        if self.constraint_boxes["Allow Gear Changes"].isChecked():
+            dimensions.append(PrescriptionDimension.GEAR)
+        return TeamPrescriptionScope(dimensions=tuple(dimensions))
+
+    def _generate_prescription_preview(self, *_args):
+        self._generate_preview()
+        source_mode = self._effective_source_mode()
+        builds = () if source_mode == "Recruitment Plan Only" else tuple(self.roster.Members)
+        goal = self.goal_combo.currentText().strip() or "Custom Goal"
+        prescription = generate_prescribed_roster_from_saved_builds(
+            name=f"{goal} Prescribed Roster",
+            goal=goal,
+            slot_labels=tuple(self._role_slots()),
+            builds=builds,
+            scope=self._prescription_scope(),
+        )
+        self.current_prescription = prescription
+
+        lines = [f"{prescription.name}"]
+        for assignment in prescription.assignments:
+            if assignment.player_name:
+                source = assignment.source_build_name or "Current Build"
+                lines.append(
+                    f"{assignment.slot_name}: {assignment.player_name} — {source}"
+                )
+            else:
+                lines.append(
+                    f"{assignment.slot_name}: TO PRESCRIBE ({assignment.prescribed_role})"
+                )
+        unresolved_count = len(prescription.unresolved)
+        lines.append("")
+        lines.append(
+            f"{unresolved_count} slot(s) still need canonical class/build/provider optimization."
+        )
+        self.change_text.setText("\n".join(lines))
+        self.status.success(
+            f"Generated {goal} prescription preview with "
+            f"{len(prescription.assignments) - unresolved_count} saved anchor(s) and "
+            f"{unresolved_count} unresolved slot(s)."
+        )
 
     def _generate_preview(self, *_args):
         self._populate_team_editor(self.team_table, autofill=True)
