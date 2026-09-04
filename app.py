@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from engine.config import ensure_default_database, get_resource_path
+from services.encounter_schema import ensure_encounter_schema_file
 
 
 def _set_windows_app_id() -> None:
@@ -92,12 +94,20 @@ def _close_pyinstaller_boot_splash() -> None:
 
 
 def _prepare_packaged_database() -> bool:
-    """Provision the frozen database or show a recoverable startup message."""
+    """Provision the runtime database and ensure non-destructive encounter tables.
+
+    Source checkouts normally already contain ``data/eso.db`` while frozen builds
+    may provision it from the bundled seed.  In either case, the encounter schema
+    is safe to apply with ``CREATE TABLE IF NOT EXISTS`` and prevents optional
+    Mechanics/Research consumers from crashing the whole application merely
+    because the local database predates the encounter layer.
+    """
 
     try:
-        ensure_default_database()
+        database = ensure_default_database()
+        ensure_encounter_schema_file(database)
         return True
-    except OSError as exc:
+    except (OSError, sqlite3.Error) as exc:
         _close_pyinstaller_boot_splash()
         QMessageBox.critical(
             None,
