@@ -77,7 +77,7 @@ def test_catalog_loads_versioned_template_and_candidate_without_player_identity(
     assert candidate.candidate_metadata["template_kind"] == "published_reference_template"
     assert candidate.candidate_metadata["observed_skills"][0] == "Combat Prayer"
     assert candidate.candidate_metadata["observed_mundus"] == "The Ritual"
-    assert candidate.candidate_metadata["supported_goals"] == ["gryphon heart"]
+    assert candidate.candidate_metadata["supported_goals"] == ["Gryphon Heart"]
     assert "BTV Tools" in candidate.candidate_source
 
 
