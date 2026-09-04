@@ -159,8 +159,8 @@ def test_reused_action_plan_keeps_candidate_pool_and_recovery_specific() -> None
     assert repository.calls == ["Combat Prayer", "Combat Prayer"]
     assert baseline.timeline.starting_amount == 5000
     assert candidate.timeline.starting_amount == 9000
-    assert [tick.amount for tick in baseline.recovery_ticks] == [500, 500]
-    assert [tick.amount for tick in candidate.recovery_ticks] == [1500, 1500]
+    assert [tick.tick.restored_amount for tick in baseline.recovery_ticks] == [500, 500]
+    assert [tick.tick.restored_amount for tick in candidate.recovery_ticks] == [1500, 1500]
     assert baseline.timeline.ending_amount != candidate.timeline.ending_amount
 
 
