@@ -61,13 +61,7 @@ def apply_ranked_candidate_to_prescribed_roster(
     roster: PrescribedRoster,
     ranking: PrescribedSlotCandidateRanking,
 ) -> PrescribedRoster:
-    """Apply one defensible slot recommendation without mutating saved builds.
-
-    A recommendation may populate only dimensions explicitly permitted by the
-    roster prescription scope. The slot remains a prescription rather than a
-    fabricated saved player; player identity is resolved separately when a real
-    roster member or recruit is assigned.
-    """
+    """Apply one defensible slot recommendation without mutating saved builds."""
 
     target_index = next(
         (
@@ -99,7 +93,7 @@ def apply_ranked_candidate_to_prescribed_roster(
     evidence = ranking.recommended
     comparison = evidence.comparison
     build = evidence.candidate_build
-    provider_ids = ranking.recommended.provider_requirement_ids
+    provider_ids = evidence.provider_requirement_ids
     provider_reason = (
         " and satisfies allocated provider requirements " + ", ".join(provider_ids)
         if provider_ids
@@ -118,52 +112,48 @@ def apply_ranked_candidate_to_prescribed_roster(
         f"{current.slot_name} with {objective_detail}{provider_reason}."
     )
 
-    proposed = (
-        _change(
-            roster,
-            dimension=PrescriptionDimension.CLASS,
-            value=build.EsoClass,
-            reason=objective_reason,
-        ),
-        _change(
-            roster,
-            dimension=PrescriptionDimension.RACE,
-            value=build.Race,
-            reason=objective_reason,
-        ),
-        _change(
-            roster,
-            dimension=PrescriptionDimension.BUILD,
-            value=build.BuildName,
-            reason=objective_reason,
-        ),
-        _change(
-            roster,
-            dimension=PrescriptionDimension.GEAR,
-            value=_gear_summary(build),
-            reason=objective_reason,
-        ),
+    saved_player_name = (
+        evidence.open_slot.candidate.player_name
+        if evidence.open_slot is not None
+        else None
     )
-    changes = tuple(change for change in proposed if change is not None)
 
     assignments = list(roster.assignments)
-    assignments[target_index] = PrescribedRosterAssignment(
-        slot_name=current.slot_name,
-        player_name=None,
-        source_build_name=build.BuildName.strip() or None,
-        prescribed_role=current.prescribed_role,
-        changes=changes,
-        unresolved=(),
-    )
+    if saved_player_name:
+        assignments[target_index] = PrescribedRosterAssignment(
+            slot_name=current.slot_name,
+            player_name=saved_player_name,
+            source_build_name=build.BuildName.strip() or None,
+            prescribed_role=current.prescribed_role,
+            changes=(),
+            unresolved=(),
+        )
+        assumptions = tuple(dict.fromkeys((*roster.assumptions, objective_reason)))
+    else:
+        proposed = (
+            _change(roster, dimension=PrescriptionDimension.CLASS, value=build.EsoClass, reason=objective_reason),
+            _change(roster, dimension=PrescriptionDimension.RACE, value=build.Race, reason=objective_reason),
+            _change(roster, dimension=PrescriptionDimension.BUILD, value=build.BuildName, reason=objective_reason),
+            _change(roster, dimension=PrescriptionDimension.GEAR, value=_gear_summary(build), reason=objective_reason),
+        )
+        changes = tuple(change for change in proposed if change is not None)
+        assignments[target_index] = PrescribedRosterAssignment(
+            slot_name=current.slot_name,
+            player_name=None,
+            source_build_name=build.BuildName.strip() or None,
+            prescribed_role=current.prescribed_role,
+            changes=changes,
+            unresolved=(),
+        )
+        assumptions = roster.assumptions
 
     prefix = current.slot_name.casefold() + ":"
     remaining_unresolved = tuple(
-        item
-        for item in roster.unresolved
-        if not str(item).casefold().startswith(prefix)
+        item for item in roster.unresolved if not str(item).casefold().startswith(prefix)
     )
     return replace(
         roster,
         assignments=tuple(assignments),
+        assumptions=assumptions,
         unresolved=remaining_unresolved,
     )
