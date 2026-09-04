@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QPushButton, QScrollArea
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea
 
+from services.esologs_client import EsoLogsApiError, EsoLogsClient
 from services.esologs_composition_evidence import (
     EsoLogsCompositionEvidence,
     EsoLogsCompositionEvidenceService,
 )
+from services.settings_service import SettingsService
+from services.top_team_service import TopTeamService
 from ui.components.foundry_card import FoundryCard
 
 
@@ -29,6 +32,16 @@ def _current_trial(page) -> str:
     return GOAL_TRIALS.get(goal, "Custom Trial")
 
 
+def _top_team_service() -> TopTeamService:
+    settings = SettingsService(Path("settings.json")).load()
+    return TopTeamService(
+        EsoLogsClient(
+            client_id=settings.get("EsoLogsClientId", ""),
+            client_secret=settings.get("EsoLogsClientSecret", ""),
+        )
+    )
+
+
 def _format_count_rows(rows: tuple[tuple[str, int], ...], *, limit: int = 3) -> str:
     if not rows:
         return "None observed"
@@ -37,7 +50,7 @@ def _format_count_rows(rows: tuple[tuple[str, int], ...], *, limit: int = 3) -> 
 
 def _format_observed_evidence(evidence: EsoLogsCompositionEvidence | None) -> str:
     if evidence is None:
-        return "ESO LOGS OBSERVED EVIDENCE\nNo imported evidence for this trial yet."
+        return "ESO LOGS OBSERVED EVIDENCE\nNo live evidence fetched for this trial yet."
 
     lines = [
         "ESO LOGS OBSERVED EVIDENCE",
@@ -82,70 +95,87 @@ def _append_report_provenance(page, evidence: EsoLogsCompositionEvidence) -> Non
     page.evidence_text.setPlainText(combined)
 
 
-def _refresh_for_trial(page) -> None:
-    results = getattr(page, "_esologs_loaded_results", ())
-    trial = _current_trial(page)
-    filtered = tuple(
-        result
-        for result in results
-        if result.TrialName.strip().casefold() == trial.casefold()
-    )
-
-    if filtered:
-        evidence = page._esologs_evidence_service.aggregate(filtered, trial_name=trial)
-    else:
-        evidence = None
-
-    page._esologs_observed_evidence = evidence
-    page.esologs_evidence_label.setText(_format_observed_evidence(evidence))
-    page.apply_esologs_button.setEnabled(evidence is not None)
-
-    if evidence is not None:
-        _append_report_provenance(page, evidence)
+def _clear_esologs_evidence(page) -> None:
+    page._esologs_observed_evidence = None
+    page.esologs_evidence_label.setText(_format_observed_evidence(None))
+    page.apply_esologs_button.setEnabled(False)
 
 
-def _load_esologs_evidence(page) -> None:
-    filename, _filter = QFileDialog.getOpenFileName(
-        page,
-        "Load ESO Logs Top-Team Evidence",
-        str(Path.cwd()),
-        "JSON files (*.json);;All files (*.*)",
-    )
-    if not filename:
+def _refresh_live_esologs(page) -> None:
+    trial_name = _current_trial(page)
+    if trial_name == "Custom Trial":
+        _clear_esologs_evidence(page)
+        page.status.info("Choose a published trial goal before refreshing ESO Logs evidence.")
         return
+
+    page.refresh_esologs_button.setEnabled(False)
+    page.status.info(f"Fetching current top-ranked {trial_name} teams from ESO Logs...")
 
     try:
-        results = page._esologs_evidence_service.load_snapshots(filename)
-    except (OSError, ValueError) as exc:
-        page.status.error(f"Could not load ESO Logs evidence: {exc}")
-        return
-
-    if not results:
-        page.status.warning("That file contains no usable top-team snapshots.")
-        return
-
-    page._esologs_loaded_results = results
-    _refresh_for_trial(page)
-
-    matching = sum(
-        1
-        for result in results
-        if result.TrialName.strip().casefold() == _current_trial(page).casefold()
-    )
-    if matching:
-        page.status.success(
-            f"Loaded {matching} observed ESO Logs team snapshot(s) for {_current_trial(page)}."
+        service = _top_team_service()
+        trials = service.list_trials()
+        trial = next(
+            (
+                item
+                for item in trials
+                if str(item.get("name", "")).strip().casefold() == trial_name.casefold()
+            ),
+            None,
         )
-    else:
-        page.status.info(
-            f"Loaded {len(results)} ESO Logs snapshot(s), but none match {_current_trial(page)}."
+        if trial is None:
+            raise EsoLogsApiError(f"ESO Logs did not return the trial {trial_name!r}.")
+
+        results = []
+        failures: list[str] = []
+        for encounter in trial.get("encounters") or ():
+            try:
+                results.append(
+                    service.get_top_team(
+                        zone_id=int(trial["id"]),
+                        zone_name=str(trial["name"]),
+                        encounter_id=int(encounter["id"]),
+                        encounter_name=str(encounter["name"]),
+                    )
+                )
+            except (EsoLogsApiError, KeyError, TypeError, ValueError) as exc:
+                failures.append(f"{encounter.get('name', 'Unknown encounter')}: {exc}")
+
+        if not results:
+            detail = failures[0] if failures else "No ranked encounters returned usable team data."
+            raise EsoLogsApiError(detail)
+
+        evidence = page._esologs_evidence_service.aggregate(
+            tuple(results),
+            trial_name=trial_name,
         )
+        page._esologs_observed_evidence = evidence
+        page.esologs_evidence_label.setText(_format_observed_evidence(evidence))
+        page.apply_esologs_button.setEnabled(True)
+        _append_report_provenance(page, evidence)
+
+        if failures:
+            page.status.warning(
+                f"Loaded {len(results)} top-team encounter snapshot(s) for {trial_name}; "
+                f"{len(failures)} encounter(s) could not be read."
+            )
+        else:
+            page.status.success(
+                f"Loaded {len(results)} live top-team encounter snapshot(s) for {trial_name}."
+            )
+    except EsoLogsApiError as exc:
+        _clear_esologs_evidence(page)
+        page.status.error(str(exc))
+    except Exception as exc:
+        _clear_esologs_evidence(page)
+        page.status.error(f"ESO Logs refresh failed: {exc}")
+    finally:
+        page.refresh_esologs_button.setEnabled(True)
 
 
 def _apply_esologs_classes(page) -> None:
     evidence = getattr(page, "_esologs_observed_evidence", None)
     if evidence is None:
-        page.status.warning("Load matching ESO Logs evidence before applying observed classes.")
+        page.status.warning("Refresh matching ESO Logs evidence before applying observed classes.")
         return
 
     applied = 0
@@ -178,19 +208,18 @@ def _apply_esologs_classes(page) -> None:
 
 def _install_comp_esologs_ui(page) -> None:
     page._esologs_evidence_service = EsoLogsCompositionEvidenceService()
-    page._esologs_loaded_results = ()
     page._esologs_observed_evidence = None
 
     actions = _card(page, "Actions")
     if actions is not None:
         row = QHBoxLayout()
-        page.load_esologs_button = QPushButton("Load ESO Logs")
-        page.apply_esologs_button = QPushButton("Apply ESO Logs Classes")
+        page.refresh_esologs_button = QPushButton("Refresh ESO Logs")
+        page.apply_esologs_button = QPushButton("Apply Observed Classes")
         page.apply_esologs_button.setEnabled(False)
-        row.addWidget(page.load_esologs_button, 1)
+        row.addWidget(page.refresh_esologs_button, 1)
         row.addWidget(page.apply_esologs_button, 1)
         actions.addLayout(row)
-        page.load_esologs_button.clicked.connect(lambda *_: _load_esologs_evidence(page))
+        page.refresh_esologs_button.clicked.connect(lambda *_: _refresh_live_esologs(page))
         page.apply_esologs_button.clicked.connect(lambda *_: _apply_esologs_classes(page))
 
     details = _card(page, "Composition Details & Summary")
@@ -206,7 +235,7 @@ def _install_comp_esologs_ui(page) -> None:
         else:
             details.addWidget(page.esologs_evidence_label)
 
-    page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_for_trial(page))
+    page.goal_combo.currentTextChanged.connect(lambda *_: _clear_esologs_evidence(page))
 
 
 def _comp_init_with_esologs(self, parent=None) -> None:
