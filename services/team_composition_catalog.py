@@ -43,6 +43,13 @@ class CompositionSlot:
     alternative_classes: tuple[str, ...] = ()
     responsibilities: tuple[str, ...] = ()
     provider_requirements: tuple[str, ...] = ()
+    optional_responsibilities: tuple[str, ...] = ()
+    mechanic_jobs: tuple[str, ...] = ()
+
+    @property
+    def required_responsibilities(self) -> tuple[str, ...]:
+        """Required chair duties retained under the original responsibilities field."""
+        return self.responsibilities
 
 
 @dataclass(frozen=True)
@@ -77,8 +84,9 @@ class TeamCompositionCatalogSnapshot:
 class TeamCompositionCatalog:
     """Load versioned raid-composition evidence.
 
-    This catalog answers which chairs, classes, responsibilities, and providers a
-    composition wants. It deliberately does not contain players or complete builds.
+    This catalog answers which chairs, classes, responsibilities, providers, and
+    mechanic jobs a composition wants. It deliberately does not contain players or
+    complete builds.
     """
 
     def __init__(self, path: str | Path):
@@ -135,8 +143,16 @@ class TeamCompositionCatalog:
                     role=_clean(slot.get("role")),
                     preferred_class=_clean(slot.get("preferred_class")) or "Any class",
                     alternative_classes=_strings(slot.get("alternative_classes") or ()),
-                    responsibilities=_strings(slot.get("responsibilities") or ()),
+                    responsibilities=_strings(
+                        slot.get("required_responsibilities")
+                        or slot.get("responsibilities")
+                        or ()
+                    ),
                     provider_requirements=_strings(slot.get("provider_requirements") or ()),
+                    optional_responsibilities=_strings(
+                        slot.get("optional_responsibilities") or ()
+                    ),
+                    mechanic_jobs=_strings(slot.get("mechanic_jobs") or ()),
                 )
                 for slot in (item.get("slots") or ())
                 if isinstance(slot, dict) and _clean(slot.get("slot_name"))
