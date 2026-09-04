@@ -48,25 +48,44 @@ def build_role_compatible_autofill(
     *,
     slot_labels: tuple[str, ...],
     build_roles: tuple[object, ...],
+    build_player_keys: tuple[object, ...] | None = None,
 ) -> tuple[TeamAutofillAssignment, ...]:
-    """Assign each saved build at most once to the first compatible role slot.
+    """Assign compatible saved builds while consuming each real player once.
 
-    Saved-build ordering remains deterministic within a role family. A healer is
-    never used to fill a tank or DD slot, a tank is never used to fill healer or
-    DD, and unknown roles remain unassigned.
+    ``build_player_keys`` is optional for backwards compatibility with callers that
+    truly operate on independent build templates. Team/roster callers should pass a
+    stable player identity for each build so a person with twelve saved loadouts does
+    not become twelve raid members, a feat even ESO has declined to support.
     """
+
+    if build_player_keys is not None and len(build_player_keys) != len(build_roles):
+        raise ValueError("build_player_keys must align one-to-one with build_roles")
 
     unused = set(range(len(build_roles)))
     normalized = tuple(normalize_team_role(role) for role in build_roles)
+    player_keys = (
+        tuple(
+            str(value or "").strip().casefold() or f"build:{index}"
+            for index, value in enumerate(build_player_keys)
+        )
+        if build_player_keys is not None
+        else tuple(f"build:{index}" for index in range(len(build_roles)))
+    )
+    used_players: set[str] = set()
     assignments: list[TeamAutofillAssignment] = []
 
     for slot_label in slot_labels:
         required = slot_role_family(slot_label)
         selected: int | None = None
         for index, role in enumerate(normalized):
-            if index in unused and role == required:
+            if (
+                index in unused
+                and role == required
+                and player_keys[index] not in used_players
+            ):
                 selected = index
                 unused.remove(index)
+                used_players.add(player_keys[index])
                 break
         assignments.append(
             TeamAutofillAssignment(slot_label=slot_label, build_index=selected)
