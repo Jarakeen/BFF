@@ -3,8 +3,8 @@ from ui.team_optimization_hybrid_anchor_support import (
 )
 
 
-def test_partial_hybrid_team_auto_anchors_visible_saved_players() -> None:
-    assert should_auto_anchor_hybrid_players(
+def test_partial_hybrid_team_does_not_implicitly_lock_visible_saved_players() -> None:
+    assert not should_auto_anchor_hybrid_players(
         source_mode="Hybrid: Players + Recruitment",
         saved_player_count=2,
         recruitment_count=10,
@@ -30,7 +30,7 @@ def test_recruitment_only_team_does_not_need_saved_player_anchor() -> None:
     )
 
 
-def test_explicit_lock_remains_authoritative() -> None:
+def test_explicit_lock_is_handled_by_the_authoritative_pipeline_path() -> None:
     assert not should_auto_anchor_hybrid_players(
         source_mode="Hybrid: Players + Recruitment",
         saved_player_count=2,
