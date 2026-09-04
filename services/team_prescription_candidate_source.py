@@ -188,17 +188,17 @@ def evaluate_open_slot_candidate_source(
     resolve_provider_requirements: OpenSlotProviderResolver | None = None,
     build_constraints_by_slot: dict[str, PrescribedSlotBuildConstraint] | None = None,
 ) -> PrescribedCandidateSourceResult:
-    """Evaluate real build templates for every compatible open roster slot.
+    """Evaluate build candidates for every genuinely open roster chair.
 
-    The supplied evaluator must use an existing canonical role-specific engine. This
-    service owns only source orchestration, role boundaries, immutable snapshots, and
+    The supplied evaluator must use an existing role-specific evidence source. This
+    service owns source orchestration, role boundaries, immutable snapshots, and
     explicit failure reporting. It never invents a baseline, objective value, player,
     provider assignment, or unsupported ESO mechanic.
 
-    Saved-player anchors and chairs that already hold a complete prescribed build
-    snapshot are not open candidate targets. This lets multiple template sources run
-    in priority order without a later, weaker source replacing an earlier complete
-    recommendation.
+    Saved-player anchors, complete prescribed build snapshots, and partial template
+    recommendations already selected by an earlier-priority source are not open
+    candidate targets. User BUILD AROUND ingredient changes remain open because they
+    carry no source build recommendation yet.
     """
 
     candidate_ids = [candidate.candidate_id for candidate in candidates]
@@ -221,7 +221,7 @@ def evaluate_open_slot_candidate_source(
     }
 
     for assignment in roster.assignments:
-        if assignment.player_name is not None or assignment.prescribed_build is not None:
+        if not assignment.is_open_for_candidate:
             continue
         required_role = slot_role_family(assignment.slot_name)
         build_constraint = normalized_build_constraints.get(
