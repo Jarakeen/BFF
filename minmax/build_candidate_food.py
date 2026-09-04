@@ -59,6 +59,18 @@ def _resource_effect_values(
     )
 
 
+def _candidate_baseline_food(candidates: tuple[BuildCandidate, ...]) -> str | None:
+    baseline_names = {
+        str(change.before or "").strip()
+        for candidate in candidates
+        for change in candidate.changes
+        if change.path == "Food" and str(change.before or "").strip()
+    }
+    if len(baseline_names) != 1:
+        return None
+    return next(iter(baseline_names))
+
+
 def filter_food_candidates_for_resource(
     candidates: tuple[BuildCandidate, ...],
     *,
@@ -68,15 +80,16 @@ def filter_food_candidates_for_resource(
 ) -> tuple[BuildCandidate, ...]:
     """Keep provisioning candidates that can improve a failing resource channel.
 
-    Without ``baseline_food`` this preserves the original conservative rule:
-    keep every candidate that changes the requested maximum pool or recovery.
+    The baseline food is normally inferred from the candidates' canonical
+    ``Food`` change records. Callers may supply it explicitly when candidates do
+    not carry that standard one-change shape.
 
-    When a resolved baseline food is supplied, keep only candidates that improve
-    at least one requested sustain input relative to that baseline. A candidate
-    whose requested maximum pool and recovery are both unchanged or lower cannot
-    repair a proven failing sustain timeline under the current static one-food
-    model. Mixed candidates remain eligible when either dimension improves,
-    because a gain in one input can still outweigh a loss in the other.
+    Keep only candidates that improve at least one requested sustain input
+    relative to the resolved baseline. A candidate whose requested maximum pool
+    and recovery are both unchanged or lower cannot repair a proven failing
+    sustain timeline under the current static one-food model. Mixed candidates
+    remain eligible when either dimension improves, because a gain in one input
+    can still outweigh a loss in the other.
 
     Unknown baseline evidence fails open to the conservative resource-touching
     rule rather than dropping candidates on incomplete information.
@@ -90,11 +103,12 @@ def filter_food_candidates_for_resource(
         for candidate in candidates
         if resource in provisioning_candidate_resources(candidate, provisioning_repository)
     )
-    if not baseline_food:
+    selected_baseline = str(baseline_food or "").strip() or _candidate_baseline_food(candidates)
+    if not selected_baseline:
         return touching
 
     baseline_values, baseline_resolved = _resource_effect_values(
-        baseline_food,
+        selected_baseline,
         resource=resource,
         provisioning_repository=provisioning_repository,
     )
