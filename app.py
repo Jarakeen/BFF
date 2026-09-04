@@ -159,6 +159,7 @@ def main() -> int:
     from ui.rylo_raid_map_support import install as install_rylo_raid_map_support
     from ui.mechanics_boss_map_support import install as install_mechanics_boss_map_support
     from ui.independent_timer_note_support import install as install_independent_timer_note_support
+    from ui.encounter_research_support import install as install_encounter_research_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_acquisition_support import install as install_collectibles_acquisition_support
     from ui.collectibles_learned_recipe_support import install as install_collectibles_learned_recipe_support
@@ -197,6 +198,9 @@ def main() -> int:
     # User-facing timers/notepads own separate state and must be patched before
     # MainWindow constructs the affected pages.
     install_independent_timer_note_support()
+    # Encounter Research replaces the Data Management builder before SettingsPage
+    # is instantiated so intake/review lives beside achievement progress tools.
+    install_encounter_research_support()
     install_collectibles_profile_support()
     install_collectibles_acquisition_support()
     install_collectibles_learned_recipe_support()
