@@ -41,10 +41,12 @@ from ui.components.foundry_tabs import FoundryTabs
 from ui.foundry_page import FoundryPage
 
 from widgets.capability_editor import CapabilityEditor
+from widgets.top_team_card import TopTeamCard
 
 from models.capability_model import CapabilityRoster, CapabilityProfile
 from widgets.build_dashboard import BuildDashboard
 from services.capability_service import CapabilityService
+from services.top_team_service import TopTeamService
 from services.esologs_client import EsoLogsClient, EsoLogsApiError
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
@@ -85,6 +87,14 @@ class CapabilitiesPage(FoundryPage):
 
         self.capabilities_path = data_dir / "capabilities.json"
 
+    def _build_esologs_client(self) -> EsoLogsClient:
+        settings = self.settings_service.load()
+
+        return EsoLogsClient(
+            client_id=settings.get("EsoLogsClientId", ""),
+            client_secret=settings.get("EsoLogsClientSecret", ""),
+        )
+
     def _build_capability_service(self) -> CapabilityService:
         """
         Rebuilt on demand (not cached) so a Client ID/Secret
@@ -92,14 +102,10 @@ class CapabilitiesPage(FoundryPage):
         Fetch without restarting the Foundry.
         """
 
-        settings = self.settings_service.load()
+        return CapabilityService(self._build_esologs_client(), self.reference)
 
-        client = EsoLogsClient(
-            client_id=settings.get("EsoLogsClientId", ""),
-            client_secret=settings.get("EsoLogsClientSecret", ""),
-        )
-
-        return CapabilityService(client, self.reference)
+    def _build_top_team_service(self) -> TopTeamService:
+        return TopTeamService(self._build_esologs_client())
 
     # --------------------------------------------------
     # UI
@@ -110,13 +116,15 @@ class CapabilitiesPage(FoundryPage):
         self.header = FoundryHeader(
             title="Capabilities",
             subtitle=(
-                "Buff, debuff, and skill uptime for the raid team, "
-                "pulled from ESO Logs."
+                "Buff, debuff, skill uptime, and top-team gear from ESO Logs."
             ),
             department="Planning",
         )
 
         self.set_header(self.header)
+
+        self.top_team_card = TopTeamCard(self._build_top_team_service)
+        self.add_workspace(self.top_team_card)
 
         #
         # Tab strip
@@ -161,8 +169,6 @@ class CapabilitiesPage(FoundryPage):
         #
         # Actions
         #
-
-        from PySide6.QtWidgets import QWidget
 
         self.actions = QWidget()
 
@@ -229,8 +235,6 @@ class CapabilitiesPage(FoundryPage):
         self.status.info(f"{len(roster.Members)} member tab(s) loaded.")
 
     def _load_roster_from_disk(self) -> CapabilityRoster:
-
-        import json
 
         if not self.capabilities_path.exists():
             return CapabilityRoster()
@@ -352,7 +356,7 @@ class CapabilitiesPage(FoundryPage):
         dashboard = BuildDashboard(editor)
         self.stack.addWidget(dashboard)
 
-        self.stack.setCurrentWidget(editor)
+        self.stack.setCurrentWidget(dashboard)
 
         self._rebuild_tabs()
 
@@ -387,9 +391,9 @@ class CapabilitiesPage(FoundryPage):
 
         self.editors.pop(index)
 
-        self.stack.removeWidget(editor)
-
-        editor.deleteLater()
+        widget = self.stack.widget(index)
+        self.stack.removeWidget(widget)
+        widget.deleteLater()
 
         self._rebuild_tabs()
 
@@ -519,8 +523,6 @@ class CapabilitiesPage(FoundryPage):
 
     def save_capabilities(self):
 
-        import json
-
         try:
 
             self.capabilities_path.parent.mkdir(parents=True, exist_ok=True)
@@ -541,10 +543,6 @@ class CapabilitiesPage(FoundryPage):
     # --------------------------------------------------
 
     def export_csv(self):
-
-        import csv
-
-        from PySide6.QtWidgets import QFileDialog
 
         filename, _ = QFileDialog.getSaveFileName(
             self,
