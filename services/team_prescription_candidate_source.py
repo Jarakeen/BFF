@@ -16,14 +16,19 @@ from .team_role_autofill import normalize_team_role, slot_role_family
 class PrescribedOpenSlotCandidate:
     """Immutable build template for an open roster chair.
 
-    This is deliberately not a Phase 12 ``BuildCandidate``.  An open chair has no
+    This is deliberately not a Phase 12 ``BuildCandidate``. An open chair has no
     authoritative baseline build, so representing it as a baseline mutation would
     manufacture comparison evidence that does not exist.
+
+    ``player_name`` is optional because open-slot candidates may be either reusable
+    build templates or real saved-player builds. When present, downstream roster
+    optimization must treat that player as consumable exactly once.
     """
 
     candidate_id: str
     candidate_build_json: str
     candidate_source: str
+    player_name: str | None = None
 
     @classmethod
     def from_build(
@@ -32,9 +37,11 @@ class PrescribedOpenSlotCandidate:
         candidate_id: str,
         candidate_build: PlayerBuild,
         candidate_source: str,
+        player_name: str | None = None,
     ) -> "PrescribedOpenSlotCandidate":
         normalized_id = str(candidate_id or "").strip()
         normalized_source = str(candidate_source or "").strip()
+        normalized_player = str(player_name or "").strip() or None
         if not normalized_id:
             raise ValueError("open-slot candidate_id is required")
         if not normalized_source:
@@ -48,6 +55,7 @@ class PrescribedOpenSlotCandidate:
                 ensure_ascii=False,
             ),
             candidate_source=normalized_source,
+            player_name=normalized_player,
         )
 
     @property
@@ -145,9 +153,9 @@ def evaluate_open_slot_candidate_source(
 ) -> PrescribedCandidateSourceResult:
     """Evaluate real build templates for every compatible open roster slot.
 
-    The supplied evaluator must use an existing canonical role-specific engine.  This
+    The supplied evaluator must use an existing canonical role-specific engine. This
     service owns only source orchestration, role boundaries, immutable snapshots, and
-    explicit failure reporting.  It never invents a baseline, objective value, player,
+    explicit failure reporting. It never invents a baseline, objective value, player,
     provider assignment, or unsupported ESO mechanic.
     """
 
@@ -158,6 +166,12 @@ def evaluate_open_slot_candidate_source(
     by_slot: dict[str, tuple[PrescribedOpenSlotCandidateEvidence, ...]] = {}
     unresolved: list[str] = []
 
+    anchored_players = {
+        assignment.player_name.casefold()
+        for assignment in roster.assignments
+        if assignment.player_name
+    }
+
     for assignment in roster.assignments:
         if assignment.player_name is not None:
             continue
@@ -166,6 +180,10 @@ def evaluate_open_slot_candidate_source(
             candidate
             for candidate in candidates
             if normalize_team_role(candidate.candidate_build.Role) == required_role
+            and not (
+                candidate.player_name
+                and candidate.player_name.casefold() in anchored_players
+            )
         )
         rows: list[PrescribedOpenSlotCandidateEvidence] = []
         for candidate in compatible:
