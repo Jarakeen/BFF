@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from PySide6.QtWidgets import QComboBox
+
 from engine.config import get_data_dir
 from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
 from services.team_prescription_pipeline import run_automatic_team_prescription_candidate_pipeline
@@ -13,6 +15,15 @@ from services.team_role_autofill import normalize_team_role
 
 
 _INSTALLED = False
+_ORIGINAL_POPULATE_TEAM_EDITOR = None
+
+
+def _player_key(build, index: int) -> str:
+    identity = (
+        str(getattr(build, "Name", "") or "").strip()
+        or str(getattr(build, "Gamertag", "") or "").strip()
+    )
+    return identity.casefold() if identity else f"unnamed-build:{index}"
 
 
 def _tank_anchor_builds(page):
@@ -21,6 +32,57 @@ def _tank_anchor_builds(page):
         for build in page.roster.Members
         if normalize_team_role(getattr(build, "Role", "")) == "tank"
     )
+
+
+def _selected_saved_builds(page) -> tuple:
+    selected: list = []
+    used_players: set[str] = set()
+    for row in range(page.team_table.rowCount()):
+        selector = page.team_table.cellWidget(row, 1)
+        selection = selector.currentData() if isinstance(selector, QComboBox) else None
+        if not isinstance(selection, int) or not (0 <= selection < len(page.roster.Members)):
+            continue
+        build = page.roster.Members[selection]
+        key = _player_key(build, selection)
+        if key in used_players:
+            continue
+        used_players.add(key)
+        selected.append(build)
+    return tuple(selected)
+
+
+def _populate_team_editor_unique(self, table, *, autofill: bool) -> None:
+    """Keep legacy editor behavior but stop autofill from cloning real players."""
+
+    assert _ORIGINAL_POPULATE_TEAM_EDITOR is not None
+    _ORIGINAL_POPULATE_TEAM_EDITOR(self, table, autofill=autofill)
+    if not autofill or self._effective_source_mode() == "Recruitment Plan Only":
+        return
+
+    used_players: set[str] = set()
+    self._team_combo_signal_guard = True
+    try:
+        for row in range(table.rowCount()):
+            selector = table.cellWidget(row, 1)
+            selection = selector.currentData() if isinstance(selector, QComboBox) else None
+            if not isinstance(selection, int) or not (0 <= selection < len(self.roster.Members)):
+                continue
+            build = self.roster.Members[selection]
+            key = _player_key(build, selection)
+            if key not in used_players:
+                used_players.add(key)
+                continue
+
+            if self._effective_source_mode() == "Hybrid: Players + Recruitment":
+                replacement = selector.findData(f"recruitment:{row}")
+            else:
+                replacement = selector.findData(None)
+            if replacement >= 0:
+                selector.setCurrentIndex(replacement)
+                self._team_selection_changed(table, row)
+    finally:
+        self._team_combo_signal_guard = False
+    self._update_team_analysis()
 
 
 def _apply_saved_assignments_to_team_editor(page, prescription) -> None:
@@ -63,7 +125,6 @@ def _apply_saved_assignments_to_team_editor(page, prescription) -> None:
 
 
 def _generate_prescription_preview(self, *_args):
-    self._generate_preview()
     source_mode = self._effective_source_mode()
     saved_builds = tuple(self.roster.Members)
     goal = self.goal_combo.currentText().strip() or "Custom Goal"
@@ -94,11 +155,12 @@ def _generate_prescription_preview(self, *_args):
         )
         return
 
-    # Lock Players preserves deterministic saved anchors. Without that lock, tanks
-    # remain anchors because BFF does not yet have an authoritative scalar tank
-    # ranking objective; healer/DD chairs are evaluated by the real candidate path.
+    # Locked players come from the actual visible Team A selections rather than
+    # silently re-autofilling behind the user's back. Without that lock, tanks
+    # remain deterministic anchors because there is not yet an authoritative
+    # scalar tank objective; healer/DD chairs use the evidence-backed pipeline.
     anchor_builds = (
-        saved_builds
+        _selected_saved_builds(self)
         if self.constraint_boxes["Lock Players"].isChecked()
         else _tank_anchor_builds(self)
     )
@@ -149,10 +211,12 @@ def _generate_prescription_preview(self, *_args):
 
 
 def install() -> None:
-    global _INSTALLED
+    global _INSTALLED, _ORIGINAL_POPULATE_TEAM_EDITOR
     if _INSTALLED:
         return
     from ui.optimization_page import OptimizationPage
 
+    _ORIGINAL_POPULATE_TEAM_EDITOR = OptimizationPage._populate_team_editor
+    OptimizationPage._populate_team_editor = _populate_team_editor_unique
     OptimizationPage._generate_prescription_preview = _generate_prescription_preview
     _INSTALLED = True
