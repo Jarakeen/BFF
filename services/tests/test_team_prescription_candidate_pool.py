@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from minmax.build_candidate import BuildCandidate
@@ -97,6 +99,48 @@ def test_pool_adapter_rejects_candidate_for_anchored_slot() -> None:
                 PrescribedCandidatePoolInput(
                     slot_name="Main Tank",
                     comparison=_comparison("replacement"),
+                ),
+            ),
+        )
+
+
+def test_pool_adapter_skips_complete_prescribed_build_chair_without_false_unresolved() -> None:
+    complete = PlayerBuild(BuildName="Published DD", Role="DD")
+    roster = PrescribedRoster(
+        name="Published Template Roster",
+        goal="Godslayer",
+        scope=TeamPrescriptionScope(),
+        assignments=(
+            PrescribedRosterAssignment(
+                slot_name="DD 1",
+                player_name=None,
+                source_build_name="Published DD",
+                prescribed_role="DD",
+                prescribed_build_json=json.dumps(complete.to_dict()),
+            ),
+            PrescribedRosterAssignment(
+                slot_name="DD 2",
+                player_name=None,
+                source_build_name=None,
+                prescribed_role="DD",
+            ),
+        ),
+    )
+
+    result = build_prescribed_candidate_pools(roster=roster, inputs=())
+
+    assert tuple(result.pools) == ("DD 2",)
+    assert result.unresolved == (
+        "DD 2: no evaluated Phase 12 candidate evidence is available",
+    )
+
+    with pytest.raises(ValueError, match="cannot replace prescribed build slot"):
+        build_prescribed_candidate_pools(
+            roster=roster,
+            inputs=(
+                PrescribedCandidatePoolInput(
+                    slot_name="DD 1",
+                    comparison=_comparison("late-replacement"),
                 ),
             ),
         )
