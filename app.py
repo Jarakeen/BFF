@@ -157,6 +157,7 @@ def main() -> int:
     from ui.rylo_surface_icon_fix import install as install_rylo_surface_icon_fix
     from ui.theme_brand_mark_support import install as install_theme_brand_mark_support
     from ui.rylo_raid_map_support import install as install_rylo_raid_map_support
+    from ui.mechanics_boss_map_support import install as install_mechanics_boss_map_support
     from ui.independent_timer_note_support import install as install_independent_timer_note_support
     from ui.collectibles_profile_support import install as install_collectibles_profile_support
     from ui.collectibles_acquisition_support import install as install_collectibles_acquisition_support
@@ -190,6 +191,9 @@ def main() -> int:
     # Raid Map owns custom QGraphics painting, so it needs its own theme-aware
     # palette after accessibility and visual-theme support are registered.
     install_rylo_raid_map_support()
+    # Mechanics pairs multi-actor encounters and stores per-boss Raid Maps before
+    # MainWindow constructs the boss-guide page.
+    install_mechanics_boss_map_support()
     # User-facing timers/notepads own separate state and must be patched before
     # MainWindow constructs the affected pages.
     install_independent_timer_note_support()
