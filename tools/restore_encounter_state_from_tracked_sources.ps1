@@ -33,15 +33,62 @@ function Get-AbsolutePath {
     return [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $Path))
 }
 
+function Backup-SqliteDatabase {
+    param(
+        [Parameter(Mandatory = $true)][string]$Label,
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    Invoke-PythonStep $Label @(
+        "-c",
+        "import sqlite3,sys; src=sqlite3.connect(sys.argv[1]); dst=sqlite3.connect(sys.argv[2]); src.backup(dst); dst.close(); src.close()",
+        $Source,
+        $Destination
+    )
+}
+
+function Invoke-CanonicalPrerequisiteBootstrap {
+    param(
+        [Parameter(Mandatory = $true)][string]$TargetDatabase,
+        [switch]$Apply
+    )
+
+    $ParentArgs = @(
+        "tools\bootstrap_boss_parent_content.py",
+        "--database", $TargetDatabase,
+        "--boss-dir", $BossSourceDir,
+        "--content-root", $ContentRoot
+    )
+    if ($Apply) {
+        $ParentArgs += "--apply"
+    }
+    Invoke-PythonStep "Bootstrap boss parent content" $ParentArgs
+
+    $EncounterArgs = @(
+        "tools\bootstrap_boss_encounter_corpus.py",
+        "--database", $TargetDatabase,
+        "--source-dir", $BossSourceDir
+    )
+    if ($Apply) {
+        $EncounterArgs += "--apply"
+    }
+    Invoke-PythonStep "Bootstrap canonical boss encounter identities" $EncounterArgs
+}
+
 $DatabasePath = Get-AbsolutePath $Database
 $ManifestPath = Join-Path $RepoRoot "data\encounter_reviews\inferred_boss_mechanics.json"
-$BossSourceDir = Join-Path $RepoRoot "data\eso_info\bosses"
+$ContentRoot = Join-Path $RepoRoot "data\eso_info"
+$BossSourceDir = Join-Path $ContentRoot "bosses"
 $EvidenceRoot = Join-Path $RepoRoot "data\encounter_evidence"
 $BatchRoot = Join-Path $RepoRoot "data\encounter_review_batches"
 $Timestamp = Get-Date -Format "yyyyMMddTHHmmss"
 
 if (-not (Test-Path -LiteralPath $DatabasePath -PathType Leaf)) {
     throw "Database does not exist: $DatabasePath"
+}
+if (-not (Test-Path -LiteralPath $ContentRoot -PathType Container)) {
+    throw "ESO source directory does not exist: $ContentRoot"
 }
 if (-not (Test-Path -LiteralPath $BossSourceDir -PathType Container)) {
     throw "Boss source directory does not exist: $BossSourceDir"
@@ -71,30 +118,42 @@ Write-Host "This recovery does not reset or cherry-pick the branch."
 Write-Host "It rebuilds encounter state from tracked current-branch sources only."
 
 if ($DryRun) {
-    Invoke-PythonStep "Structural encounter dry run" @(
-        "tools\import_boss_encounter_structure.py",
-        "--database", $DatabasePath,
-        "--source-dir", $BossSourceDir
-    )
+    $DryRunDatabase = Join-Path ([System.IO.Path]::GetTempPath()) "bff-encounter-recovery-$PID-$Timestamp.db"
+    try {
+        Backup-SqliteDatabase "Clone live SQLite database for disposable dry run" $DatabasePath $DryRunDatabase
 
-    Invoke-PythonStep "Timeline canonical dry run" @(
-        "tools\write_encounter_timeline_facts.py",
-        "--database", $DatabasePath,
-        "--evidence-root", $EvidenceRoot
-    )
+        Write-Host ""
+        Write-Host "Dry-run sandbox: $DryRunDatabase"
+        Write-Host "Canonical prerequisites will be applied only to this temporary database."
 
-    Write-Host ""
-    Write-Host "RESULT: PASS (dry run; no database or review manifest changes)"
+        Invoke-CanonicalPrerequisiteBootstrap -TargetDatabase $DryRunDatabase -Apply
+
+        Invoke-PythonStep "Structural encounter dry run" @(
+            "tools\import_boss_encounter_structure.py",
+            "--database", $DryRunDatabase,
+            "--source-dir", $BossSourceDir
+        )
+
+        Invoke-PythonStep "Timeline canonical dry run" @(
+            "tools\write_encounter_timeline_facts.py",
+            "--database", $DryRunDatabase,
+            "--evidence-root", $EvidenceRoot
+        )
+
+        Write-Host ""
+        Write-Host "RESULT: PASS (dry run; live database and review manifest unchanged)"
+    }
+    finally {
+        if (Test-Path -LiteralPath $DryRunDatabase -PathType Leaf) {
+            Remove-Item -LiteralPath $DryRunDatabase -Force
+            Write-Host "Removed disposable dry-run database: $DryRunDatabase"
+        }
+    }
     exit 0
 }
 
 $DatabaseBackup = "$DatabasePath.before-encounter-recovery.$Timestamp"
-Invoke-PythonStep "Backup live SQLite database" @(
-    "-c",
-    "import sqlite3,sys; src=sqlite3.connect(sys.argv[1]); dst=sqlite3.connect(sys.argv[2]); src.backup(dst); dst.close(); src.close()",
-    $DatabasePath,
-    $DatabaseBackup
-)
+Backup-SqliteDatabase "Backup live SQLite database" $DatabasePath $DatabaseBackup
 Write-Host "Recovery backup: $DatabaseBackup"
 
 $ManifestBackup = $null
@@ -103,6 +162,8 @@ if (Test-Path -LiteralPath $ManifestPath -PathType Leaf) {
     Copy-Item -LiteralPath $ManifestPath -Destination $ManifestBackup
     Write-Host "Review manifest backup: $ManifestBackup"
 }
+
+Invoke-CanonicalPrerequisiteBootstrap -TargetDatabase $DatabasePath -Apply
 
 $StructuralBackup = "$DatabasePath.before-structural-recovery.$Timestamp"
 Invoke-PythonStep "Restore source-backed boss structure" @(
