@@ -28,14 +28,17 @@ Tasks outside of the master roadmap
 -[X] wherever there are timers in the app - plase make them functional
 -[X] whereever there are "edit notes" cards on the app, please make that card a note app and editable
 -[ ] next to "Provides" card on the Overview page card, please change that to a "thumbs up"
--[ ] firgure out what to do the the ESO logs page, maybe ask Rik
+-[X] figure out what to do the the ESO logs page, maybe ask Rik
 -[X] make all the timers work
 -[ ] add an asylum sanctorium timer
 -[ ] are there other ESO game timers that would be handy? if so, add them
 -[ ] wire all the bosses and mechs to the Mechanics page and reference pages
 -[ ] How do multiple ppl share a roster info?
 -[ ] make roster output/export 'pretty'
--[ ] add the top ESO Logs setups per trial
+-[X] add the top ESO Logs setups per trial
 -[ ] get ms signature file thingy for app completed
 -[ ] images for mechs - can they be farmed? uesp?
+-[X] Optimaztion - auto fill top buttons to match what they need to be for "generate team"
+-[ ] figure out how to easily share things like maps and roster to google docs and make it pretty
+-[ ] fix top logo
 -[ ] 
