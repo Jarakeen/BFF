@@ -21,7 +21,7 @@ def test_semi_static_healer_plan_expands_explicit_recasts_deterministically() ->
             ),
             SemiStaticRotationEntry(
                 first_time_seconds=1.0,
-                sequence=0,
+                sequence=1,
                 kind=RotationActionKind.SKILL,
                 name="Overflowing Altar",
                 bar="back",
@@ -31,14 +31,14 @@ def test_semi_static_healer_plan_expands_explicit_recasts_deterministically() ->
     )
 
     assert [
-        (action.time_seconds, action.name, action.bar)
+        (action.time_seconds, action.sequence, action.name, action.bar)
         for action in plan.actions
     ] == [
-        (0.0, "Combat Prayer", "front"),
-        (1.0, "Overflowing Altar", "back"),
-        (8.0, "Combat Prayer", "front"),
-        (16.0, "Combat Prayer", "front"),
-        (16.0, "Overflowing Altar", "back"),
+        (0.0, 0, "Combat Prayer", "front"),
+        (1.0, 1, "Overflowing Altar", "back"),
+        (8.0, 0, "Combat Prayer", "front"),
+        (16.0, 0, "Combat Prayer", "front"),
+        (16.0, 1, "Overflowing Altar", "back"),
     ]
     assert len(plan.assumptions) == 1
     assert "caller-supplied assumptions" in plan.assumptions[0]
