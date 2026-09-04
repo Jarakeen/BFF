@@ -50,6 +50,58 @@ class _ResourceProvisioningRepository:
         return effects.get(name, []), []
 
 
+class _DirectionalProvisioningRepository:
+    def list_names(self):
+        return (
+            "Worse Pool",
+            "Equal Sustain",
+            "Better Pool",
+            "Better Recovery",
+            "Mixed Tradeoff",
+            "Health Only",
+        )
+
+    def canonical_name(self, name):
+        return str(name or "").strip()
+
+    def resolve(self, name):
+        effects = {
+            "Baseline": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=3000.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=300.0),
+            ],
+            "Worse Pool": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=2500.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=300.0),
+            ],
+            "Equal Sustain": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=3000.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=300.0),
+            ],
+            "Better Pool": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=3500.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=300.0),
+            ],
+            "Better Recovery": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=3000.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=450.0),
+            ],
+            "Mixed Tradeoff": [
+                SimpleNamespace(stat=StatId.MAX_MAGICKA, value=2500.0),
+                SimpleNamespace(stat=StatId.MAGICKA_RECOVERY, value=500.0),
+            ],
+            "Health Only": [SimpleNamespace(stat=StatId.MAX_HEALTH, value=5000.0)],
+        }
+        return effects.get(name, []), []
+
+
+class _UnresolvedBaselineProvisioningRepository(_DirectionalProvisioningRepository):
+    def resolve(self, name):
+        if name == "Baseline":
+            return [], ["baseline unresolved"]
+        return super().resolve(name)
+
+
 class _EquivalentProvisioningRepository:
     def __init__(self, *, distinct_tooltips: bool) -> None:
         self.distinct_tooltips = distinct_tooltips
@@ -148,6 +200,52 @@ def test_magicka_filter_keeps_magicka_and_mixed_candidates_only() -> None:
     assert {candidate.candidate_build.Food for candidate in filtered} == {
         "Hybrid Meal",
         "Magicka Drink",
+    }
+
+
+def test_magicka_filter_prunes_candidates_that_cannot_improve_failed_sustain() -> None:
+    repo = _DirectionalProvisioningRepository()
+    candidates = enumerate_food_candidates(
+        baseline_build=PlayerBuild(BuildName="DF Healer", Food="Baseline"),
+        character_id="magrat",
+        baseline_build_id="DF Healer",
+        provisioning_repository=repo,
+    )
+
+    filtered = filter_food_candidates_for_resource(
+        candidates,
+        resource=ResourceType.MAGICKA,
+        provisioning_repository=repo,
+    )
+
+    assert {candidate.candidate_build.Food for candidate in filtered} == {
+        "Better Pool",
+        "Better Recovery",
+        "Mixed Tradeoff",
+    }
+
+
+def test_magicka_filter_fails_open_when_baseline_effects_are_unresolved() -> None:
+    repo = _UnresolvedBaselineProvisioningRepository()
+    candidates = enumerate_food_candidates(
+        baseline_build=PlayerBuild(BuildName="DF Healer", Food="Baseline"),
+        character_id="magrat",
+        baseline_build_id="DF Healer",
+        provisioning_repository=repo,
+    )
+
+    filtered = filter_food_candidates_for_resource(
+        candidates,
+        resource=ResourceType.MAGICKA,
+        provisioning_repository=repo,
+    )
+
+    assert {candidate.candidate_build.Food for candidate in filtered} == {
+        "Worse Pool",
+        "Equal Sustain",
+        "Better Pool",
+        "Better Recovery",
+        "Mixed Tradeoff",
     }
 
 
