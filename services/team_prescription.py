@@ -139,6 +139,24 @@ class PrescribedRosterAssignment:
             return None
         return PlayerBuild.from_dict(json.loads(self.prescribed_build_json))
 
+    @property
+    def has_candidate_recommendation(self) -> bool:
+        """Whether a candidate source has already claimed this chair.
+
+        A complete prescribed snapshot clearly claims the chair. A partial template
+        also claims it by carrying both a source build name and proposed changes. User
+        BUILD AROUND ingredients create changes without a source build name, so those
+        constraints remain open for a compatible candidate to satisfy.
+        """
+
+        return self.prescribed_build_json is not None or bool(
+            self.source_build_name and self.changes
+        )
+
+    @property
+    def is_open_for_candidate(self) -> bool:
+        return self.player_name is None and not self.has_candidate_recommendation
+
 
 @dataclass(frozen=True)
 class PrescribedRoster:
