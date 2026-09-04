@@ -93,6 +93,7 @@ def test_complete_published_template_fills_slot_before_partial_observed_template
                         "source_url": "https://example.invalid/template",
                         "retrieved_at": "2026-09-04",
                         "base_score": 200.0,
+                        "complete_build": True,
                         "build": {
                             "BuildName": "Published Warden Healer",
                             "EsoClass": "Warden",
@@ -127,3 +128,48 @@ def test_complete_published_template_fills_slot_before_partial_observed_template
     assert result.applied_count == 1
     assert assignment.source_build_name == "Published Warden Healer"
     assert assignment.prescribed_build is not None
+
+
+def test_published_template_without_complete_declaration_remains_partial(tmp_path) -> None:
+    (tmp_path / "team_prescription_templates.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "catalog_version": "u50-test",
+                "game_update": "U50",
+                "templates": [
+                    {
+                        "template_id": "published:partial-healer",
+                        "name": "Partial Published Healer",
+                        "source_name": "Curated Test Source",
+                        "source_url": "https://example.invalid/partial",
+                        "retrieved_at": "2026-09-04",
+                        "base_score": 200.0,
+                        "unresolved": ["exact traits and enchants unresolved"],
+                        "build": {
+                            "BuildName": "Partial Published Healer",
+                            "EsoClass": "Warden",
+                            "Role": "Healer",
+                            "FrontBarSkills": ["Combat Prayer", "Energy Orb"],
+                            "Mundus": "The Ritual",
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = apply_team_template_sources(
+        roster=_roster(),
+        goal="Hurricane Herald",
+        data_dir=tmp_path,
+    )
+
+    assignment = result.final_roster.assignments[0]
+    assert result.applied_count == 1
+    assert assignment.source_build_name == "Partial Published Healer"
+    assert assignment.prescribed_build is None
+    assert assignment.change_for(PrescriptionDimension.SKILLS) is not None
+    assert assignment.change_for(PrescriptionDimension.MUNDUS).prescribed_value == "The Ritual"
+    assert any("exact traits and enchants unresolved" in row for row in assignment.unresolved)
