@@ -3,9 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any
 
-from minmax.build_candidate_comparison import CandidateConstraint
 from minmax.evaluation_objective import EvaluationObjective
 from models.build_model import PlayerBuild
 from services.team_prescription_candidate_source import (
@@ -235,7 +233,7 @@ class TemplateCatalogObjectiveEvaluator:
             objective=objective,
             value=score,
             metric_name="versioned reference-template score",
-            constraints=tuple[CandidateConstraint, ...](),
+            constraints=(),
             evidence=evidence,
         )
 
