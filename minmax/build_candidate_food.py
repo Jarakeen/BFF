@@ -39,27 +39,84 @@ def provisioning_candidate_resources(
     )
 
 
+def _resource_effect_values(
+    name: str,
+    *,
+    resource: ResourceType,
+    provisioning_repository: ProvisioningStaticRepository,
+) -> tuple[dict[StatId, float], bool]:
+    effects, unresolved = provisioning_repository.resolve(name)
+    if unresolved:
+        return {}, False
+    relevant = _RESOURCE_STATS[resource]
+    return (
+        {
+            effect.stat: float(effect.value)
+            for effect in effects
+            if effect.stat in relevant
+        },
+        True,
+    )
+
+
 def filter_food_candidates_for_resource(
     candidates: tuple[BuildCandidate, ...],
     *,
     resource: ResourceType,
     provisioning_repository: ProvisioningStaticRepository,
+    baseline_food: str | None = None,
 ) -> tuple[BuildCandidate, ...]:
-    """Keep provisioning candidates that can change the requested resource.
+    """Keep provisioning candidates that can improve a failing resource channel.
 
-    This is intended for a proven failing sustain constraint. A candidate that
-    changes neither the requested maximum pool nor its recovery cannot repair
-    that resource failure, so evaluating it would be wasted work. Unknown or
-    unmapped provisioning entries are not promoted through this filter.
+    Without ``baseline_food`` this preserves the original conservative rule:
+    keep every candidate that changes the requested maximum pool or recovery.
+
+    When a resolved baseline food is supplied, keep only candidates that improve
+    at least one requested sustain input relative to that baseline. A candidate
+    whose requested maximum pool and recovery are both unchanged or lower cannot
+    repair a proven failing sustain timeline under the current static one-food
+    model. Mixed candidates remain eligible when either dimension improves,
+    because a gain in one input can still outweigh a loss in the other.
+
+    Unknown baseline evidence fails open to the conservative resource-touching
+    rule rather than dropping candidates on incomplete information.
     """
 
     if resource not in _RESOURCE_STATS:
         return candidates
-    return tuple(
+
+    touching = tuple(
         candidate
         for candidate in candidates
         if resource in provisioning_candidate_resources(candidate, provisioning_repository)
     )
+    if not baseline_food:
+        return touching
+
+    baseline_values, baseline_resolved = _resource_effect_values(
+        baseline_food,
+        resource=resource,
+        provisioning_repository=provisioning_repository,
+    )
+    if not baseline_resolved:
+        return touching
+
+    relevant_stats = _RESOURCE_STATS[resource]
+    result: list[BuildCandidate] = []
+    for candidate in touching:
+        candidate_values, candidate_resolved = _resource_effect_values(
+            candidate.candidate_build.Food,
+            resource=resource,
+            provisioning_repository=provisioning_repository,
+        )
+        if not candidate_resolved:
+            continue
+        if any(
+            candidate_values.get(stat, 0.0) > baseline_values.get(stat, 0.0)
+            for stat in relevant_stats
+        ):
+            result.append(candidate)
+    return tuple(result)
 
 
 def _normalized_description(
