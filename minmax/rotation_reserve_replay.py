@@ -127,6 +127,13 @@ def plan_exact_rotation_reserve_protection(
         requirement=analysis.reserve_assessment.requirement,
     )
 
+    expected_baseline = analysis.reserve_assessment.available_before_start
+    if assessment.available_before_start != expected_baseline:
+        raise ValueError(
+            "reserve replay inputs do not reproduce analyzed demand-entry resource: "
+            f"{assessment.available_before_start} != {expected_baseline}"
+        )
+
     if not assessment.satisfied:
         for item in ranked:
             selected.append(item)
