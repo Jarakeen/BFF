@@ -358,10 +358,16 @@ def install() -> None:
     def init_with_maps(self, *args, **kwargs):
         self._boss_raid_map_store = EncounterRaidMapStore(get_data_dir())
         original_page_init(self, *args, **kwargs)
+
+        # Existing notepad compatibility runs during _build_ui and still knows
+        # this slot as NOTES. Replace the completed tab after construction so
+        # the user's requested MAP surface wins without disturbing My Notes.
         for index in range(self.tabs.count()):
-            if self.tabs.tabText(index).strip().upper() == "NOTES":
-                self.tabs.setTabText(index, "MAP")
-                break
+            if self.tabs.tabText(index).strip().upper() != "NOTES":
+                continue
+            self.tabs.removeTab(index)
+            self.tabs.insertTab(index, _map_tab(self), "MAP")
+            break
         _refresh_map_list(self)
 
     def boss_changed_with_maps(self, index: int) -> None:
@@ -380,7 +386,6 @@ def install() -> None:
 
     EncounterBossGuideService.encounter_summaries = summaries_with_pairs
     EncounterBossGuideService.get = get_with_pairs
-    MechanicsPage._notes_tab = _map_tab
     MechanicsPage.__init__ = init_with_maps
     MechanicsPage._boss_changed = boss_changed_with_maps
     MechanicsPage.refresh_context = refresh_context_with_pairs
