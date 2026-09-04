@@ -222,3 +222,12 @@ def install() -> None:
     from ui.team_prescription_row_display_support import install as install_row_display
 
     install_row_display()
+
+    # Generated prescriptions are first-class roster plans. This also bounds the
+    # diagnostic preview so Generate cannot stretch the Optimization page into an
+    # effectively inescapable wall of unresolved evidence.
+    from ui.team_prescription_roster_transfer_support import (
+        install as install_roster_transfer_support,
+    )
+
+    install_roster_transfer_support()
