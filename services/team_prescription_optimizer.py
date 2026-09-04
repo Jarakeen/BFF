@@ -55,14 +55,12 @@ def optimize_prescribed_roster_candidates(
     candidate_pools: dict[str, tuple[PrescribedSlotCandidateEvidence, ...]],
     provider_requirements_by_slot: dict[str, tuple[str, ...]] | None = None,
 ) -> TeamPrescriptionOptimizationResult:
-    """Rank and apply evidence-backed candidate pools to every open roster slot.
+    """Rank and apply evidence-backed candidate pools to genuinely open chairs.
 
-    Candidate generation and Phase 12 evaluation stay authoritative in their
-    existing services. A missing pool is reported as unresolved rather than
-    converted into a fabricated recommendation. Anchored saved players and chairs
-    that already hold a complete prescribed build snapshot are never replaced here,
-    and a real saved player can be consumed by at most one roster chair even when
-    that player has several saved builds in the candidate pool.
+    Anchored saved players, complete prescribed build snapshots, and partial template
+    recommendations already selected by an earlier-priority source are preserved.
+    User ingredient-only constraints remain open and are enforced by candidate
+    generation before this optimizer receives the pool.
     """
 
     provider_requirements_by_slot = provider_requirements_by_slot or {}
@@ -86,7 +84,7 @@ def optimize_prescribed_roster_candidates(
     }
 
     for assignment in roster.assignments:
-        if assignment.player_name is not None or assignment.prescribed_build is not None:
+        if not assignment.is_open_for_candidate:
             decisions.append(
                 PrescribedSlotOptimization(
                     slot_name=assignment.slot_name,
