@@ -23,6 +23,7 @@ from models.build_model import BuildRoster
 from services.build_service import BuildService
 from services.team_prescription import PrescriptionDimension, TeamPrescriptionScope
 from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
+from services.team_prescription_preview import format_prescribed_roster_preview
 from services.team_role_autofill import build_role_compatible_autofill
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -561,23 +562,8 @@ class OptimizationPage(FoundryPage):
         )
         self.current_prescription = prescription
 
-        lines = [f"{prescription.name}"]
-        for assignment in prescription.assignments:
-            if assignment.player_name:
-                source = assignment.source_build_name or "Current Build"
-                lines.append(
-                    f"{assignment.slot_name}: {assignment.player_name} — {source}"
-                )
-            else:
-                lines.append(
-                    f"{assignment.slot_name}: TO PRESCRIBE ({assignment.prescribed_role})"
-                )
+        self.change_text.setText("\n".join(format_prescribed_roster_preview(prescription)))
         unresolved_count = len(prescription.unresolved)
-        lines.append("")
-        lines.append(
-            f"{unresolved_count} slot(s) still need canonical class/build/provider optimization."
-        )
-        self.change_text.setText("\n".join(lines))
         self.status.success(
             f"Generated {goal} prescription preview with "
             f"{len(prescription.assignments) - unresolved_count} saved anchor(s) and "
