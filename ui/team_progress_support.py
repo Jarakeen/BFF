@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
 
 from ui.components.foundry_card import FoundryCard
 from ui.components.team_progress_panels import (
@@ -17,21 +17,23 @@ _ORIGINAL_OPT_INIT = None
 _ORIGINAL_OPT_UPDATE_ANALYSIS = None
 
 
+def _matrix_text(table, row: int, column: int) -> str:
+    widget = table.cellWidget(row, column)
+    if isinstance(widget, QLineEdit):
+        return widget.text().strip()
+    item = table.item(row, column)
+    return item.text().strip() if item is not None else ""
+
+
 def _comp_declared_rows(page) -> tuple[tuple[str, str], ...]:
     rows: list[tuple[str, str]] = []
     table = page.matrix_table
     for row in range(table.rowCount()):
-        slot_item = table.item(row, 0)
-        responsibilities_item = table.item(row, 4)
-        providers_item = table.item(row, 5)
-        slot_name = slot_item.text().strip() if slot_item is not None else f"Slot {row + 1}"
+        slot_name = _matrix_text(table, row, 0) or f"Slot {row + 1}"
         text = " ".join(
             value
-            for value in (
-                responsibilities_item.text().strip() if responsibilities_item is not None else "",
-                providers_item.text().strip() if providers_item is not None else "",
-            )
-            if value
+            for column in (4, 5, 6, 7)
+            if (value := _matrix_text(table, row, column))
         )
         rows.append((slot_name, text))
     return tuple(rows)
