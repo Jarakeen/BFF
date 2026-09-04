@@ -132,7 +132,7 @@ def derive_rotation_window_resource_budget(
 
     for event in ordered_events:
         if event.kind is ResourceTimelineEventKind.ACTION_COST:
-            spent = max(0, -int(event.applied_change))
+            spent = max(0, -int(event.attempted_change))
             required_amount += spent
             cumulative -= spent
         else:
