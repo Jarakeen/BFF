@@ -43,6 +43,12 @@ class TeamPrescriptionOptimizationResult:
         )
 
 
+def _saved_player_name(evidence: PrescribedSlotCandidateEvidence) -> str | None:
+    if evidence.open_slot is None:
+        return None
+    return evidence.open_slot.candidate.player_name
+
+
 def optimize_prescribed_roster_candidates(
     *,
     roster: PrescribedRoster,
@@ -51,10 +57,11 @@ def optimize_prescribed_roster_candidates(
 ) -> TeamPrescriptionOptimizationResult:
     """Rank and apply evidence-backed candidate pools to every open roster slot.
 
-    This is deliberately an orchestration layer. Candidate generation and Phase 12
-    evaluation stay authoritative in their existing services. A missing pool is
-    reported as unresolved rather than converted into a fabricated recommendation.
-    Anchored saved players are never replaced here.
+    Candidate generation and Phase 12 evaluation stay authoritative in their
+    existing services. A missing pool is reported as unresolved rather than
+    converted into a fabricated recommendation. Anchored saved players are never
+    replaced here, and a real saved player can be consumed by at most one roster
+    chair even when that player has several saved builds in the candidate pool.
     """
 
     provider_requirements_by_slot = provider_requirements_by_slot or {}
@@ -71,6 +78,11 @@ def optimize_prescribed_roster_candidates(
 
     current = roster
     decisions: list[PrescribedSlotOptimization] = []
+    used_saved_players = {
+        assignment.player_name.casefold()
+        for assignment in roster.assignments
+        if assignment.player_name
+    }
 
     for assignment in roster.assignments:
         if assignment.player_name is not None:
@@ -84,12 +96,26 @@ def optimize_prescribed_roster_candidates(
             continue
 
         slot_key = assignment.slot_name.casefold()
-        candidates = normalized_pools.get(slot_key, ())
-        if not candidates:
-            unresolved = (
-                f"{assignment.slot_name}: no evaluated candidate pool is available; "
-                "prescription remains unresolved",
+        raw_candidates = normalized_pools.get(slot_key, ())
+        candidates = tuple(
+            evidence
+            for evidence in raw_candidates
+            if not (
+                (player_name := _saved_player_name(evidence))
+                and player_name.casefold() in used_saved_players
             )
+        )
+        if not candidates:
+            if raw_candidates:
+                unresolved = (
+                    f"{assignment.slot_name}: every evaluated saved-player candidate "
+                    "is already assigned to another roster slot",
+                )
+            else:
+                unresolved = (
+                    f"{assignment.slot_name}: no evaluated candidate pool is available; "
+                    "prescription remains unresolved",
+                )
             decisions.append(
                 PrescribedSlotOptimization(
                     slot_name=assignment.slot_name,
@@ -111,6 +137,11 @@ def optimize_prescribed_roster_candidates(
             ranking=ranking,
         )
         applied = ranking.recommended is not None and current != before
+        if applied and ranking.recommended is not None:
+            player_name = _saved_player_name(ranking.recommended)
+            if player_name:
+                used_saved_players.add(player_name.casefold())
+
         unresolved = ranking.unresolved
         if ranking.recommended is None and not unresolved:
             unresolved = (
