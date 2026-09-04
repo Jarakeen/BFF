@@ -21,6 +21,7 @@ from minmax.optimization_mode import OptimizationMode, policy_for_mode
 from minmax.recruitment import RecruitmentPlanner
 from models.build_model import BuildRoster
 from services.build_service import BuildService
+from services.team_role_autofill import build_role_compatible_autofill
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -311,6 +312,17 @@ class OptimizationPage(FoundryPage):
         source_mode = self._effective_source_mode()
         table.setRowCount(len(role_slots))
 
+        autofill_by_row: dict[int, int | None] = {}
+        if autofill and source_mode != "Recruitment Plan Only":
+            assignments = build_role_compatible_autofill(
+                slot_labels=tuple(role_slots),
+                build_roles=tuple(getattr(build, "Role", "") for build in builds),
+            )
+            autofill_by_row = {
+                row: assignment.build_index
+                for row, assignment in enumerate(assignments)
+            }
+
         self._team_combo_signal_guard = True
         try:
             for row, role_name in enumerate(role_slots):
@@ -335,10 +347,12 @@ class OptimizationPage(FoundryPage):
                 if autofill:
                     if source_mode == "Recruitment Plan Only":
                         selector.setCurrentIndex(selector.findData(recruitment_value))
-                    elif row < len(builds):
-                        selector.setCurrentIndex(row + 1)
-                    elif source_mode == "Hybrid: Players + Recruitment":
-                        selector.setCurrentIndex(selector.findData(recruitment_value))
+                    else:
+                        selected_build = autofill_by_row.get(row)
+                        if selected_build is not None:
+                            selector.setCurrentIndex(selector.findData(selected_build))
+                        elif source_mode == "Hybrid: Players + Recruitment":
+                            selector.setCurrentIndex(selector.findData(recruitment_value))
 
                 selector.currentIndexChanged.connect(
                     lambda _index, current_table=table, current_row=row:
