@@ -67,3 +67,10 @@ def install() -> None:
     from ui.comp_builder_esologs_chair_layout import install as install_comp_builder_esologs_chair_layout
 
     install_comp_builder_esologs_chair_layout()
+
+    # Finally tighten the page geometry. This runs after the additive Comp Builder
+    # support modules so Actions stays pinned top-right, coverage sits directly under
+    # the matrix, and only the Details card owns flexible vertical space.
+    from ui.comp_builder_layout_support import install as install_comp_builder_layout
+
+    install_comp_builder_layout()
