@@ -61,3 +61,9 @@ def install() -> None:
     from ui.comp_builder_esologs_support import install as install_comp_builder_esologs
 
     install_comp_builder_esologs()
+
+    # Keep the selected-chair setup above the all-chair ESO Logs summary so gear and
+    # skills are visible immediately when a matrix row is selected.
+    from ui.comp_builder_esologs_chair_layout import install as install_comp_builder_esologs_chair_layout
+
+    install_comp_builder_esologs_chair_layout()
