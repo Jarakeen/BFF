@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 from ui.achievement_progress_import_page import AchievementProgressImportPage
 from ui.components.foundry_card import FoundryCard
 from ui.encounter_research_page import EncounterResearchPage
+from ui.encounter_research_value_support import install as install_value_review
 
 
 _INSTALLED = False
@@ -16,6 +17,9 @@ def install() -> None:
     global _INSTALLED
     if _INSTALLED:
         return
+
+    # Patch candidate value/source review before Settings constructs the page.
+    install_value_review()
 
     from ui.settings_page import SettingsPage
 
