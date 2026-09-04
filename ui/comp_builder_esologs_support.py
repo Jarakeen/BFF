@@ -48,6 +48,12 @@ def _format_count_rows(rows: tuple[tuple[str, int], ...], *, limit: int = 3) -> 
     return ", ".join(f"{name} ×{count}" for name, count in rows[:limit])
 
 
+def _format_count_lines(rows: tuple[tuple[str, int], ...], *, limit: int) -> str:
+    if not rows:
+        return "• None observed"
+    return "\n".join(f"• {name} ×{count}" for name, count in rows[:limit])
+
+
 def _format_observed_evidence(evidence: EsoLogsCompositionEvidence | None) -> str:
     if evidence is None:
         return "ESO LOGS OBSERVED EVIDENCE\nNo live evidence fetched for this trial yet."
@@ -75,6 +81,88 @@ def _format_observed_evidence(evidence: EsoLogsCompositionEvidence | None) -> st
     return "\n".join(lines)
 
 
+def _selected_row(page) -> int:
+    row = page.matrix_table.currentRow()
+    if row >= 0:
+        return row
+    return 0 if page.matrix_table.rowCount() else -1
+
+
+def _format_selected_chair(page) -> str:
+    row = _selected_row(page)
+    if row < 0:
+        return "SELECTED CHAIR SETUP\nNo composition chair selected."
+
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    role = page._cell_text(row, 1) or "Unresolved role"
+    planned_class = page._selected_class(row) or "Any class"
+    required = page._cell_text(row, 4) or "None declared"
+    optional = page._cell_text(row, 5) or "None declared"
+    providers = page._cell_text(row, 6) or "None declared"
+    mechanics = page._cell_text(row, 7) or "None declared"
+
+    evidence = getattr(page, "_esologs_observed_evidence", None)
+    observed = evidence.slot(slot_name) if evidence is not None else None
+
+    lines = [
+        "SELECTED CHAIR SETUP",
+        f"{slot_name} • {role}",
+        "",
+        "PLANNED CHAIR",
+        f"Class: {planned_class}",
+        f"Required: {required}",
+        f"Optional / Flex: {optional}",
+        f"Providers: {providers}",
+        f"Mechanic Jobs: {mechanics}",
+        "",
+        "OBSERVED SETUP • ESO LOGS",
+    ]
+
+    if observed is None:
+        lines.extend(
+            (
+                "No live ranked-team evidence has been resolved for this chair yet.",
+                "Use Refresh ESO Logs for the selected trial.",
+            )
+        )
+    else:
+        confidence = round(observed.confidence * 100)
+        alternatives = ", ".join(observed.alternative_classes) or "None observed"
+        lines.extend(
+            (
+                f"Class: {observed.preferred_class or 'Unresolved'} ({confidence}% of sampled chair observations)",
+                f"Alternatives: {alternatives}",
+                "",
+                "Gear sets observed:",
+                _format_count_lines(observed.observed_gear_sets, limit=10),
+                "",
+                "Skills / abilities observed:",
+                _format_count_lines(observed.observed_abilities, limit=14),
+            )
+        )
+        if evidence.encounter_names:
+            lines.extend(("", "Encounters: " + ", ".join(evidence.encounter_names)))
+        if evidence.report_fights:
+            lines.append("Report/fight refs: " + ", ".join(evidence.report_fights))
+
+    lines.extend(
+        (
+            "",
+            "RECOMMENDED SETUP",
+            "Gear: not prescribed yet from a sourced build recommendation.",
+            "Skills: not prescribed yet from a sourced build recommendation.",
+            "Observed ESO Logs usage is evidence, not automatically a recommendation.",
+        )
+    )
+    return "\n".join(lines)
+
+
+def _refresh_selected_chair(page) -> None:
+    label = getattr(page, "esologs_selected_chair_label", None)
+    if label is not None:
+        label.setText(_format_selected_chair(page))
+
+
 def _append_report_provenance(page, evidence: EsoLogsCompositionEvidence) -> None:
     current = page.evidence_text.toPlainText().strip()
     marker = "ESO LOGS OBSERVED SNAPSHOTS"
@@ -99,6 +187,7 @@ def _clear_esologs_evidence(page) -> None:
     page._esologs_observed_evidence = None
     page.esologs_evidence_label.setText(_format_observed_evidence(None))
     page.apply_esologs_button.setEnabled(False)
+    _refresh_selected_chair(page)
 
 
 def _refresh_live_esologs(page) -> None:
@@ -152,6 +241,7 @@ def _refresh_live_esologs(page) -> None:
         page.esologs_evidence_label.setText(_format_observed_evidence(evidence))
         page.apply_esologs_button.setEnabled(True)
         _append_report_provenance(page, evidence)
+        _refresh_selected_chair(page)
 
         if failures:
             page.status.warning(
@@ -200,6 +290,7 @@ def _apply_esologs_classes(page) -> None:
             )
         applied += 1
 
+    _refresh_selected_chair(page)
     page.status.success(
         f"Applied observed ESO Logs class evidence to {applied} composition chair(s). "
         "Responsibilities, providers, and mechanic jobs were preserved."
@@ -225,6 +316,8 @@ def _install_comp_esologs_ui(page) -> None:
     details = _card(page, "Composition Details & Summary")
     page.esologs_evidence_label = QLabel(_format_observed_evidence(None))
     page.esologs_evidence_label.setWordWrap(True)
+    page.esologs_selected_chair_label = QLabel(_format_selected_chair(page))
+    page.esologs_selected_chair_label.setWordWrap(True)
     if details is not None:
         scroll = next(iter(details.findChildren(QScrollArea)), None)
         body = scroll.widget() if scroll is not None else None
@@ -232,10 +325,19 @@ def _install_comp_esologs_ui(page) -> None:
         if layout is not None:
             index = max(0, layout.count() - 1)
             layout.insertWidget(index, page.esologs_evidence_label)
+            layout.insertWidget(index + 1, page.esologs_selected_chair_label)
         else:
             details.addWidget(page.esologs_evidence_label)
+            details.addWidget(page.esologs_selected_chair_label)
 
+    page.matrix_table.currentCellChanged.connect(
+        lambda *_: _refresh_selected_chair(page)
+    )
     page.goal_combo.currentTextChanged.connect(lambda *_: _clear_esologs_evidence(page))
+
+    if page.matrix_table.rowCount() and page.matrix_table.currentRow() < 0:
+        page.matrix_table.setCurrentCell(0, 0)
+    _refresh_selected_chair(page)
 
 
 def _comp_init_with_esologs(self, parent=None) -> None:
