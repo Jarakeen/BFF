@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "catalog_version": "2026-09-04-u50-comp-1",
+  "game_update": "Update 50",
+  "templates": [
+    {
+      "template_id": "u50-godslayer-sunspire-2-2-8",
+      "name": "U50 Godslayer 2/2/8 Reference",
+      "trial_name": "Sunspire",
+      "goal": "Godslayer",
+      "difficulty": "Veteran Hardmode",
+      "game_update": "Update 50",
+      "sources": [
+        {
+          "name": "BTV Tools Sunspire Most Run Comp",
+          "url": "https://www.btvtools.com/database/trials/sunspire",
+          "retrieved_at": "2026-09-04",
+          "note": "Observed U50 top-run class-frequency evidence. BFF adapts the observed lineup to its current 2 tank / 2 healer / 8 DD raid-slot model."
+        },
+        {
+          "name": "The Tank Club ESO Tank Class Guide",
+          "url": "https://thetankclub.com/eso-tank-class/",
+          "retrieved_at": "2026-09-04",
+          "note": "Current trial-tank class guidance used only for tank-chair preference evidence."
+        }
+      ],
+      "slots": [
+        {
+          "slot_name": "Main Tank",
+          "role": "Tank",
+          "preferred_class": "Dragonknight",
+          "alternative_classes": ["Necromancer", "Sorcerer", "Arcanist", "Warden"],
+          "responsibilities": ["Boss positioning", "Primary control", "Survivability"],
+          "provider_requirements": ["Primary tank support package"]
+        },
+        {
+          "slot_name": "Off Tank",
+          "role": "Tank",
+          "preferred_class": "Sorcerer",
+          "alternative_classes": ["Necromancer", "Dragonknight", "Arcanist", "Warden"],
+          "responsibilities": ["Add control", "Off-mechanic coverage", "Utility flex"],
+          "provider_requirements": ["Secondary tank support package"]
+        },
+        {
+          "slot_name": "Healer 1",
+          "role": "Healer",
+          "preferred_class": "Warden",
+          "alternative_classes": ["Arcanist"],
+          "responsibilities": ["Raid healing", "Defensive support", "Group sustain"],
+          "provider_requirements": ["Warden support coverage"]
+        },
+        {
+          "slot_name": "Healer 2",
+          "role": "Healer",
+          "preferred_class": "Arcanist",
+          "alternative_classes": ["Warden"],
+          "responsibilities": ["Raid healing", "Offensive support", "Utility coverage"],
+          "provider_requirements": ["Arcanist support coverage"]
+        },
+        {
+          "slot_name": "DD 1",
+          "role": "DD",
+          "preferred_class": "Dragonknight",
+          "alternative_classes": ["Necromancer", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 2",
+          "role": "DD",
+          "preferred_class": "Dragonknight",
+          "alternative_classes": ["Necromancer", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 3",
+          "role": "DD",
+          "preferred_class": "Necromancer",
+          "alternative_classes": ["Dragonknight", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 4",
+          "role": "DD",
+          "preferred_class": "Necromancer",
+          "alternative_classes": ["Dragonknight", "Sorcerer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 5",
+          "role": "DD",
+          "preferred_class": "Sorcerer",
+          "alternative_classes": ["Dragonknight", "Necromancer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 6",
+          "role": "DD",
+          "preferred_class": "Sorcerer",
+          "alternative_classes": ["Dragonknight", "Necromancer", "Nightblade", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 7",
+          "role": "DD",
+          "preferred_class": "Nightblade",
+          "alternative_classes": ["Dragonknight", "Necromancer", "Sorcerer", "Templar", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        },
+        {
+          "slot_name": "DD 8",
+          "role": "DD",
+          "preferred_class": "Templar",
+          "alternative_classes": ["Dragonknight", "Necromancer", "Sorcerer", "Nightblade", "Warden", "Arcanist"],
+          "responsibilities": ["Boss damage", "Mechanic execution"],
+          "provider_requirements": []
+        }
+      ]
+    }
+  ]
+}
