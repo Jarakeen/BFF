@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 from models.roster_model import RosterMember
+from models.team_schedule import TeamSchedule
 from services.eso_database import EsoDatabase
 
 
@@ -37,9 +38,20 @@ class RosterService:
         self.db.execute("""
             CREATE TABLE IF NOT EXISTS team (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE
+                name TEXT NOT NULL UNIQUE,
+                raid_days TEXT NOT NULL DEFAULT '',
+                raid_time TEXT NOT NULL DEFAULT '',
+                timezone TEXT NOT NULL DEFAULT ''
             )
         """)
+        existing_team_columns = {
+            row["name"] for row in self.db.execute("PRAGMA table_info(team)").fetchall()
+        }
+        for column in ("raid_days", "raid_time", "timezone"):
+            if column not in existing_team_columns:
+                self.db.execute(
+                    f"ALTER TABLE team ADD COLUMN {column} TEXT NOT NULL DEFAULT ''"
+                )
         self.db.execute("""
             CREATE TABLE IF NOT EXISTS team_member (
                 roster_member_id INTEGER NOT NULL
@@ -114,6 +126,60 @@ class RosterService:
             ORDER BY name COLLATE NOCASE
         """).fetchall()
         return [row["name"] for row in rows]
+
+    def list_team_schedules(self) -> list[TeamSchedule]:
+        rows = self.db.execute("""
+            SELECT name, raid_days, raid_time, timezone
+            FROM team
+            ORDER BY name COLLATE NOCASE
+        """).fetchall()
+        return [
+            TeamSchedule(
+                TeamName=row["name"] or "",
+                RaidDays=row["raid_days"] or "",
+                RaidTime=row["raid_time"] or "",
+                TimeZone=row["timezone"] or "",
+            )
+            for row in rows
+        ]
+
+    def get_team_schedule(self, team_name: str) -> TeamSchedule | None:
+        name = str(team_name or "").strip()
+        if not name:
+            return None
+        row = self.db.execute("""
+            SELECT name, raid_days, raid_time, timezone
+            FROM team
+            WHERE name = ? COLLATE NOCASE
+        """, (name,)).fetchone()
+        if row is None:
+            return None
+        return TeamSchedule(
+            TeamName=row["name"] or "",
+            RaidDays=row["raid_days"] or "",
+            RaidTime=row["raid_time"] or "",
+            TimeZone=row["timezone"] or "",
+        )
+
+    def set_team_schedule(self, schedule: TeamSchedule) -> None:
+        name = str(schedule.TeamName or "").strip()
+        if not name:
+            raise ValueError("Team name is required before a raid schedule can be saved.")
+        self.db.execute(
+            "INSERT OR IGNORE INTO team (name) VALUES (?)",
+            (name,),
+        )
+        self.db.execute("""
+            UPDATE team
+            SET raid_days = ?, raid_time = ?, timezone = ?
+            WHERE name = ? COLLATE NOCASE
+        """, (
+            str(schedule.RaidDays or "").strip(),
+            str(schedule.RaidTime or "").strip(),
+            str(schedule.TimeZone or "").strip(),
+            name,
+        ))
+        self.db.commit()
 
     def create_member(self, member: RosterMember) -> int:
         cursor = self.db.execute("""
