@@ -18,6 +18,14 @@ def _player_name(build: PlayerBuild) -> str:
     )
 
 
+def _player_key(build: PlayerBuild, index: int) -> str:
+    identity = (
+        str(getattr(build, "Name", "") or "").strip()
+        or str(getattr(build, "Gamertag", "") or "").strip()
+    )
+    return identity or f"unnamed-build:{index}"
+
+
 def _build_name(build: PlayerBuild) -> str:
     return str(getattr(build, "BuildName", "") or "").strip() or "Current Build"
 
@@ -41,10 +49,9 @@ def generate_prescribed_roster_from_saved_builds(
 ) -> PrescribedRoster:
     """Create a non-destructive roster prescription from known saved anchors.
 
-    Existing builds are assigned only to compatible role families. Open slots
-    become explicit prescription requirements instead of fabricated players or
-    invented class/race/gear recommendations. Later optimizers can replace the
-    unresolved requirement evidence with canonical candidate recommendations.
+    Existing builds are assigned only to compatible role families and each named
+    saved player can occupy at most one chair even when that player owns many saved
+    builds. Open slots become explicit requirements instead of fabricated players.
     """
 
     slots = tuple(str(value or "").strip() for value in slot_labels)
@@ -55,6 +62,9 @@ def generate_prescribed_roster_from_saved_builds(
     autofill = build_role_compatible_autofill(
         slot_labels=slots,
         build_roles=tuple(getattr(build, "Role", "") for build in saved_builds),
+        build_player_keys=tuple(
+            _player_key(build, index) for index, build in enumerate(saved_builds)
+        ),
     )
 
     assignments: list[PrescribedRosterAssignment] = []
@@ -105,6 +115,7 @@ def generate_prescribed_roster_from_saved_builds(
         assignments=tuple(assignments),
         assumptions=(
             "Saved builds are role-compatible anchors, not proof that their current class, race, gear, or loadout is optimal for the selected goal.",
+            "A saved player may occupy only one roster slot even when multiple builds are available.",
             "Open slots are left unresolved until canonical build/provider candidate evidence can prescribe them.",
         ),
         unresolved=tuple(unresolved),
