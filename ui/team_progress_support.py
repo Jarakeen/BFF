@@ -53,22 +53,10 @@ def _comp_refresh_coverage_with_progress(self, *args) -> None:
     _refresh_comp_progress(self)
 
 
-def _rename_comp_actions_card(page) -> None:
-    for card in page.findChildren(FoundryCard):
-        if card.title_label.text().strip() == "Roster Handoff":
-            card.set_title("Actions")
-            return
-
-
 def _comp_init_with_progress(self, parent=None) -> None:
+    """Comp Builder owns its coverage-card placement; this layer only refreshes it."""
     assert _ORIGINAL_COMP_INIT is not None
     _ORIGINAL_COMP_INIT(self, parent)
-
-    _rename_comp_actions_card(self)
-    card, grid = make_coverage_card()
-    self.progress_coverage_card = card
-    self.progress_coverage_grid = grid
-    self.workspace_layout.insertWidget(0, card)
     _refresh_comp_progress(self)
 
 
