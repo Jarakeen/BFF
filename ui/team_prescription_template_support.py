@@ -4,11 +4,35 @@ from PySide6.QtWidgets import QTableWidgetItem
 
 from engine.config import get_data_dir
 from services.team_prescription import PrescriptionDimension
+from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
+from services.team_prescription_slot_constraints import project_slot_build_constraints
 from services.team_prescription_template_sources import apply_team_template_sources
 
 
 _INSTALLED = False
 _ORIGINAL_GENERATE = None
+
+
+def _ensure_template_base(page) -> None:
+    """Create an honest open-chair base when Hybrid has no saved players yet."""
+
+    if page.current_prescription is not None:
+        return
+    if page._effective_source_mode() != "Hybrid: Players + Recruitment":
+        return
+    goal = page.goal_combo.currentText().strip() or "Custom Goal"
+    base = generate_prescribed_roster_from_saved_builds(
+        name=f"{goal} Prescribed Roster",
+        goal=goal,
+        slot_labels=tuple(page._role_slots()),
+        builds=(),
+        scope=page._prescription_scope(),
+    )
+    build_constraints = page._prescription_build_constraints()
+    page.current_prescription = project_slot_build_constraints(
+        roster=base,
+        constraints=tuple(build_constraints.values()),
+    )
 
 
 def _needs_template_candidates(page) -> bool:
@@ -20,7 +44,6 @@ def _needs_template_candidates(page) -> bool:
     return any(
         assignment.player_name is None
         and assignment.prescribed_build is None
-        and not assignment.changes
         for assignment in prescription.assignments
     )
 
@@ -104,6 +127,7 @@ def _generate_prescription_with_templates(self, *args):
 
     assert _ORIGINAL_GENERATE is not None
     _ORIGINAL_GENERATE(self, *args)
+    _ensure_template_base(self)
     if not _needs_template_candidates(self):
         return
 
