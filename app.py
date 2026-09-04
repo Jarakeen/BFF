@@ -11,6 +11,13 @@ from engine.config import ensure_default_database, get_resource_path
 from services.encounter_schema import ensure_encounter_schema_file
 
 
+_REQUIRED_CANONICAL_TABLES = {
+    "achievement",
+    "achievement_category",
+    "collectible",
+}
+
+
 def _set_windows_app_id() -> None:
     """
     Set the Windows AppUserModelID so the taskbar icon
@@ -93,18 +100,50 @@ def _close_pyinstaller_boot_splash() -> None:
         pass
 
 
-def _prepare_packaged_database() -> bool:
-    """Provision the runtime database and ensure non-destructive encounter tables.
+def _canonical_database_missing_tables(database: Path) -> tuple[str, ...]:
+    """Return required core catalog tables missing from an existing database.
 
-    Source checkouts normally already contain ``data/eso.db`` while frozen builds
-    may provision it from the bundled seed.  In either case, the encounter schema
-    is safe to apply with ``CREATE TABLE IF NOT EXISTS`` and prevents optional
-    Mechanics/Research consumers from crashing the whole application merely
-    because the local database predates the encounter layer.
+    This guard deliberately runs before encounter schema migration.  A missing
+    source-checkout database must never be silently replaced by a new SQLite
+    file containing only the optional encounter tables.
+    """
+
+    if not database.is_file():
+        raise FileNotFoundError(f"Canonical ESO database does not exist: {database}")
+
+    connection = sqlite3.connect(database)
+    try:
+        names = {
+            str(row[0])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+    finally:
+        connection.close()
+
+    return tuple(sorted(_REQUIRED_CANONICAL_TABLES - names))
+
+
+def _prepare_packaged_database() -> bool:
+    """Provision/validate the canonical database, then extend encounter schema.
+
+    Frozen builds may provision the canonical DB from their bundled seed. Source
+    checkouts must already have their real local ``data/eso.db``. In either case
+    we require core achievement/collectible catalog tables before adding or
+    extending encounter tables, so a missing DB can never turn into an empty
+    replacement database during startup.
     """
 
     try:
         database = ensure_default_database()
+        missing = _canonical_database_missing_tables(database)
+        if missing:
+            raise sqlite3.DatabaseError(
+                "Canonical ESO database is missing core table(s): "
+                + ", ".join(missing)
+                + f". Database: {database}"
+            )
         ensure_encounter_schema_file(database)
         return True
     except (OSError, sqlite3.Error) as exc:
@@ -112,10 +151,10 @@ def _prepare_packaged_database() -> bool:
         QMessageBox.critical(
             None,
             "FoundryDock data unavailable",
-            "FoundryDock could not prepare its ESO database.\n\n"
-            "Please extract the complete BFF-Friend.zip into a normal folder "
-            "and run FoundryDock.exe from that folder. Administrator access is "
-            "not required.\n\n"
+            "FoundryDock could not prepare its canonical ESO database.\n\n"
+            "The application will not create or use an empty replacement database. "
+            "Restore the real data\\eso.db for this FoundryDock checkout, then start "
+            "the app again.\n\n"
             f"Details: {exc}",
         )
         return False
