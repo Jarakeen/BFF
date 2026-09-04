@@ -111,15 +111,17 @@ class CompBuilderPage(FoundryPage):
         matrix_actions_layout.addWidget(self.reset_button)
         self.matrix_card.set_header_action(matrix_actions)
 
-        self.matrix_table = QTableWidget(0, 6)
+        self.matrix_table = QTableWidget(0, 8)
         self.matrix_table.setHorizontalHeaderLabels(
             (
                 "SLOT",
                 "ROLE",
                 "PREFERRED CLASS",
                 "ALTERNATIVES",
-                "RESPONSIBILITIES",
+                "REQUIRED",
+                "OPTIONAL / FLEX",
                 "PROVIDERS",
+                "MECHANIC JOBS",
             )
         )
         self.matrix_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -127,7 +129,7 @@ class CompBuilderPage(FoundryPage):
         self.matrix_table.setAlternatingRowColors(True)
         self.matrix_table.verticalHeader().setVisible(False)
         self.matrix_table.horizontalHeader().setStretchLastSection(True)
-        self.matrix_table.setMinimumHeight(500)
+        self.matrix_table.setMinimumHeight(560)
         self.matrix_card.addWidget(self.matrix_table)
         top.addWidget(self.matrix_card, 7)
 
@@ -162,14 +164,14 @@ class CompBuilderPage(FoundryPage):
         coverage_card.addWidget(self.coverage_label)
         bottom.addWidget(coverage_card, 2)
 
-        actions_card = FoundryCard("Roster Handoff", "➜")
+        actions_card = FoundryCard("Actions", "➜")
         name_row = QHBoxLayout()
         name_row.addWidget(QLabel("PLAN NAME"))
         self.plan_name_input = QLineEdit()
         name_row.addWidget(self.plan_name_input, 1)
         actions_card.addLayout(name_row)
         note = QLabel(
-            "This sends composition requirements to Roster. It does not invent players or complete builds."
+            "Edit chair duties here. Send the requirements to Roster when the composition is ready; no player or complete build is fabricated."
         )
         note.setWordWrap(True)
         actions_card.addWidget(note)
@@ -245,11 +247,11 @@ class CompBuilderPage(FoundryPage):
         )
         self.summary_label.setText(
             "Manual composition\n2 Tanks • 2 Healers • 8 Damage Dealers\n\n"
-            "No external class recommendation is being asserted for this matrix."
+            "No external class, provider, or mechanic recommendation is being asserted for this matrix."
         )
         self.evidence_text.setPlainText(
             "No published composition evidence is attached to this manual matrix.\n\n"
-            "Choose classes and responsibilities deliberately. BFF will preserve this as a roster-plan requirement, not a complete build."
+            "Choose classes, required duties, optional flex duties, provider obligations, and mechanic jobs deliberately. BFF preserves them as roster-plan requirements, not complete builds."
         )
         self._refresh_coverage()
         self.recommended_button.setEnabled(self._matching_template() is not None)
@@ -269,7 +271,7 @@ class CompBuilderPage(FoundryPage):
             f"{len(template.slots)} raid chairs\n"
             f"Catalog: {template.catalog_version}\n"
             f"Game update: {template.game_update}\n\n"
-            "This is composition evidence, not a complete build prescription."
+            "Class evidence and planning responsibilities are separate from complete build prescriptions."
         )
         evidence: list[str] = []
         for source in template.sources:
@@ -284,6 +286,13 @@ class CompBuilderPage(FoundryPage):
         self.evidence_text.setPlainText("\n".join(evidence).strip() or "No source metadata recorded.")
         self.recommended_button.setEnabled(True)
         self._refresh_coverage()
+
+    def _editable_text_cell(self, row: int, column: int, value: str, placeholder: str) -> None:
+        field = QLineEdit()
+        field.setText(value)
+        field.setPlaceholderText(placeholder)
+        field.textChanged.connect(self._refresh_coverage)
+        self.matrix_table.setCellWidget(row, column, field)
 
     def _render_slots(self, slots: tuple[CompositionSlot, ...]) -> None:
         self.matrix_table.setRowCount(len(slots))
@@ -304,20 +313,41 @@ class CompBuilderPage(FoundryPage):
                 3,
                 QTableWidgetItem(", ".join(slot.alternative_classes) or "Flexible"),
             )
-            self.matrix_table.setItem(
+            self._editable_text_cell(
                 row,
                 4,
-                QTableWidgetItem(" • ".join(slot.responsibilities) or "Open responsibility"),
+                " • ".join(slot.required_responsibilities),
+                "Required chair duties",
             )
-            self.matrix_table.setItem(
+            self._editable_text_cell(
                 row,
                 5,
-                QTableWidgetItem(" • ".join(slot.provider_requirements) or "—"),
+                " • ".join(slot.optional_responsibilities),
+                "Optional / flex duties",
+            )
+            self._editable_text_cell(
+                row,
+                6,
+                " • ".join(slot.provider_requirements),
+                "Buff, debuff, or utility obligations",
+            )
+            self._editable_text_cell(
+                row,
+                7,
+                " • ".join(slot.mechanic_jobs),
+                "Portal, kite, tombs, add duty, etc.",
             )
 
     def _selected_class(self, row: int) -> str:
         combo = self.matrix_table.cellWidget(row, 2)
         return combo.currentText().strip() if isinstance(combo, QComboBox) else "Any class"
+
+    def _cell_text(self, row: int, column: int) -> str:
+        widget = self.matrix_table.cellWidget(row, column)
+        if isinstance(widget, QLineEdit):
+            return widget.text().strip()
+        item = self.matrix_table.item(row, column)
+        return item.text().strip() if item is not None else ""
 
     def _refresh_coverage(self, *_args) -> None:
         classes = Counter(
@@ -331,17 +361,30 @@ class CompBuilderPage(FoundryPage):
             else "No class requirements selected"
         )
 
-        providers: list[str] = []
-        for row in range(self.matrix_table.rowCount()):
-            item = self.matrix_table.item(row, 5)
-            if item is None:
-                continue
-            text = item.text().strip()
-            if text and text != "—":
-                providers.append(text)
-        provider_summary = "\n".join(f"• {value}" for value in providers) if providers else "• No explicit providers recorded"
+        providers = [
+            value
+            for row in range(self.matrix_table.rowCount())
+            if (value := self._cell_text(row, 6))
+        ]
+        jobs = [
+            value
+            for row in range(self.matrix_table.rowCount())
+            if (value := self._cell_text(row, 7))
+        ]
+        provider_summary = (
+            "\n".join(f"• {value}" for value in providers)
+            if providers
+            else "• No explicit providers recorded"
+        )
+        job_summary = (
+            "\n".join(f"• {value}" for value in jobs)
+            if jobs
+            else "• No mechanic jobs assigned yet"
+        )
         self.coverage_label.setText(
-            f"CLASS MIX\n{class_summary}\n\nDECLARED PROVIDER RESPONSIBILITIES\n{provider_summary}"
+            f"CLASS MIX\n{class_summary}\n\n"
+            f"DECLARED PROVIDER RESPONSIBILITIES\n{provider_summary}\n\n"
+            f"MECHANIC JOBS\n{job_summary}"
         )
 
     def _send_to_roster(self, *_args) -> None:
@@ -349,14 +392,17 @@ class CompBuilderPage(FoundryPage):
         plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
         slots: list[GeneratedRosterPlanSlot] = []
         for row in range(self.matrix_table.rowCount()):
-            slot_name = self.matrix_table.item(row, 0).text()
+            slot_name = self._cell_text(row, 0)
             eso_class = self._selected_class(row)
-            alternatives = self.matrix_table.item(row, 3).text()
-            responsibilities = self.matrix_table.item(row, 4).text()
-            providers = self.matrix_table.item(row, 5).text()
+            alternatives = self._cell_text(row, 3) or "Flexible"
+            required = self._cell_text(row, 4) or "Open responsibility"
+            optional = self._cell_text(row, 5) or "None declared"
+            providers = self._cell_text(row, 6) or "None declared"
+            mechanic_jobs = self._cell_text(row, 7) or "None declared"
             detail = (
                 f"Composition requirement. Alternatives: {alternatives}. "
-                f"Responsibilities: {responsibilities}. Providers: {providers}."
+                f"Required: {required}. Optional/flex: {optional}. "
+                f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
             )
             concrete = eso_class != "Any class"
             slots.append(
