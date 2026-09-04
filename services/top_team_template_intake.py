@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from pathlib import Path
 
 from models.top_team_model import TopTeamPlayer, TopTeamResult
 from services.team_prescription_observed_templates import (
@@ -8,6 +9,9 @@ from services.team_prescription_observed_templates import (
     ObservedTeamTemplateStore,
 )
 from services.top_team_service import TopTeamService
+
+
+OBSERVED_TEAM_TEMPLATE_FILENAME = "team_prescription_observed_templates.json"
 
 
 @dataclass(frozen=True)
@@ -31,6 +35,16 @@ class TopTeamTemplateIntake:
     def __init__(self, store: ObservedTeamTemplateStore):
         self.store = store
 
+    @classmethod
+    def for_data_dir(cls, data_dir: str | Path) -> "TopTeamTemplateIntake":
+        """Construct the standard user-curated template intake for the app data dir."""
+
+        return cls(
+            ObservedTeamTemplateStore(
+                Path(data_dir) / OBSERVED_TEAM_TEMPLATE_FILENAME
+            )
+        )
+
     def add_player(
         self,
         *,
@@ -42,7 +56,6 @@ class TopTeamTemplateIntake:
         source_score: float = 100.0,
         include_mundus: bool = True,
     ) -> TopTeamTemplateIntakeResult:
-        source_player = player
         mundus_lookup_requested = bool(include_mundus and not player.Mundus.strip())
         mundus = player.Mundus.strip()
 
@@ -64,7 +77,6 @@ class TopTeamTemplateIntake:
 
         # The fetched Performance result remains evidence of the original API
         # response. Optional enrichment belongs only to the curated template.
-        assert source_player is player
         return TopTeamTemplateIntakeResult(
             template=template,
             mundus_lookup_requested=mundus_lookup_requested,
