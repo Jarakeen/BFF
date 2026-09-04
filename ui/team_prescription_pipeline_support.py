@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from engine.config import get_data_dir
 from services.team_prescription_generator import generate_prescribed_roster_from_saved_builds
 from services.team_prescription_pipeline import run_automatic_team_prescription_candidate_pipeline
 from services.team_prescription_preview import format_prescribed_roster_preview
@@ -93,10 +94,9 @@ def _generate_prescription_preview(self, *_args):
         )
         return
 
-    # Lock Players preserves the existing deterministic saved anchors. Without
-    # that lock, tanks remain anchors because BFF does not yet have an authoritative
-    # scalar tank-ranking objective; healer/DD chairs are left open for the real
-    # objective pipeline below.
+    # Lock Players preserves deterministic saved anchors. Without that lock, tanks
+    # remain anchors because BFF does not yet have an authoritative scalar tank
+    # ranking objective; healer/DD chairs are evaluated by the real candidate path.
     anchor_builds = (
         saved_builds
         if self.constraint_boxes["Lock Players"].isChecked()
@@ -116,7 +116,7 @@ def _generate_prescription_preview(self, *_args):
     else:
         evaluator = SavedBuildPrescriptionObjectiveEvaluator(
             build_service=self.build_service,
-            database_path=self.build_service.canonical.database_path,
+            database_path=get_data_dir() / "eso.db",
             settings=SavedBuildPrescriptionEvaluationSettings(),
         )
         pipeline = run_automatic_team_prescription_candidate_pipeline(
@@ -136,9 +136,11 @@ def _generate_prescription_preview(self, *_args):
     message = (
         f"Generated {goal} prescription: {saved_count} saved player(s) assigned, "
         f"{unresolved_count} roster requirement(s) remain. "
-        "Healers use modeled verified-heal potency; DDs use the canonical standardized "
-        "single-event damage comparison with Phase 4 sustain gates. Tanks are not ranked "
-        "until an authoritative tank objective exists."
+        "Healers use modeled verified-heal potency; DDs use a magical standardized "
+        "single-event comparison against 18,200 resistance with Phase 4 sustain gates. "
+        "That DD number is not rotation DPS. Tanks remain role-compatible anchors until "
+        "an authoritative tank objective exists. Encounter-provider allocation also stays "
+        "explicit until this page has a canonical encounter selection."
     )
     if unresolved_count or source_unresolved:
         self.status.warning(message)
