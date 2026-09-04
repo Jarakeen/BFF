@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "catalog_version": "2026-09-04-u50-godslayer-1",
+  "game_update": "Update 50",
+  "templates": [
+    {
+      "template_id": "u50-gs-main-tank-dk",
+      "name": "U50 Godslayer Main Tank",
+      "source_name": "The Tank Club 2026 Trial Tank Rankings",
+      "source_url": "https://thetankclub.com/eso-tank-class/",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"Main Tank": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "reference class foundation only; exact Sunspire skills, gear, traits, enchants, CP, food, potion, race, and subclass lines remain unresolved",
+        "BTV Sunspire top-comp tank is reported as subclassed without exposing its base-class mix"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Main Tank",
+        "EsoClass": "Dragonknight",
+        "Role": "Tank"
+      }
+    },
+    {
+      "template_id": "u50-gs-off-tank-sorc",
+      "name": "U50 Godslayer Off Tank",
+      "source_name": "The Tank Club 2026 Trial Tank Rankings",
+      "source_url": "https://thetankclub.com/eso-tank-class/",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"Off Tank": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "reference class foundation only; exact Sunspire skills, gear, traits, enchants, CP, food, potion, race, and subclass lines remain unresolved",
+        "Tank Club identifies Sorcerer and Necromancer as the strongest current trial Off Tank foundations"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Off Tank",
+        "EsoClass": "Sorcerer",
+        "Role": "Tank"
+      }
+    },
+    {
+      "template_id": "u50-gs-healer-warden",
+      "name": "U50 Godslayer Warden Healer",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"Healer 1": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete healer build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Warden Healer",
+        "EsoClass": "Warden",
+        "Role": "Healer"
+      }
+    },
+    {
+      "template_id": "u50-gs-healer-arcanist",
+      "name": "U50 Godslayer Arcanist Healer",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"Healer 2": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete healer build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Arcanist Healer",
+        "EsoClass": "Arcanist",
+        "Role": "Healer"
+      }
+    },
+    {
+      "template_id": "u50-gs-dd-dragonknight",
+      "name": "U50 Godslayer Dragonknight DD",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"DD 1": 100, "DD 2": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete DD build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Dragonknight DD",
+        "EsoClass": "Dragonknight",
+        "Role": "DD"
+      }
+    },
+    {
+      "template_id": "u50-gs-dd-necromancer",
+      "name": "U50 Godslayer Necromancer DD",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"DD 3": 100, "DD 4": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete DD build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Necromancer DD",
+        "EsoClass": "Necromancer",
+        "Role": "DD"
+      }
+    },
+    {
+      "template_id": "u50-gs-dd-sorcerer",
+      "name": "U50 Godslayer Sorcerer DD",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"DD 5": 100, "DD 6": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete DD build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Sorcerer DD",
+        "EsoClass": "Sorcerer",
+        "Role": "DD"
+      }
+    },
+    {
+      "template_id": "u50-gs-dd-nightblade",
+      "name": "U50 Godslayer Nightblade DD",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"DD 7": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete DD build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Nightblade DD",
+        "EsoClass": "Nightblade",
+        "Role": "DD"
+      }
+    },
+    {
+      "template_id": "u50-gs-dd-templar",
+      "name": "U50 Godslayer Templar DD",
+      "source_name": "BTV Tools Sunspire Most Run Comp",
+      "source_url": "https://www.btvtools.com/database/trials/sunspire",
+      "retrieved_at": "2026-09-04",
+      "base_score": 10,
+      "slot_scores": {"DD 8": 100},
+      "goal_scores": {"Godslayer": 25},
+      "complete_build": false,
+      "unresolved": [
+        "BTV comp evidence supplies class/role frequency, not a complete DD build snapshot",
+        "gear, traits, enchants, CP, food, potion, race, skills, and subclass details remain unresolved"
+      ],
+      "build": {
+        "Name": "Published Reference Template",
+        "BuildName": "U50 Godslayer Templar DD",
+        "EsoClass": "Templar",
+        "Role": "DD"
+      }
+    }
+  ]
+}
