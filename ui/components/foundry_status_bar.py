@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QToolButton,
+    QSizePolicy,
 )
 
 from ui.theme.fonts import Fonts
@@ -65,6 +66,13 @@ class FoundryStatusBar(QWidget):
             "statusMessage",
             True,
         )
+        # Status text is transient information, not a layout constraint. Long
+        # optimizer/audit messages must never force an entire Foundry page wider.
+        self.message.setMinimumWidth(0)
+        self.message.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Preferred,
+        )
 
         #
         # Center (optional)
@@ -85,6 +93,11 @@ class FoundryStatusBar(QWidget):
         self.center_label.setProperty(
             "statusCenter",
             True,
+        )
+        self.center_label.setMinimumWidth(0)
+        self.center_label.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Preferred,
         )
 
         #
@@ -150,6 +163,7 @@ class FoundryStatusBar(QWidget):
     ):
 
         self.center_label.setText(text)
+        self.center_label.setToolTip(text)
 
     def add_action(
         self,
@@ -199,7 +213,7 @@ class FoundryStatusBar(QWidget):
             "info",
         )
 
-        self.message.setText(text)
+        self._set_message(text)
 
         self._refresh()
 
@@ -215,7 +229,7 @@ class FoundryStatusBar(QWidget):
             "success",
         )
 
-        self.message.setText(text)
+        self._set_message(text)
 
         self._refresh()
 
@@ -231,7 +245,7 @@ class FoundryStatusBar(QWidget):
             "warning",
         )
 
-        self.message.setText(text)
+        self._set_message(text)
 
         self._refresh()
 
@@ -247,13 +261,18 @@ class FoundryStatusBar(QWidget):
             "error",
         )
 
-        self.message.setText(text)
+        self._set_message(text)
 
         self._refresh()
 
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
+
+    def _set_message(self, text: str) -> None:
+        value = str(text or "")
+        self.message.setText(value)
+        self.message.setToolTip(value)
 
     def _refresh(self):
 
