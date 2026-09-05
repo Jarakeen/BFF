@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QScrollArea
+from PySide6.QtWidgets import QLabel
 
 from ui.components.foundry_card import FoundryCard
 
@@ -60,9 +60,9 @@ def _refresh_assignment_cue(page) -> None:
 
 
 def _install_assignment_cue(page) -> None:
-    # The selected matrix row and the source-build block share one accent treatment.
-    # This is a visual relationship only; assignment still uses the tested candidate
-    # application path and the explicit build picker controls which candidate is used.
+    # The selected matrix row and source-build controls share one accent treatment.
+    # Keep this cue fixed above the scrollable evidence so the assignment relationship
+    # is always visible, regardless of how long the ESO Logs report becomes.
     page.matrix_table.setProperty("compAssignmentTarget", True)
 
     candidate_label = getattr(page, "comp_build_candidates_label", None)
@@ -72,18 +72,15 @@ def _install_assignment_cue(page) -> None:
     details = _details_card(page)
     if details is not None:
         details.setProperty("compAssignmentSourceCard", True)
-        scroll = next(iter(details.findChildren(QScrollArea)), None)
-        body = scroll.widget() if scroll is not None else None
-        layout = body.layout() if body is not None else None
-        if layout is not None:
+        picker_host = getattr(page, "comp_candidate_picker_host", None)
+        picker_layout = picker_host.layout() if picker_host is not None else None
+        if picker_layout is not None:
             cue = QLabel()
             cue.setWordWrap(True)
             cue.setProperty("compAssignmentCue", True)
-            picker_label = getattr(page, "comp_candidate_choice_label", None)
-            picker_index = layout.indexOf(picker_label) if picker_label is not None else -1
-            candidate_index = layout.indexOf(candidate_label) if candidate_label is not None else -1
-            insert_at = picker_index if picker_index >= 0 else (candidate_index if candidate_index >= 0 else 0)
-            layout.insertWidget(insert_at, cue)
+            # BUILD CHOICE label stays first, then the live selected-build/target cue,
+            # then the actual dropdown. All three remain pinned above the catalog.
+            picker_layout.insertWidget(1, cue)
             page.comp_assignment_cue_label = cue
 
     page.matrix_table.currentCellChanged.connect(
