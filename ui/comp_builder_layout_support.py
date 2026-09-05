@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLayout, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QLayout, QTextEdit
 
 from ui.components.foundry_card import FoundryCard
 
@@ -26,7 +26,6 @@ def _card_any(page, *titles: str) -> FoundryCard | None:
 
 
 def _detach_layout_items(layout: QLayout) -> None:
-    """Detach existing layout items without deleting their widgets."""
     while layout.count():
         item = layout.takeAt(0)
         nested = item.layout()
@@ -54,10 +53,10 @@ def _install_layout(page) -> None:
     root.setSpacing(10)
     root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    # One vertical reading direction only. FoundryPage already provides the page's
-    # vertical scrollbar and explicitly disables horizontal scrolling.
-    actions.setMinimumHeight(145)
-    actions.setMaximumHeight(175)
+    # Composition Style adds one compact selector and a wrapped explanation. Grow
+    # downward instead of forcing another horizontal row into the page.
+    actions.setMinimumHeight(205)
+    actions.setMaximumHeight(245)
     root.addWidget(actions, 0)
 
     matrix.setMinimumHeight(470)
@@ -68,9 +67,6 @@ def _install_layout(page) -> None:
     coverage.setMaximumHeight(235)
     root.addWidget(coverage, 0)
 
-    # Selected-chair duties, hard build ingredients, candidates and ESO Logs
-    # evidence belong together. Let this card grow naturally and keep its existing
-    # internal scroll area as a second safety valve for very verbose evidence.
     details.setMinimumHeight(520)
     details.setMaximumHeight(760)
     root.addWidget(details, 0)
@@ -81,9 +77,6 @@ def _install_layout(page) -> None:
         text.setMinimumHeight(110)
         text.setMaximumHeight(160)
     root.addWidget(evidence, 0)
-
-    # The workspace is intentionally taller than the viewport. Vertical page
-    # scrolling is expected; horizontal page/table scrolling is not.
     root.addStretch(1)
 
 
