@@ -25,15 +25,18 @@ def test_raid_engine_menu_matches_workflow_order():
     ]
 
 
-def test_help_guide_is_nested_under_settings_navigation():
-    settings = next(
-        item for item in CORE_NAV_SECTIONS
-        if isinstance(item, dict) and item.get("label") == "Settings"
-    )
-    assert settings["page"] == "settings"
-    assert settings["children"] == [("Help & Guide", "help")]
+def test_help_guide_is_not_a_global_sidebar_destination():
+    assert ("Settings", "settings") in CORE_NAV_SECTIONS
     assert not any(
-        isinstance(item, tuple) and len(item) >= 2 and item[1] == "help"
+        (
+            isinstance(item, tuple)
+            and len(item) >= 2
+            and item[1] == "help"
+        )
+        or (
+            isinstance(item, dict)
+            and any(page == "help" for _label, page in item.get("children", []))
+        )
         for item in CORE_NAV_SECTIONS
     )
 
