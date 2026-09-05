@@ -106,8 +106,13 @@ class CompBuilderBuildCandidateService:
             sorted(
                 candidates,
                 key=lambda item: (
-                    -item.score,
+                    # Source precedence is intentional. A matching saved BFF build
+                    # is concrete user-owned evidence and should surface before a
+                    # published reference template. Relevance score ranks candidates
+                    # within that source tier; it must not let a catalog slot bonus
+                    # leapfrog an eligible saved build.
                     0 if item.source_kind == "saved_build" else 1,
+                    -item.score,
                     item.name.casefold(),
                     item.candidate_id.casefold(),
                 ),
