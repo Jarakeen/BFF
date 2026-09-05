@@ -37,6 +37,38 @@ def _matching_template_for_selected_trial(self):
     return None
 
 
+def _chair_candidates_for_selected_trial(page, row: int):
+    if row < 0:
+        return ()
+
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    role = page._cell_text(row, 1)
+    preferred_class = page._selected_class(row) or "Any class"
+    trial_name = trial_for_selection(page.goal_combo.currentText())
+    goal = default_goal_for_trial(trial_name)
+
+    evidence = getattr(page, "_esologs_observed_evidence", None)
+    observed = evidence.slot(slot_name) if evidence is not None else None
+    observed_gear = (
+        tuple(name for name, _count in observed.observed_gear_sets)
+        if observed is not None
+        else ()
+    )
+    observed_skills = (
+        tuple(name for name, _count in observed.observed_abilities)
+        if observed is not None
+        else ()
+    )
+    return page._comp_build_candidate_service.candidates_for_chair(
+        goal=goal,
+        slot_name=slot_name,
+        role=role,
+        preferred_class=preferred_class,
+        observed_gear_sets=observed_gear,
+        observed_skills=observed_skills,
+    )
+
+
 def _rename_goal_context_to_trial(page) -> None:
     host = page.goal_combo.parentWidget()
     if host is None:
@@ -51,7 +83,6 @@ def _refresh_sources_for_trial(page) -> None:
     if getattr(page, "_comp_trial_refresh_in_progress", False):
         return
     page._comp_trial_refresh_in_progress = True
-    trial_name = trial_for_selection(page.goal_combo.currentText())
     try:
         # Saved roster builds and versioned reference catalogs are local and are
         # re-queried by the candidate/picker refresh. ESO Logs is the live source.
@@ -124,9 +155,16 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from ui import comp_builder_build_candidate_support as candidate_support
+    from ui import comp_builder_esologs_support as esologs_support
     from ui.comp_builder_page import CompBuilderPage
 
     CompBuilderPage._matching_template = _matching_template_for_selected_trial
+    candidate_support._chair_candidates = _chair_candidates_for_selected_trial
+    esologs_support._current_trial = (
+        lambda page: trial_for_selection(page.goal_combo.currentText())
+    )
+
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     CompBuilderPage.__init__ = _comp_init_with_trial_flow
     _INSTALLED = True
