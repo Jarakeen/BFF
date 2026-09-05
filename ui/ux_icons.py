@@ -35,6 +35,7 @@ _EXACT = {
     "coverage": "compass",
     "combat reference": "open-book",
     "reference data": "reference",
+    "characters": "character",
     "builds": "builds",
     "rotations": "rotations",
     "performance": "capabilities",
