@@ -35,6 +35,7 @@ from ui.components.foundry_sidebar import FoundrySidebar
 from ui.coverage_page import CoveragePage
 from ui.encounters_page import EncountersPage
 from ui.foundry_page import FoundryPage
+from ui.gear_lookup_page import GearLookupPage
 from ui.incident_page import IncidentPage
 from ui.mechanics_page import MechanicsPage
 from ui.operations_console import OperationsConsole
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
             "console:6": optimization_page,
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
+            "gear_lookup": GearLookupPage(),
             "timers": AsylumPerfectaTimerPage(),
             "settings": SettingsPage(),
             "incident": IncidentPage(),
@@ -355,6 +357,21 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(self.page_containers["collectibles_browser"])
             return
 
+        # A couple of sidebar entries intentionally expose a focused view of an
+        # existing page instead of manufacturing duplicate stateful pages.
+        if page_name == "scribed_skills":
+            builds_page = self.pages.get("console:2")
+            if builds_page is not None and hasattr(builds_page, "build_tabs"):
+                builds_page.build_tabs.setCurrentIndex(3)
+            self.sidebar.set_current(page_name)
+            self.stack.setCurrentWidget(self.page_containers["console:2"])
+            return
+
+        if page_name == "tools:reference_data":
+            self.sidebar.set_current(page_name)
+            self.stack.setCurrentWidget(self.page_containers["console:8"])
+            return
+
         if page_name not in self.page_containers:
             print(f"[FoundryDock] Unknown navigation page: {page_name}")
             return
@@ -367,6 +384,8 @@ class MainWindow(QMainWindow):
             self._refresh_collectibles_for_active_profile()
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
+        elif page_name == "gear_lookup":
+            self.pages["gear_lookup"].refresh()
         elif page_name == "timers":
             self.pages["timers"].refresh_context()
 
