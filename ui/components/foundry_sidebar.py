@@ -26,48 +26,43 @@ from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_label, semantic_icon, set_button_icon
 
 
-BROADCAST_NAV_SECTION = {"label": "Broadcast", "children": [
-    ("Broadcast Desk", "broadcast"),
-    ("Field Notes", "field_office"),
-    ("Live Operations", "live_operations"),
-    ("Archive", "archive"),
-]}
+BROADCAST_NAV_SECTION = ("Broadcast", "broadcast", "header")
 
 CORE_NAV_SECTIONS = [
-    ("Achievements", "achievements", "header"),
-    {"label": "Collections", "page": "collectibles", "children": [
-        ("Mounts", "collectibles:Mounts"), ("Pets", "collectibles:Pets"),
-        ("Allies / Assistants", "collectibles:Allies / Assistants"), ("Houses", "collectibles:Houses"),
-        ("Costumes", "collectibles:Costumes"), ("Skins", "collectibles:Skins"),
-        ("Polymorphs", "collectibles:Polymorphs"), ("Personalities", "collectibles:Personalities"),
-        ("Hairstyles & Adornments", "collectibles:Hairstyles & Adornments"), ("Mementos", "collectibles:Mementos"),
-        ("Emotes", "collectibles:Emotes"), ("Customized Actions", "collectibles:Customized Actions"),
-        ("Weapon Styles", "collectibles:Weapon Styles"), ("Armor Styles", "collectibles:Armor Styles"),
-        ("Furnishings", "collectibles:Furnishings"), ("Fragments", "collectibles:Fragments"),
-        ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
+    {"label": "Roster", "children": [
+        ("Characters", "roster_page"),
+        ("Builds", "console:2"),
     ]},
     {"label": "Raid Engine", "children": [
-        ("Overview", "operations_console"),
-        ("Builds", "console:2"),
-        ("Rotations", "rotations"),
-        ("Comp Builder", "comp_builder"),
-        ("Roster", "roster_page"),
+        ("Comp Maker", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
-        ("Encounters", "console:1"),
         ("Performance", "console:3"),
+    ]},
+    {"label": "Mechanics", "children": [
         ("Mechanics", "console:4"),
+        ("Encounters", "console:1"),
         ("Reference Data", "console:8"),
-        ("Timers", "timers"),
+        ("Rotations", "rotations"),
+    ]},
+    {"label": "Tools", "children": [
+        ("Gear Lookup", "gear_lookup"),
+        ("Scribed Skills", "scribed_skills"),
+        ("Reference Data", "tools:reference_data"),
+        ("vAS2 Timer", "timers"),
+    ]},
+    {"label": "Collections", "children": [
+        ("Achievements", "achievements"),
+        ("Collectibles", "collectibles"),
     ]},
     ("Settings", "settings"),
 ]
 
 
 def nav_sections(include_broadcast: bool) -> list:
-    if include_broadcast:
-        return [BROADCAST_NAV_SECTION, *CORE_NAV_SECTIONS]
-    return list(CORE_NAV_SECTIONS)
+    if not include_broadcast:
+        return list(CORE_NAV_SECTIONS)
+    return [*CORE_NAV_SECTIONS[:-1], BROADCAST_NAV_SECTION, CORE_NAV_SECTIONS[-1]]
 
 
 class FoundrySidebar(QWidget):
