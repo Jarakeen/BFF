@@ -126,3 +126,61 @@ def test_mapped_provider_requirement_leaves_chair_open_when_no_candidate_proves_
     assert result.assignments[0].candidate is None
     assert result.provider_blocked_slots == ("Healer 1",)
     assert result.unresolved_slots == ("Healer 1",)
+
+
+def test_raid_wide_provider_requirement_prefers_team_coverage_over_relevance() -> None:
+    raw = _candidate("raw", player="Raw", score=500)
+    courage = _candidate("courage", player="Courage", score=100)
+    second = _candidate("second", player="Second", score=90)
+
+    result = optimize_comp_team_candidates(
+        pools=(
+            CompTeamCandidatePool("Healer 1", (raw, courage)),
+            CompTeamCandidatePool("Healer 2", (second,)),
+        ),
+        provider_ids_by_candidate={
+            "raw": (),
+            "courage": ("major_courage",),
+            "second": (),
+        },
+        required_team_provider_ids=("major_courage",),
+    )
+
+    selected = {row.slot_name: row.candidate.candidate_id for row in result.assignments}
+    assert selected == {"Healer 1": "courage", "Healer 2": "second"}
+    assert result.uncovered_team_provider_ids == ()
+
+
+def test_raid_wide_provider_requirement_respects_precovered_manual_assignment() -> None:
+    raw = _candidate("raw", player="Raw", score=500)
+    courage = _candidate("courage", player="Courage", score=100)
+
+    result = optimize_comp_team_candidates(
+        pools=(CompTeamCandidatePool("Healer 2", (raw, courage)),),
+        provider_ids_by_candidate={
+            "raw": (),
+            "courage": ("major_courage",),
+        },
+        required_team_provider_ids=("major_courage",),
+        already_covered_team_provider_ids=("major_courage",),
+    )
+
+    assert result.assignments[0].candidate.candidate_id == "raw"
+    assert result.uncovered_team_provider_ids == ()
+
+
+def test_impossible_raid_wide_provider_requirement_is_reported_without_emptying_roster() -> None:
+    first = _candidate("first", player="First", score=100)
+    second = _candidate("second", player="Second", score=90)
+
+    result = optimize_comp_team_candidates(
+        pools=(
+            CompTeamCandidatePool("Healer 1", (first,)),
+            CompTeamCandidatePool("Healer 2", (second,)),
+        ),
+        provider_ids_by_candidate={"first": (), "second": ()},
+        required_team_provider_ids=("major_courage",),
+    )
+
+    assert result.applied_count == 2
+    assert result.uncovered_team_provider_ids == ("major_courage",)
