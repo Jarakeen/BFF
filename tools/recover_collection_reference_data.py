@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE
 from importers.learned_recipe_importer import UespLearnedRecipeImporter
 from importers.lorebook_importer import UespLorebookImporter
+from services.eso_collectible_database_service import EsoCollectibleDatabaseService
 
 
 _JSON_HINTS = ("recipe", "furnish", "book", "lore")
@@ -29,8 +30,7 @@ def _candidate_files(root: Path, suffixes: set[str], hints: tuple[str, ...]) -> 
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix.casefold() not in suffixes:
             continue
-        name = path.name.casefold()
-        if any(hint in name for hint in hints):
+        if any(hint in path.name.casefold() for hint in hints):
             files.append(path)
     return sorted(files)
 
@@ -45,9 +45,16 @@ def _looks_like_recipe_export(path: Path) -> bool:
     records = payload.get("minedItemSummary")
     if not isinstance(records, list) or not records:
         return False
-    prefixes = ("Recipe:", "Blueprint:", "Praxis:", "Diagram:", "Pattern:", "Design:", "Formula:", "Sketch:")
+    prefixes = (
+        "Recipe:", "Blueprint:", "Praxis:", "Diagram:",
+        "Pattern:", "Design:", "Formula:", "Sketch:",
+    )
     sample = records[: min(len(records), 5000)]
-    return any(str(row.get("name") or "").startswith(prefixes) for row in sample if isinstance(row, dict))
+    return any(
+        str(row.get("name") or "").startswith(prefixes)
+        for row in sample
+        if isinstance(row, dict)
+    )
 
 
 def _looks_like_lorebook_export(path: Path) -> bool:
@@ -83,8 +90,7 @@ def _discover(project_root: Path) -> dict[str, list[Path]]:
     lorebook_candidates: list[Path] = []
     furnishing_candidates: list[Path] = []
 
-    roots = [project_root / name for name in _SCAN_ROOT_NAMES]
-    for root in roots:
+    for root in (project_root / name for name in _SCAN_ROOT_NAMES):
         for path in _candidate_files(root, {".json"}, _JSON_HINTS):
             if _looks_like_recipe_export(path):
                 recipe_candidates.append(path)
@@ -123,6 +129,130 @@ def _count(connection: sqlite3.Connection, table: str, where: str = "", params: 
         return 0
 
 
+def _as_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _as_bool(value) -> int:
+    return 1 if str(value or "").strip().casefold() in {"1", "yes", "true"} else 0
+
+
+def _restore_furnishings_from_collectible_source(database: Path) -> tuple[int, int]:
+    """Backfill Furniture collectibles from preserved entity/entity_source rows.
+
+    This uses UPDATE/INSERT rather than INSERT OR REPLACE so existing
+    collectible_progress rows are not deleted by SQLite replacement semantics.
+    """
+    service = EsoCollectibleDatabaseService(database)
+    service.close()
+
+    restored = 0
+    source_rows = 0
+    with sqlite3.connect(database) as connection:
+        connection.row_factory = sqlite3.Row
+        tables = {
+            str(row[0])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+        if not {"entity", "entity_source", "collectible"}.issubset(tables):
+            return 0, 0
+
+        rows = connection.execute(
+            """
+            SELECT e.id AS entity_id, e.name AS entity_name, es.raw_json
+            FROM entity e
+            JOIN entity_source es ON es.entity_id = e.id
+            WHERE e.entity_type = 'collectible'
+              AND es.raw_json IS NOT NULL
+            ORDER BY es.id
+            """
+        ).fetchall()
+
+        seen: set[str] = set()
+        for row in rows:
+            entity_id = str(row["entity_id"])
+            if entity_id in seen:
+                continue
+            seen.add(entity_id)
+            try:
+                raw = json.loads(row["raw_json"])
+            except (TypeError, json.JSONDecodeError):
+                continue
+
+            fields = raw.get("fields") or {}
+            category_type = str(fields.get("categoryType") or "")
+            category_name = str(fields.get("categoryName") or "")
+            subcategory_name = str(fields.get("subCategoryName") or "")
+            canonical_type, status = EsoCollectibleDatabaseService._classify(
+                category_type,
+                category_name,
+                subcategory_name,
+            )
+            if canonical_type != "furnishing":
+                continue
+
+            collectible_id = _as_int(raw.get("collectible_id") or fields.get("id"))
+            if collectible_id is None:
+                continue
+            source_rows += 1
+
+            existing = connection.execute(
+                "SELECT id FROM collectible WHERE id = ? OR entity_id = ? LIMIT 1",
+                (collectible_id, entity_id),
+            ).fetchone()
+
+            values = {
+                "entity_id": entity_id,
+                "name": fields.get("name") or row["entity_name"] or f"Collectible {collectible_id}",
+                "description": fields.get("description") or "",
+                "hint": fields.get("hint") or "",
+                "icon": fields.get("icon") or "",
+                "source_category_type": category_type,
+                "source_category_name": category_name,
+                "source_subcategory_name": subcategory_name,
+                "category_index": _as_int(fields.get("categoryIndex")),
+                "subcategory_index": _as_int(fields.get("subCategoryIndex")),
+                "collectible_index": _as_int(fields.get("collectibleIndex")),
+                "canonical_type_key": "furnishing",
+                "sidebar_category_key": "Furnishings",
+                "normalization_status": status,
+                "audit_reason": None,
+                "is_unlocked": _as_bool(fields.get("isUnlocked")),
+                "is_active": _as_bool(fields.get("isActive")),
+                "is_slottable": _as_bool(fields.get("isSlottable")),
+                "is_usable": _as_bool(fields.get("isUsable")),
+                "is_renameable": _as_bool(fields.get("isRenameable")),
+                "is_placeholder": _as_bool(fields.get("isPlaceholder")),
+                "is_hidden": _as_bool(fields.get("isHidden")),
+                "has_appearance": _as_bool(fields.get("hasAppearance")),
+                "source_raw_json": row["raw_json"],
+            }
+
+            if existing is not None:
+                assignments = ", ".join(f"{name} = ?" for name in values)
+                connection.execute(
+                    f"UPDATE collectible SET {assignments} WHERE id = ?",
+                    (*values.values(), int(existing["id"])),
+                )
+            else:
+                columns = ["id", *values.keys()]
+                placeholders = ", ".join("?" for _ in columns)
+                connection.execute(
+                    f"INSERT INTO collectible ({', '.join(columns)}) VALUES ({placeholders})",
+                    (collectible_id, *values.values()),
+                )
+            restored += 1
+
+        connection.commit()
+
+    return source_rows, restored
+
+
 def _print_candidates(discovered: dict[str, list[Path]]) -> None:
     print("Discovered source candidates:")
     for label in ("recipes", "furnishings", "lorebooks"):
@@ -135,8 +265,8 @@ def _print_candidates(discovered: dict[str, list[Path]]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Restore FoundryDock Recipes, Furnishing Plans/results, and Lorebooks "
-            "from existing local UESP source exports without replacing eso.db."
+            "Restore FoundryDock Furnishings, Recipes/Furnishing Plans, and "
+            "Lorebooks from preserved canonical/raw sources without replacing eso.db."
         )
     )
     parser.add_argument("--recipes", help="Explicit minedItemSummary recipe/furnishing-plan JSON")
@@ -180,6 +310,12 @@ def main() -> int:
         print(f"Backup: {backup}")
 
     print()
+    print("Restoring Furniture collectibles from entity_source...")
+    furnishing_source_rows, furnishings_restored = _restore_furnishings_from_collectible_source(database)
+    print(f"  furnishing source rows: {furnishing_source_rows:,}")
+    print(f"  furnishings upserted:   {furnishings_restored:,}")
+
+    print()
     print("Restoring Recipes / Furnishing Plans...")
     recipe_summary = UespLearnedRecipeImporter(database).run(
         recipe_path=recipe_path,
@@ -201,10 +337,12 @@ def main() -> int:
     print(f"  unresolved:          {len(lore_summary.unresolved):,}")
 
     with sqlite3.connect(database) as connection:
+        furnishings = _count(connection, "collectible", "sidebar_category_key = ?", ("Furnishings",))
         provisioning = _count(connection, "learnable_recipe", "learnable_kind = ?", ("provisioning_recipe",))
         plans = _count(connection, "learnable_recipe", "learnable_kind = ?", ("furnishing_plan",))
         mappings = _count(connection, "furnishing_plan_result")
         lorebooks = _count(connection, "lorebook")
+        collectible_progress = _count(connection, "collectible_progress")
         recipe_progress = _count(connection, "learnable_recipe_progress")
         lore_progress = _count(connection, "lorebook_progress")
 
@@ -212,12 +350,14 @@ def main() -> int:
     print("========================================")
     print(" COLLECTION REFERENCE RECOVERY COMPLETE")
     print("========================================")
-    print(f"Provisioning recipes:   {provisioning:,}")
-    print(f"Furnishing plans:       {plans:,}")
-    print(f"Furnishing mappings:    {mappings:,}")
-    print(f"Lorebooks:              {lorebooks:,}")
-    print(f"Recipe progress rows:   {recipe_progress:,}")
-    print(f"Lorebook progress rows: {lore_progress:,}")
+    print(f"Furnishings:             {furnishings:,}")
+    print(f"Provisioning recipes:    {provisioning:,}")
+    print(f"Furnishing plans:        {plans:,}")
+    print(f"Furnishing mappings:     {mappings:,}")
+    print(f"Lorebooks:               {lorebooks:,}")
+    print(f"Collectible progress:    {collectible_progress:,}")
+    print(f"Recipe progress rows:    {recipe_progress:,}")
+    print(f"Lorebook progress rows:  {lore_progress:,}")
 
     unresolved = tuple(recipe_summary.unresolved) + tuple(lore_summary.unresolved)
     if unresolved:
