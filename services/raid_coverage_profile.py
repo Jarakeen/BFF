@@ -75,21 +75,36 @@ class RaidCoverageProfile:
         )
 
 
-# Preserves the existing Coverage page's required default watch list. Only War Horn
-# currently has an exact capability identity mapping proven end to end: repository-
-# traced Aggressive Horn evidence resolves the EffectVariant identity ``force``.
-# The remaining entries are intentionally not guessed from their display labels.
+# Preserves the existing Coverage page's required default watch list. Mappings are
+# promoted only when repository-backed effect resolution proves the exact
+# EffectVariant identity end to end. Everything else remains explicitly unmapped.
 DEFAULT_RAID_COVERAGE_PROFILE = RaidCoverageProfile(
     profile_id="default_raid_coverage",
     name="Default Raid Coverage",
     requirements=(
-        RaidCoverageRequirement("major_courage", "Major Courage"),
+        RaidCoverageRequirement(
+            "major_courage",
+            "Major Courage",
+            capability_type="major_courage",
+            mapping_evidence=(
+                "Repository capability-resolution coverage proves the canonical "
+                "EffectVariant identity 'major_courage'."
+            ),
+        ),
         RaidCoverageRequirement("major_vulnerability", "Major Vulnerability"),
         RaidCoverageRequirement("major_berserk", "Major Berserk"),
         RaidCoverageRequirement("major_breach", "Major Breach"),
         RaidCoverageRequirement("major_slayer", "Major Slayer"),
         RaidCoverageRequirement("crusher", "Crusher"),
-        RaidCoverageRequirement("minor_brittle", "Minor Brittle"),
+        RaidCoverageRequirement(
+            "minor_brittle",
+            "Minor Brittle",
+            capability_type="minor_brittle",
+            mapping_evidence=(
+                "Real-data character-build integration coverage proves the canonical "
+                "EffectVariant identity 'minor_brittle'."
+            ),
+        ),
         RaidCoverageRequirement("minor_maim", "Minor Maim"),
         RaidCoverageRequirement(
             "war_horn",
