@@ -67,3 +67,18 @@ def test_comp_maker_raid_wide_provider_scope_comes_from_active_template_rows():
     assert "for row in provider_service.profile.mapped_required" not in source.split(
         "already_covered_team_provider_ids", 1
     )[0]
+
+
+def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
+    source = Path("ui/comp_builder_authoritative_prescription_support.py").read_text(
+        encoding="utf-8"
+    )
+    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "CompBuilderAuthoritativePrescriptionService" in source
+    assert "candidates_by_slot=dict(applied)" in source
+    assert "page._comp_current_prescription = prescription" in source
+    assert "_ORIGINAL_SEND_TO_ROSTER(self)" in source
+    assert "materialization does not rerank" in installer
