@@ -22,16 +22,22 @@ def test_comp_maker_workspace_keeps_legacy_columns_as_authoritative_storage():
     assert "_comp_required_gear_sets_by_slot" in source
 
 
-def test_comp_maker_layout_is_vertical_not_two_column():
+def test_comp_maker_layout_is_balanced_two_column_workspace():
     source = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
 
-    assert "QHBoxLayout" not in source
-    assert "root.addWidget(actions, 0)" in source
-    assert "root.addWidget(matrix, 0)" in source
-    assert "root.addWidget(coverage, 0)" in source
-    assert "root.addWidget(details, 0)" in source
-    assert "root.addWidget(evidence, 0)" in source
-    assert "vertical" in source.casefold()
+    assert "QHBoxLayout" in source
+    assert "QVBoxLayout" in source
+    assert "left.addWidget(matrix, 0)" in source
+    assert "left.addWidget(coverage, 0)" in source
+    assert "left.addWidget(evidence, 0)" in source
+    assert "right.addWidget(actions, 0)" in source
+    assert "right.addWidget(details, 1)" in source
+    assert "columns.addLayout(left, 1)" in source
+    assert "columns.addLayout(right, 1)" in source
+    assert "columns.setStretch(0, 1)" in source
+    assert "columns.setStretch(1, 1)" in source
+    assert 'details.title_label.setText("ESO Logs Catalog & Chair Evidence")' in source
+    assert "ScrollBarAlwaysOff" in source
 
 
 def test_comp_maker_selected_chair_editor_contains_duties_providers_mechanics_and_build_around():
