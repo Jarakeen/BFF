@@ -58,6 +58,13 @@ def install() -> None:
     from ui.comp_builder_build_candidate_support import install as install_comp_builder_build_candidates
     install_comp_builder_build_candidates()
 
+    # Give the right-side catalog a real per-chair build selector. It replaces the
+    # old implicit "always use #1" behavior while preserving the same assignment path.
+    from ui.comp_builder_candidate_picker_support import (
+        install as install_comp_builder_candidate_picker,
+    )
+    install_comp_builder_candidate_picker()
+
     # Visible style state must exist before the whole-team optimizer is installed.
     from ui.comp_builder_composition_style_support import (
         install as install_comp_builder_composition_style,
@@ -96,8 +103,7 @@ def install() -> None:
     )
     install_comp_builder_main_controls()
 
-    # Link the selected left-side chair to the ranked source build on the right.
-    # This is visual guidance only; the existing candidate assignment callback remains authoritative.
+    # Link the selected left-side chair to the selected source build on the right.
     from ui.comp_builder_assignment_cue_support import (
         install as install_comp_builder_assignment_cue,
     )
