@@ -12,11 +12,13 @@ def test_provider_requirement_mapping_enforces_only_proven_profile_rows(tmp_path
         capability_service=_UnusedCapabilityService(),
     )
 
-    result = service.resolve_requirement_labels(("War Horn", "Major Courage"))
+    result = service.resolve_requirement_labels(
+        ("War Horn", "Major Courage", "Minor Brittle", "Major Slayer")
+    )
 
-    assert result.provider_ids == ("force",)
+    assert result.provider_ids == ("force", "major_courage", "minor_brittle")
     assert result.unresolved == (
-        "provider requirement has no proven canonical capability mapping yet: Major Courage",
+        "provider requirement has no proven canonical capability mapping yet: Major Slayer",
     )
 
 
