@@ -357,8 +357,23 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(self.page_containers["collectibles_browser"])
             return
 
-        # A couple of sidebar entries intentionally expose a focused view of an
-        # existing page instead of manufacturing duplicate stateful pages.
+        # Some sidebar entries intentionally expose focused views of existing
+        # stateful pages instead of creating duplicate editors and services.
+        if page_name == "characters":
+            roster_page = self.pages.get("roster_page")
+            if roster_page is not None:
+                refresh = getattr(roster_page, "refresh", None)
+                if callable(refresh):
+                    refresh()
+                if hasattr(roster_page, "tabs"):
+                    roster_page.tabs.setCurrentIndex(1)
+                roster_page.header.title.setText("Characters")
+                roster_page.header.subtitle.setText("People and characters available to your raid roster.")
+                roster_page.header.department.setText("ROSTER • CHARACTERS")
+            self.sidebar.set_current(page_name)
+            self.stack.setCurrentWidget(self.page_containers["roster_page"])
+            return
+
         if page_name == "scribed_skills":
             builds_page = self.pages.get("console:2")
             if builds_page is not None and hasattr(builds_page, "build_tabs"):
@@ -388,6 +403,11 @@ class MainWindow(QMainWindow):
             self.pages["gear_lookup"].refresh()
         elif page_name == "timers":
             self.pages["timers"].refresh_context()
+        elif page_name == "roster_page":
+            roster_page = self.pages["roster_page"]
+            roster_page.header.title.setText("Roster")
+            roster_page.header.subtitle.setText("Team members, optimized assignments, responsibilities, and readiness.")
+            roster_page.header.department.setText("RAID ENGINE • ROSTER")
 
         self.sidebar.set_current(page_name)
         self.stack.setCurrentWidget(self.page_containers[page_name])
