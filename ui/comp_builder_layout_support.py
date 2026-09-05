@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLayout, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QLayout, QTextEdit, QVBoxLayout
 
 from ui.components.foundry_card import FoundryCard
 
@@ -13,6 +13,14 @@ _ORIGINAL_COMP_INIT = None
 def _card(page, title: str) -> FoundryCard | None:
     for card in page.findChildren(FoundryCard):
         if card.title_label.text().strip() == title:
+            return card
+    return None
+
+
+def _card_any(page, *titles: str) -> FoundryCard | None:
+    wanted = {title.strip() for title in titles}
+    for card in page.findChildren(FoundryCard):
+        if card.title_label.text().strip() in wanted:
             return card
     return None
 
@@ -35,7 +43,7 @@ def _install_layout(page) -> None:
 
     matrix = _card(page, "Composition Matrix")
     actions = _card(page, "Actions")
-    details = _card(page, "Composition Details & Summary")
+    details = _card_any(page, "Selected Chair Setup & Evidence", "Composition Details & Summary")
     coverage = _card(page, "Group Buff & Provider Coverage")
     evidence = _card(page, "Evidence & Provenance")
     if None in (matrix, actions, details, coverage, evidence):
@@ -44,57 +52,42 @@ def _install_layout(page) -> None:
     _detach_layout_items(root)
     root.setContentsMargins(0, 0, 0, 0)
     root.setSpacing(10)
+    root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    columns = QHBoxLayout()
-    columns.setContentsMargins(0, 0, 0, 0)
-    columns.setSpacing(10)
+    # One vertical reading direction only. FoundryPage already provides the page's
+    # vertical scrollbar and explicitly disables horizontal scrolling.
+    actions.setMinimumHeight(145)
+    actions.setMaximumHeight(175)
+    root.addWidget(actions, 0)
 
-    left = QVBoxLayout()
-    left.setContentsMargins(0, 0, 0, 0)
-    left.setSpacing(10)
-    left.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-    # The raid matrix is intentionally bounded to the 12-player trial group.
     matrix.setMinimumHeight(470)
     matrix.setMaximumHeight(480)
-    left.addWidget(matrix, 0)
+    root.addWidget(matrix, 0)
 
-    # Coverage belongs immediately under the matrix, not after the right column
-    # happens to finish growing.
+    coverage.setMinimumHeight(185)
     coverage.setMaximumHeight(235)
-    left.addWidget(coverage, 0)
-    left.addStretch(1)
+    root.addWidget(coverage, 0)
 
-    right = QVBoxLayout()
-    right.setContentsMargins(0, 0, 0, 0)
-    right.setSpacing(10)
-    right.setAlignment(Qt.AlignmentFlag.AlignTop)
+    # Selected-chair duties, hard build ingredients, candidates and ESO Logs
+    # evidence belong together. Let this card grow naturally and keep its existing
+    # internal scroll area as a second safety valve for very verbose evidence.
+    details.setMinimumHeight(520)
+    details.setMaximumHeight(760)
+    root.addWidget(details, 0)
 
-    # Keep plan actions permanently visible at the top-right.
-    actions.setMinimumHeight(150)
-    actions.setMaximumHeight(178)
-    right.addWidget(actions, 0)
-
-    # Details owns the flexible space and already contains its own scroll area.
-    details.setMinimumHeight(300)
-    details.setMaximumHeight(355)
-    right.addWidget(details, 1)
-
-    # Provenance is supporting context, so cap it instead of letting it stretch.
-    evidence.setMinimumHeight(150)
-    evidence.setMaximumHeight(180)
+    evidence.setMinimumHeight(165)
+    evidence.setMaximumHeight(220)
     for text in evidence.findChildren(QTextEdit):
-        text.setMinimumHeight(100)
-        text.setMaximumHeight(125)
-    right.addWidget(evidence, 0)
-    right.addStretch(1)
+        text.setMinimumHeight(110)
+        text.setMaximumHeight(160)
+    root.addWidget(evidence, 0)
 
-    columns.addLayout(left, 7)
-    columns.addLayout(right, 3)
-    root.addLayout(columns)
+    # The workspace is intentionally taller than the viewport. Vertical page
+    # scrolling is expected; horizontal page/table scrolling is not.
+    root.addStretch(1)
 
 
-def _comp_init_with_tight_layout(self, parent=None) -> None:
+def _comp_init_with_vertical_layout(self, parent=None) -> None:
     assert _ORIGINAL_COMP_INIT is not None
     _ORIGINAL_COMP_INIT(self, parent)
     _install_layout(self)
@@ -108,5 +101,5 @@ def install() -> None:
     from ui.comp_builder_page import CompBuilderPage
 
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
-    CompBuilderPage.__init__ = _comp_init_with_tight_layout
+    CompBuilderPage.__init__ = _comp_init_with_vertical_layout
     _INSTALLED = True
