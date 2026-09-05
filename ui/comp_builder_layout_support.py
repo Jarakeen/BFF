@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLayout, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLayout, QTextEdit, QVBoxLayout
 
 from ui.components.foundry_card import FoundryCard
 
@@ -59,7 +59,7 @@ def _install_layout(page) -> None:
     # columns grow vertically; the page itself still forbids horizontal scrolling.
     columns = QHBoxLayout()
     columns.setContentsMargins(0, 0, 0, 0)
-    columns.setSpacing(10)
+    columns.setSpacing(6)
 
     left = QVBoxLayout()
     left.setContentsMargins(0, 0, 0, 0)
@@ -99,10 +99,21 @@ def _install_layout(page) -> None:
     right.addWidget(details, 1)
     right.addStretch(1)
 
+    # The narrow center cue makes the assignment direction explicit: source build
+    # on the right is assigned into the selected player/chair on the left.
+    assignment_arrow = QLabel("←\nASSIGN")
+    assignment_arrow.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    assignment_arrow.setFixedWidth(38)
+    assignment_arrow.setProperty("compAssignmentArrow", True)
+    assignment_arrow.setToolTip("Assign the highlighted build on the right to the selected player/chair on the left.")
+    page.comp_assignment_arrow_label = assignment_arrow
+
     columns.addLayout(left, 1)
+    columns.addWidget(assignment_arrow, 0, Qt.AlignmentFlag.AlignVCenter)
     columns.addLayout(right, 1)
     columns.setStretch(0, 1)
-    columns.setStretch(1, 1)
+    columns.setStretch(1, 0)
+    columns.setStretch(2, 1)
     root.addLayout(columns)
     root.addStretch(1)
 
