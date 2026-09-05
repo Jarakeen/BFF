@@ -124,6 +124,13 @@ def install() -> None:
     )
     install_comp_builder_esologs_snapshot_candidates()
 
+    # Wrap the final roster-transfer path after the materialization/constraint
+    # layers so send-state feedback reflects the actual completed operation.
+    from ui.comp_builder_send_feedback_support import (
+        install as install_comp_builder_send_feedback,
+    )
+    install_comp_builder_send_feedback()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
