@@ -89,6 +89,13 @@ def install() -> None:
     from ui.comp_builder_workspace_support import install as install_comp_builder_workspace
     install_comp_builder_workspace()
 
+    # Consolidate the existing working commands into the right-side Actions card.
+    # This moves controls only; it does not create a second execution path.
+    from ui.comp_builder_main_controls_support import (
+        install as install_comp_builder_main_controls,
+    )
+    install_comp_builder_main_controls()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
