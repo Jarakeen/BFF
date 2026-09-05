@@ -9,6 +9,15 @@ def test_assignment_action_uses_player_facing_language() -> None:
     assert 'generate.setText("Generate Team")' in source
 
 
+def test_main_controls_hide_redundant_update_and_optional_strategy_action() -> None:
+    source = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+
+    assert 'update_combo = getattr(page, "update_combo", None)' in source
+    assert "host.hide()" in source
+    assert 'button = getattr(page, "comp_interesting_strategy_button", None)' in source
+    assert "button.hide()" in source
+
+
 def test_assignment_cue_links_top_build_to_selected_player_chair() -> None:
     source = Path("ui/comp_builder_assignment_cue_support.py").read_text(encoding="utf-8")
 
