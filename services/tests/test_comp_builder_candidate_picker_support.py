@@ -10,6 +10,17 @@ def test_comp_maker_has_explicit_build_choice_selector() -> None:
     assert "candidate.candidate_id" in source
 
 
+def test_candidate_picker_stays_pinned_above_scrollable_esologs_catalog() -> None:
+    source = Path("ui/comp_builder_candidate_picker_support.py").read_text(encoding="utf-8")
+    cue = Path("ui/comp_builder_assignment_cue_support.py").read_text(encoding="utf-8")
+
+    assert 'picker_host.setProperty("compCandidatePickerHost", True)' in source
+    assert "details.body_layout.insertWidget(0, picker_host)" in source
+    assert "QScrollArea" not in source
+    assert 'picker_host = getattr(page, "comp_candidate_picker_host", None)' in cue
+    assert "picker_layout.insertWidget(1, cue)" in cue
+
+
 def test_assign_build_uses_explicit_selected_candidate_not_implicit_top_rank() -> None:
     source = Path("ui/comp_builder_candidate_picker_support.py").read_text(encoding="utf-8")
 
