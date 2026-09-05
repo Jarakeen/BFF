@@ -88,9 +88,11 @@ def _install_layout(page) -> None:
     left.addWidget(evidence, 0)
     left.addStretch(1)
 
-    # RIGHT: compact controls above the ESO Logs/candidate catalog.
-    actions.setMinimumHeight(235)
-    actions.setMaximumHeight(270)
+    # RIGHT: compact controls above the ESO Logs/candidate catalog. It is still
+    # intentionally much smaller than the catalog, but tall enough to show the full
+    # ordinary workflow without clipping rows of controls.
+    actions.setMinimumHeight(300)
+    actions.setMaximumHeight(340)
     right.addWidget(actions, 0)
 
     details.title_label.setText("ESO Logs Catalog & Chair Evidence")
