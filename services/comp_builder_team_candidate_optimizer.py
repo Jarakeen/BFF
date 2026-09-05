@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from services.comp_builder_build_candidates import CompBuildCandidate
+from services.comp_builder_composition_style import (
+    CompCompositionStyle,
+    composition_style_policy,
+)
 
 
 @dataclass(frozen=True)
@@ -52,19 +56,55 @@ def _saved_player_key(candidate: CompBuildCandidate) -> str:
     return str(candidate.source_name or "").strip().casefold()
 
 
-def _option_value(candidate: CompBuildCandidate | None) -> tuple[int, int, float]:
+def _option_value(
+    candidate: CompBuildCandidate | None,
+    *,
+    novelty_by_candidate: dict[str, float],
+) -> tuple[int, int, float, float]:
     if candidate is None:
-        return (0, 0, 0.0)
+        return (0, 0, 0.0, 0.0)
     return (
         1,
         1 if candidate.source_kind == "saved_build" else 0,
         float(candidate.score),
+        float(novelty_by_candidate.get(candidate.candidate_id, 0.0)),
     )
 
 
+def _style_value(
+    *,
+    style: CompCompositionStyle,
+    filled: int,
+    coverage_count: int,
+    saved_build_count: int,
+    relevance: float,
+    novelty: float,
+    all_team_required_covered: int,
+) -> tuple[float, ...]:
+    policy = composition_style_policy(style)
+
+    # Hard raid validity always wins. Style only influences already-legal teams.
+    hard_prefix = (
+        float(all_team_required_covered),
+        float(filled),
+        float(coverage_count),
+    )
+
+    if policy.style is CompCompositionStyle.PROVEN:
+        return (*hard_prefix, float(saved_build_count), float(relevance), float(novelty))
+    if policy.style is CompCompositionStyle.PERFORMANCE:
+        return (*hard_prefix, float(relevance), float(saved_build_count), float(novelty))
+
+    discovery = (
+        float(novelty) * float(policy.novelty_weight)
+        + float(relevance) * float(policy.relevance_weight)
+    )
+    return (*hard_prefix, discovery, float(relevance), float(saved_build_count))
+
+
 def _better(
-    left: tuple[tuple[int, int, int, int, float], tuple[str, ...]],
-    right: tuple[tuple[int, int, int, int, float], tuple[str, ...]],
+    left: tuple[tuple[float, ...], tuple[str, ...]],
+    right: tuple[tuple[float, ...], tuple[str, ...]],
 ) -> bool:
     if left[0] != right[0]:
         return left[0] > right[0]
@@ -78,20 +118,28 @@ def optimize_comp_team_candidates(
     provider_ids_by_candidate: dict[str, tuple[str, ...]] | None = None,
     required_team_provider_ids: tuple[str, ...] = (),
     already_covered_team_provider_ids: tuple[str, ...] = (),
+    composition_style: CompCompositionStyle | str = CompCompositionStyle.PROVEN,
+    novelty_by_candidate: dict[str, float] | None = None,
 ) -> CompTeamCandidateOptimizationResult:
     """Choose a coherent team assignment from per-chair Comp Maker candidates.
 
     Saved players are consumable once. Reference templates are reusable recruitment
     evidence. Chair-local provider requirements remain hard eligibility constraints.
 
-    Raid-wide provider requirements are a separate concern: when a full-coverage
-    assignment is possible, it outranks an otherwise stronger relevance assignment.
-    If complete raid coverage is impossible, the optimizer preserves maximum chair
-    fill first and then prefers the assignment covering the most remaining raid-wide
-    providers. This keeps impossible coverage explicit instead of sacrificing most of
-    the roster merely to satisfy one isolated effect.
+    Raid-wide provider requirements are also hard team validity. Composition style
+    can change which *legal* team wins, but it cannot trade away chair fill, required
+    provider coverage, or other candidate gates established before this solver runs.
+
+    ``novelty_by_candidate`` is deliberately external evidence. Experimental modes do
+    not invent rarity from source names or labels; a candidate receives no novelty
+    credit unless an evidence-producing layer supplies it.
     """
 
+    style = composition_style_policy(composition_style).style
+    novelty_by_candidate = {
+        str(candidate_id): float(value)
+        for candidate_id, value in (novelty_by_candidate or {}).items()
+    }
     provider_ids_by_candidate = provider_ids_by_candidate or {}
     normalized_provider_ids = {
         str(candidate_id): _clean_provider_ids(tuple(values))
@@ -133,11 +181,24 @@ def optimize_comp_team_candidates(
         if index >= len(pools):
             coverage_count = len(required_team & covered_set)
             all_team_required_covered = int(required_team.issubset(covered_set))
+            value = _style_value(
+                style=style,
+                filled=0,
+                coverage_count=coverage_count,
+                saved_build_count=0,
+                relevance=0.0,
+                novelty=0.0,
+                all_team_required_covered=all_team_required_covered,
+            )
             return (
-                (all_team_required_covered, 0, coverage_count, 0, 0.0),
+                value,
                 (),
                 (),
                 tuple(sorted(covered_set)),
+                0,
+                0,
+                0.0,
+                0.0,
             )
 
         used_set = set(used)
@@ -159,22 +220,48 @@ def optimize_comp_team_candidates(
                 else frozenset()
             )
             next_covered = tuple(sorted(covered_set | (candidate_providers & required_team)))
-            tail_value, tail_ids, tail_candidates, tail_covered = solve(
-                index + 1,
-                next_used,
-                next_covered,
+            (
+                _tail_value,
+                tail_ids,
+                tail_candidates,
+                tail_covered,
+                tail_filled,
+                tail_saved,
+                tail_relevance,
+                tail_novelty,
+            ) = solve(index + 1, next_used, next_covered)
+            own_filled, own_saved, own_relevance, own_novelty = _option_value(
+                candidate,
+                novelty_by_candidate=novelty_by_candidate,
             )
-            own = _option_value(candidate)
-            total_value = (
-                tail_value[0],
-                own[0] + tail_value[1],
-                tail_value[2],
-                own[1] + tail_value[3],
-                own[2] + tail_value[4],
+            filled = own_filled + tail_filled
+            saved = own_saved + tail_saved
+            relevance = own_relevance + tail_relevance
+            novelty = own_novelty + tail_novelty
+            covered_final = set(tail_covered)
+            coverage_count = len(required_team & covered_final)
+            all_team_required_covered = int(required_team.issubset(covered_final))
+            total_value = _style_value(
+                style=style,
+                filled=filled,
+                coverage_count=coverage_count,
+                saved_build_count=saved,
+                relevance=relevance,
+                novelty=novelty,
+                all_team_required_covered=all_team_required_covered,
             )
             candidate_id = candidate.candidate_id if candidate is not None else "~unresolved"
             ids = (candidate_id.casefold(), *tail_ids)
-            proposal = (total_value, ids, (candidate, *tail_candidates), tail_covered)
+            proposal = (
+                total_value,
+                ids,
+                (candidate, *tail_candidates),
+                tail_covered,
+                filled,
+                saved,
+                relevance,
+                novelty,
+            )
             if best is None or _better(
                 (proposal[0], proposal[1]),
                 (best[0], best[1]),
@@ -184,7 +271,7 @@ def optimize_comp_team_candidates(
         assert best is not None
         return best
 
-    _value, _ids, selected, covered = solve(
+    _value, _ids, selected, covered, *_metrics = solve(
         0,
         normalized_used,
         tuple(sorted(initial_covered)),
