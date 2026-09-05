@@ -10,6 +10,7 @@ from services.encounter_build_capability_adapter import SavedBuildEncounterCapab
 from services.raid_coverage_encounter_adapter import RaidCoverageEncounterAdapter
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE, RaidCoverageProfile
 from services.saved_build_capability_service import SavedBuildCapabilityService
+from services.team_prescription_template_catalog import TeamPrescriptionTemplateCatalog
 
 
 def _clean(value: object) -> str:
@@ -45,6 +46,9 @@ class CompBuilderProviderEvidenceService:
             self.coverage_adapter.capability_identity_maps()
         )
         self.build_service = BuildService(self.data_dir / "builds.json")
+        self.template_catalog = TeamPrescriptionTemplateCatalog(
+            self.data_dir / "team_prescription_templates.json"
+        )
         self.capability_service = capability_service or SavedBuildCapabilityService(
             self.build_service,
             self.data_dir / "eso.db",
@@ -103,33 +107,43 @@ class CompBuilderProviderEvidenceService:
     def provider_ids_for_candidate(self, candidate: CompBuildCandidate) -> tuple[str, ...]:
         """Return only canonically proven provider identities for one candidate.
 
-        Saved BFF builds can be reloaded as complete canonical build snapshots and
-        audited through SavedBuildCapabilityService. Reference/observed templates
-        are not treated as providers here because CompBuildCandidate intentionally
-        carries only partial build evidence and cannot prove the full configured
-        build needed by the capability audit.
+        Saved BFF builds are reloaded as canonical build snapshots and audited through
+        SavedBuildCapabilityService. A reference template may use that same path only
+        when the catalog explicitly marks it as a complete build and its exact template
+        id can be resolved. Partial reference evidence remains ineligible for provider
+        credit, even when its gear or skill names look suggestive.
         """
 
-        if candidate.source_kind != "saved_build":
-            return ()
         cached = self._candidate_provider_cache.get(candidate.candidate_id)
         if cached is not None:
             return cached
 
-        target_name = _clean(candidate.name).casefold()
-        target_owner = _clean(candidate.source_name).casefold()
-        matches: list[PlayerBuild] = []
-        for build in self.build_service.load().Members:
-            build_name = _clean(build.BuildName).casefold()
-            owner = (_clean(build.Name) or _clean(build.Gamertag)).casefold()
-            if build_name == target_name and owner == target_owner:
-                matches.append(build)
+        result: tuple[str, ...] = ()
+        if candidate.source_kind == "saved_build":
+            target_name = _clean(candidate.name).casefold()
+            target_owner = _clean(candidate.source_name).casefold()
+            matches: list[PlayerBuild] = []
+            for build in self.build_service.load().Members:
+                build_name = _clean(build.BuildName).casefold()
+                owner = (_clean(build.Name) or _clean(build.Gamertag)).casefold()
+                if build_name == target_name and owner == target_owner:
+                    matches.append(build)
 
-        if len(matches) != 1:
-            # Ambiguous or stale candidate identity must remain unresolved instead
-            # of borrowing provider evidence from a different saved build.
-            result: tuple[str, ...] = ()
-        else:
-            result = self.provider_ids_for_build(matches[0])
+            if len(matches) == 1:
+                result = self.provider_ids_for_build(matches[0])
+        elif candidate.source_kind == "reference_template" and candidate.complete_build:
+            prefix = "template:"
+            candidate_id = _clean(candidate.candidate_id)
+            if candidate_id.casefold().startswith(prefix):
+                template_id = candidate_id[len(prefix):].strip().casefold()
+                matches = [
+                    template
+                    for template in self.template_catalog.load().templates
+                    if template.template_id.casefold() == template_id
+                    and template.complete_build
+                ]
+                if len(matches) == 1:
+                    result = self.provider_ids_for_build(matches[0].build)
+
         self._candidate_provider_cache[candidate.candidate_id] = result
         return result
