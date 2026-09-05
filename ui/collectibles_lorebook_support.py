@@ -224,4 +224,10 @@ def install() -> None:
     collectibles_page.CollectiblesPage.save_pending_changes = save_pending_changes_with_lorebooks
     collectibles_page.CollectiblesPage.closeEvent = close_event_with_lorebooks
 
+    # The dashboard is built later by MainWindow. Install its recovered-data
+    # ledgers now so Recipes, Furnishing Plans, and Lorebooks appear alongside
+    # the canonical collectible categories as soon as the app starts.
+    from ui.collectibles_reference_dashboard_support import install as install_reference_dashboard_support
+    install_reference_dashboard_support()
+
     _INSTALLED = True
