@@ -20,13 +20,15 @@ def test_strategy_support_uses_only_canonical_provider_ids_and_keeps_hard_solver
     assert "strategy_score" not in source
 
 
-def test_strategy_button_stays_vertical_and_has_rylo_treatment() -> None:
+def test_strategy_button_stays_in_compact_right_hand_controls_and_has_rylo_treatment() -> None:
     support = Path("ui/comp_builder_strategy_support.py").read_text(encoding="utf-8")
     layout = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
     rylo = Path("ui/comp_builder_rylo_support.py").read_text(encoding="utf-8")
     installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(encoding="utf-8")
 
     assert 'setProperty("compInterestingStrategy", True)' in support
-    assert "actions.setMinimumHeight(255)" in layout
+    assert "right.addWidget(actions, 0)" in layout
+    assert "actions.setMinimumHeight(235)" in layout
+    assert "actions.setMaximumHeight(270)" in layout
     assert 'QPushButton[compInterestingStrategy="true"]' in rylo
     assert "install_comp_builder_strategy()" in installer
