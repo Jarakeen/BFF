@@ -80,7 +80,7 @@ def _install_main_controls(page) -> None:
         generate.setText("Fill from Roster")
         generate.setProperty("compPrimaryGenerate", True)
         generate.setToolTip(
-            "Fill every currently open raid chair with the best eligible saved or reference build "
+            "Fill every currently open raid chair with the best eligible saved roster build "
             "while preserving existing assignments and required provider coverage."
         )
     if apply_chair is not None:
