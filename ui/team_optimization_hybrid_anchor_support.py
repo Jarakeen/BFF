@@ -96,6 +96,13 @@ def install() -> None:
     )
     install_comp_builder_main_controls()
 
+    # Link the selected left-side chair to the ranked source build on the right.
+    # This is visual guidance only; the existing candidate assignment callback remains authoritative.
+    from ui.comp_builder_assignment_cue_support import (
+        install as install_comp_builder_assignment_cue,
+    )
+    install_comp_builder_assignment_cue()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
