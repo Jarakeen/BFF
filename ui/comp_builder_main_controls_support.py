@@ -53,7 +53,11 @@ def _install_main_controls(page) -> None:
         generate.setText("Generate Team")
         generate.setProperty("compPrimaryGenerate", True)
     if apply_chair is not None:
-        apply_chair.setText("Apply to Selected Chair")
+        # The selected matrix row is the destination. Candidate ranking on the
+        # right supplies the source build, so use assignment language rather than
+        # the old implementation-centric "apply candidate" wording.
+        apply_chair.setText("Assign Build to This Player")
+        apply_chair.setProperty("compAssignBuild", True)
 
     # Keep the existing plan-name, style, roster/save/load and strategy controls in
     # the card. Insert the ordinary Comp Maker workflow immediately after the style
