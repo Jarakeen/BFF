@@ -102,9 +102,21 @@ def install() -> None:
 
     install_comp_builder_build_constraints()
 
-    # Finally tighten the page geometry. This runs after the additive Comp Builder
-    # support modules so Actions stays pinned top-right, coverage sits directly under
-    # the matrix, and only the Details card owns flexible vertical space.
+    # Reframe the page around a compact raid overview and a selected-chair editor.
+    # Original matrix columns remain hidden authoritative storage so provider,
+    # mechanic and prescription plumbing does not fork into a second data model.
+    from ui.comp_builder_workspace_support import install as install_comp_builder_workspace
+
+    install_comp_builder_workspace()
+
+    # Rylo gets explicit Comp Maker surfaces rather than inheriting whatever teal
+    # happened to survive from the default theme.
+    from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
+
+    install_comp_builder_rylo()
+
+    # Finally stack the entire Comp Maker workspace vertically. Vertical scrolling is
+    # intentional; horizontal page/table scrolling is explicitly disabled.
     from ui.comp_builder_layout_support import install as install_comp_builder_layout
 
     install_comp_builder_layout()
