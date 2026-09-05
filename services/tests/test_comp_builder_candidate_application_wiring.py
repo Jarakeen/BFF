@@ -50,8 +50,20 @@ def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
 def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
 
-    assert "required_team_provider_ids = tuple(" in source
+    assert "required_team_provider_ids: list[str] = []" in source
+    assert "required_team_provider_ids.extend(provider_resolution.provider_ids)" in source
+    assert "required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))" in source
     assert "already_covered_team_provider_ids.update(" in source
-    assert "required_team_provider_ids=required_team_provider_ids" in source
+    assert "required_team_provider_ids=tuple(required_team_provider_ids)" in source
     assert "already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids))" in source
     assert "raid-wide provider still uncovered" in source
+
+
+def test_comp_maker_raid_wide_provider_scope_comes_from_active_template_rows():
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
+
+    assert "provider_labels = page._split_values(page._cell_text(row, 6))" in source
+    assert "provider_resolution_by_slot[slot_name] = provider_resolution" in source
+    assert "for row in provider_service.profile.mapped_required" not in source.split(
+        "already_covered_team_provider_ids", 1
+    )[0]
