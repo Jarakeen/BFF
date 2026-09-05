@@ -69,6 +69,11 @@ def install() -> None:
     )
     install_comp_builder_team_candidate_optimizer()
 
+    # Strategy discovery wraps the same authoritative optimizer with canonically
+    # proven provider-redistribution novelty; it never creates a second chooser.
+    from ui.comp_builder_strategy_support import install as install_comp_builder_strategy
+    install_comp_builder_strategy()
+
     # Comp Maker optimizer choices are authoritative. This materialization does not rerank;
     # it only resolves the already-selected saved/template candidate IDs for roster transfer.
     from ui.comp_builder_authoritative_prescription_support import (
