@@ -5,9 +5,28 @@ def test_comp_maker_can_apply_top_ranked_candidate_to_selected_chair():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
     assert '"Apply Top Candidate"' in source
-    assert "candidate = candidates[0]" in source
+    assert "_first_unused_candidate(candidates, used_saved_players)" in source
     assert "page._comp_applied_candidates[slot_name] = candidate" in source
     assert "Applied {candidate.name} to {slot_name}" in source
+
+
+def test_comp_maker_can_apply_best_candidates_across_unassigned_chairs():
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    assert '"Apply Best to All Chairs"' in source
+    assert "def _apply_best_candidates_to_all" in source
+    assert "if slot_name in page._comp_applied_candidates" in source
+    assert "skipped_existing += 1" in source
+    assert "_set_candidate_for_row(page, row, candidate)" in source
+
+
+def test_comp_maker_bulk_application_does_not_clone_saved_players():
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    assert "def _saved_player_key" in source
+    assert "def _first_unused_candidate" in source
+    assert "if player_key and player_key in used_saved_players" in source
+    assert "used_saved_players.add(player_key)" in source
 
 
 def test_comp_maker_send_to_roster_preserves_applied_candidate_build_evidence():
