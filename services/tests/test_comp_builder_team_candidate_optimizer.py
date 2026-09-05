@@ -85,3 +85,44 @@ def test_reference_templates_do_not_consume_a_player_identity() -> None:
         "reference",
         "reference",
     ]
+
+
+def test_mapped_provider_requirement_blocks_higher_scoring_non_provider() -> None:
+    raw = _candidate("raw", player="Raw", score=500)
+    provider = _candidate("provider", player="Provider", score=100)
+
+    result = optimize_comp_team_candidates(
+        pools=(
+            CompTeamCandidatePool(
+                "Healer 1",
+                (raw, provider),
+                required_provider_ids=("force",),
+            ),
+        ),
+        provider_ids_by_candidate={
+            "raw": (),
+            "provider": ("force",),
+        },
+    )
+
+    assert result.assignments[0].candidate.candidate_id == "provider"
+    assert result.provider_blocked_slots == ()
+
+
+def test_mapped_provider_requirement_leaves_chair_open_when_no_candidate_proves_it() -> None:
+    raw = _candidate("raw", player="Raw", score=500)
+
+    result = optimize_comp_team_candidates(
+        pools=(
+            CompTeamCandidatePool(
+                "Healer 1",
+                (raw,),
+                required_provider_ids=("force",),
+            ),
+        ),
+        provider_ids_by_candidate={"raw": ()},
+    )
+
+    assert result.assignments[0].candidate is None
+    assert result.provider_blocked_slots == ("Healer 1",)
+    assert result.unresolved_slots == ("Healer 1",)
