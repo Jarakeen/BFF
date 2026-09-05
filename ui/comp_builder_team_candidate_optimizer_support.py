@@ -80,7 +80,14 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         if slot_name in applied:
             continue
         try:
-            candidates = support._chair_candidates(page, row)
+            # This action is explicitly Fill from Roster. Reference templates remain
+            # visible in the manual build picker, but they cannot masquerade as saved
+            # players during automatic roster fill.
+            candidates = tuple(
+                candidate
+                for candidate in support._chair_candidates(page, row)
+                if candidate.source_kind == "saved_build"
+            )
         except (OSError, ValueError) as exc:
             unresolved_reads.append(f"{slot_name}: {exc}")
             continue
@@ -118,7 +125,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         pools.append(
             CompTeamCandidatePool(
                 slot_name=slot_name,
-                candidates=tuple(candidates),
+                candidates=candidates,
                 required_provider_ids=provider_resolution.provider_ids,
             )
         )
@@ -147,8 +154,8 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     support._refresh_candidates(page)
     open_count = page.matrix_table.rowCount() - len(page._comp_applied_candidates)
     message = (
-        f"Optimized the remaining team in {style.value.replace('_', ' ')} mode and applied "
-        f"{result.applied_count} candidate(s); preserved {skipped_existing} existing choice(s); "
+        f"Filled {result.applied_count} open chair(s) from saved roster builds in "
+        f"{style.value.replace('_', ' ')} mode; preserved {skipped_existing} existing choice(s); "
         f"{open_count} chair(s) remain open."
     )
     display_name_by_provider_id = {
@@ -166,11 +173,11 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             for name in uncovered_team_provider_names
         ),
         *(
-            f"{slot}: no candidate proved the chair's mapped provider requirement"
+            f"{slot}: no roster build proved the chair's mapped provider requirement"
             for slot in result.provider_blocked_slots
         ),
         *(
-            f"{slot}: no coherent matching candidate"
+            f"{slot}: no matching saved roster build"
             for slot in result.unresolved_slots
             if slot not in result.provider_blocked_slots
         ),
