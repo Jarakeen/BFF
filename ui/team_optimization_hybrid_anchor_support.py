@@ -109,6 +109,13 @@ def install() -> None:
     )
     install_comp_builder_assignment_cue()
 
+    # Trial selection is the primary Comp Maker workflow. Install it after all
+    # source/candidate controls exist so one trial change can refresh every source.
+    from ui.comp_builder_trial_flow_support import (
+        install as install_comp_builder_trial_flow,
+    )
+    install_comp_builder_trial_flow()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
