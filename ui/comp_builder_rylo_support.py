@@ -58,10 +58,24 @@ QComboBox[compCompositionStyle="true"] {
 QComboBox[compCompositionStyle="true"]:focus {
     border: 2px solid #B88A3C;
 }
-QLabel[compCompositionStyleHelp="true"] {
+QLabel[compCompositionStyleHelp="true"],
+QLabel[compInterestingStrategyHelp="true"] {
     color: #969A9E;
     background: transparent;
     padding-left: 2px;
+}
+QPushButton[compInterestingStrategy="true"] {
+    background-color: #19171A;
+    color: #E8E1D7;
+    border-left: 3px solid #B88A3C;
+    border-top: 1px solid #46484C;
+    border-right: 1px solid #26282B;
+    border-bottom: 1px solid #26282B;
+    font-weight: 700;
+}
+QPushButton[compInterestingStrategy="true"]:hover {
+    background-color: #242126;
+    border-left-color: #D1A24D;
 }
 QFrame[compMakerChairCard="true"] QWidget[cardHeader="true"] {
     border-bottom: 2px solid #5A3336;
