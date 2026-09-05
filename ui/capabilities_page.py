@@ -47,6 +47,10 @@ from models.capability_model import CapabilityRoster, CapabilityProfile
 from widgets.build_dashboard import BuildDashboard
 from services.capability_service import CapabilityService
 from services.top_team_service import TopTeamService
+from services.top_team_template_intake import TopTeamTemplateIntake
+from services.team_prescription_template_catalog import (
+    TeamPrescriptionTemplateCatalog,
+)
 from services.esologs_client import EsoLogsClient, EsoLogsApiError
 from services.eso_database import EsoDatabase
 from services.reference_data_service import ReferenceDataService
@@ -87,6 +91,13 @@ class CapabilitiesPage(FoundryPage):
 
         self.capabilities_path = data_dir / "capabilities.json"
 
+        self.top_team_template_intake = TopTeamTemplateIntake.for_data_dir(
+            data_dir
+        )
+        self.template_catalog_snapshot = TeamPrescriptionTemplateCatalog(
+            data_dir / "team_prescription_templates.json"
+        ).load()
+
     def _build_esologs_client(self) -> EsoLogsClient:
         settings = self.settings_service.load()
 
@@ -117,7 +128,7 @@ class CapabilitiesPage(FoundryPage):
         self.header = FoundryHeader(
             title="Capabilities",
             subtitle=(
-                "Buff, debuff, skill uptime, and top-team gear from ESO Logs."
+                "Buff/debuff uptime and ranked-team build evidence from ESO Logs."
             ),
             department="Planning",
         )
@@ -126,7 +137,9 @@ class CapabilitiesPage(FoundryPage):
 
         # Keep the compact top-team gear card fixed above the per-member editor stack.
         self.top_team_card = TopTeamCard(
-            service_factory=self._build_top_team_service
+            service_factory=self._build_top_team_service,
+            template_intake=self.top_team_template_intake,
+            default_game_update=self.template_catalog_snapshot.game_update,
         )
         self.workspace_layout.addWidget(self.top_team_card, 0)
 

@@ -1,17 +1,8 @@
 # widgets/top_team_card.py
 #
 # "Top Ranked Team" card for the Capabilities Desk: pick a trial,
-# pick a boss, fetch the top-ranking log's roster from ESO Logs, and
-# browse it as a vertical, role-sorted gear board (Tank / Healer /
-# DD) rather than a flat list -- meant to be skimmed for "what's
-# trending right now," not cross-referenced like a report.
-#
-# Built against models.top_team_model.TopTeamPlayer as it actually
-# exists on this branch (Name / Role / GearSets only -- no class,
-# skills, or Mundus fields), and services.top_team_service.TopTeamService
-# as it actually exists (list_trials() / get_top_team(zone_id=,
-# zone_name=, encounter_id=, encounter_name=)). Neither of those
-# files is touched by this widget.
+# pick a boss, fetch one coordinated ranked team's observed builds,
+# and curate those partial gear/skill observations for Comp Maker.
 #
 # Each section also surfaces which sets repeat across 2+ players in
 # that role for this pull ("Trending in this pull") -- a cheap,
@@ -28,12 +19,15 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
 from models.top_team_model import TopTeamPlayer, TopTeamResult
 from services.esologs_client import EsoLogsApiError
+from services.top_team_template_intake import TopTeamTemplateIntake
 
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
@@ -76,20 +70,34 @@ KNOWN_SUPPORT_SET_NAMES = frozenset(
 class TopTeamCard(FoundryCard):
     """
     Self-contained card: owns its own trial/boss pickers and its own
-    role-sectioned gear display. The page only needs to construct it
-    with a way to get a freshly-configured TopTeamService -- the
-    constructor signature and public surface here are unchanged from
-    what ui/capabilities_page.py already wires up.
+    role-sectioned observed-build display. A supplied template intake
+    lets the user save the fetched gear and skills as partial,
+    provenance-bearing Comp Maker templates without pretending ESO
+    Logs exposed complete BFF builds.
     """
 
     fetchFailed = Signal(str)
     fetchSucceeded = Signal(str)
 
-    def __init__(self, service_factory, parent=None):
-        super().__init__(title="Top Ranked Team Gear", icon="achievement", parent=parent)
+    def __init__(
+        self,
+        service_factory,
+        template_intake: TopTeamTemplateIntake | None = None,
+        default_game_update: str = "",
+        parent=None,
+    ):
+        super().__init__(
+            title="Top Ranked Team Builds",
+            icon="achievement",
+            parent=parent,
+        )
 
         self._service_factory = service_factory
+        self._template_intake = template_intake
         self._trials: list[dict] = []
+        self._current_result: TopTeamResult | None = None
+        self._current_service = None
+        self._default_game_update = str(default_game_update or "").strip()
 
         # role_key -> {"count_label", "trending_row", "trending_layout",
         #              "players_layout"}
@@ -112,45 +120,66 @@ class TopTeamCard(FoundryCard):
         root_layout.setSpacing(10)
 
         #
-        # Filters -- same trial / boss / fetch / reload row as
-        # before.
+        # Keep the selectors and actions on separate rows so the card
+        # does not impose a wide minimum size on the Capabilities page.
         #
 
         picker_row = QHBoxLayout()
         picker_row.setSpacing(8)
 
         self.trial_combo = QComboBox()
-        self.trial_combo.setMinimumWidth(210)
+        self.trial_combo.setMinimumWidth(110)
         self.trial_combo.setPlaceholderText("Choose a trial...")
 
         self.encounter_combo = QComboBox()
-        self.encounter_combo.setMinimumWidth(190)
+        self.encounter_combo.setMinimumWidth(110)
         self.encounter_combo.setPlaceholderText("Choose a boss...")
         self.encounter_combo.setEnabled(False)
 
+        picker_row.addWidget(self.trial_combo, 1)
+        picker_row.addWidget(self.encounter_combo, 1)
+
+        actions_row = QHBoxLayout()
+        actions_row.setSpacing(8)
+
         self.fetch_button = FoundryButton(
-            "Fetch Team Gear",
+            "Fetch Team Builds",
             role=ButtonRole.PRIMARY,
             compact=True,
         )
         self.fetch_button.setEnabled(False)
 
         self.reload_button = FoundryButton(
-            "Reload Trials",
+            "Reload",
             role=ButtonRole.SECONDARY,
             compact=True,
         )
 
-        picker_row.addWidget(self.trial_combo)
-        picker_row.addWidget(self.encounter_combo)
-        picker_row.addWidget(self.fetch_button)
-        picker_row.addWidget(self.reload_button)
-        picker_row.addStretch()
+        self.game_update_input = QLineEdit(self._default_game_update)
+        self.game_update_input.setPlaceholderText("Game update (required to save)")
+        self.game_update_input.setMinimumWidth(125)
+        self.game_update_input.setToolTip(
+            "Version label stored with the observed templates, for example Update 50."
+        )
+
+        self.save_team_button = FoundryButton(
+            "Save Team to Catalog",
+            role=ButtonRole.SUCCESS,
+            compact=True,
+        )
+        self.save_team_button.setEnabled(False)
+        self.save_team_button.setVisible(self._template_intake is not None)
 
         root_layout.addLayout(picker_row)
+        actions_row.addWidget(self.fetch_button, 1)
+        actions_row.addWidget(self.reload_button, 1)
+        actions_row.addWidget(self.game_update_input, 1)
+        actions_row.addWidget(self.save_team_button, 1)
+        root_layout.addLayout(actions_row)
 
         self.summary = QLabel(
-            "Choose a trial and boss to inspect the top-ranked team's sets."
+            "Choose a trial and boss to inspect one coordinated ranked "
+            "team's observed gear and skills."
         )
         self.summary.setWordWrap(True)
         self.summary.setProperty("muted", True)
@@ -163,6 +192,10 @@ class TopTeamCard(FoundryCard):
         #
 
         self.board = QWidget()
+        self.board.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
         board_layout = QVBoxLayout(self.board)
         board_layout.setContentsMargins(0, 0, 0, 0)
         board_layout.setSpacing(4)
@@ -254,7 +287,9 @@ class TopTeamCard(FoundryCard):
         players_layout.setContentsMargins(12, 0, 0, 0)
         players_layout.setSpacing(8)
 
-        empty_label = QLabel("Fetch a trial + boss to see this role's gear.")
+        empty_label = QLabel(
+            "Fetch a trial + boss to see this role's observed build."
+        )
         empty_label.setFont(Fonts.body())
         empty_label.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
         empty_label.setWordWrap(True)
@@ -282,6 +317,8 @@ class TopTeamCard(FoundryCard):
 
         self.reload_button.clicked.connect(self.load_trials)
 
+        self.save_team_button.clicked.connect(self.save_current_team)
+
     # --------------------------------------------------
     # Trial / boss loading
     # --------------------------------------------------
@@ -294,6 +331,7 @@ class TopTeamCard(FoundryCard):
         a popup, so it doesn't block opening the page.
         """
 
+        self._clear_current_result()
         self.status.info("Loading trial list from ESO Logs...")
 
         try:
@@ -392,7 +430,10 @@ class TopTeamCard(FoundryCard):
 
         encounter = self.encounter_combo.itemData(encounter_index)
 
-        self.status.info(f"Fetching top-ranked {encounter['name']} team gear...")
+        self._clear_current_result()
+        self.status.info(
+            f"Fetching top-ranked {encounter['name']} team gear and skills..."
+        )
 
         self.fetch_button.setEnabled(False)
 
@@ -429,7 +470,16 @@ class TopTeamCard(FoundryCard):
 
         self._render_result(result)
 
-        self.status.success(f"Loaded {len(result.Players)} player gear list(s).")
+        self._current_service = service
+        self._current_result = result
+        self.save_team_button.setEnabled(
+            self._template_intake is not None and bool(result.Players)
+        )
+
+        self.status.success(
+            f"Loaded {len(result.Players)} observed player build(s), "
+            "including available gear and skills."
+        )
 
         self.fetchSucceeded.emit(result.ReportCode)
 
@@ -550,7 +600,7 @@ class TopTeamCard(FoundryCard):
         name_row = QHBoxLayout()
         name_row.setSpacing(6)
 
-        name_label = QLabel(player.Name or "Unknown")
+        name_label = QLabel(self._name_label_text(player))
         name_label.setFont(Fonts.label())
         name_label.setStyleSheet(f"color: {Colors.TEXT};")
 
@@ -582,9 +632,81 @@ class TopTeamCard(FoundryCard):
 
         text_column.addWidget(gear_label)
 
+        skills_text = (
+            ", ".join(player.Abilities)
+            if player.Abilities
+            else "No skill data exposed for this player."
+        )
+        skills_label = QLabel(f"Skills: {skills_text}")
+        skills_label.setFont(Fonts.small())
+        skills_label.setStyleSheet(f"color: {Colors.ACCENT_LIGHT};")
+        skills_label.setWordWrap(True)
+        skills_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        text_column.addWidget(skills_label)
+
         row_layout.addLayout(text_column, 1)
 
         return row
+
+    @staticmethod
+    def _name_label_text(player: TopTeamPlayer) -> str:
+        name = player.Name or "Unknown"
+        return f"{name} · {player.ClassName}" if player.ClassName else name
+
+    def _clear_current_result(self):
+        self._current_result = None
+        self._current_service = None
+        self.save_team_button.setEnabled(False)
+
+    def save_current_team(self):
+        """Curate the displayed team as partial Comp Maker build evidence."""
+
+        if self._template_intake is None:
+            self.status.warning("Team template intake is not configured.")
+            return
+        if self._current_result is None or self._current_service is None:
+            self.status.warning("Fetch a ranked team before saving templates.")
+            return
+
+        game_update = self.game_update_input.text().strip()
+        if not game_update:
+            self.status.warning(
+                "Enter the ESO game update before saving this evidence."
+            )
+            return
+
+        self.save_team_button.setEnabled(False)
+        try:
+            outcome = self._template_intake.add_team(
+                top_team_service=self._current_service,
+                result=self._current_result,
+                game_update=game_update,
+                include_mundus=False,
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            self.status.error(f"Could not save the observed team: {exc}")
+            return
+        finally:
+            self.save_team_button.setEnabled(True)
+
+        saved = len(outcome.templates)
+        skipped = len(outcome.skipped_players)
+        if not saved:
+            self.status.warning(
+                "This log exposed no class-tagged gear or skill setups to save."
+            )
+        elif skipped:
+            self.status.warning(
+                f"Saved {saved} observed build template(s); skipped {skipped}. "
+                "No complete build fields were invented."
+            )
+        else:
+            self.status.success(
+                f"Saved {saved} observed build template(s) for Comp Maker "
+                f"as {game_update} evidence."
+            )
 
     @staticmethod
     def _looks_like_support(player: TopTeamPlayer) -> bool:

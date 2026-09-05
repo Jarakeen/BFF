@@ -23,6 +23,14 @@ class TopTeamTemplateIntakeResult:
     mundus_resolved: bool
 
 
+@dataclass(frozen=True)
+class TopTeamTemplateBatchIntakeResult:
+    """Outcome of curating every usable player setup from one ranked team."""
+
+    templates: tuple[ObservedTeamTemplate, ...]
+    skipped_players: tuple[str, ...]
+
+
 class TopTeamTemplateIntake:
     """UI-facing boundary for ``Add to Team Templates``.
 
@@ -81,4 +89,45 @@ class TopTeamTemplateIntake:
             template=template,
             mundus_lookup_requested=mundus_lookup_requested,
             mundus_resolved=bool(mundus),
+        )
+
+    def add_team(
+        self,
+        *,
+        top_team_service: TopTeamService,
+        result: TopTeamResult,
+        game_update: str,
+        retrieved_at: str | None = None,
+        source_score: float = 100.0,
+        include_mundus: bool = False,
+    ) -> TopTeamTemplateBatchIntakeResult:
+        """Curate every usable partial build in one fetched team.
+
+        A player needs a resolved class plus at least one observed gear set or
+        ability. Empty/anonymized rows are reported as skipped instead of becoming
+        misleading catalog candidates. Mundus defaults off for bulk intake because
+        resolving it would require an additional ESO Logs request per player.
+        """
+
+        templates: list[ObservedTeamTemplate] = []
+        skipped: list[str] = []
+        for player in result.Players:
+            if not player.ClassName.strip() or not (
+                player.GearSets or player.Abilities
+            ):
+                skipped.append(player.Name or "Unknown")
+                continue
+            outcome = self.add_player(
+                top_team_service=top_team_service,
+                result=result,
+                player=player,
+                game_update=game_update,
+                retrieved_at=retrieved_at,
+                source_score=source_score,
+                include_mundus=include_mundus,
+            )
+            templates.append(outcome.template)
+        return TopTeamTemplateBatchIntakeResult(
+            templates=tuple(templates),
+            skipped_players=tuple(skipped),
         )

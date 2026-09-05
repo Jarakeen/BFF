@@ -146,3 +146,37 @@ def test_intake_keeps_mundus_unresolved_when_lazy_lookup_returns_no_evidence(tmp
     assert not outcome.mundus_resolved
     assert outcome.template.mundus == ""
     assert "mundus" in outcome.template.unknown_fields
+
+
+def test_bulk_intake_saves_gear_and_skills_and_skips_empty_players(tmp_path) -> None:
+    intake, store = _intake(tmp_path)
+    service = _FakeTopTeamService()
+    result = _result()
+    result.Players.extend(
+        (
+            _player(),
+            TopTeamPlayer(
+                Name="Anonymous",
+                Role="dps",
+                ClassName="",
+                GearSets=[],
+                Abilities=[],
+            ),
+        )
+    )
+
+    outcome = intake.add_team(
+        top_team_service=service,
+        result=result,
+        game_update="Update 50",
+        retrieved_at="2026-09-05T18:00:00+00:00",
+    )
+
+    assert service.mundus_calls == 0
+    assert len(outcome.templates) == 1
+    assert outcome.skipped_players == ("Anonymous",)
+    saved = store.load().templates[0]
+    assert saved.game_update == "Update 50"
+    assert saved.gear_sets == ("Serpent's Disdain", "Pillager's Profit")
+    assert saved.skills == ("Combat Prayer", "Energy Orb")
+    assert "skill bar placement" in saved.unknown_fields
