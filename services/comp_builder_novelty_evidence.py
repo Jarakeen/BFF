@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 from pathlib import Path
 from typing import Iterable
 import unicodedata
@@ -23,6 +24,19 @@ def _identity(value: object) -> str:
 def _gear_identity(value: object) -> str:
     text = _identity(value)
     return text[len("perfected ") :] if text.startswith("perfected ") else text
+
+
+def _gear_pairs(values: Iterable[object]) -> tuple[tuple[str, str], ...]:
+    normalized = tuple(
+        sorted(
+            {
+                key
+                for value in values
+                if (key := _gear_identity(value))
+            }
+        )
+    )
+    return tuple(combinations(normalized, 2))
 
 
 @dataclass(frozen=True)
@@ -51,6 +65,10 @@ class CompBuilderNoveltyEvidenceService:
     Novelty is descriptive evidence, never a hard validity signal. The whole-team
     optimizer may use it only after chair fill, required provider coverage and other
     hard candidate gates have already been satisfied.
+
+    The observation store can prove class/role frequency and gear-set combinations.
+    It does not currently prove canonical provider ownership, so provider-redistribution
+    novelty is deliberately not inferred from set names or prose.
     """
 
     def __init__(self, data_dir: str | Path):
@@ -70,6 +88,7 @@ class CompBuilderNoveltyEvidenceService:
         if normalized_role is None:
             return CompNoveltyEvidenceResult((), 0, "unsupported role")
 
+        candidates = tuple(candidates)
         snapshot = self.store.load()
         role_rows = tuple(
             row
@@ -109,18 +128,34 @@ class CompBuilderNoveltyEvidenceService:
                 scope=scope,
             )
 
-        class_counts: dict[str, int] = {}
+        class_role_counts: dict[str, int] = {}
         gear_counts: dict[str, int] = {}
+        gear_pair_counts: dict[tuple[str, str], int] = {}
         gear_observation_count = 0
+        pair_observation_count = 0
         for row in corpus:
             class_key = _identity(row.eso_class)
             if class_key:
-                class_counts[class_key] = class_counts.get(class_key, 0) + 1
-            row_gear = {_gear_identity(name) for name in row.gear_sets if _gear_identity(name)}
+                # The corpus is already role-scoped, so this is explicitly the
+                # frequency of a class/role pairing rather than class popularity in
+                # the game at large.
+                class_role_counts[class_key] = class_role_counts.get(class_key, 0) + 1
+
+            row_gear = {
+                _gear_identity(name)
+                for name in row.gear_sets
+                if _gear_identity(name)
+            }
             if row_gear:
                 gear_observation_count += 1
                 for gear_key in row_gear:
                     gear_counts[gear_key] = gear_counts.get(gear_key, 0) + 1
+
+            row_pairs = _gear_pairs(row.gear_sets)
+            if row_pairs:
+                pair_observation_count += 1
+                for pair in row_pairs:
+                    gear_pair_counts[pair] = gear_pair_counts.get(pair, 0) + 1
 
         confidence = min(1.0, sample_size / float(_FULL_CONFIDENCE_SAMPLE))
         evidence: list[CompCandidateNoveltyEvidence] = []
@@ -130,11 +165,12 @@ class CompBuilderNoveltyEvidenceService:
 
             class_key = _identity(candidate.eso_class)
             if class_key:
-                class_frequency = class_counts.get(class_key, 0) / float(sample_size)
-                class_rarity = 1.0 - class_frequency
-                parts.append((class_rarity, 0.4))
+                class_frequency = class_role_counts.get(class_key, 0) / float(sample_size)
+                class_role_rarity = 1.0 - class_frequency
+                parts.append((class_role_rarity, 0.30))
                 reasons.append(
-                    f"class observed {class_counts.get(class_key, 0)}/{sample_size} times"
+                    f"{candidate.eso_class or 'class'} {normalized_role} pairing observed "
+                    f"{class_role_counts.get(class_key, 0)}/{sample_size} times"
                 )
 
             candidate_gear = tuple(
@@ -150,13 +186,34 @@ class CompBuilderNoveltyEvidenceService:
                     for key in candidate_gear
                 )
                 gear_rarity = sum(set_rarities) / len(set_rarities)
-                parts.append((gear_rarity, 0.6))
+                parts.append((gear_rarity, 0.30))
                 rarest = min(
                     candidate_gear,
                     key=lambda key: gear_counts.get(key, 0),
                 )
                 reasons.append(
-                    f"rarest candidate set observed {gear_counts.get(rarest, 0)}/{gear_observation_count} geared setups"
+                    f"rarest candidate set observed {gear_counts.get(rarest, 0)}/"
+                    f"{gear_observation_count} geared setups"
+                )
+
+            candidate_pairs = _gear_pairs(candidate.gear_sets)
+            if candidate_pairs and pair_observation_count >= _MIN_SAMPLE:
+                pair_rarities = tuple(
+                    1.0 - (
+                        gear_pair_counts.get(pair, 0) / float(pair_observation_count)
+                    )
+                    for pair in candidate_pairs
+                )
+                pair_rarity = sum(pair_rarities) / len(pair_rarities)
+                parts.append((pair_rarity, 0.40))
+                rarest_pair = min(
+                    candidate_pairs,
+                    key=lambda pair: gear_pair_counts.get(pair, 0),
+                )
+                reasons.append(
+                    "rarest candidate gear pairing observed "
+                    f"{gear_pair_counts.get(rarest_pair, 0)}/{pair_observation_count} "
+                    "multi-set setups"
                 )
 
             if parts:
@@ -170,6 +227,10 @@ class CompBuilderNoveltyEvidenceService:
             score = max(0.0, min(100.0, 100.0 * raw_novelty * confidence))
             reasons.append(
                 f"rarity confidence {confidence:.2f} from {sample_size} observed setup(s)"
+            )
+            reasons.append(
+                "provider redistribution rarity unavailable until observed setups carry "
+                "canonical provider evidence"
             )
             evidence.append(
                 CompCandidateNoveltyEvidence(
