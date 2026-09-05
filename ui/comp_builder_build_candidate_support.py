@@ -7,12 +7,15 @@ from services.comp_builder_build_candidates import (
     CompBuildCandidate,
     CompBuilderBuildCandidateService,
 )
+from services.generated_roster_plan_service import GeneratedRosterPlanSlot
+from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 
 
 _INSTALLED = False
 _ORIGINAL_COMP_INIT = None
 _ORIGINAL_RENDER_SLOTS = None
+_ORIGINAL_SEND_TO_ROSTER = None
 
 
 def _details_card(page) -> FoundryCard | None:
@@ -66,11 +69,9 @@ def _candidate_text(candidate: CompBuildCandidate, rank: int) -> list[str]:
     return lines
 
 
-def _format_candidates(page) -> str:
-    row = _selected_row(page)
+def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
     if row < 0:
-        return "BUILD CANDIDATES • MERGED SOURCES\nNo composition chair selected."
-
+        return ()
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
     role = page._cell_text(row, 1)
     preferred_class = page._selected_class(row) or "Any class"
@@ -88,16 +89,26 @@ def _format_candidates(page) -> str:
         if observed is not None
         else ()
     )
+    return page._comp_build_candidate_service.candidates_for_chair(
+        goal=goal,
+        slot_name=slot_name,
+        role=role,
+        preferred_class=preferred_class,
+        observed_gear_sets=observed_gear,
+        observed_skills=observed_skills,
+    )
 
+
+def _format_candidates(page) -> str:
+    row = _selected_row(page)
+    if row < 0:
+        return "BUILD CANDIDATES • MERGED SOURCES\nNo composition chair selected."
+
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    role = page._cell_text(row, 1)
+    preferred_class = page._selected_class(row) or "Any class"
     try:
-        candidates = page._comp_build_candidate_service.candidates_for_chair(
-            goal=goal,
-            slot_name=slot_name,
-            role=role,
-            preferred_class=preferred_class,
-            observed_gear_sets=observed_gear,
-            observed_skills=observed_skills,
-        )
+        candidates = _chair_candidates(page, row)
     except (OSError, ValueError) as exc:
         return (
             "BUILD CANDIDATES • MERGED SOURCES\n"
@@ -108,8 +119,12 @@ def _format_candidates(page) -> str:
         "BUILD CANDIDATES • MERGED SOURCES",
         f"{slot_name} • {preferred_class} • {role}",
         "Saved builds and versioned references are ranked for relevance. This is not yet combat optimization.",
-        "",
     ]
+    applied = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
+    if applied is not None:
+        lines.append(f"APPLIED TO CHAIR: {applied.name} • {_source_label(applied)}")
+    lines.append("")
+
     if not candidates:
         lines.extend(
             (
@@ -130,6 +145,27 @@ def _refresh_candidates(page) -> None:
     label = getattr(page, "comp_build_candidates_label", None)
     if label is not None:
         label.setText(_format_candidates(page))
+    button = getattr(page, "apply_comp_candidate_button", None)
+    if button is not None:
+        try:
+            button.setEnabled(bool(_chair_candidates(page, _selected_row(page))))
+        except (OSError, ValueError):
+            button.setEnabled(False)
+
+
+def _class_changed(page, row: int) -> None:
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    applied = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
+    if applied is not None:
+        selected = page._selected_class(row)
+        if (
+            selected
+            and selected.casefold() != "any class"
+            and applied.eso_class
+            and selected.casefold() != applied.eso_class.casefold()
+        ):
+            page._comp_applied_candidates.pop(slot_name, None)
+    _refresh_candidates(page)
 
 
 def _wire_class_selectors(page) -> None:
@@ -139,14 +175,59 @@ def _wire_class_selectors(page) -> None:
             continue
         if selector.property("compCandidateRefreshConnected"):
             continue
-        selector.currentTextChanged.connect(lambda *_: _refresh_candidates(page))
+        selector.currentTextChanged.connect(
+            lambda *_args, row=row: _class_changed(page, row)
+        )
         selector.setProperty("compCandidateRefreshConnected", True)
+
+
+def _apply_top_candidate(page, *_args) -> None:
+    row = _selected_row(page)
+    if row < 0:
+        page.status.warning("Select a composition chair before applying a build candidate.")
+        return
+    try:
+        candidates = _chair_candidates(page, row)
+    except (OSError, ValueError) as exc:
+        page.status.error(f"Could not read build candidates: {exc}")
+        return
+    if not candidates:
+        page.status.warning("No matching build candidate is available for this chair.")
+        return
+
+    candidate = candidates[0]
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    page._comp_applied_candidates[slot_name] = candidate
+
+    if candidate.eso_class:
+        selector = page.matrix_table.cellWidget(row, 2)
+        if isinstance(selector, QComboBox):
+            index = selector.findText(candidate.eso_class)
+            if index >= 0:
+                selector.setCurrentIndex(index)
+
+    status = "complete build" if candidate.complete_build else "partial build evidence"
+    page.status.success(
+        f"Applied {candidate.name} to {slot_name} as {status}. "
+        "Send to Roster will preserve this candidate evidence."
+    )
+    _refresh_candidates(page)
 
 
 def _install_candidate_ui(page) -> None:
     page._comp_build_candidate_service = CompBuilderBuildCandidateService(get_data_dir())
+    page._comp_applied_candidates: dict[str, CompBuildCandidate] = {}
     page.comp_build_candidates_label = QLabel()
     page.comp_build_candidates_label.setWordWrap(True)
+    page.apply_comp_candidate_button = FoundryButton(
+        "Apply Top Candidate",
+        role=ButtonRole.PRIMARY,
+        compact=True,
+    )
+    page.apply_comp_candidate_button.setEnabled(False)
+    page.apply_comp_candidate_button.clicked.connect(
+        lambda *_: _apply_top_candidate(page)
+    )
 
     details = _details_card(page)
     if details is not None:
@@ -158,8 +239,10 @@ def _install_candidate_ui(page) -> None:
             selected_index = layout.indexOf(selected) if selected is not None else -1
             insert_at = selected_index + 1 if selected_index >= 0 else min(3, layout.count())
             layout.insertWidget(insert_at, page.comp_build_candidates_label)
+            layout.insertWidget(insert_at + 1, page.apply_comp_candidate_button)
         else:
             details.addWidget(page.comp_build_candidates_label)
+            details.addWidget(page.apply_comp_candidate_button)
 
     page.matrix_table.currentCellChanged.connect(lambda *_: _refresh_candidates(page))
     page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_candidates(page))
@@ -181,13 +264,95 @@ def _comp_init_with_build_candidates(self, parent=None) -> None:
 def _render_slots_with_candidate_refresh(self, slots) -> None:
     assert _ORIGINAL_RENDER_SLOTS is not None
     _ORIGINAL_RENDER_SLOTS(self, slots)
-    if hasattr(self, "_comp_build_candidate_service"):
+    if hasattr(self, "_comp_applied_candidates"):
+        self._comp_applied_candidates.clear()
         _wire_class_selectors(self)
         _refresh_candidates(self)
 
 
+def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> str:
+    details = [base_detail, f"Candidate source: {_source_label(candidate)}."]
+    if candidate.skills:
+        details.append("Observed/known skills: " + ", ".join(candidate.skills) + ".")
+    if candidate.mundus:
+        details.append(f"Mundus: {candidate.mundus}.")
+    if not candidate.complete_build:
+        details.append("Candidate is partial evidence, not a complete prescribed build.")
+    if candidate.unresolved:
+        details.append("Unresolved: " + "; ".join(candidate.unresolved) + ".")
+    return " ".join(details)
+
+
+def _send_to_roster_with_candidates(self, *_args) -> None:
+    applied = getattr(self, "_comp_applied_candidates", {})
+    if not applied:
+        assert _ORIGINAL_SEND_TO_ROSTER is not None
+        _ORIGINAL_SEND_TO_ROSTER(self)
+        return
+
+    goal = self.goal_combo.currentText().strip() or "Custom Goal"
+    plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
+    slots: list[GeneratedRosterPlanSlot] = []
+    for row in range(self.matrix_table.rowCount()):
+        slot_name = self._cell_text(row, 0)
+        selected_class = self._selected_class(row)
+        alternatives = self._cell_text(row, 3) or "Flexible"
+        required = self._cell_text(row, 4) or "Open responsibility"
+        optional = self._cell_text(row, 5) or "None declared"
+        providers = self._cell_text(row, 6) or "None declared"
+        mechanic_jobs = self._cell_text(row, 7) or "None declared"
+        detail = (
+            f"Composition requirement. Alternatives: {alternatives}. "
+            f"Required: {required}. Optional/flex: {optional}. "
+            f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
+        )
+        candidate = applied.get(slot_name)
+        if candidate is None:
+            concrete = selected_class != "Any class"
+            slots.append(
+                GeneratedRosterPlanSlot(
+                    slot_name=slot_name,
+                    kind="prescribed_recruit" if concrete else "open_recruit",
+                    player_name="Recruitment Needed",
+                    character_name="",
+                    eso_class=selected_class,
+                    build_name="Composition requirement",
+                    gear_summary="",
+                    unresolved=detail,
+                )
+            )
+            continue
+
+        is_saved = candidate.source_kind == "saved_build"
+        slots.append(
+            GeneratedRosterPlanSlot(
+                slot_name=slot_name,
+                kind="prescribed_player" if is_saved else "prescribed_recruit",
+                player_name=candidate.source_name if is_saved else "Recruitment Needed",
+                character_name=candidate.source_name if is_saved else "",
+                eso_class=candidate.eso_class or selected_class,
+                build_name=candidate.name,
+                gear_summary=" + ".join(candidate.gear_sets),
+                unresolved=_candidate_unresolved(candidate, detail),
+            )
+        )
+
+    plan = self.plan_service.save_plan(
+        name=plan_name,
+        goal=goal,
+        difficulty=self.difficulty_combo.currentText(),
+        slots=tuple(slots),
+    )
+    applied_count = sum(1 for slot in slots if slot.build_name != "Composition requirement")
+    self.status.success(
+        f"Sent {plan.name} to Roster with {len(plan.slots)} composition chair(s); "
+        f"preserved {applied_count} applied build candidate(s)."
+    )
+    self.rosterPlanSent.emit(plan.name)
+
+
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_RENDER_SLOTS
+    global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_RENDER_SLOTS, _ORIGINAL_SEND_TO_ROSTER
     if _INSTALLED:
         return
 
@@ -195,6 +360,8 @@ def install() -> None:
 
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     _ORIGINAL_RENDER_SLOTS = CompBuilderPage._render_slots
+    _ORIGINAL_SEND_TO_ROSTER = CompBuilderPage._send_to_roster
     CompBuilderPage.__init__ = _comp_init_with_build_candidates
     CompBuilderPage._render_slots = _render_slots_with_candidate_refresh
+    CompBuilderPage._send_to_roster = _send_to_roster_with_candidates
     _INSTALLED = True
