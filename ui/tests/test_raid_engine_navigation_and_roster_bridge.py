@@ -25,6 +25,19 @@ def test_raid_engine_menu_matches_workflow_order():
     ]
 
 
+def test_help_guide_is_nested_under_settings_navigation():
+    settings = next(
+        item for item in CORE_NAV_SECTIONS
+        if isinstance(item, dict) and item.get("label") == "Settings"
+    )
+    assert settings["page"] == "settings"
+    assert settings["children"] == [("Help & Guide", "help")]
+    assert not any(
+        isinstance(item, tuple) and len(item) >= 2 and item[1] == "help"
+        for item in CORE_NAV_SECTIONS
+    )
+
+
 def test_optimized_build_identity_preserves_player_character_and_build():
     build = SimpleNamespace(
         Name="Player One",
