@@ -32,10 +32,26 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     unresolved_provider_mappings: list[str] = []
     skipped_existing = 0
 
+    required_team_provider_ids = tuple(
+        row.capability_type
+        for row in provider_service.profile.mapped_required
+        if row.capability_type
+    )
+    already_covered_team_provider_ids: set[str] = set()
+    for slot_name, candidate in applied.items():
+        skipped_existing += 1
+        try:
+            already_covered_team_provider_ids.update(
+                provider_service.provider_ids_for_candidate(candidate)
+            )
+        except Exception as exc:
+            unresolved_reads.append(
+                f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
+            )
+
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
         if slot_name in applied:
-            skipped_existing += 1
             continue
         try:
             candidates = support._chair_candidates(page, row)
@@ -78,6 +94,8 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
         provider_ids_by_candidate=provider_ids_by_candidate,
+        required_team_provider_ids=required_team_provider_ids,
+        already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids)),
     )
 
     for assignment in result.assignments:
@@ -93,7 +111,20 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         f"Optimized the remaining team and applied {result.applied_count} candidate(s); "
         f"preserved {skipped_existing} existing choice(s); {open_count} chair(s) remain open."
     )
+    display_name_by_provider_id = {
+        row.capability_type: row.display_name
+        for row in provider_service.profile.mapped_required
+        if row.capability_type
+    }
+    uncovered_team_provider_names = tuple(
+        display_name_by_provider_id.get(provider_id, provider_id)
+        for provider_id in result.uncovered_team_provider_ids
+    )
     unresolved = [
+        *(
+            f"raid-wide provider still uncovered: {name}"
+            for name in uncovered_team_provider_names
+        ),
         *(
             f"{slot}: no candidate proved the chair's mapped provider requirement"
             for slot in result.provider_blocked_slots
