@@ -47,6 +47,22 @@ QLineEdit[compMakerConstraintInput="true"] {
     background-color: #151113;
     border-left: 3px solid #8B1E24;
 }
+QComboBox[compCompositionStyle="true"] {
+    background-color: #151113;
+    color: #E1DED8;
+    border-left: 3px solid #8B1E24;
+    border-top: 1px solid #3D3F43;
+    border-right: 1px solid #242629;
+    border-bottom: 1px solid #242629;
+}
+QComboBox[compCompositionStyle="true"]:focus {
+    border: 2px solid #B88A3C;
+}
+QLabel[compCompositionStyleHelp="true"] {
+    color: #969A9E;
+    background: transparent;
+    padding-left: 2px;
+}
 QFrame[compMakerChairCard="true"] QWidget[cardHeader="true"] {
     border-bottom: 2px solid #5A3336;
 }
