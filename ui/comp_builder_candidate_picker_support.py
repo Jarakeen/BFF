@@ -49,6 +49,14 @@ def _selected_candidate(page):
     return candidates[0] if candidates else None
 
 
+def _candidate_source_name(candidate) -> str:
+    if candidate.source_kind == "saved_build":
+        return "Roster"
+    if candidate.source_kind == "esologs_snapshot":
+        return "ESO Logs"
+    return "Reference"
+
+
 def _refresh_picker(page) -> None:
     from ui import comp_builder_build_candidate_support as candidate_support
 
@@ -66,7 +74,7 @@ def _refresh_picker(page) -> None:
     combo.blockSignals(True)
     combo.clear()
     for rank, candidate in enumerate(candidates, start=1):
-        source = "Roster" if candidate.source_kind == "saved_build" else "Reference"
+        source = _candidate_source_name(candidate)
         combo.addItem(
             f"#{rank}  {candidate.name}  •  {source}  •  {candidate.score:.1f}",
             candidate.candidate_id,
