@@ -29,6 +29,15 @@ def test_comp_maker_bulk_application_does_not_clone_saved_players():
     assert "used_saved_players.add(player_key)" in source
 
 
+def test_fill_from_roster_uses_saved_build_candidates_only():
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
+
+    assert 'if candidate.source_kind == "saved_build"' in source
+    assert "Reference templates remain" in source
+    assert "Filled {result.applied_count} open chair(s) from saved roster builds" in source
+    assert "no matching saved roster build" in source
+
+
 def test_comp_maker_send_to_roster_preserves_applied_candidate_build_evidence():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
