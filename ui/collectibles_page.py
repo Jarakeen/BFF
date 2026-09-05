@@ -32,6 +32,16 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 
 
+_GRANULAR_CATEGORY_FILTERS = {
+    "Body Markings": ("Hairstyles & Adornments", {"body_marking"}),
+    "Facial Hair / Horns": ("Hairstyles & Adornments", {"facial_hair_horns"}),
+    "Piercing / Jewelry": ("Hairstyles & Adornments", {"piercing_jewelry"}),
+    "Facial Accessories": ("Hairstyles & Adornments", {"facial_accessory"}),
+    "Hair": ("Hairstyles & Adornments", {"hair"}),
+    "Head Markings": ("Hairstyles & Adornments", {"head_marking"}),
+}
+
+
 class CollectiblesPage(QWidget):
     """Shared page used by all ``collectibles:*`` routes."""
 
@@ -184,6 +194,16 @@ class CollectiblesPage(QWidget):
         self._clear_details()
         self.refresh()
 
+    def _category_scope(self) -> tuple[str, set[str] | None]:
+        parent, type_filter = _GRANULAR_CATEGORY_FILTERS.get(self.category, (self.category, None))
+        return parent, type_filter
+
+    @staticmethod
+    def _filter_by_type(rows: list[dict], type_filter: set[str] | None) -> list[dict]:
+        if not type_filter:
+            return rows
+        return [row for row in rows if row.get("canonical_type_key") in type_filter]
+
     def refresh(self):
         selected_id = self.current_collectible_id
         self._building_results = True
@@ -198,7 +218,16 @@ class CollectiblesPage(QWidget):
             self.status.warning(self.service.bootstrap_message or "Collectible reference data is unavailable.")
             return
 
-        rows = self.service.collectibles(self.category, self.search.text())
+        service_category, type_filter = self._category_scope()
+        all_rows = self._filter_by_type(self.service.collectibles(service_category), type_filter)
+        if self.search.text().strip():
+            rows = self._filter_by_type(
+                self.service.collectibles(service_category, self.search.text()),
+                type_filter,
+            )
+        else:
+            rows = all_rows
+
         selected_row = -1
         for index, row in enumerate(rows):
             item = QListWidgetItem(row["name"])
@@ -218,7 +247,8 @@ class CollectiblesPage(QWidget):
                 selected_row = index
 
         self._building_results = False
-        owned, total = self.service.progress_summary(self.category)
+        owned = sum(1 for row in all_rows if bool(row.get("owned")))
+        total = len(all_rows)
         pending_delta = sum(1 for cid in self.pending_changes if any(
             self.results.item(i).data(Qt.ItemDataRole.UserRole) == cid for i in range(self.results.count())
         ))
@@ -326,10 +356,14 @@ class CollectiblesPage(QWidget):
         hint = (row.get("hint") or "").strip()
         self.detail_hint.setText(f"Acquisition hint: {hint}" if hint else "")
         flags = []
-        if row.get("is_usable"): flags.append("Usable")
-        if row.get("is_renameable"): flags.append("Renameable")
-        if row.get("is_slottable"): flags.append("Slottable")
-        if row.get("has_appearance"): flags.append("Appearance")
+        if row.get("is_usable"):
+            flags.append("Usable")
+        if row.get("is_renameable"):
+            flags.append("Renameable")
+        if row.get("is_slottable"):
+            flags.append("Slottable")
+        if row.get("has_appearance"):
+            flags.append("Appearance")
         self.detail_flags.setText(" · ".join(flags))
         effective = self.pending_changes.get(self.current_collectible_id, bool(row.get("owned")))
         self.collected.setChecked(effective)
@@ -368,7 +402,13 @@ class CollectiblesPage(QWidget):
         pixmap = QPixmap(str(icon_path))
         if pixmap.isNull():
             return
-        self.detail_icon.setPixmap(pixmap.scaled(self.detail_icon.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        self.detail_icon.setPixmap(
+            pixmap.scaled(
+                self.detail_icon.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
 
     def _clear_details(self, message: str = "Select a collectible."):
         self.current_collectible_id = None
