@@ -5,6 +5,7 @@ from pathlib import Path
 
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
+from services.comp_builder_build_candidates import CompBuildCandidate
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
 from services.raid_coverage_encounter_adapter import RaidCoverageEncounterAdapter
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE, RaidCoverageProfile
@@ -43,14 +44,16 @@ class CompBuilderProviderEvidenceService:
         self.capability_adapter = SavedBuildEncounterCapabilityAdapter(
             self.coverage_adapter.capability_identity_maps()
         )
+        self.build_service = BuildService(self.data_dir / "builds.json")
         self.capability_service = capability_service or SavedBuildCapabilityService(
-            BuildService(self.data_dir / "builds.json"),
+            self.build_service,
             self.data_dir / "eso.db",
         )
         self._rows_by_label = {
             row.display_name.casefold(): row
             for row in profile.requirements
         }
+        self._candidate_provider_cache: dict[str, tuple[str, ...]] = {}
 
     def resolve_requirement_labels(
         self,
@@ -96,3 +99,37 @@ class CompBuilderProviderEvidenceService:
             for row in mapped
             if row.capability_type in supported
         )
+
+    def provider_ids_for_candidate(self, candidate: CompBuildCandidate) -> tuple[str, ...]:
+        """Return only canonically proven provider identities for one candidate.
+
+        Saved BFF builds can be reloaded as complete canonical build snapshots and
+        audited through SavedBuildCapabilityService. Reference/observed templates
+        are not treated as providers here because CompBuildCandidate intentionally
+        carries only partial build evidence and cannot prove the full configured
+        build needed by the capability audit.
+        """
+
+        if candidate.source_kind != "saved_build":
+            return ()
+        cached = self._candidate_provider_cache.get(candidate.candidate_id)
+        if cached is not None:
+            return cached
+
+        target_name = _clean(candidate.name).casefold()
+        target_owner = _clean(candidate.source_name).casefold()
+        matches: list[PlayerBuild] = []
+        for build in self.build_service.load().Members:
+            build_name = _clean(build.BuildName).casefold()
+            owner = (_clean(build.Name) or _clean(build.Gamertag)).casefold()
+            if build_name == target_name and owner == target_owner:
+                matches.append(build)
+
+        if len(matches) != 1:
+            # Ambiguous or stale candidate identity must remain unresolved instead
+            # of borrowing provider evidence from a different saved build.
+            result: tuple[str, ...] = ()
+        else:
+            result = self.provider_ids_for_build(matches[0])
+        self._candidate_provider_cache[candidate.candidate_id] = result
+        return result
