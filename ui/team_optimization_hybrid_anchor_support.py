@@ -43,80 +43,47 @@ def install() -> None:
     )
     _INSTALLED = True
 
-    # Install last in the existing team-support chain. The underlying prescription
-    # machinery remains available, but its direct composition-building UI is removed
-    # from Optimization now that Comp Builder owns that responsibility.
     from ui.team_optimization_role_cleanup import install as install_role_cleanup
-
     install_role_cleanup()
 
-    # Comp Builder owns the planned coverage scoreboard; the shared progress layer
-    # keeps its evidence-driven checkmarks refreshed.
     from ui.team_progress_support import install as install_team_progress_support
-
     install_team_progress_support()
 
-    # ESO Logs composition evidence is additive: observed snapshots can inform
-    # Comp Builder classes without overwriting responsibilities/providers.
     from ui.comp_builder_esologs_support import install as install_comp_builder_esologs
-
     install_comp_builder_esologs()
 
-    # Keep the selected-chair setup above the all-chair ESO Logs summary so gear and
-    # skills are visible immediately when a matrix row is selected.
     from ui.comp_builder_esologs_chair_layout import install as install_comp_builder_esologs_chair_layout
-
     install_comp_builder_esologs_chair_layout()
 
-    # Merge saved BFF builds with versioned reference templates for the selected
-    # composition chair. ESO Logs overlap improves relevance when that evidence is
-    # available, but hidden log setup data is never fabricated.
     from ui.comp_builder_build_candidate_support import install as install_comp_builder_build_candidates
-
     install_comp_builder_build_candidates()
 
-    # Upgrade the all-chair action from greedy row order to one deterministic team
-    # assignment. Manual chair choices remain fixed, saved players remain unique,
-    # and reference templates stay reusable recruitment evidence.
+    # Visible style state must exist before the whole-team optimizer is installed.
+    from ui.comp_builder_composition_style_support import (
+        install as install_comp_builder_composition_style,
+    )
+    install_comp_builder_composition_style()
+
     from ui.comp_builder_team_candidate_optimizer_support import (
         install as install_comp_builder_team_candidate_optimizer,
     )
-
     install_comp_builder_team_candidate_optimizer()
 
-    # Materialize those already-selected Comp Maker assignments into the existing
-    # PrescribedRoster model before roster transfer. This materialization does not rerank;
-    # it only resolves the optimizer's authoritative saved/template candidate IDs.
     from ui.comp_builder_authoritative_prescription_support import (
         install as install_comp_builder_authoritative_prescription,
     )
-
     install_comp_builder_authoritative_prescription()
 
-    # User-injected class/gear ingredients are hard candidate gates. Install this
-    # after authoritative materialization so roster transfer can revalidate current
-    # source evidence before the already-selected prescription is persisted.
     from ui.comp_builder_build_constraint_support import (
         install as install_comp_builder_build_constraints,
     )
-
     install_comp_builder_build_constraints()
 
-    # Reframe the page around a compact raid overview and a selected-chair editor.
-    # Original matrix columns remain hidden authoritative storage so provider,
-    # mechanic and prescription plumbing does not fork into a second data model.
     from ui.comp_builder_workspace_support import install as install_comp_builder_workspace
-
     install_comp_builder_workspace()
 
-    # Rylo gets explicit Comp Maker surfaces rather than inheriting whatever teal
-    # happened to survive from the default theme.
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
-
     install_comp_builder_rylo()
 
-    # Finally stack the entire Comp Maker workspace vertically. Vertical scrolling is
-    # intentional; horizontal page/table scrolling is explicitly disabled.
     from ui.comp_builder_layout_support import install as install_comp_builder_layout
-
     install_comp_builder_layout()
