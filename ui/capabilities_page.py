@@ -27,6 +27,7 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QStackedWidget,
+    QTabBar,
     QMessageBox,
     QWidget,
     QFileDialog,
@@ -36,8 +37,6 @@ from engine.config import get_data_dir
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_button import ButtonRole, FoundryButton
-from ui.components.foundry_tabs import FoundryTabs
-
 from ui.foundry_page import FoundryPage
 
 from widgets.capability_editor import CapabilityEditor
@@ -327,12 +326,14 @@ class CapabilitiesPage(FoundryPage):
         if not labels:
             return
 
-        self.tabs_widget = FoundryTabs(
-            labels,
-            selected=labels[current] if current < len(labels) else labels[0],
-        )
-
-        self.tabs_widget.tabChanged.connect(self._select_tab_by_label)
+        self.tabs_widget = QTabBar()
+        self.tabs_widget.setExpanding(False)
+        self.tabs_widget.setDrawBase(True)
+        self.tabs_widget.setUsesScrollButtons(True)
+        for label in labels:
+            self.tabs_widget.addTab(label)
+        self.tabs_widget.setCurrentIndex(min(current, len(labels) - 1))
+        self.tabs_widget.currentChanged.connect(self._select_tab_by_index)
 
         self.tabs_container.addWidget(self.tabs_widget)
 
@@ -342,15 +343,9 @@ class CapabilitiesPage(FoundryPage):
             len(self.editors) < CapabilityRoster.MAX_MEMBERS
         )
 
-    def _select_tab_by_label(self, label: str):
-
-        for i, editor in enumerate(self.editors):
-
-            if editor.model.display_label(f"Member {i + 1}") == label:
-
-                self.stack.setCurrentIndex(i)
-
-                return
+    def _select_tab_by_index(self, index: int):
+        if 0 <= index < self.stack.count():
+            self.stack.setCurrentIndex(index)
 
     # --------------------------------------------------
     # Member management
