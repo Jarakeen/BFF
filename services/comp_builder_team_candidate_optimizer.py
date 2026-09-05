@@ -10,6 +10,7 @@ from services.comp_builder_build_candidates import CompBuildCandidate
 class CompTeamCandidatePool:
     slot_name: str
     candidates: tuple[CompBuildCandidate, ...]
+    required_provider_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class CompTeamCandidateAssignment:
 @dataclass(frozen=True)
 class CompTeamCandidateOptimizationResult:
     assignments: tuple[CompTeamCandidateAssignment, ...]
+    provider_blocked_slots: tuple[str, ...] = ()
 
     @property
     def applied_count(self) -> int:
@@ -44,9 +46,6 @@ def _saved_player_key(candidate: CompBuildCandidate) -> str:
 def _option_value(candidate: CompBuildCandidate | None) -> tuple[int, int, float]:
     if candidate is None:
         return (0, 0, 0.0)
-    # Fill as many chairs as possible first. Within equally complete team plans,
-    # concrete user-owned saved builds outrank reference-only evidence, matching
-    # CompBuilderBuildCandidateService's source precedence. Relevance then breaks ties.
     return (
         1,
         1 if candidate.source_kind == "saved_build" else 0,
@@ -67,16 +66,25 @@ def optimize_comp_team_candidates(
     *,
     pools: tuple[CompTeamCandidatePool, ...],
     already_used_saved_players: tuple[str, ...] = (),
+    provider_ids_by_candidate: dict[str, tuple[str, ...]] | None = None,
 ) -> CompTeamCandidateOptimizationResult:
     """Choose a coherent team assignment from per-chair Comp Maker candidates.
 
-    This solves the cross-chair collision problem that greedy chair-by-chair selection
-    cannot: one saved player can own many builds but can occupy only one raid chair.
-    Reference templates are reusable recruitment evidence and therefore do not consume
-    a player identity. The objective is deterministic and deliberately remains relevance
-    ranking, not combat optimization.
+    Saved players are consumable once. Reference templates are reusable recruitment
+    evidence. When a chair carries canonically mapped provider requirements, candidates
+    that cannot prove every required provider identity are ineligible. Unsupported or
+    unresolved provider evidence therefore cannot win through a relevance score.
     """
 
+    provider_ids_by_candidate = provider_ids_by_candidate or {}
+    normalized_provider_ids = {
+        str(candidate_id): frozenset(
+            str(value or "").strip()
+            for value in values
+            if str(value or "").strip()
+        )
+        for candidate_id, values in provider_ids_by_candidate.items()
+    }
     normalized_used = tuple(
         sorted(
             {
@@ -87,14 +95,38 @@ def optimize_comp_team_candidates(
         )
     )
 
+    provider_blocked_slots: list[str] = []
+    eligible_by_slot: list[tuple[CompBuildCandidate, ...]] = []
+    for pool in pools:
+        required = frozenset(
+            str(value or "").strip()
+            for value in pool.required_provider_ids
+            if str(value or "").strip()
+        )
+        if not required:
+            eligible_by_slot.append(pool.candidates)
+            continue
+        eligible = tuple(
+            candidate
+            for candidate in pool.candidates
+            if required.issubset(
+                normalized_provider_ids.get(candidate.candidate_id, frozenset())
+            )
+        )
+        eligible_by_slot.append(eligible)
+        if pool.candidates and not eligible:
+            provider_blocked_slots.append(pool.slot_name)
+
     @lru_cache(maxsize=None)
     def solve(index: int, used: tuple[str, ...]):
         if index >= len(pools):
             return ((0, 0, 0.0), (), ())
 
-        pool = pools[index]
         used_set = set(used)
-        options: tuple[CompBuildCandidate | None, ...] = (*pool.candidates, None)
+        options: tuple[CompBuildCandidate | None, ...] = (
+            *eligible_by_slot[index],
+            None,
+        )
         best = None
 
         for candidate in options:
@@ -127,5 +159,6 @@ def optimize_comp_team_candidates(
         assignments=tuple(
             CompTeamCandidateAssignment(slot_name=pool.slot_name, candidate=candidate)
             for pool, candidate in zip(pools, selected, strict=True)
-        )
+        ),
+        provider_blocked_slots=tuple(provider_blocked_slots),
     )
