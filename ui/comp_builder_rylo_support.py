@@ -46,11 +46,22 @@ QLabel[compAssignmentCue="true"] {
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
     font-weight: 700;
 }
-QLabel[compAssignmentArrow="true"] {
-    color: #D1A24D;
-    background: transparent;
+QLabel[compCandidateChoiceLabel="true"] {
+    color: #C7BBAA;
     font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
-    font-weight: 800;
+    font-weight: 700;
+}
+QComboBox[compCandidateChoice="true"] {
+    background-color: #211C16;
+    color: #F2ECE2;
+    border-left: 3px solid #B88A3C;
+    border-top: 1px solid #4A402C;
+    border-right: 1px solid #302A20;
+    border-bottom: 1px solid #302A20;
+    padding: 4px 7px;
+}
+QComboBox[compCandidateChoice="true"]:focus {
+    border: 2px solid #D1A24D;
 }
 QPushButton[compAssignBuild="true"] {
     background-color: #211C16;
