@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLabel, QScrollArea, QWidget
+from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
 from ui.components.foundry_card import FoundryCard
 
@@ -136,30 +136,32 @@ def _install_picker(page) -> None:
     if details is None:
         return
 
+    # Keep the interactive picker outside the long evidence scroll. The ESO Logs
+    # catalog may be many screens tall, but choosing a build must remain visible.
+    picker_host = QWidget()
+    picker_host.setProperty("compCandidatePickerHost", True)
+    picker_layout = QVBoxLayout(picker_host)
+    picker_layout.setContentsMargins(0, 0, 0, 4)
+    picker_layout.setSpacing(4)
+    page.comp_candidate_picker_host = picker_host
+
     page.comp_candidate_choice_label = QLabel()
     page.comp_candidate_choice_label.setWordWrap(True)
     page.comp_candidate_choice_label.setProperty("compCandidateChoiceLabel", True)
 
     page.comp_candidate_choice_combo = QComboBox()
     page.comp_candidate_choice_combo.setProperty("compCandidateChoice", True)
-    page.comp_candidate_choice_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+    page.comp_candidate_choice_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+    )
     page.comp_candidate_choice_combo.setMinimumContentsLength(28)
     page.comp_candidate_choice_combo.currentIndexChanged.connect(
         lambda *_args: _refresh_picker(page)
     )
 
-    scroll = next(iter(details.findChildren(QScrollArea)), None)
-    body = scroll.widget() if scroll is not None else None
-    layout = body.layout() if body is not None else None
-    if layout is not None:
-        candidate_label = getattr(page, "comp_build_candidates_label", None)
-        candidate_index = layout.indexOf(candidate_label) if candidate_label is not None else -1
-        insert_at = candidate_index if candidate_index >= 0 else min(2, layout.count())
-        layout.insertWidget(insert_at, page.comp_candidate_choice_label)
-        layout.insertWidget(insert_at + 1, page.comp_candidate_choice_combo)
-    else:
-        details.addWidget(page.comp_candidate_choice_label)
-        details.addWidget(page.comp_candidate_choice_combo)
+    picker_layout.addWidget(page.comp_candidate_choice_label)
+    picker_layout.addWidget(page.comp_candidate_choice_combo)
+    details.body_layout.insertWidget(0, picker_host)
 
     page.matrix_table.currentCellChanged.connect(lambda *_args: _refresh_picker(page))
     page.goal_combo.currentTextChanged.connect(lambda *_args: _refresh_picker(page))
