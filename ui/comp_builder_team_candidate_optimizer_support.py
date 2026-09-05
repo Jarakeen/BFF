@@ -32,11 +32,23 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     unresolved_provider_mappings: list[str] = []
     skipped_existing = 0
 
-    required_team_provider_ids = tuple(
-        row.capability_type
-        for row in provider_service.profile.mapped_required
-        if row.capability_type
-    )
+    # The rendered composition matrix is the goal-specific source of provider
+    # responsibility. Derive raid-wide coverage from those rows instead of forcing
+    # every goal to inherit the entire default profile watch list.
+    required_team_provider_ids: list[str] = []
+    provider_resolution_by_slot: dict[str, object] = {}
+    for row in range(page.matrix_table.rowCount()):
+        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        provider_labels = page._split_values(page._cell_text(row, 6))
+        provider_resolution = provider_service.resolve_requirement_labels(provider_labels)
+        provider_resolution_by_slot[slot_name] = provider_resolution
+        required_team_provider_ids.extend(provider_resolution.provider_ids)
+        unresolved_provider_mappings.extend(
+            f"{slot_name}: {message}"
+            for message in provider_resolution.unresolved
+        )
+    required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))
+
     already_covered_team_provider_ids: set[str] = set()
     for slot_name, candidate in applied.items():
         skipped_existing += 1
@@ -59,12 +71,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             unresolved_reads.append(f"{slot_name}: {exc}")
             continue
 
-        provider_labels = page._split_values(page._cell_text(row, 6))
-        provider_resolution = provider_service.resolve_requirement_labels(provider_labels)
-        unresolved_provider_mappings.extend(
-            f"{slot_name}: {message}"
-            for message in provider_resolution.unresolved
-        )
+        provider_resolution = provider_resolution_by_slot[slot_name]
 
         for candidate in candidates:
             if candidate.candidate_id in provider_ids_by_candidate:
@@ -94,7 +101,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
         provider_ids_by_candidate=provider_ids_by_candidate,
-        required_team_provider_ids=required_team_provider_ids,
+        required_team_provider_ids=tuple(required_team_provider_ids),
         already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids)),
     )
 
