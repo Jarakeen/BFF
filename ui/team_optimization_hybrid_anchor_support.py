@@ -93,6 +93,15 @@ def install() -> None:
 
     install_comp_builder_authoritative_prescription()
 
+    # User-injected class/gear ingredients are hard candidate gates. Install this
+    # after authoritative materialization so roster transfer can revalidate current
+    # source evidence before the already-selected prescription is persisted.
+    from ui.comp_builder_build_constraint_support import (
+        install as install_comp_builder_build_constraints,
+    )
+
+    install_comp_builder_build_constraints()
+
     # Finally tighten the page geometry. This runs after the additive Comp Builder
     # support modules so Actions stays pinned top-right, coverage sits directly under
     # the matrix, and only the Details card owns flexible vertical space.
