@@ -41,7 +41,7 @@ CORE_NAV_SECTIONS = [
         ("Characters", "characters"),
         ("Builds", "console:2"),
     ]},
-    {"label": "Raid Engine", "children": [
+    {"label": "Raid Engine", "page": "operations_console", "children": [
         ("Comp Maker", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
