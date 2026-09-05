@@ -53,10 +53,10 @@ def _install_layout(page) -> None:
     root.setSpacing(10)
     root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    # Composition Style adds one compact selector and a wrapped explanation. Grow
-    # downward instead of forcing another horizontal row into the page.
-    actions.setMinimumHeight(205)
-    actions.setMaximumHeight(245)
+    # Composition Style plus the strategy action intentionally grow downward. The
+    # page remains one-dimensional to avoid horizontal-scroll regressions.
+    actions.setMinimumHeight(255)
+    actions.setMaximumHeight(305)
     root.addWidget(actions, 0)
 
     matrix.setMinimumHeight(470)
