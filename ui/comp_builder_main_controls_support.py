@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from ui.components.foundry_card import FoundryCard
 
@@ -35,10 +35,37 @@ def _row(*widgets: QWidget) -> QHBoxLayout:
     return row
 
 
+def _hide_update_context(page) -> None:
+    # Comp Maker assumes the current live game update for now. Hide the disabled
+    # header field rather than carrying a redundant Update 50/51 box in the UI.
+    update_combo = getattr(page, "update_combo", None)
+    if update_combo is None:
+        return
+    host = update_combo.parentWidget()
+    if host is not None:
+        host.hide()
+    else:
+        update_combo.hide()
+
+
+def _hide_strategy_action(page) -> None:
+    # Keep the underlying experimental machinery available for later, but remove
+    # its dedicated button from the normal Comp Maker workflow for now.
+    button = getattr(page, "comp_interesting_strategy_button", None)
+    if button is not None:
+        button.hide()
+    for label in page.findChildren(QLabel):
+        if label.property("compInterestingStrategyHelp"):
+            label.hide()
+
+
 def _install_main_controls(page) -> None:
     actions = _actions_card(page)
     if actions is None:
         return
+
+    _hide_update_context(page)
+    _hide_strategy_action(page)
 
     # The right-side Actions card is the single control surface for Comp Maker.
     # Re-home working buttons rather than duplicating callbacks or state.
@@ -52,6 +79,10 @@ def _install_main_controls(page) -> None:
     if generate is not None:
         generate.setText("Generate Team")
         generate.setProperty("compPrimaryGenerate", True)
+        generate.setToolTip(
+            "Fill every currently open raid chair with the best eligible saved or reference build "
+            "while preserving existing assignments and required provider coverage."
+        )
     if apply_chair is not None:
         # The selected matrix row is the destination. Candidate ranking on the
         # right supplies the source build, so use assignment language rather than
@@ -59,9 +90,8 @@ def _install_main_controls(page) -> None:
         apply_chair.setText("Assign Build to This Player")
         apply_chair.setProperty("compAssignBuild", True)
 
-    # Keep the existing plan-name, style, roster/save/load and strategy controls in
-    # the card. Insert the ordinary Comp Maker workflow immediately after the style
-    # help so the primary path is visible before optional strategy discovery.
+    # Keep the existing plan-name, style and roster/save/load controls in the card.
+    # Insert the ordinary Comp Maker workflow immediately after the style help.
     insert_at = min(3, actions.body_layout.count())
 
     primary = tuple(widget for widget in (generate, apply_chair) if widget is not None)
