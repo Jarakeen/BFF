@@ -69,6 +69,8 @@ def install() -> None:
     )
     install_comp_builder_team_candidate_optimizer()
 
+    # Comp Maker optimizer choices are authoritative. This materialization does not rerank;
+    # it only resolves the already-selected saved/template candidate IDs for roster transfer.
     from ui.comp_builder_authoritative_prescription_support import (
         install as install_comp_builder_authoritative_prescription,
     )
