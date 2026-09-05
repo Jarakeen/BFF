@@ -113,7 +113,15 @@ DEFAULT_RAID_COVERAGE_PROFILE = RaidCoverageProfile(
                 "EffectVariant identity 'minor_brittle'."
             ),
         ),
-        RaidCoverageRequirement("minor_maim", "Minor Maim"),
+        RaidCoverageRequirement(
+            "minor_maim",
+            "Minor Maim",
+            capability_type="minor_maim",
+            mapping_evidence=(
+                "Real-data character-build integration coverage proves the canonical "
+                "EffectVariant identity 'minor_maim'."
+            ),
+        ),
         RaidCoverageRequirement(
             "war_horn",
             "War Horn",
