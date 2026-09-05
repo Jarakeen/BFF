@@ -26,7 +26,15 @@ from ui.theme.fonts import Fonts
 from ui.ux_icons import icon_label, semantic_icon, set_button_icon
 
 
-BROADCAST_NAV_SECTION = ("Broadcast", "broadcast", "header")
+BROADCAST_NAV_SECTION = {
+    "label": "Broadcast",
+    "children": [
+        ("Broadcast Desk", "broadcast"),
+        ("Field Notes", "field_office"),
+        ("Live Operations", "live_operations"),
+        ("Archive", "archive"),
+    ],
+}
 
 CORE_NAV_SECTIONS = [
     {"label": "Roster", "children": [
@@ -37,22 +45,16 @@ CORE_NAV_SECTIONS = [
         ("Comp Maker", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
+        ("Encounters", "console:1"),
         ("Performance", "console:3"),
     ]},
     {"label": "Mechanics", "children": [
         ("Mechanics", "console:4"),
-        ("Encounters", "console:1"),
         ("Reference Data", "console:8"),
         ("Rotations", "rotations"),
     ]},
-    {"label": "Tools", "children": [
-        ("Gear Lookup", "gear_lookup"),
-        ("Reference Data", "tools:reference_data"),
-        ("vAS2 Timer", "timers"),
-    ]},
-    {"label": "Collections", "children": [
-        ("Achievements", "achievements"),
-        ("Collectibles", "collectibles"),
+    ("Achievements", "achievements"),
+    {"label": "Collectibles", "page": "collectibles", "children": [
         ("Mounts", "collectibles:Mounts"),
         ("Pets", "collectibles:Pets"),
         ("Allies / Assistants", "collectibles:Allies / Assistants"),
@@ -66,14 +68,21 @@ CORE_NAV_SECTIONS = [
         ("Emotes", "collectibles:Emotes"),
         ("Customized Actions", "collectibles:Customized Actions"),
     ]},
+    {"label": "Tool", "children": [
+        ("Gear Lookup", "gear_lookup"),
+        ("Reference Data", "tools:reference_data"),
+        ("vAS2 Timer", "timers"),
+    ]},
     ("Settings", "settings"),
 ]
 
 
 def nav_sections(include_broadcast: bool) -> list:
-    if not include_broadcast:
-        return list(CORE_NAV_SECTIONS)
-    return [*CORE_NAV_SECTIONS[:-1], BROADCAST_NAV_SECTION, CORE_NAV_SECTIONS[-1]]
+    sections = list(CORE_NAV_SECTIONS)
+    if include_broadcast:
+        settings_index = len(sections) - 1
+        sections.insert(settings_index - 1, BROADCAST_NAV_SECTION)
+    return sections
 
 
 class FoundrySidebar(QWidget):
