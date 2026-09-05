@@ -77,7 +77,7 @@ def _install_main_controls(page) -> None:
     apply_logs = _detach_widget(getattr(page, "apply_esologs_button", None))
 
     if generate is not None:
-        generate.setText("Generate Team")
+        generate.setText("Fill from Roster")
         generate.setProperty("compPrimaryGenerate", True)
         generate.setToolTip(
             "Fill every currently open raid chair with the best eligible saved or reference build "
