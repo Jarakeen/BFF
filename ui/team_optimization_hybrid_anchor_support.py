@@ -56,8 +56,8 @@ def install() -> None:
 
     install_team_progress_support()
 
-    # ESO Logs composition evidence is additive: imported observed snapshots can
-    # inform Comp Builder classes without overwriting responsibilities/providers.
+    # ESO Logs composition evidence is additive: observed snapshots can inform
+    # Comp Builder classes without overwriting responsibilities/providers.
     from ui.comp_builder_esologs_support import install as install_comp_builder_esologs
 
     install_comp_builder_esologs()
@@ -67,6 +67,13 @@ def install() -> None:
     from ui.comp_builder_esologs_chair_layout import install as install_comp_builder_esologs_chair_layout
 
     install_comp_builder_esologs_chair_layout()
+
+    # Merge saved BFF builds with versioned reference templates for the selected
+    # composition chair. ESO Logs overlap improves relevance when that evidence is
+    # available, but hidden log setup data is never fabricated.
+    from ui.comp_builder_build_candidate_support import install as install_comp_builder_build_candidates
+
+    install_comp_builder_build_candidates()
 
     # Finally tighten the page geometry. This runs after the additive Comp Builder
     # support modules so Actions stays pinned top-right, coverage sits directly under
