@@ -84,6 +84,15 @@ def install() -> None:
 
     install_comp_builder_team_candidate_optimizer()
 
+    # Materialize those already-selected Comp Maker assignments into the existing
+    # PrescribedRoster model before roster transfer. This bridge never reranks; it
+    # only resolves the optimizer's authoritative saved/template candidate IDs.
+    from ui.comp_builder_authoritative_prescription_support import (
+        install as install_comp_builder_authoritative_prescription,
+    )
+
+    install_comp_builder_authoritative_prescription()
+
     # Finally tighten the page geometry. This runs after the additive Comp Builder
     # support modules so Actions stays pinned top-right, coverage sits directly under
     # the matrix, and only the Details card owns flexible vertical space.
