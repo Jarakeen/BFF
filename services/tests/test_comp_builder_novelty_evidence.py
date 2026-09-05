@@ -89,6 +89,7 @@ def test_novelty_prefers_rare_class_and_gear_within_trial(tmp_path) -> None:
     assert scores["rare"] > scores["common"]
     assert result.sample_size == 5
     assert result.scope == "Sunspire healer observations"
+    assert "Necromancer healer pairing observed 1/5 times" in result.evidence[1].reasons
 
 
 def test_novelty_is_zero_when_observed_sample_is_too_small(tmp_path) -> None:
@@ -149,3 +150,62 @@ def test_novelty_normalizes_perfected_and_standard_set_names(tmp_path) -> None:
 
     reasons = " | ".join(result.evidence[0].reasons)
     assert "observed 2/3 geared setups" in reasons
+
+
+def test_novelty_rewards_uncommon_gear_pair_even_when_individual_sets_are_common(tmp_path) -> None:
+    rows = (
+        _observed(1, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+        _observed(2, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+        _observed(3, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+        _observed(4, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Serpent's Disdain")),
+        _observed(5, trial="Sunspire", eso_class="Warden", gear_sets=("Pillager's Profit", "Serpent's Disdain")),
+    )
+    _save(tmp_path, rows)
+
+    result = CompBuilderNoveltyEvidenceService(tmp_path).evaluate_candidates(
+        (
+            _candidate(
+                "common-pair",
+                eso_class="Warden",
+                gear_sets=("Spell Power Cure", "Pillager's Profit"),
+            ),
+            _candidate(
+                "rare-pair",
+                eso_class="Warden",
+                gear_sets=("Spell Power Cure", "Serpent's Disdain"),
+            ),
+        ),
+        role="Healer",
+        trial_name="Sunspire",
+    )
+
+    assert result.novelty_by_candidate["rare-pair"] > result.novelty_by_candidate["common-pair"]
+    rare_reasons = " | ".join(result.evidence[1].reasons)
+    assert "gear pairing observed 1/5 multi-set setups" in rare_reasons
+
+
+def test_provider_redistribution_novelty_is_explicitly_unavailable_without_canonical_evidence(tmp_path) -> None:
+    _save(
+        tmp_path,
+        (
+            _observed(1, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+            _observed(2, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+            _observed(3, trial="Sunspire", eso_class="Warden", gear_sets=("Spell Power Cure", "Pillager's Profit")),
+        ),
+    )
+
+    result = CompBuilderNoveltyEvidenceService(tmp_path).evaluate_candidates(
+        (
+            _candidate(
+                "candidate",
+                eso_class="Warden",
+                gear_sets=("Spell Power Cure", "Pillager's Profit"),
+            ),
+        ),
+        role="Healer",
+        trial_name="Sunspire",
+    )
+
+    reasons = " | ".join(result.evidence[0].reasons)
+    assert "provider redistribution rarity unavailable" in reasons
+    assert "canonical provider evidence" in reasons
