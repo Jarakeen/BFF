@@ -99,6 +99,34 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
     )
 
 
+def _saved_player_key(candidate: CompBuildCandidate) -> str:
+    if candidate.source_kind != "saved_build":
+        return ""
+    return str(candidate.source_name or "").strip().casefold()
+
+
+def _first_unused_candidate(
+    candidates: tuple[CompBuildCandidate, ...],
+    used_saved_players: set[str],
+) -> CompBuildCandidate | None:
+    """Return the first ranked candidate that does not clone a saved player."""
+
+    for candidate in candidates:
+        player_key = _saved_player_key(candidate)
+        if player_key and player_key in used_saved_players:
+            continue
+        return candidate
+    return None
+
+
+def _used_saved_players(page) -> set[str]:
+    return {
+        key
+        for candidate in getattr(page, "_comp_applied_candidates", {}).values()
+        if (key := _saved_player_key(candidate))
+    }
+
+
 def _format_candidates(page) -> str:
     row = _selected_row(page)
     if row < 0:
@@ -151,6 +179,9 @@ def _refresh_candidates(page) -> None:
             button.setEnabled(bool(_chair_candidates(page, _selected_row(page))))
         except (OSError, ValueError):
             button.setEnabled(False)
+    all_button = getattr(page, "apply_all_comp_candidates_button", None)
+    if all_button is not None:
+        all_button.setEnabled(page.matrix_table.rowCount() > 0)
 
 
 def _class_changed(page, row: int) -> None:
@@ -181,6 +212,19 @@ def _wire_class_selectors(page) -> None:
         selector.setProperty("compCandidateRefreshConnected", True)
 
 
+def _set_candidate_for_row(page, row: int, candidate: CompBuildCandidate) -> str:
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    page._comp_applied_candidates[slot_name] = candidate
+
+    if candidate.eso_class:
+        selector = page.matrix_table.cellWidget(row, 2)
+        if isinstance(selector, QComboBox):
+            index = selector.findText(candidate.eso_class)
+            if index >= 0:
+                selector.setCurrentIndex(index)
+    return slot_name
+
+
 def _apply_top_candidate(page, *_args) -> None:
     row = _selected_row(page)
     if row < 0:
@@ -195,23 +239,75 @@ def _apply_top_candidate(page, *_args) -> None:
         page.status.warning("No matching build candidate is available for this chair.")
         return
 
-    candidate = candidates[0]
-    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-    page._comp_applied_candidates[slot_name] = candidate
+    used_saved_players = _used_saved_players(page)
+    current_slot = page._cell_text(row, 0) or f"Slot {row + 1}"
+    existing = page._comp_applied_candidates.get(current_slot)
+    if existing is not None:
+        existing_key = _saved_player_key(existing)
+        if existing_key:
+            used_saved_players.discard(existing_key)
 
-    if candidate.eso_class:
-        selector = page.matrix_table.cellWidget(row, 2)
-        if isinstance(selector, QComboBox):
-            index = selector.findText(candidate.eso_class)
-            if index >= 0:
-                selector.setCurrentIndex(index)
+    candidate = _first_unused_candidate(candidates, used_saved_players)
+    if candidate is None:
+        page.status.warning(
+            "Matching candidates exist, but every saved-player option is already assigned "
+            "to another composition chair."
+        )
+        return
 
+    slot_name = _set_candidate_for_row(page, row, candidate)
     status = "complete build" if candidate.complete_build else "partial build evidence"
     page.status.success(
         f"Applied {candidate.name} to {slot_name} as {status}. "
         "Send to Roster will preserve this candidate evidence."
     )
     _refresh_candidates(page)
+
+
+def _apply_best_candidates_to_all(page, *_args) -> None:
+    """Fill unassigned chairs from ranked candidates without duplicating saved people."""
+
+    if page.matrix_table.rowCount() <= 0:
+        page.status.warning("There are no composition chairs to fill.")
+        return
+
+    used_saved_players = _used_saved_players(page)
+    applied_count = 0
+    skipped_existing = 0
+    unresolved: list[str] = []
+
+    for row in range(page.matrix_table.rowCount()):
+        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        if slot_name in page._comp_applied_candidates:
+            skipped_existing += 1
+            continue
+        try:
+            candidates = _chair_candidates(page, row)
+        except (OSError, ValueError) as exc:
+            unresolved.append(f"{slot_name}: {exc}")
+            continue
+
+        candidate = _first_unused_candidate(candidates, used_saved_players)
+        if candidate is None:
+            unresolved.append(f"{slot_name}: no unused matching candidate")
+            continue
+
+        _set_candidate_for_row(page, row, candidate)
+        player_key = _saved_player_key(candidate)
+        if player_key:
+            used_saved_players.add(player_key)
+        applied_count += 1
+
+    _refresh_candidates(page)
+    open_count = page.matrix_table.rowCount() - len(page._comp_applied_candidates)
+    message = (
+        f"Applied the best eligible candidate to {applied_count} chair(s); "
+        f"preserved {skipped_existing} existing choice(s); {open_count} chair(s) remain open."
+    )
+    if unresolved:
+        page.status.warning(message + " " + " • ".join(unresolved[:4]))
+    else:
+        page.status.success(message)
 
 
 def _install_candidate_ui(page) -> None:
@@ -228,6 +324,15 @@ def _install_candidate_ui(page) -> None:
     page.apply_comp_candidate_button.clicked.connect(
         lambda *_: _apply_top_candidate(page)
     )
+    page.apply_all_comp_candidates_button = FoundryButton(
+        "Apply Best to All Chairs",
+        role=ButtonRole.SUCCESS,
+        compact=True,
+    )
+    page.apply_all_comp_candidates_button.setEnabled(False)
+    page.apply_all_comp_candidates_button.clicked.connect(
+        lambda *_: _apply_best_candidates_to_all(page)
+    )
 
     details = _details_card(page)
     if details is not None:
@@ -240,9 +345,11 @@ def _install_candidate_ui(page) -> None:
             insert_at = selected_index + 1 if selected_index >= 0 else min(3, layout.count())
             layout.insertWidget(insert_at, page.comp_build_candidates_label)
             layout.insertWidget(insert_at + 1, page.apply_comp_candidate_button)
+            layout.insertWidget(insert_at + 2, page.apply_all_comp_candidates_button)
         else:
             details.addWidget(page.comp_build_candidates_label)
             details.addWidget(page.apply_comp_candidate_button)
+            details.addWidget(page.apply_all_comp_candidates_button)
 
     page.matrix_table.currentCellChanged.connect(lambda *_: _refresh_candidates(page))
     page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_candidates(page))
