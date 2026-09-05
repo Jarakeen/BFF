@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from engine.config import get_data_dir
+from services.comp_builder_composition_style import CompCompositionStyle
 from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
@@ -9,6 +10,14 @@ from services.comp_builder_team_candidate_optimizer import (
 
 
 _INSTALLED = False
+
+
+def _selected_style(page) -> CompCompositionStyle:
+    value = getattr(page, "_comp_composition_style", CompCompositionStyle.PROVEN)
+    try:
+        return value if isinstance(value, CompCompositionStyle) else CompCompositionStyle(str(value))
+    except ValueError:
+        return CompCompositionStyle.PROVEN
 
 
 def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
@@ -32,9 +41,6 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     unresolved_provider_mappings: list[str] = []
     skipped_existing = 0
 
-    # The rendered composition matrix is the goal-specific source of provider
-    # responsibility. Derive raid-wide coverage from those rows instead of forcing
-    # every goal to inherit the entire default profile watch list.
     required_team_provider_ids: list[str] = []
     provider_resolution_by_slot: dict[str, object] = {}
     for row in range(page.matrix_table.rowCount()):
@@ -81,8 +87,6 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
                     provider_service.provider_ids_for_candidate(candidate)
                 )
             except Exception as exc:
-                # Provider evidence failures are not converted to absence. The
-                # candidate remains unable to satisfy mapped hard requirements.
                 provider_ids_by_candidate[candidate.candidate_id] = ()
                 unresolved_reads.append(
                     f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
@@ -97,12 +101,21 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         rows_by_slot[slot_name] = row
 
+    # Novelty is intentionally evidence-fed. Until an ESO Logs/template-frequency
+    # adapter supplies values, experimental modes remain conservative rather than
+    # fabricating rarity from source labels.
+    novelty_by_candidate = dict(
+        getattr(page, "_comp_novelty_by_candidate", {}) or {}
+    )
+    style = _selected_style(page)
     result = optimize_comp_team_candidates(
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
         provider_ids_by_candidate=provider_ids_by_candidate,
         required_team_provider_ids=tuple(required_team_provider_ids),
         already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids)),
+        composition_style=style,
+        novelty_by_candidate=novelty_by_candidate,
     )
 
     for assignment in result.assignments:
@@ -115,8 +128,9 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     support._refresh_candidates(page)
     open_count = page.matrix_table.rowCount() - len(page._comp_applied_candidates)
     message = (
-        f"Optimized the remaining team and applied {result.applied_count} candidate(s); "
-        f"preserved {skipped_existing} existing choice(s); {open_count} chair(s) remain open."
+        f"Optimized the remaining team in {style.value.replace('_', ' ')} mode and applied "
+        f"{result.applied_count} candidate(s); preserved {skipped_existing} existing choice(s); "
+        f"{open_count} chair(s) remain open."
     )
     display_name_by_provider_id = {
         row.capability_type: row.display_name
@@ -157,8 +171,5 @@ def install() -> None:
 
     from ui import comp_builder_build_candidate_support as support
 
-    # The existing button callback resolves this module global at click time, so
-    # replacing the function keeps the established UI wiring while upgrading only
-    # the bulk-selection policy from greedy chair order to whole-team optimization.
     support._apply_best_candidates_to_all = _apply_best_candidates_to_all_optimized
     _INSTALLED = True
