@@ -60,9 +60,7 @@ CORE_NAV_SECTIONS = [
         ("Reference Data", "console:8"),
         ("Timers", "timers"),
     ]},
-    {"label": "Settings", "page": "settings", "children": [
-        ("Help & Guide", "help"),
-    ]},
+    ("Settings", "settings"),
 ]
 
 
