@@ -21,6 +21,50 @@ QTableWidget[compMakerOverview="true"]::item:selected {
     color: #F0ECE5;
     border-left: 2px solid #8B1E24;
 }
+/* Assignment mode: selected player/chair and source build share one gold cue. */
+QTableWidget[compMakerOverview="true"][compAssignmentTarget="true"]::item:selected {
+    background-color: #2B2418;
+    color: #F2ECE2;
+    border-left: 3px solid #B88A3C;
+    border-top: 1px solid #4A402C;
+    border-bottom: 1px solid #4A402C;
+}
+QFrame[compAssignmentSourceCard="true"] {
+    border: 1px solid #4A402C;
+}
+QLabel[compAssignmentSource="true"],
+QLabel[compAssignmentCue="true"] {
+    background-color: #211C16;
+    color: #F2ECE2;
+    border-left: 3px solid #B88A3C;
+    border-top: 1px solid #4A402C;
+    border-right: 1px solid #302A20;
+    border-bottom: 1px solid #302A20;
+    padding: 7px 9px;
+}
+QLabel[compAssignmentCue="true"] {
+    font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
+    font-weight: 700;
+}
+QLabel[compAssignmentArrow="true"] {
+    color: #D1A24D;
+    background: transparent;
+    font-family: "Bahnschrift SemiCondensed", "Arial Narrow", "Segoe UI Semibold", Arial;
+    font-weight: 800;
+}
+QPushButton[compAssignBuild="true"] {
+    background-color: #211C16;
+    color: #F2ECE2;
+    border-left: 3px solid #B88A3C;
+    border-top: 1px solid #4A402C;
+    border-right: 1px solid #302A20;
+    border-bottom: 1px solid #302A20;
+    font-weight: 700;
+}
+QPushButton[compAssignBuild="true"]:hover {
+    background-color: #2E271C;
+    border-left-color: #D1A24D;
+}
 QWidget[compMakerChairEditor="true"],
 QWidget[compMakerDetailField="true"] {
     background: transparent;
