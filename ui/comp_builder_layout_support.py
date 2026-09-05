@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLayout, QTextEdit
+from PySide6.QtWidgets import QHBoxLayout, QLayout, QTextEdit, QVBoxLayout
 
 from ui.components.foundry_card import FoundryCard
 
@@ -53,31 +53,63 @@ def _install_layout(page) -> None:
     root.setSpacing(10)
     root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    # Composition Style plus the strategy action intentionally grow downward. The
-    # page remains one-dimensional to avoid horizontal-scroll regressions.
-    actions.setMinimumHeight(255)
-    actions.setMaximumHeight(305)
-    root.addWidget(actions, 0)
+    # Main Comp Maker workspace is intentionally two columns. The left side owns
+    # the player composition and its raid-wide evidence. The right side owns the
+    # compact action controls and the ESO Logs / selected-chair catalog. Both
+    # columns grow vertically; the page itself still forbids horizontal scrolling.
+    columns = QHBoxLayout()
+    columns.setContentsMargins(0, 0, 0, 0)
+    columns.setSpacing(10)
 
+    left = QVBoxLayout()
+    left.setContentsMargins(0, 0, 0, 0)
+    left.setSpacing(10)
+    left.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+    right = QVBoxLayout()
+    right.setContentsMargins(0, 0, 0, 0)
+    right.setSpacing(10)
+    right.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+    # LEFT: player comp -> group coverage -> evidence/provenance.
     matrix.setMinimumHeight(470)
     matrix.setMaximumHeight(480)
-    root.addWidget(matrix, 0)
+    left.addWidget(matrix, 0)
 
     coverage.setMinimumHeight(185)
     coverage.setMaximumHeight(235)
-    root.addWidget(coverage, 0)
-
-    details.setMinimumHeight(520)
-    details.setMaximumHeight(760)
-    root.addWidget(details, 0)
+    left.addWidget(coverage, 0)
 
     evidence.setMinimumHeight(165)
     evidence.setMaximumHeight(220)
     for text in evidence.findChildren(QTextEdit):
         text.setMinimumHeight(110)
         text.setMaximumHeight(160)
-    root.addWidget(evidence, 0)
+    left.addWidget(evidence, 0)
+    left.addStretch(1)
+
+    # RIGHT: compact controls above the ESO Logs/candidate catalog.
+    actions.setMinimumHeight(235)
+    actions.setMaximumHeight(270)
+    right.addWidget(actions, 0)
+
+    details.title_label.setText("ESO Logs Catalog & Chair Evidence")
+    details.setMinimumHeight(700)
+    details.setMaximumHeight(980)
+    right.addWidget(details, 1)
+    right.addStretch(1)
+
+    columns.addLayout(left, 1)
+    columns.addLayout(right, 1)
+    columns.setStretch(0, 1)
+    columns.setStretch(1, 1)
+    root.addLayout(columns)
     root.addStretch(1)
+
+    # Width stays bounded to the viewport. The matrix already hides verbose legacy
+    # columns and disables its horizontal scrollbar; the page scroll remains vertical.
+    page.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    page.matrix_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
 
 def _comp_init_with_vertical_layout(self, parent=None) -> None:
