@@ -45,3 +45,13 @@ def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
     assert 'player_name=candidate.source_name if is_saved else "Recruitment Needed"' in source
     assert 'character_name=candidate.source_name if is_saved else ""' in source
     assert "Candidate is partial evidence, not a complete prescribed build." in source
+
+
+def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
+
+    assert "required_team_provider_ids = tuple(" in source
+    assert "already_covered_team_provider_ids.update(" in source
+    assert "required_team_provider_ids=required_team_provider_ids" in source
+    assert "already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids))" in source
+    assert "raid-wide provider still uncovered" in source
