@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from engine.config import get_data_dir
+from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
     optimize_comp_team_candidates,
@@ -16,11 +18,18 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         page.status.warning("There are no composition chairs to fill.")
         return
 
+    provider_service = getattr(page, "_comp_provider_evidence_service", None)
+    if provider_service is None:
+        provider_service = CompBuilderProviderEvidenceService(get_data_dir())
+        page._comp_provider_evidence_service = provider_service
+
     applied = getattr(page, "_comp_applied_candidates", {})
     used_saved_players = tuple(support._used_saved_players(page))
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
+    provider_ids_by_candidate: dict[str, tuple[str, ...]] = {}
     unresolved_reads: list[str] = []
+    unresolved_provider_mappings: list[str] = []
     skipped_existing = 0
 
     for row in range(page.matrix_table.rowCount()):
@@ -33,10 +42,34 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         except (OSError, ValueError) as exc:
             unresolved_reads.append(f"{slot_name}: {exc}")
             continue
+
+        provider_labels = page._split_values(page._cell_text(row, 6))
+        provider_resolution = provider_service.resolve_requirement_labels(provider_labels)
+        unresolved_provider_mappings.extend(
+            f"{slot_name}: {message}"
+            for message in provider_resolution.unresolved
+        )
+
+        for candidate in candidates:
+            if candidate.candidate_id in provider_ids_by_candidate:
+                continue
+            try:
+                provider_ids_by_candidate[candidate.candidate_id] = (
+                    provider_service.provider_ids_for_candidate(candidate)
+                )
+            except Exception as exc:
+                # Provider evidence failures are not converted to absence. The
+                # candidate remains unable to satisfy mapped hard requirements.
+                provider_ids_by_candidate[candidate.candidate_id] = ()
+                unresolved_reads.append(
+                    f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
+                )
+
         pools.append(
             CompTeamCandidatePool(
                 slot_name=slot_name,
                 candidates=tuple(candidates),
+                required_provider_ids=provider_resolution.provider_ids,
             )
         )
         rows_by_slot[slot_name] = row
@@ -44,6 +77,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     result = optimize_comp_team_candidates(
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
+        provider_ids_by_candidate=provider_ids_by_candidate,
     )
 
     for assignment in result.assignments:
@@ -60,11 +94,20 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         f"preserved {skipped_existing} existing choice(s); {open_count} chair(s) remain open."
     )
     unresolved = [
-        *(f"{slot}: no coherent matching candidate" for slot in result.unresolved_slots),
+        *(
+            f"{slot}: no candidate proved the chair's mapped provider requirement"
+            for slot in result.provider_blocked_slots
+        ),
+        *(
+            f"{slot}: no coherent matching candidate"
+            for slot in result.unresolved_slots
+            if slot not in result.provider_blocked_slots
+        ),
+        *unresolved_provider_mappings,
         *unresolved_reads,
     ]
     if unresolved:
-        page.status.warning(message + " " + " • ".join(unresolved[:4]))
+        page.status.warning(message + " " + " • ".join(unresolved[:5]))
     else:
         page.status.success(message)
 
