@@ -15,7 +15,7 @@ Tasks outside of the master roadmap
 - [X] find a standard 'Boss' and 'Double Bosses' icon to use on the boss page
 - [X] add a "Pages On/Off" setting on the Settings tab that allows you to hide pages by main menu (Broadcast, Collectible, Acheivement, Raid Engine)
 - [ ] Achievement page - details box, make the text much larger - style it like the wireframe
-- [ ] Create a page for the Collections main menu button with circle and/or line graphs that shows your progress in each submenu category
+- [X] Create a page for the Collections main menu button with circle and/or line graphs that shows your progress in each submenu category
 - [X] | What it actually is                  | Current-ish name           | Better name                                                         |
 | ------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
 | ESO account achievements             | `collections_page.py`      | `achievements_page.py`                                              |
@@ -30,15 +30,18 @@ Tasks outside of the master roadmap
 -[ ] next to "Provides" card on the Overview page card, please change that to a "thumbs up"
 -[X] figure out what to do the the ESO logs page, maybe ask Rik
 -[X] make all the timers work
--[ ] add an asylum sanctorium timer
+-[X] add an asylum sanctorium timer
 -[ ] are there other ESO game timers that would be handy? if so, add them
--[ ] wire all the bosses and mechs to the Mechanics page and reference pages
+-[?] wire all the bosses and mechs to the Mechanics page and reference pages
 -[ ] How do multiple ppl share a roster info?
--[ ] make roster output/export 'pretty'
+-[X] make roster output/export 'pretty'
 -[X] add the top ESO Logs setups per trial
 -[ ] get ms signature file thingy for app completed
 -[ ] images for mechs - can they be farmed? uesp?
 -[X] Optimaztion - auto fill top buttons to match what they need to be for "generate team"
 -[ ] figure out how to easily share things like maps and roster to google docs and make it pretty
 -[ ] fix top logo
--[ ] 
+-[ ] can I document how long bosses are damagable from ESO logs?
+-[X] add Help docs
+-[ ] timer for bosses - ex add portal timer to Bahse
+-[X] beef up Reference data page

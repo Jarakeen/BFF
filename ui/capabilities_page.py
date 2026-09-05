@@ -26,6 +26,8 @@ from pathlib import Path
 
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QVBoxLayout,
+    QSizePolicy,
     QStackedWidget,
     QMessageBox,
     QWidget,
@@ -124,11 +126,21 @@ class CapabilitiesPage(FoundryPage):
 
         self.set_header(self.header)
 
-        # Keep the compact top-team gear card fixed above the per-member editor stack.
+        #
+        # Top-team gear card (left column) beside the tab strip +
+        # per-member editor stack (right column) -- a horizontal
+        # split rather than stacking the gear card above everything,
+        # so it grows tall enough to match the editor stack next to
+        # it instead of leaving dead space below a short card.
+        #
+
         self.top_team_card = TopTeamCard(
             service_factory=self._build_top_team_service
         )
-        self.workspace_layout.addWidget(self.top_team_card, 0)
+        self.top_team_card.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
 
         #
         # Tab strip
@@ -158,8 +170,6 @@ class CapabilitiesPage(FoundryPage):
         self.tab_row.addWidget(self.add_member_button)
         self.tab_row.addWidget(self.remove_member_button)
 
-        self.add_workspace_layout(self.tab_row)
-
         #
         # Per-member editors
         #
@@ -168,7 +178,50 @@ class CapabilitiesPage(FoundryPage):
 
         self.editors: list[CapabilityEditor] = []
 
-        self.add_workspace(self.stack)
+        self.member_column = QWidget()
+
+        member_column_layout = QVBoxLayout(self.member_column)
+
+        member_column_layout.setContentsMargins(0, 0, 0, 0)
+
+        member_column_layout.setSpacing(8)
+
+        member_column_layout.addLayout(self.tab_row)
+
+        member_column_layout.addWidget(self.stack, 1)
+
+        #
+        # Desk-level tabs: Gear Trend (top-ranked team browsing) and
+        # Logs (per-member report/watch/uptime editors). Same
+        # FoundryTabs + QStackedWidget pattern the member roster
+        # strip below already uses (see _rebuild_tabs), just one
+        # level up, driving a 2-page stack instead of the per-member
+        # editor stack.
+        #
+
+        self.desk_tabs = FoundryTabs(["Gear Trend", "Logs"], selected="Gear Trend")
+
+        self.desk_tabs.tabChanged.connect(self._select_desk_tab)
+
+        self.desk_stack = QStackedWidget()
+
+        self.desk_stack.addWidget(self.top_team_card)  # index 0: Gear Trend
+
+        self.desk_stack.addWidget(self.member_column)  # index 1: Logs
+
+        desk_container = QWidget()
+
+        desk_container_layout = QVBoxLayout(desk_container)
+
+        desk_container_layout.setContentsMargins(0, 0, 0, 0)
+
+        desk_container_layout.setSpacing(8)
+
+        desk_container_layout.addWidget(self.desk_tabs)
+
+        desk_container_layout.addWidget(self.desk_stack, 1)
+
+        self.add_workspace(desk_container)
 
         #
         # Actions
@@ -329,6 +382,10 @@ class CapabilitiesPage(FoundryPage):
             len(self.editors) < CapabilityRoster.MAX_MEMBERS
         )
 
+    def _select_desk_tab(self, label: str):
+
+        self.desk_stack.setCurrentIndex(0 if label == "Gear Trend" else 1)
+
     def _select_tab_by_label(self, label: str):
 
         for i, editor in enumerate(self.editors):
@@ -462,20 +519,6 @@ class CapabilitiesPage(FoundryPage):
 
             return
 
-        active_text = editor.boss_active_seconds.text().strip()
-
-        boss_active_seconds = None
-
-        if active_text:
-
-            try:
-                boss_active_seconds = float(active_text)
-            except ValueError:
-
-                self.status.error("Boss active time must be a number of seconds.")
-
-                return
-
         watches = editor.active_watches
 
         if not watches:
@@ -487,6 +530,56 @@ class CapabilitiesPage(FoundryPage):
         service = self._build_capability_service()
 
         self.status.info(f"Fetching {report_code} #{fight_text} from ESO Logs...")
+
+        immunity_name = editor.immunity_buff_name.text().strip()
+
+        boss_active_seconds: float | None = None
+
+        if immunity_name:
+
+            # Immunity buff given -- always recompute and overwrite
+            # Boss Active Time from it, rather than trusting whatever
+            # was typed there before (this box is now driven by the
+            # immunity buff, not manually maintained).
+            try:
+
+                boss_active_seconds = service.compute_boss_active_seconds(
+                    report_code,
+                    fight_id,
+                    immunity_name,
+                    editor.immunity_buff_kind.currentText(),
+                )
+
+            except EsoLogsApiError as exc:
+
+                self.status.error(str(exc))
+
+                return
+
+            except Exception as exc:
+
+                self.status.error(f"Failed to compute boss active time: {exc}")
+
+                return
+
+            editor.boss_active_seconds.setText(f"{boss_active_seconds:.1f}")
+
+        else:
+
+            # No immunity buff configured -- fall back to whatever
+            # the user manually typed in Boss Active Time, exactly
+            # as before this feature existed.
+            active_text = editor.boss_active_seconds.text().strip()
+
+            if active_text:
+
+                try:
+                    boss_active_seconds = float(active_text)
+                except ValueError:
+
+                    self.status.error("Boss active time must be a number of seconds.")
+
+                    return
 
         try:
 

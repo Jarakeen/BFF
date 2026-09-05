@@ -1,60 +1,66 @@
 from __future__ import annotations
 
-import json
+import time
 from typing import Any
 
 from models.top_team_model import TopTeamPlayer, TopTeamResult
-from services.esologs_client import (
-    MUNDUS_STONE_NAMES,
-    EsoLogsApiError,
-    EsoLogsClient,
-)
-from services.esologs_combat_importer import PLAYER_QUERY
+from services.esologs_client import EsoLogsApiError, EsoLogsClient
 
 
-_RANKING_QUERY = """
-query TopTeamRanking($encounterID: Int!) {
-  worldData {
-    encounter(id: $encounterID) {
-      fightRankings(page: 1, includeOtherPlayers: true)
-    }
-  }
+# How many top individual parses to pull per role. These can (and
+# often do) come from different reports/guilds -- that's the point:
+# a broader, community-wide "what's trending" sample rather than one
+# team's roster from a single pull.
+_TOP_N_PER_ROLE = 5
+
+# role bucket key -> (RoleType enum value, CharacterRankingMetricType
+# enum value) for EsoLogsClient.get_role_rankings. Tank rankings
+# don't have a natural "highest output" metric the way DPS/healers
+# do -- "dps" is the conventional choice these platforms use for
+# ranking tanks too (by their own damage output within the Tank
+# role), but this is the least certain part of this feature; if ESO
+# Logs rejects it or the results look wrong, this one line is what
+# to change.
+_ROLE_QUERY_PARAMS = {
+    "tank": ("Tank", "dps"),
+    "healer": ("Healer", "hps"),
+    "dps": ("DPS", "dps"),
 }
-"""
 
-_MUNDUS_UPTIME_THRESHOLD_PERCENT = 60.0
+# A genuine transient 500 from ESO Logs' own server is worth one
+# short retry before giving up on that specific call -- this is
+# specifically for "Internal server error" text, not for other
+# errors (auth, malformed query, etc.), which should surface
+# immediately rather than being retried.
+_MAX_QUERY_ATTEMPTS = 2
+_RETRY_DELAY_SECONDS = 1.5
 
 
 class TopTeamService:
-    """Read the current top encounter log as reusable observed build evidence.
+    """
+    Read the current top-ranked individual players for each role
+    (Tank / Healer / DPS) on a boss and summarize their role, class,
+    gear sets, and skills.
 
-    The initial fetch stays intentionally bounded: one ranking lookup, the fight,
-    and one playerDetails payload. Class, gear-set names, and observed abilities are
-    parsed from that payload. Mundus remains lazy because ESO Logs exposes it only as
-    aura uptime; fetching it eagerly would add up to one network call per raid member.
+    Uses EsoLogsClient's own get_trial_zones / get_role_rankings /
+    get_report_player_summary methods rather than a separate inline
+    query set, so there is exactly one place that owns the GraphQL
+    shape for "top ranked team" data.
     """
 
     def __init__(self, client: EsoLogsClient):
         self.client = client
 
-    @staticmethod
-    def _scalar(value: Any) -> Any:
-        if isinstance(value, str):
-            try:
-                return json.loads(value)
-            except json.JSONDecodeError:
-                return value
-        return value
+    # --------------------------------------------------
+    # Trial / boss picker data
+    # --------------------------------------------------
 
     def list_trials(self) -> list[dict]:
-        """Use the client's verified trial-only zone filter.
+        return self._call_with_retry(self.client.get_trial_zones)
 
-        ``EsoLogsClient.get_trial_zones`` owns the live zone IDs and the explicit
-        trial-name allowlist. Keeping that boundary here prevents dungeons/arenas
-        returned by ``worldData.zones`` from leaking into the Performance picker.
-        """
-
-        return self.client.get_trial_zones()
+    # --------------------------------------------------
+    # Top players per role for a chosen trial + boss
+    # --------------------------------------------------
 
     def get_top_team(
         self,
@@ -64,176 +70,190 @@ class TopTeamService:
         encounter_id: int,
         encounter_name: str,
     ) -> TopTeamResult:
-        del zone_id  # retained in the public call shape for the trial picker.
 
-        ranking_data = self.client._query(
-            _RANKING_QUERY,
-            {"encounterID": int(encounter_id)},
-        )
-        encounter = (ranking_data.get("worldData") or {}).get("encounter") or {}
-        rankings = self._scalar(encounter.get("fightRankings")) or {}
-        ranking = self._first_ranking(rankings)
-        report_code, fight_id = self._ranking_report_fight(ranking)
-
-        fight = self.client.get_fight(report_code, fight_id)
-        start = float(fight.get("startTime", 0))
-        end = float(fight.get("endTime", 0))
-
-        details_data = self.client._query(
-            PLAYER_QUERY,
-            {
-                "code": report_code,
-                "fightIDs": [int(fight_id)],
-                "startTime": start,
-                "endTime": end,
-            },
-        )
-        report = (details_data.get("reportData") or {}).get("report") or {}
-        details = self._scalar(report.get("playerDetails")) or {}
+        del zone_id  # kept for call-site symmetry with list_trials()
 
         players: list[TopTeamPlayer] = []
-        for bucket, role in (("tanks", "tank"), ("healers", "healer"), ("dps", "dps")):
-            for actor in details.get(bucket) or []:
-                if not isinstance(actor, dict):
+
+        # Multiple top-ranked players (even across different roles)
+        # can come from the very same log -- cache each unique
+        # report+fight's gear-details fetch so that log only gets
+        # queried once, no matter how many of its players rank in
+        # the top N somewhere.
+        details_cache: dict[tuple[str, int], dict | None] = {}
+
+        seen_role_names: set[tuple[str, str]] = set()
+
+        role_errors: list[str] = []
+
+        for role_key, (role_enum, metric) in _ROLE_QUERY_PARAMS.items():
+
+            try:
+                entries = self._call_with_retry(
+                    self.client.get_role_rankings,
+                    encounter_id,
+                    role_enum,
+                    metric,
+                    _TOP_N_PER_ROLE,
+                )
+
+            except EsoLogsApiError as exc:
+
+                role_errors.append(f"{role_key}: {exc}")
+
+                continue
+
+            for entry in entries:
+
+                name = str(entry.get("name") or "").strip()
+
+                dedupe_key = (role_key, name.casefold())
+
+                if not name or dedupe_key in seen_role_names:
                     continue
-                actor_id = actor.get("id")
-                try:
-                    normalized_actor_id = None if actor_id is None else int(actor_id)
-                except (TypeError, ValueError):
-                    normalized_actor_id = None
+
+                key = (entry["report_code"], entry["fight_id"])
+
+                if key not in details_cache:
+
+                    details_cache[key] = self._fetch_details_or_none(
+                        key[0], key[1], role_errors, role_key
+                    )
+
+                details = details_cache[key]
+
+                if not details:
+                    continue
+
+                actor = self._find_actor(details, role_key, name)
+
+                if actor is None:
+                    continue
+
+                seen_role_names.add(dedupe_key)
+
                 players.append(
                     TopTeamPlayer(
-                        Name=str(actor.get("name") or actor.get("displayName") or "Unknown"),
-                        Role=role,
+                        Name=name,
+                        Role=role_key,
+                        ClassName=self._class_name(actor) or str(entry.get("class") or ""),
                         GearSets=self._gear_sets(actor),
-                        ClassName=self._class_name(actor),
                         Abilities=self._abilities(actor),
-                        Mundus="",
-                        ActorId=normalized_actor_id,
                     )
                 )
+
+        if not players:
+            raise EsoLogsApiError(
+                f"Could not build a top-players list for {encounter_name} "
+                f"({'; '.join(role_errors) if role_errors else 'no ranked entries found'})."
+            )
+
+        unique_reports = {key for key, details in details_cache.items() if details}
+
+        primary_report, primary_fight = (
+            next(iter(unique_reports)) if unique_reports else ("", 0)
+        )
 
         return TopTeamResult(
             TrialName=zone_name,
             EncounterName=encounter_name,
-            ReportCode=report_code,
-            FightId=fight_id,
+            ReportCode=primary_report,
+            FightId=primary_fight,
+            SourceReportCount=len(unique_reports),
             Players=players,
         )
 
-    def get_player_mundus(
+    def _fetch_details_or_none(
         self,
-        *,
         report_code: str,
         fight_id: int,
-        actor_id: int,
-    ) -> str:
-        """Resolve one player's Mundus on demand from buff uptime evidence."""
+        role_errors: list[str],
+        role_key: str,
+    ) -> dict | None:
 
-        fight = self.client.get_fight(report_code, fight_id)
-        start = float(fight.get("startTime", 0.0))
-        end = float(fight.get("endTime", 0.0))
-        duration_ms = max(0.0, end - start)
-        if duration_ms <= 0:
-            return ""
+        try:
 
-        auras = self.client.get_aura_table(
-            report_code,
-            fight_id,
-            start,
-            end,
-            data_type="Buffs",
-            hostility_type="Friendlies",
-            source_id=int(actor_id),
-        )
-        for aura in auras:
-            if not isinstance(aura, dict):
-                continue
-            name = str(aura.get("name", "") or "").strip()
-            if name not in MUNDUS_STONE_NAMES:
-                continue
-            try:
-                uptime_ms = float(aura.get("totalUptime", 0.0) or 0.0)
-            except (TypeError, ValueError):
-                continue
-            if (uptime_ms / duration_ms) * 100.0 >= _MUNDUS_UPTIME_THRESHOLD_PERCENT:
-                return name
-        return ""
+            fight = self._call_with_retry(self.client.get_fight, report_code, fight_id)
 
-    def resolve_player_mundus(
-        self,
-        result: TopTeamResult,
-        player: TopTeamPlayer,
-    ) -> str:
-        """Convenience boundary for a future View/Add Template UI action."""
+            start = float(fight.get("startTime", 0))
+            end = float(fight.get("endTime", 0))
 
-        if player.Mundus:
-            return player.Mundus
-        if player.ActorId is None or not result.ReportCode or not result.FightId:
-            return ""
-        return self.get_player_mundus(
-            report_code=result.ReportCode,
-            fight_id=result.FightId,
-            actor_id=player.ActorId,
-        )
-
-    @classmethod
-    def _first_ranking(cls, payload: Any) -> dict:
-        payload = cls._scalar(payload)
-        if isinstance(payload, list):
-            rows = payload
-        elif isinstance(payload, dict):
-            rows = payload.get("rankings") or payload.get("data") or []
-        else:
-            rows = []
-        if isinstance(rows, dict):
-            rows = rows.get("rankings") or rows.get("data") or []
-        if not rows or not isinstance(rows[0], dict):
-            raise EsoLogsApiError("ESO Logs returned no ranked team for that encounter.")
-        return rows[0]
-
-    @staticmethod
-    def _ranking_report_fight(ranking: dict) -> tuple[str, int]:
-        report = ranking.get("report") if isinstance(ranking.get("report"), dict) else {}
-        code = (
-            report.get("code")
-            or ranking.get("reportCode")
-            or ranking.get("code")
-        )
-        fight_id = (
-            report.get("fightID")
-            or report.get("fightId")
-            or ranking.get("fightID")
-            or ranking.get("fightId")
-            or ranking.get("fight_id")
-        )
-        if not code or fight_id is None:
-            raise EsoLogsApiError(
-                "ESO Logs returned a ranked team without a usable report/fight reference."
+            return self._call_with_retry(
+                self.client.get_report_player_summary,
+                report_code,
+                fight_id,
+                start,
+                end,
             )
-        return str(code), int(fight_id)
+
+        except EsoLogsApiError as exc:
+
+            role_errors.append(f"{role_key} ({report_code}#{fight_id}): {exc}")
+
+            return None
 
     @staticmethod
-    def _combatant_info(actor: dict) -> dict:
-        info = actor.get("combatantInfo")
-        return info if isinstance(info, dict) else actor
+    def _find_actor(details: dict, role_key: str, name: str) -> dict | None:
 
-    @classmethod
-    def _class_name(cls, actor: dict) -> str:
-        info = cls._combatant_info(actor)
-        return str(
-            actor.get("type")
-            or actor.get("class")
-            or actor.get("className")
-            or info.get("type")
-            or info.get("class")
-            or ""
-        ).strip()
+        bucket_key = {"tank": "tanks", "healer": "healers", "dps": "dps"}[role_key]
+
+        target = name.casefold()
+
+        for actor in details.get(bucket_key) or []:
+
+            if str(actor.get("name", "")).strip().casefold() == target:
+                return actor
+
+        return None
+
+    # --------------------------------------------------
+    # Resilience: retry a genuinely transient server error once
+    # before giving up on that specific call.
+    # --------------------------------------------------
+
+    def _call_with_retry(self, fn, *args, **kwargs) -> Any:
+
+        last_error: EsoLogsApiError | None = None
+
+        for attempt in range(_MAX_QUERY_ATTEMPTS):
+
+            try:
+                return fn(*args, **kwargs)
+
+            except EsoLogsApiError as exc:
+
+                last_error = exc
+
+                # Only a genuine server-side 500 is worth retrying the
+                # exact same request -- anything else (auth, a bad
+                # argument, a missing report) will fail identically
+                # every time, so surface it immediately instead of
+                # burning a retry on it.
+                if "internal server error" not in str(exc).casefold():
+                    raise
+
+                if attempt + 1 < _MAX_QUERY_ATTEMPTS:
+                    time.sleep(_RETRY_DELAY_SECONDS)
+
+        raise last_error
+
+    # --------------------------------------------------
+    # playerDetails actor parsing
+    # --------------------------------------------------
+
+    @staticmethod
+    def _class_name(actor: dict) -> str:
+        # ESO Logs' playerDetails entries carry the class under
+        # `type` (e.g. "Templar", "Warden") in every shape this API
+        # has been observed to return it in; `class` is checked as a
+        # defensive fallback in case that ever changes.
+        name = actor.get("type") or actor.get("class") or ""
+        return str(name).strip()
 
     @classmethod
     def _abilities(cls, actor: dict) -> list[str]:
-        info = cls._combatant_info(actor)
-        talents = info.get("talents")
+        combatant = actor.get("combatantInfo") if isinstance(actor.get("combatantInfo"), dict) else actor
+        talents = combatant.get("talents") if isinstance(combatant, dict) else None
         if not isinstance(talents, list):
             talents = actor.get("talents") if isinstance(actor.get("talents"), list) else []
 
@@ -241,13 +261,14 @@ class TopTeamService:
         seen: set[str] = set()
         for talent in talents:
             if isinstance(talent, dict):
-                nested = talent.get("ability")
-                name = talent.get("name") or talent.get("displayName")
-                if not name and isinstance(nested, dict):
-                    name = nested.get("name")
-            else:
+                name = talent.get("name") or talent.get("ability")
+            elif isinstance(talent, str):
                 name = talent
-            text = str(name or "").strip()
+            else:
+                continue
+            if not name:
+                continue
+            text = str(name).strip()
             key = text.casefold()
             if text and key not in seen:
                 seen.add(key)
@@ -256,7 +277,7 @@ class TopTeamService:
 
     @classmethod
     def _gear_sets(cls, actor: dict) -> list[str]:
-        combatant = cls._combatant_info(actor)
+        combatant = actor.get("combatantInfo") if isinstance(actor.get("combatantInfo"), dict) else actor
         gear = combatant.get("gear") if isinstance(combatant, dict) else None
         if not isinstance(gear, list):
             gear = actor.get("gear") if isinstance(actor.get("gear"), list) else []

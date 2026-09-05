@@ -66,6 +66,8 @@ class CapabilityProfile:
     FightId: str = ""
     EquippedSets: str = ""
     BossActiveSeconds: str = ""
+    ImmunityBuffName: str = ""
+    ImmunityBuffKind: str = "Buff"
 
     Watches: list[WatchEntry] = field(default_factory=list)
 
@@ -81,6 +83,8 @@ class CapabilityProfile:
             "FightId": self.FightId,
             "EquippedSets": self.EquippedSets,
             "BossActiveSeconds": self.BossActiveSeconds,
+            "ImmunityBuffName": self.ImmunityBuffName,
+            "ImmunityBuffKind": self.ImmunityBuffKind,
             "Watches": [w.to_dict() for w in self.Watches],
             "LastResults": [r.to_dict() for r in self.LastResults],
             "LastFightName": self.LastFightName,
@@ -98,6 +102,8 @@ class CapabilityProfile:
             FightId=data.get("FightId", ""),
             EquippedSets=data.get("EquippedSets", ""),
             BossActiveSeconds=data.get("BossActiveSeconds", ""),
+            ImmunityBuffName=data.get("ImmunityBuffName", ""),
+            ImmunityBuffKind=data.get("ImmunityBuffKind", "Buff"),
             Watches=[
                 WatchEntry.from_dict(w) for w in data.get("Watches", [])
             ],

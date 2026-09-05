@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -112,42 +113,50 @@ class TopTeamCard(FoundryCard):
         root_layout.setSpacing(10)
 
         #
-        # Filters -- same trial / boss / fetch / reload row as
-        # before.
+        # Filters -- stacked into two rows (pickers, then actions)
+        # instead of one wide row, so the card's minimum width is
+        # driven by whichever row needs more, not by all four
+        # controls jammed side by side. Trades a little extra height
+        # for a much narrower card -- the right direction for a
+        # vertical, sidebar-style card.
         #
 
         picker_row = QHBoxLayout()
         picker_row.setSpacing(8)
 
         self.trial_combo = QComboBox()
-        self.trial_combo.setMinimumWidth(210)
+        self.trial_combo.setMinimumWidth(110)
         self.trial_combo.setPlaceholderText("Choose a trial...")
 
         self.encounter_combo = QComboBox()
-        self.encounter_combo.setMinimumWidth(190)
+        self.encounter_combo.setMinimumWidth(110)
         self.encounter_combo.setPlaceholderText("Choose a boss...")
         self.encounter_combo.setEnabled(False)
 
+        picker_row.addWidget(self.trial_combo, 1)
+        picker_row.addWidget(self.encounter_combo, 1)
+
+        actions_row = QHBoxLayout()
+        actions_row.setSpacing(8)
+
         self.fetch_button = FoundryButton(
-            "Fetch Team Gear",
+            "Fetch",
             role=ButtonRole.PRIMARY,
             compact=True,
         )
         self.fetch_button.setEnabled(False)
 
         self.reload_button = FoundryButton(
-            "Reload Trials",
+            "Reload",
             role=ButtonRole.SECONDARY,
             compact=True,
         )
 
-        picker_row.addWidget(self.trial_combo)
-        picker_row.addWidget(self.encounter_combo)
-        picker_row.addWidget(self.fetch_button)
-        picker_row.addWidget(self.reload_button)
-        picker_row.addStretch()
+        actions_row.addWidget(self.fetch_button, 1)
+        actions_row.addWidget(self.reload_button, 1)
 
         root_layout.addLayout(picker_row)
+        root_layout.addLayout(actions_row)
 
         self.summary = QLabel(
             "Choose a trial and boss to inspect the top-ranked team's sets."
@@ -163,9 +172,13 @@ class TopTeamCard(FoundryCard):
         #
 
         self.board = QWidget()
+        self.board.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
         board_layout = QVBoxLayout(self.board)
         board_layout.setContentsMargins(0, 0, 0, 0)
-        board_layout.setSpacing(4)
+        board_layout.setSpacing(10)
 
         for index, (role_key, role_label) in enumerate(_ROLE_SECTIONS):
 
@@ -175,7 +188,7 @@ class TopTeamCard(FoundryCard):
 
             self._sections[role_key] = section_refs
 
-            board_layout.addWidget(section_widget)
+            board_layout.addWidget(section_widget, 1)
 
             if index < len(_ROLE_SECTIONS) - 1:
 
@@ -185,9 +198,17 @@ class TopTeamCard(FoundryCard):
 
                 board_layout.addWidget(divider)
 
-        root_layout.addWidget(self.board)
+        root_layout.addWidget(self.board, 1)
 
         self.status = FoundryStatusBar()
+
+        # This card's status messages can run long (the ranking
+        # fallback error explains what it tried), and FoundryStatusBar's
+        # message label doesn't wrap by default -- that was forcing a
+        # 600+px minimum width on the whole card from one long error
+        # sentence. Wrap just this instance's message label; the
+        # shared FoundryStatusBar class/other cards are unaffected.
+        self.status.message.setWordWrap(True)
 
         root_layout.addWidget(self.status)
 
@@ -439,9 +460,15 @@ class TopTeamCard(FoundryCard):
 
     def _render_result(self, result: TopTeamResult):
 
+        report_note = (
+            f"across {result.SourceReportCount} report(s)"
+            if result.SourceReportCount != 1
+            else f"from report {result.ReportCode}"
+        )
+
         self.summary.setText(
             f"{result.TrialName} \u00b7 {result.EncounterName} \u00b7 "
-            f"top ranked report {result.ReportCode} / fight {result.FightId}"
+            f"top {len(result.Players)} player(s) per role, {report_note}"
         )
 
         by_role: dict[str, list[TopTeamPlayer]] = {
@@ -550,7 +577,7 @@ class TopTeamCard(FoundryCard):
         name_row = QHBoxLayout()
         name_row.setSpacing(6)
 
-        name_label = QLabel(player.Name or "Unknown")
+        name_label = QLabel(self._name_label_text(player))
         name_label.setFont(Fonts.label())
         name_label.setStyleSheet(f"color: {Colors.TEXT};")
 
@@ -582,9 +609,29 @@ class TopTeamCard(FoundryCard):
 
         text_column.addWidget(gear_label)
 
+        skills_text = ", ".join(player.Abilities) if player.Abilities else "No skill data."
+
+        skills_label = QLabel(f"Skills: {skills_text}")
+        skills_label.setFont(Fonts.small())
+        skills_label.setStyleSheet(f"color: {Colors.ACCENT_LIGHT};")
+        skills_label.setWordWrap(True)
+        skills_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+
+        text_column.addWidget(skills_label)
+
         row_layout.addLayout(text_column, 1)
 
         return row
+
+    @staticmethod
+    def _name_label_text(player: TopTeamPlayer) -> str:
+
+        name = player.Name or "Unknown"
+
+        if player.ClassName:
+            return f"{name} \u00b7 {player.ClassName}"
+
+        return name
 
     @staticmethod
     def _looks_like_support(player: TopTeamPlayer) -> bool:

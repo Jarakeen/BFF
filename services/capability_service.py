@@ -58,6 +58,65 @@ class CapabilityService:
             "duration_seconds": max(0.0, (end - start) / 1000.0),
         }
 
+    def compute_boss_active_seconds(
+        self,
+        report_code: str,
+        fight_id: int,
+        immunity_name: str,
+        immunity_kind: str = "Buff",
+    ) -> float | None:
+        """
+        Total fight duration minus the time the boss spent with its
+        named immunity buff/debuff active -- i.e. the time the boss
+        was actually damageable.
+
+        Returns None if immunity_name is blank (nothing to compute).
+        A name that simply isn't found in this particular fight's
+        aura list is not an error -- some pulls skip the immunity
+        window entirely (e.g. a fast burn) -- so that case returns
+        the full fight duration (zero immune time), not None.
+        """
+
+        name = (immunity_name or "").strip()
+
+        if not name:
+            return None
+
+        summary = self.fetch_fight_summary(report_code, fight_id)
+
+        full_seconds = summary["duration_seconds"]
+
+        data_type = "Debuffs" if immunity_kind == "Debuff" else "Buffs"
+
+        # The immunity effect lives on the boss itself, i.e. an
+        # enemy actor -- same hostility_type used elsewhere in this
+        # service for reading enemy-side auras (see fetch_uptime's
+        # debuff-watch branch), not the "Friendlies" side used for a
+        # tracked player's own buffs.
+        auras = self.client.get_aura_table(
+            report_code,
+            fight_id,
+            summary["start_time"],
+            summary["end_time"],
+            data_type=data_type,
+            hostility_type="Enemies",
+            source_id=None,
+        )
+
+        target_key = name.casefold()
+
+        immune_ms = 0.0
+
+        for aura in auras:
+
+            if str(aura.get("name", "")).strip().casefold() == target_key:
+
+                immune_ms += float(aura.get("totalUptime", 0.0))
+
+        immune_seconds = immune_ms / 1000.0
+
+        return max(0.0, full_seconds - immune_seconds)
+
     def fetch_uptime(
         self,
         report_code: str,

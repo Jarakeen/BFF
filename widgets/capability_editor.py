@@ -87,6 +87,20 @@ class CapabilityEditor(QWidget):
             "Optional -- seconds the boss was actually damageable"
         )
 
+        self.immunity_buff_name = QLineEdit()
+        self.immunity_buff_name.setPlaceholderText(
+            "Optional -- name of the boss's immunity buff/debuff "
+            "(auto-fills Boss Active Time on Fetch)"
+        )
+
+        self.immunity_buff_kind = QComboBox()
+        self.immunity_buff_kind.addItems(["Buff", "Debuff"])
+        self.immunity_buff_kind.setToolTip(
+            "Whether the boss's immunity shows up as a buff the boss "
+            "gains on itself, or a debuff (e.g. one players must apply "
+            "to end the immunity window)."
+        )
+
         self.equipped_sets = QLineEdit()
         self.equipped_sets.setPlaceholderText(
             "Equipped sets, comma-separated (used for suggestions)"
@@ -114,6 +128,13 @@ class CapabilityEditor(QWidget):
         report_row.addWidget(self.fight_id, 1)
 
         form.addRow("Report", report_row)
+
+        immunity_row = QHBoxLayout()
+
+        immunity_row.addWidget(self.immunity_buff_name, 3)
+        immunity_row.addWidget(self.immunity_buff_kind, 1)
+
+        form.addRow("Boss Immunity Buff", immunity_row)
 
         form.addRow("Boss Active Time", self.boss_active_seconds)
         form.addRow("Equipped Sets", self.equipped_sets)
@@ -372,6 +393,8 @@ class CapabilityEditor(QWidget):
             FightId=self.fight_id.text().strip(),
             EquippedSets=self.equipped_sets.text().strip(),
             BossActiveSeconds=self.boss_active_seconds.text().strip(),
+            ImmunityBuffName=self.immunity_buff_name.text().strip(),
+            ImmunityBuffKind=self.immunity_buff_kind.currentText(),
             Watches=self.watches,
             LastResults=self._last_results,
             LastFightName=self._last_fight_name,
@@ -385,6 +408,8 @@ class CapabilityEditor(QWidget):
         self.fight_id.setText(model.FightId)
         self.equipped_sets.setText(model.EquippedSets)
         self.boss_active_seconds.setText(model.BossActiveSeconds)
+        self.immunity_buff_name.setText(model.ImmunityBuffName)
+        self.immunity_buff_kind.setCurrentText(model.ImmunityBuffKind or "Buff")
 
         self.watch_list.clear()
 
