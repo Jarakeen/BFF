@@ -58,14 +58,11 @@ def install() -> None:
     from ui.comp_builder_build_candidate_support import install as install_comp_builder_build_candidates
     install_comp_builder_build_candidates()
 
-    # Give the right-side catalog a real per-chair build selector. It replaces the
-    # old implicit "always use #1" behavior while preserving the same assignment path.
     from ui.comp_builder_candidate_picker_support import (
         install as install_comp_builder_candidate_picker,
     )
     install_comp_builder_candidate_picker()
 
-    # Visible style state must exist before the whole-team optimizer is installed.
     from ui.comp_builder_composition_style_support import (
         install as install_comp_builder_composition_style,
     )
@@ -76,13 +73,9 @@ def install() -> None:
     )
     install_comp_builder_team_candidate_optimizer()
 
-    # Strategy discovery wraps the same authoritative optimizer with canonically
-    # proven provider-redistribution novelty; it never creates a second chooser.
     from ui.comp_builder_strategy_support import install as install_comp_builder_strategy
     install_comp_builder_strategy()
 
-    # Comp Maker optimizer choices are authoritative. This materialization does not rerank;
-    # it only resolves the already-selected saved/template candidate IDs for roster transfer.
     from ui.comp_builder_authoritative_prescription_support import (
         install as install_comp_builder_authoritative_prescription,
     )
@@ -96,40 +89,37 @@ def install() -> None:
     from ui.comp_builder_workspace_support import install as install_comp_builder_workspace
     install_comp_builder_workspace()
 
-    # Consolidate the existing working commands into the right-side Actions card.
-    # This moves controls only; it does not create a second execution path.
     from ui.comp_builder_main_controls_support import (
         install as install_comp_builder_main_controls,
     )
     install_comp_builder_main_controls()
 
-    # Link the selected left-side chair to the selected source build on the right.
     from ui.comp_builder_assignment_cue_support import (
         install as install_comp_builder_assignment_cue,
     )
     install_comp_builder_assignment_cue()
 
-    # Trial selection is the primary Comp Maker workflow. Install it after all
-    # source/candidate controls exist so one trial change can refresh every source.
     from ui.comp_builder_trial_flow_support import (
         install as install_comp_builder_trial_flow,
     )
     install_comp_builder_trial_flow()
 
-    # Preserve the actual per-player top-team snapshots returned by ESO Logs and
-    # merge matching role/class snapshots into Build Choice. The aggregate panel
-    # remains evidence only; selectable candidates come from coherent player rows.
     from ui.comp_builder_esologs_snapshot_candidate_support import (
         install as install_comp_builder_esologs_snapshot_candidates,
     )
     install_comp_builder_esologs_snapshot_candidates()
 
-    # Wrap the final roster-transfer path after the materialization/constraint
-    # layers so send-state feedback reflects the actual completed operation.
     from ui.comp_builder_send_feedback_support import (
         install as install_comp_builder_send_feedback,
     )
     install_comp_builder_send_feedback()
+
+    # The generated-team selector is an implementation detail now. Roster shows
+    # the just-sent team directly and keeps its name visible as a static header cue.
+    from ui.comp_builder_roster_view_support import (
+        install as install_comp_builder_roster_view,
+    )
+    install_comp_builder_roster_view()
 
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
