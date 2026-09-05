@@ -28,7 +28,8 @@ def test_strategy_button_stays_in_compact_right_hand_controls_and_has_rylo_treat
 
     assert 'setProperty("compInterestingStrategy", True)' in support
     assert "right.addWidget(actions, 0)" in layout
-    assert "actions.setMinimumHeight(235)" in layout
-    assert "actions.setMaximumHeight(270)" in layout
+    assert "actions.setMinimumHeight(300)" in layout
+    assert "actions.setMaximumHeight(340)" in layout
+    assert "details.setMinimumHeight(700)" in layout
     assert 'QPushButton[compInterestingStrategy="true"]' in rylo
     assert "install_comp_builder_strategy()" in installer
