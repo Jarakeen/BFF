@@ -85,8 +85,8 @@ def install() -> None:
     install_comp_builder_team_candidate_optimizer()
 
     # Materialize those already-selected Comp Maker assignments into the existing
-    # PrescribedRoster model before roster transfer. This bridge never reranks; it
-    # only resolves the optimizer's authoritative saved/template candidate IDs.
+    # PrescribedRoster model before roster transfer. This materialization does not rerank;
+    # it only resolves the optimizer's authoritative saved/template candidate IDs.
     from ui.comp_builder_authoritative_prescription_support import (
         install as install_comp_builder_authoritative_prescription,
     )
