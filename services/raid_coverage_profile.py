@@ -94,7 +94,15 @@ DEFAULT_RAID_COVERAGE_PROFILE = RaidCoverageProfile(
         RaidCoverageRequirement("major_vulnerability", "Major Vulnerability"),
         RaidCoverageRequirement("major_berserk", "Major Berserk"),
         RaidCoverageRequirement("major_breach", "Major Breach"),
-        RaidCoverageRequirement("major_slayer", "Major Slayer"),
+        RaidCoverageRequirement(
+            "major_slayer",
+            "Major Slayer",
+            capability_type="major_slayer",
+            mapping_evidence=(
+                "Gear-set effect resolution tests prove Master Architect resolves to "
+                "the canonical EffectVariant identity 'major_slayer'."
+            ),
+        ),
         RaidCoverageRequirement("crusher", "Crusher"),
         RaidCoverageRequirement(
             "minor_brittle",
