@@ -6,7 +6,7 @@ def test_assignment_action_uses_player_facing_language() -> None:
 
     assert 'apply_chair.setText("Assign Build to This Player")' in source
     assert 'setProperty("compAssignBuild", True)' in source
-    assert 'generate.setText("Generate Team")' in source
+    assert 'generate.setText("Fill from Roster")' in source
 
 
 def test_main_controls_hide_redundant_update_and_optional_strategy_action() -> None:
