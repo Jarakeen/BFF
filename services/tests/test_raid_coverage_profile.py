@@ -31,10 +31,11 @@ def test_default_profile_preserves_existing_required_watch_list():
 def test_default_profile_maps_only_source_backed_capability_identities():
     assert [(row.display_name, row.capability_type) for row in DEFAULT_RAID_COVERAGE_PROFILE.mapped_required] == [
         ("Major Courage", "major_courage"),
+        ("Major Slayer", "major_slayer"),
         ("Minor Brittle", "minor_brittle"),
         ("War Horn", "force"),
     ]
-    assert len(DEFAULT_RAID_COVERAGE_PROFILE.unmapped_required) == 12
+    assert len(DEFAULT_RAID_COVERAGE_PROFILE.unmapped_required) == 11
 
 
 def test_profile_emits_only_mapped_required_coverage_requirements():
@@ -42,6 +43,7 @@ def test_profile_emits_only_mapped_required_coverage_requirements():
 
     assert [row.effect_name for row in requirements] == [
         "major_courage",
+        "major_slayer",
         "minor_brittle",
         "force",
     ]
@@ -49,7 +51,7 @@ def test_profile_emits_only_mapped_required_coverage_requirements():
 
 
 def test_unmapped_display_name_is_not_guessed_into_capability_type():
-    row = RaidCoverageRequirement("major_slayer", "Major Slayer")
+    row = RaidCoverageRequirement("major_vulnerability", "Major Vulnerability")
 
     assert row.capability_type is None
     assert row.to_coverage_requirement() is None
