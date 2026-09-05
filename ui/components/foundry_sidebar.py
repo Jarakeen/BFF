@@ -30,7 +30,7 @@ BROADCAST_NAV_SECTION = ("Broadcast", "broadcast", "header")
 
 CORE_NAV_SECTIONS = [
     {"label": "Roster", "children": [
-        ("Characters", "roster_page"),
+        ("Characters", "characters"),
         ("Builds", "console:2"),
     ]},
     {"label": "Raid Engine", "children": [
