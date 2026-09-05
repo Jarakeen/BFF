@@ -31,25 +31,25 @@ def _selected_row(page) -> int:
 def _assignment_text(page) -> str:
     row = _selected_row(page)
     if row < 0:
-        return "← SELECT A PLAYER / CHAIR ON THE LEFT"
+        return "SELECT A PLAYER / CHAIR ON THE LEFT"
 
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
     role = page._cell_text(row, 1) or "Unresolved role"
     selected_class = page._selected_class(row) or "Any class"
 
-    candidate_name = "Top eligible build"
+    candidate_name = "No eligible build selected"
     try:
-        from ui import comp_builder_build_candidate_support as candidate_support
+        from ui import comp_builder_candidate_picker_support as picker_support
 
-        candidates = candidate_support._chair_candidates(page, row)
-        if candidates:
-            candidate_name = candidates[0].name
-    except (OSError, ValueError):
+        candidate = picker_support._selected_candidate(page)
+        if candidate is not None:
+            candidate_name = candidate.name
+    except (ImportError, AttributeError, OSError, ValueError):
         pass
 
     return (
-        f"{candidate_name}  ←  ASSIGN TO {slot_name}\n"
-        f"{role} • {selected_class}"
+        f"SELECTED BUILD: {candidate_name}\n"
+        f"TARGET PLAYER / CHAIR: {slot_name} • {role} • {selected_class}"
     )
 
 
@@ -61,8 +61,8 @@ def _refresh_assignment_cue(page) -> None:
 
 def _install_assignment_cue(page) -> None:
     # The selected matrix row and the source-build block share one accent treatment.
-    # This is a visual relationship only; assignment still uses the existing tested
-    # candidate application path.
+    # This is a visual relationship only; assignment still uses the tested candidate
+    # application path and the explicit build picker controls which candidate is used.
     page.matrix_table.setProperty("compAssignmentTarget", True)
 
     candidate_label = getattr(page, "comp_build_candidates_label", None)
@@ -79,12 +79,10 @@ def _install_assignment_cue(page) -> None:
             cue = QLabel()
             cue.setWordWrap(True)
             cue.setProperty("compAssignmentCue", True)
-            candidate_index = (
-                layout.indexOf(candidate_label)
-                if candidate_label is not None
-                else -1
-            )
-            insert_at = candidate_index if candidate_index >= 0 else 0
+            picker_label = getattr(page, "comp_candidate_choice_label", None)
+            picker_index = layout.indexOf(picker_label) if picker_label is not None else -1
+            candidate_index = layout.indexOf(candidate_label) if candidate_label is not None else -1
+            insert_at = picker_index if picker_index >= 0 else (candidate_index if candidate_index >= 0 else 0)
             layout.insertWidget(insert_at, cue)
             page.comp_assignment_cue_label = cue
 
@@ -94,6 +92,9 @@ def _install_assignment_cue(page) -> None:
     page.goal_combo.currentTextChanged.connect(
         lambda *_args: _refresh_assignment_cue(page)
     )
+    picker = getattr(page, "comp_candidate_choice_combo", None)
+    if picker is not None:
+        picker.currentIndexChanged.connect(lambda *_args: _refresh_assignment_cue(page))
     _refresh_assignment_cue(page)
 
 
