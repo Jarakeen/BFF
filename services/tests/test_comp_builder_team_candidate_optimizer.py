@@ -1,4 +1,5 @@
 from services.comp_builder_build_candidates import CompBuildCandidate
+from services.comp_builder_composition_style import CompCompositionStyle
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
     optimize_comp_team_candidates,
@@ -184,3 +185,48 @@ def test_impossible_raid_wide_provider_requirement_is_reported_without_emptying_
 
     assert result.applied_count == 2
     assert result.uncovered_team_provider_ids == ("major_courage",)
+
+
+def test_off_meta_style_can_prefer_evidence_backed_novel_candidate() -> None:
+    conventional = _candidate("conventional", player="Conventional", score=120)
+    unusual = _candidate("unusual", player="Unusual", score=100)
+
+    result = optimize_comp_team_candidates(
+        pools=(CompTeamCandidatePool("Healer 1", (conventional, unusual)),),
+        composition_style=CompCompositionStyle.OFF_META,
+        novelty_by_candidate={"unusual": 25.0},
+    )
+
+    assert result.assignments[0].candidate.candidate_id == "unusual"
+
+
+def test_off_meta_style_never_trades_required_provider_coverage_for_novelty() -> None:
+    provider = _candidate("provider", player="Provider", score=100)
+    unusual = _candidate("unusual", player="Unusual", score=100)
+
+    result = optimize_comp_team_candidates(
+        pools=(CompTeamCandidatePool("Healer 1", (provider, unusual)),),
+        provider_ids_by_candidate={
+            "provider": ("major_courage",),
+            "unusual": (),
+        },
+        required_team_provider_ids=("major_courage",),
+        composition_style=CompCompositionStyle.OFF_META,
+        novelty_by_candidate={"unusual": 10000.0},
+    )
+
+    assert result.assignments[0].candidate.candidate_id == "provider"
+    assert result.uncovered_team_provider_ids == ()
+
+
+def test_off_meta_style_never_prefers_novelty_over_filling_a_chair() -> None:
+    usable = _candidate("usable", player="Usable", score=1)
+
+    result = optimize_comp_team_candidates(
+        pools=(CompTeamCandidatePool("Healer 1", (usable,)),),
+        composition_style=CompCompositionStyle.OFF_META,
+        novelty_by_candidate={},
+    )
+
+    assert result.assignments[0].candidate.candidate_id == "usable"
+    assert result.applied_count == 1
