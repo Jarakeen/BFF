@@ -51,5 +51,9 @@ def test_rylo_theme_covers_composition_style_without_horizontal_layout_pressure(
 
     assert 'QComboBox[compCompositionStyle="true"]' in rylo
     assert 'QLabel[compCompositionStyleHelp="true"]' in rylo
-    assert "actions.setMinimumHeight(205)" in layout
-    assert "Grow\n    # downward" in layout
+    # Actions may grow downward as controls are added. The contract is vertical
+    # expansion within the page rather than freezing one historical pixel height.
+    assert "actions.setMinimumHeight(" in layout
+    assert "actions.setMaximumHeight(" in layout
+    assert "grow downward" in layout
+    assert "avoid horizontal-scroll regressions" in layout
