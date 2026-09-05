@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -46,6 +47,18 @@ _OPTIONAL_METADATA_COLUMNS = {
     "acquisition_type": ("acquisition_type", "activity_type", "source_type", "set_type"),
 }
 
+_ACQUISITION_PLAN = (
+    "Trial",
+    "Dungeon",
+    "Overland",
+    "Crafted",
+    "Mythic",
+    "Arena",
+    "Monster",
+    "PvP",
+    "Infinite Archive",
+)
+
 
 class GearLookupPage(FoundryPage):
     """Read-only browser for the canonical ESO gear-set catalog."""
@@ -76,7 +89,12 @@ class GearLookupPage(FoundryPage):
         self.bonus = self._filter_combo("Any Bonus")
         self.acquisition_type = self._filter_combo("All Acquisition Types")
 
-        filter_card = FoundryCard("Filters", "⌕").set_watermark("compass", 0.025)
+        filter_card = FoundryCard("Filters", "filter")
+        filter_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        filter_card.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        filter_card.set_body_margins(10, 5, 10, 6)
+        filter_card.setMaximumHeight(96)
+
         filter_row = QHBoxLayout()
         filter_row.setContentsMargins(0, 0, 0, 0)
         filter_row.setSpacing(8)
@@ -84,19 +102,22 @@ class GearLookupPage(FoundryPage):
         filter_row.addWidget(self._context_field("BONUS", self.bonus), 1)
         filter_row.addWidget(self._context_field("ACQUISITION", self.acquisition_type), 1)
         filter_card.addLayout(filter_row)
-        self.add_workspace(filter_card)
+        # FoundryPage.add_workspace gives every workspace child stretch=1. The
+        # filter strip is intentionally a fixed-height control row, not a panel
+        # that should consume half the page.
+        self.workspace_layout.addWidget(filter_card, 0)
 
         workspace = QHBoxLayout()
         workspace.setContentsMargins(0, 0, 0, 0)
         workspace.setSpacing(8)
 
-        index_card = FoundryCard("Gear Sets", "⌕").set_watermark("compass", 0.04)
+        index_card = FoundryCard("Gear Sets", "search").set_watermark("compass", 0.04)
         self.results = QListWidget()
         self.results.currentItemChanged.connect(self._show_selected)
         index_card.addWidget(self.results)
         workspace.addWidget(index_card, 2)
 
-        detail_card = FoundryCard("Set Details", "✦").set_watermark("compass", 0.05)
+        detail_card = FoundryCard("Set Details", "set").set_watermark("compass", 0.05)
         self.set_name = QLabel("Select a gear set")
         self.set_name.setProperty("heroTitle", True)
         self.set_meta = QLabel()
@@ -119,6 +140,7 @@ class GearLookupPage(FoundryPage):
 
     def _filter_combo(self, all_label: str) -> QComboBox:
         combo = QComboBox()
+        combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         combo.addItem(all_label, "")
         combo.currentIndexChanged.connect(self._filter_sets)
         return combo
@@ -126,6 +148,7 @@ class GearLookupPage(FoundryPage):
     @staticmethod
     def _context_field(title: str, widget: QWidget) -> QWidget:
         box = QWidget()
+        box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         layout = QVBoxLayout(box)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
@@ -263,6 +286,9 @@ class GearLookupPage(FoundryPage):
         combo.clear()
         if not column:
             combo.addItem("Acquisition data unavailable", "")
+            combo.setToolTip(
+                "Planned acquisition groups: " + ", ".join(_ACQUISITION_PLAN)
+            )
             combo.setEnabled(False)
             combo.blockSignals(False)
             return
@@ -276,6 +302,7 @@ class GearLookupPage(FoundryPage):
             index = combo.findData(selected)
             if index >= 0:
                 combo.setCurrentIndex(index)
+        combo.setToolTip("")
         combo.setEnabled(True)
         combo.blockSignals(False)
 
