@@ -57,6 +57,43 @@ def _candidate_source_name(candidate) -> str:
     return "Reference"
 
 
+def _compact(values: tuple[str, ...], *, empty: str) -> str:
+    return " • ".join(values) if values else empty
+
+
+def _selected_build_details_text(page) -> str:
+    candidate = _selected_candidate(page)
+    if candidate is None:
+        return "SELECTED BUILD DETAILS\nNo build selected."
+
+    source = _candidate_source_name(candidate)
+    completeness = "Complete saved build" if candidate.complete_build else "Partial observed/reference evidence"
+    lines = [
+        "SELECTED BUILD DETAILS",
+        f"{candidate.name}",
+        f"Source: {source}",
+        f"Class / Role: {candidate.eso_class or 'Unresolved'} / {candidate.role or 'Unresolved'}",
+        f"Status: {completeness}",
+        "",
+        "GEAR",
+        _compact(candidate.gear_sets, empty="No gear sets resolved"),
+        "",
+        "SKILLS / ABILITIES",
+        _compact(candidate.skills, empty="No skills resolved from this source"),
+    ]
+    if candidate.mundus:
+        lines.extend(("", "MUNDUS", candidate.mundus))
+    if candidate.unresolved:
+        lines.extend(("", "UNRESOLVED", " • ".join(candidate.unresolved[:3])))
+    return "\n".join(lines)
+
+
+def _refresh_selected_build_details(page) -> None:
+    label = getattr(page, "comp_candidate_details_label", None)
+    if label is not None:
+        label.setText(_selected_build_details_text(page))
+
+
 def _refresh_picker(page) -> None:
     from ui import comp_builder_build_candidate_support as candidate_support
 
@@ -92,6 +129,8 @@ def _refresh_picker(page) -> None:
             label.setText("BUILD CHOICE • Select the build to assign to the highlighted player/chair")
         else:
             label.setText("BUILD CHOICE • No eligible build is available for this player/chair")
+
+    _refresh_selected_build_details(page)
 
     try:
         from ui import comp_builder_assignment_cue_support as cue_support
@@ -133,7 +172,7 @@ def _apply_selected_candidate(page, *_args) -> None:
     status = "complete build" if candidate.complete_build else "partial build evidence"
     page.status.success(
         f"Assigned {candidate.name} to {slot_name} as {status}. "
-        "Send to Roster will preserve this exact build choice."
+        "Send Comp to Roster will preserve this exact build choice."
     )
     candidate_support._refresh_candidates(page)
     _refresh_picker(page)
@@ -167,8 +206,16 @@ def _install_picker(page) -> None:
         lambda *_args: _refresh_picker(page)
     )
 
+    page.comp_candidate_details_label = QLabel()
+    page.comp_candidate_details_label.setWordWrap(True)
+    page.comp_candidate_details_label.setTextInteractionFlags(
+        page.comp_candidate_details_label.textInteractionFlags()
+    )
+    page.comp_candidate_details_label.setProperty("compCandidateDetails", True)
+
     picker_layout.addWidget(page.comp_candidate_choice_label)
     picker_layout.addWidget(page.comp_candidate_choice_combo)
+    picker_layout.addWidget(page.comp_candidate_details_label)
     details.body_layout.insertWidget(0, picker_host)
 
     page.matrix_table.currentCellChanged.connect(lambda *_args: _refresh_picker(page))
