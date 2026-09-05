@@ -33,9 +33,10 @@ def test_default_profile_maps_only_source_backed_capability_identities():
         ("Major Courage", "major_courage"),
         ("Major Slayer", "major_slayer"),
         ("Minor Brittle", "minor_brittle"),
+        ("Minor Maim", "minor_maim"),
         ("War Horn", "force"),
     ]
-    assert len(DEFAULT_RAID_COVERAGE_PROFILE.unmapped_required) == 11
+    assert len(DEFAULT_RAID_COVERAGE_PROFILE.unmapped_required) == 10
 
 
 def test_profile_emits_only_mapped_required_coverage_requirements():
@@ -45,6 +46,7 @@ def test_profile_emits_only_mapped_required_coverage_requirements():
         "major_courage",
         "major_slayer",
         "minor_brittle",
+        "minor_maim",
         "force",
     ]
     assert all(row.required_provider_count == 1 for row in requirements)
