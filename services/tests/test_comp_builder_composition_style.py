@@ -33,15 +33,16 @@ def test_comp_maker_style_selector_is_vertical_actions_state() -> None:
     assert "help_label.setWordWrap(True)" in source
 
 
-def test_whole_team_optimizer_receives_selected_style_and_external_novelty() -> None:
+def test_whole_team_optimizer_receives_selected_style_and_observed_novelty() -> None:
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
         encoding="utf-8"
     )
 
+    assert "CompBuilderNoveltyEvidenceService" in source
+    assert "novelty_service.evaluate_candidates" in source
+    assert "page._comp_novelty_by_candidate = dict(novelty_by_candidate)" in source
     assert "composition_style=style" in source
     assert "novelty_by_candidate=novelty_by_candidate" in source
-    assert 'getattr(page, "_comp_novelty_by_candidate", {})' in source
-    assert "fabricating rarity" in source
 
 
 def test_rylo_theme_covers_composition_style_without_horizontal_layout_pressure() -> None:
