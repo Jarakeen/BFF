@@ -47,16 +47,14 @@ _OPTIONAL_METADATA_COLUMNS = {
     "acquisition_type": ("acquisition_type", "activity_type", "source_type", "set_type"),
 }
 
-_ACQUISITION_PLAN = (
-    "Trial",
-    "Dungeon",
-    "Overland",
+# Practical lookup buckets requested by the app owner. These answer the useful
+# question: can I make it, buy/farm it in the world, farm/reconstruct it from
+# PvE group content, or deal with Cyrodiil-specific acquisition?
+_ACQUISITION_TYPES = (
     "Crafted",
-    "Mythic",
-    "Arena",
-    "Monster",
-    "PvP",
-    "Infinite Archive",
+    "Overland",
+    "Dungeon / Trial",
+    "Cyrodiil",
 )
 
 
@@ -80,7 +78,7 @@ class GearLookupPage(FoundryPage):
         self.set_header(self.header)
 
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Search set name, category, acquisition, or bonus text...")
+        self.search.setPlaceholderText("Search set name, acquisition, source, or bonus text...")
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self._filter_sets)
         self.header.add_context_widget(self._context_field("SEARCH", self.search))
@@ -102,9 +100,6 @@ class GearLookupPage(FoundryPage):
         filter_row.addWidget(self._context_field("BONUS", self.bonus), 1)
         filter_row.addWidget(self._context_field("ACQUISITION", self.acquisition_type), 1)
         filter_card.addLayout(filter_row)
-        # FoundryPage.add_workspace gives every workspace child stretch=1. The
-        # filter strip is intentionally a fixed-height control row, not a panel
-        # that should consume half the page.
         self.workspace_layout.addWidget(filter_card, 0)
 
         workspace = QHBoxLayout()
@@ -159,6 +154,15 @@ class GearLookupPage(FoundryPage):
         return box
 
     @staticmethod
+    def _table_names(connection: sqlite3.Connection) -> set[str]:
+        return {
+            str(row[0])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+
+    @staticmethod
     def _resolve_optional_columns(connection: sqlite3.Connection) -> dict[str, str | None]:
         columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(gear_set)").fetchall()}
         resolved: dict[str, str | None] = {}
@@ -166,15 +170,76 @@ class GearLookupPage(FoundryPage):
             resolved[facet] = next((candidate for candidate in candidates if candidate in columns), None)
         return resolved
 
+    @staticmethod
+    def _normalize_acquisition(raw_value: str | None) -> str:
+        value = str(raw_value or "").strip().casefold()
+        if not value:
+            return ""
+        if any(token in value for token in ("craft", "crafted")):
+            return "Crafted"
+        if any(token in value for token in ("overland", "world", "zone")):
+            return "Overland"
+        if any(token in value for token in ("dungeon", "trial", "arena", "monster")):
+            return "Dungeon / Trial"
+        if any(token in value for token in ("cyrodiil", "alliance war")):
+            return "Cyrodiil"
+        return ""
+
+    @staticmethod
+    def _content_acquisition(
+        connection: sqlite3.Connection,
+        tables: set[str],
+    ) -> dict[int, dict[str, object]]:
+        if not {"content", "content_sets"}.issubset(tables):
+            return {}
+
+        rows = connection.execute(
+            """
+            SELECT
+                cs.set_id,
+                c.content_type,
+                c.name,
+                c.location
+            FROM content_sets AS cs
+            JOIN content AS c ON c.id = cs.content_id
+            ORDER BY c.name COLLATE NOCASE
+            """
+        ).fetchall()
+
+        result: dict[int, dict[str, object]] = {}
+        for raw_set_id, content_type, name, location in rows:
+            try:
+                set_id = int(raw_set_id)
+            except (TypeError, ValueError):
+                continue
+
+            entry = result.setdefault(
+                set_id,
+                {"acquisition_type": "", "sources": []},
+            )
+            content_kind = str(content_type or "").strip().casefold()
+            if content_kind in {"trial", "dungeon", "arena"}:
+                entry["acquisition_type"] = "Dungeon / Trial"
+
+            source = str(name or "").strip()
+            location_text = str(location or "").strip()
+            if source and location_text and location_text.casefold() not in source.casefold():
+                source = f"{source} • {location_text}"
+            if source and source not in entry["sources"]:
+                entry["sources"].append(source)
+
+        return result
+
     def refresh(self) -> None:
         try:
             with sqlite3.connect(self.database_path) as connection:
+                tables = self._table_names(connection)
                 self._metadata_columns = self._resolve_optional_columns(connection)
                 acquisition_column = self._metadata_columns.get("acquisition_type")
                 acquisition_select = (
-                    f", gs.{acquisition_column} AS acquisition_type"
+                    f", gs.{acquisition_column} AS stored_acquisition_type"
                     if acquisition_column
-                    else ", NULL AS acquisition_type"
+                    else ", NULL AS stored_acquisition_type"
                 )
 
                 rows = connection.execute(
@@ -201,6 +266,8 @@ class GearLookupPage(FoundryPage):
                     ORDER BY set_id, piece_count, id
                     """
                 ).fetchall()
+
+                content_acquisition = self._content_acquisition(connection, tables)
         except sqlite3.Error as exc:
             self._sets = []
             self.results.clear()
@@ -213,30 +280,43 @@ class GearLookupPage(FoundryPage):
 
         self._sets = []
         for row in rows:
-            set_id, name, category, max_equip_count, armor_csv, acquisition_type = row
+            set_id, name, category, max_equip_count, armor_csv, stored_acquisition = row
+            set_id = int(set_id)
             armor_types = {
                 int(value)
                 for value in str(armor_csv or "").split(",")
                 if value.strip().isdigit() and int(value) in _ARMOR_TYPE_LABELS
             }
+
+            content_info = content_acquisition.get(set_id, {})
+            acquisition_type = str(content_info.get("acquisition_type") or "")
+            if not acquisition_type:
+                acquisition_type = self._normalize_acquisition(str(stored_acquisition or ""))
+            if not acquisition_type:
+                acquisition_type = self._normalize_acquisition(str(category or ""))
+
             self._sets.append(
                 {
-                    "id": int(set_id),
+                    "id": set_id,
                     "name": str(name),
                     "category": str(category or ""),
                     "max_equip_count": max_equip_count,
                     "armor_types": armor_types,
-                    "bonus_texts": bonuses_by_set.get(int(set_id), []),
-                    "acquisition_type": str(acquisition_type or "").strip(),
+                    "bonus_texts": bonuses_by_set.get(set_id, []),
+                    "acquisition_type": acquisition_type,
+                    "sources": list(content_info.get("sources") or []),
                 }
             )
 
         self._populate_filters()
         self._filter_sets()
-        if not self._metadata_columns.get("acquisition_type"):
+
+        classified = sum(1 for row in self._sets if row["acquisition_type"])
+        unresolved = len(self._sets) - classified
+        if unresolved:
             self.status.info(
-                f"Gear Lookup ready • {len(self._sets)} canonical set(s) loaded • "
-                "catalog does not yet store acquisition type."
+                f"Gear Lookup ready • {len(self._sets)} canonical set(s) • "
+                f"{classified} acquisition-classified • {unresolved} awaiting source metadata."
             )
         else:
             self.status.info(f"Gear Lookup ready • {len(self._sets)} canonical set(s) loaded.")
@@ -277,34 +357,16 @@ class GearLookupPage(FoundryPage):
         ]
         self._restore_combo(self.bonus, "Any Bonus", bonus_values)
 
-        self._populate_acquisition_combo()
-
-    def _populate_acquisition_combo(self) -> None:
-        combo = self.acquisition_type
-        column = self._metadata_columns.get("acquisition_type")
-        combo.blockSignals(True)
-        combo.clear()
-        if not column:
-            combo.addItem("Acquisition data unavailable", "")
-            combo.setToolTip(
-                "Planned acquisition groups: " + ", ".join(_ACQUISITION_PLAN)
-            )
-            combo.setEnabled(False)
-            combo.blockSignals(False)
-            return
-
-        selected = str(combo.currentData() or "")
-        values = sorted({row["acquisition_type"] for row in self._sets if row["acquisition_type"]}, key=str.casefold)
-        combo.addItem("All Acquisition Types", "")
-        for value in values:
-            combo.addItem(value, value)
-        if selected:
-            index = combo.findData(selected)
-            if index >= 0:
-                combo.setCurrentIndex(index)
-        combo.setToolTip("")
-        combo.setEnabled(True)
-        combo.blockSignals(False)
+        self._restore_combo(
+            self.acquisition_type,
+            "All Acquisition Types",
+            list(_ACQUISITION_TYPES),
+        )
+        self.acquisition_type.setToolTip(
+            "Crafted: make it • Overland: buy/farm it • "
+            "Dungeon / Trial: farm or reconstruct it • Cyrodiil: PvP-origin gear"
+        )
+        self.acquisition_type.setEnabled(True)
 
     @staticmethod
     def _bonus_facet_matches(label: str, descriptions: list[str]) -> bool:
@@ -347,6 +409,7 @@ class GearLookupPage(FoundryPage):
                     row["name"],
                     row["category"],
                     row["acquisition_type"],
+                    *row["sources"],
                     *row["bonus_texts"],
                 ]
             ).casefold()
@@ -355,7 +418,9 @@ class GearLookupPage(FoundryPage):
 
             item = QListWidgetItem(row["name"])
             item.setData(Qt.ItemDataRole.UserRole, row["id"])
-            item.setToolTip(row["category"] or "Uncategorized")
+            tooltip_bits = [row["acquisition_type"] or "Acquisition not classified"]
+            tooltip_bits.extend(row["sources"])
+            item.setToolTip(" • ".join(tooltip_bits))
             self.results.addItem(item)
             if row["id"] == current_id:
                 restore_row = matched
@@ -381,7 +446,6 @@ class GearLookupPage(FoundryPage):
             return
 
         self.set_name.setText(selected["name"].upper())
-        category_text = selected["category"] or "Uncategorized"
         equip_text = str(selected["max_equip_count"]) if selected["max_equip_count"] is not None else "—"
         weights = ", ".join(
             _ARMOR_TYPE_LABELS[value]
@@ -390,12 +454,12 @@ class GearLookupPage(FoundryPage):
         ) or "—"
 
         metadata = [
-            f"Category: {category_text}",
             f"Weight: {weights}",
             f"Maximum equipped pieces: {equip_text}",
+            f"Acquisition: {selected['acquisition_type'] or 'Not yet classified'}",
         ]
-        if selected["acquisition_type"]:
-            metadata.append(f"Acquisition: {selected['acquisition_type']}")
+        if selected["sources"]:
+            metadata.append(f"Source: {', '.join(selected['sources'])}")
         self.set_meta.setText("   •   ".join(metadata))
 
         rows = selected["bonus_texts"]
