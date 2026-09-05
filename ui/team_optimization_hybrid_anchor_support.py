@@ -116,6 +116,14 @@ def install() -> None:
     )
     install_comp_builder_trial_flow()
 
+    # Preserve the actual per-player top-team snapshots returned by ESO Logs and
+    # merge matching role/class snapshots into Build Choice. The aggregate panel
+    # remains evidence only; selectable candidates come from coherent player rows.
+    from ui.comp_builder_esologs_snapshot_candidate_support import (
+        install as install_comp_builder_esologs_snapshot_candidates,
+    )
+    install_comp_builder_esologs_snapshot_candidates()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
