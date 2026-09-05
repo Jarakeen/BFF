@@ -75,6 +75,15 @@ def install() -> None:
 
     install_comp_builder_build_candidates()
 
+    # Upgrade the all-chair action from greedy row order to one deterministic team
+    # assignment. Manual chair choices remain fixed, saved players remain unique,
+    # and reference templates stay reusable recruitment evidence.
+    from ui.comp_builder_team_candidate_optimizer_support import (
+        install as install_comp_builder_team_candidate_optimizer,
+    )
+
+    install_comp_builder_team_candidate_optimizer()
+
     # Finally tighten the page geometry. This runs after the additive Comp Builder
     # support modules so Actions stays pinned top-right, coverage sits directly under
     # the matrix, and only the Details card owns flexible vertical space.
