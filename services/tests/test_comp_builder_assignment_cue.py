@@ -20,13 +20,15 @@ def test_assignment_cue_links_top_build_to_selected_player_chair() -> None:
     assert "candidates[0].name" in source
 
 
-def test_assignment_arrow_points_from_catalog_to_comp() -> None:
+def test_assignment_layout_gives_space_back_to_both_main_cards() -> None:
     layout = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
 
-    assert 'assignment_arrow = QLabel("←\\nASSIGN")' in layout
-    assert 'setProperty("compAssignmentArrow", True)' in layout
-    assert "columns.addWidget(assignment_arrow" in layout
-    assert "columns.setStretch(1, 0)" in layout
+    assert 'assignment_arrow = QLabel("←\\nASSIGN")' not in layout
+    assert 'setProperty("compAssignmentArrow", True)' not in layout
+    assert "columns.addLayout(left, 1)" in layout
+    assert "columns.addLayout(right, 1)" in layout
+    assert "columns.setStretch(0, 1)" in layout
+    assert "columns.setStretch(1, 1)" in layout
 
 
 def test_rylo_uses_one_gold_assignment_accent_for_source_and_target() -> None:
@@ -35,7 +37,6 @@ def test_rylo_uses_one_gold_assignment_accent_for_source_and_target() -> None:
     assert 'QTableWidget[compMakerOverview="true"][compAssignmentTarget="true"]::item:selected' in rylo
     assert 'QLabel[compAssignmentSource="true"]' in rylo
     assert 'QLabel[compAssignmentCue="true"]' in rylo
-    assert 'QLabel[compAssignmentArrow="true"]' in rylo
     assert 'QPushButton[compAssignBuild="true"]' in rylo
     assert "#B88A3C" in rylo
 
