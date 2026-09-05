@@ -21,6 +21,9 @@ def test_ranked_team_card_displays_and_saves_skill_evidence():
 def test_capability_member_selector_uses_real_tabs_instead_of_round_buttons():
     source = Path("ui/capabilities_page.py").read_text(encoding="utf-8")
 
+    assert "self.desk_tabs = QTabBar()" in source
+    assert 'self.desk_tabs.addTab("Ranked Team Builds")' in source
+    assert 'self.desk_tabs.addTab("Uptime Logs")' in source
     assert "self.tabs_widget = QTabBar()" in source
     assert "self.tabs_widget.setUsesScrollButtons(True)" in source
     assert "FoundryTabs" not in source

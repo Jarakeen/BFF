@@ -1,10 +1,5 @@
+from services.esologs_client import EsoLogsApiError
 from services.top_team_service import TopTeamService
-
-
-def test_top_team_extracts_report_and_fight_from_nested_ranking():
-    ranking = {"report": {"code": "ABC123", "fightID": 17}}
-
-    assert TopTeamService._ranking_report_fight(ranking) == ("ABC123", 17)
 
 
 def test_top_team_extracts_and_deduplicates_set_names():
@@ -27,19 +22,13 @@ def test_top_team_extracts_and_deduplicates_set_names():
     ]
 
 
-def test_top_team_accepts_rankings_json_scalar():
-    payload = '{"rankings":[{"report":{"code":"XYZ","fightID":4}}]}'
-
-    assert TopTeamService._first_ranking(payload) == {
-        "report": {"code": "XYZ", "fightID": 4}
-    }
-
-
 class _FakeClient:
     def __init__(self):
         self.query_calls = []
         self.aura_calls = []
         self.trial_zone_calls = 0
+        self.report_candidates = [("ABC123", 7)]
+        self.summary_calls = []
 
     def get_trial_zones(self):
         self.trial_zone_calls += 1
@@ -51,53 +40,39 @@ class _FakeClient:
             }
         ]
 
-    def _query(self, query, variables):
-        self.query_calls.append((query, variables))
-        if "fightRankings" in query:
-            return {
-                "worldData": {
-                    "encounter": {
-                        "fightRankings": {
-                            "rankings": [
-                                {"report": {"code": "ABC123", "fightID": 7}}
-                            ]
-                        }
-                    }
-                }
-            }
-        return {
-            "reportData": {
-                "report": {
-                    "playerDetails": {
-                        "tanks": [],
-                        "healers": [
-                            {
-                                "id": 42,
-                                "name": "ObservedHealer",
-                                "type": "Warden",
-                                "combatantInfo": {
-                                    "gear": [
-                                        {"setName": "Serpent's Disdain"},
-                                        {"set": {"name": "Pillager's Profit"}},
-                                    ],
-                                    "talents": [
-                                        {"name": "Combat Prayer"},
-                                        {"ability": {"name": "Energy Orb"}},
-                                        {"name": "Combat Prayer"},
-                                    ],
-                                },
-                            }
-                        ],
-                        "dps": [],
-                    }
-                }
-            }
-        }
+    def get_top_reports_for_encounter(self, encounter_id, limit=10):
+        assert encounter_id == 123
+        return self.report_candidates[:limit]
 
     def get_fight(self, report_code, fight_id):
-        assert report_code == "ABC123"
-        assert fight_id == 7
         return {"startTime": 1000, "endTime": 11000}
+
+    def get_report_player_summary(
+        self, report_code, fight_id, start_time, end_time
+    ):
+        self.summary_calls.append((report_code, fight_id))
+        return {
+            "tanks": [],
+            "healers": [
+                {
+                    "id": 42,
+                    "name": "ObservedHealer",
+                    "type": "Warden",
+                    "combatantInfo": {
+                        "gear": [
+                            {"setName": "Serpent's Disdain"},
+                            {"set": {"name": "Pillager's Profit"}},
+                        ],
+                        "talents": [
+                            {"name": "Combat Prayer"},
+                            {"ability": {"name": "Energy Orb"}},
+                            {"name": "Combat Prayer"},
+                        ],
+                    },
+                }
+            ],
+            "dps": [],
+        }
 
     def get_aura_table(
         self,
@@ -167,6 +142,38 @@ def test_top_team_initial_fetch_restores_class_and_skills_without_eager_aura_cal
     assert player.Abilities == ["Combat Prayer", "Energy Orb"]
     assert player.Mundus == ""
     assert client.aura_calls == []
+
+
+def test_top_team_falls_through_private_report_without_mixing_teams():
+    class _FallbackClient(_FakeClient):
+        def __init__(self):
+            super().__init__()
+            self.report_candidates = [("PRIVATE", 1), ("ABC123", 7)]
+
+        def get_report_player_summary(
+            self, report_code, fight_id, start_time, end_time
+        ):
+            if report_code == "PRIVATE":
+                self.summary_calls.append((report_code, fight_id))
+                raise EsoLogsApiError("Report is private")
+            return super().get_report_player_summary(
+                report_code, fight_id, start_time, end_time
+            )
+
+    client = _FallbackClient()
+    result = TopTeamService(client).get_top_team(
+        zone_id=99,
+        zone_name="Dreadsail Reef",
+        encounter_id=123,
+        encounter_name="Taleria",
+    )
+
+    assert result.ReportCode == "ABC123"
+    assert [player.Name for player in result.Players] == ["ObservedHealer"]
+    assert client.summary_calls == [
+        ("PRIVATE", 1),
+        ("ABC123", 7),
+    ]
 
 
 def test_top_team_resolves_mundus_lazily_for_one_selected_player():

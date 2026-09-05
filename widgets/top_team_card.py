@@ -120,8 +120,12 @@ class TopTeamCard(FoundryCard):
         root_layout.setSpacing(10)
 
         #
-        # Keep the selectors and actions on separate rows so the card
-        # does not impose a wide minimum size on the Capabilities page.
+        # Filters -- stacked into two rows (pickers, then actions)
+        # instead of one wide row, so the card's minimum width is
+        # driven by whichever row needs more, not by all four
+        # controls jammed side by side. Trades a little extra height
+        # for a much narrower card -- the right direction for a
+        # vertical, sidebar-style card.
         #
 
         picker_row = QHBoxLayout()
@@ -198,7 +202,7 @@ class TopTeamCard(FoundryCard):
         )
         board_layout = QVBoxLayout(self.board)
         board_layout.setContentsMargins(0, 0, 0, 0)
-        board_layout.setSpacing(4)
+        board_layout.setSpacing(10)
 
         for index, (role_key, role_label) in enumerate(_ROLE_SECTIONS):
 
@@ -208,7 +212,7 @@ class TopTeamCard(FoundryCard):
 
             self._sections[role_key] = section_refs
 
-            board_layout.addWidget(section_widget)
+            board_layout.addWidget(section_widget, 1)
 
             if index < len(_ROLE_SECTIONS) - 1:
 
@@ -218,9 +222,17 @@ class TopTeamCard(FoundryCard):
 
                 board_layout.addWidget(divider)
 
-        root_layout.addWidget(self.board)
+        root_layout.addWidget(self.board, 1)
 
         self.status = FoundryStatusBar()
+
+        # This card's status messages can run long (the ranking
+        # fallback error explains what it tried), and FoundryStatusBar's
+        # message label doesn't wrap by default -- that was forcing a
+        # 600+px minimum width on the whole card from one long error
+        # sentence. Wrap just this instance's message label; the
+        # shared FoundryStatusBar class/other cards are unaffected.
+        self.status.message.setWordWrap(True)
 
         root_layout.addWidget(self.status)
 
@@ -491,7 +503,8 @@ class TopTeamCard(FoundryCard):
 
         self.summary.setText(
             f"{result.TrialName} \u00b7 {result.EncounterName} \u00b7 "
-            f"top ranked report {result.ReportCode} / fight {result.FightId}"
+            f"{len(result.Players)} player build(s) from ranked team "
+            f"report {result.ReportCode}"
         )
 
         by_role: dict[str, list[TopTeamPlayer]] = {

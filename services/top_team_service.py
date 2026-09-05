@@ -1,28 +1,13 @@
 from __future__ import annotations
 
-import json
-from typing import Any
-
 from models.top_team_model import TopTeamPlayer, TopTeamResult
 from services.esologs_client import (
     MUNDUS_STONE_NAMES,
     EsoLogsApiError,
     EsoLogsClient,
 )
-from services.esologs_combat_importer import PLAYER_QUERY
-
-
-_RANKING_QUERY = """
-query TopTeamRanking($encounterID: Int!) {
-  worldData {
-    encounter(id: $encounterID) {
-      fightRankings(page: 1, includeOtherPlayers: true)
-    }
-  }
-}
-"""
-
 _MUNDUS_UPTIME_THRESHOLD_PERCENT = 60.0
+_RANKED_TEAM_CANDIDATE_LIMIT = 10
 
 
 class TopTeamService:
@@ -36,15 +21,6 @@ class TopTeamService:
 
     def __init__(self, client: EsoLogsClient):
         self.client = client
-
-    @staticmethod
-    def _scalar(value: Any) -> Any:
-        if isinstance(value, str):
-            try:
-                return json.loads(value)
-            except json.JSONDecodeError:
-                return value
-        return value
 
     def list_trials(self) -> list[dict]:
         """Use the client's verified trial-only zone filter.
@@ -66,31 +42,47 @@ class TopTeamService:
     ) -> TopTeamResult:
         del zone_id  # retained in the public call shape for the trial picker.
 
-        ranking_data = self.client._query(
-            _RANKING_QUERY,
-            {"encounterID": int(encounter_id)},
+        candidates = self.client.get_top_reports_for_encounter(
+            int(encounter_id),
+            limit=_RANKED_TEAM_CANDIDATE_LIMIT,
         )
-        encounter = (ranking_data.get("worldData") or {}).get("encounter") or {}
-        rankings = self._scalar(encounter.get("fightRankings")) or {}
-        ranking = self._first_ranking(rankings)
-        report_code, fight_id = self._ranking_report_fight(ranking)
+        candidate_errors: list[str] = []
+        for report_code, fight_id in candidates:
+            try:
+                fight = self.client.get_fight(report_code, fight_id)
+                start = float(fight.get("startTime", 0))
+                end = float(fight.get("endTime", 0))
+                details = self.client.get_report_player_summary(
+                    report_code,
+                    fight_id,
+                    start,
+                    end,
+                )
+            except EsoLogsApiError as exc:
+                candidate_errors.append(f"{report_code}#{fight_id}: {exc}")
+                continue
 
-        fight = self.client.get_fight(report_code, fight_id)
-        start = float(fight.get("startTime", 0))
-        end = float(fight.get("endTime", 0))
+            players = self._players_from_details(details)
+            if players:
+                return TopTeamResult(
+                    TrialName=zone_name,
+                    EncounterName=encounter_name,
+                    ReportCode=report_code,
+                    FightId=fight_id,
+                    Players=players,
+                )
 
-        details_data = self.client._query(
-            PLAYER_QUERY,
-            {
-                "code": report_code,
-                "fightIDs": [int(fight_id)],
-                "startTime": start,
-                "endTime": end,
-            },
+            candidate_errors.append(
+                f"{report_code}#{fight_id}: summary exposed no team players"
+            )
+
+        reason = "; ".join(candidate_errors) or "no usable ranked reports"
+        raise EsoLogsApiError(
+            f"Could not load a coordinated ranked team for {encounter_name}: {reason}."
         )
-        report = (details_data.get("reportData") or {}).get("report") or {}
-        details = self._scalar(report.get("playerDetails")) or {}
 
+    @classmethod
+    def _players_from_details(cls, details: dict) -> list[TopTeamPlayer]:
         players: list[TopTeamPlayer] = []
         for bucket, role in (("tanks", "tank"), ("healers", "healer"), ("dps", "dps")):
             for actor in details.get(bucket) or []:
@@ -105,21 +97,15 @@ class TopTeamService:
                     TopTeamPlayer(
                         Name=str(actor.get("name") or actor.get("displayName") or "Unknown"),
                         Role=role,
-                        GearSets=self._gear_sets(actor),
-                        ClassName=self._class_name(actor),
-                        Abilities=self._abilities(actor),
+                        GearSets=cls._gear_sets(actor),
+                        ClassName=cls._class_name(actor),
+                        Abilities=cls._abilities(actor),
                         Mundus="",
                         ActorId=normalized_actor_id,
                     )
                 )
 
-        return TopTeamResult(
-            TrialName=zone_name,
-            EncounterName=encounter_name,
-            ReportCode=report_code,
-            FightId=fight_id,
-            Players=players,
-        )
+        return players
 
     def get_player_mundus(
         self,
@@ -176,42 +162,6 @@ class TopTeamService:
             fight_id=result.FightId,
             actor_id=player.ActorId,
         )
-
-    @classmethod
-    def _first_ranking(cls, payload: Any) -> dict:
-        payload = cls._scalar(payload)
-        if isinstance(payload, list):
-            rows = payload
-        elif isinstance(payload, dict):
-            rows = payload.get("rankings") or payload.get("data") or []
-        else:
-            rows = []
-        if isinstance(rows, dict):
-            rows = rows.get("rankings") or rows.get("data") or []
-        if not rows or not isinstance(rows[0], dict):
-            raise EsoLogsApiError("ESO Logs returned no ranked team for that encounter.")
-        return rows[0]
-
-    @staticmethod
-    def _ranking_report_fight(ranking: dict) -> tuple[str, int]:
-        report = ranking.get("report") if isinstance(ranking.get("report"), dict) else {}
-        code = (
-            report.get("code")
-            or ranking.get("reportCode")
-            or ranking.get("code")
-        )
-        fight_id = (
-            report.get("fightID")
-            or report.get("fightId")
-            or ranking.get("fightID")
-            or ranking.get("fightId")
-            or ranking.get("fight_id")
-        )
-        if not code or fight_id is None:
-            raise EsoLogsApiError(
-                "ESO Logs returned a ranked team without a usable report/fight reference."
-            )
-        return str(code), int(fight_id)
 
     @staticmethod
     def _combatant_info(actor: dict) -> dict:

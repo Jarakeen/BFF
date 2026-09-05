@@ -438,15 +438,31 @@ class EsoLogsClient:
     ) -> tuple[str, int]:
         """
         Return (report_code, fight_id) for the #1 log-ranked kill of
-        this encounter -- i.e. the top-ranking team's pull, not one
-        player's best parse.
-
-        `zone_id` is retained in the public method signature for
-        call-site compatibility, but Encounter.characterRankings does
-        not accept zoneID and it must not be sent to ESO Logs.
+        this encounter. Thin convenience wrapper around
+        get_top_reports_for_encounter(limit=1) for any caller that
+        only ever wants the single top log.
         """
 
-        del zone_id
+        candidates = self.get_top_reports_for_encounter(encounter_id, limit=1)
+
+        return candidates[0]
+
+    def get_top_reports_for_encounter(
+        self,
+        encounter_id: int,
+        limit: int = 10,
+    ) -> list[tuple[str, int]]:
+        """
+        Return up to `limit` (report_code, fight_id) pairs, in rank
+        order, for this encounter's top log-ranked kills.
+
+        The #1 log on a leaderboard is sometimes private/anonymized,
+        which can make a later query for that specific report's full
+        player/gear details fail or come back empty even though the
+        ranking itself resolved fine -- returning several candidates
+        lets the caller fall through to the next-ranked log instead
+        of hard-failing on the very first one.
+        """
 
         query = """
         query TopLog($encounterID: Int!) {
@@ -490,25 +506,35 @@ class EsoLogsClient:
                 "v2 schema at https://www.esologs.com/v2-api-docs/eso/."
             )
 
-        top = rows[0]
+        candidates: list[tuple[str, int]] = []
 
-        report = top.get("report") if isinstance(top, dict) else None
+        for row in rows:
 
-        if not isinstance(report, dict) or not report.get("code"):
+            if not isinstance(row, dict):
+                continue
+
+            report = row.get("report")
+
+            if not isinstance(report, dict) or not report.get("code"):
+                continue
+
+            fight_id = report.get("fightID", report.get("fightId"))
+
+            if fight_id is None:
+                continue
+
+            candidates.append((str(report["code"]), int(fight_id)))
+
+            if len(candidates) >= limit:
+                break
+
+        if not candidates:
             raise EsoLogsApiError(
-                "The top ranking entry did not include a report pointer "
-                "in the shape this client expects (report.code / "
-                "report.fightID)."
+                "None of the ranked entries for this encounter included a "
+                "usable report pointer (report.code / report.fightID)."
             )
 
-        fight_id = report.get("fightID", report.get("fightId"))
-
-        if fight_id is None:
-            raise EsoLogsApiError(
-                "The top ranking entry's report pointer had no fight ID."
-            )
-
-        return str(report["code"]), int(fight_id)
+        return candidates
 
     def get_report_player_summary(
         self,
@@ -582,3 +608,111 @@ class EsoLogsClient:
             )
 
         return player_details
+
+    def get_role_rankings(
+        self,
+        encounter_id: int,
+        role: str,
+        metric: str,
+        limit: int = 5,
+    ) -> list[dict]:
+        """
+        Return up to `limit` top-ranked *individual* character parses
+        for one role on this encounter, in rank order -- distinct
+        from get_top_reports_for_encounter, which ranks whole logs.
+        Each entry here can come from a different report/guild, since
+        this ranks players against each other directly rather than
+        ranking full-team kills.
+
+        role: "Tank" | "Healer" | "DPS" (ESO Logs' RoleType enum)
+        metric: "dps" | "hps" (ESO Logs' CharacterRankingMetricType enum)
+
+        Each returned dict has: name, class, report_code, fight_id.
+
+        The exact enum member casing for RoleType/CharacterRankingMetricType
+        has not been verified against a live response -- if ESO Logs
+        rejects either argument, the resulting EsoLogsApiError will
+        name exactly which one and why (same as the earlier zoneID
+        argument bug), rather than failing silently or guessing.
+        """
+
+        query = """
+        query RoleRankings(
+          $encounterID: Int!
+          $role: RoleType
+          $metric: CharacterRankingMetricType
+        ) {
+          worldData {
+            encounter(id: $encounterID) {
+              characterRankings(role: $role, metric: $metric)
+            }
+          }
+        }
+        """
+
+        data = self._query(
+            query,
+            {"encounterID": int(encounter_id), "role": role, "metric": metric},
+        )
+
+        encounter = ((data.get("worldData") or {}).get("encounter")) or {}
+
+        rankings = encounter.get("characterRankings")
+
+        if isinstance(rankings, str):
+            try:
+                rankings = json.loads(rankings)
+            except json.JSONDecodeError as exc:
+                raise EsoLogsApiError(
+                    f"ESO Logs returned an unreadable {role} rankings payload."
+                ) from exc
+
+        rows = None
+
+        if isinstance(rankings, dict):
+            rows = rankings.get("rankings") or rankings.get("data")
+
+        elif isinstance(rankings, list):
+            rows = rankings
+
+        if not rows:
+            raise EsoLogsApiError(
+                f"No ranked {role} parses were found for this encounter."
+            )
+
+        entries: list[dict] = []
+
+        for row in rows:
+
+            if not isinstance(row, dict):
+                continue
+
+            report = row.get("report")
+
+            if not isinstance(report, dict) or not report.get("code"):
+                continue
+
+            fight_id = report.get("fightID", report.get("fightId"))
+
+            if fight_id is None:
+                continue
+
+            entries.append(
+                {
+                    "name": row.get("name"),
+                    "class": row.get("class") or row.get("className"),
+                    "report_code": str(report["code"]),
+                    "fight_id": int(fight_id),
+                }
+            )
+
+            if len(entries) >= limit:
+                break
+
+        if not entries:
+            raise EsoLogsApiError(
+                f"None of the ranked {role} entries included a usable "
+                "report pointer (report.code / report.fightID)."
+            )
+
+        return entries
