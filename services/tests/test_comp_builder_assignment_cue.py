@@ -1,0 +1,53 @@
+from pathlib import Path
+
+
+def test_assignment_action_uses_player_facing_language() -> None:
+    source = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+
+    assert 'apply_chair.setText("Assign Build to This Player")' in source
+    assert 'setProperty("compAssignBuild", True)' in source
+    assert 'generate.setText("Generate Team")' in source
+
+
+def test_assignment_cue_links_top_build_to_selected_player_chair() -> None:
+    source = Path("ui/comp_builder_assignment_cue_support.py").read_text(encoding="utf-8")
+
+    assert 'page.matrix_table.setProperty("compAssignmentTarget", True)' in source
+    assert 'candidate_label.setProperty("compAssignmentSource", True)' in source
+    assert 'details.setProperty("compAssignmentSourceCard", True)' in source
+    assert 'cue.setProperty("compAssignmentCue", True)' in source
+    assert 'f"{candidate_name}  ←  ASSIGN TO {slot_name}\\n"' in source
+    assert "candidates[0].name" in source
+
+
+def test_assignment_arrow_points_from_catalog_to_comp() -> None:
+    layout = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
+
+    assert 'assignment_arrow = QLabel("←\\nASSIGN")' in layout
+    assert 'setProperty("compAssignmentArrow", True)' in layout
+    assert "columns.addWidget(assignment_arrow" in layout
+    assert "columns.setStretch(1, 0)" in layout
+
+
+def test_rylo_uses_one_gold_assignment_accent_for_source_and_target() -> None:
+    rylo = Path("ui/comp_builder_rylo_support.py").read_text(encoding="utf-8")
+
+    assert 'QTableWidget[compMakerOverview="true"][compAssignmentTarget="true"]::item:selected' in rylo
+    assert 'QLabel[compAssignmentSource="true"]' in rylo
+    assert 'QLabel[compAssignmentCue="true"]' in rylo
+    assert 'QLabel[compAssignmentArrow="true"]' in rylo
+    assert 'QPushButton[compAssignBuild="true"]' in rylo
+    assert "#B88A3C" in rylo
+
+
+def test_assignment_cue_installs_after_candidate_and_main_control_surfaces() -> None:
+    installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    main_controls = installer.index("install_comp_builder_main_controls()")
+    assignment = installer.index("install_comp_builder_assignment_cue()")
+    rylo = installer.index("install_comp_builder_rylo()")
+    layout = installer.index("install_comp_builder_layout()")
+
+    assert main_controls < assignment < rylo < layout
