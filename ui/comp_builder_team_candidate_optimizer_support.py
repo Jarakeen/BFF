@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from engine.config import get_data_dir
 from services.comp_builder_composition_style import CompCompositionStyle
+from services.comp_builder_novelty_evidence import CompBuilderNoveltyEvidenceService
 from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
@@ -22,6 +23,7 @@ def _selected_style(page) -> CompCompositionStyle:
 
 def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     from ui import comp_builder_build_candidate_support as support
+    from ui.comp_builder_page import GOAL_TRIALS
 
     if page.matrix_table.rowCount() <= 0:
         page.status.warning("There are no composition chairs to fill.")
@@ -31,12 +33,15 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     if provider_service is None:
         provider_service = CompBuilderProviderEvidenceService(get_data_dir())
         page._comp_provider_evidence_service = provider_service
+    novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
 
     applied = getattr(page, "_comp_applied_candidates", {})
     used_saved_players = tuple(support._used_saved_players(page))
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
     provider_ids_by_candidate: dict[str, tuple[str, ...]] = {}
+    novelty_by_candidate: dict[str, float] = {}
+    novelty_evidence_by_candidate: dict[str, object] = {}
     unresolved_reads: list[str] = []
     unresolved_provider_mappings: list[str] = []
     skipped_existing = 0
@@ -67,6 +72,9 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
                 f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
             )
 
+    goal = page.goal_combo.currentText().strip()
+    trial_name = GOAL_TRIALS.get(goal, "")
+
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
         if slot_name in applied:
@@ -92,6 +100,21 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
                     f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
                 )
 
+        try:
+            novelty_result = novelty_service.evaluate_candidates(
+                candidates,
+                role=page._cell_text(row, 1),
+                trial_name=trial_name,
+            )
+            novelty_by_candidate.update(novelty_result.novelty_by_candidate)
+            novelty_evidence_by_candidate.update(
+                {item.candidate_id: item for item in novelty_result.evidence}
+            )
+        except (OSError, ValueError) as exc:
+            unresolved_reads.append(
+                f"{slot_name}: novelty evidence could not be resolved: {exc}"
+            )
+
         pools.append(
             CompTeamCandidatePool(
                 slot_name=slot_name,
@@ -101,12 +124,8 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         rows_by_slot[slot_name] = row
 
-    # Novelty is intentionally evidence-fed. Until an ESO Logs/template-frequency
-    # adapter supplies values, experimental modes remain conservative rather than
-    # fabricating rarity from source labels.
-    novelty_by_candidate = dict(
-        getattr(page, "_comp_novelty_by_candidate", {}) or {}
-    )
+    page._comp_novelty_by_candidate = dict(novelty_by_candidate)
+    page._comp_novelty_evidence_by_candidate = dict(novelty_evidence_by_candidate)
     style = _selected_style(page)
     result = optimize_comp_team_candidates(
         pools=tuple(pools),
