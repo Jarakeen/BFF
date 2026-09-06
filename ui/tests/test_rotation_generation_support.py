@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
+from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationActionKind
 from ui.rotation_generation_support import (
     RotationGenerationRequest,
@@ -52,6 +53,49 @@ def test_dashboard_seed_definition_uses_saved_ordinary_bar_order() -> None:
     assert any("priority" in item for item in definition.unresolved)
     assert any("ultimate" in item for item in definition.unresolved)
     assert any("canonical positive skill durations" in item for item in definition.assumptions)
+
+
+def test_dashboard_seed_definition_honors_explicit_ability_priorities() -> None:
+    priorities = (
+        AbilityPriorityEntry("front", 1, "Combat Prayer", 20),
+        AbilityPriorityEntry("front", 2, "Radiating Regeneration", 30),
+        AbilityPriorityEntry("front", 3, "Energy Orb", 10),
+        AbilityPriorityEntry("back", 1, "Overflowing Altar", 20),
+        AbilityPriorityEntry("back", 2, "Expansive Frost Cloak", 10),
+    )
+
+    definition = RotationGenerationSupport().build_definition(
+        build=_build(),
+        request=RotationGenerationRequest(ability_priorities=priorities),
+    )
+
+    assert [(step.kind, step.name, step.bar) for step in definition.steps] == [
+        (RotationActionKind.SKILL, "Energy Orb", "front"),
+        (RotationActionKind.SKILL, "Combat Prayer", "front"),
+        (RotationActionKind.SKILL, "Radiating Regeneration", "front"),
+        (RotationActionKind.BAR_SWAP, None, "back"),
+        (RotationActionKind.SKILL, "Expansive Frost Cloak", "back"),
+        (RotationActionKind.SKILL, "Overflowing Altar", "back"),
+        (RotationActionKind.BAR_SWAP, None, "front"),
+    ]
+    assert not any("ability-priority editing" in item for item in definition.unresolved)
+    assert any("explicit ability priority values" in item for item in definition.assumptions)
+
+
+def test_dashboard_seed_definition_rejects_incomplete_explicit_priorities() -> None:
+    try:
+        RotationGenerationSupport().build_definition(
+            build=_build(),
+            request=RotationGenerationRequest(
+                ability_priorities=(
+                    AbilityPriorityEntry("front", 1, "Combat Prayer", 10),
+                )
+            ),
+        )
+    except ValueError as exc:
+        assert "ability priority is missing" in str(exc)
+    else:
+        raise AssertionError("Expected incomplete explicit priorities to fail")
 
 
 def test_dashboard_generation_produces_real_rotation_plan() -> None:
