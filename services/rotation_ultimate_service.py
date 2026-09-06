@@ -28,8 +28,8 @@ class RotationUltimateService:
     """Resolve saved ultimates and apply explicit Ultimate timing evidence.
 
     Callers may either supply already-resolved availability times through
-    ``apply`` or explicit starting Ultimate plus gain events through
-    ``apply_generation``. Neither path invents Ultimate generation.
+    ``apply`` or one shared Ultimate resource timeline through ``apply_generation``.
+    Neither path invents Ultimate generation.
     """
 
     def __init__(
@@ -92,79 +92,93 @@ class RotationUltimateService:
         *,
         build,
         plan: RotationPlan,
-        starting_ultimate_by_bar: dict[str, float] | None = None,
-        generation_events_by_bar: dict[str, tuple[UltimateGenerationEvent, ...]] | None = None,
+        ultimate_bar: str,
+        starting_ultimate: float = 0.0,
+        generation_events: tuple[UltimateGenerationEvent, ...] = (),
     ) -> RotationUltimateProjection:
-        """Derive ultimate affordability from explicit generation evidence.
+        """Derive affordability from one shared explicit Ultimate resource pool.
 
-        The saved slot-6 ability supplies identity. Canonical ability-cost evidence
-        supplies cost. The caller supplies starting Ultimate and generation events.
-        This service then computes affordability times and feeds them to the same
-        deterministic ultimate scheduler used by ``apply``.
+        ESO Ultimate is shared across bars. The caller therefore selects which
+        saved slot-6 ultimate is being considered for this bounded projection.
+        Canonical ability-cost evidence supplies its cost; explicit starting
+        Ultimate and gain events supply the resource timeline. Competing front/back
+        ultimate choice remains unresolved rather than double-spending one pool.
         """
-        starting = {
-            str(bar).strip().casefold(): float(value)
-            for bar, value in (starting_ultimate_by_bar or {}).items()
-        }
-        events_by_bar = {
-            str(bar).strip().casefold(): tuple(events)
-            for bar, events in (generation_events_by_bar or {}).items()
-        }
+        bar = str(ultimate_bar or "").strip().casefold()
+        if bar not in {"front", "back"}:
+            raise ValueError("ultimate generation projection requires 'front' or 'back' ultimate_bar")
 
-        rules: list[UltimateScheduleRule] = []
-        projections: list[tuple[str, UltimateResourceProjection]] = []
+        values = (
+            getattr(build, "FrontBarSkills", [])
+            if bar == "front"
+            else getattr(build, "BackBarSkills", [])
+        )
+        ultimate = self._slot_six(values)
         unresolved = list(plan.unresolved)
-
-        for bar, values in self._bar_skill_values(build):
-            ultimate = self._slot_six(values)
-            if not ultimate:
-                continue
-
-            resolution = self.ability_cost_repository.resolve_name(ultimate)
-            unresolved.extend(resolution.unresolved)
-            base_cost = resolution.base_cost
-            if base_cost is None:
-                unresolved.append(
-                    f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical cost"
-                )
-                continue
-            if ResourceType.ULTIMATE not in base_cost.resources:
-                unresolved.append(
-                    f"saved slot-6 ability '{ultimate}' resolved without the Ultimate resource mechanic"
-                )
-                continue
-
-            projection = self.resource_timeline.project(
-                starting_amount=starting.get(bar, 0.0),
-                events=events_by_bar.get(bar, ()),
-                spend_rule=UltimateSpendRule(
-                    skill_name=resolution.name or ultimate,
-                    cost=base_cost.amount,
-                ),
-                duration_seconds=plan.duration_seconds,
+        if not ultimate:
+            unresolved.append(f"saved build has no {bar}-bar slot-6 ultimate to project")
+            return self._finish(
+                plan=plan,
+                rules=(),
+                unresolved=tuple(unresolved),
             )
-            projections.append((bar, projection))
 
-            if not projection.availability_times:
-                unresolved.append(
-                    f"saved {bar}-bar ultimate '{ultimate}' never became affordable from the supplied explicit Ultimate timeline"
-                )
-                continue
+        resolution = self.ability_cost_repository.resolve_name(ultimate)
+        unresolved.extend(resolution.unresolved)
+        base_cost = resolution.base_cost
+        if base_cost is None:
+            unresolved.append(
+                f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical cost"
+            )
+            return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
+        if ResourceType.ULTIMATE not in base_cost.resources:
+            unresolved.append(
+                f"saved slot-6 ability '{ultimate}' resolved without the Ultimate resource mechanic"
+            )
+            return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
 
-            rules.append(
+        projection = self.resource_timeline.project(
+            starting_amount=starting_ultimate,
+            events=tuple(generation_events),
+            spend_rule=UltimateSpendRule(
+                skill_name=resolution.name or ultimate,
+                cost=base_cost.amount,
+            ),
+            duration_seconds=plan.duration_seconds,
+        )
+
+        if not projection.availability_times:
+            unresolved.append(
+                f"saved {bar}-bar ultimate '{ultimate}' never became affordable from the supplied explicit Ultimate timeline"
+            )
+            rules: tuple[UltimateScheduleRule, ...] = ()
+        else:
+            rules = (
                 UltimateScheduleRule(
                     skill_name=resolution.name or ultimate,
                     bar=bar,
                     cost=base_cost.amount,
                     available_at_seconds=projection.availability_times,
-                )
+                ),
+            )
+
+        other_bar = "back" if bar == "front" else "front"
+        other_values = (
+            getattr(build, "BackBarSkills", [])
+            if other_bar == "back"
+            else getattr(build, "FrontBarSkills", [])
+        )
+        other_ultimate = self._slot_six(other_values)
+        if other_ultimate:
+            unresolved.append(
+                f"shared Ultimate projection selected {bar}-bar '{ultimate}'; competing {other_bar}-bar ultimate '{other_ultimate}' choice policy is unresolved"
             )
 
         return self._finish(
             plan=plan,
-            rules=tuple(rules),
+            rules=rules,
             unresolved=tuple(unresolved),
-            resource_projections=tuple(projections),
+            resource_projections=((bar, projection),),
         )
 
     def _resolve_ultimate_rule(
