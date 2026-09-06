@@ -8,6 +8,9 @@ from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_ultimate import UltimateRotationScheduler, UltimateScheduleRule
+from minmax.secondary_ultimate_activation_repository import (
+    SecondaryUltimateActivationRepository,
+)
 from minmax.ultimate_generation_sources import (
     CombatAttackUltimateGenerationSource,
     HeroismUltimateGenerationSource,
@@ -29,13 +32,21 @@ class RotationUltimateProjection:
     resource_projections: tuple[tuple[str, UltimateResourceProjection], ...] = ()
 
 
+@dataclass(frozen=True)
+class _ResolvedUltimateSpend:
+    skill_name: str
+    cost: float
+    unresolved: tuple[str, ...] = ()
+
+
 class RotationUltimateService:
     """Resolve saved ultimates and apply explicit Ultimate timing evidence.
 
-    Callers may either supply already-resolved availability times through
-    ``apply`` or one shared Ultimate resource timeline through ``apply_generation``.
-    The generation path can combine explicit gain events with source-derived
-    events whose activation evidence is supplied explicitly.
+    Normal one-shot Ultimates resolve from canonical ``ability.base_cost``.
+    Persistent/summoned Ultimates may instead expose an explicitly described
+    secondary activation with its own Ultimate cost. Those are resolved through
+    ``SecondaryUltimateActivationRepository`` without rewriting the slotted
+    ability's zero base cost.
     """
 
     def __init__(
@@ -43,6 +54,7 @@ class RotationUltimateService:
         database_path: Path = DEFAULT_DATABASE,
         *,
         ability_cost_repository: AbilityCostRepository | None = None,
+        secondary_activation_repository: SecondaryUltimateActivationRepository | None = None,
         scheduler: UltimateRotationScheduler | None = None,
         resource_timeline: UltimateResourceTimeline | None = None,
         heroism_source: HeroismUltimateGenerationSource | None = None,
@@ -50,6 +62,10 @@ class RotationUltimateService:
     ) -> None:
         self.ability_cost_repository = ability_cost_repository or AbilityCostRepository(
             database_path
+        )
+        self.secondary_activation_repository = (
+            secondary_activation_repository
+            or SecondaryUltimateActivationRepository(database_path)
         )
         self.scheduler = scheduler or UltimateRotationScheduler()
         self.resource_timeline = resource_timeline or UltimateResourceTimeline()
@@ -108,18 +124,7 @@ class RotationUltimateService:
         heroism_windows: tuple[HeroismWindow, ...] = (),
         use_scheduled_combat_attacks: bool = False,
     ) -> RotationUltimateProjection:
-        """Derive affordability from one shared Ultimate resource pool.
-
-        ESO Ultimate is shared across bars. The caller selects which saved slot-6
-        ultimate is being considered for this bounded projection. Canonical
-        ability-cost evidence supplies its cost. Starting Ultimate, explicit gain
-        events, explicitly supplied Heroism windows, and optionally scheduled
-        light/heavy attacks feed the shared timeline.
-
-        Scheduled attacks are used only when ``use_scheduled_combat_attacks`` is
-        true; enabling it explicitly asserts that those attacks damaged a target
-        and therefore refreshed the canonical base Ultimate-generation buff.
-        """
+        """Derive affordability from one shared Ultimate resource pool."""
         bar = str(ultimate_bar or "").strip().casefold()
         if bar not in {"front", "back"}:
             raise ValueError("ultimate generation projection requires 'front' or 'back' ultimate_bar")
@@ -139,17 +144,11 @@ class RotationUltimateService:
                 unresolved=tuple(unresolved),
             )
 
-        resolution = self.ability_cost_repository.resolve_name(ultimate)
-        unresolved.extend(resolution.unresolved)
-        base_cost = resolution.base_cost
-        if base_cost is None:
+        spend = self._resolve_ultimate_spend(ultimate)
+        unresolved.extend(spend.unresolved)
+        if spend.cost <= 0:
             unresolved.append(
-                f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical cost"
-            )
-            return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
-        if ResourceType.ULTIMATE not in base_cost.resources:
-            unresolved.append(
-                f"saved slot-6 ability '{ultimate}' resolved without the Ultimate resource mechanic"
+                f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical spend"
             )
             return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
 
@@ -171,8 +170,8 @@ class RotationUltimateService:
             starting_amount=starting_ultimate,
             events=all_events,
             spend_rule=UltimateSpendRule(
-                skill_name=resolution.name or ultimate,
-                cost=base_cost.amount,
+                skill_name=spend.skill_name,
+                cost=spend.cost,
             ),
             duration_seconds=plan.duration_seconds,
         )
@@ -185,9 +184,9 @@ class RotationUltimateService:
         else:
             rules = (
                 UltimateScheduleRule(
-                    skill_name=resolution.name or ultimate,
+                    skill_name=spend.skill_name,
                     bar=bar,
-                    cost=base_cost.amount,
+                    cost=spend.cost,
                     available_at_seconds=projection.availability_times,
                 ),
             )
@@ -211,6 +210,45 @@ class RotationUltimateService:
             resource_projections=((bar, projection),),
         )
 
+    def _resolve_ultimate_spend(self, ultimate: str) -> _ResolvedUltimateSpend:
+        resolution = self.ability_cost_repository.resolve_name(ultimate)
+        base_cost = resolution.base_cost
+        if base_cost is not None:
+            if ResourceType.ULTIMATE not in base_cost.resources:
+                return _ResolvedUltimateSpend(
+                    skill_name=resolution.name or ultimate,
+                    cost=0.0,
+                    unresolved=tuple(resolution.unresolved)
+                    + (
+                        f"saved slot-6 ability '{ultimate}' resolved without the Ultimate resource mechanic",
+                    ),
+                )
+            return _ResolvedUltimateSpend(
+                skill_name=resolution.name or ultimate,
+                cost=float(base_cost.amount),
+                unresolved=tuple(resolution.unresolved),
+            )
+
+        secondary = self.secondary_activation_repository.resolve_name(ultimate)
+        activation = secondary.activation
+        if activation is not None:
+            retained = tuple(
+                item
+                for item in resolution.unresolved
+                if "no positive canonical base cost" not in str(item).casefold()
+            )
+            return _ResolvedUltimateSpend(
+                skill_name=activation.activation_name,
+                cost=float(activation.cost),
+                unresolved=retained,
+            )
+
+        return _ResolvedUltimateSpend(
+            skill_name=resolution.name or ultimate,
+            cost=0.0,
+            unresolved=tuple(resolution.unresolved) + tuple(secondary.unresolved),
+        )
+
     def _resolve_ultimate_rule(
         self,
         *,
@@ -219,23 +257,17 @@ class RotationUltimateService:
         available_at_seconds: tuple[float, ...],
         unresolved: list[str],
     ) -> UltimateScheduleRule | None:
-        resolution = self.ability_cost_repository.resolve_name(ultimate)
-        unresolved.extend(resolution.unresolved)
-        base_cost = resolution.base_cost
-        if base_cost is None:
+        spend = self._resolve_ultimate_spend(ultimate)
+        unresolved.extend(spend.unresolved)
+        if spend.cost <= 0:
             unresolved.append(
-                f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical cost"
-            )
-            return None
-        if ResourceType.ULTIMATE not in base_cost.resources:
-            unresolved.append(
-                f"saved slot-6 ability '{ultimate}' resolved without the Ultimate resource mechanic"
+                f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical spend"
             )
             return None
         return UltimateScheduleRule(
-            skill_name=resolution.name or ultimate,
+            skill_name=spend.skill_name,
             bar=bar,
-            cost=base_cost.amount,
+            cost=spend.cost,
             available_at_seconds=available_at_seconds,
         )
 
