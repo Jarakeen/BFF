@@ -133,14 +133,14 @@ class RotationGenerationSupport:
             )
             self._validate_priority_coverage(
                 priority_list=priority_list,
-                ordinary_slots=(
-                    *("front", slot, skill) for slot, skill in front_slots
+                ordinary_slots=tuple(
+                    ("front", slot, skill) for slot, skill in front_slots
                 ),
             )
             self._validate_priority_coverage(
                 priority_list=priority_list,
-                ordinary_slots=(
-                    *("back", slot, skill) for slot, skill in back_slots
+                ordinary_slots=tuple(
+                    ("back", slot, skill) for slot, skill in back_slots
                 ),
             )
 
