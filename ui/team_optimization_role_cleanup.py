@@ -3,10 +3,13 @@ from __future__ import annotations
 from engine.config import get_data_dir
 from minmax.optimization_mode import OptimizationMode
 from services.eso_database import EsoDatabase
-from services.generated_roster_plan_service import GeneratedRosterPlanSlot
+from services.generated_roster_plan_service import (
+    GeneratedRosterPlanService,
+    GeneratedRosterPlanSlot,
+)
 from services.roster_service import RosterService
 from services.team_role_autofill import build_role_compatible_autofill
-from PySide6.QtWidgets import QComboBox, QLabel
+from PySide6.QtWidgets import QComboBox, QLabel, QTableWidgetItem
 
 
 _INSTALLED = False
@@ -23,9 +26,6 @@ def _hide_team_source(page) -> None:
     combo = getattr(page, "team_source_combo", None)
     if combo is None:
         return
-    # Keep the legacy source-mode control alive because the prescription pipeline
-    # still reads it internally. Optimization users now load a real named Roster
-    # team instead of choosing an implementation-level candidate source.
     combo.setCurrentText("Saved Players Only")
     host = combo.parentWidget()
     if host is not None:
@@ -35,12 +35,7 @@ def _hide_team_source(page) -> None:
 
 
 def _hide_build_around(page) -> None:
-    """Remove duplicate composition constraints from Optimization.
-
-    Comp Maker owns chair/class/required-set composition design. The underlying
-    PrescribedSlotBuildConstraint machinery remains intact for callers/tests; only
-    the redundant Optimization-page editor is removed.
-    """
+    """Remove duplicate composition constraints from Optimization."""
 
     for name in ("required_slot_combo", "required_class_combo", "required_gear_input"):
         widget = getattr(page, name, None)
@@ -86,9 +81,108 @@ def _active_team_table(page):
     return page.team_table
 
 
+def _loaded_team_attr(page, table) -> str:
+    return (
+        "_optimization_loaded_team_name_b"
+        if table is getattr(page, "team_b_table", None)
+        else "_optimization_loaded_team_name_a"
+    )
+
+
+def _remember_loaded_team(page, table, team_name: str) -> None:
+    setattr(page, _loaded_team_attr(page, table), str(team_name or "").strip())
+
+
+def _loaded_team_name(page, table=None) -> str:
+    target = table or _active_team_table(page)
+    return str(getattr(page, _loaded_team_attr(page, target), "") or "").strip()
+
+
+def _exact_saved_build_index(page, slot) -> int | None:
+    wanted_people = {
+        str(slot.player_name or "").strip().casefold(),
+        str(slot.character_name or "").strip().casefold(),
+    }
+    wanted_people.discard("")
+    wanted_build = str(slot.build_name or "").strip().casefold()
+    for index, build in enumerate(page.roster.Members):
+        if wanted_people and not (_identity_values(build) & wanted_people):
+            continue
+        build_name = str(getattr(build, "BuildName", "") or "").strip().casefold()
+        if wanted_build and build_name != wanted_build:
+            continue
+        return index
+    return None
+
+
+def _row_by_slot_name(table) -> dict[str, int]:
+    rows: dict[str, int] = {}
+    for row in range(table.rowCount()):
+        item = table.item(row, 0)
+        name = item.text().strip().casefold() if item is not None else ""
+        if name:
+            rows[name] = row
+    return rows
+
+
+def _load_generated_team_plan(page, plan) -> None:
+    """Load an exact named generated plan without reranking its chairs."""
+
+    table = _active_team_table(page)
+    page._populate_team_editor(table, autofill=False)
+    row_by_name = _row_by_slot_name(table)
+    applied_saved = 0
+    applied_recruits = 0
+
+    page._team_combo_signal_guard = True
+    try:
+        for slot in plan.slots:
+            row = row_by_name.get(str(slot.slot_name or "").strip().casefold())
+            if row is None:
+                continue
+            selector = table.cellWidget(row, 1)
+            if not isinstance(selector, QComboBox):
+                continue
+
+            build_index = _exact_saved_build_index(page, slot) if slot.kind == "saved" else None
+            if build_index is not None:
+                combo_index = selector.findData(build_index)
+                if combo_index >= 0:
+                    selector.setCurrentIndex(combo_index)
+                    page._team_selection_changed(table, row)
+                    applied_saved += 1
+                    continue
+
+            # Recruitment stays recruitment. If a formerly saved player/build can no
+            # longer be resolved, do not silently substitute somebody else.
+            recruitment_value = f"recruitment:{row}"
+            combo_index = selector.findData(recruitment_value)
+            if combo_index >= 0:
+                selector.setCurrentIndex(combo_index)
+                page._team_selection_changed(table, row)
+            table.setItem(row, 2, QTableWidgetItem(str(slot.eso_class or "Any class")))
+            table.setItem(row, 3, QTableWidgetItem(str(slot.build_name or "Open requirement")))
+            applied_recruits += 1
+    finally:
+        page._team_combo_signal_guard = False
+
+    _remember_loaded_team(page, table, plan.name)
+    page._update_team_analysis()
+    target = "Team B" if table is getattr(page, "team_b_table", None) else "Team A"
+    page.status.success(
+        f"Loaded team {plan.name!r} into {target}: {applied_saved} exact saved assignment(s), "
+        f"{applied_recruits} recruit/open assignment(s)."
+    )
+
+
 def _load_roster_team(page, team_name: str) -> None:
     team = str(team_name or "").strip()
     if not team:
+        return
+
+    generated = page._optimization_generated_plan_service.load_plan(team)
+    if generated is not None:
+        _load_generated_team_plan(page, generated)
         return
 
     members = [
@@ -108,8 +202,6 @@ def _load_roster_team(page, team_name: str) -> None:
     eligible_builds = [page.roster.Members[index] for index in eligible_indices]
 
     table = _active_team_table(page)
-    # Rebuild the editor without generic autofill, then assign only saved builds
-    # belonging to the selected named Roster team.
     page._populate_team_editor(table, autofill=False)
     assignments = build_role_compatible_autofill(
         slot_labels=tuple(page._role_slots()),
@@ -139,6 +231,7 @@ def _load_roster_team(page, team_name: str) -> None:
     finally:
         page._team_combo_signal_guard = False
 
+    _remember_loaded_team(page, table, team)
     page._update_team_analysis()
     target = "Team B" if table is getattr(page, "team_b_table", None) else "Team A"
     page.status.success(
@@ -147,12 +240,30 @@ def _load_roster_team(page, team_name: str) -> None:
     )
 
 
+def _all_named_teams(page) -> tuple[str, ...]:
+    names: dict[str, str] = {}
+    for source in (
+        page._optimization_roster_service.list_team_names(),
+        page._optimization_generated_plan_service.list_plan_names(),
+    ):
+        for raw in source:
+            name = str(raw or "").strip()
+            if name:
+                names.setdefault(name.casefold(), name)
+    return tuple(sorted(names.values(), key=str.casefold))
+
+
 def _install_load_team(page) -> None:
-    page._optimization_roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+    db_path = get_data_dir() / "eso.db"
+    page._optimization_roster_service = RosterService(EsoDatabase(db_path))
+    page._optimization_generated_plan_service = GeneratedRosterPlanService(EsoDatabase(db_path))
+    page._optimization_loaded_team_name_a = ""
+    page._optimization_loaded_team_name_b = ""
+
     page.load_team_combo = QComboBox()
     page.load_team_combo.setMinimumWidth(190)
-    page.load_team_combo.addItem("Select roster team…", "")
-    for name in page._optimization_roster_service.list_team_names():
+    page.load_team_combo.addItem("Select team…", "")
+    for name in _all_named_teams(page):
         page.load_team_combo.addItem(name, name)
     page.load_team_combo.currentIndexChanged.connect(
         lambda *_: _load_roster_team(page, page.load_team_combo.currentData() or "")
@@ -197,7 +308,7 @@ def _init_refocused(self, parent=None) -> None:
 
 
 def _send_visible_optimization_team_to_roster(window) -> None:
-    """Persist the visible Optimization team as a generated roster plan."""
+    """Persist the visible Optimization team back under its loaded team identity."""
 
     optimization_page = window.pages.get("console:6")
     plan_rows = window._current_optimized_team_plan()
@@ -227,13 +338,15 @@ def _send_visible_optimization_team_to_roster(window) -> None:
     )
 
     goal = optimization_page.goal_combo.currentText().strip() or "Custom Goal"
+    team_name = _loaded_team_name(optimization_page) or f"{goal} Optimized Team"
     roster_page = window.pages["roster_page"]
     plan = roster_page.generated_plan_service.save_plan(
-        name=f"{goal} Optimized Team",
+        name=team_name,
         goal=goal,
         difficulty=optimization_page.difficulty_combo.currentText(),
         slots=slots,
     )
+    _remember_loaded_team(optimization_page, _active_team_table(optimization_page), plan.name)
     roster_page._refresh_generated_plan_choices(plan.name)
     roster_page.view_combo.setCurrentText("Generated Team")
     roster_page.tabs.setCurrentIndex(0)
@@ -242,7 +355,7 @@ def _send_visible_optimization_team_to_roster(window) -> None:
     saved = sum(1 for slot in slots if slot.kind == "saved")
     recruits = len(slots) - saved
     optimization_page.status.success(
-        f"Sent {plan.name} to Roster: {saved} saved player(s), "
+        f"Updated team {plan.name!r} in Roster: {saved} saved player(s), "
         f"{recruits} open recruit slot(s)."
     )
     window.show_page("roster_page")
