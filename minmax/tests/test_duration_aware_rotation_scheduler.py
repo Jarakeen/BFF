@@ -71,6 +71,37 @@ def test_duration_skill_refresh_claims_first_due_same_bar_slot() -> None:
     ]
     assert any("refresh obligation" in item for item in refined.unresolved)
     assert any("premature recast" in item for item in refined.unresolved)
+    assert any("displaced beyond" in item for item in refined.unresolved)
+
+
+def test_refresh_displacement_cascades_to_next_same_bar_slot() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "Buff", sequence=0),
+            _skill(2.0, "Action A", sequence=0),
+            _skill(3.0, "Action B", sequence=0),
+        ],
+        duration=3.0,
+    )
+    rule = RotationRecastRule("Buff", duration_seconds=2.0, bar="front")
+
+    refined = DurationAwareRotationScheduler().refine(plan, (rule,))
+    named = {
+        action.time_seconds: action.name
+        for action in refined.actions
+        if action.kind is RotationActionKind.SKILL
+    }
+
+    assert named[2.0] == "Buff"
+    assert named[3.0] == "Action A"
+    assert any(
+        "claimed the 2s front-bar slot from 'Action A'; displaced skill will cascade" in item
+        for item in refined.unresolved
+    )
+    assert any(
+        "skill 'Action B' was displaced beyond the 3s plan horizon" in item
+        for item in refined.unresolved
+    )
 
 
 def test_duration_scheduler_uses_deterministic_same_bar_filler_cycle() -> None:
