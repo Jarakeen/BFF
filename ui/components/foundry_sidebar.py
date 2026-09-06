@@ -241,15 +241,24 @@ class FoundrySidebar(QWidget):
         line.setProperty("sidebarDivider", True)
         return line
 
-    def build_leaf_button(self, text: str, page: str, header_style: bool = False) -> QPushButton:
-        button = QPushButton(text)
+    def build_leaf_button(
+        self,
+        text: str,
+        page: str,
+        header_style: bool = False,
+        submenu: bool = False,
+    ) -> QPushButton:
+        button = QPushButton(f"•  {text}" if submenu else text)
         button.setCheckable(True)
         button.setProperty("nav", True)
         if header_style:
             button.setProperty("navHeader", True)
-        icon_name = semantic_icon(text)
-        if icon_name:
-            set_button_icon(button, icon_name, 16)
+        if submenu:
+            button.setProperty("navSubmenu", True)
+        else:
+            icon_name = semantic_icon(text)
+            if icon_name:
+                set_button_icon(button, icon_name, 16)
         button.clicked.connect(lambda checked=False, p=page: self.pageRequested.emit(p))
         self.buttons[page] = button
         return button
@@ -281,7 +290,7 @@ class FoundrySidebar(QWidget):
         child_layout.setContentsMargins(12, 0, 0, 0)
         child_layout.setSpacing(1)
         for text, page in section["children"]:
-            child_layout.addWidget(self.build_leaf_button(text, page))
+            child_layout.addWidget(self.build_leaf_button(text, page, submenu=True))
         layout.addWidget(children)
         label.toggled.connect(children.setVisible)
         return wrapper
