@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
@@ -16,6 +17,14 @@ class GeneratedRosterPlanSlot:
     build_name: str
     gear_summary: str = ""
     unresolved: str = ""
+    role: str = ""
+    source_kind: str = ""
+    source_name: str = ""
+    source_url: str = ""
+    candidate_id: str = ""
+    gear_sets: tuple[str, ...] = ()
+    skills: tuple[str, ...] = ()
+    mundus: str = ""
 
 
 @dataclass(frozen=True)
@@ -31,9 +40,21 @@ class GeneratedRosterPlanService:
     """Persistent build/assignment layer for a named Roster team.
 
     Recruitment requirements remain separate from ``roster_member`` so BFF never
-    fabricates people. The plan name, however, is one durable user-facing team
-    identity shared with Roster and Optimization.
+    fabricates people. The plan name is one durable user-facing team identity shared
+    with Roster and Optimization. Structured assignment fields remain authoritative;
+    ``gear_summary`` and ``unresolved`` are retained for backwards-compatible display.
     """
+
+    _STRUCTURED_COLUMNS = {
+        "role": "TEXT NOT NULL DEFAULT ''",
+        "source_kind": "TEXT NOT NULL DEFAULT ''",
+        "source_name": "TEXT NOT NULL DEFAULT ''",
+        "source_url": "TEXT NOT NULL DEFAULT ''",
+        "candidate_id": "TEXT NOT NULL DEFAULT ''",
+        "gear_sets_json": "TEXT NOT NULL DEFAULT '[]'",
+        "skills_json": "TEXT NOT NULL DEFAULT '[]'",
+        "mundus": "TEXT NOT NULL DEFAULT ''",
+    }
 
     def __init__(self, database: EsoDatabase):
         self.db = database
@@ -66,11 +87,40 @@ class GeneratedRosterPlanService:
                 build_name TEXT NOT NULL DEFAULT '',
                 gear_summary TEXT NOT NULL DEFAULT '',
                 unresolved TEXT NOT NULL DEFAULT '',
+                role TEXT NOT NULL DEFAULT '',
+                source_kind TEXT NOT NULL DEFAULT '',
+                source_name TEXT NOT NULL DEFAULT '',
+                source_url TEXT NOT NULL DEFAULT '',
+                candidate_id TEXT NOT NULL DEFAULT '',
+                gear_sets_json TEXT NOT NULL DEFAULT '[]',
+                skills_json TEXT NOT NULL DEFAULT '[]',
+                mundus TEXT NOT NULL DEFAULT '',
                 PRIMARY KEY (plan_id, slot_index)
             )
             """
         )
+        existing = {
+            row["name"]
+            for row in self.db.execute(
+                "PRAGMA table_info(generated_roster_plan_slot)"
+            ).fetchall()
+        }
+        for column, definition in self._STRUCTURED_COLUMNS.items():
+            if column not in existing:
+                self.db.execute(
+                    f"ALTER TABLE generated_roster_plan_slot ADD COLUMN {column} {definition}"
+                )
         self.db.commit()
+
+    @staticmethod
+    def _json_tuple(value: str) -> tuple[str, ...]:
+        try:
+            raw = json.loads(str(value or "[]"))
+        except json.JSONDecodeError:
+            return ()
+        if not isinstance(raw, list):
+            return ()
+        return tuple(str(item).strip() for item in raw if str(item).strip())
 
     def save_plan(
         self,
@@ -116,8 +166,10 @@ class GeneratedRosterPlanService:
                 """
                 INSERT INTO generated_roster_plan_slot (
                     plan_id, slot_index, slot_name, kind, player_name,
-                    character_name, eso_class, build_name, gear_summary, unresolved
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    character_name, eso_class, build_name, gear_summary, unresolved,
+                    role, source_kind, source_name, source_url, candidate_id,
+                    gear_sets_json, skills_json, mundus
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     plan_id,
@@ -130,13 +182,18 @@ class GeneratedRosterPlanService:
                     slot.build_name,
                     slot.gear_summary,
                     slot.unresolved,
+                    slot.role,
+                    slot.source_kind,
+                    slot.source_name,
+                    slot.source_url,
+                    slot.candidate_id,
+                    json.dumps(list(slot.gear_sets), ensure_ascii=False),
+                    json.dumps(list(slot.skills), ensure_ascii=False),
+                    slot.mundus,
                 ),
             )
         self.db.commit()
 
-        # The plan stores chair/build state. Roster owns the durable team identity.
-        # Registering the same name here makes Comp Maker -> Roster -> Optimization
-        # one user-facing team without turning recruit chairs into fake members.
         canonical_name = RosterService(self.db).ensure_team_name(plan_name)
         return GeneratedRosterPlan(
             plan_id=plan_id,
@@ -187,7 +244,9 @@ class GeneratedRosterPlanService:
         slot_rows = self.db.execute(
             """
             SELECT slot_name, kind, player_name, character_name,
-                   eso_class, build_name, gear_summary, unresolved
+                   eso_class, build_name, gear_summary, unresolved,
+                   role, source_kind, source_name, source_url, candidate_id,
+                   gear_sets_json, skills_json, mundus
             FROM generated_roster_plan_slot
             WHERE plan_id = ?
             ORDER BY slot_index
@@ -204,6 +263,14 @@ class GeneratedRosterPlanService:
                 build_name=str(slot["build_name"] or ""),
                 gear_summary=str(slot["gear_summary"] or ""),
                 unresolved=str(slot["unresolved"] or ""),
+                role=str(slot["role"] or ""),
+                source_kind=str(slot["source_kind"] or ""),
+                source_name=str(slot["source_name"] or ""),
+                source_url=str(slot["source_url"] or ""),
+                candidate_id=str(slot["candidate_id"] or ""),
+                gear_sets=self._json_tuple(slot["gear_sets_json"]),
+                skills=self._json_tuple(slot["skills_json"]),
+                mundus=str(slot["mundus"] or ""),
             )
             for slot in slot_rows
         )
