@@ -6,6 +6,10 @@ from minmax.rotation_definition import RotationDefinition, RotationMode, Rotatio
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from ui.rotation_duration_evidence_support import (
+    RotationDurationEvidence,
+    RotationDurationEvidenceSupport,
+)
 
 
 @dataclass(frozen=True)
@@ -17,6 +21,14 @@ class RotationGenerationRequest:
     potion: str = ""
     potion_on_cooldown: bool = False
     weave_light_attacks: bool = True
+
+
+@dataclass(frozen=True)
+class RotationGenerationResult:
+    """One generated plan plus the duration evidence that explains it."""
+
+    plan: RotationPlan
+    duration_evidence: RotationDurationEvidence
 
 
 class RotationGenerationSupport:
@@ -33,14 +45,31 @@ class RotationGenerationSupport:
         self,
         planner: SemiStaticRotationPlanner | None = None,
         duration_refinement: RotationDurationRefinementService | None = None,
+        duration_evidence: RotationDurationEvidenceSupport | None = None,
     ) -> None:
         self.planner = planner or SemiStaticRotationPlanner()
         self.duration_refinement = duration_refinement or RotationDurationRefinementService()
+        self.duration_evidence = duration_evidence or RotationDurationEvidenceSupport()
 
     def generate(self, *, build, request: RotationGenerationRequest) -> RotationPlan:
+        """Compatibility entry point returning only the refined plan."""
+        return self.generate_with_evidence(build=build, request=request).plan
+
+    def generate_with_evidence(
+        self,
+        *,
+        build,
+        request: RotationGenerationRequest,
+    ) -> RotationGenerationResult:
+        """Return the refined plan together with dashboard-ready duration evidence."""
         definition = self.build_definition(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
-        return self.duration_refinement.refine(seed_plan).plan
+        refinement = self.duration_refinement.refine(seed_plan)
+        evidence = self.duration_evidence.build(refinement.plan)
+        return RotationGenerationResult(
+            plan=refinement.plan,
+            duration_evidence=evidence,
+        )
 
     def build_definition(
         self,
