@@ -60,22 +60,23 @@ def main(argv: list[str] | None = None) -> int:
     print("========================================")
     print(" PHASE 12.5 LEGACY PLAN REPAIR")
     print("========================================")
-    print(f"Team:                    {result.team_name}")
-    print(f"Missing team identity:   {'yes' if result.team_identity_missing else 'no'}")
-    print(f"Provable saved chairs:   {len(result.promotable_slots)}")
-    print(f"Ambiguous legacy chairs: {len(result.ambiguous_slots)}")
-    print(f"Blocked source chairs:   {len(result.blocked_source_slots)}")
+    print(f"Team:                       {result.team_name}")
+    print(f"Missing team identity:      {'yes' if result.team_identity_missing else 'no'}")
+    print(f"Provable saved chairs:      {len(result.promotable_slots)}")
+    print(f"Ambiguous recruit chairs:   {len(result.ambiguous_slots)}")
+    print(f"Blocked-source recruit rows:{len(result.blocked_source_slots):>4}")
+    print(f"Safe recruit normalizations:{len(result.normalizable_slots):>4}")
 
     if result.promotable_slots:
         print("\nPROVABLE SAVED-CHAIR REPAIRS")
         for slot in result.promotable_slots:
             print(f"- {slot}")
     if result.ambiguous_slots:
-        print("\nAMBIGUOUS - LEFT UNCHANGED")
+        print("\nAMBIGUOUS OWNERSHIP - NORMALIZE TO RECRUIT")
         for slot in result.ambiguous_slots:
             print(f"- {slot}")
     if result.blocked_source_slots:
-        print("\nNON-ROSTER SOURCE - LEFT AS RECRUIT EVIDENCE")
+        print("\nNON-ROSTER SOURCE - NORMALIZE TO RECRUIT EVIDENCE")
         for slot in result.blocked_source_slots:
             print(f"- {slot}")
 
@@ -83,14 +84,17 @@ def main(argv: list[str] | None = None) -> int:
         print("\nMODE: DRY RUN")
         print("No data was changed.")
         if result.has_repairs:
-            print("Run again with --apply to perform only the provable repairs above.")
+            print(
+                "Run again with --apply to perform only the safe repairs above. "
+                "Ambiguous/source player names are preserved in legacy evidence before canonical recruit normalization."
+            )
         else:
             print("No safe legacy repair is available from current evidence.")
         return 0
 
     if not result.has_repairs:
         print("\nMODE: APPLY")
-        print("No provable repairs were available; no data was changed.")
+        print("No safe repairs were available; no data was changed.")
         return 0
 
     repaired = service.apply(
@@ -104,10 +108,10 @@ def main(argv: list[str] | None = None) -> int:
         roster_members=tuple(roster.list_members()),
     )
     print("\nMODE: APPLY")
-    print(f"Team identity now present: {'yes' if not after.team_identity_missing else 'NO'}")
-    print(f"Remaining promotable chairs: {len(after.promotable_slots)}")
-    print(f"Remaining ambiguous chairs:  {len(after.ambiguous_slots)}")
-    print(f"Remaining blocked chairs:    {len(after.blocked_source_slots)}")
+    print(f"Team identity now present:  {'yes' if not after.team_identity_missing else 'NO'}")
+    print(f"Remaining promotable chairs:{len(after.promotable_slots):>4}")
+    print(f"Remaining ambiguous chairs: {len(after.ambiguous_slots):>4}")
+    print(f"Remaining blocked chairs:   {len(after.blocked_source_slots):>4}")
     print("RESULT: APPLIED")
     return 0
 
