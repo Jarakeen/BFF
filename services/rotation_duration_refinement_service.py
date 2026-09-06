@@ -5,6 +5,8 @@ from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
 from minmax.duration_aware_rotation_scheduler import DurationAwareRotationScheduler
+from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
+from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
 from services.rotation_duration_analysis_service import (
     RotationDurationAnalysisService,
@@ -35,12 +37,22 @@ class RotationDurationRefinementService:
         )
         self.scheduler = scheduler or DurationAwareRotationScheduler()
 
-    def refine(self, plan: RotationPlan) -> RotationDurationRefinement:
+    def refine(
+        self,
+        plan: RotationPlan,
+        *,
+        priorities: AbilityPriorityList | None = None,
+    ) -> RotationDurationRefinement:
         # The first projection supplies canonical duration rules used to refine
         # the seed schedule. It is not returned as final evidence because its
         # uptime/gap measurements describe the pre-refinement plan.
         seed_projection = self.duration_analysis.analyze(plan)
-        refined = self.scheduler.refine(plan, seed_projection.rules)
+        scheduler = (
+            PriorityAwareDurationRotationScheduler(priorities)
+            if priorities is not None
+            else self.scheduler
+        )
+        refined = scheduler.refine(plan, seed_projection.rules)
 
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
