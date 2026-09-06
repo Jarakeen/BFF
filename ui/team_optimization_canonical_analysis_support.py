@@ -3,11 +3,16 @@ from __future__ import annotations
 from PySide6.QtWidgets import QComboBox
 
 from engine.config import get_data_dir
+from minmax.optimization_mode import policy_for_mode
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 from services.team_optimization_canonical_analysis import (
     TeamOptimizationCanonicalAnalysis,
     TeamOptimizationCanonicalAnalysisService,
+)
+from services.team_optimization_static_comparison import (
+    TeamOptimizationStaticComparison,
+    TeamOptimizationStaticComparisonService,
 )
 
 
@@ -22,8 +27,8 @@ def _active_table(page):
     return page.team_table
 
 
-def _selected_builds_and_recruits(page):
-    table = _active_table(page)
+def _selected_builds_and_recruits(page, table=None):
+    table = table or _active_table(page)
     builds = []
     recruits = 0
     for row in range(table.rowCount()):
@@ -42,13 +47,24 @@ def _team_label(page) -> str:
     return "Team A"
 
 
-def _loaded_team_name(page) -> str:
+def _loaded_team_name_for(page, label: str) -> str:
     attr = (
         "_optimization_loaded_team_name_b"
-        if _team_label(page) == "Team B"
+        if label == "Team B"
         else "_optimization_loaded_team_name_a"
     )
     return str(getattr(page, attr, "") or "").strip()
+
+
+def _loaded_team_name(page) -> str:
+    return _loaded_team_name_for(page, _team_label(page))
+
+
+def _is_compare_mode(page) -> bool:
+    try:
+        return bool(policy_for_mode(page._current_mode()).uses_two_teams)
+    except (AttributeError, IndexError, TypeError, ValueError):
+        return False
 
 
 def _format_analysis(page, result: TeamOptimizationCanonicalAnalysis) -> str:
@@ -117,14 +133,71 @@ def _format_risks(result: TeamOptimizationCanonicalAnalysis) -> str:
     return "\n".join(lines)
 
 
+def _team_identity(page, label: str) -> str:
+    name = _loaded_team_name_for(page, label)
+    return f"{label} • {name}" if name else label
+
+
+def _format_comparison_analysis(page, comparison: TeamOptimizationStaticComparison) -> str:
+    a = comparison.team_a
+    b = comparison.team_b
+    return "\n".join(
+        (
+            _team_identity(page, "Team A"),
+            f"{a.saved_build_count} saved build(s) • {a.recruit_count} recruit/open • {a.resolved_capability_count} static capabilities • {a.capability_gap_count} gap(s)",
+            "",
+            _team_identity(page, "Team B"),
+            f"{b.saved_build_count} saved build(s) • {b.recruit_count} recruit/open • {b.resolved_capability_count} static capabilities • {b.capability_gap_count} gap(s)",
+            "",
+            f"Shared static capabilities: {len(comparison.shared_capabilities)}",
+        )
+    )
+
+
+def _format_capability_list(title: str, values: tuple[str, ...]) -> list[str]:
+    lines = [title]
+    if not values:
+        lines.append("• None")
+        return lines
+    for value in values[:10]:
+        lines.append(f"• {value}")
+    if len(values) > 10:
+        lines.append(f"• +{len(values) - 10} more")
+    return lines
+
+
+def _format_comparison_support(comparison: TeamOptimizationStaticComparison) -> str:
+    lines = []
+    lines.extend(_format_capability_list("TEAM A ONLY", comparison.team_a_only_capabilities))
+    lines.append("")
+    lines.extend(_format_capability_list("TEAM B ONLY", comparison.team_b_only_capabilities))
+    lines.extend(
+        (
+            "",
+            f"Redundant capability rows: Team A {comparison.team_a_redundancy_count} • Team B {comparison.team_b_redundancy_count}",
+            "Availability only. No encounter-aware winner is declared here.",
+        )
+    )
+    return "\n".join(lines)
+
+
+def _format_comparison_risks(comparison: TeamOptimizationStaticComparison) -> str:
+    a = comparison.team_a
+    b = comparison.team_b
+    lines = [
+        f"Team A: {a.recruit_count} recruit/open chair(s), {a.capability_gap_count} capability gap(s), {a.conditional_source_count} conditional source(s), {a.boundary_count} boundary note(s).",
+        f"Team B: {b.recruit_count} recruit/open chair(s), {b.capability_gap_count} capability gap(s), {b.conditional_source_count} conditional source(s), {b.boundary_count} boundary note(s).",
+        "No encounter-aware winner is declared. Static capability breadth is not the same thing as raid performance.",
+        "Rotation timing, encounter uptime, sustain-through-rotation, and raid DPS remain outside this Phase 12.5 comparison.",
+    ]
+    return "\n".join(lines)
+
+
 def _replace_placeholder_surfaces(page) -> None:
     page.analysis_card.title_label.setText("Canonical Team Analysis")
     page.support_card.title_label.setText("Static Support Capabilities")
     page.risks_card.title_label.setText("Evidence Boundaries & Risks")
 
-    # Gear/skill recommendation tables were literal placeholder rows. Hide them
-    # until a later phase can populate evidence-backed recommendations rather than
-    # presenting unconnected UI as though it were an optimizer result.
     for name in ("gear_card", "skill_card", "notes_card"):
         card = getattr(page, name, None)
         if card is not None:
@@ -132,12 +205,34 @@ def _replace_placeholder_surfaces(page) -> None:
             card.setMaximumHeight(0)
 
 
+def _analyze_table(page, table) -> TeamOptimizationCanonicalAnalysis:
+    builds, recruits = _selected_builds_and_recruits(page, table)
+    return page._optimization_canonical_analysis_service.analyze(
+        builds,
+        recruit_count=recruits,
+    )
+
+
 def _refresh_canonical_analysis(page) -> None:
     service = getattr(page, "_optimization_canonical_analysis_service", None)
     if service is None or not hasattr(page, "analysis_summary"):
         return
-    builds, recruits = _selected_builds_and_recruits(page)
     try:
+        if _is_compare_mode(page):
+            team_a = _analyze_table(page, page.team_table)
+            team_b = _analyze_table(page, page.team_b_table)
+            comparison = page._optimization_static_comparison_service.compare(team_a, team_b)
+            page._optimization_current_canonical_comparison = comparison
+            page._optimization_current_canonical_analysis = None
+            page.analysis_card.title_label.setText("Canonical Team Comparison")
+            page.support_card.title_label.setText("Static Capability Differences")
+            page.risks_card.title_label.setText("Comparison Boundaries & Risks")
+            page.analysis_summary.setText(_format_comparison_analysis(page, comparison))
+            page.support_text.setText(_format_comparison_support(comparison))
+            page.risks_text.setText(_format_comparison_risks(comparison))
+            return
+
+        builds, recruits = _selected_builds_and_recruits(page)
         result = service.analyze(builds, recruit_count=recruits)
     except (OSError, ValueError) as exc:
         page.analysis_summary.setText("Canonical capability analysis unavailable.")
@@ -145,7 +240,11 @@ def _refresh_canonical_analysis(page) -> None:
         page.risks_text.setText(f"⚠ Canonical capability analysis failed: {exc}")
         return
 
+    page._optimization_current_canonical_comparison = None
     page._optimization_current_canonical_analysis = result
+    page.analysis_card.title_label.setText("Canonical Team Analysis")
+    page.support_card.title_label.setText("Static Support Capabilities")
+    page.risks_card.title_label.setText("Evidence Boundaries & Risks")
     page.analysis_summary.setText(_format_analysis(page, result))
     page.support_text.setText(_format_support(result))
     page.risks_text.setText(_format_risks(result))
@@ -166,10 +265,14 @@ def _init_with_canonical_analysis(self, parent=None) -> None:
     self._optimization_canonical_analysis_service = TeamOptimizationCanonicalAnalysisService(
         capability
     )
+    self._optimization_static_comparison_service = TeamOptimizationStaticComparisonService()
     self._optimization_current_canonical_analysis = None
+    self._optimization_current_canonical_comparison = None
     _replace_placeholder_surfaces(self)
     if hasattr(self, "team_tabs"):
         self.team_tabs.currentChanged.connect(lambda *_: _refresh_canonical_analysis(self))
+    if hasattr(self, "mode_tabs"):
+        self.mode_tabs.currentChanged.connect(lambda *_: _refresh_canonical_analysis(self))
     _refresh_canonical_analysis(self)
 
 
