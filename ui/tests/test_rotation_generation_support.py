@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from models.build_model import PlayerBuild
 from minmax.rotation_plan import RotationActionKind
 from ui.rotation_generation_support import (
@@ -49,6 +51,7 @@ def test_dashboard_seed_definition_uses_saved_ordinary_bar_order() -> None:
     assert definition.initial_bar == "front"
     assert any("priority" in item for item in definition.unresolved)
     assert any("ultimate" in item for item in definition.unresolved)
+    assert any("canonical positive skill durations" in item for item in definition.assumptions)
 
 
 def test_dashboard_generation_produces_real_rotation_plan() -> None:
@@ -64,6 +67,23 @@ def test_dashboard_generation_produces_real_rotation_plan() -> None:
     assert plan.actions[1].kind is RotationActionKind.SKILL
     assert plan.actions[1].name == "Combat Prayer"
     assert any(action.kind is RotationActionKind.BAR_SWAP for action in plan.actions)
+
+
+def test_dashboard_generation_returns_duration_refined_plan() -> None:
+    calls = []
+
+    class RefinementStub:
+        def refine(self, plan):
+            calls.append(plan)
+            return SimpleNamespace(plan=plan)
+
+    support = RotationGenerationSupport(duration_refinement=RefinementStub())
+    plan = support.generate(
+        build=_build(),
+        request=RotationGenerationRequest(duration_seconds=6.0),
+    )
+
+    assert calls == [plan]
 
 
 def test_dashboard_generation_rejects_modes_not_yet_implemented() -> None:
