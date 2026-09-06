@@ -13,14 +13,12 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.scribing_catalog import (
-    compatible_affix,
-    compatible_focus,
-    compatible_signature,
     grimoire_names,
     result_name,
     skill_line_for_grimoire,
 )
 from services.scribing_result_service import ScribingResultService
+from services.scribing_simulator_data_service import ScribingSimulatorDataService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -35,7 +33,9 @@ class ScribingSimulatorPage(FoundryPage):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._loading = False
-        self.result_service = ScribingResultService(get_data_dir() / "eso.db")
+        database = get_data_dir() / "eso.db"
+        self.result_service = ScribingResultService(database)
+        self.simulator_data = ScribingSimulatorDataService(database)
         self._build_ui()
         self.reset()
 
@@ -113,9 +113,9 @@ class ScribingSimulatorPage(FoundryPage):
         self.set_status(self.status)
 
         self.grimoire.currentIndexChanged.connect(self._grimoire_changed)
-        self.focus.currentIndexChanged.connect(self._refresh_preview)
-        self.signature.currentIndexChanged.connect(self._refresh_preview)
-        self.affix.currentIndexChanged.connect(self._refresh_preview)
+        self.focus.currentIndexChanged.connect(self._script_changed)
+        self.signature.currentIndexChanged.connect(self._script_changed)
+        self.affix.currentIndexChanged.connect(self._script_changed)
 
     @staticmethod
     def _replace_combo(combo: QComboBox, label: str, values: list[str]) -> None:
@@ -145,18 +145,75 @@ class ScribingSimulatorPage(FoundryPage):
             return
         grimoire = str(self.grimoire.currentData() or "")
         self._loading = True
-        self._replace_combo(self.focus, "Choose a Focus Script", compatible_focus(grimoire))
-        self._replace_combo(self.signature, "Choose a Signature Script", compatible_signature(grimoire))
-        self._replace_combo(self.affix, "Choose an Affix Script", compatible_affix(grimoire))
+        self._replace_combo(
+            self.focus,
+            "Choose a Focus Script",
+            self.simulator_data.compatible_focus(grimoire),
+        )
+        self._replace_combo(
+            self.signature,
+            "Choose a Signature Script",
+            self.simulator_data.compatible_signature(grimoire),
+        )
+        self._replace_combo(
+            self.affix,
+            "Choose an Affix Script",
+            self.simulator_data.compatible_affix(grimoire),
+        )
         self._loading = False
         self._refresh_preview()
+
+    def _script_changed(self, *_args) -> None:
+        if self._loading:
+            return
+        self._refilter_script_choices()
+        self._refresh_preview()
+
+    def _refilter_script_choices(self) -> None:
+        grimoire = str(self.grimoire.currentData() or "")
+        if not grimoire or not self.simulator_data.available:
+            return
+
+        focus = str(self.focus.currentData() or "")
+        signature = str(self.signature.currentData() or "")
+        affix = str(self.affix.currentData() or "")
+
+        self._loading = True
+        self._replace_combo(
+            self.focus,
+            "Choose a Focus Script",
+            self.simulator_data.filtered_choices(
+                grimoire,
+                1,
+                [signature, affix],
+            ),
+        )
+        self._replace_combo(
+            self.signature,
+            "Choose a Signature Script",
+            self.simulator_data.filtered_choices(
+                grimoire,
+                2,
+                [focus, affix],
+            ),
+        )
+        self._replace_combo(
+            self.affix,
+            "Choose an Affix Script",
+            self.simulator_data.filtered_choices(
+                grimoire,
+                3,
+                [focus, signature],
+            ),
+        )
+        self._loading = False
 
     def _verified_result_name(self, grimoire: str, focus: str) -> tuple[str, str]:
         if not focus:
             return "", ""
         observed = self.result_service.result_name(grimoire, focus)
         if observed:
-            return observed, "eso_client"
+            return observed, self.result_service.source_kind or "verified_reference"
         static = result_name(grimoire, focus)
         if static:
             return static, "catalog"
@@ -177,12 +234,13 @@ class ScribingSimulatorPage(FoundryPage):
             self.recipe.clear()
             self.compatibility.clear()
             if self.result_service.available:
+                source = self.result_service.source_kind or "verified reference"
                 self.note.setText(
-                    f"Verified ESO client result-name catalog loaded: {self.result_service.count} Grimoire + Focus pairs."
+                    f"Verified Scribing result-name catalog loaded: {self.result_service.count} Grimoire + Focus pairs ({source})."
                 )
             else:
                 self.note.setText(
-                    "No verified ESO client result-name extract is loaded yet. The simulator will use explicit static mappings only."
+                    "No verified Scribing result-name extract is loaded yet. The simulator will use explicit static mappings only."
                 )
             self.status.info("Scribing Simulator ready.")
             return
@@ -201,21 +259,31 @@ class ScribingSimulatorPage(FoundryPage):
         self.recipe.setText("\n".join(values))
 
         counts = (
-            len(compatible_focus(grimoire)),
-            len(compatible_signature(grimoire)),
-            len(compatible_affix(grimoire)),
+            len(self.simulator_data.compatible_focus(grimoire)),
+            len(self.simulator_data.compatible_signature(grimoire)),
+            len(self.simulator_data.compatible_affix(grimoire)),
         )
+        source_note = "structured simulator feed" if self.simulator_data.available else "static fallback"
         self.compatibility.setText(
-            f"Compatible choices for {grimoire}: {counts[0]} Focus • {counts[1]} Signature • {counts[2]} Affix"
+            f"Compatible choices for {grimoire}: {counts[0]} Focus • {counts[1]} Signature • {counts[2]} Affix ({source_note})"
         )
 
         complete = all((focus, signature, affix))
-        if name_source == "eso_client":
+        allowed = self.simulator_data.is_combination_allowed(
+            grimoire,
+            [focus, signature, affix],
+        )
+
+        if name_source == "eso_client_api":
             version = self.result_service.game_version or str(self.result_service.api_version or "")
             suffix = f" ({version})" if version else ""
             self.note.setText(
                 "Result name observed from the official ESO client Scribing API"
                 f"{suffix} for this Grimoire + Focus pair."
+            )
+        elif name_source == "public_simulator_api":
+            self.note.setText(
+                "Result name and compatibility are loaded from the verified structured Scribing simulator dataset."
             )
         elif name_source == "catalog":
             self.note.setText(
@@ -228,7 +296,9 @@ class ScribingSimulatorPage(FoundryPage):
         else:
             self.note.setText("Choose one script from each column to complete the recipe.")
 
-        if complete:
+        if complete and not allowed:
+            self.status.error("That three-script combination is explicitly forbidden.")
+        elif complete:
             self.status.success("Complete compatible Scribing recipe assembled.")
         else:
             missing = []
