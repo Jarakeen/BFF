@@ -26,6 +26,7 @@ from services.rotation_sustain_service import RotationSustainProjection, Rotatio
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.rotation_duration_evidence_card import RotationDurationEvidenceCard
 from ui.foundry_page import FoundryPage
 from ui.rotation_generation_support import (
     RotationGenerationRequest,
@@ -237,6 +238,9 @@ class RotationDashboardPage(FoundryPage):
         settings_card.addLayout(settings_grid)
         grid.addWidget(settings_card, 1, 1)
 
+        self.duration_evidence_card = RotationDurationEvidenceCard()
+        grid.addWidget(self.duration_evidence_card, 2, 0)
+
         notes_card = FoundryCard("Rotation Notes", "✎").set_watermark("feather", 0.05)
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText(
@@ -244,7 +248,7 @@ class RotationDashboardPage(FoundryPage):
         )
         self.notes_edit.setMaximumHeight(95)
         notes_card.addWidget(self.notes_edit)
-        grid.addWidget(notes_card, 2, 0)
+        grid.addWidget(notes_card, 3, 0)
 
         right_lower = QWidget()
         right_lower_layout = QGridLayout(right_lower)
@@ -278,7 +282,7 @@ class RotationDashboardPage(FoundryPage):
         self.optimization_motto.setProperty("muted", True)
         summary_card.addWidget(self.optimization_motto)
         right_lower_layout.addWidget(summary_card, 1, 0)
-        grid.addWidget(right_lower, 2, 1)
+        grid.addWidget(right_lower, 2, 1, 2, 1)
 
         action_row = QHBoxLayout()
         action_row.setContentsMargins(0, 0, 0, 0)
@@ -294,7 +298,7 @@ class RotationDashboardPage(FoundryPage):
         action_row.addWidget(self.generate_button)
         action_row.addWidget(self.clear_plan_button)
         action_row.addStretch()
-        grid.addLayout(action_row, 3, 0, 1, 2)
+        grid.addLayout(action_row, 4, 0, 1, 2)
 
         self.add_workspace(workspace)
         self.status = FoundryStatusBar()
@@ -412,6 +416,7 @@ class RotationDashboardPage(FoundryPage):
             self.build_summary.setText("No saved build selected.")
             self.resource_summary.setText("Rotation evidence: unavailable")
             self.sustain_graph.clear_points()
+            self.duration_evidence_card.clear_evidence()
             self.generate_button.setEnabled(False)
             self.status.warning("No saved build is available for the selected character.")
             return
@@ -461,6 +466,7 @@ class RotationDashboardPage(FoundryPage):
             "Ultimate timing: unresolved"
         )
         self.sustain_graph.clear_points()
+        self.duration_evidence_card.clear_evidence()
         self._refresh_generate_button()
         if self.rotation_plan is None:
             self.status.info(f"Loaded saved build: {character} • {build_name}.")
@@ -482,12 +488,17 @@ class RotationDashboardPage(FoundryPage):
         )
 
         try:
-            plan = self.rotation_generation.generate(build=build, request=request)
+            result = self.rotation_generation.generate_with_evidence(
+                build=build,
+                request=request,
+            )
+            plan = result.plan
         except ValueError as exc:
             self.status.warning(str(exc))
             return
 
         self.set_rotation_plan(plan)
+        self.duration_evidence_card.set_evidence(result.duration_evidence)
 
         try:
             projection = self.rotation_sustain.evaluate(
@@ -600,5 +611,7 @@ class RotationDashboardPage(FoundryPage):
             )
         if hasattr(self, "sustain_graph"):
             self.sustain_graph.clear_points()
+        if hasattr(self, "duration_evidence_card"):
+            self.duration_evidence_card.clear_evidence()
         if refresh and hasattr(self, "build_summary"):
             self._refresh_build_context()
