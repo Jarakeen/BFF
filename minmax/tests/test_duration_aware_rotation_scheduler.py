@@ -31,7 +31,7 @@ def _la(time_seconds, bar="front"):
     )
 
 
-def test_duration_skill_recasts_only_after_verified_expiry_and_uses_filler() -> None:
+def test_duration_skill_refresh_claims_first_due_same_bar_slot() -> None:
     plan = _plan(
         [
             _la(0.0),
@@ -66,9 +66,10 @@ def test_duration_skill_recasts_only_after_verified_expiry_and_uses_filler() -> 
         (2.0, "Filler"),
         (3.0, "Filler"),
         (4.0, "Filler"),
-        (5.0, "Filler"),
-        (6.0, "Long Buff"),
+        (5.0, "Long Buff"),
+        (6.0, "Filler"),
     ]
+    assert any("refresh obligation" in item for item in refined.unresolved)
     assert any("premature recast" in item for item in refined.unresolved)
 
 
@@ -128,6 +129,64 @@ def test_duration_scheduler_preserves_explicit_bar_swap_and_never_crosses_filler
         action.time_seconds == 4.0 and action.name == "Back Filler"
         for action in refined.actions
     )
+
+
+def test_due_refresh_waits_for_same_bar_slot_instead_of_crossing_bars() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "Front Buff", "front", 0),
+            RotationAction(1.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+            _skill(2.0, "Back Filler", "back", 0),
+            _skill(3.0, "Back Filler", "back", 0),
+            RotationAction(4.0, 0, RotationActionKind.BAR_SWAP, bar="front"),
+            _skill(5.0, "Front Filler", "front", 0),
+        ],
+        duration=5.0,
+    )
+    rule = RotationRecastRule("Front Buff", duration_seconds=2.0, bar="front")
+
+    refined = DurationAwareRotationScheduler().refine(plan, (rule,))
+
+    assert not any(
+        action.name == "Front Buff" and action.bar == "back"
+        for action in refined.actions
+    )
+    at_five = next(
+        action
+        for action in refined.actions
+        if action.time_seconds == 5.0 and action.kind is RotationActionKind.SKILL
+    )
+    assert at_five.name == "Front Buff"
+    assert at_five.bar == "front"
+
+
+def test_earliest_due_refresh_claims_slot_deterministically() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "Buff A", sequence=0),
+            _skill(1.0, "Buff B", sequence=0),
+            _skill(2.0, "Filler", sequence=0),
+            _skill(3.0, "Filler", sequence=0),
+            _skill(4.0, "Filler", sequence=0),
+            _skill(5.0, "Filler", sequence=0),
+            _skill(6.0, "Filler", sequence=0),
+        ],
+        duration=6.0,
+    )
+    rules = (
+        RotationRecastRule("Buff A", duration_seconds=4.0, bar="front"),
+        RotationRecastRule("Buff B", duration_seconds=4.0, bar="front"),
+    )
+
+    refined = DurationAwareRotationScheduler().refine(plan, rules)
+    named = {
+        action.time_seconds: action.name
+        for action in refined.actions
+        if action.kind is RotationActionKind.SKILL
+    }
+
+    assert named[4.0] == "Buff A"
+    assert named[5.0] == "Buff B"
 
 
 def test_wait_replaces_premature_recast_without_orphan_light_attack() -> None:
