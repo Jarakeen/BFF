@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from minmax.resource_costs import ResourceType
+from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationPlan
 from services.build_service import BuildService
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
@@ -180,7 +181,14 @@ class RotationDashboardPage(FoundryPage):
         self.priority_table = QTableWidget(0, 4)
         self.priority_table.setHorizontalHeaderLabels(["Bar", "Slot", "Ability", "Priority"])
         self.priority_table.verticalHeader().setVisible(False)
-        self.priority_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.priority_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.EditKeyPressed
+            | QAbstractItemView.EditTrigger.SelectedClicked
+        )
+        self.priority_table.setToolTip(
+            "Edit Priority only. Lower numbers are higher priority; equal numbers remain the same priority tier."
+        )
         self.priority_table.horizontalHeader().setStretchLastSection(True)
         self.priority_table.setMinimumHeight(300)
         priority_card.addWidget(self.priority_table)
@@ -460,9 +468,12 @@ class RotationDashboardPage(FoundryPage):
             for slot, skill in self._clean_skills(skills):
                 row = self.priority_table.rowCount()
                 self.priority_table.insertRow(row)
-                values = (bar_name, str(slot), skill, "Unranked")
+                values = (bar_name, str(slot), skill, "100")
                 for column, value in enumerate(values):
-                    self.priority_table.setItem(row, column, QTableWidgetItem(value))
+                    item = QTableWidgetItem(value)
+                    if column < 3:
+                        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    self.priority_table.setItem(row, column, item)
 
         front_ultimate = self._slot_six(getattr(build, "FrontBarSkills", []))
         back_ultimate = self._slot_six(getattr(build, "BackBarSkills", []))
@@ -511,6 +522,39 @@ class RotationDashboardPage(FoundryPage):
         if self.rotation_plan is None:
             self.status.info(f"Loaded saved build: {character} • {build_name}.")
 
+    def ability_priorities(self) -> tuple[AbilityPriorityEntry, ...]:
+        """Return explicit dashboard priority values for the selected saved slots."""
+        entries: list[AbilityPriorityEntry] = []
+        for row in range(self.priority_table.rowCount()):
+            bar_item = self.priority_table.item(row, 0)
+            slot_item = self.priority_table.item(row, 1)
+            skill_item = self.priority_table.item(row, 2)
+            priority_item = self.priority_table.item(row, 3)
+            if None in {bar_item, slot_item, skill_item, priority_item}:
+                raise ValueError("ability priority table contains an incomplete row")
+
+            raw_priority = priority_item.text().strip()
+            try:
+                priority = int(raw_priority)
+            except ValueError as exc:
+                raise ValueError(
+                    f"ability priority must be a whole number: {skill_item.text().strip()}"
+                ) from exc
+            if priority < 0:
+                raise ValueError(
+                    f"ability priority cannot be negative: {skill_item.text().strip()}"
+                )
+
+            entries.append(
+                AbilityPriorityEntry(
+                    bar=bar_item.text().strip().casefold(),
+                    slot=int(slot_item.text().strip()),
+                    skill_name=skill_item.text().strip(),
+                    priority=priority,
+                )
+            )
+        return tuple(entries)
+
     def generate_rotation(self) -> None:
         """Generate and evaluate the first authoritative semi-static schedule."""
         build = self._selected_build()
@@ -519,6 +563,12 @@ class RotationDashboardPage(FoundryPage):
             return
 
         settings = self.rotation_settings()
+        try:
+            priorities = self.ability_priorities()
+        except ValueError as exc:
+            self.status.warning(str(exc))
+            return
+
         request = RotationGenerationRequest(
             duration_seconds=60.0,
             rotation_type=str(settings["rotation_type"]),
@@ -530,6 +580,7 @@ class RotationDashboardPage(FoundryPage):
             use_scheduled_combat_attacks_for_ultimate=bool(
                 settings["use_scheduled_combat_attacks_for_ultimate"]
             ),
+            ability_priorities=priorities,
         )
 
         try:
