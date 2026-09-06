@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from models.build_model import PlayerBuild
 from minmax.resource_costs import BaseActionCost, ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.secondary_ultimate_activation_repository import SecondaryUltimateActivation
 from minmax.ultimate_generation_sources import HeroismTier, HeroismWindow
 from minmax.ultimate_resource_timeline import UltimateGenerationEvent
 from services.rotation_ultimate_service import RotationUltimateService
@@ -18,10 +19,27 @@ class _FakeCostRepository:
         return self.resolution
 
 
+class _FakeSecondaryRepository:
+    def __init__(self, resolution):
+        self.resolution = resolution
+        self.calls = []
+
+    def resolve_name(self, name):
+        self.calls.append(name)
+        return self.resolution
+
+
 def _build() -> PlayerBuild:
     build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
     build.FrontBarSkills = ["Skill", "", "", "", "", "Aggressive Horn"]
     build.BackBarSkills = ["", "", "", "", "", "Barrier"]
+    return build
+
+
+def _pet_build() -> PlayerBuild:
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+    build.FrontBarSkills = ["Skill", "", "", "", "", "Eternal Guardian"]
+    build.BackBarSkills = ["", "", "", "", "", "Aggressive Horn"]
     return build
 
 
@@ -84,6 +102,26 @@ def _resolution(name="Aggressive Horn", resource=ResourceType.ULTIMATE):
     )
 
 
+def _zero_cost_resolution(name="Eternal Guardian"):
+    return SimpleNamespace(
+        name=name,
+        base_cost=None,
+        unresolved=(f"Ability {name} has no positive canonical base cost",),
+    )
+
+
+def _secondary_resolution():
+    return SimpleNamespace(
+        activation=SecondaryUltimateActivation(
+            slotted_ability_name="Eternal Guardian",
+            slotted_ability_id=85989,
+            activation_name="Guardian's Wrath",
+            cost=75.0,
+        ),
+        unresolved=(),
+    )
+
+
 def test_service_resolves_saved_slot_six_ultimate_and_schedules_explicit_availability() -> None:
     repository = _FakeCostRepository(_resolution())
     service = RotationUltimateService(ability_cost_repository=repository)
@@ -100,6 +138,31 @@ def test_service_resolves_saved_slot_six_ultimate_and_schedules_explicit_availab
     cast = next(action for action in result.plan.actions if action.kind is RotationActionKind.ULTIMATE)
     assert cast.time_seconds == 1.0
     assert cast.name == "Aggressive Horn"
+
+
+def test_service_uses_secondary_activation_for_zero_cost_pet_ultimate() -> None:
+    cost_repository = _FakeCostRepository(_zero_cost_resolution())
+    secondary_repository = _FakeSecondaryRepository(_secondary_resolution())
+    service = RotationUltimateService(
+        ability_cost_repository=cost_repository,
+        secondary_activation_repository=secondary_repository,
+    )
+
+    result = service.apply(
+        build=_pet_build(),
+        plan=_plan(),
+        availability_by_bar={"front": (1.0,)},
+    )
+
+    assert cost_repository.calls == ["Eternal Guardian"]
+    assert secondary_repository.calls == ["Eternal Guardian"]
+    assert len(result.rules) == 1
+    assert result.rules[0].skill_name == "Guardian's Wrath"
+    assert result.rules[0].cost == 75.0
+    cast = next(action for action in result.plan.actions if action.kind is RotationActionKind.ULTIMATE)
+    assert cast.time_seconds == 1.0
+    assert cast.name == "Guardian's Wrath"
+    assert not any("no positive canonical base cost" in item for item in result.unresolved)
 
 
 def test_service_does_not_schedule_without_explicit_availability() -> None:
@@ -184,6 +247,36 @@ def test_generation_bridge_derives_affordability_from_shared_pool() -> None:
     assert horn.time_seconds == 10.0
     assert horn.bar == "front"
     assert any("competing back-bar ultimate" in item for item in result.unresolved)
+
+
+def test_generation_bridge_derives_pet_activation_affordability_from_shared_pool() -> None:
+    cost_repository = _FakeCostRepository(_zero_cost_resolution())
+    secondary_repository = _FakeSecondaryRepository(_secondary_resolution())
+    service = RotationUltimateService(
+        ability_cost_repository=cost_repository,
+        secondary_activation_repository=secondary_repository,
+    )
+
+    result = service.apply_generation(
+        build=_pet_build(),
+        plan=_long_plan(),
+        ultimate_bar="front",
+        starting_ultimate=60.0,
+        generation_events=(UltimateGenerationEvent(5.0, 15.0, "explicit gain"),),
+    )
+
+    projection = dict(result.resource_projections)["front"]
+    assert projection.availability_times == (5.0,)
+    assert result.rules[0].skill_name == "Guardian's Wrath"
+    assert result.rules[0].cost == 75.0
+    wrath = next(
+        action
+        for action in result.plan.actions
+        if action.kind is RotationActionKind.ULTIMATE
+        and action.name == "Guardian's Wrath"
+    )
+    assert wrath.time_seconds == 5.0
+    assert not any("no positive canonical base cost" in item for item in result.unresolved)
 
 
 def test_generation_bridge_keeps_unaffordable_ultimate_unscheduled() -> None:
