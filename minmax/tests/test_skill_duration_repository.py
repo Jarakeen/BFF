@@ -36,28 +36,44 @@ def _database(tmp_path: Path) -> Path:
             );
             CREATE TABLE ability (
                 ability_id INTEGER PRIMARY KEY,
-                name TEXT
+                name TEXT,
+                duration REAL
             );
             """
         )
         db.execute("INSERT INTO skill VALUES (1, 100, 'Combat Prayer')")
-        db.execute("INSERT INTO ability VALUES (101, 'Combat Prayer')")
+        db.execute("INSERT INTO ability VALUES (101, 'Combat Prayer', 10000.0)")
         db.execute("INSERT INTO skill_rank VALUES (10, 1, 101, 4, 0, 8.0, 'Combat Prayer')")
         db.execute("INSERT INTO skill_coefficient VALUES (1, 10, 1, '8', 0, 0, 0, 1, NULL)")
 
         db.execute("INSERT INTO skill VALUES (2, 200, 'Instant Skill')")
-        db.execute("INSERT INTO ability VALUES (201, 'Instant Skill')")
+        db.execute("INSERT INTO ability VALUES (201, 'Instant Skill', 0.0)")
         db.execute("INSERT INTO skill_rank VALUES (20, 2, 201, 4, 0, 0.0, 'Instant Skill')")
         db.execute("INSERT INTO skill_coefficient VALUES (2, 20, 1, '8', 0, 0, 0, 1, NULL)")
+
+        db.execute("INSERT INTO skill VALUES (3, 300, 'Radiating Regeneration')")
+        db.execute("INSERT INTO ability VALUES (301, 'Radiating Regeneration', 10000.0)")
+        db.execute(
+            "INSERT INTO skill_rank VALUES (30, 3, 301, 4, 0, NULL, 'Radiating Regeneration')"
+        )
+        db.execute("INSERT INTO skill_coefficient VALUES (3, 30, 1, '8', 0, 0, 0, 1, NULL)")
     return path
 
 
-def test_resolves_positive_canonical_duration(tmp_path: Path) -> None:
+def test_resolves_positive_canonical_skill_rank_duration(tmp_path: Path) -> None:
     result = SkillDurationRepository(_database(tmp_path)).resolve_name("Combat Prayer")
 
     assert result.skill_name == "Combat Prayer"
     assert result.duration_seconds == 8.0
     assert result.ability_id == 101
+
+
+def test_falls_back_to_canonical_ability_duration_milliseconds(tmp_path: Path) -> None:
+    result = SkillDurationRepository(_database(tmp_path)).resolve_name("Radiating Regeneration")
+
+    assert result.skill_name == "Radiating Regeneration"
+    assert result.duration_seconds == 10.0
+    assert result.ability_id == 301
 
 
 def test_non_positive_duration_stays_unresolved(tmp_path: Path) -> None:
