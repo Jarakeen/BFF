@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
@@ -28,6 +29,7 @@ class RotationGenerationRequest:
     ultimate_bar: str = ""
     starting_ultimate: float = 0.0
     use_scheduled_combat_attacks_for_ultimate: bool = False
+    ability_priorities: tuple[AbilityPriorityEntry, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -42,11 +44,12 @@ class RotationGenerationResult:
 class RotationGenerationSupport:
     """Translate saved-build UI state into authoritative planner contracts.
 
-    Generation builds the deterministic saved-bar seed schedule, refines it using
+    Generation builds the deterministic saved-bar seed schedule, optionally orders
+    ordinary skills by an explicit AbilityPriorityList, refines the plan using
     canonical positive skill durations, optionally projects one explicitly selected
     slot-6 ultimate through the shared Ultimate resource model, then analyzes the
-    final plan for dashboard duration evidence. Potion cadence, execute rules,
-    editable priorities, and dynamic bar timing remain later Phase 13 work.
+    final plan for dashboard duration evidence. Potion cadence, execute rules, and
+    dynamic bar timing remain later Phase 13 work.
     """
 
     def __init__(
@@ -116,8 +119,41 @@ class RotationGenerationSupport:
 
         character_name = self._character_name(build)
         build_name = self._build_name(build)
-        front_skills = self._ordinary_skills(getattr(build, "FrontBarSkills", []))
-        back_skills = self._ordinary_skills(getattr(build, "BackBarSkills", []))
+        role = str(getattr(build, "Role", "") or "Unspecified").strip()
+        front_slots = self._ordinary_skill_slots(getattr(build, "FrontBarSkills", []))
+        back_slots = self._ordinary_skill_slots(getattr(build, "BackBarSkills", []))
+
+        priority_list: AbilityPriorityList | None = None
+        if request.ability_priorities:
+            priority_list = AbilityPriorityList(
+                character_name=character_name,
+                build_name=build_name,
+                role=role,
+                entries=tuple(request.ability_priorities),
+            )
+            self._validate_priority_coverage(
+                priority_list=priority_list,
+                ordinary_slots=(
+                    *("front", slot, skill) for slot, skill in front_slots
+                ),
+            )
+            self._validate_priority_coverage(
+                priority_list=priority_list,
+                ordinary_slots=(
+                    *("back", slot, skill) for slot, skill in back_slots
+                ),
+            )
+
+        front_skills = self._ordered_ordinary_skills(
+            bar="front",
+            slots=front_slots,
+            priorities=priority_list,
+        )
+        back_skills = self._ordered_ordinary_skills(
+            bar="back",
+            slots=back_slots,
+            priorities=priority_list,
+        )
 
         steps: list[RotationStep] = []
         for skill in front_skills:
@@ -134,14 +170,24 @@ class RotationGenerationSupport:
             raise ValueError("selected saved build has no ordinary slotted skills to schedule")
 
         assumptions = [
-            "dashboard seed order follows saved front-bar slots then saved back-bar slots",
             "ordinary skill cadence uses the Phase 13 baseline 1.0s action interval",
             "canonical positive skill durations refine premature recast slots after seed generation",
         ]
         unresolved = [
-            "ability-priority editing has not yet replaced saved slot order",
             "execute-phase behavior is not yet scheduled",
         ]
+
+        if priority_list is None:
+            assumptions.append(
+                "dashboard seed order follows saved front-bar slots then saved back-bar slots"
+            )
+            unresolved.append(
+                "ability-priority editing has not yet replaced saved slot order"
+            )
+        else:
+            assumptions.append(
+                "dashboard seed order follows explicit ability priority values within each saved bar; lower numbers are higher priority"
+            )
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
         if selected_ultimate_bar:
@@ -197,8 +243,51 @@ class RotationGenerationSupport:
             raise ValueError(f"unsupported rotation type: {value!r}") from exc
 
     @staticmethod
-    def _ordinary_skills(values) -> list[str]:
-        return [str(value).strip() for value in list(values or [])[:5] if str(value or "").strip()]
+    def _ordinary_skill_slots(values) -> list[tuple[int, str]]:
+        return [
+            (slot, str(value).strip())
+            for slot, value in enumerate(list(values or [])[:5], start=1)
+            if str(value or "").strip()
+        ]
+
+    @staticmethod
+    def _ordered_ordinary_skills(
+        *,
+        bar: str,
+        slots: list[tuple[int, str]],
+        priorities: AbilityPriorityList | None,
+    ) -> list[str]:
+        if priorities is None:
+            return [skill for _, skill in slots]
+
+        slot_map = {slot: skill for slot, skill in slots}
+        return [
+            item.entry.skill_name
+            for item in priorities.resolve()
+            if item.entry.bar == bar and item.entry.slot in slot_map
+        ]
+
+    @staticmethod
+    def _validate_priority_coverage(
+        *,
+        priority_list: AbilityPriorityList,
+        ordinary_slots,
+    ) -> None:
+        by_slot = {
+            (item.entry.bar, item.entry.slot): item.entry
+            for item in priority_list.resolve()
+        }
+        for bar, slot, skill in ordinary_slots:
+            entry = by_slot.get((bar, slot))
+            if entry is None:
+                raise ValueError(
+                    f"ability priority is missing for {bar} slot {slot}: {skill}"
+                )
+            if entry.skill_name != skill:
+                raise ValueError(
+                    "ability priority skill does not match saved slot: "
+                    f"{entry.skill_name!r} != {skill!r} at {bar} slot {slot}"
+                )
 
     @staticmethod
     def _character_name(build) -> str:
