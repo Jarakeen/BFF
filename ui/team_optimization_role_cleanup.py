@@ -89,13 +89,27 @@ def _loaded_team_attr(page, table) -> str:
     )
 
 
-def _remember_loaded_team(page, table, team_name: str) -> None:
+def _loaded_plan_attr(page, table) -> str:
+    return (
+        "_optimization_loaded_generated_plan_b"
+        if table is getattr(page, "team_b_table", None)
+        else "_optimization_loaded_generated_plan_a"
+    )
+
+
+def _remember_loaded_team(page, table, team_name: str, generated_plan=None) -> None:
     setattr(page, _loaded_team_attr(page, table), str(team_name or "").strip())
+    setattr(page, _loaded_plan_attr(page, table), generated_plan)
 
 
 def _loaded_team_name(page, table=None) -> str:
     target = table or _active_team_table(page)
     return str(getattr(page, _loaded_team_attr(page, target), "") or "").strip()
+
+
+def _loaded_generated_plan(page, table=None):
+    target = table or _active_team_table(page)
+    return getattr(page, _loaded_plan_attr(page, target), None)
 
 
 def _exact_saved_build_index(page, slot) -> int | None:
@@ -153,8 +167,6 @@ def _load_generated_team_plan(page, plan) -> None:
                     applied_saved += 1
                     continue
 
-            # Recruitment stays recruitment. If a formerly saved player/build can no
-            # longer be resolved, do not silently substitute somebody else.
             recruitment_value = f"recruitment:{row}"
             combo_index = selector.findData(recruitment_value)
             if combo_index >= 0:
@@ -166,7 +178,7 @@ def _load_generated_team_plan(page, plan) -> None:
     finally:
         page._team_combo_signal_guard = False
 
-    _remember_loaded_team(page, table, plan.name)
+    _remember_loaded_team(page, table, plan.name, plan)
     page._update_team_analysis()
     target = "Team B" if table is getattr(page, "team_b_table", None) else "Team A"
     page.status.success(
@@ -231,7 +243,7 @@ def _load_roster_team(page, team_name: str) -> None:
     finally:
         page._team_combo_signal_guard = False
 
-    _remember_loaded_team(page, table, team)
+    _remember_loaded_team(page, table, team, None)
     page._update_team_analysis()
     target = "Team B" if table is getattr(page, "team_b_table", None) else "Team A"
     page.status.success(
@@ -259,6 +271,8 @@ def _install_load_team(page) -> None:
     page._optimization_generated_plan_service = GeneratedRosterPlanService(EsoDatabase(db_path))
     page._optimization_loaded_team_name_a = ""
     page._optimization_loaded_team_name_b = ""
+    page._optimization_loaded_generated_plan_a = None
+    page._optimization_loaded_generated_plan_b = None
 
     page.load_team_combo = QComboBox()
     page.load_team_combo.setMinimumWidth(190)
@@ -307,6 +321,71 @@ def _init_refocused(self, parent=None) -> None:
     _refocus_optimization_ui(self)
 
 
+def _original_slot_by_name(page) -> dict[str, GeneratedRosterPlanSlot]:
+    plan = _loaded_generated_plan(page)
+    if plan is None:
+        return {}
+    return {
+        str(slot.slot_name or "").strip().casefold(): slot
+        for slot in plan.slots
+        if str(slot.slot_name or "").strip()
+    }
+
+
+def _slot_from_optimization_row(row: dict[str, str], original=None) -> GeneratedRosterPlanSlot:
+    slot_name = row.get("slot", "")
+    is_saved = row.get("kind") == "saved"
+    player_name = row.get("player", "") or "Recruitment Needed"
+    build_name = row.get("build", "") or "Open requirement"
+
+    preserve_original = False
+    if original is not None:
+        if is_saved and original.kind == "saved":
+            preserve_original = (
+                str(original.player_name or "").strip().casefold()
+                == str(player_name).strip().casefold()
+                and str(original.build_name or "").strip().casefold()
+                == str(build_name).strip().casefold()
+            )
+        elif not is_saved and original.kind != "saved":
+            preserve_original = True
+
+    if preserve_original:
+        return GeneratedRosterPlanSlot(
+            slot_name=slot_name or original.slot_name,
+            kind=original.kind,
+            player_name=original.player_name,
+            character_name=original.character_name,
+            eso_class=original.eso_class,
+            build_name=original.build_name,
+            gear_summary=original.gear_summary,
+            unresolved=original.unresolved,
+            role=original.role,
+            source_kind=original.source_kind,
+            source_name=original.source_name,
+            source_url=original.source_url,
+            candidate_id=original.candidate_id,
+            gear_sets=original.gear_sets,
+            skills=original.skills,
+            mundus=original.mundus,
+        )
+
+    return GeneratedRosterPlanSlot(
+        slot_name=slot_name,
+        kind=("saved" if is_saved else "open_recruit"),
+        player_name=player_name,
+        character_name=row.get("character", ""),
+        eso_class=row.get("class", "") or "Any class",
+        build_name=build_name,
+        role=slot_name,
+        unresolved=(
+            "Open recruitment requirement from Optimization."
+            if not is_saved
+            else ""
+        ),
+    )
+
+
 def _send_visible_optimization_team_to_roster(window) -> None:
     """Persist the visible Optimization team back under its loaded team identity."""
 
@@ -319,20 +398,11 @@ def _send_visible_optimization_team_to_roster(window) -> None:
             )
         return
 
+    originals = _original_slot_by_name(optimization_page)
     slots = tuple(
-        GeneratedRosterPlanSlot(
-            slot_name=row.get("slot", ""),
-            kind=("saved" if row.get("kind") == "saved" else "open_recruit"),
-            player_name=row.get("player", "") or "Recruitment Needed",
-            character_name=row.get("character", ""),
-            eso_class=row.get("class", "") or "Any class",
-            build_name=row.get("build", "") or "Open requirement",
-            gear_summary="",
-            unresolved=(
-                "Open recruitment requirement from Optimization."
-                if row.get("kind") != "saved"
-                else ""
-            ),
+        _slot_from_optimization_row(
+            row,
+            originals.get(str(row.get("slot", "")).strip().casefold()),
         )
         for row in plan_rows
     )
@@ -346,7 +416,12 @@ def _send_visible_optimization_team_to_roster(window) -> None:
         difficulty=optimization_page.difficulty_combo.currentText(),
         slots=slots,
     )
-    _remember_loaded_team(optimization_page, _active_team_table(optimization_page), plan.name)
+    _remember_loaded_team(
+        optimization_page,
+        _active_team_table(optimization_page),
+        plan.name,
+        plan,
+    )
     roster_page._refresh_generated_plan_choices(plan.name)
     roster_page.view_combo.setCurrentText("Generated Team")
     roster_page.tabs.setCurrentIndex(0)
