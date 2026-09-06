@@ -46,6 +46,14 @@ def install() -> None:
     from ui.team_optimization_role_cleanup import install as install_role_cleanup
     install_role_cleanup()
 
+    # Optimization consumes canonical saved-build capability evidence. This is a
+    # static Phase 12.5 audit surface only: it does not invent encounter uptime,
+    # rotation execution, or raid DPS before the temporal phases exist.
+    from ui.team_optimization_canonical_analysis_support import (
+        install as install_team_optimization_canonical_analysis,
+    )
+    install_team_optimization_canonical_analysis()
+
     from ui.team_progress_support import install as install_team_progress_support
     install_team_progress_support()
 
