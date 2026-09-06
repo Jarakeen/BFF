@@ -141,11 +141,11 @@ def _strip_icon_canvas(svg: str) -> str:
     before recoloring.
     """
     svg = re.sub(
-        r'<path\b(?=[^>]*\bd=["\']\s*M0\s+0\s*h512\s*v512\s*H0\s*z\s*["\'])[^>]*>\s*</path>',
+        r'<path\b(?=[^>]*\bd=["\']\s*M0\s+0\s+h512\s+v512\s+H0\s+z\s*["\'])[^>]*>\s*</path>',
         '', svg, flags=re.IGNORECASE,
     )
     svg = re.sub(
-        r'<path\b(?=[^>]*\bd=["\']\s*M0\s+0\s*h512\s*v512\s*H0\s*z\s*["\'])[^>]*/>',
+        r'<path\b(?=[^>]*\bd=["\']\s*M0\s+0\s+h512\s+v512\s+H0\s+z\s*["\'])[^>]*/>',
         '', svg, flags=re.IGNORECASE,
     )
     svg = re.sub(
@@ -177,9 +177,6 @@ def install(app: QApplication) -> None:
 
     theme_manager.ThemeManager.stylesheet_for_preferences = stylesheet_with_final_rylo_surfaces
 
-    # The uploaded SVG library is the canonical shape library for both visual
-    # themes. Foundry renders the source gold; Rylo renders those same shapes as
-    # worn steel. Override the renderer itself so no black source tile survives.
     from ui import ux_icons
 
     ux_icons._RYLO_DEFAULT = "#AEB3B7"
@@ -195,9 +192,6 @@ def install(app: QApplication) -> None:
     ux_icons._recolor_svg = recolor_svg_without_canvas
     ux_icons._rylo_pixmap.cache_clear()
 
-    # Supply every QIcon mode/state explicitly. Checked submenu buttons can ask
-    # Qt for Active+On; leaving combinations absent lets Qt synthesize a result
-    # that is not guaranteed to match the intended Rylo state.
     def complete_rylo_icon(path, size: int = 32) -> QIcon:
         result = QIcon()
         tones = {
@@ -214,9 +208,6 @@ def install(app: QApplication) -> None:
 
     ux_icons._rylo_icon = complete_rylo_icon
 
-    # FoundryCard historically loaded source SVGs into QPixmap directly. Route
-    # header icons through the theme-aware renderer so Rylo gets glyph-only
-    # steel icons instead of black-backed source tiles.
     from ui.components.foundry_card import FoundryCard
 
     def set_icon_theme_aware(self, icon_name: str):
@@ -237,8 +228,6 @@ def install(app: QApplication) -> None:
 
     FoundryCard.set_icon = set_icon_theme_aware
 
-    # Force sidebar buttons through the corrected renderer at creation time.
-    # This avoids any legacy source-QIcon assignment winning later.
     from ui.components.foundry_sidebar import FoundrySidebar
 
     original_leaf = FoundrySidebar.build_leaf_button
@@ -246,6 +235,10 @@ def install(app: QApplication) -> None:
 
     def force_button_icon(button: QPushButton) -> None:
         if app.property("visualTheme") != VISUAL_THEME_RYLO:
+            return
+        if bool(button.property("navSubmenu")):
+            button.setIcon(QIcon())
+            button.setProperty("semanticIconName", "")
             return
         name = button.property("semanticIconName") or ux_icons.semantic_icon(button.text())
         if not name:
@@ -256,8 +249,14 @@ def install(app: QApplication) -> None:
         button.setIcon(complete_rylo_icon(path, 32))
         button.setProperty("semanticIconName", str(name))
 
-    def leaf_with_rylo_icon(self, text: str, page: str, header_style: bool = False):
-        button = original_leaf(self, text, page, header_style)
+    def leaf_with_rylo_icon(
+        self,
+        text: str,
+        page: str,
+        header_style: bool = False,
+        submenu: bool = False,
+    ):
+        button = original_leaf(self, text, page, header_style, submenu)
         force_button_icon(button)
         return button
 
@@ -271,11 +270,6 @@ def install(app: QApplication) -> None:
     FoundrySidebar.build_leaf_button = leaf_with_rylo_icon
     FoundrySidebar.build_category = category_with_rylo_icons
 
-    # The permanent Builds workspace compatibility layer historically forces
-    # Foundry's #0C171B teal onto tabs, scroll areas, editors, and child panels
-    # with a local stylesheet. That bypasses the Rylo QSS entirely. Replace the
-    # hard-coded surface only for Rylo; preserve the original behavior for the
-    # Foundry theme.
     from ui import build_editor_inline_compat
 
     original_force_dark_surface = build_editor_inline_compat._force_dark_surface
@@ -296,10 +290,6 @@ def install(app: QApplication) -> None:
 
     build_editor_inline_compat._force_dark_surface = force_theme_dark_surface
 
-    # BuildEditor gear-slot pictograms came from ESO gear art rather than the
-    # supplied semantic SVG library, so they remained gold under Rylo. Use the
-    # user's themed SVG shapes for Rylo while leaving Foundry's existing ESO
-    # gear art untouched.
     from widgets.build_editor import BuildEditor
 
     original_gear_icon = BuildEditor._gear_icon
@@ -347,8 +337,6 @@ def install(app: QApplication) -> None:
 
         from PySide6.QtWidgets import QWidget
 
-        # The attribute separators were also hard-coded brass. Convert only the
-        # decorative separators; ESO item-quality colors remain semantic data.
         for child in card.findChildren(QWidget):
             style = child.styleSheet()
             normalized = style.replace(" ", "").lower()
@@ -359,9 +347,6 @@ def install(app: QApplication) -> None:
     BuildEditor._gear_icon = gear_icon_with_rylo_svg
     BuildEditor._build_identity_card = editor_identity_card_with_rylo_details
 
-    # The Builds identity plate is a legacy QFrame created outside FoundryCard.
-    # Give it an explicit Rylo surface so the old leather-teal rule cannot win
-    # through selector specificity or a stale local style.
     from ui.builds_page import BuildsPage
 
     original_identity_header = BuildsPage._identity_header
