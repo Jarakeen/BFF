@@ -19,8 +19,10 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from services.build_service import BuildService
+from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -124,6 +126,7 @@ class RotationDashboardPage(FoundryPage):
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.roster = self.build_service.load()
         self.rotation_generation = RotationGenerationSupport()
+        self.rotation_sustain = RotationSustainService()
         self.rotation_plan: RotationPlan | None = None
         self._build_ui()
         self._load_characters()
@@ -463,7 +466,7 @@ class RotationDashboardPage(FoundryPage):
             self.status.info(f"Loaded saved build: {character} • {build_name}.")
 
     def generate_rotation(self) -> None:
-        """Generate the first authoritative semi-static schedule for the selected build."""
+        """Generate and evaluate the first authoritative semi-static schedule."""
         build = self._selected_build()
         if build is None:
             self.status.warning("Select a saved build before generating a rotation.")
@@ -485,6 +488,23 @@ class RotationDashboardPage(FoundryPage):
             return
 
         self.set_rotation_plan(plan)
+
+        try:
+            projection = self.rotation_sustain.evaluate(
+                build=build,
+                plan=plan,
+                resource=ResourceType.MAGICKA,
+            )
+        except (OSError, ValueError) as exc:
+            self.sustain_graph.clear_points()
+            self.resource_summary.setText(
+                "Rotation schedule loaded. Magicka sustain evaluation could not be completed."
+            )
+            self.resource_detail.setText(str(exc))
+            self.status.warning(f"Rotation generated; sustain evaluation unavailable: {exc}")
+            return
+
+        self.set_sustain_projection(projection)
 
     def set_rotation_plan(self, plan: RotationPlan) -> None:
         """Render one authoritative Phase 13 plan without reinterpreting it."""
@@ -508,7 +528,7 @@ class RotationDashboardPage(FoundryPage):
             f"Unresolved: {len(plan.unresolved)}. Assumptions: {len(plan.assumptions)}."
         )
         self.resource_summary.setText(
-            "Rotation schedule loaded. The 60s sustain graph remains unresolved until evaluated resource evidence is supplied."
+            "Rotation schedule loaded. Evaluating 60s Magicka sustain through the Phase 4 resource engine."
         )
         if plan.unresolved:
             self.status.warning(
@@ -516,6 +536,46 @@ class RotationDashboardPage(FoundryPage):
             )
         else:
             self.status.success("Rotation plan loaded with no schedule-level unresolved items.")
+
+    def set_sustain_projection(self, projection: RotationSustainProjection) -> None:
+        """Render the authoritative Phase 4 sustain result for the generated plan."""
+        self.set_sustain_series(projection.series)
+        sustain = projection.run.sustain
+        state = "SUSTAINS" if sustain.sustains else "FAILS"
+        self.resource_summary.setText(
+            f"Magicka sustain: {state}\n"
+            f"Start: {sustain.starting_amount:,} • Minimum: {sustain.minimum_amount:,} • "
+            f"End: {sustain.ending_amount:,}\n"
+            f"Cost attempted: {sustain.total_cost_attempted:,} • Cost paid: {sustain.total_cost_paid:,}"
+        )
+
+        details = [
+            f"Resolved cost events: {len(projection.run.action_cost_events)}",
+            f"Recovery ticks: {len(projection.run.recovery_ticks)}",
+            f"Unresolved evidence: {len(projection.unresolved)}",
+        ]
+        if sustain.first_failure is not None:
+            failure = sustain.first_failure
+            details.append(
+                f"First failure: {failure.time_seconds:g}s • {failure.source} • "
+                f"shortfall {failure.shortfall:,}"
+            )
+        elif projection.unresolved:
+            details.append("Some temporal/runtime mechanics remain explicitly unresolved.")
+        else:
+            details.append("No sustain-level unresolved evidence reported.")
+        self.resource_detail.setText("\n".join(details))
+
+        if not sustain.sustains:
+            self.status.warning(
+                "Rotation generated; the modeled 60-second Magicka timeline does not sustain."
+            )
+        elif projection.unresolved:
+            self.status.warning(
+                f"Rotation generated and sustains with {len(projection.unresolved)} unresolved item(s)."
+            )
+        else:
+            self.status.success("Rotation generated and sustains with no unresolved sustain evidence.")
 
     def set_sustain_series(self, points) -> None:
         """Render evaluated resource evidence as (time_seconds, resource_value) pairs."""
