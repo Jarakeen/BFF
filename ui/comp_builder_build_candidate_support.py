@@ -35,6 +35,8 @@ def _selected_row(page) -> int:
 def _source_label(candidate: CompBuildCandidate) -> str:
     if candidate.source_kind == "saved_build":
         return f"Saved BFF build • {candidate.source_name}"
+    if candidate.source_kind == "esologs_snapshot":
+        return f"ESO Logs • {candidate.source_name}"
     return f"Reference template • {candidate.source_name}"
 
 
@@ -379,10 +381,6 @@ def _render_slots_with_candidate_refresh(self, slots) -> None:
 
 def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> str:
     details = [base_detail, f"Candidate source: {_source_label(candidate)}."]
-    if candidate.skills:
-        details.append("Observed/known skills: " + ", ".join(candidate.skills) + ".")
-    if candidate.mundus:
-        details.append(f"Mundus: {candidate.mundus}.")
     if not candidate.complete_build:
         details.append("Candidate is partial evidence, not a complete prescribed build.")
     if candidate.unresolved:
@@ -402,6 +400,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
     slots: list[GeneratedRosterPlanSlot] = []
     for row in range(self.matrix_table.rowCount()):
         slot_name = self._cell_text(row, 0)
+        role = self._cell_text(row, 1)
         selected_class = self._selected_class(row)
         alternatives = self._cell_text(row, 3) or "Flexible"
         required = self._cell_text(row, 4) or "Open responsibility"
@@ -426,6 +425,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
                     build_name="Composition requirement",
                     gear_summary="",
                     unresolved=detail,
+                    role=role,
                 )
             )
             continue
@@ -434,13 +434,21 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
         slots.append(
             GeneratedRosterPlanSlot(
                 slot_name=slot_name,
-                kind="prescribed_player" if is_saved else "prescribed_recruit",
+                kind="saved" if is_saved else "prescribed_recruit",
                 player_name=candidate.source_name if is_saved else "Recruitment Needed",
                 character_name=candidate.source_name if is_saved else "",
                 eso_class=candidate.eso_class or selected_class,
                 build_name=candidate.name,
                 gear_summary=" + ".join(candidate.gear_sets),
                 unresolved=_candidate_unresolved(candidate, detail),
+                role=candidate.role or role,
+                source_kind=candidate.source_kind,
+                source_name=candidate.source_name,
+                source_url=candidate.source_url,
+                candidate_id=candidate.candidate_id,
+                gear_sets=tuple(candidate.gear_sets),
+                skills=tuple(candidate.skills),
+                mundus=candidate.mundus,
             )
         )
 
