@@ -52,6 +52,23 @@ def _long_plan() -> RotationPlan:
     )
 
 
+def _woven_plan() -> RotationPlan:
+    actions = []
+    for second in range(13):
+        actions.append(
+            RotationAction(float(second), 0, RotationActionKind.LIGHT_ATTACK, bar="front")
+        )
+        actions.append(
+            RotationAction(float(second), 1, RotationActionKind.SKILL, "Skill", "front")
+        )
+    return RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=12.0,
+        actions=tuple(actions),
+    )
+
+
 def _resolution(name="Aggressive Horn", resource=ResourceType.ULTIMATE):
     return SimpleNamespace(
         name=name,
@@ -248,3 +265,45 @@ def test_generation_bridge_combines_explicit_gains_with_minor_heroism() -> None:
 
     projection = dict(result.resource_projections)["front"]
     assert projection.availability_times == (3.0,)
+
+
+def test_generation_bridge_keeps_scheduled_attack_generation_opt_in() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_woven_plan(),
+        ultimate_bar="front",
+        starting_ultimate=220.0,
+    )
+
+    projection = dict(result.resource_projections)["front"]
+    assert projection.availability_times == ()
+    assert not any(
+        action.kind is RotationActionKind.ULTIMATE
+        for action in result.plan.actions
+    )
+
+
+def test_generation_bridge_uses_scheduled_damaging_attacks_when_enabled() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_woven_plan(),
+        ultimate_bar="front",
+        starting_ultimate=220.0,
+        use_scheduled_combat_attacks=True,
+    )
+
+    projection = dict(result.resource_projections)["front"]
+    assert projection.availability_times == (10.0,)
+    horn = next(
+        action
+        for action in result.plan.actions
+        if action.kind is RotationActionKind.ULTIMATE
+        and action.name == "Aggressive Horn"
+    )
+    assert horn.time_seconds == 10.0
