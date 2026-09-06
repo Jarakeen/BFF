@@ -12,16 +12,19 @@ class DurationAwareRotationScheduler:
 
     Verified duration skills establish refresh obligations after their first cast.
     When an obligation becomes due, the next eligible skill slot on the same bar
-    is claimed by that due ability. Existing timestamps and explicit bar swaps are
-    still preserved in this Phase 13 slice; the displaced ordinary cast is not
-    silently moved elsewhere.
+    is claimed by that due ability. An explicit ``refresh_lead_seconds`` value on
+    the verified rule moves that obligation into the supplied pre-expiry refresh
+    window; zero lead preserves hard-expiry behavior.
+
+    Existing timestamps and explicit bar swaps are still preserved in this Phase
+    13 slice; the displaced ordinary cast is not silently moved elsewhere.
 
     Premature recast slots that are not needed by another due refresh continue to
     use deterministic same-bar no-duration fillers when available. If no valid
     filler exists, the slot becomes an explicit WAIT rather than an invented cast.
 
     The scheduler does not yet optimize bar-swap timing, pull a refresh onto the
-    opposite bar, use refresh lead windows, or model execute, proc, potion, or
+    opposite bar, invent refresh lead windows, or model execute, proc, potion, or
     encounter priorities. Those remain later Phase 13 work.
     """
 
@@ -46,6 +49,9 @@ class DurationAwareRotationScheduler:
         )
         assumptions.append(
             "verified refresh obligations may claim the next eligible skill slot on the same bar once due"
+        )
+        assumptions.append(
+            "explicit verified refresh lead windows are honored; no refresh lead is invented"
         )
         assumptions.append(
             "premature duration-skill recast slots use deterministic same-bar no-duration fillers when available"
@@ -90,7 +96,7 @@ class DurationAwareRotationScheduler:
                         bar=action.bar,
                     )
                 )
-                next_due[due_key] = action.time_seconds + due_rule.duration_seconds
+                next_due[due_key] = self._refresh_due(action.time_seconds, due_rule)
                 unresolved.append(
                     f"refresh obligation for '{due_rule.skill_name}' claimed the {action.time_seconds:g}s "
                     f"{action.bar or 'unknown'}-bar slot from '{action.name}'; displaced-action priority is unresolved"
@@ -111,7 +117,7 @@ class DurationAwareRotationScheduler:
                     actions.append(pending_light_attack)
                     pending_light_attack = None
                 actions.append(action)
-                next_due[planned_key] = action.time_seconds + rule.duration_seconds
+                next_due[planned_key] = self._refresh_due(action.time_seconds, rule)
                 continue
 
             replacement = self._next_filler(
@@ -197,6 +203,17 @@ class DurationAwareRotationScheduler:
             key = (action.name.casefold(), action.bar)
             result.setdefault(key, action.kind)
         return result
+
+    @staticmethod
+    def _refresh_due(
+        cast_time_seconds: float,
+        rule: RotationRecastRule,
+    ) -> float:
+        return (
+            float(cast_time_seconds)
+            + rule.duration_seconds
+            - rule.refresh_lead_seconds
+        )
 
     @staticmethod
     def _due_refresh(
