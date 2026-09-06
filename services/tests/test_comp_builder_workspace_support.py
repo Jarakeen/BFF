@@ -22,6 +22,17 @@ def test_comp_maker_workspace_keeps_legacy_columns_as_authoritative_storage():
     assert "_comp_required_gear_sets_by_slot" in source
 
 
+def test_comp_maker_overview_shows_exact_assigned_build_and_source():
+    source = Path("ui/comp_builder_workspace_support.py").read_text(encoding="utf-8")
+
+    assert '"ASSIGNED BUILD"' in source
+    assert '"saved_build": "Roster"' in source
+    assert '"esologs_snapshot": "ESO Logs"' in source
+    assert '"reference_template": "Reference"' in source
+    assert 'return f"✓ {name} · {source}"' in source
+    assert "def _public_candidate_name" in source
+
+
 def test_comp_maker_layout_is_balanced_two_column_workspace():
     source = Path("ui/comp_builder_layout_support.py").read_text(encoding="utf-8")
 
