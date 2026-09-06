@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from models.build_model import PlayerBuild
 from minmax.resource_costs import BaseActionCost, ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent
 from services.rotation_ultimate_service import RotationUltimateService
 
 
@@ -34,6 +35,18 @@ def _plan() -> RotationPlan:
             RotationAction(2.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
             RotationAction(3.0, 0, RotationActionKind.SKILL, "Back Skill", "back"),
             RotationAction(4.0, 0, RotationActionKind.SKILL, "Back Skill", "back"),
+        ),
+    )
+
+
+def _long_plan() -> RotationPlan:
+    return RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=12.0,
+        actions=tuple(
+            RotationAction(float(second), 0, RotationActionKind.SKILL, "Skill", "front")
+            for second in range(13)
         ),
     )
 
@@ -123,3 +136,54 @@ def test_service_keeps_front_and_back_ultimate_availability_separate() -> None:
     assert cast.time_seconds == 3.0
     assert cast.bar == "back"
     assert cast.name == "Barrier"
+
+
+def test_generation_bridge_derives_affordability_and_schedules_ultimate() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_long_plan(),
+        starting_ultimate_by_bar={"front": 100.0},
+        generation_events_by_bar={
+            "front": (
+                UltimateGenerationEvent(5.0, 75.0, "explicit gain A"),
+                UltimateGenerationEvent(10.0, 75.0, "explicit gain B"),
+            )
+        },
+    )
+
+    assert repository.calls == ["Aggressive Horn", "Barrier"]
+    assert len(result.resource_projections) == 2
+    front_projection = dict(result.resource_projections)["front"]
+    assert front_projection.availability_times == (10.0,)
+    horn = next(
+        action
+        for action in result.plan.actions
+        if action.kind is RotationActionKind.ULTIMATE
+        and action.name == "Aggressive Horn"
+    )
+    assert horn.time_seconds == 10.0
+    assert horn.bar == "front"
+
+
+def test_generation_bridge_keeps_unaffordable_ultimate_unscheduled() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_long_plan(),
+        starting_ultimate_by_bar={"front": 100.0},
+        generation_events_by_bar={
+            "front": (UltimateGenerationEvent(5.0, 100.0, "explicit gain"),)
+        },
+    )
+
+    assert not any(
+        action.kind is RotationActionKind.ULTIMATE
+        and action.name == "Aggressive Horn"
+        for action in result.plan.actions
+    )
+    assert any("never became affordable" in item for item in result.unresolved)
