@@ -3,6 +3,7 @@ from services.generated_roster_plan_service import (
     GeneratedRosterPlanService,
     GeneratedRosterPlanSlot,
 )
+from services.roster_service import RosterService
 
 
 def _service(tmp_path):
@@ -57,6 +58,30 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
     assert loaded.slots == slots
     assert service.list_plan_names() == ("Godslayer Prescribed Roster",)
     assert service.latest_plan() == loaded
+    assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
+
+
+def test_generated_plan_team_identity_does_not_fabricate_roster_members(tmp_path) -> None:
+    service = _service(tmp_path)
+    service.save_plan(
+        name="GH Prog",
+        goal="Gryphon Heart",
+        difficulty="Veteran Hardmode",
+        slots=(
+            GeneratedRosterPlanSlot(
+                slot_name="Healer 1",
+                kind="prescribed_recruit",
+                player_name="Recruitment Needed",
+                character_name="",
+                eso_class="Warden",
+                build_name="Brittle Warden",
+            ),
+        ),
+    )
+
+    roster = RosterService(service.db)
+    assert roster.list_team_names() == ["GH Prog"]
+    assert roster.list_members() == []
 
 
 def test_resending_same_named_plan_replaces_slots_instead_of_duplicating(tmp_path) -> None:
@@ -107,3 +132,4 @@ def test_resending_same_named_plan_replaces_slots_instead_of_duplicating(tmp_pat
     assert loaded.difficulty == "Veteran Hardmode"
     assert loaded.slots == replacement
     assert service.list_plan_names() == ("Godslayer Prescribed Roster",)
+    assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
