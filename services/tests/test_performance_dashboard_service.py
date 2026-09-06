@@ -133,7 +133,7 @@ def test_build_snapshot_scopes_every_query_to_the_chosen_actor():
         "ABC123", 1, actor_id=7, actor_label="Anonymous 7 -- Templar", role="DPS",
     )
 
-    assert client.aura_calls[0]["source_id"] == 7
+    assert client.aura_calls[0]["target_id"] == 7
     assert client.aura_calls[0]["data_type"] == "Buffs"
     assert client.aura_calls[0]["hostility_type"] == "Friendlies"
 

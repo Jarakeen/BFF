@@ -94,6 +94,63 @@ class EsoLogsApiError(Exception):
     pass
 
 
+def _points_from_series(series: dict, query_start_time: float) -> list[tuple[float, float]]:
+    """
+    Turn one graph() series row into (seconds_into_fight, amount)
+    points. Handles the shape confirmed against a live report --
+    `data`: a flat array of numbers, one per pointInterval-wide
+    (milliseconds) bucket starting at pointStart (milliseconds) --
+    as well as [t, v] pairs and {x, y} dicts, in case a different
+    dataType or a future API version uses one of those instead.
+    """
+
+    raw_data = series.get("data")
+
+    if not isinstance(raw_data, list) or not raw_data:
+        return []
+
+    first = raw_data[0]
+
+    points: list[tuple[float, float]] = []
+
+    if isinstance(first, (int, float)):
+
+        point_start = series.get("pointStart")
+        point_interval = series.get("pointInterval")
+
+        if not isinstance(point_start, (int, float)) or not isinstance(
+            point_interval, (int, float)
+        ):
+            return []
+
+        for i, value in enumerate(raw_data):
+
+            if not isinstance(value, (int, float)):
+                continue
+
+            t_ms = point_start + i * point_interval
+
+            points.append(((t_ms - query_start_time) / 1000.0, float(value)))
+
+        return points
+
+    for point in raw_data:
+
+        if isinstance(point, dict):
+            raw_t, raw_v = point.get("x"), point.get("y")
+        elif isinstance(point, (list, tuple)) and len(point) >= 2:
+            raw_t, raw_v = point[0], point[1]
+        else:
+            continue
+
+        try:
+            points.append(((float(raw_t) - query_start_time) / 1000.0, float(raw_v)))
+        except (TypeError, ValueError):
+            continue
+
+    return points
+
+
 class EsoLogsClient:
 
     def __init__(self, client_id: str, client_secret: str):
@@ -286,6 +343,7 @@ class EsoLogsClient:
         data_type: str,
         hostility_type: str = "Friendlies",
         source_id: int | None = None,
+        target_id: int | None = None,
         view_by: str | None = None,
     ) -> dict:
         """
@@ -296,19 +354,26 @@ class EsoLogsClient:
         query and differ only in which key they pull out of the
         decoded `data` object afterward.
 
-        sourceID scopes every one of those dataTypes down to a
-        single actor -- the same numeric id ESO Logs shows as
-        "Anonymous N" when a report's names are hidden, since that
-        anonymization only replaces the display name, not the
-        actor id the API still keys everything on.
+        sourceID and targetID are NOT interchangeable, and picking
+        the wrong one silently returns a different (still valid-
+        looking) number instead of erroring:
+          sourceID -- scope to auras/damage/healing *caused by*
+            that actor (who applied a buff/debuff, who dealt the
+            damage or healing). Use this for "my healing/damage
+            output" and "debuffs I applied to the boss".
+          targetID -- scope to auras *held by* that actor
+            (who the buff/debuff is currently active on). Use
+            this for "my own buff uptime" -- most raid buffs
+            (Major Courage, Major Sorcery, ...) are cast by
+            someone else, so filtering those by sourceID=you
+            returns nothing useful, or -- as observed against a
+            live report -- appears to ignore the filter and
+            return raid-wide uptime instead.
 
         viewBy ("Source" | "Target" | "Ability") controls how a
         DamageDone/Healing table's `entries` are grouped -- pass
         "Ability" alongside a sourceID to get one actor's per-
-        ability breakdown instead of one row per player. Like the
-        rest of this client's newer additions, this argument is
-        written against the published v2 schema but hasn't been
-        checked against a live response.
+        ability breakdown instead of one row per player.
         """
 
         code = self.normalize_report_code(report_code)
@@ -325,6 +390,7 @@ class EsoLogsClient:
           $dataType: TableDataType!
           $hostilityType: HostilityType!
           $sourceID: Int
+          $targetID: Int
           $viewBy: ViewType
         ) {
           reportData {
@@ -336,6 +402,7 @@ class EsoLogsClient:
                 dataType: $dataType
                 hostilityType: $hostilityType
                 sourceID: $sourceID
+                targetID: $targetID
                 viewBy: $viewBy
               )
             }
@@ -351,6 +418,7 @@ class EsoLogsClient:
             "dataType": data_type,
             "hostilityType": hostility_type,
             "sourceID": source_id,
+            "targetID": target_id,
             "viewBy": view_by,
         }
 
@@ -388,6 +456,7 @@ class EsoLogsClient:
         data_type: str = "Buffs",
         hostility_type: str = "Friendlies",
         source_id: int | None = None,
+        target_id: int | None = None,
     ) -> list[dict]:
         """
         Fetch a Buffs/Debuffs table for one fight and return
@@ -398,8 +467,11 @@ class EsoLogsClient:
         hostilityType: "Friendlies" | "Enemies"
           (use Enemies + Debuffs to see debuffs the group
           landed on the boss.)
-        sourceID: optional -- scope to one actor's own buffs, or
-          the debuffs that one actor applied.
+        sourceID: scope to auras *applied by* one actor (e.g.
+          debuffs that actor landed on the boss).
+        targetID: scope to auras *held by* one actor (e.g. that
+          actor's own buff uptime, regardless of who cast it) --
+          this is almost always what you want for "my uptime".
         """
 
         inner = self._fetch_table_data(
@@ -410,6 +482,7 @@ class EsoLogsClient:
             data_type=data_type,
             hostility_type=hostility_type,
             source_id=source_id,
+            target_id=target_id,
         )
 
         auras = inner.get("auras")
@@ -429,6 +502,7 @@ class EsoLogsClient:
         data_type: str,
         hostility_type: str = "Friendlies",
         source_id: int | None = None,
+        target_id: int | None = None,
         view_by: str | None = None,
     ) -> tuple[list[dict], float]:
         """
@@ -464,6 +538,7 @@ class EsoLogsClient:
             data_type=data_type,
             hostility_type=hostility_type,
             source_id=source_id,
+            target_id=target_id,
             view_by=view_by,
         )
 
@@ -507,17 +582,28 @@ class EsoLogsClient:
         time-series counterpart to get_actor_table's aggregated
         breakdown. Pass sourceID to scope the series to one actor.
 
-        Returns a list of (seconds_into_fight, value) points,
-        sorted by time. `value` is whatever amount ESO Logs
-        attributes to that time bucket -- not a pre-smoothed rate --
-        so a rolling window over these points (seconds elapsed vs.
-        amount summed) is how a caller finds a "best stretch"
-        rather than reading any single point as an instantaneous
-        DPS/HPS figure.
+        Returns a list of (seconds_into_fight, amount) points,
+        sorted by time. `amount` is whatever ESO Logs attributes to
+        that time bucket -- not a pre-smoothed rate -- so a rolling
+        window over these points (seconds elapsed vs. amount
+        summed) is how a caller finds a "best stretch" rather than
+        reading any single point as an instantaneous DPS/HPS
+        figure.
 
-        Like get_actor_table, this series shape (a `series` list of
-        {name, data: [[t, v], ...]} objects) matches the published
-        v2 schema but hasn't been checked against a live response.
+        Confirmed against a live report: `series` is a list of
+        per-ability rows (name, guid, pointStart, pointInterval --
+        both milliseconds -- total, and `data`: a flat array of
+        numbers, one per pointInterval-wide bucket starting at
+        pointStart) rather than a list of [time, value] pairs. ESO
+        Logs also includes one extra row with name/type/id =
+        "Total" that's the actor's combined amount per bucket
+        across every ability in that series -- exactly "my output
+        over time" -- so that row is preferred when present, with a
+        bucket-aligned sum across the per-ability rows as a
+        fallback for graphs that don't include one. Older/other
+        point shapes ([t, v] pairs, {x, y} dicts) are still accepted
+        defensively in case a different dataType or a future API
+        version returns those instead.
         """
 
         code = self.normalize_report_code(report_code)
@@ -585,30 +671,38 @@ class EsoLogsClient:
                 "check the raw response against the current v2 schema."
             )
 
-        points: list[tuple[float, float]] = []
+        total_series = None
+        per_ability_series: list[list[tuple[float, float]]] = []
 
         for series in series_list:
 
             if not isinstance(series, dict):
                 continue
 
-            for point in series.get("data") or []:
+            points = _points_from_series(series, start_time)
 
-                if isinstance(point, dict):
-                    raw_t, raw_v = point.get("x"), point.get("y")
-                elif isinstance(point, (list, tuple)) and len(point) >= 2:
-                    raw_t, raw_v = point[0], point[1]
-                else:
-                    continue
+            is_total_row = str(
+                series.get("name") or series.get("type") or series.get("id") or ""
+            ).strip().casefold() == "total"
 
-                try:
-                    # Graph timestamps are milliseconds since the
-                    # report's start, same unit as fight
-                    # start/endTime -- convert to seconds into the
-                    # fight so callers don't juggle units per point.
-                    points.append((float(raw_t) / 1000.0, float(raw_v)))
-                except (TypeError, ValueError):
-                    continue
+            if is_total_row:
+                total_series = points
+            else:
+                per_ability_series.append(points)
+
+        if total_series is not None:
+            points = total_series
+        elif per_ability_series:
+            # No explicit "Total" row -- sum every ability's series
+            # bucket-by-bucket (they share the same pointStart/
+            # pointInterval grid within one graph response).
+            merged: dict[float, float] = {}
+            for series_points in per_ability_series:
+                for t, v in series_points:
+                    merged[t] = merged.get(t, 0.0) + v
+            points = list(merged.items())
+        else:
+            points = []
 
         points.sort(key=lambda p: p[0])
 

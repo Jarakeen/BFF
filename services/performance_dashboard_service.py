@@ -111,14 +111,23 @@ class PerformanceDashboardService:
 
         duration = summary["duration_seconds"]
 
+        # Buffs: filter by targetID (who *holds* the buff) -- most
+        # raid buffs (Major Courage, Major Sorcery, ...) are cast
+        # by someone else, so this actor's own uptime picture comes
+        # from what's active ON them, not what they personally cast.
         buff_uptimes = self._top_uptimes(
             report_code, fight_id, start, end, duration,
-            data_type="Buffs", hostility_type="Friendlies", actor_id=actor_id,
+            data_type="Buffs", hostility_type="Friendlies",
+            filter_by="target", actor_id=actor_id,
         )
 
+        # Debuffs: filter by sourceID (who *applied* it) -- this is
+        # "debuffs you personally landed on the boss", which is
+        # legitimately empty for builds that don't apply any.
         debuff_uptimes = self._top_uptimes(
             report_code, fight_id, start, end, duration,
-            data_type="Debuffs", hostility_type="Enemies", actor_id=actor_id,
+            data_type="Debuffs", hostility_type="Enemies",
+            filter_by="source", actor_id=actor_id,
         )
 
         data_type, hostility_type, output_label, rate_label = ROLE_OUTPUT.get(
@@ -170,12 +179,17 @@ class PerformanceDashboardService:
         duration_seconds: float,
         data_type: str,
         hostility_type: str,
+        filter_by: str,
         actor_id: int,
     ) -> list[AbilityUptime]:
 
+        kwargs = (
+            {"target_id": actor_id} if filter_by == "target" else {"source_id": actor_id}
+        )
+
         auras = self.client.get_aura_table(
             report_code, fight_id, start, end,
-            data_type=data_type, hostility_type=hostility_type, source_id=actor_id,
+            data_type=data_type, hostility_type=hostility_type, **kwargs,
         )
 
         return _top_uptimes(auras, duration_seconds, TOP_UPTIME_COUNT)
