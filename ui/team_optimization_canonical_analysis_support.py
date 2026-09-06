@@ -117,6 +117,21 @@ def _format_risks(result: TeamOptimizationCanonicalAnalysis) -> str:
     return "\n".join(lines)
 
 
+def _replace_placeholder_surfaces(page) -> None:
+    page.analysis_card.title_label.setText("Canonical Team Analysis")
+    page.support_card.title_label.setText("Static Support Capabilities")
+    page.risks_card.title_label.setText("Evidence Boundaries & Risks")
+
+    # Gear/skill recommendation tables were literal placeholder rows. Hide them
+    # until a later phase can populate evidence-backed recommendations rather than
+    # presenting unconnected UI as though it were an optimizer result.
+    for name in ("gear_card", "skill_card", "notes_card"):
+        card = getattr(page, name, None)
+        if card is not None:
+            card.hide()
+            card.setMaximumHeight(0)
+
+
 def _refresh_canonical_analysis(page) -> None:
     service = getattr(page, "_optimization_canonical_analysis_service", None)
     if service is None or not hasattr(page, "analysis_summary"):
@@ -152,6 +167,7 @@ def _init_with_canonical_analysis(self, parent=None) -> None:
         capability
     )
     self._optimization_current_canonical_analysis = None
+    _replace_placeholder_surfaces(self)
     if hasattr(self, "team_tabs"):
         self.team_tabs.currentChanged.connect(lambda *_: _refresh_canonical_analysis(self))
     _refresh_canonical_analysis(self)
