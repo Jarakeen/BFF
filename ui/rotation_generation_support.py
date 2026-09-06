@@ -6,7 +6,10 @@ from minmax.rotation_definition import RotationDefinition, RotationMode, Rotatio
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
-from services.rotation_ultimate_service import RotationUltimateService
+from services.rotation_ultimate_service import (
+    RotationUltimateProjection,
+    RotationUltimateService,
+)
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
     RotationDurationEvidenceSupport,
@@ -29,10 +32,11 @@ class RotationGenerationRequest:
 
 @dataclass(frozen=True)
 class RotationGenerationResult:
-    """One generated plan plus the duration evidence that explains it."""
+    """One generated plan plus evidence produced while building it."""
 
     plan: RotationPlan
     duration_evidence: RotationDurationEvidence
+    ultimate_projection: RotationUltimateProjection | None = None
 
 
 class RotationGenerationSupport:
@@ -67,11 +71,12 @@ class RotationGenerationSupport:
         build,
         request: RotationGenerationRequest,
     ) -> RotationGenerationResult:
-        """Return the final plan together with dashboard-ready duration evidence."""
+        """Return the final plan together with generation evidence."""
         definition = self.build_definition(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
         refinement = self.duration_refinement.refine(seed_plan)
         final_plan = refinement.plan
+        ultimate_projection: RotationUltimateProjection | None = None
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
         if selected_ultimate_bar:
@@ -94,6 +99,7 @@ class RotationGenerationSupport:
         return RotationGenerationResult(
             plan=final_plan,
             duration_evidence=evidence,
+            ultimate_projection=ultimate_projection,
         )
 
     def build_definition(
