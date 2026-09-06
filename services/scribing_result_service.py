@@ -9,6 +9,7 @@ class ScribingResultService:
 
     A verified ESO client capture is preferred when present. Xbox-only users can
     fall back to a separately stored, probe-verified public reference source.
+    Structured simulator API data is preferred over page-scraped public rows.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -70,7 +71,12 @@ class ScribingResultService:
             SELECT source_key, source_kind
             FROM scribing_result_name_reference_source
             WHERE probe_verified = 1
-            ORDER BY imported_at DESC
+            ORDER BY
+                CASE source_kind
+                    WHEN 'public_simulator_api' THEN 0
+                    ELSE 1
+                END,
+                imported_at DESC
             LIMIT 1
             """
         ).fetchone()
