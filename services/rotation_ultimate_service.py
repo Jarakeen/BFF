@@ -8,6 +8,10 @@ from minmax.ability_cost_repository import AbilityCostRepository
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_ultimate import UltimateRotationScheduler, UltimateScheduleRule
+from minmax.ultimate_generation_sources import (
+    HeroismUltimateGenerationSource,
+    HeroismWindow,
+)
 from minmax.ultimate_resource_timeline import (
     UltimateGenerationEvent,
     UltimateResourceProjection,
@@ -29,7 +33,8 @@ class RotationUltimateService:
 
     Callers may either supply already-resolved availability times through
     ``apply`` or one shared Ultimate resource timeline through ``apply_generation``.
-    Neither path invents Ultimate generation.
+    The generation path can combine explicit gain events with source-derived
+    events whose uptime evidence is supplied explicitly, such as Heroism windows.
     """
 
     def __init__(
@@ -39,12 +44,14 @@ class RotationUltimateService:
         ability_cost_repository: AbilityCostRepository | None = None,
         scheduler: UltimateRotationScheduler | None = None,
         resource_timeline: UltimateResourceTimeline | None = None,
+        heroism_source: HeroismUltimateGenerationSource | None = None,
     ) -> None:
         self.ability_cost_repository = ability_cost_repository or AbilityCostRepository(
             database_path
         )
         self.scheduler = scheduler or UltimateRotationScheduler()
         self.resource_timeline = resource_timeline or UltimateResourceTimeline()
+        self.heroism_source = heroism_source or HeroismUltimateGenerationSource()
 
     def apply(
         self,
@@ -95,14 +102,16 @@ class RotationUltimateService:
         ultimate_bar: str,
         starting_ultimate: float = 0.0,
         generation_events: tuple[UltimateGenerationEvent, ...] = (),
+        heroism_windows: tuple[HeroismWindow, ...] = (),
     ) -> RotationUltimateProjection:
-        """Derive affordability from one shared explicit Ultimate resource pool.
+        """Derive affordability from one shared Ultimate resource pool.
 
         ESO Ultimate is shared across bars. The caller therefore selects which
         saved slot-6 ultimate is being considered for this bounded projection.
-        Canonical ability-cost evidence supplies its cost; explicit starting
-        Ultimate and gain events supply the resource timeline. Competing front/back
-        ultimate choice remains unresolved rather than double-spending one pool.
+        Canonical ability-cost evidence supplies its cost. Starting Ultimate,
+        explicit gain events, and explicitly supplied Heroism uptime windows feed
+        the shared resource timeline. Competing front/back ultimate choice remains
+        unresolved rather than double-spending one pool.
         """
         bar = str(ultimate_bar or "").strip().casefold()
         if bar not in {"front", "back"}:
@@ -137,9 +146,15 @@ class RotationUltimateService:
             )
             return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
 
+        derived_events = self.heroism_source.events(
+            windows=tuple(heroism_windows),
+            duration_seconds=plan.duration_seconds,
+        )
+        all_events = tuple(generation_events) + tuple(derived_events)
+
         projection = self.resource_timeline.project(
             starting_amount=starting_ultimate,
-            events=tuple(generation_events),
+            events=all_events,
             spend_rule=UltimateSpendRule(
                 skill_name=resolution.name or ultimate,
                 cost=base_cost.amount,
@@ -149,7 +164,7 @@ class RotationUltimateService:
 
         if not projection.availability_times:
             unresolved.append(
-                f"saved {bar}-bar ultimate '{ultimate}' never became affordable from the supplied explicit Ultimate timeline"
+                f"saved {bar}-bar ultimate '{ultimate}' never became affordable from the supplied Ultimate generation evidence"
             )
             rules: tuple[UltimateScheduleRule, ...] = ()
         else:
