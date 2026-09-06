@@ -4,6 +4,9 @@ import re
 
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextEdit, QVBoxLayout
 
+from engine.config import get_data_dir
+from services.team_prescription_template_inspector import find_team_template_inspection
+
 
 _INSTALLED = False
 _ORIGINAL_ROSTER_INIT = None
@@ -17,7 +20,7 @@ def _clean(value: object) -> str:
 
 
 def _public_build_name(player_name: str, build_name: str) -> str:
-    """Hide the source log player's identity from recruit-facing labels."""
+    """Hide source-log player identity from recruit-facing labels."""
 
     player = _clean(player_name)
     build = _clean(build_name)
@@ -65,6 +68,24 @@ def _saved_build_for_slot(page, slot):
     return None
 
 
+def _template_inspection_for_slot(slot):
+    player = _clean(slot.player_name) or "Recruitment Needed"
+    if player.casefold() != "recruitment needed":
+        return None
+    build_name = _public_build_name(player, slot.build_name)
+    if not build_name:
+        return None
+    try:
+        return find_team_template_inspection(
+            data_dir=get_data_dir(),
+            slot_name=_clean(slot.slot_name),
+            build_name=build_name,
+            eso_class=_clean(slot.eso_class),
+        )
+    except (OSError, ValueError):
+        return None
+
+
 def _skills_from_slot(slot) -> tuple[str, ...]:
     match = _SKILLS_RE.search(_clean(slot.unresolved))
     if match is None:
@@ -95,17 +116,38 @@ def _saved_skills(build) -> tuple[str, ...]:
     return tuple(values)
 
 
-def _details_text(page, slot) -> str:
-    player = _clean(slot.player_name) or "Recruitment Needed"
-    build_name = _public_build_name(player, slot.build_name) or "Open requirement"
-    saved_build = _saved_build_for_slot(page, slot)
-
-    gear = tuple(
+def _slot_gear(slot) -> tuple[str, ...]:
+    return tuple(
         value.strip()
         for value in _clean(slot.gear_summary).split("+")
         if value.strip()
     )
-    skills = _saved_skills(saved_build) if saved_build is not None else _skills_from_slot(slot)
+
+
+def _details_text(page, slot) -> str:
+    player = _clean(slot.player_name) or "Recruitment Needed"
+    build_name = _public_build_name(player, slot.build_name) or "Open requirement"
+    saved_build = _saved_build_for_slot(page, slot)
+    inspection = _template_inspection_for_slot(slot) if saved_build is None else None
+
+    if saved_build is not None:
+        gear = _slot_gear(slot)
+        skills = _saved_skills(saved_build)
+        mundus = _clean(getattr(saved_build, "Mundus", ""))
+        source = "Saved Roster Build"
+        unresolved = ()
+    elif inspection is not None:
+        gear = tuple(inspection.gear_sets) or _slot_gear(slot)
+        skills = tuple(inspection.skills) or _skills_from_slot(slot)
+        mundus = _clean(inspection.mundus)
+        source = _clean(inspection.source_name) or _clean(inspection.template_kind)
+        unresolved = tuple(_clean(value) for value in inspection.unknown_fields if _clean(value))
+    else:
+        gear = _slot_gear(slot)
+        skills = _skills_from_slot(slot)
+        mundus = ""
+        source = "Sourced build evidence"
+        unresolved = ()
 
     lines = [
         player,
@@ -118,15 +160,22 @@ def _details_text(page, slot) -> str:
     lines.extend(f"• {value}" for value in gear) if gear else lines.append("• No gear detail recorded")
     lines.extend(("", "SKILLS / ABILITIES"))
     lines.extend(f"• {value}" for value in skills) if skills else lines.append("• No skill detail recorded")
+    if mundus:
+        lines.extend(("", "MUNDUS", mundus))
 
-    if saved_build is None and _clean(slot.unresolved):
-        lines.extend(
-            (
-                "",
-                "SOURCE BOUNDARY",
-                "This recruit setup is sourced evidence. Missing traits, enchants, CP, bar placement, food, potions, or other fields remain unresolved rather than being invented.",
+    if saved_build is None:
+        lines.extend(("", "SOURCE", source))
+        if unresolved:
+            lines.extend(("", "UNRESOLVED"))
+            lines.extend(f"• {value}" for value in unresolved)
+        elif _clean(slot.unresolved):
+            lines.extend(
+                (
+                    "",
+                    "SOURCE BOUNDARY",
+                    "This recruit setup is sourced evidence. Missing traits, enchants, CP, bar placement, food, potions, or other fields remain unresolved rather than being invented.",
+                )
             )
-        )
     return "\n".join(lines)
 
 
