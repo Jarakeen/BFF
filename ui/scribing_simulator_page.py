@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_data_dir
 from services.scribing_catalog import (
     compatible_affix,
     compatible_focus,
@@ -19,6 +20,7 @@ from services.scribing_catalog import (
     result_name,
     skill_line_for_grimoire,
 )
+from services.scribing_result_service import ScribingResultService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -28,15 +30,12 @@ from ui.ux_icons import set_button_icon
 
 
 class ScribingSimulatorPage(FoundryPage):
-    """Standalone theorycrafting workspace for ESO Scribing recipes.
-
-    The page intentionally reuses the Foundry's own canonical scribing catalog
-    instead of embedding or depending on a third-party web simulator.
-    """
+    """Standalone theorycrafting workspace for ESO Scribing recipes."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._loading = False
+        self.result_service = ScribingResultService(get_data_dir() / "eso.db")
         self._build_ui()
         self.reset()
 
@@ -152,6 +151,17 @@ class ScribingSimulatorPage(FoundryPage):
         self._loading = False
         self._refresh_preview()
 
+    def _verified_result_name(self, grimoire: str, focus: str) -> tuple[str, str]:
+        if not focus:
+            return "", ""
+        observed = self.result_service.result_name(grimoire, focus)
+        if observed:
+            return observed, "eso_client"
+        static = result_name(grimoire, focus)
+        if static:
+            return static, "catalog"
+        return "", ""
+
     def _refresh_preview(self, *_args) -> None:
         if self._loading:
             return
@@ -166,13 +176,18 @@ class ScribingSimulatorPage(FoundryPage):
             self.skill_line.setText("Select a base Scribing skill to begin.")
             self.recipe.clear()
             self.compatibility.clear()
-            self.note.setText(
-                "This simulator uses Black Feather Foundry's canonical Scribing catalog and does not depend on an online calculator."
-            )
+            if self.result_service.available:
+                self.note.setText(
+                    f"Verified ESO client result-name catalog loaded: {self.result_service.count} Grimoire + Focus pairs."
+                )
+            else:
+                self.note.setText(
+                    "No verified ESO client result-name extract is loaded yet. The simulator will use explicit static mappings only."
+                )
             self.status.info("Scribing Simulator ready.")
             return
 
-        verified_name = result_name(grimoire, focus) if focus else ""
+        verified_name, name_source = self._verified_result_name(grimoire, focus)
         self.result_title.setText((verified_name or grimoire).upper())
         line = skill_line_for_grimoire(grimoire) or "Unknown skill line"
         self.skill_line.setText(f"Skill line: {line}")
@@ -195,11 +210,20 @@ class ScribingSimulatorPage(FoundryPage):
         )
 
         complete = all((focus, signature, affix))
-        if verified_name:
-            self.note.setText("Result name is explicitly verified in the Foundry catalog for this Grimoire + Focus pair.")
+        if name_source == "eso_client":
+            version = self.result_service.game_version or str(self.result_service.api_version or "")
+            suffix = f" ({version})" if version else ""
+            self.note.setText(
+                "Result name observed from the official ESO client Scribing API"
+                f"{suffix} for this Grimoire + Focus pair."
+            )
+        elif name_source == "catalog":
+            self.note.setText(
+                "Result name is explicitly verified in the Foundry static catalog for this Grimoire + Focus pair."
+            )
         elif focus:
             self.note.setText(
-                "The recipe is valid at the Grimoire-compatibility level. The exact transformed skill name is not normalized yet, so BFF will not invent one."
+                "The exact transformed skill name has not been verified yet, so BFF will not invent one."
             )
         else:
             self.note.setText("Choose one script from each column to complete the recipe.")
