@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 import math
 
@@ -47,10 +48,12 @@ class UltimateScheduleRule:
 class UltimateRotationScheduler:
     """Place explicitly available ultimates into eligible same-bar action slots.
 
-    This first slice preserves all existing timestamps and bar swaps. Each supplied
-    availability time may claim the first SKILL slot on the matching bar at or
-    after that time. Availability that cannot be placed remains explicit unresolved
-    evidence. The scheduler never invents Ultimate generation or availability.
+    Existing timestamps and bar swaps stay fixed. An Ultimate may claim the first
+    eligible SKILL slot on its bar at or after availability. The displaced skill is
+    cascaded into the next same-bar skill slot, pushing that occupant forward in
+    turn. This preserves same-bar skill order as far as the fixed plan horizon
+    allows. Any action still displaced at the end remains explicit unresolved
+    evidence rather than being silently lost.
     """
 
     def apply(
@@ -74,8 +77,16 @@ class UltimateRotationScheduler:
         assumptions.append(
             "ultimate scheduling preserves existing timestamps and explicit bar swaps"
         )
+        assumptions.append(
+            "skills displaced by an ultimate cascade into later same-bar skill slots while timestamps remain fixed"
+        )
 
         used: set[int] = set()
+        displaced: dict[str, deque[RotationAction]] = {
+            "front": deque(),
+            "back": deque(),
+        }
+
         for action in plan.actions:
             if action.kind is not RotationActionKind.SKILL:
                 actions.append(action)
@@ -94,24 +105,43 @@ class UltimateRotationScheduler:
                 selected_rule = rule
                 break
 
-            if selected_rule is None:
-                actions.append(action)
+            bar = str(action.bar or "").casefold()
+            queue = displaced.get(bar)
+
+            if selected_rule is not None:
+                used.add(selected_index)
+                actions.append(
+                    RotationAction(
+                        time_seconds=action.time_seconds,
+                        sequence=action.sequence,
+                        kind=RotationActionKind.ULTIMATE,
+                        name=selected_rule.skill_name,
+                        bar=action.bar,
+                    )
+                )
+                if queue is not None:
+                    queue.append(action)
+                unresolved.append(
+                    f"ultimate '{selected_rule.skill_name}' claimed the {action.time_seconds:g}s "
+                    f"{action.bar}-bar slot from '{action.name}'; displaced skill will cascade to the next same-bar skill slot"
+                )
                 continue
 
-            used.add(selected_index)
-            actions.append(
-                RotationAction(
-                    time_seconds=action.time_seconds,
-                    sequence=action.sequence,
-                    kind=RotationActionKind.ULTIMATE,
-                    name=selected_rule.skill_name,
-                    bar=action.bar,
+            if queue:
+                replacement = queue.popleft()
+                actions.append(
+                    RotationAction(
+                        time_seconds=action.time_seconds,
+                        sequence=action.sequence,
+                        kind=replacement.kind,
+                        name=replacement.name,
+                        bar=action.bar,
+                    )
                 )
-            )
-            unresolved.append(
-                f"ultimate '{selected_rule.skill_name}' claimed the {action.time_seconds:g}s "
-                f"{action.bar}-bar slot from '{action.name}'; displaced-action priority is unresolved"
-            )
+                queue.append(action)
+                continue
+
+            actions.append(action)
 
         for index, (available_at, _rule_index, rule) in enumerate(pending):
             if index in used:
@@ -120,6 +150,15 @@ class UltimateRotationScheduler:
                 f"ultimate '{rule.skill_name}' became explicitly available at {available_at:g}s "
                 f"but no eligible {rule.bar}-bar skill slot remained"
             )
+
+        for bar in ("front", "back"):
+            queue = displaced[bar]
+            while queue:
+                action = queue.popleft()
+                unresolved.append(
+                    f"skill '{action.name}' was displaced beyond the {plan.duration_seconds:g}s plan horizon "
+                    f"after same-bar ultimate insertion on {bar} bar"
+                )
 
         return RotationPlan(
             character_name=plan.character_name,
