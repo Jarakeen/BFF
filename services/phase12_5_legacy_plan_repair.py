@@ -99,6 +99,18 @@ class Phase125LegacyPlanRepairService:
             not in {"", "recruitment needed"}
         )
 
+    @classmethod
+    def _team_names(cls, member: RosterMember) -> list[str]:
+        values: list[str] = []
+        seen: set[str] = set()
+        for raw in str(getattr(member, "Team", "") or "").split(","):
+            value = cls._clean(raw)
+            key = value.casefold()
+            if value and key not in seen:
+                seen.add(key)
+                values.append(value)
+        return values
+
     def inspect(
         self,
         *,
@@ -161,6 +173,13 @@ class Phase125LegacyPlanRepairService:
                 updated_slots.append(slot)
                 continue
             build = self._matching_builds(builds, slot)[0]
+            member = self._matching_members(roster_members, slot)[0]
+            memberships = self._team_names(member)
+            if plan.name.casefold() not in {name.casefold() for name in memberships}:
+                memberships.append(plan.name)
+                member.Team = ", ".join(memberships)
+                self.roster.update_member(member)
+
             updated_slots.append(
                 GeneratedRosterPlanSlot(
                     slot_name=slot.slot_name,
