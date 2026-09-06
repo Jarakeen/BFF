@@ -97,6 +97,19 @@ def test_optimization_analysis_only_counts_selected_saved_builds_and_recruits() 
     assert "recruits += 1" in source
 
 
+def test_canonical_optimization_analysis_replaces_placeholder_surfaces() -> None:
+    source = Path("ui/team_optimization_canonical_analysis_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'page.analysis_card.title_label.setText("Canonical Team Analysis")' in source
+    assert 'page.support_card.title_label.setText("Static Support Capabilities")' in source
+    assert 'page.risks_card.title_label.setText("Evidence Boundaries & Risks")' in source
+    assert 'for name in ("gear_card", "skill_card", "notes_card")' in source
+    assert "card.hide()" in source
+    assert "card.setMaximumHeight(0)" in source
+
+
 def test_canonical_optimization_analysis_is_installed_after_roster_load_refocus() -> None:
     installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
         encoding="utf-8"
