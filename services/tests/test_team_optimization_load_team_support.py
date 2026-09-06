@@ -28,7 +28,9 @@ def test_load_team_targets_active_compare_editor_and_remembers_identity() -> Non
     assert "return page.team_table" in source
     assert '"_optimization_loaded_team_name_b"' in source
     assert '"_optimization_loaded_team_name_a"' in source
-    assert "_remember_loaded_team(page, table, plan.name)" in source
+    assert '"_optimization_loaded_generated_plan_b"' in source
+    assert '"_optimization_loaded_generated_plan_a"' in source
+    assert "_remember_loaded_team(page, table, plan.name, plan)" in source
 
 
 def test_roster_only_team_fallback_still_consumes_each_player_once() -> None:
@@ -48,3 +50,18 @@ def test_optimization_updates_loaded_team_under_same_name() -> None:
     assert "name=team_name" in source
     assert 'f"Updated team {plan.name!r} in Roster' in source
     assert '"required_slot_combo", "required_class_combo", "required_gear_input"' in source
+
+
+def test_optimization_round_trip_preserves_unchanged_structured_assignment_evidence() -> None:
+    source = Path("ui/team_optimization_role_cleanup.py").read_text(encoding="utf-8")
+
+    assert "def _original_slot_by_name" in source
+    assert "def _slot_from_optimization_row" in source
+    assert "source_kind=original.source_kind" in source
+    assert "source_name=original.source_name" in source
+    assert "source_url=original.source_url" in source
+    assert "candidate_id=original.candidate_id" in source
+    assert "gear_sets=original.gear_sets" in source
+    assert "skills=original.skills" in source
+    assert "mundus=original.mundus" in source
+    assert "elif not is_saved and original.kind != \"saved\"" in source
