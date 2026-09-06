@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from models.build_model import BuildRoster
 from models.roster_model import RosterMember
@@ -21,19 +22,32 @@ class Phase125LegacyPlanRepair:
     blocked_source_slots: tuple[str, ...]
 
     @property
+    def normalizable_slots(self) -> tuple[str, ...]:
+        return tuple(dict.fromkeys((*self.ambiguous_slots, *self.blocked_source_slots)))
+
+    @property
     def has_repairs(self) -> bool:
-        return self.team_identity_missing or bool(self.promotable_slots)
+        return (
+            self.team_identity_missing
+            or bool(self.promotable_slots)
+            or bool(self.normalizable_slots)
+        )
 
 
 class Phase125LegacyPlanRepairService:
     """Repair only provable pre-Phase-12.5 generated-plan inconsistencies.
 
-    The service is deliberately conservative. Missing Roster team identity is safe to
-    backfill because a persisted generated plan now canonically owns that user-facing
-    team identity. A legacy recruit chair may be promoted to ``saved`` only when its
-    real player/character identity and exact saved build resolve uniquely and the
-    source does not identify non-roster evidence such as ESO Logs or a reference
-    template. Ambiguous rows remain untouched.
+    Missing Roster team identity is safe to backfill because a persisted generated
+    plan now canonically owns that user-facing team identity. A legacy recruit chair
+    may be promoted to ``saved`` only when its real player/character identity and
+    exact saved build resolve uniquely and the source does not identify non-roster
+    evidence such as ESO Logs or a reference template.
+
+    A real player name on a recruit chair that cannot be promoted is still invalid
+    canonical ownership. Those rows are normalized back to ``Recruitment Needed``
+    while their original identity/source payload is preserved in a dedicated legacy
+    evidence sidecar. This removes the contradiction without inventing an assignment
+    and keeps the historical clue available for later encounter-aware review.
     """
 
     _BLOCKED_SOURCE_KINDS = frozenset({"esologs_snapshot", "reference_template"})
@@ -46,6 +60,24 @@ class Phase125LegacyPlanRepairService:
     ) -> None:
         self.plans = plans
         self.roster = roster
+        self.db = plans.db
+        self._ensure_evidence_schema()
+
+    def _ensure_evidence_schema(self) -> None:
+        self.db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS generated_roster_legacy_assignment_evidence (
+                plan_id INTEGER NOT NULL
+                    REFERENCES generated_roster_plan(id)
+                    ON DELETE CASCADE,
+                slot_name TEXT NOT NULL,
+                evidence_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (plan_id, slot_name)
+            )
+            """
+        )
+        self.db.commit()
 
     @staticmethod
     def _clean(value: object) -> str:
@@ -111,6 +143,65 @@ class Phase125LegacyPlanRepairService:
                 values.append(value)
         return values
 
+    @staticmethod
+    def _slot_payload(slot: GeneratedRosterPlanSlot) -> dict[str, object]:
+        return {
+            "slot_name": slot.slot_name,
+            "kind": slot.kind,
+            "player_name": slot.player_name,
+            "character_name": slot.character_name,
+            "eso_class": slot.eso_class,
+            "build_name": slot.build_name,
+            "role": slot.role,
+            "source_kind": slot.source_kind,
+            "source_name": slot.source_name,
+            "source_url": slot.source_url,
+            "candidate_id": slot.candidate_id,
+            "gear_sets": list(slot.gear_sets),
+            "skills": list(slot.skills),
+            "mundus": slot.mundus,
+            "unresolved": slot.unresolved,
+        }
+
+    def _remember_legacy_evidence(
+        self, plan: GeneratedRosterPlan, slot: GeneratedRosterPlanSlot
+    ) -> None:
+        payload = json.dumps(self._slot_payload(slot), ensure_ascii=False, sort_keys=True)
+        self.db.execute(
+            """
+            INSERT INTO generated_roster_legacy_assignment_evidence (
+                plan_id, slot_name, evidence_json, updated_at
+            ) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(plan_id, slot_name) DO UPDATE SET
+                evidence_json = excluded.evidence_json,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (plan.plan_id, slot.slot_name, payload),
+        )
+        self.db.commit()
+
+    def legacy_assignment_evidence(
+        self, plan_name: str, slot_name: str
+    ) -> dict[str, object] | None:
+        plan = self.plans.load_plan(plan_name)
+        if plan is None:
+            return None
+        row = self.db.execute(
+            """
+            SELECT evidence_json
+            FROM generated_roster_legacy_assignment_evidence
+            WHERE plan_id = ? AND slot_name = ? COLLATE NOCASE
+            """,
+            (plan.plan_id, self._clean(slot_name)),
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            value = json.loads(str(row["evidence_json"] or "{}"))
+        except json.JSONDecodeError:
+            return None
+        return value if isinstance(value, dict) else None
+
     def inspect(
         self,
         *,
@@ -148,6 +239,27 @@ class Phase125LegacyPlanRepairService:
             blocked_source_slots=tuple(blocked),
         )
 
+    @staticmethod
+    def _normalized_recruit(slot: GeneratedRosterPlanSlot) -> GeneratedRosterPlanSlot:
+        return GeneratedRosterPlanSlot(
+            slot_name=slot.slot_name,
+            kind=slot.kind,
+            player_name="Recruitment Needed",
+            character_name="",
+            eso_class=slot.eso_class,
+            build_name=slot.build_name,
+            gear_summary=slot.gear_summary,
+            unresolved=slot.unresolved,
+            role=slot.role,
+            source_kind=slot.source_kind,
+            source_name=slot.source_name,
+            source_url=slot.source_url,
+            candidate_id=slot.candidate_id,
+            gear_sets=slot.gear_sets,
+            skills=slot.skills,
+            mundus=slot.mundus,
+        )
+
     def apply(
         self,
         *,
@@ -164,14 +276,21 @@ class Phase125LegacyPlanRepairService:
             self.roster.ensure_team_name(plan.name)
 
         promotable = {name.casefold() for name in inspection.promotable_slots}
-        if not promotable:
+        normalizable = {name.casefold() for name in inspection.normalizable_slots}
+        if not promotable and not normalizable:
             return self.plans.load_plan(plan.name) or plan
 
         updated_slots: list[GeneratedRosterPlanSlot] = []
         for slot in plan.slots:
-            if slot.slot_name.casefold() not in promotable:
+            slot_key = slot.slot_name.casefold()
+            if slot_key in normalizable:
+                self._remember_legacy_evidence(plan, slot)
+                updated_slots.append(self._normalized_recruit(slot))
+                continue
+            if slot_key not in promotable:
                 updated_slots.append(slot)
                 continue
+
             build = self._matching_builds(builds, slot)[0]
             member = self._matching_members(roster_members, slot)[0]
             memberships = self._team_names(member)
