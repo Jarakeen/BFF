@@ -25,6 +25,10 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.rotation_generation_support import (
+    RotationGenerationRequest,
+    RotationGenerationSupport,
+)
 
 
 class SustainGraph(QWidget):
@@ -119,6 +123,7 @@ class RotationDashboardPage(FoundryPage):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.roster = self.build_service.load()
+        self.rotation_generation = RotationGenerationSupport()
         self.rotation_plan: RotationPlan | None = None
         self._build_ui()
         self._load_characters()
@@ -205,6 +210,7 @@ class RotationDashboardPage(FoundryPage):
         self.rotation_type_combo = QComboBox()
         self.rotation_type_combo.addItems(["Static", "Semi-static", "Dynamic"])
         self.rotation_type_combo.setCurrentText("Semi-static")
+        self.rotation_type_combo.currentTextChanged.connect(self._refresh_generate_button)
 
         self.target_type_combo = QComboBox()
         self.target_type_combo.addItems(["Single Target", "AoE"])
@@ -277,8 +283,9 @@ class RotationDashboardPage(FoundryPage):
         self.generate_button.setProperty("primary", True)
         self.generate_button.setEnabled(False)
         self.generate_button.setToolTip(
-            "Generator wiring will enable this when the Phase 13 planner owns the complete saved-build schedule path."
+            "Generate the first deterministic 60-second semi-static schedule from the selected saved build."
         )
+        self.generate_button.clicked.connect(self.generate_rotation)
         self.clear_plan_button = QPushButton("Clear Plan")
         self.clear_plan_button.clicked.connect(self.clear_rotation_plan)
         action_row.addWidget(self.generate_button)
@@ -380,6 +387,17 @@ class RotationDashboardPage(FoundryPage):
             if str(name or "").strip()
         ]
 
+    def _refresh_generate_button(self) -> None:
+        build = self._selected_build()
+        supported_mode = self.rotation_type_combo.currentText() == "Semi-static"
+        has_ordinary_skill = False
+        if build is not None:
+            has_ordinary_skill = bool(
+                self._clean_skills(list(getattr(build, "FrontBarSkills", []) or [])[:5])
+                or self._clean_skills(list(getattr(build, "BackBarSkills", []) or [])[:5])
+            )
+        self.generate_button.setEnabled(bool(build is not None and supported_mode and has_ordinary_skill))
+
     def _refresh_build_context(self) -> None:
         build = self._selected_build()
         self.priority_table.setRowCount(0)
@@ -391,6 +409,7 @@ class RotationDashboardPage(FoundryPage):
             self.build_summary.setText("No saved build selected.")
             self.resource_summary.setText("Rotation evidence: unavailable")
             self.sustain_graph.clear_points()
+            self.generate_button.setEnabled(False)
             self.status.warning("No saved build is available for the selected character.")
             return
 
@@ -439,8 +458,33 @@ class RotationDashboardPage(FoundryPage):
             "Ultimate timing: unresolved"
         )
         self.sustain_graph.clear_points()
+        self._refresh_generate_button()
         if self.rotation_plan is None:
             self.status.info(f"Loaded saved build: {character} • {build_name}.")
+
+    def generate_rotation(self) -> None:
+        """Generate the first authoritative semi-static schedule for the selected build."""
+        build = self._selected_build()
+        if build is None:
+            self.status.warning("Select a saved build before generating a rotation.")
+            return
+
+        settings = self.rotation_settings()
+        request = RotationGenerationRequest(
+            duration_seconds=60.0,
+            rotation_type=str(settings["rotation_type"]),
+            potion=str(settings["potion"]),
+            potion_on_cooldown=bool(settings["potion_on_cooldown"]),
+            weave_light_attacks=True,
+        )
+
+        try:
+            plan = self.rotation_generation.generate(build=build, request=request)
+        except ValueError as exc:
+            self.status.warning(str(exc))
+            return
+
+        self.set_rotation_plan(plan)
 
     def set_rotation_plan(self, plan: RotationPlan) -> None:
         """Render one authoritative Phase 13 plan without reinterpreting it."""
