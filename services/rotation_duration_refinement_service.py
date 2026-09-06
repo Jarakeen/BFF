@@ -8,6 +8,7 @@ from minmax.duration_aware_rotation_scheduler import DurationAwareRotationSchedu
 from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
+from minmax.rotation_wait_decision import PrematureRecastDecisionProvider
 from services.rotation_duration_analysis_service import (
     RotationDurationAnalysisService,
     RotationDurationProjection,
@@ -42,6 +43,7 @@ class RotationDurationRefinementService:
         plan: RotationPlan,
         *,
         priorities: AbilityPriorityList | None = None,
+        wait_decision: PrematureRecastDecisionProvider | None = None,
     ) -> RotationDurationRefinement:
         # The first projection supplies canonical duration rules used to refine
         # the seed schedule. It is not returned as final evidence because its
@@ -52,7 +54,11 @@ class RotationDurationRefinementService:
             if priorities is not None
             else self.scheduler
         )
-        refined = scheduler.refine(plan, seed_projection.rules)
+        refined = scheduler.refine(
+            plan,
+            seed_projection.rules,
+            wait_decision=wait_decision,
+        )
 
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
