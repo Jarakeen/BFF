@@ -9,6 +9,22 @@ from services.accessibility_preferences import VISUAL_THEME_FOUNDRY
 from services.share_document_export import ShareDocumentExporter, _paragraph_text, resolve_share_theme
 
 
+def _public_assignment_build(item: Mapping[str, object]) -> str:
+    """Return a recruit-safe build label for the human-facing roster PDF.
+
+    ESO Logs player names are evidence provenance, not recruit identities. Generated
+    ESO Logs candidate labels use bullet-delimited segments ending in the observed
+    player's name, so remove only that final identity segment for recruit rows.
+    """
+
+    build = str(item.get("build") or "").strip()
+    player = str(item.get("player") or "").strip()
+    if player.casefold() != "recruitment needed" or " • " not in build:
+        return build
+    parts = [part.strip() for part in build.split(" • ") if part.strip()]
+    return " • ".join(parts[:-1]) if len(parts) >= 3 else build
+
+
 class TeamScheduleShareDocumentExporter(ShareDocumentExporter):
     """Roster share sheets with an obvious, compact team schedule band."""
 
@@ -109,23 +125,20 @@ class TeamScheduleShareDocumentExporter(ShareDocumentExporter):
 
         if assignments:
             story.append(Paragraph("ASSIGNMENTS", styles["section"]))
-            rows = [["PLAYER", "ROLE", "CLASS", "BUILD", "PRIMARY", "SECONDARY", "READY"]]
+            rows = [["PLAYER", "CLASS", "ROLE", "BUILD"]]
             for item in assignments:
                 rows.append([
                     Paragraph(_paragraph_text(item.get("player")), styles["small"]),
-                    Paragraph(_paragraph_text(item.get("role")), styles["small"]),
                     Paragraph(_paragraph_text(item.get("class")), styles["small"]),
-                    Paragraph(_paragraph_text(item.get("build")), styles["small"]),
-                    Paragraph(_paragraph_text(item.get("primary")), styles["small"]),
-                    Paragraph(_paragraph_text(item.get("secondary")), styles["small"]),
-                    Paragraph(_paragraph_text(item.get("ready")), styles["center"]),
+                    Paragraph(_paragraph_text(item.get("role")), styles["small"]),
+                    Paragraph(_paragraph_text(_public_assignment_build(item)), styles["small"]),
                 ])
             story.append(self._card_table(
                 rl,
                 theme,
                 rows,
-                [0.90 * inch, 0.65 * inch, 0.72 * inch, 0.80 * inch, 1.27 * inch, 1.35 * inch, 0.55 * inch],
-                font_size=6.5,
+                [1.20 * inch, 1.15 * inch, 0.95 * inch, 3.45 * inch],
+                font_size=7.2,
             ))
             story.append(Spacer(1, 9))
 
