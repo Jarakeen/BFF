@@ -145,6 +145,14 @@ def install() -> None:
     )
     install_roster_assignment_build_details()
 
+    # Generated recruit chairs can now be replaced by real roster members. The
+    # original sourced prescription stays in structured sidecar evidence so later
+    # encounter-aware evaluation can compare intent with the adopted saved build.
+    from ui.roster_recruit_adoption_support import (
+        install as install_roster_recruit_adoption,
+    )
+    install_roster_recruit_adoption()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
