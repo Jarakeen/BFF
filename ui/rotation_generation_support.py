@@ -46,10 +46,10 @@ class RotationGenerationSupport:
 
     Generation builds the deterministic saved-bar seed schedule, optionally orders
     ordinary skills by an explicit AbilityPriorityList, refines the plan using
-    canonical positive skill durations, optionally projects one explicitly selected
-    slot-6 ultimate through the shared Ultimate resource model, then analyzes the
-    final plan for dashboard duration evidence. Potion cadence, execute rules, and
-    dynamic bar timing remain later Phase 13 work.
+    canonical positive skill durations and the same explicit priorities, optionally
+    projects one explicitly selected slot-6 ultimate through the shared Ultimate
+    resource model, then analyzes the final plan for dashboard duration evidence.
+    Potion cadence, execute rules, and dynamic bar timing remain later Phase 13 work.
     """
 
     def __init__(
@@ -76,8 +76,15 @@ class RotationGenerationSupport:
     ) -> RotationGenerationResult:
         """Return the final plan together with generation evidence."""
         definition = self.build_definition(build=build, request=request)
+        priority_list = self._priority_list(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
-        refinement = self.duration_refinement.refine(seed_plan)
+        if priority_list is None:
+            refinement = self.duration_refinement.refine(seed_plan)
+        else:
+            refinement = self.duration_refinement.refine(
+                seed_plan,
+                priorities=priority_list,
+            )
         final_plan = refinement.plan
         ultimate_projection: RotationUltimateProjection | None = None
 
@@ -119,30 +126,9 @@ class RotationGenerationSupport:
 
         character_name = self._character_name(build)
         build_name = self._build_name(build)
-        role = str(getattr(build, "Role", "") or "Unspecified").strip()
         front_slots = self._ordinary_skill_slots(getattr(build, "FrontBarSkills", []))
         back_slots = self._ordinary_skill_slots(getattr(build, "BackBarSkills", []))
-
-        priority_list: AbilityPriorityList | None = None
-        if request.ability_priorities:
-            priority_list = AbilityPriorityList(
-                character_name=character_name,
-                build_name=build_name,
-                role=role,
-                entries=tuple(request.ability_priorities),
-            )
-            self._validate_priority_coverage(
-                priority_list=priority_list,
-                ordinary_slots=tuple(
-                    ("front", slot, skill) for slot, skill in front_slots
-                ),
-            )
-            self._validate_priority_coverage(
-                priority_list=priority_list,
-                ordinary_slots=tuple(
-                    ("back", slot, skill) for slot, skill in back_slots
-                ),
-            )
+        priority_list = self._priority_list(build=build, request=request)
 
         front_skills = self._ordered_ordinary_skills(
             bar="front",
@@ -186,7 +172,7 @@ class RotationGenerationSupport:
             )
         else:
             assumptions.append(
-                "dashboard seed order follows explicit ability priority values within each saved bar; lower numbers are higher priority"
+                "dashboard seed and due-refresh selection use explicit ability priority values within each saved bar; lower numbers are higher priority"
             )
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
@@ -233,6 +219,37 @@ class RotationGenerationSupport:
             assumptions=tuple(assumptions),
             unresolved=tuple(unresolved),
         )
+
+    def _priority_list(
+        self,
+        *,
+        build,
+        request: RotationGenerationRequest,
+    ) -> AbilityPriorityList | None:
+        if not request.ability_priorities:
+            return None
+
+        priority_list = AbilityPriorityList(
+            character_name=self._character_name(build),
+            build_name=self._build_name(build),
+            role=str(getattr(build, "Role", "") or "Unspecified").strip(),
+            entries=tuple(request.ability_priorities),
+        )
+        front_slots = self._ordinary_skill_slots(getattr(build, "FrontBarSkills", []))
+        back_slots = self._ordinary_skill_slots(getattr(build, "BackBarSkills", []))
+        self._validate_priority_coverage(
+            priority_list=priority_list,
+            ordinary_slots=tuple(
+                ("front", slot, skill) for slot, skill in front_slots
+            ),
+        )
+        self._validate_priority_coverage(
+            priority_list=priority_list,
+            ordinary_slots=tuple(
+                ("back", slot, skill) for slot, skill in back_slots
+            ),
+        )
+        return priority_list
 
     @staticmethod
     def _mode(value: str) -> RotationMode:
