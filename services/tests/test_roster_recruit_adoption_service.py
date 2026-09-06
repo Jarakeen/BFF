@@ -135,8 +135,6 @@ def test_adopt_prescribed_setup_creates_new_build_without_mutating_base(tmp_path
     assert by_name["DF Healer"].Mundus == "The Ritual"
     assert by_name["GH Healer"].Mundus == "The Atronach"
 
-    # The prescription names gear sets but does not identify exact equipment slots.
-    # Adoption must not invent those placements on the new canonical build.
     assert by_name["GH Healer"].Armor["Head"]["Set"] == "Spell Power Cure"
     assert "Serpent's Disdain" not in {
         values.get("Set", "") for values in by_name["GH Healer"].Armor.values()
@@ -191,6 +189,9 @@ def test_adoption_refuses_to_overwrite_an_existing_build_name(tmp_path: Path) ->
 
 def test_recruit_adoption_ui_keeps_encounter_future_boundary_explicit() -> None:
     source = Path("ui/roster_recruit_adoption_support.py").read_text(encoding="utf-8")
+    details = Path("ui/roster_recruit_prescription_details_support.py").read_text(
+        encoding="utf-8"
+    )
     installer = Path("ui/team_optimization_hybrid_anchor_support.py").read_text(
         encoding="utf-8"
     )
@@ -200,4 +201,8 @@ def test_recruit_adoption_ui_keeps_encounter_future_boundary_explicit() -> None:
     assert '"Create new draft from prescribed setup"' in source
     assert "Original recruit prescription preserved for later encounter evaluation" in source
     assert "Gear-set lists and observed abilities are kept as structured prescription evidence" in source
+    assert '"ORIGINAL RECRUIT PRESCRIPTION"' in details
+    assert '"ENCOUNTER BOUNDARY"' in details
+    assert "service.prescription_evidence(plan.name, slot.slot_name)" in details
     assert "install_roster_recruit_adoption()" in installer
+    assert "install_roster_recruit_prescription_details()" in installer
