@@ -4,6 +4,22 @@ _INSTALLED = False
 _ORIGINAL_REFRESH = None
 
 
+def _install_reference_badges(collectibles_dashboard_page) -> None:
+    # Reuse the existing semantic artwork so the recovered reference ledgers
+    # render as first-class dashboard tiles instead of falling back to text-only
+    # glyphs. Furnishing Plans belongs with Furnishings; Recipes uses the vial-
+    # style Fragments artwork until a dedicated recipe badge sheet exists.
+    badge_maps = (
+        collectibles_dashboard_page.BFF_BADGES,
+        collectibles_dashboard_page.RYLO_BADGES,
+    )
+    for badges in badge_maps:
+        if "Furnishing Plans" not in badges and "Furnishings" in badges:
+            badges["Furnishing Plans"] = badges["Furnishings"]
+        if "Recipes" not in badges and "Fragments" in badges:
+            badges["Recipes"] = badges["Fragments"]
+
+
 def install() -> None:
     global _INSTALLED, _ORIGINAL_REFRESH
     if _INSTALLED:
@@ -12,6 +28,8 @@ def install() -> None:
     from services.learned_recipe_service import LearnedRecipeService
     from services.lorebook_service import LorebookService
     from ui import collectibles_dashboard_page
+
+    _install_reference_badges(collectibles_dashboard_page)
 
     existing_routes = {spec.route for spec in collectibles_dashboard_page.DASHBOARD_SPECS}
     additions = []
