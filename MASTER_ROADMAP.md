@@ -499,10 +499,69 @@ The healing value used by the closeout audit is a modeled comparison score, not 
 
 ---
 
+# PHASE 12.5 · Team Workflow Integration
+**Status: 🟡 Active**
+
+Phase 12.5 is the product-integration bridge between the completed bounded build optimizer and the later temporal engines. It does **not** expand Phase 12's mathematical search scope and it does **not** substitute UI plumbing for Phase 13 Rotation Engine work.
+
+The authoritative user workflow is:
+
+```text
+COMP MAKER
+   ↓
+NAMED TEAM + EXACT CHAIR / BUILD ASSIGNMENTS
+   ↓
+ROSTER
+   ↓
+LOAD TEAM IN OPTIMIZATION
+   ↓
+AUDIT / IMPROVE / COMPARE
+   ↓
+ROSTER
+```
+
+Active scope, in order:
+
+1. **Canonical team identity**
+   - a named team created in Comp Maker, displayed in Roster, and loaded in Optimization is the same user-facing team identity;
+   - generated-plan persistence may remain an implementation detail, but it must not create a second competing team concept in the UI;
+   - recruits remain assignment slots, never fabricated roster people.
+
+2. **Structured assignment persistence**
+   - preserve slot, player/recruit state, class, role, exact selected build, source identity, gear, skills/abilities, Mundus, candidate/template identity, and explicit unresolved fields where known;
+   - do not reconstruct structured application state by scraping human-readable evidence text when a canonical field can be persisted instead.
+
+3. **Visible assigned state in Comp Maker**
+   - each chair clearly shows the exact build/source currently assigned before transfer;
+   - explicit manual choices remain authoritative and are never silently reranked during transfer.
+
+4. **Hard-constraint routing integrity**
+   - class and required-gear constraints apply to every candidate source, including saved builds, reference templates, and ESO Logs snapshots;
+   - wrapper/install order may not bypass hard constraints.
+
+5. **Static Optimization integration groundwork**
+   - Optimization loads a named team from Roster and consumes existing canonical build, coverage, provider, sustain, and bounded optimization evidence;
+   - placeholder recommendation surfaces are replaced only where existing engine evidence supports the claim;
+   - temporal/rotation-dependent conclusions remain deferred to Phases 13–15.
+
+6. **Team A / Team B bounded comparison groundwork**
+   - compare only currently supported canonical/static metrics;
+   - do not label modeled single-event or bounded objective values as parse DPS, raid ceiling, or simulated encounter outcome.
+
+7. **Recruit → real player → reusable build workflow**
+   - a prescribed recruit chair can later be assigned to a real roster player without rebuilding the team;
+   - the player may keep an existing build or save the prescribed setup as a new reusable Build while preserving the original Build unchanged.
+
+**Phase 12.5 exit criteria:** a representative real team can be created in Comp Maker, saved and inspected in Roster, loaded into Optimization, and transferred back without losing or silently changing team identity, exact assignment choice, source, gear/skill evidence, hard constraints, recruit state, or unresolved boundaries. Focused regression tests must pass, a real-data end-to-end workflow must be demonstrated, and an appropriate full regression checkpoint must be recorded before Phase 13 is marked active.
+
+---
+
 # PHASE 13 · Rotation Engine
 **Status: 🔴 Planned**
 
 Start with semi-static rotations, then add dynamic priorities, duration/recast windows, resource awareness, proc alignment, execute, movement, interruptions, mechanic handling, and healing rotations.
+
+**Prerequisite gate:** Phase 12.5 Team Workflow Integration must be green before Phase 13 is marked active. Rotation evaluation must consume the canonical Character → Build → Team assignment path rather than introducing another page-specific build/team identity model.
 
 **Hardened exit criteria:** BFF can produce and evaluate a realistic damage, support, or healing rotation from verified skill behavior and resource constraints; action timing is deterministic from identical inputs; unsupported mechanics remain explicit; at least one real build is validated end-to-end; focused and appropriate regression gates pass.
 
@@ -534,7 +593,7 @@ Next Action
 
 Compare builds across DPS, burst, sustained damage, execute, uptime, sustain, survivability, positioning, mechanic compliance, support contribution, phase compression, and execution complexity.
 
-**Prerequisite gate:** Phases 9 and 10 must be green under the hardened completion standard. Encounter-aware optimization may not consume partially reviewed encounter truth as if it were complete.
+**Prerequisite gate:** Phases 9 and 10 must be green under the hardened completion standard. Encounter-aware optimization may not consume partially reviewed encounter truth as if it were complete. Phase 12.5 may expose bounded static comparison groundwork, but temporal or encounter-outcome claims require the later rotation/simulation dependencies they actually use.
 
 **Hardened exit criteria:** BFF answers which build produces the better outcome in a real canonically persisted encounter, explains why, preserves unknown/conflicting mechanics, and demonstrates the result against at least one real saved build and encounter.
 
