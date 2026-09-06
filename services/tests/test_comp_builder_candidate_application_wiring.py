@@ -38,14 +38,22 @@ def test_fill_from_roster_uses_saved_build_candidates_only():
     assert "no matching saved roster build" in source
 
 
-def test_comp_maker_send_to_roster_preserves_applied_candidate_build_evidence():
+def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
     assert "GeneratedRosterPlanSlot(" in source
-    assert 'kind="prescribed_player" if is_saved else "prescribed_recruit"' in source
+    assert 'kind="saved" if is_saved else "prescribed_recruit"' in source
     assert "build_name=candidate.name" in source
     assert 'gear_summary=" + ".join(candidate.gear_sets)' in source
-    assert "_candidate_unresolved(candidate, detail)" in source
+    assert "role=candidate.role or role" in source
+    assert "source_kind=candidate.source_kind" in source
+    assert "source_name=candidate.source_name" in source
+    assert "source_url=candidate.source_url" in source
+    assert "candidate_id=candidate.candidate_id" in source
+    assert "gear_sets=tuple(candidate.gear_sets)" in source
+    assert "skills=tuple(candidate.skills)" in source
+    assert "mundus=candidate.mundus" in source
+    assert "Observed/known skills:" not in source
 
 
 def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
