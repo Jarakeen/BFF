@@ -274,6 +274,108 @@ class EsoLogsClient:
         )
 
     # --------------------------------------------------
+    # Shared table plumbing
+    # --------------------------------------------------
+
+    def _fetch_table_data(
+        self,
+        report_code: str,
+        fight_id: int,
+        start_time: float,
+        end_time: float,
+        data_type: str,
+        hostility_type: str = "Friendlies",
+        source_id: int | None = None,
+        view_by: str | None = None,
+    ) -> dict:
+        """
+        Shared plumbing behind every reportData.report.table(...)
+        call -- Buffs/Debuffs (get_aura_table), Summary
+        (get_report_player_summary), and DamageDone/Healing/Casts/
+        Resources/Deaths (get_actor_table) all go through this one
+        query and differ only in which key they pull out of the
+        decoded `data` object afterward.
+
+        sourceID scopes every one of those dataTypes down to a
+        single actor -- the same numeric id ESO Logs shows as
+        "Anonymous N" when a report's names are hidden, since that
+        anonymization only replaces the display name, not the
+        actor id the API still keys everything on.
+
+        viewBy ("Source" | "Target" | "Ability") controls how a
+        DamageDone/Healing table's `entries` are grouped -- pass
+        "Ability" alongside a sourceID to get one actor's per-
+        ability breakdown instead of one row per player. Like the
+        rest of this client's newer additions, this argument is
+        written against the published v2 schema but hasn't been
+        checked against a live response.
+        """
+
+        code = self.normalize_report_code(report_code)
+
+        if not code:
+            raise EsoLogsApiError("Enter an ESO Logs report code or report URL.")
+
+        query = """
+        query ActorTable(
+          $code: String!
+          $fightIDs: [Int]!
+          $startTime: Float!
+          $endTime: Float!
+          $dataType: TableDataType!
+          $hostilityType: HostilityType!
+          $sourceID: Int
+          $viewBy: ViewType
+        ) {
+          reportData {
+            report(code: $code) {
+              table(
+                fightIDs: $fightIDs
+                startTime: $startTime
+                endTime: $endTime
+                dataType: $dataType
+                hostilityType: $hostilityType
+                sourceID: $sourceID
+                viewBy: $viewBy
+              )
+            }
+          }
+        }
+        """
+
+        variables = {
+            "code": code,
+            "fightIDs": [int(fight_id)],
+            "startTime": float(start_time),
+            "endTime": float(end_time),
+            "dataType": data_type,
+            "hostilityType": hostility_type,
+            "sourceID": source_id,
+            "viewBy": view_by,
+        }
+
+        data = self._query(query, variables)
+
+        report = (data.get("reportData") or {}).get("report") or {}
+
+        table = report.get("table") or {}
+
+        # The `table` field is a JSON scalar in the v2 API.
+        # Depending on the HTTP/GraphQL stack it may arrive as
+        # an already-decoded dict or as a JSON string.
+        if isinstance(table, str):
+            try:
+                table = json.loads(table)
+            except json.JSONDecodeError as exc:
+                raise EsoLogsApiError(
+                    f"ESO Logs returned an unreadable {data_type} table payload."
+                ) from exc
+
+        inner = table.get("data") if isinstance(table, dict) else None
+
+        return inner if isinstance(inner, dict) else {}
+
+    # --------------------------------------------------
     # Buff / debuff tables
     # --------------------------------------------------
 
@@ -296,6 +398,126 @@ class EsoLogsClient:
         hostilityType: "Friendlies" | "Enemies"
           (use Enemies + Debuffs to see debuffs the group
           landed on the boss.)
+        sourceID: optional -- scope to one actor's own buffs, or
+          the debuffs that one actor applied.
+        """
+
+        inner = self._fetch_table_data(
+            report_code,
+            fight_id,
+            start_time,
+            end_time,
+            data_type=data_type,
+            hostility_type=hostility_type,
+            source_id=source_id,
+        )
+
+        auras = inner.get("auras")
+
+        return auras or []
+
+    # --------------------------------------------------
+    # Damage / healing / other per-actor tables
+    # --------------------------------------------------
+
+    def get_actor_table(
+        self,
+        report_code: str,
+        fight_id: int,
+        start_time: float,
+        end_time: float,
+        data_type: str,
+        hostility_type: str = "Friendlies",
+        source_id: int | None = None,
+        view_by: str | None = None,
+    ) -> tuple[list[dict], float]:
+        """
+        Fetch a DamageDone/Healing/Casts/Resources/Deaths/Threat/
+        Survivability table for one fight and return
+        (entries, total): entries is that dataType's per-row
+        breakdown (each row at least `name`, `id`/`guid`, `total`),
+        and total is the table's own overall total for whatever
+        metric this dataType represents -- read from the table's
+        `total` field when present (so it matches what ESO Logs
+        itself would show) rather than re-summed client-side,
+        falling back to a client-side sum only if that field is
+        missing.
+
+        Pass sourceID to scope both entries and total to one
+        actor -- e.g. sourceID + dataType="Healing" gets one
+        healer's own healing breakdown and total, and sourceID +
+        dataType="DamageDone" + viewBy="Ability" gets one DPS's
+        per-ability damage breakdown.
+
+        This `entries`/`total` shape matches the published v2
+        schema for these dataTypes but -- like
+        get_report_player_summary -- hasn't been checked against a
+        live response, so a schema drift here surfaces as a clear
+        EsoLogsApiError rather than a silently empty dashboard.
+        """
+
+        inner = self._fetch_table_data(
+            report_code,
+            fight_id,
+            start_time,
+            end_time,
+            data_type=data_type,
+            hostility_type=hostility_type,
+            source_id=source_id,
+            view_by=view_by,
+        )
+
+        entries = inner.get("entries")
+
+        if entries is None:
+            raise EsoLogsApiError(
+                f"The {data_type} table response did not include `entries` "
+                "in the shape this client expects -- check the raw "
+                "response against the current v2 schema."
+            )
+
+        total = inner.get("total")
+
+        if not isinstance(total, (int, float)):
+            total = sum(
+                float(e.get("total", 0.0))
+                for e in entries
+                if isinstance(e, dict)
+            )
+
+        return entries, float(total)
+
+    # --------------------------------------------------
+    # Output-over-time graphs
+    # --------------------------------------------------
+
+    def get_output_graph(
+        self,
+        report_code: str,
+        fight_id: int,
+        start_time: float,
+        end_time: float,
+        data_type: str,
+        hostility_type: str = "Friendlies",
+        source_id: int | None = None,
+    ) -> list[tuple[float, float]]:
+        """
+        Fetch a DamageDone/Healing graph -- a value-over-time series
+        -- for one fight via reportData.report.graph(...), the
+        time-series counterpart to get_actor_table's aggregated
+        breakdown. Pass sourceID to scope the series to one actor.
+
+        Returns a list of (seconds_into_fight, value) points,
+        sorted by time. `value` is whatever amount ESO Logs
+        attributes to that time bucket -- not a pre-smoothed rate --
+        so a rolling window over these points (seconds elapsed vs.
+        amount summed) is how a caller finds a "best stretch"
+        rather than reading any single point as an instantaneous
+        DPS/HPS figure.
+
+        Like get_actor_table, this series shape (a `series` list of
+        {name, data: [[t, v], ...]} objects) matches the published
+        v2 schema but hasn't been checked against a live response.
         """
 
         code = self.normalize_report_code(report_code)
@@ -304,18 +526,18 @@ class EsoLogsClient:
             raise EsoLogsApiError("Enter an ESO Logs report code or report URL.")
 
         query = """
-        query AuraTable(
+        query ActorGraph(
           $code: String!
           $fightIDs: [Int]!
           $startTime: Float!
           $endTime: Float!
-          $dataType: TableDataType!
+          $dataType: GraphDataType!
           $hostilityType: HostilityType!
           $sourceID: Int
         ) {
           reportData {
             report(code: $code) {
-              table(
+              graph(
                 fightIDs: $fightIDs
                 startTime: $startTime
                 endTime: $endTime
@@ -342,24 +564,55 @@ class EsoLogsClient:
 
         report = (data.get("reportData") or {}).get("report") or {}
 
-        table = report.get("table") or {}
+        graph = report.get("graph") or {}
 
-        # The `table` field is a JSON scalar in the v2 API.
-        # Depending on the HTTP/GraphQL stack it may arrive as
-        # an already-decoded dict or as a JSON string.
-        if isinstance(table, str):
+        if isinstance(graph, str):
             try:
-                table = json.loads(table)
+                graph = json.loads(graph)
             except json.JSONDecodeError as exc:
                 raise EsoLogsApiError(
-                    "ESO Logs returned an unreadable aura table payload."
+                    f"ESO Logs returned an unreadable {data_type} graph payload."
                 ) from exc
 
-        inner = table.get("data") if isinstance(table, dict) else None
+        inner = graph.get("data") if isinstance(graph, dict) else None
 
-        auras = (inner or {}).get("auras") if isinstance(inner, dict) else None
+        series_list = (inner or {}).get("series") if isinstance(inner, dict) else None
 
-        return auras or []
+        if not isinstance(series_list, list):
+            raise EsoLogsApiError(
+                f"The {data_type} graph response did not include a "
+                "`series` list in the shape this client expects -- "
+                "check the raw response against the current v2 schema."
+            )
+
+        points: list[tuple[float, float]] = []
+
+        for series in series_list:
+
+            if not isinstance(series, dict):
+                continue
+
+            for point in series.get("data") or []:
+
+                if isinstance(point, dict):
+                    raw_t, raw_v = point.get("x"), point.get("y")
+                elif isinstance(point, (list, tuple)) and len(point) >= 2:
+                    raw_t, raw_v = point[0], point[1]
+                else:
+                    continue
+
+                try:
+                    # Graph timestamps are milliseconds since the
+                    # report's start, same unit as fight
+                    # start/endTime -- convert to seconds into the
+                    # fight so callers don't juggle units per point.
+                    points.append((float(raw_t) / 1000.0, float(raw_v)))
+                except (TypeError, ValueError):
+                    continue
+
+        points.sort(key=lambda p: p[0])
+
+        return points
 
     # --------------------------------------------------
     # Trials / encounters (for the "choose a trial" dropdown)
