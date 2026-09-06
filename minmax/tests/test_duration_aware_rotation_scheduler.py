@@ -189,6 +189,51 @@ def test_earliest_due_refresh_claims_slot_deterministically() -> None:
     assert named[5.0] == "Buff B"
 
 
+def test_explicit_refresh_lead_claims_pre_expiry_slot_without_inventing_lead() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "Long Buff", sequence=0),
+            _skill(7.0, "Filler", sequence=0),
+            _skill(8.0, "Filler", sequence=0),
+            _skill(9.0, "Filler", sequence=0),
+            _skill(10.0, "Filler", sequence=0),
+        ],
+        duration=10.0,
+    )
+
+    with_lead = DurationAwareRotationScheduler().refine(
+        plan,
+        (
+            RotationRecastRule(
+                "Long Buff",
+                duration_seconds=10.0,
+                bar="front",
+                refresh_lead_seconds=2.0,
+            ),
+        ),
+    )
+    without_lead = DurationAwareRotationScheduler().refine(
+        plan,
+        (RotationRecastRule("Long Buff", duration_seconds=10.0, bar="front"),),
+    )
+
+    with_lead_named = {
+        action.time_seconds: action.name
+        for action in with_lead.actions
+        if action.kind is RotationActionKind.SKILL
+    }
+    without_lead_named = {
+        action.time_seconds: action.name
+        for action in without_lead.actions
+        if action.kind is RotationActionKind.SKILL
+    }
+
+    assert with_lead_named[8.0] == "Long Buff"
+    assert without_lead_named[8.0] == "Filler"
+    assert without_lead_named[10.0] == "Long Buff"
+    assert any("no refresh lead is invented" in item for item in with_lead.assumptions)
+
+
 def test_wait_replaces_premature_recast_without_orphan_light_attack() -> None:
     plan = _plan(
         [
