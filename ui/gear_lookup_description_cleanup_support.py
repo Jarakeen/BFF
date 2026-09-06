@@ -20,8 +20,10 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from ui.gear_lookup_layout_support import install as install_layout_support
     from ui.gear_lookup_page import GearLookupPage
 
+    install_layout_support()
     _ORIGINAL_SHOW_SELECTED = GearLookupPage._show_selected
 
     def show_selected_without_eso_markup(self, current, previous=None) -> None:
