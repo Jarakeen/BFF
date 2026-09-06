@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 from .rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from .rotation_recast import RotationRecastRule
+from .rotation_wait_decision import (
+    PrematureRecastDecisionContext,
+    PrematureRecastDecisionProvider,
+)
 
 
 @dataclass(frozen=True)
@@ -22,18 +26,23 @@ class DurationAwareRotationScheduler:
     still queued when the fixed plan horizon ends is reported explicitly.
 
     Premature recast slots that are not needed by another due refresh continue to
-    use deterministic same-bar no-duration fillers when available. If no valid
-    filler exists, the slot becomes an explicit WAIT rather than an invented cast.
+    use deterministic same-bar no-duration fillers when available. If no filler
+    exists, an optional caller-proven decision provider may supply one legal action
+    for that exact slot. Otherwise the slot becomes an explicit WAIT rather than
+    an invented cast.
 
-    The scheduler does not yet optimize bar-swap timing, pull a refresh onto the
-    opposite bar, invent refresh lead windows, or model execute, proc, potion, or
-    encounter priorities. Those remain later Phase 13 work.
+    The scheduler does not itself optimize bar-swap timing, pull a refresh onto the
+    opposite bar, invent refresh lead windows, or infer execute, proc, potion,
+    heavy-attack, sustain, or encounter legality. Those remain caller-owned Phase
+    13 decision evidence.
     """
 
     def refine(
         self,
         plan: RotationPlan,
         rules: tuple[RotationRecastRule, ...],
+        *,
+        wait_decision: PrematureRecastDecisionProvider | None = None,
     ) -> RotationPlan:
         rule_map = self._rule_map(rules)
         filler_by_bar = self._fillers(plan, rule_map)
@@ -61,6 +70,10 @@ class DurationAwareRotationScheduler:
         assumptions.append(
             "premature duration-skill recast slots use deterministic same-bar no-duration fillers when available"
         )
+        if wait_decision is not None:
+            assumptions.append(
+                "caller-proven premature-recast decisions may replace waits without inventing legality"
+            )
 
         actions: list[RotationAction] = []
         pending_light_attack: RotationAction | None = None
@@ -159,6 +172,39 @@ class DurationAwareRotationScheduler:
                 )
                 continue
 
+            decided_action = None
+            if wait_decision is not None:
+                decided_action = wait_decision(
+                    PrematureRecastDecisionContext(
+                        time_seconds=action.time_seconds,
+                        bar=action.bar,
+                        candidate=candidate,
+                        slot=action,
+                        next_due=tuple(
+                            sorted(
+                                (
+                                    (name, bar, due_time)
+                                    for (name, bar), due_time in next_due.items()
+                                ),
+                                key=lambda item: (item[2], item[1] or "", item[0]),
+                            )
+                        ),
+                        rules=rules,
+                    )
+                )
+                if decided_action is not None:
+                    decided_action = self._validate_wait_decision(
+                        decided_action,
+                        slot=action,
+                    )
+                    pending_light_attack = None
+                    actions.append(decided_action)
+                    unresolved.append(
+                        f"premature recast of '{candidate.name}' at {action.time_seconds:g}s was replaced "
+                        f"by caller-proven {decided_action.kind.value} decision"
+                    )
+                    continue
+
             pending_light_attack = None
             actions.append(
                 RotationAction(
@@ -171,7 +217,7 @@ class DurationAwareRotationScheduler:
             )
             unresolved.append(
                 f"premature recast of '{candidate.name}' at {action.time_seconds:g}s had no verified "
-                f"same-bar no-duration filler; scheduled wait instead"
+                f"same-bar no-duration filler or caller-proven replacement; scheduled wait instead"
             )
 
         if pending_light_attack is not None:
@@ -192,6 +238,28 @@ class DurationAwareRotationScheduler:
             actions=tuple(actions),
             assumptions=tuple(self._dedupe(assumptions)),
             unresolved=tuple(self._dedupe(unresolved)),
+        )
+
+    @staticmethod
+    def _validate_wait_decision(
+        decided: RotationAction,
+        *,
+        slot: RotationAction,
+    ) -> RotationAction:
+        if decided.time_seconds != slot.time_seconds:
+            raise ValueError("premature-recast replacement must use the decision slot timestamp")
+        if decided.bar != slot.bar:
+            raise ValueError("premature-recast replacement must remain on the active decision bar")
+        if decided.kind in {RotationActionKind.BAR_SWAP, RotationActionKind.WAIT}:
+            raise ValueError(
+                "premature-recast replacement must be an already-proven active action, not bar_swap or wait"
+            )
+        return RotationAction(
+            time_seconds=slot.time_seconds,
+            sequence=slot.sequence,
+            kind=decided.kind,
+            name=decided.name,
+            bar=slot.bar,
         )
 
     @staticmethod
