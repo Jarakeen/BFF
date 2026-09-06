@@ -1,0 +1,8 @@
+## Title: BFF Scribing Extractor
+## Description: Captures official ESO client Scribing result-name observations for Black Feather Foundry.
+## Author: Jarakeen / Black Feather Foundry
+## Version: 1.0.0
+## APIVersion: 101051
+## SavedVariables: BFFScribingExtractorSavedVariables
+
+BFFScribingExtractor.lua
