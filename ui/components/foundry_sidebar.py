@@ -37,11 +37,11 @@ BROADCAST_NAV_SECTION = {
 }
 
 CORE_NAV_SECTIONS = [
-    {"label": "Roster", "children": [
+    {"label": "Roster", "page": "operations_console", "children": [
         ("Characters", "characters"),
         ("Builds", "console:2"),
     ]},
-    {"label": "Raid Engine", "page": "operations_console", "children": [
+    {"label": "Raid Engine", "children": [
         ("Comp Maker", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
