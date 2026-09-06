@@ -94,5 +94,12 @@ def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
     assert "CompBuilderAuthoritativePrescriptionService" in source
     assert "candidates_by_slot=dict(applied)" in source
     assert "page._comp_current_prescription = prescription" in source
+    assert "_materialize_current_comp(self)" in source
     assert "_ORIGINAL_SEND_TO_ROSTER(self)" in source
-    assert "without reranking it" in source
+
+    send_function = source.split(
+        "def _send_to_roster_with_authoritative_prescription", 1
+    )[1].split("def install", 1)[0]
+    assert send_function.index("_materialize_current_comp(self)") < send_function.index(
+        "_ORIGINAL_SEND_TO_ROSTER(self)"
+    )
