@@ -56,7 +56,7 @@ _EXACT = {
     "warnings": "hazard-sign",
     "raid roster": "users",
     "selected player": "person",
-    "provides": "potion-ball",
+    "provides": "potion",
     "current gear": "leather-armor",
     "key stats": "dashboard",
     "capability gap": "warning",
