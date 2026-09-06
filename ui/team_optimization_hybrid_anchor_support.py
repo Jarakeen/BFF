@@ -109,27 +109,29 @@ def install() -> None:
     )
     install_comp_builder_esologs_snapshot_candidates()
 
+    # Trial routing and ESO Logs both wrap the candidate path after the original
+    # constraint layer. Re-apply the same hard class/gear contract at the final
+    # merged-source boundary so no later source can bypass it.
+    from ui.comp_builder_final_constraint_guard_support import (
+        install as install_comp_builder_final_constraint_guard,
+    )
+    install_comp_builder_final_constraint_guard()
+
     from ui.comp_builder_send_feedback_support import (
         install as install_comp_builder_send_feedback,
     )
     install_comp_builder_send_feedback()
 
-    # The generated-team selector is an implementation detail now. Roster shows
-    # the just-sent team directly and keeps its name visible as a static header cue.
     from ui.comp_builder_roster_view_support import (
         install as install_comp_builder_roster_view,
     )
     install_comp_builder_roster_view()
 
-    # The old View Template action only worked for a narrow subset of generated
-    # recruit rows. Keep inspection plumbing internal and remove the misleading UI.
     from ui.roster_template_button_cleanup_support import (
         install as install_roster_template_button_cleanup,
     )
     install_roster_template_button_cleanup()
 
-    # Player/build names in Generated Team rows are now the direct inspection
-    # surface: clicking either opens the known gear and skill evidence.
     from ui.roster_assignment_build_details_support import (
         install as install_roster_assignment_build_details,
     )
