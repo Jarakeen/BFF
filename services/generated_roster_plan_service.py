@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from services.eso_database import EsoDatabase
+from services.roster_service import RosterService
 
 
 @dataclass(frozen=True)
@@ -27,11 +28,11 @@ class GeneratedRosterPlan:
 
 
 class GeneratedRosterPlanService:
-    """Persistent bridge between Team Optimization and the Roster page.
+    """Persistent build/assignment layer for a named Roster team.
 
-    Generated plans are deliberately separate from roster_member. Recruitment
-    requirements are real roster-plan slots but are not fabricated people.
-    Re-sending the same named prescription replaces only that generated plan.
+    Recruitment requirements remain separate from ``roster_member`` so BFF never
+    fabricates people. The plan name, however, is one durable user-facing team
+    identity shared with Roster and Optimization.
     """
 
     def __init__(self, database: EsoDatabase):
@@ -132,9 +133,14 @@ class GeneratedRosterPlanService:
                 ),
             )
         self.db.commit()
+
+        # The plan stores chair/build state. Roster owns the durable team identity.
+        # Registering the same name here makes Comp Maker -> Roster -> Optimization
+        # one user-facing team without turning recruit chairs into fake members.
+        canonical_name = RosterService(self.db).ensure_team_name(plan_name)
         return GeneratedRosterPlan(
             plan_id=plan_id,
-            name=plan_name,
+            name=canonical_name,
             goal=plan_goal,
             difficulty=str(difficulty or "").strip(),
             slots=tuple(slots),
