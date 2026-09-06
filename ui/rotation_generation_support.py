@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.healer_wait_decision_provider import (
+    HealerHeavyAttackCandidate,
+    HealerWaitDecisionProvider,
+)
 from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
@@ -30,6 +34,7 @@ class RotationGenerationRequest:
     starting_ultimate: float = 0.0
     use_scheduled_combat_attacks_for_ultimate: bool = False
     ability_priorities: tuple[AbilityPriorityEntry, ...] = ()
+    heavy_attack_candidates: tuple[HealerHeavyAttackCandidate, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -47,9 +52,10 @@ class RotationGenerationSupport:
     Generation builds the deterministic saved-bar seed schedule, optionally orders
     ordinary skills by an explicit AbilityPriorityList, refines the plan using
     canonical positive skill durations and the same explicit priorities, optionally
-    projects one explicitly selected slot-6 ultimate through the shared Ultimate
-    resource model, then analyzes the final plan for dashboard duration evidence.
-    Potion cadence, execute rules, and dynamic bar timing remain later Phase 13 work.
+    uses caller-proven healer heavy opportunities in slots that would otherwise be
+    WAITs, then optionally projects one explicitly selected slot-6 ultimate through
+    the shared Ultimate resource model. Potion cadence, execute rules, automatic
+    heavy-opportunity discovery, and dynamic bar timing remain later Phase 13 work.
     """
 
     def __init__(
@@ -77,14 +83,32 @@ class RotationGenerationSupport:
         """Return the final plan together with generation evidence."""
         definition = self.build_definition(build=build, request=request)
         priority_list = self._priority_list(build=build, request=request)
+        wait_decision = (
+            HealerWaitDecisionProvider(tuple(request.heavy_attack_candidates))
+            if request.heavy_attack_candidates
+            else None
+        )
         seed_plan = self.planner.build_plan(definition, build)
-        if priority_list is None:
+
+        if priority_list is None and wait_decision is None:
             refinement = self.duration_refinement.refine(seed_plan)
-        else:
+        elif priority_list is not None and wait_decision is None:
             refinement = self.duration_refinement.refine(
                 seed_plan,
                 priorities=priority_list,
             )
+        elif priority_list is None:
+            refinement = self.duration_refinement.refine(
+                seed_plan,
+                wait_decision=wait_decision,
+            )
+        else:
+            refinement = self.duration_refinement.refine(
+                seed_plan,
+                priorities=priority_list,
+                wait_decision=wait_decision,
+            )
+
         final_plan = refinement.plan
         ultimate_projection: RotationUltimateProjection | None = None
 
@@ -173,6 +197,11 @@ class RotationGenerationSupport:
         else:
             assumptions.append(
                 "dashboard seed and due-refresh selection use explicit ability priority values within each saved bar; lower numbers are higher priority"
+            )
+
+        if request.heavy_attack_candidates:
+            assumptions.append(
+                "caller-proven healer heavy-attack opportunities may replace premature-recast WAIT slots on the same active bar"
             )
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
