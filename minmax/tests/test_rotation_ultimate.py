@@ -46,6 +46,60 @@ def test_explicit_ultimate_availability_claims_first_same_bar_skill_slot() -> No
     assert any("claimed the 1s" in item for item in result.unresolved)
 
 
+def test_displaced_skill_cascades_to_next_same_bar_slot() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "A"),
+            _skill(1.0, "B"),
+            _skill(2.0, "C"),
+            _skill(3.0, "D"),
+        ],
+        duration=3.0,
+    )
+    rule = UltimateScheduleRule(
+        "Guardian's Wrath",
+        bar="front",
+        cost=75.0,
+        available_at_seconds=(1.0,),
+    )
+
+    result = UltimateRotationScheduler().apply(plan, (rule,))
+
+    by_time = {action.time_seconds: action for action in result.actions}
+    assert by_time[1.0].kind is RotationActionKind.ULTIMATE
+    assert by_time[1.0].name == "Guardian's Wrath"
+    assert by_time[2.0].name == "B"
+    assert by_time[3.0].name == "C"
+    assert any("skill 'D' was displaced beyond the 3s plan horizon" in item for item in result.unresolved)
+
+
+def test_displacement_cascade_never_crosses_bars() -> None:
+    plan = _plan(
+        [
+            _skill(0.0, "Front A", "front"),
+            _skill(1.0, "Front B", "front"),
+            _skill(2.0, "Back A", "back"),
+            _skill(3.0, "Front C", "front"),
+        ],
+        duration=3.0,
+    )
+    rule = UltimateScheduleRule(
+        "Guardian's Wrath",
+        bar="front",
+        cost=75.0,
+        available_at_seconds=(1.0,),
+    )
+
+    result = UltimateRotationScheduler().apply(plan, (rule,))
+
+    by_time = {action.time_seconds: action for action in result.actions}
+    assert by_time[2.0].name == "Back A"
+    assert by_time[2.0].bar == "back"
+    assert by_time[3.0].name == "Front B"
+    assert by_time[3.0].bar == "front"
+    assert any("skill 'Front C' was displaced beyond the 3s plan horizon" in item for item in result.unresolved)
+
+
 def test_ultimate_never_crosses_to_wrong_bar() -> None:
     plan = _plan(
         [
