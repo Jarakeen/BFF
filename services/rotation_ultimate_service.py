@@ -9,6 +9,7 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_ultimate import UltimateRotationScheduler, UltimateScheduleRule
 from minmax.ultimate_generation_sources import (
+    CombatAttackUltimateGenerationSource,
     HeroismUltimateGenerationSource,
     HeroismWindow,
 )
@@ -34,7 +35,7 @@ class RotationUltimateService:
     Callers may either supply already-resolved availability times through
     ``apply`` or one shared Ultimate resource timeline through ``apply_generation``.
     The generation path can combine explicit gain events with source-derived
-    events whose uptime evidence is supplied explicitly, such as Heroism windows.
+    events whose activation evidence is supplied explicitly.
     """
 
     def __init__(
@@ -45,6 +46,7 @@ class RotationUltimateService:
         scheduler: UltimateRotationScheduler | None = None,
         resource_timeline: UltimateResourceTimeline | None = None,
         heroism_source: HeroismUltimateGenerationSource | None = None,
+        combat_attack_source: CombatAttackUltimateGenerationSource | None = None,
     ) -> None:
         self.ability_cost_repository = ability_cost_repository or AbilityCostRepository(
             database_path
@@ -52,6 +54,7 @@ class RotationUltimateService:
         self.scheduler = scheduler or UltimateRotationScheduler()
         self.resource_timeline = resource_timeline or UltimateResourceTimeline()
         self.heroism_source = heroism_source or HeroismUltimateGenerationSource()
+        self.combat_attack_source = combat_attack_source or CombatAttackUltimateGenerationSource()
 
     def apply(
         self,
@@ -103,15 +106,19 @@ class RotationUltimateService:
         starting_ultimate: float = 0.0,
         generation_events: tuple[UltimateGenerationEvent, ...] = (),
         heroism_windows: tuple[HeroismWindow, ...] = (),
+        use_scheduled_combat_attacks: bool = False,
     ) -> RotationUltimateProjection:
         """Derive affordability from one shared Ultimate resource pool.
 
-        ESO Ultimate is shared across bars. The caller therefore selects which
-        saved slot-6 ultimate is being considered for this bounded projection.
-        Canonical ability-cost evidence supplies its cost. Starting Ultimate,
-        explicit gain events, and explicitly supplied Heroism uptime windows feed
-        the shared resource timeline. Competing front/back ultimate choice remains
-        unresolved rather than double-spending one pool.
+        ESO Ultimate is shared across bars. The caller selects which saved slot-6
+        ultimate is being considered for this bounded projection. Canonical
+        ability-cost evidence supplies its cost. Starting Ultimate, explicit gain
+        events, explicitly supplied Heroism windows, and optionally scheduled
+        light/heavy attacks feed the shared timeline.
+
+        Scheduled attacks are used only when ``use_scheduled_combat_attacks`` is
+        true; enabling it explicitly asserts that those attacks damaged a target
+        and therefore refreshed the canonical base Ultimate-generation buff.
         """
         bar = str(ultimate_bar or "").strip().casefold()
         if bar not in {"front", "back"}:
@@ -146,11 +153,19 @@ class RotationUltimateService:
             )
             return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
 
-        derived_events = self.heroism_source.events(
+        heroism_events = self.heroism_source.events(
             windows=tuple(heroism_windows),
             duration_seconds=plan.duration_seconds,
         )
-        all_events = tuple(generation_events) + tuple(derived_events)
+        combat_events = self.combat_attack_source.events_from_plan(
+            plan=plan,
+            assume_scheduled_attacks_damage=bool(use_scheduled_combat_attacks),
+        )
+        all_events = (
+            tuple(generation_events)
+            + tuple(heroism_events)
+            + tuple(combat_events)
+        )
 
         projection = self.resource_timeline.project(
             starting_amount=starting_ultimate,
