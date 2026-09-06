@@ -44,11 +44,10 @@ def test_comp_maker_layout_is_balanced_two_column_workspace():
     assert "right.addWidget(actions, 0)" in source
     assert "right.addWidget(details, 1)" in source
     assert "columns.addLayout(left, 1)" in source
-    assert "columns.addWidget(assignment_arrow" in source
     assert "columns.addLayout(right, 1)" in source
+    assert "columns.addWidget(assignment_arrow" not in source
     assert "columns.setStretch(0, 1)" in source
-    assert "columns.setStretch(1, 0)" in source
-    assert "columns.setStretch(2, 1)" in source
+    assert "columns.setStretch(1, 1)" in source
     assert 'details.title_label.setText("ESO Logs Catalog & Chair Evidence")' in source
     assert "ScrollBarAlwaysOff" in source
 
