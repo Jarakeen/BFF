@@ -12,6 +12,7 @@ _INSTALLED = False
 _ORIGINAL_ROSTER_INIT = None
 
 
+# Migration fallback for generated plans written before structured skill persistence.
 _SKILLS_RE = re.compile(r"Observed/known skills:\s*(.*?)(?:\.\s|$)", re.IGNORECASE)
 
 
@@ -87,6 +88,10 @@ def _template_inspection_for_slot(slot):
 
 
 def _skills_from_slot(slot) -> tuple[str, ...]:
+    structured = tuple(_clean(value) for value in getattr(slot, "skills", ()) if _clean(value))
+    if structured:
+        return structured
+
     match = _SKILLS_RE.search(_clean(slot.unresolved))
     if match is None:
         return ()
@@ -117,11 +122,28 @@ def _saved_skills(build) -> tuple[str, ...]:
 
 
 def _slot_gear(slot) -> tuple[str, ...]:
+    structured = tuple(_clean(value) for value in getattr(slot, "gear_sets", ()) if _clean(value))
+    if structured:
+        return structured
     return tuple(
         value.strip()
         for value in _clean(slot.gear_summary).split("+")
         if value.strip()
     )
+
+
+def _slot_source(slot) -> str:
+    source_name = _clean(getattr(slot, "source_name", ""))
+    source_kind = _clean(getattr(slot, "source_kind", ""))
+    if source_name:
+        return source_name
+    if source_kind == "esologs_snapshot":
+        return "ESO Logs"
+    if source_kind == "saved_build":
+        return "Saved Roster Build"
+    if source_kind:
+        return source_kind.replace("_", " ").title()
+    return ""
 
 
 def _details_text(page, slot) -> str:
@@ -130,29 +152,41 @@ def _details_text(page, slot) -> str:
     saved_build = _saved_build_for_slot(page, slot)
     inspection = _template_inspection_for_slot(slot) if saved_build is None else None
 
+    structured_gear = _slot_gear(slot)
+    structured_skills = _skills_from_slot(slot)
+    structured_mundus = _clean(getattr(slot, "mundus", ""))
+    structured_source = _slot_source(slot)
+
     if saved_build is not None:
-        gear = _slot_gear(slot)
-        skills = _saved_skills(saved_build)
-        mundus = _clean(getattr(saved_build, "Mundus", ""))
-        source = "Saved Roster Build"
+        gear = structured_gear
+        skills = structured_skills or _saved_skills(saved_build)
+        mundus = structured_mundus or _clean(getattr(saved_build, "Mundus", ""))
+        source = structured_source or "Saved Roster Build"
+        unresolved = ()
+    elif structured_gear or structured_skills or structured_mundus or structured_source:
+        gear = structured_gear
+        skills = structured_skills
+        mundus = structured_mundus
+        source = structured_source or "Sourced build evidence"
         unresolved = ()
     elif inspection is not None:
-        gear = tuple(inspection.gear_sets) or _slot_gear(slot)
-        skills = tuple(inspection.skills) or _skills_from_slot(slot)
+        gear = tuple(inspection.gear_sets) or structured_gear
+        skills = tuple(inspection.skills) or structured_skills
         mundus = _clean(inspection.mundus)
         source = _clean(inspection.source_name) or _clean(inspection.template_kind)
         unresolved = tuple(_clean(value) for value in inspection.unknown_fields if _clean(value))
     else:
-        gear = _slot_gear(slot)
-        skills = _skills_from_slot(slot)
+        gear = structured_gear
+        skills = structured_skills
         mundus = ""
         source = "Sourced build evidence"
         unresolved = ()
 
+    role = _clean(getattr(slot, "role", "")) or _clean(slot.slot_name) or "Unresolved"
     lines = [
         player,
         f"Class: {_clean(slot.eso_class) or 'Any class'}",
-        f"Role: {_clean(slot.slot_name) or 'Unresolved'}",
+        f"Role: {role}",
         f"Build: {build_name}",
         "",
         "GEAR",
@@ -163,8 +197,9 @@ def _details_text(page, slot) -> str:
     if mundus:
         lines.extend(("", "MUNDUS", mundus))
 
-    if saved_build is None:
+    if source:
         lines.extend(("", "SOURCE", source))
+    if saved_build is None:
         if unresolved:
             lines.extend(("", "UNRESOLVED"))
             lines.extend(f"• {value}" for value in unresolved)
@@ -208,7 +243,6 @@ def _show_assignment_details(page, row: int) -> None:
 
 
 def _assignment_item_clicked(page, item) -> None:
-    # Player and Build are the two human-facing assignment names in the table.
     if item is None or item.column() not in {0, 3}:
         return
     _show_assignment_details(page, item.row())
