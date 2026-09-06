@@ -9,11 +9,21 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from minmax.eso_markup import normalize_eso_markup
 from minmax.skill_coefficient_repository import SkillCoefficientRepository
 
 
 def _columns(connection: sqlite3.Connection, table: str) -> tuple[str, ...]:
     return tuple(str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})"))
+
+
+def _display_value(value) -> str:
+    if isinstance(value, str):
+        # Database descriptions preserve ESO tooltip color markup such as
+        # |cffffff75|r. Audits are plain text, so keep the value and discard
+        # the rendering tokens. Collapse source line breaks for readable rows.
+        return " ".join(normalize_eso_markup(value).text.split())
+    return str(value)
 
 
 def _print_rows(title: str, rows: list[sqlite3.Row]) -> None:
@@ -29,7 +39,7 @@ def _print_rows(title: str, rows: list[sqlite3.Row]) -> None:
             value = row[key]
             if value is None or value == "":
                 continue
-            values.append(f"{key}={value}")
+            values.append(f"{key}={_display_value(value)}")
         print(" | ".join(values) or "(empty row)")
     print()
 
