@@ -121,6 +121,7 @@ def test_dashboard_generation_can_return_plan_with_duration_evidence() -> None:
     assert result.plan.character_name == "Magrat"
     assert result.plan.build_name == "DF Healer"
     assert result.duration_evidence is evidence
+    assert result.ultimate_projection is None
     assert evidence_calls == [projection]
 
 
@@ -137,7 +138,7 @@ def test_dashboard_generation_applies_selected_ultimate_and_rebuilds_final_evide
     class UltimateStub:
         def apply_generation(self, **kwargs):
             ultimate_calls.append(kwargs)
-            return SimpleNamespace(plan=kwargs["plan"])
+            return SimpleNamespace(plan=kwargs["plan"], rules=("ultimate rule",))
 
     class EvidenceStub:
         def from_projection(self, received):
@@ -167,6 +168,7 @@ def test_dashboard_generation_applies_selected_ultimate_and_rebuilds_final_evide
     assert ultimate_calls[0]["use_scheduled_combat_attacks"] is True
     assert build_calls == [result.plan]
     assert result.duration_evidence is final_evidence
+    assert result.ultimate_projection.rules == ("ultimate rule",)
 
 
 def test_dashboard_generation_leaves_ultimate_unscheduled_without_bar_selection() -> None:
@@ -196,6 +198,7 @@ def test_dashboard_generation_leaves_ultimate_unscheduled_without_bar_selection(
     )
 
     assert result.duration_evidence is evidence
+    assert result.ultimate_projection is None
     assert any("no ultimate bar is selected" in item for item in result.plan.unresolved)
 
 
