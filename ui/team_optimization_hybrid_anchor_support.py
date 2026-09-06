@@ -46,9 +46,6 @@ def install() -> None:
     from ui.team_optimization_role_cleanup import install as install_role_cleanup
     install_role_cleanup()
 
-    # Optimization consumes canonical saved-build capability evidence. This is a
-    # static Phase 12.5 audit surface only: it does not invent encounter uptime,
-    # rotation execution, or raid DPS before the temporal phases exist.
     from ui.team_optimization_canonical_analysis_support import (
         install as install_team_optimization_canonical_analysis,
     )
@@ -117,9 +114,6 @@ def install() -> None:
     )
     install_comp_builder_esologs_snapshot_candidates()
 
-    # Trial routing and ESO Logs both wrap the candidate path after the original
-    # constraint layer. Re-apply the same hard class/gear contract at the final
-    # merged-source boundary so no later source can bypass it.
     from ui.comp_builder_final_constraint_guard_support import (
         install as install_comp_builder_final_constraint_guard,
     )
@@ -145,13 +139,15 @@ def install() -> None:
     )
     install_roster_assignment_build_details()
 
-    # Generated recruit chairs can now be replaced by real roster members. The
-    # original sourced prescription stays in structured sidecar evidence so later
-    # encounter-aware evaluation can compare intent with the adopted saved build.
     from ui.roster_recruit_adoption_support import (
         install as install_roster_recruit_adoption,
     )
     install_roster_recruit_adoption()
+
+    from ui.roster_recruit_prescription_details_support import (
+        install as install_roster_recruit_prescription_details,
+    )
+    install_roster_recruit_prescription_details()
 
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
