@@ -40,8 +40,22 @@ Tasks outside of the master roadmap
 -[ ] images for mechs - can they be farmed? uesp?
 -[X] Optimaztion - auto fill top buttons to match what they need to be for "generate team"
 -[ ] figure out how to easily share things like maps and roster to google docs and make it pretty
--[ ] fix top logo
--[ ] can I document how long bosses are damagable from ESO logs?
+-[X] fix top logo
+-[X] can I document how long bosses are damagable from ESO logs?
 -[X] add Help docs
 -[ ] timer for bosses - ex add portal timer to Bahse
 -[X] beef up Reference data page
+-[X] Tools & Timers menu category - add gear/pot/food/skill lookup
+-[X] remove the "generated rosters" from assignemnts page 
+-[X] remove |cffffff0 from gear lookup
+-[X] make scribe simulator actually work
+-[ ] make a team merch page
+-[ ] add stickerbook to Collectibles
+-[ ] add an engine that has lots of swaps or only a few swaps for a trial?
+-[ ] rylo says it needs to auto update
+-[ ] still need more trial info
+-[ ] art/icons for scribed skills
+-[ ] why arent the arena weapons in the gear lookup
+-[ ] make a MOST page for fun lol ask the app to make a build capabale of the most heals, health, damage, etc (sustain, survivability not required lol)
+-[ ] PvP? 
+-[ ] 

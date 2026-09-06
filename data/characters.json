@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "characters": [
     {
       "character_id": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
@@ -8,9 +8,40 @@
       "eso_class": "Warden",
       "race": "Breton",
       "role": "Healer",
-      "alliance": "",
+      "alliance": "Daggerfall Covenant",
       "vampire": false,
-      "werewolf": false
+      "werewolf": false,
+      "owned_skill_lines": [],
+      "passive_ranks": {},
+      "passive_cp_points": {}
+    },
+    {
+      "character_id": "d4a2c67a-cc32-5e5b-a8b3-53b5004e5e57",
+      "name": "Susan",
+      "gamertag": "Jarakeen",
+      "eso_class": "Necromancer",
+      "race": "Nord",
+      "role": "Tank",
+      "alliance": "Daggerfall Covenant",
+      "vampire": false,
+      "werewolf": false,
+      "owned_skill_lines": [],
+      "passive_ranks": {},
+      "passive_cp_points": {}
+    },
+    {
+      "character_id": "0cb166ee-8994-57eb-a32b-91f0bda1980f",
+      "name": "YOUR TANK BUILD",
+      "gamertag": "Jarakeen",
+      "eso_class": "Necromancer",
+      "race": "Nord",
+      "role": "Tank",
+      "alliance": "Daggerfall Covenant",
+      "vampire": false,
+      "werewolf": false,
+      "owned_skill_lines": [],
+      "passive_ranks": {},
+      "passive_cp_points": {}
     }
   ],
   "builds": [
@@ -22,86 +53,108 @@
         "Name": "Magrat",
         "Gamertag": "Jarakeen",
         "BuildName": "DF Healer",
-        "ImagePath": "",
+        "ImagePath": "C:/Users/nourg/Downloads/Avatar.png",
         "Race": "Breton",
         "EsoClass": "Warden",
         "Role": "Healer",
-        "Alliance": "",
+        "Alliance": "Daggerfall Covenant",
+        "Mundus": "The Ritual",
         "Vampire": false,
         "Werewolf": false,
+        "AttributeHealth": 0,
+        "AttributeMagicka": 64,
+        "AttributeStamina": 0,
         "Armor": {
           "Head": {
-            "Set": "",
+            "Set": "Magma Incarnate",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Medium",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Shoulders": {
-            "Set": "",
+            "Set": "Spaulder of Ruin",
+            "Trait": "Infused",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Chest": {
-            "Set": "",
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Hands": {
-            "Set": "",
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Waist": {
-            "Set": "",
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Legs": {
-            "Set": "",
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Feet": {
-            "Set": "",
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           }
         },
         "FrontBarWeapon": {
+          "Set": "Master Architect",
+          "Trait": "Powered",
+          "Enchant": "Weapon Damage",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Restoration Staff"
+        },
+        "FrontBarOffHand": {
           "Set": "",
           "Trait": "",
           "Enchant": "",
@@ -109,9 +162,21 @@
           "Set2": "",
           "Quality": "",
           "EnchantTier": "",
-          "Level": ""
+          "Level": "",
+          "WeaponType": ""
         },
         "BackBarWeapon": {
+          "Set": "Master Architect",
+          "Trait": "Charged",
+          "Enchant": "Crushing",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Ice Staff"
+        },
+        "BackBarOffHand": {
           "Set": "",
           "Trait": "",
           "Enchant": "",
@@ -119,29 +184,233 @@
           "Set2": "",
           "Quality": "",
           "EnchantTier": "",
-          "Level": ""
+          "Level": "",
+          "WeaponType": ""
         },
         "Necklace": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
+          "Set": "Master Architect",
+          "Trait": "Arcane",
+          "Enchant": "Magicka Recovery",
           "Weight": "",
           "Set2": "",
-          "Quality": "",
-          "EnchantTier": "",
-          "Level": ""
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Ring1": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
+          "Set": "Master Architect",
+          "Trait": "Infused",
+          "Enchant": "Magicka Recovery",
           "Weight": "",
           "Set2": "",
-          "Quality": "",
-          "EnchantTier": "",
-          "Level": ""
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Ring2": {
+          "Set": "Master Architect",
+          "Trait": "Infused",
+          "Enchant": "Magicka Recovery",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "ChampionPoints": [
+          {
+            "Name": "Master Gatherer",
+            "Points": "30"
+          },
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Liquid Efficiency",
+            "Points": "50"
+          },
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Swift Renewal",
+            "Points": "50"
+          },
+          {
+            "Name": "Soothing Tide",
+            "Points": "50"
+          },
+          {
+            "Name": "Rejuvenator",
+            "Points": "50"
+          },
+          {
+            "Name": "From the Brink",
+            "Points": "50"
+          },
+          {
+            "Name": "Celerity",
+            "Points": "50"
+          },
+          {
+            "Name": "Fortification",
+            "Points": "30"
+          },
+          {
+            "Name": "Rejuvenation",
+            "Points": "56"
+          },
+          {
+            "Name": "Boundless Vitality",
+            "Points": "50"
+          }
+        ],
+        "FrontBarSkills": [
+          "Budding Seeds",
+          "Race Against Time",
+          "Combat Prayer",
+          "Illustrious Healing",
+          "Energy Orb",
+          "Eternal Guardian"
+        ],
+        "BackBarSkills": [
+          "Elemental Ring",
+          "Echoing Vigor",
+          "Winter's Revenge",
+          "Expansive Frost Cloak",
+          "Overflowing Altar",
+          "Aggressive Horn"
+        ],
+        "ScribedSkills": [
+          "Goading Throw"
+        ],
+        "Food": "Witchmother's Potent Brew",
+        "Potion": "spell power",
+        "Notes": "",
+        "BossLoadouts": [],
+        "ScribedSkillRecipes": [
+          {
+            "ResultName": "Goading Throw",
+            "Grimoire": "Shield Throw",
+            "Focus": "Taunt",
+            "Signature": "Druid's Resurgence",
+            "Affix": "Maim"
+          }
+        ],
+        "CharacterId": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
+        "BuildId": "6688e999-4106-5556-8984-07ccf5390070"
+      },
+      "payload": {
+        "Name": "Magrat",
+        "Gamertag": "Jarakeen",
+        "BuildName": "DF Healer",
+        "ImagePath": "C:/Users/nourg/Downloads/Avatar.png",
+        "Race": "Breton",
+        "EsoClass": "Warden",
+        "Role": "Healer",
+        "Alliance": "Daggerfall Covenant",
+        "Mundus": "The Ritual",
+        "Vampire": false,
+        "Werewolf": false,
+        "AttributeHealth": 0,
+        "AttributeMagicka": 64,
+        "AttributeStamina": 0,
+        "Armor": {
+          "Head": {
+            "Set": "Magma Incarnate",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Medium",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Shoulders": {
+            "Set": "Spaulder of Ruin",
+            "Trait": "Infused",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Chest": {
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Hands": {
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Waist": {
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Legs": {
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Feet": {
+            "Set": "Serpent's Disdain",
+            "Trait": "Divines",
+            "Enchant": "Max Magicka",
+            "Weight": "Light",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          }
+        },
+        "FrontBarWeapon": {
+          "Set": "Master Architect",
+          "Trait": "Powered",
+          "Enchant": "Weapon Damage",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Restoration Staff"
+        },
+        "FrontBarOffHand": {
           "Set": "",
           "Trait": "",
           "Enchant": "",
@@ -149,131 +418,282 @@
           "Set2": "",
           "Quality": "",
           "EnchantTier": "",
-          "Level": ""
+          "Level": "",
+          "WeaponType": ""
         },
-        "ChampionPoints": [],
+        "BackBarWeapon": {
+          "Set": "Master Architect",
+          "Trait": "Charged",
+          "Enchant": "Crushing",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Ice Staff"
+        },
+        "BackBarOffHand": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": ""
+        },
+        "Necklace": {
+          "Set": "Master Architect",
+          "Trait": "Arcane",
+          "Enchant": "Magicka Recovery",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Ring1": {
+          "Set": "Master Architect",
+          "Trait": "Infused",
+          "Enchant": "Magicka Recovery",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Ring2": {
+          "Set": "Master Architect",
+          "Trait": "Infused",
+          "Enchant": "Magicka Recovery",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "ChampionPoints": [
+          {
+            "Name": "Master Gatherer",
+            "Points": "30"
+          },
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Liquid Efficiency",
+            "Points": "50"
+          },
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Swift Renewal",
+            "Points": "50"
+          },
+          {
+            "Name": "Soothing Tide",
+            "Points": "50"
+          },
+          {
+            "Name": "Rejuvenator",
+            "Points": "50"
+          },
+          {
+            "Name": "From the Brink",
+            "Points": "50"
+          },
+          {
+            "Name": "Celerity",
+            "Points": "50"
+          },
+          {
+            "Name": "Fortification",
+            "Points": "30"
+          },
+          {
+            "Name": "Rejuvenation",
+            "Points": "56"
+          },
+          {
+            "Name": "Boundless Vitality",
+            "Points": "50"
+          }
+        ],
         "FrontBarSkills": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
+          "Budding Seeds",
+          "Race Against Time",
+          "Combat Prayer",
+          "Illustrious Healing",
+          "Energy Orb",
+          "Eternal Guardian"
         ],
         "BackBarSkills": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
+          "Elemental Ring",
+          "Echoing Vigor",
+          "Winter's Revenge",
+          "Expansive Frost Cloak",
+          "Overflowing Altar",
+          "Aggressive Horn"
         ],
-        "Food": "",
-        "Potion": "",
+        "ScribedSkills": [
+          "Goading Throw"
+        ],
+        "Food": "Witchmother's Potent Brew",
+        "Potion": "spell power",
         "Notes": "",
         "BossLoadouts": [],
+        "ScribedSkillRecipes": [
+          {
+            "ResultName": "Goading Throw",
+            "Grimoire": "Shield Throw",
+            "Focus": "Taunt",
+            "Signature": "Druid's Resurgence",
+            "Affix": "Maim"
+          }
+        ],
         "CharacterId": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
         "BuildId": "6688e999-4106-5556-8984-07ccf5390070"
       }
     },
     {
-      "build_id": "40438329-76a9-54a2-ab9a-6febd8590ff1",
-      "character_id": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
-      "name": "DSR HM",
+      "build_id": "4cd454c8-4067-5c75-ada5-d400f4b4b8ce",
+      "character_id": "d4a2c67a-cc32-5e5b-a8b3-53b5004e5e57",
+      "name": "Necro tank",
       "legacy": {
-        "Name": "Magrat",
+        "Name": "Susan",
         "Gamertag": "Jarakeen",
-        "BuildName": "DSR HM",
+        "BuildName": "Necro tank",
         "ImagePath": "",
-        "Race": "Breton",
-        "EsoClass": "Warden",
-        "Role": "Healer",
-        "Alliance": "",
+        "Race": "Nord",
+        "EsoClass": "Necromancer",
+        "Role": "Tank",
+        "Alliance": "Daggerfall Covenant",
+        "Mundus": "The Atronach",
         "Vampire": false,
         "Werewolf": false,
+        "AttributeHealth": 64,
+        "AttributeMagicka": 0,
+        "AttributeStamina": 0,
         "Armor": {
           "Head": {
-            "Set": "",
+            "Set": "Archdruid Devyric",
+            "Trait": "Divines",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Shoulders": {
-            "Set": "",
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Reinforced",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Chest": {
-            "Set": "",
+            "Set": "Archdruid Devyric",
+            "Trait": "Divines",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Hands": {
-            "Set": "",
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Waist": {
-            "Set": "",
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Legs": {
-            "Set": "",
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Reinforced",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
           },
           "Feet": {
-            "Set": "",
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
             "Set2": "",
-            "Quality": "",
-            "Trait": "",
-            "Enchant": "",
-            "EnchantTier": "",
-            "Level": "",
-            "Weight": ""
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP30",
+            "WeaponType": ""
           }
         },
         "FrontBarWeapon": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
+          "Set": "Perfected Puncturing Remedy",
+          "Trait": "Decisive",
+          "Enchant": "Prismatic Defense",
           "Weight": "",
           "Set2": "",
-          "Quality": "",
-          "EnchantTier": "",
-          "Level": ""
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "One Hand and Shield"
+        },
+        "FrontBarOffHand": {
+          "Set": "Perfected Puncturing Remedy",
+          "Trait": "Decisive",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Mace"
         },
         "BackBarWeapon": {
+          "Set": "Powerful Assault",
+          "Trait": "Charged",
+          "Enchant": "Crushing",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Ice Staff"
+        },
+        "BackBarOffHand": {
           "Set": "",
           "Trait": "",
           "Enchant": "",
@@ -281,29 +701,263 @@
           "Set2": "",
           "Quality": "",
           "EnchantTier": "",
-          "Level": ""
+          "Level": "",
+          "WeaponType": ""
         },
         "Necklace": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
           "Weight": "",
           "Set2": "",
-          "Quality": "",
-          "EnchantTier": "",
-          "Level": ""
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Ring1": {
-          "Set": "",
-          "Trait": "",
-          "Enchant": "",
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
           "Weight": "",
           "Set2": "",
-          "Quality": "",
-          "EnchantTier": "",
-          "Level": ""
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
         },
         "Ring2": {
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "ChampionPoints": [
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Master Gatherer",
+            "Points": "50"
+          },
+          {
+            "Name": "Liquid Efficiency",
+            "Points": "50"
+          },
+          {
+            "Name": "Rationer",
+            "Points": "50"
+          },
+          {
+            "Name": "Ironclad",
+            "Points": "50"
+          },
+          {
+            "Name": "Duelist's Rebuff",
+            "Points": "50"
+          },
+          {
+            "Name": "Bulwark",
+            "Points": "50"
+          },
+          {
+            "Name": "Enduring Resolve",
+            "Points": "50"
+          },
+          {
+            "Name": "Boundless Vitality",
+            "Points": "50"
+          },
+          {
+            "Name": "Fortified",
+            "Points": "50"
+          },
+          {
+            "Name": "Rejuvenation",
+            "Points": "50"
+          },
+          {
+            "Name": "Shield Master",
+            "Points": "50"
+          }
+        ],
+        "FrontBarSkills": [
+          "Necrotic Potency",
+          "Hungry Scythe",
+          "Resolving Vigor",
+          "Leashing Soul",
+          "Goading Throw",
+          "Replenishing Barrier"
+        ],
+        "BackBarSkills": [
+          "Elemental Susceptibility",
+          "Elemental Blockade",
+          "Summoner's Armor",
+          "Spirit Guardian",
+          "Pulsar",
+          "Glacial Colossus"
+        ],
+        "ScribedSkills": [
+          "Leashing Soul",
+          "Goading Throw"
+        ],
+        "Food": "frothgar",
+        "Potion": "Health Elixir",
+        "Notes": "",
+        "BossLoadouts": [],
+        "ScribedSkillRecipes": [
+          {
+            "ResultName": "Leashing Soul",
+            "Grimoire": "Wield Soul",
+            "Focus": "Pull",
+            "Signature": "Druid's Resurgence",
+            "Affix": "Cowardice"
+          },
+          {
+            "ResultName": "Goading Throw",
+            "Grimoire": "Shield Throw",
+            "Focus": "Taunt",
+            "Signature": "Sage's Remedy",
+            "Affix": "Maim"
+          }
+        ],
+        "CharacterId": "d4a2c67a-cc32-5e5b-a8b3-53b5004e5e57",
+        "BuildId": "4cd454c8-4067-5c75-ada5-d400f4b4b8ce"
+      },
+      "payload": {
+        "Name": "Susan",
+        "Gamertag": "Jarakeen",
+        "BuildName": "Necro tank",
+        "ImagePath": "",
+        "Race": "Nord",
+        "EsoClass": "Necromancer",
+        "Role": "Tank",
+        "Alliance": "Daggerfall Covenant",
+        "Mundus": "The Atronach",
+        "Vampire": false,
+        "Werewolf": false,
+        "AttributeHealth": 64,
+        "AttributeMagicka": 0,
+        "AttributeStamina": 0,
+        "Armor": {
+          "Head": {
+            "Set": "Archdruid Devyric",
+            "Trait": "Divines",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Shoulders": {
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Reinforced",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Chest": {
+            "Set": "Archdruid Devyric",
+            "Trait": "Divines",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Hands": {
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Waist": {
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Legs": {
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Reinforced",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP160",
+            "WeaponType": ""
+          },
+          "Feet": {
+            "Set": "Perfected Saxhleel Champion",
+            "Trait": "Sturdy",
+            "Enchant": "Prismatic Defense",
+            "Weight": "Heavy",
+            "Set2": "",
+            "Quality": "Gold",
+            "EnchantTier": "Truly Superb",
+            "Level": "CP30",
+            "WeaponType": ""
+          }
+        },
+        "FrontBarWeapon": {
+          "Set": "Perfected Puncturing Remedy",
+          "Trait": "Decisive",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "One Hand and Shield"
+        },
+        "FrontBarOffHand": {
+          "Set": "Perfected Puncturing Remedy",
+          "Trait": "Decisive",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Mace"
+        },
+        "BackBarWeapon": {
+          "Set": "Powerful Assault",
+          "Trait": "Charged",
+          "Enchant": "Crushing",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": "Ice Staff"
+        },
+        "BackBarOffHand": {
           "Set": "",
           "Trait": "",
           "Enchant": "",
@@ -311,31 +965,134 @@
           "Set2": "",
           "Quality": "",
           "EnchantTier": "",
-          "Level": ""
+          "Level": "",
+          "WeaponType": ""
         },
-        "ChampionPoints": [],
+        "Necklace": {
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Ring1": {
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "Ring2": {
+          "Set": "Powerful Assault",
+          "Trait": "Harmony",
+          "Enchant": "Prismatic Defense",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "Gold",
+          "EnchantTier": "Truly Superb",
+          "Level": "CP160",
+          "WeaponType": ""
+        },
+        "ChampionPoints": [
+          {
+            "Name": "Breakfall",
+            "Points": "50"
+          },
+          {
+            "Name": "Master Gatherer",
+            "Points": "50"
+          },
+          {
+            "Name": "Liquid Efficiency",
+            "Points": "50"
+          },
+          {
+            "Name": "Rationer",
+            "Points": "50"
+          },
+          {
+            "Name": "Ironclad",
+            "Points": "50"
+          },
+          {
+            "Name": "Duelist's Rebuff",
+            "Points": "50"
+          },
+          {
+            "Name": "Bulwark",
+            "Points": "50"
+          },
+          {
+            "Name": "Enduring Resolve",
+            "Points": "50"
+          },
+          {
+            "Name": "Boundless Vitality",
+            "Points": "50"
+          },
+          {
+            "Name": "Fortified",
+            "Points": "50"
+          },
+          {
+            "Name": "Rejuvenation",
+            "Points": "50"
+          },
+          {
+            "Name": "Shield Master",
+            "Points": "50"
+          }
+        ],
         "FrontBarSkills": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
+          "Necrotic Potency",
+          "Hungry Scythe",
+          "Resolving Vigor",
+          "Leashing Soul",
+          "Goading Throw",
+          "Replenishing Barrier"
         ],
         "BackBarSkills": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
+          "Elemental Susceptibility",
+          "Elemental Blockade",
+          "Summoner's Armor",
+          "Spirit Guardian",
+          "Pulsar",
+          "Glacial Colossus"
         ],
-        "Food": "",
-        "Potion": "",
+        "ScribedSkills": [
+          "Leashing Soul",
+          "Goading Throw"
+        ],
+        "Food": "frothgar",
+        "Potion": "Health Elixir",
         "Notes": "",
         "BossLoadouts": [],
-        "CharacterId": "ecf73a63-70a4-5b0a-81de-bf89bcd35e69",
-        "BuildId": "40438329-76a9-54a2-ab9a-6febd8590ff1"
+        "ScribedSkillRecipes": [
+          {
+            "ResultName": "Leashing Soul",
+            "Grimoire": "Wield Soul",
+            "Focus": "Pull",
+            "Signature": "Druid's Resurgence",
+            "Affix": "Cowardice"
+          },
+          {
+            "ResultName": "Goading Throw",
+            "Grimoire": "Shield Throw",
+            "Focus": "Taunt",
+            "Signature": "Sage's Remedy",
+            "Affix": "Maim"
+          }
+        ],
+        "CharacterId": "d4a2c67a-cc32-5e5b-a8b3-53b5004e5e57",
+        "BuildId": "4cd454c8-4067-5c75-ada5-d400f4b4b8ce"
       }
     }
   ]
