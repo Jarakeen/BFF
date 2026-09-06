@@ -46,6 +46,19 @@ def test_generated_assignment_player_or_build_click_opens_build_details() -> Non
     assert '"SKILLS / ABILITIES"' in source
     assert "FrontBarSkills" in source
     assert "BackBarSkills" in source
+
+
+def test_assignment_details_prefer_structured_fields_with_legacy_text_fallback() -> None:
+    source = Path("ui/roster_assignment_build_details_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'getattr(slot, "skills", ())' in source
+    assert 'getattr(slot, "gear_sets", ())' in source
+    assert 'getattr(slot, "mundus", "")' in source
+    assert 'getattr(slot, "source_name", "")' in source
+    assert 'getattr(slot, "role", "")' in source
+    assert "Migration fallback" in source
     assert "Observed/known skills:" in source
 
 
