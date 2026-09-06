@@ -48,6 +48,29 @@ def _prescription_rows(db: EsoDatabase, plan_id: int):
     ).fetchall()
 
 
+def _print_available_names(
+    *,
+    plans: GeneratedRosterPlanService,
+    roster: RosterService,
+) -> None:
+    plan_names = plans.list_plan_names()
+    roster_names = tuple(roster.list_team_names())
+
+    print("\nGenerated plans visible in this database:")
+    if plan_names:
+        for name in plan_names:
+            print(f"- {name}")
+    else:
+        print("- none")
+
+    print("\nRoster team identities visible in this database:")
+    if roster_names:
+        for name in roster_names:
+            print(f"- {name}")
+    else:
+        print("- none")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     data_dir = get_data_dir()
@@ -61,7 +84,12 @@ def main(argv: list[str] | None = None) -> int:
     if plan is None:
         print("PHASE 12.5 TEAM WORKFLOW AUDIT")
         print("RESULT: FAIL")
-        print("No generated team plan exists. Send a real Comp Maker team to Roster first.")
+        if requested:
+            print(f"No generated team plan named {requested!r} exists in {data_dir / 'eso.db'}.")
+        else:
+            print(f"No generated team plan exists in {data_dir / 'eso.db'}.")
+        print("Send a real Comp Maker team to Roster first, then audit that generated plan name.")
+        _print_available_names(plans=plans, roster=roster)
         return 1
 
     team_name = requested or plan.name
