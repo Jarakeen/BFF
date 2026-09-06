@@ -70,20 +70,55 @@ def test_dashboard_generation_produces_real_rotation_plan() -> None:
 
 
 def test_dashboard_generation_returns_duration_refined_plan() -> None:
-    calls = []
+    refinement_calls = []
+    evidence_calls = []
+    evidence = SimpleNamespace(summary="duration evidence")
 
     class RefinementStub:
         def refine(self, plan):
-            calls.append(plan)
+            refinement_calls.append(plan)
             return SimpleNamespace(plan=plan)
 
-    support = RotationGenerationSupport(duration_refinement=RefinementStub())
+    class EvidenceStub:
+        def build(self, plan):
+            evidence_calls.append(plan)
+            return evidence
+
+    support = RotationGenerationSupport(
+        duration_refinement=RefinementStub(),
+        duration_evidence=EvidenceStub(),
+    )
     plan = support.generate(
         build=_build(),
         request=RotationGenerationRequest(duration_seconds=6.0),
     )
 
-    assert calls == [plan]
+    assert refinement_calls == [plan]
+    assert evidence_calls == [plan]
+
+
+def test_dashboard_generation_can_return_plan_with_duration_evidence() -> None:
+    evidence = SimpleNamespace(summary="verified durations")
+
+    class RefinementStub:
+        def refine(self, plan):
+            return SimpleNamespace(plan=plan)
+
+    class EvidenceStub:
+        def build(self, plan):
+            return evidence
+
+    result = RotationGenerationSupport(
+        duration_refinement=RefinementStub(),
+        duration_evidence=EvidenceStub(),
+    ).generate_with_evidence(
+        build=_build(),
+        request=RotationGenerationRequest(duration_seconds=6.0),
+    )
+
+    assert result.plan.character_name == "Magrat"
+    assert result.plan.build_name == "DF Healer"
+    assert result.duration_evidence is evidence
 
 
 def test_dashboard_generation_rejects_modes_not_yet_implemented() -> None:
