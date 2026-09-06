@@ -530,7 +530,10 @@ class RotationDashboardPage(FoundryPage):
             slot_item = self.priority_table.item(row, 1)
             skill_item = self.priority_table.item(row, 2)
             priority_item = self.priority_table.item(row, 3)
-            if None in {bar_item, slot_item, skill_item, priority_item}:
+            if any(
+                item is None
+                for item in (bar_item, slot_item, skill_item, priority_item)
+            ):
                 raise ValueError("ability priority table contains an incomplete row")
 
             raw_priority = priority_item.text().strip()
