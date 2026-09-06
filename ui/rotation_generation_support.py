@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
+from services.rotation_duration_refinement_service import RotationDurationRefinementService
 
 
 @dataclass(frozen=True)
@@ -21,18 +22,25 @@ class RotationGenerationRequest:
 class RotationGenerationSupport:
     """Translate saved-build UI state into the authoritative planner contracts.
 
-    The first slice intentionally uses the saved bars as a deterministic authored
-    sequence: five normal front-bar skills, explicit swap, five normal back-bar
-    skills, explicit swap, then repeat. Ultimate, potion cadence, execute rules,
-    priority editing, and dynamic recast logic remain explicit later Phase 13 work.
+    The dashboard first creates the deterministic saved-bar seed schedule, then
+    immediately refines that valid plan using canonical positive skill-duration
+    evidence. Timeline rendering and sustain evaluation therefore consume the
+    same duration-aware ``RotationPlan``. Ultimate, potion cadence, execute rules,
+    editable priorities, and dynamic bar timing remain explicit later Phase 13 work.
     """
 
-    def __init__(self, planner: SemiStaticRotationPlanner | None = None) -> None:
+    def __init__(
+        self,
+        planner: SemiStaticRotationPlanner | None = None,
+        duration_refinement: RotationDurationRefinementService | None = None,
+    ) -> None:
         self.planner = planner or SemiStaticRotationPlanner()
+        self.duration_refinement = duration_refinement or RotationDurationRefinementService()
 
     def generate(self, *, build, request: RotationGenerationRequest) -> RotationPlan:
         definition = self.build_definition(build=build, request=request)
-        return self.planner.build_plan(definition, build)
+        seed_plan = self.planner.build_plan(definition, build)
+        return self.duration_refinement.refine(seed_plan).plan
 
     def build_definition(
         self,
@@ -84,10 +92,10 @@ class RotationGenerationSupport:
         assumptions = [
             "dashboard seed order follows saved front-bar slots then saved back-bar slots",
             "ordinary skill cadence uses the Phase 13 baseline 1.0s action interval",
+            "canonical positive skill durations refine premature recast slots after seed generation",
         ]
         unresolved = [
             "ability-priority editing has not yet replaced saved slot order",
-            "duration-aware recast timing has not yet been projected",
             "ultimate generation is not yet scheduled from dashboard seed order",
             "execute-phase behavior is not yet scheduled",
         ]
