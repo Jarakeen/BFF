@@ -16,8 +16,10 @@ class DurationAwareRotationScheduler:
     the verified rule moves that obligation into the supplied pre-expiry refresh
     window; zero lead preserves hard-expiry behavior.
 
-    Existing timestamps and explicit bar swaps are still preserved in this Phase
-    13 slice; the displaced ordinary cast is not silently moved elsewhere.
+    Existing timestamps and explicit bar swaps are preserved. When a refresh
+    claims a same-bar skill slot, the displaced action cascades forward through
+    later skill slots on that bar rather than being silently deleted. Any action
+    still queued when the fixed plan horizon ends is reported explicitly.
 
     Premature recast slots that are not needed by another due refresh continue to
     use deterministic same-bar no-duration fillers when available. If no valid
@@ -51,6 +53,9 @@ class DurationAwareRotationScheduler:
             "verified refresh obligations may claim the next eligible skill slot on the same bar once due"
         )
         assumptions.append(
+            "skills displaced by verified refresh obligations cascade to later same-bar skill slots"
+        )
+        assumptions.append(
             "explicit verified refresh lead windows are honored; no refresh lead is invented"
         )
         assumptions.append(
@@ -59,6 +64,7 @@ class DurationAwareRotationScheduler:
 
         actions: list[RotationAction] = []
         pending_light_attack: RotationAction | None = None
+        displaced_by_bar: dict[str, list[RotationAction]] = {"front": [], "back": []}
 
         for action in plan.actions:
             if action.kind is RotationActionKind.LIGHT_ATTACK:
@@ -72,7 +78,13 @@ class DurationAwareRotationScheduler:
                 actions.append(action)
                 continue
 
-            planned_key = (str(action.name or "").casefold(), action.bar)
+            candidate = action
+            queue = displaced_by_bar.get(action.bar or "")
+            if queue:
+                candidate = queue.pop(0)
+                queue.append(action)
+
+            candidate_key = (str(candidate.name or "").casefold(), action.bar)
             due_key = self._due_refresh(
                 time_seconds=action.time_seconds,
                 bar=action.bar,
@@ -81,9 +93,11 @@ class DurationAwareRotationScheduler:
                 action_kind_by_key=action_kind_by_key,
             )
 
-            if due_key is not None and due_key != planned_key:
+            if due_key is not None and due_key != candidate_key:
                 due_rule = rule_map[due_key]
                 due_kind = action_kind_by_key.get(due_key, RotationActionKind.SKILL)
+                if queue is not None:
+                    queue.insert(0, candidate)
                 if pending_light_attack is not None:
                     actions.append(pending_light_attack)
                     pending_light_attack = None
@@ -99,25 +113,26 @@ class DurationAwareRotationScheduler:
                 next_due[due_key] = self._refresh_due(action.time_seconds, due_rule)
                 unresolved.append(
                     f"refresh obligation for '{due_rule.skill_name}' claimed the {action.time_seconds:g}s "
-                    f"{action.bar or 'unknown'}-bar slot from '{action.name}'; displaced-action priority is unresolved"
+                    f"{action.bar or 'unknown'}-bar slot from '{candidate.name}'; displaced skill will "
+                    "cascade to the next same-bar skill slot"
                 )
                 continue
 
-            rule = rule_map.get(planned_key)
+            rule = rule_map.get(candidate_key)
             if rule is None:
                 if pending_light_attack is not None:
                     actions.append(pending_light_attack)
                     pending_light_attack = None
-                actions.append(action)
+                actions.append(self._at_slot(candidate, action))
                 continue
 
-            due = next_due.get(planned_key)
+            due = next_due.get(candidate_key)
             if due is None or action.time_seconds >= due:
                 if pending_light_attack is not None:
                     actions.append(pending_light_attack)
                     pending_light_attack = None
-                actions.append(action)
-                next_due[planned_key] = self._refresh_due(action.time_seconds, rule)
+                actions.append(self._at_slot(candidate, action))
+                next_due[candidate_key] = self._refresh_due(action.time_seconds, rule)
                 continue
 
             replacement = self._next_filler(
@@ -139,7 +154,7 @@ class DurationAwareRotationScheduler:
                     )
                 )
                 unresolved.append(
-                    f"premature recast of '{action.name}' at {action.time_seconds:g}s was replaced "
+                    f"premature recast of '{candidate.name}' at {action.time_seconds:g}s was replaced "
                     f"with same-bar filler '{replacement}'; exact priority ranking is unresolved"
                 )
                 continue
@@ -155,12 +170,20 @@ class DurationAwareRotationScheduler:
                 )
             )
             unresolved.append(
-                f"premature recast of '{action.name}' at {action.time_seconds:g}s had no verified "
+                f"premature recast of '{candidate.name}' at {action.time_seconds:g}s had no verified "
                 f"same-bar no-duration filler; scheduled wait instead"
             )
 
         if pending_light_attack is not None:
             actions.append(pending_light_attack)
+
+        for bar, queued in displaced_by_bar.items():
+            for displaced in queued:
+                if displaced.name:
+                    unresolved.append(
+                        f"skill '{displaced.name}' was displaced beyond the {plan.duration_seconds:g}s "
+                        f"plan horizon after same-bar refresh insertion on {bar} bar"
+                    )
 
         return RotationPlan(
             character_name=plan.character_name,
@@ -169,6 +192,16 @@ class DurationAwareRotationScheduler:
             actions=tuple(actions),
             assumptions=tuple(self._dedupe(assumptions)),
             unresolved=tuple(self._dedupe(unresolved)),
+        )
+
+    @staticmethod
+    def _at_slot(candidate: RotationAction, slot: RotationAction) -> RotationAction:
+        return RotationAction(
+            time_seconds=slot.time_seconds,
+            sequence=slot.sequence,
+            kind=candidate.kind,
+            name=candidate.name,
+            bar=slot.bar,
         )
 
     @staticmethod
