@@ -121,6 +121,13 @@ def install() -> None:
     )
     install_comp_builder_roster_view()
 
+    # The old View Template action only worked for a narrow subset of generated
+    # recruit rows. Keep inspection plumbing internal and remove the misleading UI.
+    from ui.roster_template_button_cleanup_support import (
+        install as install_roster_template_button_cleanup,
+    )
+    install_roster_template_button_cleanup()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
