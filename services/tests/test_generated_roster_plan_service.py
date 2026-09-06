@@ -61,6 +61,51 @@ def test_generated_roster_plan_persists_saved_and_recruit_slots(tmp_path) -> Non
     assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
 
 
+def test_generated_plan_round_trips_structured_candidate_evidence(tmp_path) -> None:
+    service = _service(tmp_path)
+    slot = GeneratedRosterPlanSlot(
+        slot_name="Off Tank",
+        kind="prescribed_recruit",
+        player_name="Recruitment Needed",
+        character_name="",
+        eso_class="Dragonknight",
+        build_name="Dragonknight Tank • Oaxiltso",
+        gear_summary="Jorvuld's Guidance + Nazaray + Perfected Saxhleel Champion",
+        unresolved="Observed snapshot remains partial.",
+        role="Tank",
+        source_kind="esologs_snapshot",
+        source_name="ESO Logs",
+        source_url="https://www.esologs.com/reports/example",
+        candidate_id="esologs:report:fight:player:tank:dragonknight",
+        gear_sets=(
+            "Jorvuld's Guidance",
+            "Nazaray",
+            "Perfected Saxhleel Champion",
+        ),
+        skills=("Blockade of Frost", "Crushing Shock", "Echoing Vigor"),
+        mundus="The Atronach",
+    )
+
+    service.save_plan(
+        name="RG Prog",
+        goal="Rockgrove",
+        difficulty="Veteran Hardmode",
+        slots=(slot,),
+    )
+
+    loaded = service.load_plan("RG Prog")
+    assert loaded is not None
+    assert loaded.slots == (slot,)
+    assert loaded.slots[0].skills == (
+        "Blockade of Frost",
+        "Crushing Shock",
+        "Echoing Vigor",
+    )
+    assert loaded.slots[0].gear_sets[1] == "Nazaray"
+    assert loaded.slots[0].source_kind == "esologs_snapshot"
+    assert loaded.slots[0].mundus == "The Atronach"
+
+
 def test_generated_plan_team_identity_does_not_fabricate_roster_members(tmp_path) -> None:
     service = _service(tmp_path)
     service.save_plan(
