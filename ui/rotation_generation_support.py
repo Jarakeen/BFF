@@ -6,6 +6,7 @@ from minmax.rotation_definition import RotationDefinition, RotationMode, Rotatio
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_ultimate_service import RotationUltimateService
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
     RotationDurationEvidenceSupport,
@@ -14,13 +15,16 @@ from ui.rotation_duration_evidence_support import (
 
 @dataclass(frozen=True)
 class RotationGenerationRequest:
-    """UI-facing generation inputs for the first Phase 13 semi-static slice."""
+    """UI-facing generation inputs for the current Phase 13 semi-static slice."""
 
     duration_seconds: float = 60.0
     rotation_type: str = "Semi-static"
     potion: str = ""
     potion_on_cooldown: bool = False
     weave_light_attacks: bool = True
+    ultimate_bar: str = ""
+    starting_ultimate: float = 0.0
+    use_scheduled_combat_attacks_for_ultimate: bool = False
 
 
 @dataclass(frozen=True)
@@ -32,13 +36,13 @@ class RotationGenerationResult:
 
 
 class RotationGenerationSupport:
-    """Translate saved-build UI state into the authoritative planner contracts.
+    """Translate saved-build UI state into authoritative planner contracts.
 
-    The dashboard first creates the deterministic saved-bar seed schedule, then
-    immediately refines that valid plan using canonical positive skill-duration
-    evidence. Timeline rendering and sustain evaluation therefore consume the
-    same duration-aware ``RotationPlan``. Ultimate, potion cadence, execute rules,
-    editable priorities, and dynamic bar timing remain explicit later Phase 13 work.
+    Generation builds the deterministic saved-bar seed schedule, refines it using
+    canonical positive skill durations, optionally projects one explicitly selected
+    slot-6 ultimate through the shared Ultimate resource model, then analyzes the
+    final plan for dashboard duration evidence. Potion cadence, execute rules,
+    editable priorities, and dynamic bar timing remain later Phase 13 work.
     """
 
     def __init__(
@@ -46,13 +50,15 @@ class RotationGenerationSupport:
         planner: SemiStaticRotationPlanner | None = None,
         duration_refinement: RotationDurationRefinementService | None = None,
         duration_evidence: RotationDurationEvidenceSupport | None = None,
+        ultimate_service: RotationUltimateService | None = None,
     ) -> None:
         self.planner = planner or SemiStaticRotationPlanner()
         self.duration_refinement = duration_refinement or RotationDurationRefinementService()
         self.duration_evidence = duration_evidence or RotationDurationEvidenceSupport()
+        self.ultimate_service = ultimate_service or RotationUltimateService()
 
     def generate(self, *, build, request: RotationGenerationRequest) -> RotationPlan:
-        """Compatibility entry point returning only the refined plan."""
+        """Compatibility entry point returning only the final generated plan."""
         return self.generate_with_evidence(build=build, request=request).plan
 
     def generate_with_evidence(
@@ -61,15 +67,32 @@ class RotationGenerationSupport:
         build,
         request: RotationGenerationRequest,
     ) -> RotationGenerationResult:
-        """Return the refined plan together with dashboard-ready duration evidence."""
+        """Return the final plan together with dashboard-ready duration evidence."""
         definition = self.build_definition(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
         refinement = self.duration_refinement.refine(seed_plan)
-        evidence = self.duration_evidence.from_projection(
-            refinement.duration_projection
-        )
+        final_plan = refinement.plan
+
+        selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
+        if selected_ultimate_bar:
+            ultimate_projection = self.ultimate_service.apply_generation(
+                build=build,
+                plan=final_plan,
+                ultimate_bar=selected_ultimate_bar,
+                starting_ultimate=float(request.starting_ultimate),
+                use_scheduled_combat_attacks=bool(
+                    request.use_scheduled_combat_attacks_for_ultimate
+                ),
+            )
+            final_plan = ultimate_projection.plan
+            evidence = self.duration_evidence.build(final_plan)
+        else:
+            evidence = self.duration_evidence.from_projection(
+                refinement.duration_projection
+            )
+
         return RotationGenerationResult(
-            plan=refinement.plan,
+            plan=final_plan,
             duration_evidence=evidence,
         )
 
@@ -111,9 +134,24 @@ class RotationGenerationSupport:
         ]
         unresolved = [
             "ability-priority editing has not yet replaced saved slot order",
-            "ultimate generation is not yet scheduled from dashboard seed order",
             "execute-phase behavior is not yet scheduled",
         ]
+
+        selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
+        if selected_ultimate_bar:
+            if selected_ultimate_bar not in {"front", "back"}:
+                raise ValueError("ultimate bar must be 'front', 'back', or blank")
+            assumptions.append(
+                f"dashboard Ultimate projection explicitly selects the {selected_ultimate_bar} slot-6 ultimate"
+            )
+            if request.use_scheduled_combat_attacks_for_ultimate:
+                assumptions.append(
+                    "scheduled light/heavy attacks are treated as successful damaging attacks for base Ultimate generation"
+                )
+        else:
+            unresolved.append(
+                "ultimate timing is not scheduled because no ultimate bar is selected"
+            )
 
         selected_potion = str(request.potion or "").strip()
         saved_potion = str(getattr(build, "Potion", "") or "").strip()
