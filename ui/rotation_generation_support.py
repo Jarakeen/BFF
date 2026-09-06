@@ -65,7 +65,9 @@ class RotationGenerationSupport:
         definition = self.build_definition(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
         refinement = self.duration_refinement.refine(seed_plan)
-        evidence = self.duration_evidence.build(refinement.plan)
+        evidence = self.duration_evidence.from_projection(
+            refinement.duration_projection
+        )
         return RotationGenerationResult(
             plan=refinement.plan,
             duration_evidence=evidence,
@@ -90,30 +92,14 @@ class RotationGenerationSupport:
 
         steps: list[RotationStep] = []
         for skill in front_skills:
-            steps.append(
-                RotationStep(
-                    kind=RotationActionKind.SKILL,
-                    name=skill,
-                    bar="front",
-                )
-            )
+            steps.append(RotationStep(kind=RotationActionKind.SKILL, name=skill, bar="front"))
 
         if back_skills:
-            steps.append(
-                RotationStep(kind=RotationActionKind.BAR_SWAP, bar="back")
-            )
+            steps.append(RotationStep(kind=RotationActionKind.BAR_SWAP, bar="back"))
             for skill in back_skills:
-                steps.append(
-                    RotationStep(
-                        kind=RotationActionKind.SKILL,
-                        name=skill,
-                        bar="back",
-                    )
-                )
+                steps.append(RotationStep(kind=RotationActionKind.SKILL, name=skill, bar="back"))
             if front_skills:
-                steps.append(
-                    RotationStep(kind=RotationActionKind.BAR_SWAP, bar="front")
-                )
+                steps.append(RotationStep(kind=RotationActionKind.BAR_SWAP, bar="front"))
 
         if not steps:
             raise ValueError("selected saved build has no ordinary slotted skills to schedule")
@@ -168,11 +154,7 @@ class RotationGenerationSupport:
 
     @staticmethod
     def _ordinary_skills(values) -> list[str]:
-        return [
-            str(value).strip()
-            for value in list(values or [])[:5]
-            if str(value or "").strip()
-        ]
+        return [str(value).strip() for value in list(values or [])[:5] if str(value or "").strip()]
 
     @staticmethod
     def _character_name(build) -> str:
