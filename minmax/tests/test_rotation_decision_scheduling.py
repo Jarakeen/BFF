@@ -1,5 +1,6 @@
 import pytest
 
+from minmax.heavy_attack_opportunity import HeavyAttackOpportunity, HeavyAttackPurpose
 from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_action_selection import (
     AbilityActionEligibility,
@@ -74,6 +75,70 @@ def test_schedules_selected_current_bar_skill() -> None:
     assert result.action.bar == "front"
     assert result.action.time_seconds == 12.5
     assert result.action.sequence == 4
+
+
+def test_schedules_required_heavy_when_upstream_evidence_allows_it() -> None:
+    action_selection, swap_selection = _selections(current_bar="front")
+    opportunity = HeavyAttackOpportunity(
+        recommended=True,
+        reason="heavy attack is required to maintain or trigger Roaring Opportunist",
+        purpose=HeavyAttackPurpose.REQUIRED_EFFECT,
+    )
+
+    result = schedule_priority_decision(
+        time_seconds=12.5,
+        sequence=4,
+        action_selection=action_selection,
+        bar_swap_selection=swap_selection,
+        heavy_attack_opportunity=opportunity,
+        heavy_attack_bar="front",
+    )
+
+    assert result.action is not None
+    assert result.action.kind is RotationActionKind.HEAVY_ATTACK
+    assert result.action.bar == "front"
+    assert "Roaring Opportunist" in result.reason
+
+
+def test_rejected_heavy_preserves_selected_skill_behavior() -> None:
+    action_selection, swap_selection = _selections(current_bar="front")
+    opportunity = HeavyAttackOpportunity(
+        recommended=False,
+        reason="a higher-priority legal rotation action is ready",
+        purpose=HeavyAttackPurpose.REQUIRED_EFFECT,
+    )
+
+    result = schedule_priority_decision(
+        time_seconds=12.5,
+        sequence=4,
+        action_selection=action_selection,
+        bar_swap_selection=swap_selection,
+        heavy_attack_opportunity=opportunity,
+        heavy_attack_bar="front",
+    )
+
+    assert result.action is not None
+    assert result.action.kind is RotationActionKind.SKILL
+    assert result.action.name == "Illustrious Healing"
+
+
+def test_rejects_heavy_attack_from_inactive_bar() -> None:
+    action_selection, swap_selection = _selections(current_bar="front")
+    opportunity = HeavyAttackOpportunity(
+        recommended=True,
+        reason="heavy attack is required to maintain or trigger Roaring Opportunist",
+        purpose=HeavyAttackPurpose.REQUIRED_EFFECT,
+    )
+
+    with pytest.raises(ValueError, match="current rotation bar"):
+        schedule_priority_decision(
+            time_seconds=12.5,
+            sequence=4,
+            action_selection=action_selection,
+            bar_swap_selection=swap_selection,
+            heavy_attack_opportunity=opportunity,
+            heavy_attack_bar="back",
+        )
 
 
 def test_schedules_explicit_bar_swap_without_same_tick_skill_cast() -> None:
