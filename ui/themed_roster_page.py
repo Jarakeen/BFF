@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QMessageBox,
     QPushButton,
     QTimeEdit,
     QVBoxLayout,
@@ -52,7 +54,7 @@ _COMMON_TIMEZONES = (
 
 
 class RosterPage(BaseRosterPage):
-    """Roster page with team schedules and theme-aware human sharing."""
+    """Roster page with team management, schedules, and theme-aware sharing."""
 
     def _build_ui(self):
         super()._build_ui()
@@ -72,9 +74,36 @@ class RosterPage(BaseRosterPage):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
 
+        manage_card = FoundryCard("Teams", "group")
+        manage_intro = QLabel(
+            "Create and retire named raid teams here. Deleting a team removes its schedule and roster memberships, but never deletes people, characters, or builds."
+        )
+        manage_intro.setWordWrap(True)
+        manage_intro.setProperty("pageSubtitle", True)
+        manage_card.addWidget(manage_intro)
+
+        manage_row = QHBoxLayout()
+        manage_row.setSpacing(8)
+        self.new_team_name = QLineEdit()
+        self.new_team_name.setPlaceholderText("New team name...")
+        self.new_team_name.returnPressed.connect(self._create_team)
+        manage_row.addWidget(self.new_team_name, 1)
+
+        create_team = QPushButton("Create Team")
+        create_team.setProperty("primary", True)
+        create_team.clicked.connect(self._create_team)
+        manage_row.addWidget(create_team)
+
+        delete_team = QPushButton("Delete Selected Team")
+        delete_team.setToolTip("Remove the selected team, its schedule, and its roster memberships.")
+        delete_team.clicked.connect(self._delete_selected_team)
+        manage_row.addWidget(delete_team)
+        manage_card.addLayout(manage_row)
+        root.addWidget(manage_card)
+
         card = FoundryCard("Raid Times & Days", "stopwatch")
         intro = QLabel(
-            "Set the recurring raid schedule for each named team. Time zones are stored explicitly so nobody has to perform international clock arithmetic in Discord."
+            "Keep the recurring raid schedule for each team in the same place. Time zones are stored explicitly so nobody has to perform international clock arithmetic in Discord."
         )
         intro.setWordWrap(True)
         intro.setProperty("pageSubtitle", True)
@@ -145,15 +174,66 @@ class RosterPage(BaseRosterPage):
     def refresh(self):
         super().refresh()
         if hasattr(self, "schedule_team_combo"):
-            current = self.schedule_team_combo.currentText().strip()
-            names = self.roster_service.list_team_names()
-            self.schedule_team_combo.blockSignals(True)
+            self._reload_schedule_teams(self.schedule_team_combo.currentText().strip())
+
+    def _reload_schedule_teams(self, preferred: str = "") -> None:
+        names = self.roster_service.list_team_names()
+        self.schedule_team_combo.blockSignals(True)
+        try:
             self.schedule_team_combo.clear()
             self.schedule_team_combo.addItems(names)
-            if current and current in names:
-                self.schedule_team_combo.setCurrentText(current)
+            if preferred:
+                index = next(
+                    (i for i, name in enumerate(names) if name.casefold() == preferred.casefold()),
+                    -1,
+                )
+                if index >= 0:
+                    self.schedule_team_combo.setCurrentIndex(index)
+        finally:
             self.schedule_team_combo.blockSignals(False)
-            self._load_team_schedule(self.schedule_team_combo.currentText())
+        self._load_team_schedule(self.schedule_team_combo.currentText())
+
+    def _create_team(self) -> None:
+        name = self.new_team_name.text().strip()
+        if not name:
+            self.status.warning("Enter a team name first.")
+            return
+        try:
+            canonical = self.roster_service.ensure_team_name(name)
+            self.new_team_name.clear()
+            self._reload_schedule_teams(canonical)
+            self.status.success(f"Team ready: {canonical}. Add raid days and time below when you want them.")
+        except Exception as exc:
+            self.status.error(f"Team creation failed: {exc}")
+
+    def _delete_selected_team(self) -> None:
+        team = self.schedule_team_combo.currentText().strip()
+        if not team:
+            self.status.warning("Select a team to delete.")
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Delete Team",
+            f'Delete "{team}"?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            deleted = self.roster_service.delete_team(team)
+            if not deleted:
+                self.status.warning(f"Team no longer exists: {team}")
+                return
+            super().refresh()
+            self._reload_schedule_teams()
+            self.status.success(
+                f"Deleted team {team}. Roster people, characters, and builds were kept."
+            )
+        except Exception as exc:
+            self.status.error(f"Team deletion failed: {exc}")
 
     def _selected_days_text(self) -> str:
         return ", ".join(
@@ -206,12 +286,12 @@ class RosterPage(BaseRosterPage):
         if not hasattr(self, "schedule_preview"):
             return
         schedule = self._current_team_schedule()
-        self.schedule_preview.setText(schedule.display_text if schedule else "Create or assign a team first")
+        self.schedule_preview.setText(schedule.display_text if schedule else "Create or select a team first")
 
     def _save_team_schedule(self) -> None:
         schedule = self._current_team_schedule()
         if schedule is None:
-            self.status.warning("Create or assign a team on the roster before saving raid times.")
+            self.status.warning("Create or select a team before saving raid times.")
             return
         if not schedule.RaidDays:
             self.status.warning("Choose at least one raid day.")
