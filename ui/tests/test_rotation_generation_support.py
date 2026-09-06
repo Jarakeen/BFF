@@ -124,6 +124,81 @@ def test_dashboard_generation_can_return_plan_with_duration_evidence() -> None:
     assert evidence_calls == [projection]
 
 
+def test_dashboard_generation_applies_selected_ultimate_and_rebuilds_final_evidence() -> None:
+    projection = SimpleNamespace(label="duration-refined projection")
+    final_evidence = SimpleNamespace(summary="post-ultimate evidence")
+    ultimate_calls = []
+    build_calls = []
+
+    class RefinementStub:
+        def refine(self, plan):
+            return SimpleNamespace(plan=plan, duration_projection=projection)
+
+    class UltimateStub:
+        def apply_generation(self, **kwargs):
+            ultimate_calls.append(kwargs)
+            return SimpleNamespace(plan=kwargs["plan"])
+
+    class EvidenceStub:
+        def from_projection(self, received):
+            raise AssertionError("post-ultimate generation must re-analyze the final plan")
+
+        def build(self, plan):
+            build_calls.append(plan)
+            return final_evidence
+
+    result = RotationGenerationSupport(
+        duration_refinement=RefinementStub(),
+        duration_evidence=EvidenceStub(),
+        ultimate_service=UltimateStub(),
+    ).generate_with_evidence(
+        build=_build(),
+        request=RotationGenerationRequest(
+            duration_seconds=6.0,
+            ultimate_bar="front",
+            starting_ultimate=120.0,
+            use_scheduled_combat_attacks_for_ultimate=True,
+        ),
+    )
+
+    assert len(ultimate_calls) == 1
+    assert ultimate_calls[0]["ultimate_bar"] == "front"
+    assert ultimate_calls[0]["starting_ultimate"] == 120.0
+    assert ultimate_calls[0]["use_scheduled_combat_attacks"] is True
+    assert build_calls == [result.plan]
+    assert result.duration_evidence is final_evidence
+
+
+def test_dashboard_generation_leaves_ultimate_unscheduled_without_bar_selection() -> None:
+    projection = SimpleNamespace(label="verified projection")
+    evidence = SimpleNamespace(summary="verified durations")
+
+    class RefinementStub:
+        def refine(self, plan):
+            return SimpleNamespace(plan=plan, duration_projection=projection)
+
+    class UltimateStub:
+        def apply_generation(self, **kwargs):
+            raise AssertionError("blank ultimate selection must not project Ultimate")
+
+    class EvidenceStub:
+        def from_projection(self, received):
+            assert received is projection
+            return evidence
+
+    result = RotationGenerationSupport(
+        duration_refinement=RefinementStub(),
+        duration_evidence=EvidenceStub(),
+        ultimate_service=UltimateStub(),
+    ).generate_with_evidence(
+        build=_build(),
+        request=RotationGenerationRequest(duration_seconds=6.0),
+    )
+
+    assert result.duration_evidence is evidence
+    assert any("no ultimate bar is selected" in item for item in result.plan.unresolved)
+
+
 def test_dashboard_generation_rejects_modes_not_yet_implemented() -> None:
     support = RotationGenerationSupport()
     for value in ("Static", "Dynamic"):
