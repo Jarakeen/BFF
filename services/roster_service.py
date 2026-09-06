@@ -205,6 +205,27 @@ class RosterService:
         ))
         self.db.commit()
 
+    def delete_team(self, team_name: str) -> bool:
+        """Delete one team identity without deleting roster people.
+
+        Team memberships and the saved raid schedule belong to the team record, so
+        they are removed with it. Roster members, characters, and builds remain.
+        """
+        name = str(team_name or "").strip()
+        if not name:
+            return False
+        row = self.db.execute(
+            "SELECT id FROM team WHERE name = ? COLLATE NOCASE",
+            (name,),
+        ).fetchone()
+        if row is None:
+            return False
+        team_id = int(row["id"])
+        self.db.execute("DELETE FROM team_member WHERE team_id = ?", (team_id,))
+        self.db.execute("DELETE FROM team WHERE id = ?", (team_id,))
+        self.db.commit()
+        return True
+
     def create_member(self, member: RosterMember) -> int:
         cursor = self.db.execute("""
             INSERT INTO roster_member (
