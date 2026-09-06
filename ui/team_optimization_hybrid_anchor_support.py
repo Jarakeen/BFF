@@ -128,6 +128,13 @@ def install() -> None:
     )
     install_roster_template_button_cleanup()
 
+    # Player/build names in Generated Team rows are now the direct inspection
+    # surface: clicking either opens the known gear and skill evidence.
+    from ui.roster_assignment_build_details_support import (
+        install as install_roster_assignment_build_details,
+    )
+    install_roster_assignment_build_details()
+
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
 
