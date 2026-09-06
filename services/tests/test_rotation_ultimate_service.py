@@ -138,24 +138,23 @@ def test_service_keeps_front_and_back_ultimate_availability_separate() -> None:
     assert cast.name == "Barrier"
 
 
-def test_generation_bridge_derives_affordability_and_schedules_ultimate() -> None:
+def test_generation_bridge_derives_affordability_from_shared_pool() -> None:
     repository = _FakeCostRepository(_resolution())
     service = RotationUltimateService(ability_cost_repository=repository)
 
     result = service.apply_generation(
         build=_build(),
         plan=_long_plan(),
-        starting_ultimate_by_bar={"front": 100.0},
-        generation_events_by_bar={
-            "front": (
-                UltimateGenerationEvent(5.0, 75.0, "explicit gain A"),
-                UltimateGenerationEvent(10.0, 75.0, "explicit gain B"),
-            )
-        },
+        ultimate_bar="front",
+        starting_ultimate=100.0,
+        generation_events=(
+            UltimateGenerationEvent(5.0, 75.0, "explicit gain A"),
+            UltimateGenerationEvent(10.0, 75.0, "explicit gain B"),
+        ),
     )
 
-    assert repository.calls == ["Aggressive Horn", "Barrier"]
-    assert len(result.resource_projections) == 2
+    assert repository.calls == ["Aggressive Horn"]
+    assert len(result.resource_projections) == 1
     front_projection = dict(result.resource_projections)["front"]
     assert front_projection.availability_times == (10.0,)
     horn = next(
@@ -166,6 +165,7 @@ def test_generation_bridge_derives_affordability_and_schedules_ultimate() -> Non
     )
     assert horn.time_seconds == 10.0
     assert horn.bar == "front"
+    assert any("competing back-bar ultimate" in item for item in result.unresolved)
 
 
 def test_generation_bridge_keeps_unaffordable_ultimate_unscheduled() -> None:
@@ -175,10 +175,9 @@ def test_generation_bridge_keeps_unaffordable_ultimate_unscheduled() -> None:
     result = service.apply_generation(
         build=_build(),
         plan=_long_plan(),
-        starting_ultimate_by_bar={"front": 100.0},
-        generation_events_by_bar={
-            "front": (UltimateGenerationEvent(5.0, 100.0, "explicit gain"),)
-        },
+        ultimate_bar="front",
+        starting_ultimate=100.0,
+        generation_events=(UltimateGenerationEvent(5.0, 100.0, "explicit gain"),),
     )
 
     assert not any(
@@ -187,3 +186,20 @@ def test_generation_bridge_keeps_unaffordable_ultimate_unscheduled() -> None:
         for action in result.plan.actions
     )
     assert any("never became affordable" in item for item in result.unresolved)
+
+
+def test_generation_bridge_requires_explicit_ultimate_bar_selection() -> None:
+    service = RotationUltimateService(
+        ability_cost_repository=_FakeCostRepository(_resolution())
+    )
+
+    try:
+        service.apply_generation(
+            build=_build(),
+            plan=_long_plan(),
+            ultimate_bar="",
+        )
+    except ValueError as exc:
+        assert "ultimate_bar" in str(exc)
+    else:
+        raise AssertionError("Expected shared Ultimate projection to require one selected bar")
