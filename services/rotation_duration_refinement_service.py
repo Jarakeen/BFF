@@ -14,14 +14,14 @@ from services.rotation_duration_analysis_service import (
 
 @dataclass(frozen=True)
 class RotationDurationRefinement:
-    """One duration-aware refinement result with its supporting evidence."""
+    """One duration-aware refinement result with evidence from the final schedule."""
 
     plan: RotationPlan
     duration_projection: RotationDurationProjection
 
 
 class RotationDurationRefinementService:
-    """Resolve canonical durations, then refine one already-valid rotation plan."""
+    """Resolve canonical durations, refine a plan, then analyze the final schedule."""
 
     def __init__(
         self,
@@ -36,25 +36,44 @@ class RotationDurationRefinementService:
         self.scheduler = scheduler or DurationAwareRotationScheduler()
 
     def refine(self, plan: RotationPlan) -> RotationDurationRefinement:
-        projection = self.duration_analysis.analyze(plan)
-        refined = self.scheduler.refine(plan, projection.rules)
+        # The first projection supplies canonical duration rules used to refine
+        # the seed schedule. It is not returned as final evidence because its
+        # uptime/gap measurements describe the pre-refinement plan.
+        seed_projection = self.duration_analysis.analyze(plan)
+        refined = self.scheduler.refine(plan, seed_projection.rules)
 
         unresolved = self._dedupe(
-            tuple(refined.unresolved) + tuple(projection.unresolved)
+            tuple(refined.unresolved) + tuple(seed_projection.unresolved)
         )
         if unresolved != refined.unresolved:
-            refined = RotationPlan(
-                character_name=refined.character_name,
-                build_name=refined.build_name,
-                duration_seconds=refined.duration_seconds,
-                actions=refined.actions,
-                assumptions=refined.assumptions,
-                unresolved=unresolved,
-            )
+            refined = self._with_unresolved(refined, unresolved)
+
+        # Re-analyze the actual refined actions so callers receive duration,
+        # recast, uptime, and gap evidence for the same plan they render/evaluate.
+        final_projection = self.duration_analysis.analyze(refined)
+        final_unresolved = self._dedupe(
+            tuple(refined.unresolved) + tuple(final_projection.unresolved)
+        )
+        if final_unresolved != refined.unresolved:
+            refined = self._with_unresolved(refined, final_unresolved)
 
         return RotationDurationRefinement(
             plan=refined,
-            duration_projection=projection,
+            duration_projection=final_projection,
+        )
+
+    @staticmethod
+    def _with_unresolved(
+        plan: RotationPlan,
+        unresolved: tuple[str, ...],
+    ) -> RotationPlan:
+        return RotationPlan(
+            character_name=plan.character_name,
+            build_name=plan.build_name,
+            duration_seconds=plan.duration_seconds,
+            actions=plan.actions,
+            assumptions=plan.assumptions,
+            unresolved=unresolved,
         )
 
     @staticmethod
