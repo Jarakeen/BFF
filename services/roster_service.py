@@ -119,6 +119,30 @@ class RosterService:
             return None
         return self._row_to_member(row)
 
+    def ensure_team_name(self, team_name: str) -> str:
+        """Ensure one durable Roster team identity exists for ``team_name``.
+
+        Generated plans and roster membership are separate persistence concerns, but
+        they share this user-facing team identity. This method is deliberately
+        idempotent and does not fabricate membership for recruitment-only chairs.
+        """
+
+        name = str(team_name or "").strip()
+        if not name:
+            raise ValueError("team name is required")
+        self.db.execute(
+            "INSERT OR IGNORE INTO team (name) VALUES (?)",
+            (name,),
+        )
+        row = self.db.execute(
+            "SELECT name FROM team WHERE name = ? COLLATE NOCASE",
+            (name,),
+        ).fetchone()
+        self.db.commit()
+        if row is None:
+            raise RuntimeError("team identity could not be reloaded after save")
+        return str(row["name"])
+
     def list_team_names(self) -> list[str]:
         rows = self.db.execute("""
             SELECT name
