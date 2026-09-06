@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from models.build_model import PlayerBuild
 from minmax.resource_costs import BaseActionCost, ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.ultimate_generation_sources import HeroismTier, HeroismWindow
 from minmax.ultimate_resource_timeline import UltimateGenerationEvent
 from services.rotation_ultimate_service import RotationUltimateService
 
@@ -203,3 +204,47 @@ def test_generation_bridge_requires_explicit_ultimate_bar_selection() -> None:
         assert "ultimate_bar" in str(exc)
     else:
         raise AssertionError("Expected shared Ultimate projection to require one selected bar")
+
+
+def test_generation_bridge_derives_ultimate_from_major_heroism_window() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_long_plan(),
+        ultimate_bar="front",
+        starting_ultimate=241.0,
+        heroism_windows=(
+            HeroismWindow(HeroismTier.MAJOR, 0.0, 4.5, source="Major Heroism"),
+        ),
+    )
+
+    projection = dict(result.resource_projections)["front"]
+    assert projection.availability_times == (4.5,)
+    horn = next(
+        action
+        for action in result.plan.actions
+        if action.kind is RotationActionKind.ULTIMATE
+        and action.name == "Aggressive Horn"
+    )
+    assert horn.time_seconds == 5.0
+
+
+def test_generation_bridge_combines_explicit_gains_with_minor_heroism() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.apply_generation(
+        build=_build(),
+        plan=_long_plan(),
+        ultimate_bar="front",
+        starting_ultimate=245.0,
+        generation_events=(UltimateGenerationEvent(2.0, 3.0, "explicit gain"),),
+        heroism_windows=(
+            HeroismWindow(HeroismTier.MINOR, 0.0, 3.0, source="Minor Heroism"),
+        ),
+    )
+
+    projection = dict(result.resource_projections)["front"]
+    assert projection.availability_times == (3.0,)
