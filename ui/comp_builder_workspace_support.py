@@ -48,13 +48,26 @@ def _slot_name(page, row: int) -> str:
     return page._cell_text(row, 0) or f"Slot {row + 1}"
 
 
+def _public_candidate_name(candidate) -> str:
+    name = str(candidate.name or "").strip()
+    if candidate.source_kind != "esologs_snapshot" or " • " not in name:
+        return name
+    parts = [part.strip() for part in name.split(" • ") if part.strip()]
+    return " • ".join(parts[:-1]) if len(parts) >= 3 else name
+
+
 def _summary_candidate(page, row: int) -> str:
     slot_name = _slot_name(page, row)
     candidate = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
     if candidate is None:
         return "Open"
-    source = "Saved" if candidate.source_kind == "saved_build" else "Reference"
-    return f"{candidate.name} · {source}"
+    source = {
+        "saved_build": "Roster",
+        "esologs_snapshot": "ESO Logs",
+        "reference_template": "Reference",
+    }.get(candidate.source_kind, "Reference")
+    name = _public_candidate_name(candidate) or "Unnamed build"
+    return f"✓ {name} · {source}"
 
 
 def _summary_constraints(page, row: int) -> str:
@@ -136,8 +149,6 @@ def _sync_selected_chair(page) -> None:
     _copy_hidden_value_to_detail(page, row, 6, page.comp_chair_providers_input)
     _copy_hidden_value_to_detail(page, row, 7, page.comp_chair_mechanics_input)
 
-    # Build Around already owns the authoritative per-chair gear constraint. Move
-    # its existing widgets into this editor rather than inventing duplicate state.
     if hasattr(page, "comp_required_gear_sets_input"):
         slot_gear = getattr(page, "_comp_required_gear_sets_by_slot", {}).get(slot, ())
         page.comp_required_gear_sets_input.blockSignals(True)
@@ -170,8 +181,6 @@ def _install_selected_chair_editor(page) -> None:
     details.title_label.setText("Selected Chair Setup & Evidence")
     details.setProperty("compMakerChairCard", True)
 
-    # The trial/goal summary already exists in the header and composition overview.
-    # Hiding these duplicates gives the selected-chair controls useful vertical room.
     for name in ("trial_label", "summary_label", "coverage_label"):
         widget = getattr(page, name, None)
         if widget is not None:
@@ -217,7 +226,6 @@ def _install_selected_chair_editor(page) -> None:
     layout.insertWidget(0, page.comp_chair_title_label)
     layout.insertWidget(1, editor_host)
 
-    # Re-home the already-tested hard gear constraint immediately after duties.
     gear_label = getattr(page, "comp_required_gear_sets_label", None)
     gear_input = getattr(page, "comp_required_gear_sets_input", None)
     if gear_label is not None and gear_input is not None:
@@ -258,7 +266,7 @@ def _configure_overview_table(page) -> None:
             "OPTIONAL / FLEX",
             "PROVIDERS",
             "MECHANIC JOBS",
-            "APPLIED CANDIDATE",
+            "ASSIGNED BUILD",
             "BUILD AROUND",
             "PROVIDERS / JOBS",
         )
@@ -281,8 +289,6 @@ def _configure_overview_table(page) -> None:
     for column in (SUMMARY_CANDIDATE_COLUMN, SUMMARY_CONSTRAINT_COLUMN, SUMMARY_JOB_COLUMN):
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.Stretch)
 
-    # Twelve trial chairs fit without making the whole page absurdly tall. The page
-    # itself still scrolls vertically for the editor/evidence below.
     table.setMinimumHeight(430)
     table.setMaximumHeight(430)
 
