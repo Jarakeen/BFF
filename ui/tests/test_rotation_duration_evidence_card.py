@@ -1,8 +1,14 @@
+from PySide6.QtWidgets import QApplication
+
 from ui.components.rotation_duration_evidence_card import RotationDurationEvidenceCard
 from ui.rotation_duration_evidence_support import (
     RotationDurationEvidence,
     RotationDurationEvidenceRow,
 )
+
+
+def _app() -> QApplication:
+    return QApplication.instance() or QApplication([])
 
 
 def _evidence() -> RotationDurationEvidence:
@@ -24,9 +30,9 @@ def _evidence() -> RotationDurationEvidence:
     )
 
 
-def test_duration_evidence_card_renders_rows(qtbot) -> None:
+def test_duration_evidence_card_renders_rows() -> None:
+    _app()
     card = RotationDurationEvidenceCard()
-    qtbot.addWidget(card)
 
     card.set_evidence(_evidence())
 
@@ -40,9 +46,9 @@ def test_duration_evidence_card_renders_rows(qtbot) -> None:
     assert card.table.item(0, 6).text() == "1.0s"
 
 
-def test_duration_evidence_card_clears(qtbot) -> None:
+def test_duration_evidence_card_clears() -> None:
+    _app()
     card = RotationDurationEvidenceCard()
-    qtbot.addWidget(card)
     card.set_evidence(_evidence())
 
     card.clear_evidence()
