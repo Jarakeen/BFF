@@ -28,7 +28,7 @@ def _delete_team_identity(db: EsoDatabase, name: str) -> None:
 
 
 def _legacy_plan(plans: GeneratedRosterPlanService, *, source_kind: str = "saved_build"):
-    plan = plans.save_plan(
+    return plans.save_plan(
         name="Godslayer Composition",
         goal="Godslayer",
         difficulty="Veteran Hardmode",
@@ -56,7 +56,6 @@ def _legacy_plan(plans: GeneratedRosterPlanService, *, source_kind: str = "saved
             ),
         ),
     )
-    return plan
 
 
 def _builds() -> BuildRoster:
@@ -98,6 +97,7 @@ def test_inspect_reports_missing_identity_and_only_uniquely_provable_saved_chair
     assert result.promotable_slots == ("Healer 1",)
     assert result.ambiguous_slots == ()
     assert result.blocked_source_slots == ()
+    assert result.normalizable_slots == ()
 
 
 def test_apply_backfills_identity_promotes_saved_chair_and_preserves_other_memberships(tmp_path: Path) -> None:
@@ -134,7 +134,7 @@ def test_apply_backfills_identity_promotes_saved_chair_and_preserves_other_membe
     }
 
 
-def test_esologs_player_identity_is_never_promoted_to_saved_assignment(tmp_path: Path) -> None:
+def test_esologs_player_identity_is_never_promoted_and_is_normalizable(tmp_path: Path) -> None:
     _db, plans, roster, repair = _services(tmp_path)
     plan = _legacy_plan(plans, source_kind="esologs_snapshot")
     roster.create_member(
@@ -154,9 +154,10 @@ def test_esologs_player_identity_is_never_promoted_to_saved_assignment(tmp_path:
 
     assert result.promotable_slots == ()
     assert result.blocked_source_slots == ("Healer 1",)
+    assert result.normalizable_slots == ("Healer 1",)
 
 
-def test_ambiguous_or_missing_exact_build_is_left_unchanged(tmp_path: Path) -> None:
+def test_ambiguous_missing_exact_build_is_normalized_and_original_identity_is_preserved(tmp_path: Path) -> None:
     _db, plans, roster, repair = _services(tmp_path)
     plan = _legacy_plan(plans)
     roster.create_member(
@@ -167,15 +168,64 @@ def test_ambiguous_or_missing_exact_build_is_left_unchanged(tmp_path: Path) -> N
             PrimaryRole="Healer",
         )
     )
-
     builds = BuildRoster(
         Members=[PlayerBuild(Name="Magrat", BuildName="Different Build", EsoClass="Warden")]
     )
-    result = repair.inspect(
+
+    before = repair.inspect(
         plan=plan,
         builds=builds,
         roster_members=tuple(roster.list_members()),
     )
+    assert before.promotable_slots == ()
+    assert before.ambiguous_slots == ("Healer 1",)
+    assert before.normalizable_slots == ("Healer 1",)
 
-    assert result.promotable_slots == ()
-    assert result.ambiguous_slots == ("Healer 1",)
+    repaired = repair.apply(
+        plan=plan,
+        builds=builds,
+        roster_members=tuple(roster.list_members()),
+    )
+    healer = next(slot for slot in repaired.slots if slot.slot_name == "Healer 1")
+    assert healer.kind == "prescribed_recruit"
+    assert healer.player_name == "Recruitment Needed"
+    assert healer.character_name == ""
+    assert healer.build_name == "DF Healer"
+    assert healer.source_name == "Magrat"
+
+    evidence = repair.legacy_assignment_evidence(plan.name, "Healer 1")
+    assert evidence is not None
+    assert evidence["player_name"] == "Magrat"
+    assert evidence["character_name"] == "Magrat"
+    assert evidence["build_name"] == "DF Healer"
+    assert evidence["source_kind"] == "saved_build"
+
+    after = repair.inspect(
+        plan=repaired,
+        builds=builds,
+        roster_members=tuple(roster.list_members()),
+    )
+    assert after.ambiguous_slots == ()
+    assert after.normalizable_slots == ()
+
+
+def test_blocked_source_normalization_preserves_source_evidence(tmp_path: Path) -> None:
+    _db, plans, roster, repair = _services(tmp_path)
+    plan = _legacy_plan(plans, source_kind="reference_template")
+
+    repaired = repair.apply(
+        plan=plan,
+        builds=_builds(),
+        roster_members=tuple(roster.list_members()),
+    )
+
+    healer = next(slot for slot in repaired.slots if slot.slot_name == "Healer 1")
+    assert healer.kind == "prescribed_recruit"
+    assert healer.player_name == "Recruitment Needed"
+    assert healer.source_kind == "reference_template"
+    assert healer.source_name == "Magrat"
+
+    evidence = repair.legacy_assignment_evidence(plan.name, "Healer 1")
+    assert evidence is not None
+    assert evidence["player_name"] == "Magrat"
+    assert evidence["source_kind"] == "reference_template"
