@@ -226,6 +226,22 @@ class RotationDashboardPage(FoundryPage):
         self.potion_on_cooldown = QCheckBox("Use potion on cooldown")
         self.potion_on_cooldown.setChecked(True)
 
+        self.ultimate_bar_combo = QComboBox()
+        self.ultimate_bar_combo.setToolTip(
+            "Choose which saved slot-6 ultimate may spend the shared Ultimate resource pool."
+        )
+        self.starting_ultimate_spin = QSpinBox()
+        self.starting_ultimate_spin.setRange(0, 500)
+        self.starting_ultimate_spin.setValue(0)
+        self.starting_ultimate_spin.setSuffix(" Ultimate")
+        self.attack_ultimate_generation = QCheckBox(
+            "Treat scheduled Light/Heavy Attacks as successful damaging hits"
+        )
+        self.attack_ultimate_generation.setChecked(False)
+        self.attack_ultimate_generation.setToolTip(
+            "When enabled, scheduled Light/Heavy Attacks refresh ESO's base 3 Ultimate/sec generation window."
+        )
+
         settings_grid.addWidget(self._field_label("EXECUTE STARTS"), 0, 0)
         settings_grid.addWidget(self.execute_spin, 1, 0)
         settings_grid.addWidget(self._field_label("ROTATION TYPE"), 0, 1)
@@ -235,6 +251,11 @@ class RotationDashboardPage(FoundryPage):
         settings_grid.addWidget(self._field_label("POTION"), 2, 1)
         settings_grid.addWidget(self.potion_combo, 3, 1)
         settings_grid.addWidget(self.potion_on_cooldown, 4, 0, 1, 2)
+        settings_grid.addWidget(self._field_label("ULTIMATE"), 5, 0)
+        settings_grid.addWidget(self._field_label("STARTING ULTIMATE"), 5, 1)
+        settings_grid.addWidget(self.ultimate_bar_combo, 6, 0)
+        settings_grid.addWidget(self.starting_ultimate_spin, 6, 1)
+        settings_grid.addWidget(self.attack_ultimate_generation, 7, 0, 1, 2)
         settings_card.addLayout(settings_grid)
         grid.addWidget(settings_card, 1, 1)
 
@@ -354,6 +375,13 @@ class RotationDashboardPage(FoundryPage):
     def _build_name(build) -> str:
         return str(getattr(build, "BuildName", "") or "Current Build").strip()
 
+    @staticmethod
+    def _slot_six(values) -> str:
+        skills = list(values or [])
+        if len(skills) < 6:
+            return ""
+        return str(skills[5] or "").strip()
+
     def _load_characters(self) -> None:
         self.character_combo.blockSignals(True)
         self.character_combo.clear()
@@ -408,8 +436,12 @@ class RotationDashboardPage(FoundryPage):
     def _refresh_build_context(self) -> None:
         build = self._selected_build()
         self.priority_table.setRowCount(0)
+        self.ultimate_bar_combo.blockSignals(True)
+        self.ultimate_bar_combo.clear()
+        self.ultimate_bar_combo.addItem("Do not schedule Ultimate", "")
 
         if build is None:
+            self.ultimate_bar_combo.blockSignals(False)
             self.food_value.setText("—")
             self.potion_value.setText("—")
             self.potion_combo.clear()
@@ -431,6 +463,14 @@ class RotationDashboardPage(FoundryPage):
                 values = (bar_name, str(slot), skill, "Unranked")
                 for column, value in enumerate(values):
                     self.priority_table.setItem(row, column, QTableWidgetItem(value))
+
+        front_ultimate = self._slot_six(getattr(build, "FrontBarSkills", []))
+        back_ultimate = self._slot_six(getattr(build, "BackBarSkills", []))
+        if front_ultimate:
+            self.ultimate_bar_combo.addItem(f"Front • {front_ultimate}", "front")
+        if back_ultimate:
+            self.ultimate_bar_combo.addItem(f"Back • {back_ultimate}", "back")
+        self.ultimate_bar_combo.blockSignals(False)
 
         food = str(getattr(build, "Food", "") or "Not selected")
         potion = str(getattr(build, "Potion", "") or "Not selected")
@@ -463,7 +503,7 @@ class RotationDashboardPage(FoundryPage):
         self.resource_summary.setText(
             "Rotation evidence: awaiting generated plan\n"
             "60s resource curve: unresolved\n"
-            "Ultimate timing: unresolved"
+            "Ultimate timing: choose an Ultimate projection in Rotation Setup"
         )
         self.sustain_graph.clear_points()
         self.duration_evidence_card.clear_evidence()
@@ -485,6 +525,11 @@ class RotationDashboardPage(FoundryPage):
             potion=str(settings["potion"]),
             potion_on_cooldown=bool(settings["potion_on_cooldown"]),
             weave_light_attacks=True,
+            ultimate_bar=str(settings["ultimate_bar"]),
+            starting_ultimate=float(settings["starting_ultimate"]),
+            use_scheduled_combat_attacks_for_ultimate=bool(
+                settings["use_scheduled_combat_attacks_for_ultimate"]
+            ),
         )
 
         try:
@@ -600,6 +645,9 @@ class RotationDashboardPage(FoundryPage):
             "target_type": self.target_type_combo.currentText(),
             "potion": self.potion_combo.currentText().strip(),
             "potion_on_cooldown": self.potion_on_cooldown.isChecked(),
+            "ultimate_bar": str(self.ultimate_bar_combo.currentData() or ""),
+            "starting_ultimate": int(self.starting_ultimate_spin.value()),
+            "use_scheduled_combat_attacks_for_ultimate": self.attack_ultimate_generation.isChecked(),
         }
 
     def clear_rotation_plan(self, *, refresh: bool = True) -> None:
