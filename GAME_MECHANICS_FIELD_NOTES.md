@@ -302,3 +302,35 @@ The first Extreme Build Lab boundary excluded potion uptime entirely. That made 
 **What it means in actual play:** Spell Power, Critical, recovery, and resistance potions can legitimately raise different requested stats without borrowing anything from another player. A Restore Health potion, however, improves Health Recovery rather than Max Health, so it does not magically win a "maximum Max Health" contest just because the word Health appears on the bottle.
 
 **For BFF:** the scratch optimizer now keeps the resting/self-contained result and a separate objective-specific potion-active result. It must never quietly fold temporary potion state into the resting number.
+
+---
+
+## 2026-09-07 — Mechanic-entry Magicka is not monotonic with raid DPS
+
+In the Xalvakka healer reserve sweep, Magrat entered the same projected Phase 2 preparation window with different Magicka depending on raid DPS:
+
+| Raid DPS | Magicka immediately before prep window |
+| ---: | ---: |
+| 1,300,000 | 21,836 |
+| 1,500,000 | 18,125 |
+| 2,000,000 | 20,295 |
+
+The middle damage rate produced the lowest entry reserve of the three. Faster raid damage did not simply mean more or less Magicka at the mechanic.
+
+**Layman's version:** the boss reaching the mechanic sooner can land you in a completely different part of your cast-and-recovery cycle. A faster group can therefore hit the mechanic with either more or less Magicka depending on where that threshold intersects the rotation.
+
+**What it means in actual play:** increasing group damage does not guarantee that a healer reaches health-triggered mechanics with a safer resource bar. A particular DPS level can accidentally line the mechanic up with a resource dip.
+
+**For BFF:** mechanic-entry reserve must be evaluated on the projected resource timeline for that team's fight trajectory. It cannot be estimated from raid DPS with a simple increasing or decreasing formula.
+
+---
+
+## 2026-09-07 — A cast moved inside the mechanic window cannot repair a reserve deficit that already existed before the window
+
+In the same Xalvakka reserve work, baseline and encounter-aware rotations had identical Magicka immediately before the prep window even when the encounter-aware plan changed casts inside the window and improved later sustain.
+
+**Layman's version:** once you arrive at the mechanic under-resourced, a clever cast change that happens after the mechanic starts cannot travel backward in time and give you the Magicka you needed beforehand.
+
+**What it means in actual play:** preparation has two separate questions: "Did I enter the mechanic with enough resource?" and "Did I spend that resource well once the mechanic began?" A rotation can improve the second without fixing the first.
+
+**For BFF:** demand-entry reserve must be checked before demand-window actions are applied. Later schedule improvements can improve the aftermath, but they must never be allowed to retroactively satisfy a pre-mechanic reserve requirement.
