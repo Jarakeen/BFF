@@ -96,10 +96,15 @@ class RotationCandidateHeavySustainRankingService:
             return ()
 
         seen: set[str] = set()
-        resolved: dict[str, tuple[RotationCandidateHeavySustainInput, RotationHeavySustainProjection, RotationCandidateScorecard]] = {}
-        unresolved: list[tuple[RotationCandidateHeavySustainInput, RotationHeavySustainProjection]] = []
-        kwargs = dict(scorecard_kwargs or {})
+        for candidate in candidates:
+            key = candidate.candidate_id.casefold()
+            if key in seen:
+                raise ValueError(
+                    f"duplicate rotation heavy-sustain candidate_id: {candidate.candidate_id!r}"
+                )
+            seen.add(key)
 
+        kwargs = dict(scorecard_kwargs or {})
         forbidden = {
             "baseline_plan",
             "candidate_plan",
@@ -113,14 +118,11 @@ class RotationCandidateHeavySustainRankingService:
                 + ", ".join(overlap)
             )
 
+        resolved: dict[str, tuple[RotationCandidateHeavySustainInput, RotationHeavySustainProjection, RotationCandidateScorecard]] = {}
+        unresolved: list[tuple[RotationCandidateHeavySustainInput, RotationHeavySustainProjection]] = []
+
         for candidate in candidates:
             key = candidate.candidate_id.casefold()
-            if key in seen:
-                raise ValueError(
-                    f"duplicate rotation heavy-sustain candidate_id: {candidate.candidate_id!r}"
-                )
-            seen.add(key)
-
             projection = self.heavy_service.project(
                 character_build=character_build,
                 sustain_build=sustain_build,
