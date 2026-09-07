@@ -4,10 +4,10 @@ from __future__ import annotations
 
 The Extreme engine can only call a result globally maximal when every source
 family that could materially affect the objective has been either reviewed or
-explicitly proven not applicable.  Candidate generation may still return a
+explicitly proven not applicable. Candidate generation may still return a
 useful best reviewed lower bound while that broader proof is incomplete.
 
-This module intentionally contains no ESO stat values.  It describes coverage
+This module intentionally contains no ESO stat values. It describes coverage
 of mechanic *families*, not their numeric contribution.
 """
 
@@ -70,7 +70,7 @@ class ExtremeObjectiveCoverage:
     def claim(self) -> ExtremeObjectiveClaim:
         if self.global_maximum_ready:
             return ExtremeObjectiveClaim.GLOBAL_MAXIMUM_READY
-        if self.source_universe_reviewed:
+        if not self.blocking_sources and self.reviewed_sources:
             return ExtremeObjectiveClaim.COMPLETE_WITHIN_REVIEWED_SOURCE_CONTRACT
         return ExtremeObjectiveClaim.BEST_REVIEWED_LOWER_BOUND
 
@@ -80,7 +80,7 @@ class ExtremeObjectiveCoverageService:
 
     ``source_universe_reviewed=False`` is deliberate for the Phase 13.2 seed.
     The source-family list is a conservative audit surface, not a claim that
-    every listed family contributes to every ESO objective.  A later review may
+    every listed family contributes to every ESO objective. A later review may
     mark a family ``NOT_APPLICABLE`` for a specific objective once that absence
     itself is established.
     """
