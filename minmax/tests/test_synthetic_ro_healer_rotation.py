@@ -79,14 +79,21 @@ def test_synthetic_ro_healer_places_required_heavies_around_due_refresh() -> Non
     ]
     assert heavies == [2.0, 28.0]
 
+    at_twenty_four = next(
+        action
+        for action in refined.actions
+        if action.time_seconds == 24.0
+        and action.kind is RotationActionKind.SKILL
+    )
+    assert at_twenty_four.name == "Long Buff"
+
     at_twenty_six = next(
         action
         for action in refined.actions
         if action.time_seconds == 26.0
-        and action.kind in {RotationActionKind.SKILL, RotationActionKind.HEAVY_ATTACK}
+        and action.kind is RotationActionKind.SKILL
     )
-    assert at_twenty_six.kind is RotationActionKind.SKILL
-    assert at_twenty_six.name == "Long Buff"
+    assert at_twenty_six.name == "Action A"
 
     assert not any(action.time_seconds == 3.0 for action in refined.actions)
     assert not any(action.time_seconds == 29.0 for action in refined.actions)
@@ -95,5 +102,10 @@ def test_synthetic_ro_healer_places_required_heavies_around_due_refresh() -> Non
     assert provider.runtime_states[0].incentive_name == "Roaring Opportunist"
     assert provider.runtime_states[0].last_trigger_seconds == 29.8
 
+    assert any(
+        "refresh obligation for 'Long Buff' claimed the 24s front-bar slot from 'Action A'"
+        in item
+        for item in refined.unresolved
+    )
     assert any("reserved the front-bar timeline through 3.8s" in item for item in refined.unresolved)
     assert any("reserved the front-bar timeline through 29.8s" in item for item in refined.unresolved)
