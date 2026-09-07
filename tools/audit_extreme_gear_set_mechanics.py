@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE
+from minmax.eso_markup import normalize_eso_markup
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
 
@@ -103,13 +104,14 @@ def main() -> int:
             piece_totals[int(bonus.piece_count)][classification] += 1
 
             if classification in {UNRESOLVED, EMPTY}:
+                raw_description = str(bonus.description or "").strip()
                 unresolved_rows.append(
                     (
                         gear_set.name,
                         category,
                         int(bonus.piece_count),
                         classification,
-                        str(bonus.description or "").strip(),
+                        normalize_eso_markup(raw_description).text.strip(),
                     )
                 )
 
