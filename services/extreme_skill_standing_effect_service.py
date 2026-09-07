@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from minmax.gear_stat_inputs import GearStatInputResolver
+from services.named_buff_resolution_service import NamedBuffResolutionService
 
 
 class ExtremeSkillEffectScope(str, Enum):
@@ -30,11 +31,9 @@ class ExtremeSkillStandingEffectService:
     and activated/runtime effects are intentionally excluded from resting-sheet
     scoring until combat state supplies their uptime.
 
-    Named buffs carry their actual buff identity as a stacking key. Two sources
-    of Major Sorcery, for example, collapse to one Major Sorcery contribution,
-    while Major Sorcery and Minor Sorcery remain different keys and may stack.
-    Source type is irrelevant to named-buff deduplication; a potion and a skill
-    granting the same named Major buff still provide only one copy.
+    Named-buff stacking is delegated to the source-neutral resolver shared with
+    future potion, set, passive, and group-provider effects. Source type does not
+    create a second copy of the same named Major/Minor buff.
     """
 
     MAJOR_CRIT_RATING = 2629.0
@@ -149,19 +148,8 @@ class ExtremeSkillStandingEffectService:
     def stack_effects(
         effects: tuple[ExtremeSkillStandingEffect, ...],
     ) -> tuple[ExtremeSkillStandingEffect, ...]:
-        """Apply ESO named-buff stacking by exact buff identity.
-
-        Duplicate sources of the same named Major/Minor buff do not stack. Major
-        and Minor variants remain distinct because their stacking keys differ.
-        For duplicate evidence, retain the largest projected contribution so a
-        weaker duplicate source cannot suppress a stronger canonical value.
-        """
-        by_key: dict[str, ExtremeSkillStandingEffect] = {}
-        for effect in effects:
-            existing = by_key.get(effect.stacking_key)
-            if existing is None or effect.projected_delta > existing.projected_delta:
-                by_key[effect.stacking_key] = effect
-        return tuple(by_key[key] for key in sorted(by_key))
+        """Apply the shared ESO named-buff stacking contract."""
+        return NamedBuffResolutionService.resolve(effects)
 
     @classmethod
     def score(
