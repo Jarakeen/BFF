@@ -94,7 +94,10 @@ class ExtremeClassRouteComparisonService:
     Legal allocations whose reviewed passive contribution is proven zero remain
     eligible for bar materialization. This prevents skill-only standing effects
     from disappearing merely because the passive layer had nothing numeric to
-    contribute for the requested objective.
+    contribute for the requested objective. A zero-passive bar is only promoted
+    to a reviewed lower bound when the materialized skill layer supplies reviewed
+    evidence; otherwise the route remains unresolved rather than becoming a fake
+    reviewed zero.
     """
 
     def __init__(
@@ -213,6 +216,8 @@ class ExtremeClassRouteComparisonService:
                     external_effects=external_effects,
                 )
             )
+            if not allocation.reviewed_sources and not skill_sources:
+                continue
             candidate = _ReviewedSubclassBuild(
                 allocation=allocation,
                 bars=bars,
