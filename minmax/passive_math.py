@@ -35,6 +35,10 @@ MEDIUM_ARMOR_CRIT_DAMAGE_HEALING_PERCENT_PER_PIECE = 0.02
 MEDIUM_ARMOR_STAMINA_RECOVERY_PERCENT_PER_PIECE = 0.04
 
 
+# Heavy Armor, max-rank passive values per equipped piece.
+HEAVY_ARMOR_RESOLVE_RESISTANCE_PER_PIECE = 343.0
+
+
 def _count(value: int) -> int:
     return max(0, int(value))
 
@@ -100,3 +104,8 @@ def medium_armor_crit_damage_healing_percent(piece_count: int) -> float:
 
 def medium_armor_stamina_recovery_percent(piece_count: int) -> float:
     return _count(piece_count) * MEDIUM_ARMOR_STAMINA_RECOVERY_PERCENT_PER_PIECE
+
+
+def heavy_armor_resolve_resistance(piece_count: int) -> float:
+    """Return max-rank Resolve resistance from equipped Heavy Armor pieces."""
+    return _count(piece_count) * HEAVY_ARMOR_RESOLVE_RESISTANCE_PER_PIECE
