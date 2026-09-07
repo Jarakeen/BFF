@@ -90,7 +90,7 @@ def _policy(
     )
 
 
-@pytest.mark.parametrize("role", (Role.HEALER, Role.TANK, Role.DAMAGE_DEALER))
+@pytest.mark.parametrize("role", (Role.HEALER, Role.TANK, Role.DD))
 def test_assignment_effect_obligation_derivation_is_role_neutral(role: Role) -> None:
     provider = _provider(build_name="Assigned Build")
     projection = RotationAssignmentEffectObligationService().derive(
