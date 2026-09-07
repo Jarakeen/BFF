@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from models.build_model import PlayerBuild
 from services.minmax_character_progression_adapter import SavedBuildProgressionResolution
@@ -19,8 +17,8 @@ def _build() -> PlayerBuild:
     build.Name = "Magrat"
     build.BuildName = "DF Healer"
     build.AttributeMagicka = 64
-    build.Armor["Chest"].Weight = "Light"
-    build.Armor["Head"].Weight = "Medium"
+    build.Armor["Chest"]["Weight"] = "Light"
+    build.Armor["Head"]["Weight"] = "Medium"
     return build
 
 
