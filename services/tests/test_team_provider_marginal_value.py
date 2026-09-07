@@ -134,6 +134,19 @@ def test_distinct_major_and_minor_named_effects_both_remain_marginal():
     assert result.delta_for("physical_resistance") == 2974.0
 
 
+def test_same_named_provider_modeled_across_two_objectives_counts_once():
+    candidate = (
+        _buff("minor_resolve", "physical_resistance", 2974.0, "Bound Aegis physical", "skill"),
+        _buff("minor_resolve", "spell_resistance", 2974.0, "Bound Aegis spell", "skill"),
+    )
+
+    result = TeamProviderMarginalValueService.evaluate(candidate_effects=candidate)
+
+    assert len(result.marginal_effects) == 2
+    assert result.new_named_effect_count == 1
+    assert result.stacking_keys == ("minor_resolve",)
+
+
 def test_equal_objective_candidates_use_unique_missing_provider_as_tiebreak():
     existing = (_buff("major_sorcery", "spell_damage", 600.0, "potion", "potion"),)
     redundant = _evidence(
