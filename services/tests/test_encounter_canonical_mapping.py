@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from services.encounter_canonical_mapping import (
+    CANONICAL_ADD_GROUP,
+    CANONICAL_DAMAGE_WINDOW,
     CANONICAL_FAILURE_CONDITION,
     CANONICAL_MECHANIC_DETAIL,
     CANONICAL_MECHANIC_PRESENCE,
@@ -119,6 +121,41 @@ def test_maps_corroborated_transition_thresholds_losslessly_in_schema_v3():
     assert mapping is not None
     assert mapping.canonical_kind == CANONICAL_PHASE_TRANSITION
     assert mapping.payload == {"thresholds": ["50%", "35%", "20%"]}
+    assert mapping.lossless_in_current_schema is True
+
+
+def test_maps_corroborated_damage_window_without_flattening_target_state():
+    value = {
+        "trigger_health_percent": [80, 50, 20],
+        "boss_targetable": False,
+        "boss_damageable": False,
+        "adds_active": True,
+        "raid_damage_active": True,
+        "state": "boss_airborne",
+    }
+    mapping = map_candidate_to_canonical(
+        _candidate("damage_window", "aerial_onslaught_flight", value)
+    )
+
+    assert mapping is not None
+    assert mapping.canonical_kind == CANONICAL_DAMAGE_WINDOW
+    assert mapping.payload == value
+    assert mapping.lossless_in_current_schema is True
+
+
+def test_maps_corroborated_add_group_without_inventing_unknown_count():
+    value = {
+        "members": ["Frost Atronach", "Storm Atronach"],
+        "trigger": "aerial_onslaught_flight",
+        "count": None,
+    }
+    mapping = map_candidate_to_canonical(
+        _candidate("add_group", "aerial_onslaught_atronachs", value)
+    )
+
+    assert mapping is not None
+    assert mapping.canonical_kind == CANONICAL_ADD_GROUP
+    assert mapping.payload == value
     assert mapping.lossless_in_current_schema is True
 
 
