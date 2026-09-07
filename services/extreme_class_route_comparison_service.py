@@ -18,6 +18,7 @@ from services.extreme_subclass_slot_allocation_service import (
     ExtremeSubclassSlotAllocationResult,
     ExtremeSubclassSlotAllocationService,
 )
+from services.named_buff_resolution_service import NamedBuffContribution
 
 
 class ExtremeClassRouteKind(str, Enum):
@@ -83,8 +84,9 @@ class ExtremeClassRouteComparisonService:
 
     Standing skills retain explicit scope: active-bar effects only apply on the
     selected bar, either-bar effects apply if present on either bar, and runtime
-    effects remain excluded until combat state can prove uptime. Named Major and
-    Minor buffs are deduplicated by exact buff identity across both bars.
+    effects remain excluded until combat state can prove uptime. External named
+    buffs may shape skill choice and stacking, but route scores only receive the
+    marginal value added beyond that shared external context.
     """
 
     def __init__(
@@ -102,6 +104,7 @@ class ExtremeClassRouteComparisonService:
         *,
         objective_key: str,
         reference_value: float | None,
+        external_effects: tuple[NamedBuffContribution, ...],
     ) -> ExtremeSubclassTwoBarResult | None:
         materialize_two_bars = getattr(self.skill_bars, "materialize_two_bars", None)
         if callable(materialize_two_bars):
@@ -111,13 +114,22 @@ class ExtremeClassRouteComparisonService:
                     slot_counts,
                     objective_key=objective_key,
                     reference_value=reference_value,
+                    external_effects=external_effects,
                 )
             except TypeError:
-                return materialize_two_bars(
-                    slot_counts,
-                    slot_counts,
-                    objective_key=objective_key,
-                )
+                try:
+                    return materialize_two_bars(
+                        slot_counts,
+                        slot_counts,
+                        objective_key=objective_key,
+                        reference_value=reference_value,
+                    )
+                except TypeError:
+                    return materialize_two_bars(
+                        slot_counts,
+                        slot_counts,
+                        objective_key=objective_key,
+                    )
 
         def materialize_one():
             try:
@@ -125,12 +137,20 @@ class ExtremeClassRouteComparisonService:
                     slot_counts,
                     objective_key=objective_key,
                     reference_value=reference_value,
+                    external_effects=external_effects,
                 )
             except TypeError:
-                return self.skill_bars.materialize(
-                    slot_counts,
-                    objective_key=objective_key,
-                )
+                try:
+                    return self.skill_bars.materialize(
+                        slot_counts,
+                        objective_key=objective_key,
+                        reference_value=reference_value,
+                    )
+                except TypeError:
+                    return self.skill_bars.materialize(
+                        slot_counts,
+                        objective_key=objective_key,
+                    )
 
         front = materialize_one()
         back = materialize_one()
@@ -152,6 +172,7 @@ class ExtremeClassRouteComparisonService:
         *,
         reference_value: float | None,
         active_bar: str,
+        external_effects: tuple[NamedBuffContribution, ...],
     ) -> tuple[_ReviewedSubclassBuild | None, bool]:
         allocations = ExtremeSubclassSlotAllocationService.reviewed_allocations(
             equipped_skill_lines,
@@ -168,16 +189,18 @@ class ExtremeClassRouteComparisonService:
                 allocation.slot_counts,
                 objective_key=objective_key,
                 reference_value=reference_value,
+                external_effects=external_effects,
             )
             if bars is None:
                 continue
             materialized_any = True
-            skill_delta, skill_sources = ExtremeSkillStandingEffectService.score_build_bars(
+            skill_delta, skill_sources = ExtremeSkillStandingEffectService.marginal_score_build_bars(
                 bars.front.names,
                 bars.back.names,
                 objective_key,
                 active_bar=active_bar,
                 reference_value=reference_value,
+                external_effects=external_effects,
             )
             candidate = _ReviewedSubclassBuild(
                 allocation=allocation,
@@ -212,6 +235,7 @@ class ExtremeClassRouteComparisonService:
         reference_value: float | None = None,
         higher_max_resource: float | None = None,
         active_bar: str = "front",
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> ExtremeClassRouteComparison:
         active_bar_key = str(active_bar or "").strip().casefold()
         if active_bar_key not in {"front", "back"}:
@@ -256,6 +280,7 @@ class ExtremeClassRouteComparisonService:
                 objective_key,
                 reference_value=reference_value,
                 active_bar=active_bar_key,
+                external_effects=external_effects,
             )
             if reviewed_build is not None:
                 reviewed_lower_bound_count += 1
