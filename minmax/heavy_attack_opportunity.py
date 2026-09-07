@@ -35,6 +35,7 @@ class HeavyAttackOpportunityEvidence:
     current_resource: float | None = None
     maximum_resource: float | None = None
     recovery_trigger_fraction: float = 0.0
+    reserve_shortfall: int = 0
 
     def __post_init__(self) -> None:
         purpose = self.purpose if isinstance(self.purpose, HeavyAttackPurpose) else HeavyAttackPurpose(str(self.purpose))
@@ -56,6 +57,11 @@ class HeavyAttackOpportunityEvidence:
         if self.requirement_name is not None:
             name = str(self.requirement_name).strip()
             object.__setattr__(self, "requirement_name", name or None)
+
+        shortfall = int(self.reserve_shortfall)
+        if shortfall < 0:
+            raise ValueError("heavy attack reserve shortfall cannot be negative")
+        object.__setattr__(self, "reserve_shortfall", shortfall)
 
         if purpose is HeavyAttackPurpose.REQUIRED_EFFECT:
             if not self.requirement_name:
@@ -150,12 +156,12 @@ def evaluate_heavy_attack_opportunity(
             purpose=evidence.purpose,
             resource_fraction=fraction,
         )
-    if fraction > evidence.recovery_trigger_fraction:
+    if fraction > evidence.recovery_trigger_fraction and evidence.reserve_shortfall <= 0:
         return HeavyAttackOpportunity(
             recommended=False,
             reason=(
                 f"resource fraction {fraction:.3f} is above recovery trigger "
-                f"{evidence.recovery_trigger_fraction:.3f}"
+                f"{evidence.recovery_trigger_fraction:.3f} with no verified reserve shortfall"
             ),
             purpose=evidence.purpose,
             resource_fraction=fraction,
@@ -168,12 +174,20 @@ def evaluate_heavy_attack_opportunity(
             resource_fraction=fraction,
         )
 
-    return HeavyAttackOpportunity(
-        recommended=True,
-        reason=(
+    if evidence.reserve_shortfall > 0:
+        reason = (
+            f"safe {evidence.available_window_seconds:g}s recovery window with verified "
+            f"{evidence.needed_resource.value} reserve shortfall {evidence.reserve_shortfall}"
+        )
+    else:
+        reason = (
             f"safe {evidence.available_window_seconds:g}s recovery window with "
             f"{evidence.needed_resource.value} at {fraction:.1%}"
-        ),
+        )
+
+    return HeavyAttackOpportunity(
+        recommended=True,
+        reason=reason,
         purpose=evidence.purpose,
         resource_fraction=fraction,
     )
