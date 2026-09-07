@@ -55,6 +55,7 @@ CORE_NAV_SECTIONS = [
     ]},
     ("Achievements", "achievements"),
     {"label": "Collectibles", "page": "collectibles", "children": [
+        ("Stickerbook", "stickerbook"),
         ("Mounts", "collectibles:Mounts"),
         ("Pets", "collectibles:Pets"),
         ("Allies / Assistants", "collectibles:Allies / Assistants"),
