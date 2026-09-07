@@ -7,6 +7,10 @@ from services.extreme_class_route_comparison_service import (
     ExtremeClassRouteComparisonService,
     ExtremeClassRouteKind,
 )
+from services.extreme_subclass_skill_bar_service import (
+    ExtremeSubclassBarSkill,
+    ExtremeSubclassSkillBarResult,
+)
 
 
 def _database(tmp_path):
@@ -38,8 +42,44 @@ def _database(tmp_path):
     return path
 
 
+class _MaterializingBarService:
+    def materialize(self, slot_counts):
+        if not slot_counts or sum(count for _, count in slot_counts) != 6:
+            return None
+        lines = [line for line, count in slot_counts for _ in range(count)]
+        skills = []
+        for index, line in enumerate(lines):
+            skills.append(
+                ExtremeSubclassBarSkill(
+                    ability_id=10000 + index,
+                    base_ability_id=20000 + index,
+                    name=f"{line} skill {index + 1}",
+                    skill_line_id=line,
+                    is_ultimate=index == 5,
+                    morph=1,
+                )
+            )
+        return ExtremeSubclassSkillBarResult(
+            slot_counts=slot_counts,
+            skills=tuple(skills),
+        )
+
+
+class _RejectingBarService:
+    def materialize(self, slot_counts):
+        return None
+
+
+def _service(tmp_path, *, reject_bars: bool = False):
+    bars = _RejectingBarService() if reject_bars else _MaterializingBarService()
+    return ExtremeClassRouteComparisonService(
+        _database(tmp_path),
+        skill_bar_service=bars,
+    )
+
+
 def test_route_comparison_keeps_subclasses_unresolved_even_with_reviewed_lower_bounds(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+    service = _service(tmp_path)
 
     result = service.compare(
         "spell_damage",
@@ -56,8 +96,8 @@ def test_route_comparison_keeps_subclasses_unresolved_even_with_reviewed_lower_b
     assert result.can_declare_global_winner is False
 
 
-def test_spell_damage_subclass_lower_bound_uses_legal_slot_allocation(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+def test_spell_damage_subclass_lower_bound_uses_materialized_legal_bar(tmp_path):
+    service = _service(tmp_path)
 
     result = service.compare(
         "spell_damage",
@@ -70,14 +110,32 @@ def test_spell_damage_subclass_lower_bound_uses_legal_slot_allocation(tmp_path):
     assert best.route_kind is ExtremeClassRouteKind.SUBCLASS
     assert best.projected_delta == 648.0
     assert "storm_calling" in best.equipped_skill_lines
-    assert best.score_status == "reviewed_subclass_slot_lower_bound"
+    assert best.score_status == "reviewed_subclass_materialized_lower_bound"
     assert sum(count for _, count in best.slot_counts) == 6
     assert best.reviewed_sources == ("Expert Mage (6 Sorcerer slots)",)
+    assert len(best.skill_bar_names) == 6
+    assert len(best.skill_bar_ability_ids) == 6
     assert result.can_declare_global_winner is False
 
 
+def test_unmaterializable_allocation_is_not_reported_as_numeric_lower_bound(tmp_path):
+    service = _service(tmp_path, reject_bars=True)
+
+    result = service.compare(
+        "spell_damage",
+        reference_value=5000,
+        higher_max_resource=35000,
+    )
+
+    subclasses = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.SUBCLASS]
+    assert result.reviewed_subclass_lower_bound_count == 0
+    assert result.best_reviewed_subclass_lower_bound is None
+    assert any(row.score_status == "pending_canonical_bar_materialization" for row in subclasses)
+    assert all(row.projected_delta is None for row in subclasses)
+
+
 def test_best_reviewed_pure_route_is_not_mislabeled_global_winner(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+    service = _service(tmp_path)
 
     result = service.compare(
         "spell_damage",
@@ -95,7 +153,7 @@ def test_best_reviewed_pure_route_is_not_mislabeled_global_winner(tmp_path):
 
 
 def test_pure_route_uses_native_three_line_configuration(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+    service = _service(tmp_path)
 
     result = service.compare("critical_damage", reference_value=0.5)
     nightblade = next(
@@ -110,7 +168,7 @@ def test_pure_route_uses_native_three_line_configuration(tmp_path):
 
 
 def test_subclass_routes_never_claim_class_mastery(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+    service = _service(tmp_path)
 
     result = service.compare("spell_damage", reference_value=5000, higher_max_resource=35000)
     subclasses = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.SUBCLASS]
@@ -120,7 +178,7 @@ def test_subclass_routes_never_claim_class_mastery(tmp_path):
 
 
 def test_percent_subclass_line_requires_reference_value_before_it_gets_lower_bound(tmp_path):
-    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+    service = _service(tmp_path)
 
     without_reference = service.compare("magicka_recovery")
     with_reference = service.compare("magicka_recovery", reference_value=1000)
