@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
+from minmax.demand_action_claim_duration_scheduler import (
+    DemandActionClaim,
+    DemandActionClaimPriorityDurationRotationScheduler,
+)
 from minmax.demand_anticipatory_duration_scheduler import (
     DemandAnticipatoryPriorityDurationRotationScheduler,
     DemandAnticipatoryPrioritySoftActionDurationRotationScheduler,
@@ -60,6 +64,7 @@ class RotationDurationRefinementService:
         wait_decision: PrematureRecastDecisionProvider | None = None,
         demands: tuple[RotationDemandWindow, ...] = (),
         demand_refresh_leads: tuple[DemandRefreshLead, ...] = (),
+        demand_action_claims: tuple[DemandActionClaim, ...] = (),
     ) -> RotationDurationRefinement:
         # The first projection supplies canonical duration rules used to refine
         # the seed schedule. It is not returned as final evidence because its
@@ -67,12 +72,25 @@ class RotationDurationRefinementService:
         seed_projection = self.duration_analysis.analyze(plan)
         demand_windows = tuple(demands)
         refresh_leads = tuple(demand_refresh_leads)
+        action_claims = tuple(demand_action_claims)
         if demand_windows and priorities is None:
             raise ValueError("rotation demand windows require explicit ability priorities")
         if refresh_leads and not demand_windows:
             raise ValueError("demand refresh leads require at least one rotation demand window")
         if refresh_leads and priorities is None:
             raise ValueError("demand refresh leads require explicit ability priorities")
+        if action_claims and not demand_windows:
+            raise ValueError("demand action claims require at least one rotation demand window")
+        if action_claims and priorities is None:
+            raise ValueError("demand action claims require explicit ability priorities")
+        if action_claims and refresh_leads:
+            raise ValueError(
+                "demand action claims and demand refresh leads cannot yet be combined in one refinement"
+            )
+        if action_claims and wait_decision is not None:
+            raise ValueError(
+                "demand action claims cannot yet be combined with caller-proven soft actions"
+            )
 
         if wait_decision is not None and priorities is not None:
             if refresh_leads:
@@ -103,7 +121,13 @@ class RotationDurationRefinementService:
                 soft_decision=wait_decision,
             )
         else:
-            if priorities is not None and refresh_leads:
+            if priorities is not None and action_claims:
+                scheduler = DemandActionClaimPriorityDurationRotationScheduler(
+                    priorities,
+                    demand_windows,
+                    action_claims,
+                )
+            elif priorities is not None and refresh_leads:
                 scheduler = DemandAnticipatoryPriorityDurationRotationScheduler(
                     priorities,
                     demand_windows,
