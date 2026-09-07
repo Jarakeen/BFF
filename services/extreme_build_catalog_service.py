@@ -132,63 +132,38 @@ class ExtremeBuildCatalogService:
             for lines in unique_line_sets
         }
 
+        # WHY PRECOMPUTE THE FINGERPRINT: the generated catalog is only valid for
+        # the exact canonical database it came from. If eso.db changes after an
+        # import or game update, callers can detect the mismatch and rebuild.
+        metadata = {
+            "schema_version": CATALOG_SCHEMA_VERSION,
+            "subclass_rule_version": SUBCLASS_RULE_VERSION,
+            "source_database_sha256": self.database_fingerprint(),
+            "source_database_name": self.database_path.name,
+            "active_bar_slots": ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS,
+        }
+
+        # WHY THIS STAYS DYNAMIC: these inputs can change the best build without
+        # changing which builds are legal. They belong in runtime scoring, not in
+        # the precomputed catalog, or the cache would quietly fossilize one context.
+        dynamic_runtime_inputs = [
+            "requested objective",
+            "selected active bar",
+            "reference stat values",
+            "potion state",
+            "set effects",
+            "external/group named buffs",
+            "runtime activation and uptime",
+            "encounter state",
+        ]
+
         return {
-            "metadata": {
-                "schema_version": CATALOG_SCHEMA_VERSION,
-                "subclass_rule_version": SUBCLASS_RULE_VERSION,
-                "source_database_sha256": self.database_fingerprint(),
-                "source_database_name": self.database_path.name,
-                "active_bar_slots": ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS,
-                "_why": (
-                    "The fingerprint invalidates this cache when canonical ESO data changes; "
-                    "the rule version invalidates it when subclass legality changes."
-                ),
-            },
-            "class_configurations": {
-                "_why": (
-                    "Legal class-line ownership is structural. Runtime requests should filter "
-                    "and score this list instead of rebuilding subclass legality."
-                ),
-                "rows": configuration_rows,
-            },
-            "bar_allocations": {
-                "_why": (
-                    "Six-slot line-count shapes are objective-neutral and finite. Precomputing "
-                    "them removes repeated combinatoric enumeration from route scoring."
-                ),
-                "by_line_set": allocation_rows,
-            },
-            "skill_families": {
-                "_why": (
-                    "Ability families, morph alternatives, line ownership, and Ultimate status "
-                    "come from canonical data. We retain alternatives so dynamic buff context "
-                    "can still choose the best marginal morph later."
-                ),
-                "by_skill_line": skill_families,
-            },
-            "passive_allocation_formulas": {
-                "_why": (
-                    "Reviewed slot-count passive effects are deterministic formulas. We cache "
-                    "flat/ratio/reference coefficients, not final context-dependent scores."
-                ),
-                "by_line_set": passive_formulas,
-            },
-            "dynamic_runtime_inputs": {
-                "_why": (
-                    "These values intentionally remain outside the cache because they can change "
-                    "the winner without changing structural legality."
-                ),
-                "items": [
-                    "requested objective",
-                    "selected active bar",
-                    "reference stat values",
-                    "potion state",
-                    "set effects",
-                    "external/group named buffs",
-                    "runtime activation and uptime",
-                    "encounter state",
-                ],
-            },
+            "metadata": metadata,
+            "class_configurations": {"rows": configuration_rows},
+            "bar_allocations": {"by_line_set": allocation_rows},
+            "skill_families": {"by_skill_line": skill_families},
+            "passive_allocation_formulas": {"by_line_set": passive_formulas},
+            "dynamic_runtime_inputs": {"items": dynamic_runtime_inputs},
         }
 
     def write(
@@ -279,8 +254,12 @@ class ExtremeBuildCatalogService:
 
     @staticmethod
     def _standing_effect_descriptors(skill_name: str) -> list[dict[str, Any]]:
-        # reference_value=1 lets us expose reference-sensitive reviewed effects
-        # as descriptors without pretending that 1 is the caller's real stat.
+        # WHY PRECOMPUTE THIS: standing-effect identity, activation scope, and
+        # named-buff key are properties of the skill itself. We cache those facts
+        # so runtime scoring only has to apply the current reference value and
+        # external-buff context instead of rediscovering the skill mechanics.
+        # reference_value=1 exposes reference-sensitive reviewed effects as
+        # descriptors without pretending that 1 is the caller's real stat.
         effects = ExtremeSkillStandingEffectService.effects_for_skill(
             skill_name,
             reference_value=1.0,
