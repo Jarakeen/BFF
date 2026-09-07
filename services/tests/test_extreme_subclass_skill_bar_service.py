@@ -72,6 +72,34 @@ def test_materializes_mixed_line_allocation_with_ultimate_from_represented_line(
     assert result.skills[-1].name == "Animal Ultimate"
 
 
+def test_each_purchased_subclass_line_may_supply_the_single_bar_ultimate(monkeypatch, tmp_path):
+    rows = [
+        _skill(101, 1001, "Assassin One", "Assassination"),
+        _skill(102, 1002, "Assassin Two", "Assassination"),
+        _skill(103, 1003, "Storm One", "Storm Calling"),
+        _skill(104, 1004, "Storm Two", "Storm Calling"),
+        _skill(105, 1005, "Animal One", "Animal Companions"),
+        _skill(201, 2001, "Assassination Ultimate", "Assassination", ultimate=True),
+        _skill(202, 2002, "Storm Ultimate", "Storm Calling", ultimate=True),
+        _skill(203, 2003, "Animal Ultimate", "Animal Companions", ultimate=True),
+    ]
+    monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
+    service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
+
+    result = service.materialize(
+        (("assassination", 2), ("storm_calling", 2), ("animal_companions", 2))
+    )
+
+    assert result is not None
+    assert len(result.skills) == 6
+    assert sum(1 for skill in result.skills if skill.is_ultimate) == 1
+    assert result.skills[-1].skill_line_id in {
+        "assassination",
+        "storm_calling",
+        "animal_companions",
+    }
+
+
 def test_rejects_allocation_without_a_legal_ultimate(monkeypatch, tmp_path):
     rows = [
         _skill(101 + index, 1001 + index, f"Storm Skill {index}", "Storm Calling")
