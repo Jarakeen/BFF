@@ -95,6 +95,10 @@ COMPONENT_LAYER_BUFFS = frozenset({
     "Major Protection",
     "Minor Vulnerability",
     "Major Vulnerability",
+    "Minor Slayer",
+    "Major Slayer",
+    "Minor Aegis",
+    "Major Aegis",
 })
 
 
