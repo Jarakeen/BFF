@@ -8,6 +8,7 @@ from minmax.character_build.character_class import CharacterClass
 from services.class_mastery_classification_service import ClassMasteryBoundary
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
 from services.extreme_class_mastery_pair_service import ExtremeClassMasteryPairService
+from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
 from services.extreme_subclass_skill_bar_service import ExtremeSubclassSkillBarService
 from services.extreme_subclass_slot_allocation_service import (
     ExtremeSubclassSlotAllocationService,
@@ -57,15 +58,10 @@ class ExtremeClassRouteComparison:
 class ExtremeClassRouteComparisonService:
     """Compare reviewed pure-class mastery routes against legal subclass routes.
 
-    Subclass lower bounds require two proofs:
-
-    1. a reviewed six-slot allocation for the requested objective; and
-    2. a concrete canonical bar that can actually realize that allocation with
-       five distinct non-Ultimate base families plus one Ultimate.
-
-    The chosen skill names are a deterministic legality witness, not a claim
-    that those particular morphs are the final objective-optimal bar. Unreviewed
-    skill/passive effects still keep every subclass route globally unresolved.
+    Subclass lower bounds require a reviewed six-slot allocation plus a concrete
+    canonical bar. Reviewed while-slotted skill effects may then add to that
+    proven lower bound. Triggered or otherwise unresolved skill effects remain
+    excluded rather than inferred from tooltip prose.
     """
 
     def __init__(
@@ -122,13 +118,29 @@ class ExtremeClassRouteComparisonService:
                 objective_key,
                 reference_value=reference_value,
             )
-            bar = self.skill_bars.materialize(allocation.slot_counts) if allocation is not None else None
+            bar = (
+                self.skill_bars.materialize(
+                    allocation.slot_counts,
+                    objective_key=objective_key,
+                )
+                if allocation is not None
+                else None
+            )
             if allocation is not None and bar is not None:
                 reviewed_lower_bound_count += 1
-                projected_delta: float | None = allocation.projected_delta
+                skill_delta = sum(
+                    ExtremeSkillStandingEffectService.score(skill.name, objective_key)
+                    for skill in bar.skills
+                )
+                skill_sources = tuple(
+                    source
+                    for skill in bar.skills
+                    for source in ExtremeSkillStandingEffectService.sources(skill.name, objective_key)
+                )
+                projected_delta: float | None = allocation.projected_delta + skill_delta
                 score_status = "reviewed_subclass_materialized_lower_bound"
                 slot_counts = allocation.slot_counts
-                reviewed_sources = allocation.reviewed_sources
+                reviewed_sources = allocation.reviewed_sources + skill_sources
                 reviewed_line_ids = tuple(
                     line for line, count in slot_counts if count > 0
                 )
