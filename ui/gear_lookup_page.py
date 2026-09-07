@@ -47,9 +47,6 @@ _OPTIONAL_METADATA_COLUMNS = {
     "acquisition_type": ("acquisition_type", "activity_type", "source_type", "set_type"),
 }
 
-# Practical lookup buckets requested by the app owner. These answer the useful
-# question: can I make it, buy/farm it in the world, farm/reconstruct it from
-# PvE group content, or deal with Cyrodiil-specific acquisition?
 _ACQUISITION_TYPES = (
     "Crafted",
     "Overland",
@@ -230,6 +227,53 @@ class GearLookupPage(FoundryPage):
 
         return result
 
+    @staticmethod
+    def _canonical_entity_sets(
+        connection: sqlite3.Connection,
+        tables: set[str],
+        existing_names: set[str],
+    ) -> list[dict]:
+        """Return canonical gear-set entities not yet normalized into gear_set.
+
+        Arena weapons can exist in the canonical entity catalog before their set
+        bonus rows are fully normalized. Gear Lookup must expose the same union
+        the build editor already uses, without duplicating names already present
+        in gear_set.
+        """
+        if "entity" not in tables:
+            return []
+
+        rows = connection.execute(
+            """
+            SELECT id, name
+            FROM entity
+            WHERE entity_type = 'gear_set'
+              AND name IS NOT NULL
+              AND TRIM(name) <> ''
+            ORDER BY name COLLATE NOCASE
+            """
+        ).fetchall()
+
+        result = []
+        for entity_id, name in rows:
+            display_name = str(name).strip()
+            if display_name.casefold() in existing_names:
+                continue
+            result.append(
+                {
+                    "id": f"entity:{entity_id}",
+                    "gear_set_id": None,
+                    "name": display_name,
+                    "category": "Canonical gear set",
+                    "max_equip_count": None,
+                    "armor_types": set(),
+                    "bonus_texts": [],
+                    "acquisition_type": "",
+                    "sources": ["Canonical entity catalog"],
+                }
+            )
+        return result
+
     def refresh(self) -> None:
         try:
             with sqlite3.connect(self.database_path) as connection:
@@ -268,45 +312,55 @@ class GearLookupPage(FoundryPage):
                 ).fetchall()
 
                 content_acquisition = self._content_acquisition(connection, tables)
+
+                bonuses_by_set: dict[int, list[str]] = {}
+                for set_id, description in bonus_rows:
+                    bonuses_by_set.setdefault(int(set_id), []).append(str(description))
+
+                self._sets = []
+                existing_names: set[str] = set()
+                for row in rows:
+                    set_id, name, category, max_equip_count, armor_csv, stored_acquisition = row
+                    set_id = int(set_id)
+                    display_name = str(name)
+                    existing_names.add(display_name.casefold())
+                    armor_types = {
+                        int(value)
+                        for value in str(armor_csv or "").split(",")
+                        if value.strip().isdigit() and int(value) in _ARMOR_TYPE_LABELS
+                    }
+
+                    content_info = content_acquisition.get(set_id, {})
+                    acquisition_type = str(content_info.get("acquisition_type") or "")
+                    if not acquisition_type:
+                        acquisition_type = self._normalize_acquisition(str(stored_acquisition or ""))
+                    if not acquisition_type:
+                        acquisition_type = self._normalize_acquisition(str(category or ""))
+
+                    self._sets.append(
+                        {
+                            "id": f"gear:{set_id}",
+                            "gear_set_id": set_id,
+                            "name": display_name,
+                            "category": str(category or ""),
+                            "max_equip_count": max_equip_count,
+                            "armor_types": armor_types,
+                            "bonus_texts": bonuses_by_set.get(set_id, []),
+                            "acquisition_type": acquisition_type,
+                            "sources": list(content_info.get("sources") or []),
+                        }
+                    )
+
+                self._sets.extend(
+                    self._canonical_entity_sets(connection, tables, existing_names)
+                )
+                self._sets.sort(key=lambda row: row["name"].casefold())
+
         except sqlite3.Error as exc:
             self._sets = []
             self.results.clear()
             self.status.error(f"Gear catalog unavailable: {exc}")
             return
-
-        bonuses_by_set: dict[int, list[str]] = {}
-        for set_id, description in bonus_rows:
-            bonuses_by_set.setdefault(int(set_id), []).append(str(description))
-
-        self._sets = []
-        for row in rows:
-            set_id, name, category, max_equip_count, armor_csv, stored_acquisition = row
-            set_id = int(set_id)
-            armor_types = {
-                int(value)
-                for value in str(armor_csv or "").split(",")
-                if value.strip().isdigit() and int(value) in _ARMOR_TYPE_LABELS
-            }
-
-            content_info = content_acquisition.get(set_id, {})
-            acquisition_type = str(content_info.get("acquisition_type") or "")
-            if not acquisition_type:
-                acquisition_type = self._normalize_acquisition(str(stored_acquisition or ""))
-            if not acquisition_type:
-                acquisition_type = self._normalize_acquisition(str(category or ""))
-
-            self._sets.append(
-                {
-                    "id": set_id,
-                    "name": str(name),
-                    "category": str(category or ""),
-                    "max_equip_count": max_equip_count,
-                    "armor_types": armor_types,
-                    "bonus_texts": bonuses_by_set.get(set_id, []),
-                    "acquisition_type": acquisition_type,
-                    "sources": list(content_info.get("sources") or []),
-                }
-            )
 
         self._populate_filters()
         self._filter_sets()
@@ -440,8 +494,8 @@ class GearLookupPage(FoundryPage):
     def _show_selected(self, current: QListWidgetItem | None, _previous=None) -> None:
         if current is None:
             return
-        set_id = current.data(Qt.ItemDataRole.UserRole)
-        selected = next((row for row in self._sets if row["id"] == set_id), None)
+        catalog_id = current.data(Qt.ItemDataRole.UserRole)
+        selected = next((row for row in self._sets if row["id"] == catalog_id), None)
         if selected is None:
             return
 
@@ -462,8 +516,8 @@ class GearLookupPage(FoundryPage):
             metadata.append(f"Source: {', '.join(selected['sources'])}")
         self.set_meta.setText("   •   ".join(metadata))
 
-        rows = selected["bonus_texts"]
-        if rows:
+        gear_set_id = selected.get("gear_set_id")
+        if gear_set_id is not None and selected["bonus_texts"]:
             try:
                 with sqlite3.connect(self.database_path) as connection:
                     bonus_rows = connection.execute(
@@ -473,7 +527,7 @@ class GearLookupPage(FoundryPage):
                         WHERE set_id = ?
                         ORDER BY piece_count, id
                         """,
-                        (set_id,),
+                        (gear_set_id,),
                     ).fetchall()
             except sqlite3.Error as exc:
                 bonus_rows = []
@@ -485,4 +539,7 @@ class GearLookupPage(FoundryPage):
                 lines.append(f"{pieces}: {description}")
             self.bonuses.setText("\n\n".join(lines))
         else:
-            self.bonuses.setText("No canonical piece-bonus records are available for this set.")
+            self.bonuses.setText(
+                "No canonical piece-bonus records are available for this set yet. "
+                "The set remains searchable because it exists in the canonical gear catalog."
+            )
