@@ -46,14 +46,17 @@ class RotationRequiredActionReserveService:
     """Derive an evidence floor from explicit mechanic action obligations.
 
     The service reuses ``RotationSustainService`` for canonical build-specific
-    action costs rather than maintaining a second cost formula. Each required
-    action is placed on a zero-duration synthetic plan so cost modifiers are
-    resolved through the same Phase 4 path used by real rotation sustain.
+    action costs rather than maintaining a second cost formula. Required actions
+    are placed at 0s on a minimal positive-duration synthetic plan so cost
+    modifiers are resolved through the same Phase 4 path used by real rotation
+    sustain while still satisfying the calculation-context duration contract.
 
     The resulting amount answers only: "what resource is minimally required to
     pay for these explicitly required casts?" It does not claim that amount is a
     sufficient gameplay safety reserve.
     """
+
+    _SYNTHETIC_DURATION_SECONDS = 1.0
 
     def __init__(self, sustain_service: RotationSustainService | None = None) -> None:
         self.sustain_service = sustain_service or RotationSustainService()
@@ -109,7 +112,7 @@ class RotationRequiredActionReserveService:
         plan = RotationPlan(
             character_name=character_name,
             build_name=build_name,
-            duration_seconds=0.0,
+            duration_seconds=self._SYNTHETIC_DURATION_SECONDS,
             actions=tuple(actions),
         )
         projection = self.sustain_service.evaluate(
