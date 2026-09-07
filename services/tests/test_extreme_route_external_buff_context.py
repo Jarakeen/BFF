@@ -159,3 +159,9 @@ def test_route_only_receives_marginal_skill_value_beyond_external_buff(monkeypat
     assert with_external.best_reviewed_subclass_lower_bound is not None
     assert without_external.best_reviewed_subclass_lower_bound.projected_delta == 1100.0
     assert with_external.best_reviewed_subclass_lower_bound.projected_delta == 100.0
+    assert without_external.best_reviewed_subclass_lower_bound.buff_context_notes == ()
+    assert with_external.best_reviewed_subclass_lower_bound.buff_context_notes
+    note = with_external.best_reviewed_subclass_lower_bound.buff_context_notes[0]
+    assert "Major Sorcery" in note
+    assert "Potion: Major Sorcery" in note
+    assert "does not stack" in note
