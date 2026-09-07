@@ -189,3 +189,49 @@ def test_objective_prefers_reviewed_critical_morph_within_family(monkeypatch, tm
     assert result is not None
     assert "Relentless Focus" in result.names
     assert "Other Morph" not in result.names
+
+
+def test_objective_prefers_bound_armaments_for_critical(monkeypatch, tmp_path):
+    rows = [
+        _skill(101, 1001, "Bound Aegis", "Daedric Summoning", morph=1),
+        _skill(102, 1001, "Bound Armaments", "Daedric Summoning", morph=2),
+        _skill(103, 1002, "Daedric Two", "Daedric Summoning"),
+        _skill(104, 1003, "Daedric Three", "Daedric Summoning"),
+        _skill(105, 1004, "Daedric Four", "Daedric Summoning"),
+        _skill(106, 1005, "Daedric Five", "Daedric Summoning"),
+        _skill(201, 2001, "Daedric Ultimate", "Daedric Summoning", ultimate=True),
+    ]
+    monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
+    service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
+
+    result = service.materialize(
+        (("daedric_summoning", 6),),
+        objective_key="spell_critical",
+    )
+
+    assert result is not None
+    assert "Bound Armaments" in result.names
+    assert "Bound Aegis" not in result.names
+
+
+def test_objective_prefers_bound_aegis_for_resistance(monkeypatch, tmp_path):
+    rows = [
+        _skill(101, 1001, "Bound Aegis", "Daedric Summoning", morph=1),
+        _skill(102, 1001, "Bound Armaments", "Daedric Summoning", morph=2),
+        _skill(103, 1002, "Daedric Two", "Daedric Summoning"),
+        _skill(104, 1003, "Daedric Three", "Daedric Summoning"),
+        _skill(105, 1004, "Daedric Four", "Daedric Summoning"),
+        _skill(106, 1005, "Daedric Five", "Daedric Summoning"),
+        _skill(201, 2001, "Daedric Ultimate", "Daedric Summoning", ultimate=True),
+    ]
+    monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
+    service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
+
+    result = service.materialize(
+        (("daedric_summoning", 6),),
+        objective_key="physical_resistance",
+    )
+
+    assert result is not None
+    assert "Bound Aegis" in result.names
+    assert "Bound Armaments" not in result.names
