@@ -3,6 +3,7 @@ from minmax.healer_heavy_attack_build_discovery import (
     HeavyAttackBuildIncentiveKind,
     discover_healer_heavy_attack_build_incentives,
 )
+from minmax.heavy_attack_restoration import HeavyAttackWeaponType
 
 
 def _armor_set(build: PlayerBuild, name: str, pieces: int) -> None:
@@ -29,6 +30,30 @@ def test_restoration_staff_discovers_verified_heavy_passive_incentives() -> None
     cycle = by_name[("front", "Cycle of Life")]
     assert cycle.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE
     assert ("back", "Essence Drain") not in by_name
+
+
+def test_staff_bars_discover_base_magicka_recovery_independently_of_cycle_of_life() -> None:
+    build = PlayerBuild(
+        Name="Magrat",
+        BuildName="DF Healer",
+        EsoClass="Warden",
+        FrontBarWeapon=GearSlot(WeaponType="Restoration Staff"),
+        BackBarWeapon=GearSlot(WeaponType="Ice Staff"),
+    )
+
+    incentives = discover_healer_heavy_attack_build_incentives(build)
+    base = [
+        item
+        for item in incentives
+        if item.name == "Fully Charged Heavy Attack Recovery"
+    ]
+
+    assert {(item.bar, item.weapon) for item in base} == {
+        ("front", HeavyAttackWeaponType.RESTORATION_STAFF),
+        ("back", HeavyAttackWeaponType.FROST_STAFF),
+    }
+    assert all(item.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE for item in base)
+    assert all("caller-verified" in item.source for item in base)
 
 
 def test_active_five_piece_roaring_opportunist_is_required_on_that_bar() -> None:
