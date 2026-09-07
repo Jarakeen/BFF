@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .named_buff_resolution_service import NamedBuffContribution
 from .team_prescription import PrescribedRoster
 from .team_prescription_candidate_application import (
     apply_ranked_candidate_to_prescribed_roster,
@@ -54,6 +55,7 @@ def optimize_prescribed_roster_candidates(
     roster: PrescribedRoster,
     candidate_pools: dict[str, tuple[PrescribedSlotCandidateEvidence, ...]],
     provider_requirements_by_slot: dict[str, tuple[str, ...]] | None = None,
+    existing_team_effects: tuple[NamedBuffContribution, ...] = (),
 ) -> TeamPrescriptionOptimizationResult:
     """Rank and apply evidence-backed candidate pools to genuinely open chairs.
 
@@ -61,6 +63,13 @@ def optimize_prescribed_roster_candidates(
     recommendations already selected by an earlier-priority source are preserved.
     User ingredient-only constraints remain open and are enforced by candidate
     generation before this optimizer receives the pool.
+
+    ``existing_team_effects`` describes reviewed named effects already supplied by
+    anchored roster members, potion plans, sets, or other team context. After an open
+    slot is filled, the selected candidate's reviewed provider effects are carried
+    forward so later slots receive credit only for effects still missing from the
+    evolving team. Provider effects are a tie-break signal only; they are never added
+    numerically to unlike canonical objective scores.
     """
 
     provider_requirements_by_slot = provider_requirements_by_slot or {}
@@ -77,6 +86,7 @@ def optimize_prescribed_roster_candidates(
 
     current = roster
     decisions: list[PrescribedSlotOptimization] = []
+    team_effects = list(existing_team_effects)
     used_saved_players = {
         assignment.player_name.casefold()
         for assignment in roster.assignments
@@ -129,6 +139,7 @@ def optimize_prescribed_roster_candidates(
             slot_name=assignment.slot_name,
             required_provider_requirement_ids=normalized_requirements.get(slot_key, ()),
             candidates=candidates,
+            existing_team_effects=tuple(team_effects),
         )
         before = current
         current = apply_ranked_candidate_to_prescribed_roster(
@@ -140,6 +151,7 @@ def optimize_prescribed_roster_candidates(
             player_name = _saved_player_name(ranking.recommended)
             if player_name:
                 used_saved_players.add(player_name.casefold())
+            team_effects.extend(ranking.recommended.provider_effects)
 
         unresolved = ranking.unresolved
         if ranking.recommended is None and not unresolved:
