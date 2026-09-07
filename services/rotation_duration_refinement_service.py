@@ -4,9 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
+from minmax.demand_aware_priority_duration_scheduler import (
+    DemandAwarePriorityDurationRotationScheduler,
+    DemandAwarePrioritySoftActionDurationRotationScheduler,
+)
 from minmax.duration_aware_rotation_scheduler import DurationAwareRotationScheduler
 from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotationScheduler
 from minmax.rotation_ability_priority import AbilityPriorityList
+from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_wait_decision import PrematureRecastDecisionProvider
 from minmax.soft_action_duration_scheduler import (
@@ -48,14 +53,25 @@ class RotationDurationRefinementService:
         *,
         priorities: AbilityPriorityList | None = None,
         wait_decision: PrematureRecastDecisionProvider | None = None,
+        demands: tuple[RotationDemandWindow, ...] = (),
     ) -> RotationDurationRefinement:
         # The first projection supplies canonical duration rules used to refine
         # the seed schedule. It is not returned as final evidence because its
         # uptime/gap measurements describe the pre-refinement plan.
         seed_projection = self.duration_analysis.analyze(plan)
+        demand_windows = tuple(demands)
+        if demand_windows and priorities is None:
+            raise ValueError("rotation demand windows require explicit ability priorities")
 
         if wait_decision is not None and priorities is not None:
-            scheduler = PriorityAwareSoftActionDurationRotationScheduler(priorities)
+            scheduler = (
+                DemandAwarePrioritySoftActionDurationRotationScheduler(
+                    priorities,
+                    demand_windows,
+                )
+                if demand_windows
+                else PriorityAwareSoftActionDurationRotationScheduler(priorities)
+            )
             refined = scheduler.refine(
                 plan,
                 seed_projection.rules,
@@ -71,11 +87,15 @@ class RotationDurationRefinementService:
                 soft_decision=wait_decision,
             )
         else:
-            scheduler = (
-                PriorityAwareDurationRotationScheduler(priorities)
-                if priorities is not None
-                else self.scheduler
-            )
+            if priorities is not None and demand_windows:
+                scheduler = DemandAwarePriorityDurationRotationScheduler(
+                    priorities,
+                    demand_windows,
+                )
+            elif priorities is not None:
+                scheduler = PriorityAwareDurationRotationScheduler(priorities)
+            else:
+                scheduler = self.scheduler
             refined = scheduler.refine(
                 plan,
                 seed_projection.rules,
