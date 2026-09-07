@@ -44,7 +44,12 @@ class ExtremeSubclassSlotAllocationService:
     ``reviewed_allocations`` exposes every numerically reviewed distribution so
     callers that also understand concrete skill standing effects can jointly
     optimize passive slot-count value and the actual skills placed in those
-    slots. ``best_allocation`` remains the passive-only compatibility helper.
+    slots. ``include_known_zero`` lets those callers retain legal distributions
+    whose reviewed passive contribution is proven zero, so skill-only standing
+    effects are not accidentally excluded from the search. Missing reference
+    values for reviewed percentage effects remain unresolved and are never
+    converted into fake zeroes. ``best_allocation`` remains the passive-only
+    compatibility helper.
     """
 
     ACTIVE_BAR_SLOTS = 6
@@ -58,6 +63,7 @@ class ExtremeSubclassSlotAllocationService:
         objective_key: str,
         *,
         reference_value: float | None = None,
+        include_known_zero: bool = False,
     ) -> tuple[ExtremeSubclassSlotAllocationResult, ...]:
         lines = tuple(
             sorted(
@@ -77,13 +83,15 @@ class ExtremeSubclassSlotAllocationService:
             if sum(counts) != cls.ACTIVE_BAR_SLOTS:
                 continue
             allocation = dict(zip(lines, counts))
-            projected, sources = cls._score_allocation(
+            projected, sources, unresolved = cls._score_allocation_detail(
                 lines,
                 allocation,
                 objective,
                 reference_value=reference_value,
             )
-            if projected is None:
+            if unresolved:
+                continue
+            if not sources and not include_known_zero:
                 continue
             rows.append(
                 ExtremeSubclassSlotAllocationResult(
@@ -126,6 +134,25 @@ class ExtremeSubclassSlotAllocationService:
         *,
         reference_value: float | None,
     ) -> tuple[float | None, tuple[str, ...]]:
+        projected, sources, unresolved = cls._score_allocation_detail(
+            lines,
+            allocation,
+            objective_key,
+            reference_value=reference_value,
+        )
+        if unresolved or not sources:
+            return None, ()
+        return projected, sources
+
+    @classmethod
+    def _score_allocation_detail(
+        cls,
+        lines: tuple[str, ...],
+        allocation: dict[str, int],
+        objective_key: str,
+        *,
+        reference_value: float | None,
+    ) -> tuple[float, tuple[str, ...], bool]:
         flat = 0.0
         ratio = 0.0
         percent = 0.0
@@ -162,6 +189,8 @@ class ExtremeSubclassSlotAllocationService:
                 ratio += WARDEN_ADVANCED_SPECIES_CRIT_DAMAGE_PER_SLOTTED * animal_slots
                 sources.append(f"Advanced Species ({animal_slots} Animal Companions slots)")
             elif objective_key in {"magicka_recovery", "stamina_recovery"} and animal_slots:
+                if reference_value is None:
+                    return 0.0, (), True
                 percent += WARDEN_FLOURISH_RECOVERY_PERCENT
                 sources.append("Flourish (Animal Companions represented)")
 
@@ -174,9 +203,5 @@ class ExtremeSubclassSlotAllocationService:
             flat += WARDEN_FROZEN_ARMOR_RESISTANCE_PER_SLOTTED * winter_slots
             sources.append(f"Frozen Armor ({winter_slots} Winter's Embrace slots)")
 
-        if not sources:
-            return None, ()
-        if percent and reference_value is None:
-            return None, ()
         projected = flat + ratio + (float(reference_value) * percent if percent else 0.0)
-        return projected, tuple(sources)
+        return projected, tuple(sources), False
