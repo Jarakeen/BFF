@@ -18,7 +18,7 @@ from services.extreme_class_route_comparison_service import (
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Show reviewed pure-class Class Mastery routes while preserving the unresolved subclass boundary."
+            "Show reviewed pure-class Class Mastery routes and conservative reviewed subclass lower bounds."
         )
     )
     parser.add_argument("objective")
@@ -34,6 +34,12 @@ def main() -> int:
     )
 
     pure = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.PURE_MASTERY]
+    subclass_lower_bounds = [
+        row
+        for row in result.routes
+        if row.route_kind is ExtremeClassRouteKind.SUBCLASS
+        and row.projected_delta is not None
+    ]
 
     print("=" * 100)
     print(" EXTREME BUILD CLASS ROUTE REVIEW")
@@ -45,7 +51,8 @@ def main() -> int:
         f"{args.higher_max_resource if args.higher_max_resource is not None else 'not supplied'}"
     )
     print(f"Reviewed pure-class routes with numeric deltas: {len(pure)}")
-    print(f"Legal subclass routes pending borrowed-line scoring: {result.unresolved_subclass_count}")
+    print(f"Subclass routes with reviewed single-line lower bounds: {len(subclass_lower_bounds)}")
+    print(f"Legal subclass routes still globally unresolved: {result.unresolved_subclass_count}")
     print(f"Global winner allowed: {'yes' if result.can_declare_global_winner else 'NO'}")
     print()
 
@@ -62,10 +69,31 @@ def main() -> int:
             )
 
     print()
+    if not subclass_lower_bounds:
+        print("No reviewed subclass class-line lower bound is currently numeric for this objective.")
+    else:
+        print("Top reviewed subclass lower bounds:")
+        for row in sorted(
+            subclass_lower_bounds,
+            key=lambda item: (
+                -(item.projected_delta or 0.0),
+                item.base_class.value,
+                item.equipped_skill_lines,
+            ),
+        )[:12]:
+            lines = ", ".join(row.equipped_skill_lines)
+            reviewed = ", ".join(row.reviewed_line_ids) or "none"
+            print(
+                f"  {row.base_class.value:13s} | delta >= {row.projected_delta:g} | "
+                f"reviewed {reviewed} | {lines}"
+            )
+
+    print()
     print(
-        "Boundary: these deltas cover only reviewed Class Mastery contributions. "
-        "Subclass routes are intentionally not assigned zero; they remain unresolved until borrowed class-line "
-        "skills/passives are scored for the same objective."
+        "Boundary: pure deltas cover only reviewed Class Mastery contributions. Subclass numeric values are "
+        "conservative single-line lower bounds, not final scores: BFF does not yet sum competing active-bar "
+        "slot effects or assume unreviewed lines contribute zero. Every subclass route therefore remains "
+        "globally unresolved until the full borrowed-line skill/passive search is complete."
     )
     return 0
 
