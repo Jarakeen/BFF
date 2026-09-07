@@ -552,18 +552,111 @@ Active scope, in order:
    - a prescribed recruit chair can later be assigned to a real roster player without rebuilding the team;
    - the player may keep an existing build or save the prescribed setup as a new reusable Build while preserving the original Build unchanged.
 
-**Phase 12.5 exit criteria:** a representative real team can be created in Comp Maker, saved and inspected in Roster, loaded into Optimization, and transferred back without losing or silently changing team identity, exact assignment choice, source, gear/skill evidence, hard constraints, recruit state, or unresolved boundaries. Focused regression tests must pass, a real-data end-to-end workflow must be demonstrated, and an appropriate full regression checkpoint must be recorded before Phase 13 is marked active.
+Current Phase 13.2 bridge work now also supplies reusable Comp Maker / Optimization provider contracts without weakening Phase 12.5 identity and persistence boundaries:
+
+- source-neutral named-buff marginal value and duplicate suppression;
+- recipient-capacity modeling, including repeated applications and concurrent coverage limits;
+- sequential roster context so later chairs do not receive credit for already-covered effects;
+- timed provider windows and intentional staggered multi-carrier strategies;
+- scoped uptime targets with explicit provenance rather than universal hard-coded percentages;
+- provider requirement compatibility remains backward compatible when coverage/timing policy is not supplied.
+
+Verified focused checkpoints supplied by the user:
+
+- Extreme / Comp optimization contract: **147 passed in 25.38s**;
+- marginal provider bridge: **50 passed in 1.08s**;
+- recipient-coverage bridge: **33 passed in 0.88s**.
+
+The temporal/provider suite exposed one fixture mismatch after later distinct-carrier work; the fixture was corrected in commit `72c25c0`, but the corrected expanded temporal suite still requires a fresh reported rerun before it is recorded green here.
+
+**Phase 12.5 exit criteria:** a representative real team can be created in Comp Maker, saved and inspected in Roster, loaded into Optimization, and transferred back without losing or silently changing team identity, exact assignment choice, source, gear/skill evidence, hard constraints, recruit state, or unresolved boundaries. Focused regression tests must pass, a real-data end-to-end workflow must be demonstrated, and an appropriate full regression checkpoint must be recorded before Phase 12.5 is closed.
 
 ---
 
 # PHASE 13 · Rotation Engine
-**Status: 🔴 Planned**
+**Status: 🟡 Active on `phase13.2`**
+
+Phase 13 is active in controlled overlap with the still-open Phase 12.5 product-integration work. Phase 13 closeout remains gated on canonical Character → Build → Team identity integration; current engine development may proceed so long as it does not invent a competing identity or persistence model.
 
 Start with semi-static rotations, then add dynamic priorities, duration/recast windows, resource awareness, proc alignment, execute, movement, interruptions, mechanic handling, and healing rotations.
 
-**Prerequisite gate:** Phase 12.5 Team Workflow Integration must be green before Phase 13 is marked active. Rotation evaluation must consume the canonical Character → Build → Team assignment path rather than introducing another page-specific build/team identity model.
+## Phase 13.2 current engine work
 
-**Hardened exit criteria:** BFF can produce and evaluate a realistic damage, support, or healing rotation from verified skill behavior and resource constraints; action timing is deterministic from identical inputs; unsupported mechanics remain explicit; at least one real build is validated end-to-end; focused and appropriate regression gates pass.
+The active line now includes two mutually reinforcing tracks.
+
+### A. Extreme build / class-route search
+
+BFF can efficiently search the reviewed pure-class / Class Mastery and legal subclass structural universe without recomputing static route structure for every request.
+
+Implemented and covered:
+
+- precomputed Extreme Build Catalog with database fingerprint and subclass-rule version;
+- **3,220** legal class configurations, **1,330** unique three-line sets, and **21** class skill lines in the generated catalog used by the current local database snapshot;
+- independent front/back six-slot allocation search;
+- active-bar versus either-bar standing-effect scope;
+- reviewed passive formulas and standing-skill families;
+- source-neutral named-buff stacking and external-context marginal value;
+- stale or malformed catalog rejection with canonical live fallback;
+- structural pruning and unique-line-set memoization instead of blind 28×28 repeated scoring;
+- physical-resistance regression preserving the independent-bar **10,414** reviewed result rather than the older **9,174** compromised result;
+- verified expanded Extreme / Comp contract checkpoint: **147 passed in 25.38s**.
+
+The output remains a **best reviewed lower bound**, not an unsupported claim of a globally optimal ESO build. Broader class passive, gear, race, Mundus, CP, enchantment, proc, runtime, and encounter coverage must continue to expand before that boundary changes.
+
+### B. Team provider orchestration for Comp Maker / Optimization
+
+The team optimization bridge now distinguishes four questions that were previously easy to collapse into one misleading “provider exists” flag:
+
+```text
+DOES THE TEAM HAVE THE EFFECT?
+          ↓
+DOES THIS CANDIDATE ADD MARGINAL VALUE?
+          ↓
+CAN THE PROVIDER REACH THE REQUIRED RECIPIENTS?
+          ↓
+IS THE EFFECT ACTIVE AT THE RIGHT TIMES / UPTIME?
+```
+
+Implemented contracts include:
+
+- duplicate named effects receive zero marginal tie-break credit when already supplied by a skill, potion, set, passive, or group provider;
+- hard provider IDs and role constraints remain authoritative and cannot be weakened by marginal-value scoring;
+- recipient coverage supports targets per application and maximum useful/concurrent applications per refresh cycle;
+- six-target mechanics can require repeated applications to cover a 12-player group, while a one-instance six-target provider can remain explicitly partial;
+- provider effects selected for one open chair are carried into the evolving team context for later chairs;
+- timed applications can be staggered across multiple carriers rather than being incorrectly deleted as duplicates;
+- strategy may explicitly require a minimum number of distinct carriers, such as tank + healer support-ultimate rotations;
+- temporal evaluation reports covered time, uncovered gaps, overlap, active sources, and target-uptime attainment;
+- target uptime is effect/encounter/phase policy, not a universal constant.
+
+### C. BTVTools calibration evidence
+
+User-supplied BTVTools screenshots from a Lokke hard-mode fight are now accepted as **benchmark/calibration evidence**, not canonical static ESO mechanics. They demonstrate why provider policy needs encounter/effect scope and provenance.
+
+Visible examples include:
+
+- Major Berserk: **27.9% observed / 96% BTV target**;
+- Major Slayer: **56.0% observed / 90% BTV target**;
+- Powerful Assault: **85% observed / 95% BTV target**;
+- Minor Courage: **84% observed / 97% BTV target**;
+- Major Vulnerability: **38.3% observed / 56% BTV target**;
+- Off Balance: **6.6% observed**, with BTV showing a theoretical maximum around **31.8%** for its displayed **7s / 22s cycle**.
+
+The screenshot corpus also includes buff pages and critical-damage timelines that can support later calibration of overlapping Major Force / Brittle / other support windows. Screenshot-derived benchmarks must retain provenance and fight scope and may not silently become universal game constants.
+
+Active next work:
+
+1. convert the user-supplied BTV screenshot corpus into structured benchmark fixtures with provenance, encounter scope, observed uptime, target/reference uptime where visible, theoretical maximum where visible, and explicit unknown fields rather than guessed values;
+2. test policy selection, target-vs-theoretical-max validation, temporal window scoring, overlap/gap explanation, and BTV-style feedback against those fixtures;
+3. connect those benchmark fixtures to Comp Maker / Optimization explanation paths without treating them as canonical ESO mechanics;
+4. add provider workload / rotation cost so two viable coverage plans can be compared by casts, heavy attacks, GCDs, resources, ultimate economy, bar space, refresh burden, and primary-role opportunity cost;
+5. continue thorough healer, tank, and DD rotation coverage with class passives, armor/set duration modifiers, runtime proc conditions, and encounter-specific timing.
+
+Fight-horizon policy: most raid fights are expected to finish within roughly six minutes in the user's working context, so **360 seconds may be used only as an overrideable fallback planning ceiling when encounter-specific timing is unavailable**. It is not a canonical encounter duration. Optimization should prioritize important burn/mechanic windows over meaningless attempts to force every support effect to 100% global uptime.
+
+**Prerequisite / integration gate:** Phase 12.5 must be green before Phase 13 is closed. Rotation evaluation must consume the canonical Character → Build → Team assignment path rather than introducing another page-specific build/team identity model.
+
+**Hardened exit criteria:** BFF can produce and evaluate a realistic damage, support, or healing rotation from verified skill behavior and resource constraints; action timing is deterministic from identical inputs; class passives and build-derived effect-duration modifiers are respected; provider recipient and temporal obligations can be represented where relevant; unsupported mechanics remain explicit; at least one real build is validated end-to-end; focused and appropriate regression gates pass.
 
 ---
 
