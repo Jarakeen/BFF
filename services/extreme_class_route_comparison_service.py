@@ -90,6 +90,11 @@ class ExtremeClassRouteComparisonService:
     buffs may shape skill choice and stacking, but route scores only receive the
     marginal value added beyond that shared external context. Suppressed duplicate
     buff evidence is carried on each scored route for downstream explanation.
+
+    Legal allocations whose reviewed passive contribution is proven zero remain
+    eligible for bar materialization. This prevents skill-only standing effects
+    from disappearing merely because the passive layer had nothing numeric to
+    contribute for the requested objective.
     """
 
     def __init__(
@@ -181,6 +186,7 @@ class ExtremeClassRouteComparisonService:
             equipped_skill_lines,
             objective_key,
             reference_value=reference_value,
+            include_known_zero=True,
         )
         if not allocations:
             return None, False
@@ -316,6 +322,7 @@ class ExtremeClassRouteComparisonService:
                         config.equipped_skill_lines,
                         objective_key,
                         reference_value=reference_value,
+                        include_known_zero=True,
                     )
                     else "pending_subclass_effect_resolution"
                 )
