@@ -116,6 +116,9 @@ def test_scheduled_heavy_records_completion_trigger_for_later_wait_points() -> N
             hard_boundary=6.0,
         )
     )
+    assert first is not None
+    assert provider.runtime_states[0].last_trigger_seconds == 3.8
+
     too_soon = provider(
         _context(
             time_seconds=10.0,
@@ -123,6 +126,9 @@ def test_scheduled_heavy_records_completion_trigger_for_later_wait_points() -> N
             hard_boundary=15.0,
         )
     )
+    assert too_soon is None
+    assert provider.runtime_states[0].last_trigger_seconds == 3.8
+
     due_again = provider(
         _context(
             time_seconds=25.8,
@@ -130,8 +136,5 @@ def test_scheduled_heavy_records_completion_trigger_for_later_wait_points() -> N
             hard_boundary=30.0,
         )
     )
-
-    assert first is not None
-    assert provider.runtime_states[0].last_trigger_seconds == 27.6
-    assert too_soon is None
     assert due_again is not None
+    assert provider.runtime_states[0].last_trigger_seconds == 27.6
