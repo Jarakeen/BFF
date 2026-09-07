@@ -198,14 +198,18 @@ def main() -> int:
                 print("    candidate-specific unresolved:")
                 for message in card.candidate_specific_unresolved:
                     print(f"      * {message}")
+            if card.candidate_specific_schedule_notes:
+                print("    candidate-specific schedule notes:")
+                for message in card.candidate_specific_schedule_notes:
+                    print(f"      * {message}")
 
     print()
     print(
         "Interpretation: hard encounter obligations decide eligibility before softer resource "
         "consequences. If neither candidate satisfies the supplied obligation, neither is promoted "
-        "to an eligible plan merely because its resource numbers are better. Candidate-specific "
-        "unresolved messages are printed verbatim so ranking uncertainty can be traced to the "
-        "schedule change that introduced it."
+        "to an eligible plan merely because its resource numbers are better. Deterministic refresh "
+        "cascades are reported as schedule notes; only genuine candidate-specific uncertainty is "
+        "ranked as unresolved evidence."
     )
     return 0
 
