@@ -199,6 +199,8 @@ def test_spell_damage_subclass_lower_bound_uses_materialized_legal_bar(tmp_path)
     assert "storm_calling" in best.equipped_skill_lines
     assert best.score_status == "reviewed_subclass_materialized_lower_bound"
     assert sum(count for _, count in best.slot_counts) == 6
+    assert sum(count for _, count in best.front_slot_counts) == 6
+    assert sum(count for _, count in best.back_slot_counts) == 6
     assert best.reviewed_sources == ("Expert Mage (6 Sorcerer slots)",)
     assert len(best.skill_bar_names) == 6
     assert len(best.skill_bar_ability_ids) == 6
@@ -221,7 +223,7 @@ def test_reviewed_while_slotted_skill_adds_to_subclass_critical_lower_bound(tmp_
     assert best.projected_delta > 0
 
 
-def test_joint_search_can_trade_one_passive_slot_for_stronger_reviewed_skill(tmp_path, monkeypatch):
+def test_independent_bars_keep_active_passive_max_and_move_either_bar_skill_off_bar(tmp_path, monkeypatch):
     service = ExtremeClassRouteComparisonService(
         _database(tmp_path),
         skill_bar_service=_ResistanceSkillBarService(),
@@ -247,16 +249,19 @@ def test_joint_search_can_trade_one_passive_slot_for_stronger_reviewed_skill(tmp
     )
     monkeypatch.setattr(service.mastery_pairs, "best_pure_class_routes", lambda *args, **kwargs: ())
 
-    result = service.compare("physical_resistance")
+    result = service.compare("physical_resistance", active_bar="front")
     best = result.best_reviewed_subclass_lower_bound
 
     assert best is not None
-    assert dict(best.slot_counts)["winters_embrace"] == 5
-    assert dict(best.slot_counts)["daedric_summoning"] == 1
-    assert "Bound Aegis" in best.skill_bar_names
-    assert any("Frozen Armor (5" in source for source in best.reviewed_sources)
+    assert dict(best.slot_counts)["winters_embrace"] == 6
+    assert dict(best.front_slot_counts)["winters_embrace"] == 6
+    assert dict(best.front_slot_counts)["daedric_summoning"] == 0
+    assert dict(best.back_slot_counts)["daedric_summoning"] >= 1
+    assert "Bound Aegis" not in best.front_skill_bar_names
+    assert "Bound Aegis" in best.back_skill_bar_names
+    assert any("Frozen Armor (6" in source for source in best.reviewed_sources)
     assert any("Bound Aegis" in source for source in best.reviewed_sources)
-    assert best.projected_delta == pytest.approx(9174.0)
+    assert best.projected_delta == pytest.approx(10414.0)
 
 
 def test_either_bar_skill_scores_from_front_even_when_back_is_active(tmp_path):
