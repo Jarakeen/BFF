@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import sqlite3
 from pathlib import Path
 
 from engine.config import get_data_dir
 from minmax.character_progression import AttributeAllocation, CharacterProgression
+from minmax.combat_effect_semantics import GameUpdate
+from minmax.combat_state import CombatState
 from minmax.gear_set_effect_service import GearSetEffectService
+from minmax.named_combat_buffs import effects_for_buff
 from minmax.passive_math import medium_armor_weapon_spell_damage_percent
+from minmax.stat_ids import StatId
 from models.build_model import ARMOR_SLOTS, GearSlot, PlayerBuild
 from services.extreme_optimization_service import (
     ExtremeObjective,
@@ -26,11 +30,11 @@ _CLASSES = (
     "Warden",
 )
 
-# Resting/self-contained Spell Damage proof boundary.
+# Self-contained Spell Damage proof boundary.
 # Expert Mage rank 2: +108 Weapon/Spell Damage for each Sorcerer ability slotted.
 # Twin Blade and Blunt rank 2: each equipped sword adds +129 Weapon/Spell Damage.
-# These are standing effects. Cast-required Major Sorcery, proc stacks, target state,
-# group buffs, potions, and other temporary effects are intentionally excluded.
+# These are standing effects. Potion-active output is shown separately from the
+# resting number so temporary self-buffs are never silently mixed into it.
 _SORCERER_EXPERT_MAGE_PER_SLOT = 108.0
 _DUAL_WIELD_SWORD_DAMAGE = 129.0
 _SORCERER_SPELL_DAMAGE_BAR = (
@@ -47,12 +51,51 @@ _MEDIUM_ARMOR_STATIC_PASSIVES = (
     "Dexterity",
 )
 
+# A from-scratch level-50 character owns all 64 attribute points. When the
+# requested sheet stat is not directly changed by attributes, choose a sensible
+# representative allocation instead of pretending the points vanished.
+_ATTRIBUTE_AFFINITY: dict[str, str] = {
+    "max_health": "health",
+    "health_recovery": "health",
+    "physical_resistance": "health",
+    "spell_resistance": "health",
+    "max_magicka": "magicka",
+    "magicka_recovery": "magicka",
+    "spell_damage": "magicka",
+    "spell_critical": "magicka",
+    "spell_penetration": "magicka",
+    "critical_damage": "magicka",
+    "healing_done": "magicka",
+    "max_stamina": "stamina",
+    "stamina_recovery": "stamina",
+    "weapon_damage": "stamina",
+    "weapon_critical": "stamina",
+    "physical_penetration": "stamina",
+}
+
+# Objective-specific self-usable potion snapshots. These are intentionally
+# limited to named effects BFF already knows how to route to the shared sheet.
+_POTION_PROFILE: dict[str, tuple[str, str]] = {
+    "spell_damage": ("Spell Power potion", "Major Sorcery"),
+    "weapon_damage": ("Weapon Power potion", "Major Brutality"),
+    "spell_critical": ("Spell Critical potion", "Major Prophecy"),
+    "weapon_critical": ("Weapon Critical potion", "Major Savagery"),
+    "health_recovery": ("Restore Health potion", "Major Fortitude"),
+    "magicka_recovery": ("Restore Magicka potion", "Major Intellect"),
+    "stamina_recovery": ("Restore Stamina potion", "Major Endurance"),
+    "physical_resistance": ("Increase Armor potion", "Major Resolve"),
+    "spell_resistance": ("Increase Armor potion", "Major Resolve"),
+}
+
 
 @dataclass(frozen=True)
 class ExtremeBlueprintResult:
     objective: ExtremeObjective
     build: PlayerBuild
     value: float
+    resting_value: float
+    potion_value: float
+    potion_label: str
     race: str
     class_label: str
     class_candidates: tuple[str, ...]
@@ -65,10 +108,11 @@ class ExtremeBlueprintResult:
 class ExtremeBlueprintService:
     """Build a deliberately absurd stat-maximizing character from an empty shell.
 
-    From-scratch blueprints use a resting/self-contained boundary: equipment,
-    food, race, intrinsic passives, and standing effects from skills actually
-    slotted on the active bar. Cast-required buffs, group buffs, target debuffs,
-    proc windows, potion uptime, and temporary combat states are excluded.
+    The base blueprint is self-contained: worn gear, food, race, intrinsic
+    passives, and standing effects from skills actually slotted on the active
+    bar. A second explicit potion-active snapshot may add one self-usable potion
+    effect. Group buffs, target debuffs, proc stacks, execute conditions, and
+    other borrowed combat states remain excluded.
     """
 
     def __init__(
@@ -111,7 +155,7 @@ class ExtremeBlueprintService:
         )
 
         current = base
-        current_value, initial_unresolved = self._evaluate_resting(
+        current_value, initial_unresolved = self._evaluate_snapshot(
             current,
             progression=progression,
             character_id="extreme-blueprint",
@@ -130,7 +174,7 @@ class ExtremeBlueprintService:
                 character_id="extreme-blueprint",
                 baseline_build_id=f"extreme-blueprint:{pass_index}",
             ):
-                value, candidate_unresolved = self._evaluate_resting(
+                value, candidate_unresolved = self._evaluate_snapshot(
                     candidate.candidate_build,
                     progression=progression,
                     character_id="extreme-blueprint",
@@ -163,25 +207,59 @@ class ExtremeBlueprintService:
             current = winner.candidate_build
             current_value = next_value
 
-        current.EsoClass = class_label
         current.BuildName = f"Extreme {objective.label} Blueprint"
+        resting_value = current_value
+        potion_label, potion_buff = self._potion_profile(objective)
+        potion_value = resting_value
+        if potion_buff:
+            candidate_value, potion_unresolved = self._evaluate_snapshot(
+                current,
+                progression=progression,
+                character_id="extreme-blueprint",
+                build_id="extreme-blueprint:potion-active",
+                objective=objective,
+                active_bar=active_bar,
+                potion_buff=potion_buff,
+            )
+            unresolved.extend(potion_unresolved)
+            if candidate_value > resting_value + 1e-9:
+                potion_value = candidate_value
+                current.Potion = f"{potion_label} ({potion_buff})"
+            else:
+                potion_label = "No potion improves this objective"
+                potion_buff = ""
+                current.Potion = potion_label
+        else:
+            current.Potion = potion_label
 
+        value = max(resting_value, potion_value)
+        class_note = (
+            "Spell Damage currently resolves to Sorcerer because Expert Mage rewards Sorcerer abilities slotted on the active bar."
+            if objective.key == "spell_damage"
+            else f"No proven class-specific standing winner is modeled for this objective; {current.EsoClass} is shown as one representative from a {len(class_candidates)}-class tie."
+        )
+        potion_note = (
+            f"Potion-active snapshot uses {current.Potion}; the resting number remains visible separately."
+            if potion_value > resting_value + 1e-9
+            else "No currently modeled self-usable potion raises this exact sheet objective."
+        )
         notes = (
-            "Resting/self-contained boundary: armor, jewelry, weapons, race, Mundus, food, intrinsic passives, and standing effects from skills on the active bar.",
-            "Cast-required buffs, group buffs, target debuffs, proc stacks, potion uptime, and temporary combat states are excluded.",
+            "All 64 attribute points are allocated. If attributes do not directly change the requested sheet stat, BFF uses a sensible resource-affinity allocation instead of leaving them at zero.",
+            "Both skill bars are included in the blueprint; only the selected active bar contributes active-bar-only standing effects to the displayed snapshot.",
+            "Resting/self-contained math includes worn gear, food, race, Mundus, intrinsic passives, and standing effects from skills on the active bar.",
+            potion_note,
+            class_note,
             "Static 5-piece set bonuses are evaluated only when the active-bar equipment actually reaches five pieces.",
-            (
-                "Spell Damage uses Sorcerer because Expert Mage grants +108 Weapon/Spell Damage per Sorcerer ability slotted. "
-                "The active bar is six Sorcerer abilities, armor is Medium for standing Agility, and dual swords receive Twin Blade and Blunt."
-                if objective.key == "spell_damage"
-                else "Class remains unresolved for this objective until an objective-specific resting class advantage is modeled."
-            ),
+            "Mythic, monster-set, and arena-weapon package search is still a separate legality pass; BFF will not fake slot legality just to print a larger number.",
         )
 
         return ExtremeBlueprintResult(
             objective=objective,
             build=current,
-            value=current_value,
+            value=value,
+            resting_value=resting_value,
+            potion_value=potion_value,
+            potion_label=current.Potion,
             race=str(current.Race or ""),
             class_label=class_label,
             class_candidates=class_candidates,
@@ -223,16 +301,14 @@ class ExtremeBlueprintService:
     ) -> tuple[PlayerBuild, str, tuple[str, ...]]:
         candidate = PlayerBuild.from_dict(build.to_dict())
         if objective.key != "spell_damage":
-            label = "Any class (resting-sheet tie)"
-            candidate.EsoClass = label
+            candidate.EsoClass = _CLASSES[0]
+            label = f"{candidate.EsoClass} (representative top-{len(_CLASSES)} tie)"
             return candidate, label, _CLASSES
 
         candidate.EsoClass = "Sorcerer"
         skills = list(_SORCERER_SPELL_DAMAGE_BAR)
-        if active_bar == "back":
-            candidate.BackBarSkills = skills
-        else:
-            candidate.FrontBarSkills = skills
+        candidate.FrontBarSkills = list(skills)
+        candidate.BackBarSkills = list(skills)
 
         for entry in candidate.Armor.values():
             entry["Weight"] = "Medium"
@@ -247,19 +323,13 @@ class ExtremeBlueprintService:
             WeaponType="Sword",
         )
         off = GearSlot.from_dict(main.to_dict())
-        if active_bar == "back":
-            candidate.BackBarWeapon = main
-            candidate.BackBarOffHand = off
-            candidate.FrontBarWeapon = GearSlot.from_dict(main.to_dict())
-            candidate.FrontBarOffHand = GearSlot.from_dict(off.to_dict())
-        else:
-            candidate.FrontBarWeapon = main
-            candidate.FrontBarOffHand = off
-            candidate.BackBarWeapon = GearSlot.from_dict(main.to_dict())
-            candidate.BackBarOffHand = GearSlot.from_dict(off.to_dict())
+        candidate.FrontBarWeapon = GearSlot.from_dict(main.to_dict())
+        candidate.FrontBarOffHand = GearSlot.from_dict(off.to_dict())
+        candidate.BackBarWeapon = GearSlot.from_dict(main.to_dict())
+        candidate.BackBarOffHand = GearSlot.from_dict(off.to_dict())
         return candidate, "Sorcerer", ("Sorcerer",)
 
-    def _evaluate_resting(
+    def _evaluate_snapshot(
         self,
         build: PlayerBuild,
         *,
@@ -268,21 +338,55 @@ class ExtremeBlueprintService:
         build_id: str,
         objective: ExtremeObjective,
         active_bar: str,
+        potion_buff: str = "",
     ) -> tuple[float, tuple[str, ...]]:
-        value, unresolved = self.extreme._evaluate(
-            build,
-            progression=progression,
+        candidate_progression = replace(
+            progression,
+            attributes=AttributeAllocation(
+                health=int(build.AttributeHealth or 0),
+                magicka=int(build.AttributeMagicka or 0),
+                stamina=int(build.AttributeStamina or 0),
+            ),
+        )
+        combat_state = CombatState(
+            active_buffs=(potion_buff,) if potion_buff else (),
+            game_update=GameUpdate.U50,
+        )
+        context = self.extreme.context_factory.build(
             character_id=character_id,
             build_id=build_id,
-            objective=objective,
+            build=build,
+            progression=candidate_progression,
             active_bar=active_bar,
+            combat_state=combat_state,
         )
+        value = self.extreme._objective_value(context, objective)
         if objective.key == "spell_damage":
-            value += self._resting_spell_damage_bonus(build, active_bar=active_bar)
-        return value, unresolved
+            extra_percent = self._named_percent_for_stat(potion_buff, StatId.SPELL_DAMAGE)
+            value += self._resting_spell_damage_bonus(
+                build,
+                active_bar=active_bar,
+                extra_percent=extra_percent,
+            )
+        return value, tuple(context.unresolved_gear_effects)
 
     @staticmethod
-    def _resting_spell_damage_bonus(build: PlayerBuild, *, active_bar: str) -> float:
+    def _named_percent_for_stat(buff_name: str, stat: StatId) -> float:
+        if not str(buff_name or "").strip():
+            return 0.0
+        return sum(
+            float(effect.value)
+            for effect in effects_for_buff(buff_name, game_update=GameUpdate.U50)
+            if effect.stat == stat and effect.bucket == "percent"
+        )
+
+    @staticmethod
+    def _resting_spell_damage_bonus(
+        build: PlayerBuild,
+        *,
+        active_bar: str,
+        extra_percent: float = 0.0,
+    ) -> float:
         if str(build.EsoClass or "").strip().casefold() != "sorcerer":
             return 0.0
         skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
@@ -300,7 +404,14 @@ class ExtremeBlueprintService:
             if str(entry.get("Weight", "") or "").strip().casefold() == "medium"
         )
         agility_percent = medium_armor_weapon_spell_damage_percent(medium_count)
-        return flat_bonus * (1.0 + agility_percent)
+        return flat_bonus * (1.0 + agility_percent + float(extra_percent))
+
+    @staticmethod
+    def _potion_profile(objective: ExtremeObjective) -> tuple[str, str]:
+        profile = _POTION_PROFILE.get(objective.key)
+        if profile is None:
+            return "No potion improves this objective", ""
+        return profile
 
     def _blank_build(self, objective: ExtremeObjective) -> PlayerBuild:
         build = PlayerBuild(
@@ -310,12 +421,13 @@ class ExtremeBlueprintService:
             EsoClass="",
             Role="Experimental",
         )
-        if objective.key == "max_health":
+        affinity = _ATTRIBUTE_AFFINITY.get(objective.key, "magicka")
+        if affinity == "health":
             build.AttributeHealth = 64
-        elif objective.key == "max_magicka":
-            build.AttributeMagicka = 64
-        elif objective.key == "max_stamina":
+        elif affinity == "stamina":
             build.AttributeStamina = 64
+        else:
+            build.AttributeMagicka = 64
 
         for slot_name in ARMOR_SLOTS:
             build.Armor[slot_name].update(
@@ -373,7 +485,7 @@ class ExtremeBlueprintService:
         for race in self._race_names():
             candidate = PlayerBuild.from_dict(build.to_dict())
             candidate.Race = race
-            value, _ = self._evaluate_resting(
+            value, _ = self._evaluate_snapshot(
                 candidate,
                 progression=progression,
                 character_id="extreme-blueprint",
@@ -410,7 +522,6 @@ class ExtremeBlueprintService:
             "max_health", "max_magicka", "max_stamina",
             "health_recovery", "magicka_recovery", "stamina_recovery",
         }:
-            from minmax.stat_ids import StatId
             stat = {
                 "max_health": StatId.MAX_HEALTH,
                 "max_magicka": StatId.MAX_MAGICKA,
@@ -466,7 +577,7 @@ class ExtremeBlueprintService:
 
                 candidate.Armor["Head"]["Set"] = ""
                 candidate.Armor["Shoulders"]["Set"] = ""
-                value, _ = self._evaluate_resting(
+                value, _ = self._evaluate_snapshot(
                     candidate,
                     progression=progression,
                     character_id="extreme-blueprint",
