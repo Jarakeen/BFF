@@ -62,3 +62,39 @@ def test_baseline_only_unresolved_does_not_appear_as_candidate_evidence() -> Non
     assert result.inherited_unresolved == ()
     assert result.candidate_specific_unresolved == ()
     assert result.unresolved == ()
+
+
+def test_deterministic_refresh_cascade_is_schedule_note_not_unresolved_evidence() -> None:
+    cascade = (
+        "refresh obligation for 'Budding Seeds' claimed the 40s front-bar slot from "
+        "'Energy Orb'; displaced skill will cascade to the next same-bar skill slot"
+    )
+
+    result = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(unresolved=(cascade,)),
+        baseline_sustain=_sustain(),
+        candidate_sustain=_sustain(),
+    )
+
+    assert result.candidate_specific_unresolved == ()
+    assert result.unresolved == ()
+    assert result.candidate_specific_schedule_notes == (cascade,)
+    assert result.schedule_notes == (cascade,)
+
+
+def test_beyond_horizon_displacement_remains_candidate_specific_unresolved() -> None:
+    horizon = (
+        "skill 'Budding Seeds' was displaced beyond the 60s plan horizon after "
+        "same-bar refresh/channel insertion on front bar"
+    )
+
+    result = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(unresolved=(horizon,)),
+        baseline_sustain=_sustain(),
+        candidate_sustain=_sustain(),
+    )
+
+    assert result.candidate_specific_unresolved == (horizon,)
+    assert result.candidate_specific_schedule_notes == ()
