@@ -18,12 +18,13 @@ from services.extreme_class_route_comparison_service import (
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Show reviewed pure-class Class Mastery routes and canonical-bar-backed subclass lower bounds."
+            "Show reviewed pure-class Class Mastery routes and canonical-two-bar-backed subclass lower bounds."
         )
     )
     parser.add_argument("objective")
     parser.add_argument("--reference-value", type=float, default=None)
     parser.add_argument("--higher-max-resource", type=float, default=None)
+    parser.add_argument("--active-bar", choices=("front", "back"), default="front")
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
 
@@ -31,6 +32,7 @@ def main() -> int:
         args.objective,
         reference_value=args.reference_value,
         higher_max_resource=args.higher_max_resource,
+        active_bar=args.active_bar,
     )
 
     pure = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.PURE_MASTERY]
@@ -45,6 +47,7 @@ def main() -> int:
     print(" EXTREME BUILD CLASS ROUTE REVIEW")
     print("=" * 100)
     print(f"Objective: {result.objective_key}")
+    print(f"Active bar: {args.active_bar}")
     print(f"Reference value: {args.reference_value if args.reference_value is not None else 'not supplied'}")
     print(
         "Higher Max Magicka/Stamina: "
@@ -71,9 +74,9 @@ def main() -> int:
 
     print()
     if not subclass_lower_bounds:
-        print("No reviewed subclass lower bound currently has a canonical six-slot bar for this objective.")
+        print("No reviewed subclass lower bound currently has canonical front/back bars for this objective.")
     else:
-        print("Top reviewed subclass lower bounds with concrete bars:")
+        print("Top reviewed subclass lower bounds with concrete two-bar builds:")
         for row in sorted(
             subclass_lower_bounds,
             key=lambda item: (
@@ -82,26 +85,30 @@ def main() -> int:
                 item.equipped_skill_lines,
                 item.slot_counts,
                 item.skill_bar_names,
+                item.front_skill_bar_names,
+                item.back_skill_bar_names,
             ),
         )[:12]:
             lines = ", ".join(row.equipped_skill_lines)
             slots = ", ".join(f"{line}={count}" for line, count in row.slot_counts if count) or "none"
             sources = "; ".join(row.reviewed_sources) or "none"
-            bar = " | ".join(row.skill_bar_names) or "unmaterialized"
+            front_bar = " | ".join(row.front_skill_bar_names) or "unmaterialized"
+            back_bar = " | ".join(row.back_skill_bar_names) or "unmaterialized"
             print(
                 f"  {row.base_class.value:13s} | delta >= {row.projected_delta:g} | "
-                f"slots {slots} | {sources} | {lines}"
+                f"active {row.active_bar} | slots {slots} | {sources} | {lines}"
             )
-            print(f"      bar: {bar}")
+            print(f"      front: {front_bar}")
+            print(f"      back:  {back_bar}")
 
     print()
     print(
-        "Boundary: subclass numeric values now require both a reviewed six-slot allocation and a concrete "
-        "canonical skill bar with five distinct non-Ultimate base families plus one Ultimate. The displayed "
-        "bar proves equipability only; its morph choices are deterministic representatives, not yet an "
-        "objective-optimal skill-effect search. Unreviewed skills/passives are still not assumed to contribute "
-        "zero, so every subclass route remains globally unresolved until the full borrowed-line effect search "
-        "is complete."
+        "Boundary: subclass numeric values now require a reviewed six-slot allocation plus concrete canonical "
+        "front and back bars, each with five distinct non-Ultimate base families plus one Ultimate. Both bars "
+        "belong to the build, but while-slotted/active-bar-only effects are scored only from the explicitly "
+        "selected active bar. Objective-reviewed morphs may be preferred where BFF has reviewed standing "
+        "evidence; unreviewed skill/passive effects are still not assumed to contribute zero, so every subclass "
+        "route remains globally unresolved until the borrowed-line effect search is sufficiently complete."
     )
     return 0
 
