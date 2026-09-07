@@ -112,3 +112,26 @@ def test_unreviewed_objective_returns_no_fake_zero_score():
         )
         == ()
     )
+
+
+def test_known_zero_allocations_can_be_exposed_for_skill_only_search():
+    rows = ExtremeSubclassSlotAllocationService.reviewed_allocations(
+        ("herald_of_the_tome", "aedric_spear", "green_balance"),
+        "spell_damage",
+        include_known_zero=True,
+    )
+
+    assert rows
+    assert all(row.projected_delta == 0.0 for row in rows)
+    assert all(row.reviewed_sources == () for row in rows)
+    assert any(_counts(row)["herald_of_the_tome"] == 6 for row in rows)
+
+
+def test_missing_reference_percent_allocations_are_not_exposed_as_known_zero():
+    rows = ExtremeSubclassSlotAllocationService.reviewed_allocations(
+        ("animal_companions",),
+        "magicka_recovery",
+        include_known_zero=True,
+    )
+
+    assert rows == ()
