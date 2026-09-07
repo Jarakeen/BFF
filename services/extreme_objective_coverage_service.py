@@ -161,8 +161,8 @@ class ExtremeObjectiveCoverageService:
             "Deterministic CP160 Gold armor base values, reviewed static traits, armor-weight passives, and seven-slot armor/Mundus tradeoffs are now searchable for reviewed objectives, but shields and every trait/source interaction are not yet exhaustive.",
         ),
         "gear_sets": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Extreme candidate generation does not yet exhaustively enumerate gear-set contributions.",
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical gear sets are enumerable and reviewed static active bonuses now contribute objective-specific lower bounds while unmapped active bonuses remain explicit blockers; legal multi-set equipment combinations and conditional/proc/runtime set mechanics are not yet exhaustive.",
         ),
         "race": (
             ExtremeSourceCoverageStatus.PARTIAL,
