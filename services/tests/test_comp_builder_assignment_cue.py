@@ -1,12 +1,21 @@
 from pathlib import Path
 
 
-def test_assignment_action_uses_player_facing_language() -> None:
+def test_assignment_action_uses_player_facing_language_and_flow_arrows() -> None:
     source = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
 
-    assert 'apply_chair.setText("Assign Build to This Player")' in source
+    assert 'apply_chair.setText("↰ Assign Build to Player")' in source
     assert 'setProperty("compAssignBuild", True)' in source
-    assert 'generate.setText("Fill from Roster")' in source
+    assert 'generate.setText("↵ Fill from Roster")' in source
+
+
+def test_main_controls_move_plan_identity_and_style_to_header() -> None:
+    source = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+
+    assert 'page.header.add_context_widget(page._context_field("PLAN NAME", plan_name))' in source
+    assert 'page.header.add_context_widget(page._context_field("PLAN STYLE", style_combo))' in source
+    assert 'if text in {"PLAN NAME", "COMPOSITION STYLE"}' in source
+    assert 'label.property("compCompositionStyleHelp")' in source
 
 
 def test_main_controls_hide_redundant_update_and_optional_strategy_action() -> None:
