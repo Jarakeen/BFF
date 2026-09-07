@@ -15,11 +15,9 @@ from minmax.passive_math import (
     WARDEN_FROZEN_ARMOR_RESISTANCE_PER_SLOTTED,
 )
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
-from services.extreme_skill_standing_effect_service import (
-    ExtremeSkillEffectScope,
-    ExtremeSkillStandingEffectService,
-)
+from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
 from services.extreme_subclass_skill_bar_service import ExtremeSubclassSkillBarService
+from services.extreme_subclass_slot_allocation_service import ExtremeSubclassSlotAllocationService
 from services.skill_bar_eligibility import is_player_active, is_ultimate
 from services.skill_choice_service import load_skill_choices
 
@@ -140,7 +138,7 @@ class ExtremeBuildCatalogService:
                 "subclass_rule_version": SUBCLASS_RULE_VERSION,
                 "source_database_sha256": self.database_fingerprint(),
                 "source_database_name": self.database_path.name,
-                "active_bar_slots": 6,
+                "active_bar_slots": ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS,
                 "_why": (
                     "The fingerprint invalidates this cache when canonical ESO data changes; "
                     "the rule version invalidates it when subclass legality changes."
@@ -219,8 +217,9 @@ class ExtremeBuildCatalogService:
     ) -> tuple[tuple[tuple[str, int], ...], ...]:
         canonical = tuple(sorted(lines))
         rows: list[tuple[tuple[str, int], ...]] = []
-        for counts in product(range(7), repeat=len(canonical)):
-            if sum(counts) != 6:
+        slots = ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS
+        for counts in product(range(slots + 1), repeat=len(canonical)):
+            if sum(counts) != slots:
                 continue
             rows.append(tuple(zip(canonical, counts)))
         return tuple(rows)
@@ -322,8 +321,8 @@ class ExtremeBuildCatalogService:
             )
             if nightblade_slots:
                 rating = (
-                    ExtremeSubclassSkillBarService.__name__  # keep source module import intentional
-                    and 438.0 * nightblade_slots
+                    ExtremeSubclassSlotAllocationService.NIGHTBLADE_PRESSURE_POINTS_RATING_PER_SLOT
+                    * nightblade_slots
                 )
                 ratio += GearStatInputResolver.critical_rating_to_ratio(rating)
                 sources.append(f"Pressure Points ({nightblade_slots} Nightblade slots)")
@@ -335,7 +334,10 @@ class ExtremeBuildCatalogService:
                 if _LINE_OWNER.get(line) is CharacterClass.SORCERER
             )
             if sorcerer_slots:
-                flat += 108.0 * sorcerer_slots
+                flat += (
+                    ExtremeSubclassSlotAllocationService.SORCERER_EXPERT_MAGE_POWER_PER_SLOT
+                    * sorcerer_slots
+                )
                 sources.append(f"Expert Mage ({sorcerer_slots} Sorcerer slots)")
 
         animal_slots = allocation.get("animal_companions", 0)
