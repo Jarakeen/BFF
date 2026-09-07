@@ -64,7 +64,13 @@ class RotationCandidateScorecard:
     demand_coverage: tuple[RotationDemandCoverageEvidence, ...]
     missing_required_effects: tuple[str, ...]
     candidate_shortfall: int
-    unresolved: tuple[str, ...]
+    inherited_unresolved: tuple[str, ...]
+    candidate_specific_unresolved: tuple[str, ...]
+
+    @property
+    def unresolved(self) -> tuple[str, ...]:
+        """All unresolved evidence retained for compatibility and diagnostics."""
+        return self.inherited_unresolved + self.candidate_specific_unresolved
 
     @property
     def missing_demand_requirements(self) -> tuple[RotationDemandActionRequirement, ...]:
@@ -92,6 +98,10 @@ class RotationCandidateScorecardService:
     coverage is based only on exact caller-supplied action requirements. Required
     support effects use the existing static SupportCoverage model and therefore do
     not claim runtime uptime unless a later layer proves it.
+
+    Unresolved evidence is split into inherited/shared baseline limitations and
+    candidate-specific additions. Shared model boundaries stay visible but should
+    not be treated as defects introduced by one candidate.
     """
 
     def __init__(
@@ -156,8 +166,19 @@ class RotationCandidateScorecardService:
             baseline_sustain=baseline_sustain,
             candidate_sustain=candidate_sustain,
         )
-        unresolved = self._dedupe(
+
+        baseline_unresolved = self._dedupe(
+            tuple(baseline_plan.unresolved) + tuple(baseline_sustain.unresolved)
+        )
+        candidate_unresolved = self._dedupe(
             tuple(candidate_plan.unresolved) + tuple(candidate_sustain.unresolved)
+        )
+        baseline_keys = {item.casefold() for item in baseline_unresolved}
+        inherited = tuple(
+            item for item in candidate_unresolved if item.casefold() in baseline_keys
+        )
+        candidate_specific = tuple(
+            item for item in candidate_unresolved if item.casefold() not in baseline_keys
         )
 
         return RotationCandidateScorecard(
@@ -165,7 +186,8 @@ class RotationCandidateScorecardService:
             demand_coverage=tuple(coverage),
             missing_required_effects=missing_effects,
             candidate_shortfall=int(candidate_sustain.run.timeline.total_shortfall),
-            unresolved=unresolved,
+            inherited_unresolved=inherited,
+            candidate_specific_unresolved=candidate_specific,
         )
 
     @staticmethod
