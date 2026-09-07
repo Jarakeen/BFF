@@ -26,7 +26,11 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.accessibility_preferences import VISUAL_THEME_RYLO
-from services.stickerbook_service import StickerbookPiece, StickerbookService
+from services.stickerbook_service import (
+    STICKERBOOK_BUCKETS,
+    StickerbookPiece,
+    StickerbookService,
+)
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -80,7 +84,7 @@ RYLO_THEME = StickerbookTheme(
     meter_background="#090B0E",
 )
 
-_BUCKETS = ("All", "Arena", "Dungeon", "Trial", "Overland", "PvP", "Other")
+_BUCKETS = ("All", *STICKERBOOK_BUCKETS)
 
 
 def _theme() -> StickerbookTheme:
@@ -449,11 +453,11 @@ class StickerbookPage(FoundryPage):
                 widget.deleteLater()
         self._piece_checks.clear()
 
-        groups = {"Armor": [], "Weapons": [], "Jewelry": []}
+        groups = {"Armor": [], "Weapons": [], "Jewelry": [], "Other": []}
         for piece in pieces:
             groups.setdefault(piece.group, []).append(piece)
 
-        for group_name in ("Armor", "Weapons", "Jewelry"):
+        for group_name in ("Armor", "Weapons", "Jewelry", "Other"):
             group_pieces = groups.get(group_name) or []
             if not group_pieces:
                 continue
