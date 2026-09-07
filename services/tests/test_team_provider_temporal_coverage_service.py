@@ -18,12 +18,13 @@ def _app(effect, source, start, duration):
     )
 
 
-def _req(effect="major_force", start=0.0, end=20.0):
+def _req(effect="major_force", start=0.0, end=20.0, minimum_distinct_sources=1):
     return TeamProviderTemporalRequirement(
         effect_key=effect,
         start_seconds=start,
         end_seconds=end,
         label="burn phase",
+        minimum_distinct_sources=minimum_distinct_sources,
     )
 
 
@@ -37,6 +38,7 @@ def test_staggered_same_named_buff_extends_full_required_window():
     )
 
     assert result.full_window_covered is True
+    assert result.full_requirement_met is True
     assert result.coverage_ratio == pytest.approx(1.0)
     assert result.covered_seconds == pytest.approx(20.0)
     assert result.uncovered_seconds == pytest.approx(0.0)
@@ -85,7 +87,38 @@ def test_one_carrier_can_refresh_repeatedly_when_runtime_schedule_supports_it():
     )
 
     assert result.full_window_covered is True
+    assert result.full_requirement_met is True
     assert result.active_sources == ("Healer A",)
+
+
+def test_strategy_can_require_two_distinct_horn_carriers_even_when_one_source_covers_time():
+    result = TeamProviderTemporalCoverageService.evaluate(
+        _req(end=20.0, minimum_distinct_sources=2),
+        applications=(
+            _app("major_force", "Tank Horn", 0.0, 10.0),
+            _app("major_force", "Tank Horn", 10.0, 10.0),
+        ),
+    )
+
+    assert result.full_window_covered is True
+    assert result.distinct_source_count == 1
+    assert result.distinct_source_requirement_met is False
+    assert result.full_requirement_met is False
+
+
+def test_tank_and_healer_stagger_can_satisfy_two_carrier_strategy_requirement():
+    result = TeamProviderTemporalCoverageService.evaluate(
+        _req(end=20.0, minimum_distinct_sources=2),
+        applications=(
+            _app("major_force", "Tank Horn", 0.0, 10.0),
+            _app("major_force", "Healer Horn", 10.0, 10.0),
+        ),
+    )
+
+    assert result.full_window_covered is True
+    assert result.distinct_source_count == 2
+    assert result.distinct_source_requirement_met is True
+    assert result.full_requirement_met is True
 
 
 def test_two_healers_can_overlap_short_support_buff_without_overlap_being_auto_rejected():
@@ -165,6 +198,7 @@ def test_invalid_timed_application_is_rejected(application):
         lambda: TeamProviderTemporalRequirement("buff", -1.0, 1.0),
         lambda: TeamProviderTemporalRequirement("buff", 1.0, 1.0),
         lambda: TeamProviderTemporalRequirement("buff", 2.0, 1.0),
+        lambda: TeamProviderTemporalRequirement("buff", 0.0, 1.0, minimum_distinct_sources=0),
     ],
 )
 def test_invalid_temporal_requirement_is_rejected(requirement):
