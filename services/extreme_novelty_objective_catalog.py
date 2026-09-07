@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Named novelty objectives for the Extreme/MOST page.
 
-These recipes define optimization intent and hard equipment constraints without
-pretending the underlying mechanic families are already globally complete.
-Actual source-family coverage remains governed by the relevant Extreme coverage
-and mechanic services.
+These recipes define optimization intent and hard equipment/resource constraints
+without pretending the underlying mechanic families are already globally
+complete. Actual source-family coverage remains governed by the relevant
+Extreme coverage and mechanic services.
 """
 
 from dataclasses import dataclass
@@ -32,6 +32,8 @@ class ExtremeNoveltyRecipe:
     secondary: tuple[ExtremeNoveltyMetric, ...] = ()
     required_front_weapon_family: str | None = None
     required_back_weapon_family: str | None = None
+    required_primary_resource: str | None = None
+    required_role: str | None = None
     note: str = ""
 
 
@@ -57,6 +59,24 @@ BASH_COST = ExtremeNoveltyMetric(
     objective_key="bash_cost",
     label="Bash Cost",
     direction=ExtremeObjectiveDirection.MINIMIZE,
+)
+
+HEALING_OUTPUT = ExtremeNoveltyMetric(
+    objective_key="healing_output",
+    label="Healing Output",
+    direction=ExtremeObjectiveDirection.MAXIMIZE,
+)
+
+HEALING_DONE = ExtremeNoveltyMetric(
+    objective_key="healing_done",
+    label="Healing Done",
+    direction=ExtremeObjectiveDirection.MAXIMIZE,
+)
+
+CRITICAL_HEALING = ExtremeNoveltyMetric(
+    objective_key="critical_healing",
+    label="Critical Healing",
+    direction=ExtremeObjectiveDirection.MAXIMIZE,
 )
 
 
@@ -86,9 +106,25 @@ MOST_BASHY = ExtremeNoveltyRecipe(
     ),
 )
 
+MOST_STAMINA_HEALER = ExtremeNoveltyRecipe(
+    key="most_stamina_healer",
+    label="MOST Stamina Healer",
+    primary=HEALING_OUTPUT,
+    secondary=(HEALING_DONE, CRITICAL_HEALING),
+    required_primary_resource="stamina",
+    required_role="healer",
+    note=(
+        "Require a genuinely stamina-primary healer route rather than relabeling "
+        "a magicka healer. Maximize actual healing output first, then report "
+        "Healing Done and Critical Healing as separate supporting metrics. "
+        "Sustain is optional for the novelty objective, but skill/equipment "
+        "legality and resource-use constraints must still be satisfied."
+    ),
+)
+
 
 class ExtremeNoveltyObjectiveCatalog:
-    RECIPES = (MOST_SNEAKY, MOST_BASHY)
+    RECIPES = (MOST_SNEAKY, MOST_BASHY, MOST_STAMINA_HEALER)
 
     @classmethod
     def all_recipes(cls) -> tuple[ExtremeNoveltyRecipe, ...]:
