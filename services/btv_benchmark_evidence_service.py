@@ -96,6 +96,20 @@ class BTVBenchmarkObservation:
             self.effect_key.casefold(),
         )
 
+    def comparable_uptime_with(self, other: "BTVBenchmarkObservation") -> bool:
+        """Return True only when two uptime ratios share a known denominator basis.
+
+        Unknown denominator evidence stays usable as provenance/calibration, but it
+        may not be numerically ranked against another observation until the source
+        denominator is established. Full-encounter and damageable-boss-time ratios
+        are intentionally incomparable without an explicit normalization step.
+        """
+        if self.uptime_denominator_basis == UPTIME_DENOMINATOR_UNKNOWN:
+            return False
+        if other.uptime_denominator_basis == UPTIME_DENOMINATOR_UNKNOWN:
+            return False
+        return self.uptime_denominator_basis == other.uptime_denominator_basis
+
     def to_uptime_policy(self) -> TeamProviderUptimePolicy | None:
         """Project screenshot evidence into runtime policy only when a target exists."""
         if self.target_ratio is None:
