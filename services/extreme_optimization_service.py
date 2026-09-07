@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Callable, Iterable
 
 from engine.config import get_data_dir
 from minmax.build_candidate import BuildCandidate, BuildChange
@@ -49,7 +48,6 @@ EXTREME_OBJECTIVES: tuple[ExtremeObjective, ...] = (
 )
 
 _OBJECTIVE_BY_KEY = {objective.key: objective for objective in EXTREME_OBJECTIVES}
-
 _STAT_ID_BY_OBJECTIVE = {
     "weapon_damage": StatId.WEAPON_DAMAGE,
     "spell_damage": StatId.SPELL_DAMAGE,
@@ -62,13 +60,11 @@ _STAT_ID_BY_OBJECTIVE = {
     "critical_damage": StatId.CRITICAL_DAMAGE,
     "healing_done": StatId.HEALING_DONE,
 }
-
 _RESOURCE_ATTRIBUTE_BY_OBJECTIVE = {
     "max_health": (64, 0, 0),
     "max_magicka": (0, 64, 0),
     "max_stamina": (0, 0, 64),
 }
-
 _JEWELRY_FIELDS = ("Necklace", "Ring1", "Ring2")
 _WEAPON_FIELDS = ("FrontBarWeapon", "FrontBarOffHand", "BackBarWeapon", "BackBarOffHand")
 
@@ -104,13 +100,12 @@ class ExtremeOptimizationResult:
 
 
 class ExtremeOptimizationService:
-    """Greedy single-stat laboratory built on BFF's canonical static math.
+    """Deliberately unconstrained single-stat search using BFF static math.
 
-    This intentionally ignores raid-role viability and sustain constraints. It is
-    not yet a proof of the global ESO maximum because arbitrary gear-set replacement
-    is deliberately outside the current bounded search. Every accepted mutation is
-    nevertheless evaluated by the same canonical character-sheet stack used by the
-    rest of BFF.
+    This is a laboratory, not a raid recommendation. The search is bounded to
+    mutation families BFF can currently resolve deterministically. Unrelated
+    unresolved gear effects are reported but do not erase a stat value that the
+    canonical character-sheet stack can still prove.
     """
 
     SEARCH_SCOPE = (
@@ -120,7 +115,7 @@ class ExtremeOptimizationService:
         "armor enchants",
         "jewelry traits",
         "jewelry enchants",
-        "active/inactive weapon traits",
+        "weapon traits",
         "food/drink",
     )
     OMITTED_SCOPE = (
@@ -132,12 +127,7 @@ class ExtremeOptimizationService:
         "runtime conditional stacks/procs",
     )
 
-    def __init__(
-        self,
-        *,
-        database_path: Path | None = None,
-        builds_path: Path | None = None,
-    ) -> None:
+    def __init__(self, *, database_path: Path | None = None, builds_path: Path | None = None) -> None:
         data_dir = get_data_dir()
         self.database_path = Path(database_path or data_dir / "eso.db")
         self.builds_path = Path(builds_path or data_dir / "builds.json")
@@ -198,14 +188,13 @@ class ExtremeOptimizationService:
         accepted: list[ExtremeOptimizationStep] = []
 
         for pass_index in range(max(1, int(max_passes))):
-            candidates = self._candidates(
+            best: tuple[float, str, BuildCandidate] | None = None
+            for candidate in self._candidates(
                 current,
                 objective=objective,
                 character_id=character_id,
                 baseline_build_id=f"{baseline_build_id}:extreme:{pass_index}",
-            )
-            best: tuple[float, str, BuildCandidate, tuple[str, ...]] | None = None
-            for candidate in candidates:
+            ):
                 value, candidate_unresolved = self._evaluate(
                     candidate.candidate_build,
                     progression=progression,
@@ -214,27 +203,19 @@ class ExtremeOptimizationService:
                     objective=objective,
                     active_bar=active_bar,
                 )
-                if candidate_unresolved:
-                    unresolved.extend(candidate_unresolved)
-                    continue
+                unresolved.extend(candidate_unresolved)
                 if value <= current_value + 1e-9:
                     continue
-                ranking_key = candidate.candidate_id
                 if best is None or value > best[0] + 1e-9 or (
-                    abs(value - best[0]) <= 1e-9 and ranking_key < best[1]
+                    abs(value - best[0]) <= 1e-9 and candidate.candidate_id < best[1]
                 ):
-                    best = (value, ranking_key, candidate, candidate_unresolved)
+                    best = (value, candidate.candidate_id, candidate)
 
             if best is None:
                 break
 
-            next_value, _, winner, _ = best
-            change = winner.changes[0] if winner.changes else BuildChange.from_values(
-                path="Build",
-                before="baseline",
-                after="candidate",
-                source="extreme:unknown",
-            )
+            next_value, _, winner = best
+            change = winner.changes[0]
             accepted.append(
                 ExtremeOptimizationStep(
                     path=change.path,
@@ -289,7 +270,7 @@ class ExtremeOptimizationService:
     @staticmethod
     def _objective_value(context, objective: ExtremeObjective) -> float:
         state = context.character_state
-        direct = {
+        resource_values = {
             "max_health": state.max_health,
             "max_magicka": state.max_magicka,
             "max_stamina": state.max_stamina,
@@ -297,10 +278,9 @@ class ExtremeOptimizationService:
             "magicka_recovery": state.magicka_recovery,
             "stamina_recovery": state.stamina_recovery,
         }
-        if objective.key in direct:
-            return float(direct[objective.key])
-        stat_id = _STAT_ID_BY_OBJECTIVE[objective.key]
-        trace = context.core_state.derived.get(stat_id)
+        if objective.key in resource_values:
+            return float(resource_values[objective.key])
+        trace = context.core_state.derived.get(_STAT_ID_BY_OBJECTIVE[objective.key])
         if trace is None:
             raise ValueError(f"Canonical core stat is unavailable for {objective.label}")
         return float(trace.final_value)
@@ -314,62 +294,48 @@ class ExtremeOptimizationService:
         baseline_build_id: str,
     ) -> tuple[BuildCandidate, ...]:
         candidates: list[BuildCandidate] = []
-        candidates.extend(
-            enumerate_mundus_candidates(
-                baseline_build=baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-                mundus_repository=self.mundus_repository,
-                candidate_source="extreme:mundus",
-            )
-        )
-        candidates.extend(
-            enumerate_armor_trait_candidates(
-                baseline_build=baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-                candidate_source="extreme:armor-trait",
-            )
-        )
-        candidates.extend(
-            enumerate_armor_enchant_candidates(
-                baseline_build=baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-                candidate_source="extreme:armor-enchant",
-            )
-        )
-        candidates.extend(
-            enumerate_food_candidates(
-                baseline_build=baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-                provisioning_repository=self.provisioning_repository,
-                candidate_source="extreme:food",
-            )
-        )
-        candidates.extend(
-            self._attribute_candidates(
-                baseline_build,
-                objective=objective,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-            )
-        )
-        candidates.extend(
-            self._jewelry_candidates(
-                baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-            )
-        )
-        candidates.extend(
-            self._weapon_trait_candidates(
-                baseline_build,
-                character_id=character_id,
-                baseline_build_id=baseline_build_id,
-            )
-        )
+        candidates.extend(enumerate_mundus_candidates(
+            baseline_build=baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+            mundus_repository=self.mundus_repository,
+            candidate_source="extreme:mundus",
+        ))
+        candidates.extend(enumerate_armor_trait_candidates(
+            baseline_build=baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+            candidate_source="extreme:armor-trait",
+        ))
+        candidates.extend(enumerate_armor_enchant_candidates(
+            baseline_build=baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+            candidate_source="extreme:armor-enchant",
+        ))
+        candidates.extend(enumerate_food_candidates(
+            baseline_build=baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+            provisioning_repository=self.provisioning_repository,
+            candidate_source="extreme:food",
+        ))
+        candidates.extend(self._attribute_candidates(
+            baseline_build,
+            objective=objective,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+        ))
+        candidates.extend(self._jewelry_candidates(
+            baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+        ))
+        candidates.extend(self._weapon_trait_candidates(
+            baseline_build,
+            character_id=character_id,
+            baseline_build_id=baseline_build_id,
+        ))
         return tuple(candidates)
 
     @staticmethod
@@ -390,23 +356,18 @@ class ExtremeOptimizationService:
         )
         if before == allocation:
             return ()
-        candidate_build = PlayerBuild.from_dict(baseline_build.to_dict())
-        candidate_build.AttributeHealth, candidate_build.AttributeMagicka, candidate_build.AttributeStamina = allocation
+        build = PlayerBuild.from_dict(baseline_build.to_dict())
+        build.AttributeHealth, build.AttributeMagicka, build.AttributeStamina = allocation
         return (
-            BuildCandidate.from_build(
+            ExtremeOptimizationService._direct_candidate(
+                build,
                 character_id=character_id,
                 baseline_build_id=baseline_build_id,
-                candidate_id=f"{baseline_build_id}:attributes:{objective.key}",
-                candidate_build=candidate_build,
-                changes=(
-                    BuildChange.from_values(
-                        path="Attributes",
-                        before={"health": before[0], "magicka": before[1], "stamina": before[2]},
-                        after={"health": allocation[0], "magicka": allocation[1], "stamina": allocation[2]},
-                        source="extreme:attributes",
-                    ),
-                ),
-                candidate_source="extreme:attributes",
+                token=f"attributes:{objective.key}",
+                path="Attributes",
+                before={"health": before[0], "magicka": before[1], "stamina": before[2]},
+                after={"health": allocation[0], "magicka": allocation[1], "stamina": allocation[2]},
+                source="extreme:attributes",
             ),
         )
 
@@ -418,7 +379,13 @@ class ExtremeOptimizationService:
         baseline_build_id: str,
     ) -> tuple[BuildCandidate, ...]:
         result: list[BuildCandidate] = []
-        enchant_choices = ("Weapon Damage", "Spell Damage", "Magicka Recovery", "Stamina Recovery", "Health Recovery")
+        enchants = (
+            "Weapon Damage",
+            "Spell Damage",
+            "Magicka Recovery",
+            "Stamina Recovery",
+            "Health Recovery",
+        )
         for field_name in _JEWELRY_FIELDS:
             slot = getattr(baseline_build, field_name)
             if slot.is_empty:
@@ -429,35 +396,31 @@ class ExtremeOptimizationService:
                     continue
                 build = PlayerBuild.from_dict(baseline_build.to_dict())
                 getattr(build, field_name).Trait = trait
-                result.append(
-                    ExtremeOptimizationService._direct_candidate(
-                        build,
-                        character_id=character_id,
-                        baseline_build_id=baseline_build_id,
-                        token=f"jewelry-trait:{field_name}:{trait}",
-                        path=f"{field_name}.Trait",
-                        before=slot.Trait,
-                        after=trait,
-                        source="extreme:jewelry-trait",
-                    )
-                )
-            for enchant in enchant_choices:
+                result.append(ExtremeOptimizationService._direct_candidate(
+                    build,
+                    character_id=character_id,
+                    baseline_build_id=baseline_build_id,
+                    token=f"jewelry-trait:{field_name}:{trait}",
+                    path=f"{field_name}.Trait",
+                    before=slot.Trait,
+                    after=trait,
+                    source="extreme:jewelry-trait",
+                ))
+            for enchant in enchants:
                 if enchant.casefold() == str(slot.Enchant or "").strip().casefold():
                     continue
                 build = PlayerBuild.from_dict(baseline_build.to_dict())
                 getattr(build, field_name).Enchant = enchant
-                result.append(
-                    ExtremeOptimizationService._direct_candidate(
-                        build,
-                        character_id=character_id,
-                        baseline_build_id=baseline_build_id,
-                        token=f"jewelry-enchant:{field_name}:{enchant}",
-                        path=f"{field_name}.Enchant",
-                        before=slot.Enchant,
-                        after=enchant,
-                        source="extreme:jewelry-enchant",
-                    )
-                )
+                result.append(ExtremeOptimizationService._direct_candidate(
+                    build,
+                    character_id=character_id,
+                    baseline_build_id=baseline_build_id,
+                    token=f"jewelry-enchant:{field_name}:{enchant}",
+                    path=f"{field_name}.Enchant",
+                    before=slot.Enchant,
+                    after=enchant,
+                    source="extreme:jewelry-enchant",
+                ))
         return tuple(result)
 
     @staticmethod
@@ -478,18 +441,16 @@ class ExtremeOptimizationService:
                     continue
                 build = PlayerBuild.from_dict(baseline_build.to_dict())
                 getattr(build, field_name).Trait = trait
-                result.append(
-                    ExtremeOptimizationService._direct_candidate(
-                        build,
-                        character_id=character_id,
-                        baseline_build_id=baseline_build_id,
-                        token=f"weapon-trait:{field_name}:{trait}",
-                        path=f"{field_name}.Trait",
-                        before=slot.Trait,
-                        after=trait,
-                        source="extreme:weapon-trait",
-                    )
-                )
+                result.append(ExtremeOptimizationService._direct_candidate(
+                    build,
+                    character_id=character_id,
+                    baseline_build_id=baseline_build_id,
+                    token=f"weapon-trait:{field_name}:{trait}",
+                    path=f"{field_name}.Trait",
+                    before=slot.Trait,
+                    after=trait,
+                    source="extreme:weapon-trait",
+                ))
         return tuple(result)
 
     @staticmethod
@@ -510,14 +471,12 @@ class ExtremeOptimizationService:
             baseline_build_id=baseline_build_id,
             candidate_id=f"{baseline_build_id}:{safe}",
             candidate_build=build,
-            changes=(
-                BuildChange.from_values(
-                    path=path,
-                    before=before,
-                    after=after,
-                    source=source,
-                ),
-            ),
+            changes=(BuildChange.from_values(
+                path=path,
+                before=before,
+                after=after,
+                source=source,
+            ),),
             candidate_source=source,
         )
 
