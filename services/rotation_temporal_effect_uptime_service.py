@@ -54,7 +54,13 @@ class RotationTemporalEffectRequirement:
 
 @dataclass(frozen=True)
 class RotationTemporalEffectApplication:
-    """Evidence that one temporal effect actually activated at one time/bar."""
+    """Evidence that one temporal effect actually activated at one time/bar.
+
+    ``sequence`` is optional ordering evidence within a shared timestamp. It uses
+    the same ordering domain as ``RotationAction.sequence``. When absent, callers
+    retain the older conservative behavior: a same-timestamp bar swap cannot be
+    ordered relative to this activation and plan legality remains unresolved.
+    """
 
     time_seconds: float
     effect_name: str
@@ -62,6 +68,7 @@ class RotationTemporalEffectApplication:
     source: str
     bar: str
     trigger: str | None = None
+    sequence: int | None = None
 
     def __post_init__(self) -> None:
         time_seconds = float(self.time_seconds)
@@ -80,6 +87,11 @@ class RotationTemporalEffectApplication:
             )
         if bar not in {"front", "back"}:
             raise ValueError("rotation temporal effect application bar must be front or back")
+        if self.sequence is not None:
+            sequence = int(self.sequence)
+            if sequence < 0 or sequence != self.sequence:
+                raise ValueError("rotation temporal effect application sequence must be a non-negative integer")
+            object.__setattr__(self, "sequence", sequence)
         object.__setattr__(self, "time_seconds", time_seconds)
         object.__setattr__(self, "effect_name", effect_name)
         object.__setattr__(self, "source", source)
