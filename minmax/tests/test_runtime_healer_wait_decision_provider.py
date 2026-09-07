@@ -22,10 +22,17 @@ def _incentive() -> HealerHeavyAttackBuildIncentive:
     )
 
 
-def _context(*, next_decision=3.0, hard_boundary=5.0, next_due=()) -> PrematureRecastDecisionContext:
-    slot = RotationAction(2.0, 1, RotationActionKind.SKILL, "Long Buff", "front")
+def _context(
+    *,
+    time_seconds=2.0,
+    next_decision=3.0,
+    hard_boundary=5.0,
+    next_due=(),
+    plan_end=40.0,
+) -> PrematureRecastDecisionContext:
+    slot = RotationAction(time_seconds, 1, RotationActionKind.SKILL, "Long Buff", "front")
     return PrematureRecastDecisionContext(
-        time_seconds=2.0,
+        time_seconds=time_seconds,
         bar="front",
         candidate=slot,
         slot=slot,
@@ -33,7 +40,7 @@ def _context(*, next_decision=3.0, hard_boundary=5.0, next_due=()) -> PrematureR
         rules=(RotationRecastRule("Long Buff", 10.0, bar="front"),),
         next_decision_time_seconds=next_decision,
         next_hard_boundary_time_seconds=hard_boundary,
-        plan_end_seconds=10.0,
+        plan_end_seconds=plan_end,
     )
 
 
@@ -94,3 +101,37 @@ def test_due_required_heavy_is_rejected_when_refresh_lands_inside_channel() -> N
     )
 
     assert decision is None
+
+
+def test_scheduled_heavy_records_completion_trigger_for_later_wait_points() -> None:
+    provider = RuntimeHealerWaitDecisionProvider(
+        incentives=(_incentive(),),
+        required_window_seconds=1.8,
+    )
+
+    first = provider(
+        _context(
+            time_seconds=2.0,
+            next_decision=3.0,
+            hard_boundary=6.0,
+        )
+    )
+    too_soon = provider(
+        _context(
+            time_seconds=10.0,
+            next_decision=11.0,
+            hard_boundary=15.0,
+        )
+    )
+    due_again = provider(
+        _context(
+            time_seconds=25.8,
+            next_decision=26.0,
+            hard_boundary=30.0,
+        )
+    )
+
+    assert first is not None
+    assert provider.runtime_states[0].last_trigger_seconds == 27.6
+    assert too_soon is None
+    assert due_again is not None
