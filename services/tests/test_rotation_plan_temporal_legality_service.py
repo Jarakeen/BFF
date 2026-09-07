@@ -26,6 +26,7 @@ def _app(
     source: str,
     bar: str,
     effect: str = "effect",
+    sequence: int | None = None,
 ) -> RotationTemporalEffectApplication:
     return RotationTemporalEffectApplication(
         time_seconds=time,
@@ -33,6 +34,7 @@ def _app(
         layer=layer,
         source=source,
         bar=bar,
+        sequence=sequence,
     )
 
 
@@ -69,7 +71,7 @@ def test_wrong_claimed_bar_is_plan_legality_violation() -> None:
     assert "plan has back bar active" in assessment.violations[0].reason
 
 
-def test_same_timestamp_swap_keeps_bar_evidence_unresolved() -> None:
+def test_same_timestamp_swap_keeps_bar_evidence_unresolved_without_sequence() -> None:
     assessment = RotationPlanTemporalLegalityService().assess(
         plan=_plan(
             RotationAction(10.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
@@ -82,7 +84,73 @@ def test_same_timestamp_swap_keeps_bar_evidence_unresolved() -> None:
 
     assert assessment.is_legal is False
     assert assessment.violations == ()
-    assert "same timestamp" in assessment.unresolved[0]
+    assert "sequence evidence is missing" in assessment.unresolved[0]
+
+
+def test_same_timestamp_swap_before_activation_uses_destination_bar() -> None:
+    assessment = RotationPlanTemporalLegalityService().assess(
+        plan=_plan(
+            RotationAction(10.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+        applications=(
+            _app(
+                time=10.0,
+                sequence=1,
+                layer=EffectLayer.PROC,
+                source="Set Proc",
+                bar="back",
+            ),
+        ),
+        initial_bar="front",
+    )
+
+    assert assessment.is_legal is True
+    assert assessment.violations == ()
+    assert assessment.unresolved == ()
+
+
+def test_same_timestamp_activation_before_swap_still_uses_origin_bar() -> None:
+    assessment = RotationPlanTemporalLegalityService().assess(
+        plan=_plan(
+            RotationAction(10.0, 1, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+        applications=(
+            _app(
+                time=10.0,
+                sequence=0,
+                layer=EffectLayer.PROC,
+                source="Set Proc",
+                bar="back",
+            ),
+        ),
+        initial_bar="front",
+    )
+
+    assert assessment.is_legal is False
+    assert assessment.unresolved == ()
+    assert "plan has front bar active" in assessment.violations[0].reason
+
+
+def test_same_ordered_position_as_swap_remains_unresolved() -> None:
+    assessment = RotationPlanTemporalLegalityService().assess(
+        plan=_plan(
+            RotationAction(10.0, 1, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+        applications=(
+            _app(
+                time=10.0,
+                sequence=1,
+                layer=EffectLayer.PROC,
+                source="Set Proc",
+                bar="back",
+            ),
+        ),
+        initial_bar="front",
+    )
+
+    assert assessment.is_legal is False
+    assert assessment.violations == ()
+    assert "same ordered position" in assessment.unresolved[0]
 
 
 def test_ultimate_activation_requires_matching_scheduled_ultimate_action() -> None:
@@ -109,6 +177,50 @@ def test_ultimate_activation_requires_matching_scheduled_ultimate_action() -> No
     )
 
     assert assessment.is_legal is True
+
+
+def test_ultimate_sequence_must_match_scheduled_action_when_supplied() -> None:
+    plan = _plan(
+        RotationAction(
+            20.0,
+            2,
+            RotationActionKind.ULTIMATE,
+            name="Aggressive Horn",
+            bar="front",
+        ),
+    )
+    legal = RotationPlanTemporalLegalityService().assess(
+        plan=plan,
+        applications=(
+            _app(
+                time=20.0,
+                sequence=2,
+                layer=EffectLayer.ULTIMATE,
+                source="Aggressive Horn",
+                bar="front",
+                effect="major_force",
+            ),
+        ),
+        initial_bar="front",
+    )
+    illegal = RotationPlanTemporalLegalityService().assess(
+        plan=plan,
+        applications=(
+            _app(
+                time=20.0,
+                sequence=1,
+                layer=EffectLayer.ULTIMATE,
+                source="Aggressive Horn",
+                bar="front",
+                effect="major_force",
+            ),
+        ),
+        initial_bar="front",
+    )
+
+    assert legal.is_legal is True
+    assert illegal.is_legal is False
+    assert "same time, bar, and sequence" in illegal.violations[0].reason
 
 
 def test_ultimate_activation_without_matching_plan_action_is_illegal() -> None:
@@ -167,6 +279,33 @@ def test_consumable_activation_requires_matching_potion_action() -> None:
     assert legal.is_legal is True
     assert illegal.is_legal is False
     assert "requires exactly one matching scheduled potion action" in illegal.violations[0].reason
+
+
+def test_consumable_sequence_must_match_scheduled_action_when_supplied() -> None:
+    plan = _plan(
+        RotationAction(
+            12.0,
+            3,
+            RotationActionKind.POTION,
+            name="Essence of Spell Power",
+            bar="front",
+        ),
+    )
+    legal = RotationPlanTemporalLegalityService().assess(
+        plan=plan,
+        applications=(
+            _app(
+                time=12.0,
+                sequence=3,
+                layer=EffectLayer.CONSUMABLE,
+                source="Essence of Spell Power",
+                bar="front",
+            ),
+        ),
+        initial_bar="front",
+    )
+
+    assert legal.is_legal is True
 
 
 def test_initial_bar_is_explicit_not_inferred() -> None:
