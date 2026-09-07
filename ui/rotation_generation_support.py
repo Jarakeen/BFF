@@ -13,7 +13,10 @@ from minmax.healer_wait_decision_provider import (
 from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
-from minmax.runtime_healer_wait_decision_provider import RuntimeHealerWaitDecisionProvider
+from minmax.runtime_healer_wait_decision_provider import (
+    RecoveryHeavyPressureResolver,
+    RuntimeHealerWaitDecisionProvider,
+)
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
 from services.rotation_ultimate_service import (
@@ -42,6 +45,7 @@ class RotationGenerationRequest:
     heavy_attack_candidates: tuple[HealerHeavyAttackCandidate, ...] = ()
     auto_required_heavy_attacks: bool = True
     required_heavy_channel_seconds: float = 1.8
+    recovery_pressure_resolver: RecoveryHeavyPressureResolver | None = None
 
 
 @dataclass(frozen=True)
@@ -61,10 +65,12 @@ class RotationGenerationSupport:
     canonical positive skill durations and the same explicit priorities, optionally
     uses caller-proven healer heavy opportunities in slots that would otherwise be
     WAITs, and automatically discovers required-effect healer heavy incentives from
-    saved-build state when enabled. It then optionally projects one explicitly
-    selected slot-6 ultimate through the shared Ultimate resource model. Potion
-    cadence, execute rules, recovery-heavy automation, and dynamic bar timing remain
-    later Phase 13 work.
+    saved-build state when enabled. When explicit recovery-pressure evidence is
+    supplied, discovered recovery-value incentives may use the same safe channel
+    reservation path. It then optionally projects one explicitly selected slot-6
+    ultimate through the shared Ultimate resource model. Potion cadence, execute
+    rules, iterative sustain replay, and dynamic bar timing remain later Phase 13
+    work.
     """
 
     def __init__(
@@ -208,10 +214,22 @@ class RotationGenerationSupport:
             assumptions.append(
                 "caller-proven healer heavy-attack opportunities may replace premature-recast WAIT slots on the same active bar"
             )
-        elif self._auto_required_heavy_incentives(build=build, request=request):
-            assumptions.append(
-                "saved-build required-effect heavy incentives are discovered automatically and may reserve legal premature-recast windows"
-            )
+        else:
+            discovered = self._auto_heavy_incentives(build=build)
+            if request.auto_required_heavy_attacks and any(
+                incentive.kind is HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT
+                for incentive in discovered
+            ):
+                assumptions.append(
+                    "saved-build required-effect heavy incentives are discovered automatically and may reserve legal premature-recast windows"
+                )
+            if request.recovery_pressure_resolver is not None and any(
+                incentive.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE
+                for incentive in discovered
+            ):
+                assumptions.append(
+                    "explicit runtime recovery pressure may use discovered recovery-value heavy incentives in legal premature-recast windows"
+                )
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
         if selected_ultimate_bar:
@@ -262,27 +280,48 @@ class RotationGenerationSupport:
         if request.heavy_attack_candidates:
             return HealerWaitDecisionProvider(tuple(request.heavy_attack_candidates))
 
-        required = self._auto_required_heavy_incentives(build=build, request=request)
-        if not required:
+        discovered = self._auto_heavy_incentives(build=build)
+        if not discovered:
+            return None
+
+        incentives = []
+        if request.auto_required_heavy_attacks:
+            incentives.extend(
+                incentive
+                for incentive in discovered
+                if incentive.kind is HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT
+            )
+        if request.recovery_pressure_resolver is not None:
+            incentives.extend(
+                incentive
+                for incentive in discovered
+                if incentive.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE
+            )
+        if not incentives:
             return None
 
         channel = float(request.required_heavy_channel_seconds)
         if channel <= 0:
             raise ValueError("required heavy attack channel seconds must be positive")
         return RuntimeHealerWaitDecisionProvider(
-            incentives=required,
+            incentives=tuple(incentives),
             required_window_seconds=channel,
+            recovery_pressure_resolver=request.recovery_pressure_resolver,
         )
 
     @staticmethod
-    def _auto_required_heavy_incentives(*, build, request: RotationGenerationRequest):
-        if not request.auto_required_heavy_attacks:
-            return ()
+    def _auto_heavy_incentives(*, build):
         if str(getattr(build, "Role", "") or "").strip().casefold() != "healer":
+            return ()
+        return tuple(discover_healer_heavy_attack_build_incentives(build))
+
+    @classmethod
+    def _auto_required_heavy_incentives(cls, *, build, request: RotationGenerationRequest):
+        if not request.auto_required_heavy_attacks:
             return ()
         return tuple(
             incentive
-            for incentive in discover_healer_heavy_attack_build_incentives(build)
+            for incentive in cls._auto_heavy_incentives(build=build)
             if incentive.kind is HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT
         )
 
