@@ -33,8 +33,8 @@ class RotationPlanTemporalLegalityService:
     """Validate claimed temporal activations against the scheduled plan timeline.
 
     This service proves plan-level facts only:
-    - the claimed activation bar matches the bar active immediately before its time;
-    - a same-timestamp bar swap is unresolved because applications have no sequence;
+    - the claimed activation bar matches the bar active at its ordered position;
+    - same-timestamp swaps are resolved when application sequence evidence exists;
     - ULTIMATE activations correspond to an explicit ultimate action on that bar/time;
     - CONSUMABLE activations correspond to an explicit potion action on that time.
 
@@ -67,18 +67,27 @@ class RotationPlanTemporalLegalityService:
                 if action.kind is RotationActionKind.BAR_SWAP
                 and abs(action.time_seconds - application.time_seconds) <= self._EPSILON
             )
-            if same_time_swaps:
+            if same_time_swaps and application.sequence is None:
                 unresolved.append(
                     f"cannot prove active bar for {application.effect_name!r} from "
                     f"{application.source!r} at {application.time_seconds:.3f}s because "
-                    "a bar swap occurs at the same timestamp and temporal applications "
-                    "do not carry an action sequence"
+                    "a bar swap occurs at the same timestamp and temporal application "
+                    "sequence evidence is missing"
+                )
+                continue
+            if application.sequence is not None and any(
+                action.sequence == application.sequence for action in same_time_swaps
+            ):
+                unresolved.append(
+                    f"cannot prove active bar for {application.effect_name!r} from "
+                    f"{application.source!r} at {application.time_seconds:.3f}s sequence "
+                    f"{application.sequence} because a bar swap occupies the same ordered position"
                 )
                 continue
 
-            active_bar = self._active_bar_before(
+            active_bar = self._active_bar_before_application(
                 plan=plan,
-                time_seconds=application.time_seconds,
+                application=application,
                 initial_bar=initial,
             )
             if active_bar != application.bar:
@@ -97,14 +106,11 @@ class RotationPlanTemporalLegalityService:
                 continue
 
             if application.layer is EffectLayer.ULTIMATE:
-                matching = tuple(
-                    action
-                    for action in plan.actions
-                    if action.kind is RotationActionKind.ULTIMATE
-                    and abs(action.time_seconds - application.time_seconds) <= self._EPSILON
-                    and action.bar == application.bar
-                    and action.name is not None
-                    and self._stable_name(action.name) == self._stable_name(application.source)
+                matching = self._matching_actions(
+                    plan=plan,
+                    application=application,
+                    kind=RotationActionKind.ULTIMATE,
+                    require_bar=True,
                 )
                 if len(matching) != 1:
                     violations.append(
@@ -115,19 +121,17 @@ class RotationPlanTemporalLegalityService:
                             time_seconds=application.time_seconds,
                             reason=(
                                 "ultimate temporal activation requires exactly one matching "
-                                "scheduled ultimate action at the same time and bar"
+                                "scheduled ultimate action at the same time, bar, and sequence when supplied"
                             ),
                         )
                     )
 
             elif application.layer is EffectLayer.CONSUMABLE:
-                matching = tuple(
-                    action
-                    for action in plan.actions
-                    if action.kind is RotationActionKind.POTION
-                    and abs(action.time_seconds - application.time_seconds) <= self._EPSILON
-                    and action.name is not None
-                    and self._stable_name(action.name) == self._stable_name(application.source)
+                matching = self._matching_actions(
+                    plan=plan,
+                    application=application,
+                    kind=RotationActionKind.POTION,
+                    require_bar=False,
                 )
                 if len(matching) != 1:
                     violations.append(
@@ -138,7 +142,7 @@ class RotationPlanTemporalLegalityService:
                             time_seconds=application.time_seconds,
                             reason=(
                                 "consumable temporal activation requires exactly one matching "
-                                "scheduled potion action at the same time"
+                                "scheduled potion action at the same time and sequence when supplied"
                             ),
                         )
                     )
@@ -150,20 +154,50 @@ class RotationPlanTemporalLegalityService:
         )
 
     @classmethod
-    def _active_bar_before(
+    def _active_bar_before_application(
         cls,
         *,
         plan: RotationPlan,
-        time_seconds: float,
+        application: RotationTemporalEffectApplication,
         initial_bar: str,
     ) -> str:
         active = initial_bar
         for action in plan.actions:
-            if action.time_seconds + cls._EPSILON >= time_seconds:
-                break
-            if action.kind is RotationActionKind.BAR_SWAP:
-                active = str(action.bar)
+            if action.time_seconds < application.time_seconds - cls._EPSILON:
+                if action.kind is RotationActionKind.BAR_SWAP:
+                    active = str(action.bar)
+                continue
+            if abs(action.time_seconds - application.time_seconds) <= cls._EPSILON:
+                if application.sequence is None or action.sequence >= application.sequence:
+                    break
+                if action.kind is RotationActionKind.BAR_SWAP:
+                    active = str(action.bar)
+                continue
+            break
         return active
+
+    @classmethod
+    def _matching_actions(
+        cls,
+        *,
+        plan: RotationPlan,
+        application: RotationTemporalEffectApplication,
+        kind: RotationActionKind,
+        require_bar: bool,
+    ) -> tuple:
+        return tuple(
+            action
+            for action in plan.actions
+            if action.kind is kind
+            and abs(action.time_seconds - application.time_seconds) <= cls._EPSILON
+            and (not require_bar or action.bar == application.bar)
+            and action.name is not None
+            and cls._stable_name(action.name) == cls._stable_name(application.source)
+            and (
+                application.sequence is None
+                or action.sequence == application.sequence
+            )
+        )
 
     @staticmethod
     def _stable_name(value: object) -> str:
