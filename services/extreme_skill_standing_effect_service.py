@@ -171,6 +171,33 @@ class ExtremeSkillStandingEffectService:
         )
 
     @classmethod
+    def marginal_score(
+        cls,
+        skill_name: str,
+        objective_key: str,
+        *,
+        reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
+    ) -> float:
+        """Return only the value this skill adds beyond already-provided buffs."""
+        objective = str(objective_key or "").strip()
+        baseline, _ = NamedBuffResolutionService.score(
+            tuple(effect for effect in external_effects if effect.objective_key == objective),
+            objective_key=objective,
+        )
+        skill_effects = tuple(
+            effect
+            for effect in cls.effects_for_skill(skill_name, reference_value=reference_value)
+            if effect.objective_key == objective
+            and effect.scope is not ExtremeSkillEffectScope.ACTIVATED_RUNTIME
+        )
+        combined, _ = NamedBuffResolutionService.score(
+            tuple((*external_effects, *skill_effects)),
+            objective_key=objective,
+        )
+        return combined - baseline
+
+    @classmethod
     def sources(
         cls,
         skill_name: str,
@@ -229,3 +256,29 @@ class ExtremeSkillStandingEffectService:
             sum(float(effect.projected_delta) for effect in selected),
             tuple(effect.source for effect in selected),
         )
+
+    @classmethod
+    def marginal_score_build_bars(
+        cls,
+        front_skill_names: tuple[str, ...],
+        back_skill_names: tuple[str, ...],
+        objective_key: str,
+        *,
+        active_bar: str,
+        reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
+    ) -> tuple[float, tuple[str, ...]]:
+        """Return build-bar value beyond external buffs already guaranteed."""
+        baseline, _ = NamedBuffResolutionService.score(
+            tuple(effect for effect in external_effects if effect.objective_key == objective_key),
+            objective_key=objective_key,
+        )
+        total, sources = cls.score_build_bars(
+            front_skill_names,
+            back_skill_names,
+            objective_key,
+            active_bar=active_bar,
+            reference_value=reference_value,
+            external_effects=external_effects,
+        )
+        return total - baseline, sources
