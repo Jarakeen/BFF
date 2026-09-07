@@ -100,6 +100,28 @@ def test_each_purchased_subclass_line_may_supply_the_single_bar_ultimate(monkeyp
     }
 
 
+def test_same_ultimate_may_be_slotted_on_both_bars(monkeypatch, tmp_path):
+    rows = [
+        _skill(101 + index, 1001 + index, f"Assassin Skill {index}", "Assassination")
+        for index in range(5)
+    ] + [
+        _skill(201, 2001, "Assassination Ultimate", "Assassination", ultimate=True),
+    ]
+    monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
+    service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
+
+    result = service.materialize_two_bars(
+        (("assassination", 6),),
+        (("assassination", 6),),
+    )
+
+    assert result is not None
+    assert result.front.skills[-1].ability_id == 201
+    assert result.back.skills[-1].ability_id == 201
+    assert result.front.skills[-1].name == "Assassination Ultimate"
+    assert result.back.skills[-1].name == "Assassination Ultimate"
+
+
 def test_rejects_allocation_without_a_legal_ultimate(monkeypatch, tmp_path):
     rows = [
         _skill(101 + index, 1001 + index, f"Storm Skill {index}", "Storm Calling")
