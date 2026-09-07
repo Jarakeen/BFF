@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 from .healer_heavy_attack_build_discovery import HealerHeavyAttackBuildIncentive
 from .healer_heavy_attack_runtime_candidates import build_required_heavy_attack_candidates
+from .healer_recovery_heavy_pressure import HealerRecoveryHeavyPressure
+from .healer_recovery_heavy_runtime_candidates import build_recovery_heavy_attack_candidate
 from .healer_wait_decision_provider import HealerWaitDecisionProvider
 from .heavy_attack_runtime_state import HeavyAttackEffectRuntimeState
 from .heavy_attack_wait_window import derive_heavy_attack_decision_window
@@ -13,22 +16,29 @@ from .rotation_wait_decision import (
 )
 
 
+RecoveryHeavyPressureResolver = Callable[
+    [PrematureRecastDecisionContext],
+    HealerRecoveryHeavyPressure | None,
+]
+
+
 @dataclass
 class RuntimeHealerWaitDecisionProvider:
-    """Convert due required-heavy incentives into safe WAIT replacements.
+    """Convert required/recovery heavy evidence into safe WAIT replacements.
 
-    Build discovery owns which required heavy effects exist. Runtime state owns
-    recurrence eligibility. The duration WAIT context owns refresh deadlines and
-    hard timeline boundaries. Encounter safety and higher-priority readiness
-    remain explicit caller evidence because this provider has no authority to
-    invent mechanic or emergency-heal state.
+    Build discovery owns which heavy-attack incentives exist. Runtime state owns
+    required-effect recurrence eligibility. An optional pressure resolver owns the
+    current resource/reserve evidence for recovery heavies. The duration WAIT
+    context owns refresh deadlines and hard timeline boundaries. Encounter safety
+    and higher-priority readiness remain explicit caller evidence because this
+    provider has no authority to invent mechanic or emergency-heal state.
 
-    A scheduled fully charged heavy reserves ``required_window_seconds`` of the
-    timeline so ordinary same-bar skill decisions inside the channel are displaced
-    instead of overlapping the heavy attack. When the heavy is scheduled, this
-    provider records its qualifying trigger at channel completion so later WAIT
-    points in the same generated plan respect the effect recurrence instead of
-    repeatedly treating the effect as never triggered.
+    REQUIRED_EFFECT candidates retain priority over RECOVERY candidates through
+    ``HealerWaitDecisionProvider``. A scheduled fully charged heavy reserves
+    ``required_window_seconds`` of the timeline so ordinary same-bar skill
+    decisions inside the channel are displaced instead of overlapping the heavy.
+    Required-effect triggers are recorded at channel completion so later WAIT
+    points in the same generated plan respect effect recurrence.
     """
 
     incentives: tuple[HealerHeavyAttackBuildIncentive, ...]
@@ -36,6 +46,7 @@ class RuntimeHealerWaitDecisionProvider:
     runtime_states: tuple[HeavyAttackEffectRuntimeState, ...] = ()
     encounter_allows_channel: bool = True
     higher_priority_action_ready: bool = False
+    recovery_pressure_resolver: RecoveryHeavyPressureResolver | None = None
 
     def __call__(
         self,
@@ -47,19 +58,35 @@ class RuntimeHealerWaitDecisionProvider:
             encounter_allows_channel=self.encounter_allows_channel,
             higher_priority_action_ready=self.higher_priority_action_ready,
         )
-        candidates = build_required_heavy_attack_candidates(
+        required_candidates = build_required_heavy_attack_candidates(
             incentives=self.incentives,
             window=window,
             runtime_states=self.runtime_states,
         )
+
+        recovery_candidates = []
+        if self.recovery_pressure_resolver is not None:
+            pressure = self.recovery_pressure_resolver(context)
+            if pressure is not None:
+                for incentive in self.incentives:
+                    candidate = build_recovery_heavy_attack_candidate(
+                        incentive=incentive,
+                        pressure=pressure,
+                        window=window,
+                    ) if incentive.kind.value == "recovery_value" else None
+                    if candidate is not None:
+                        recovery_candidates.append(candidate)
+
+        candidates = tuple(required_candidates) + tuple(recovery_candidates)
         if not candidates:
             return None
+
         action = HealerWaitDecisionProvider(candidates)(context)
         if action is None:
             return None
 
         completion_time = float(context.time_seconds) + float(self.required_window_seconds)
-        self._record_triggers(candidates, completion_time)
+        self._record_triggers(required_candidates, completion_time)
         return PrematureRecastDecision(
             action=action,
             reservation_seconds=float(self.required_window_seconds),
