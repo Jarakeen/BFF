@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
+from services.extreme_skill_standing_effect_service import (
+    ExtremeSkillEffectScope,
+    ExtremeSkillStandingEffect,
+    ExtremeSkillStandingEffectService,
+)
 
 
 def test_relentless_focus_has_reviewed_major_critical_effect():
@@ -37,6 +41,109 @@ def test_bound_aegis_has_reviewed_minor_resolve_armor_effect():
 def test_bound_aegis_does_not_fake_critical_or_damage():
     assert ExtremeSkillStandingEffectService.score("Bound Aegis", "spell_critical") == 0.0
     assert ExtremeSkillStandingEffectService.score("Bound Aegis", "spell_damage") == 0.0
+
+
+def test_tome_bearer_power_requires_reference_value():
+    assert ExtremeSkillStandingEffectService.score(
+        "Tome-Bearer's Inspiration",
+        "spell_damage",
+    ) == 0.0
+    assert ExtremeSkillStandingEffectService.score(
+        "Tome-Bearer's Inspiration",
+        "spell_damage",
+        reference_value=5000.0,
+    ) == 1000.0
+
+
+def test_reviewed_either_bar_skills_are_classified_as_either_bar_scope():
+    effects = ExtremeSkillStandingEffectService.effects_for_skill("Relentless Focus")
+
+    assert effects
+    assert all(effect.scope is ExtremeSkillEffectScope.EITHER_BAR_SLOTTED for effect in effects)
+
+
+def test_either_bar_effect_applies_while_other_bar_is_active():
+    front_score, _ = ExtremeSkillStandingEffectService.score_build_bars(
+        ("Relentless Focus",),
+        (),
+        "spell_critical",
+        active_bar="front",
+    )
+    back_score, _ = ExtremeSkillStandingEffectService.score_build_bars(
+        ("Relentless Focus",),
+        (),
+        "spell_critical",
+        active_bar="back",
+    )
+
+    assert front_score > 0
+    assert back_score == front_score
+
+
+def test_same_major_named_buff_does_not_stack_across_bars():
+    one_score, _ = ExtremeSkillStandingEffectService.score_build_bars(
+        ("Relentless Focus",),
+        (),
+        "spell_critical",
+        active_bar="front",
+    )
+    duplicate_score, sources = ExtremeSkillStandingEffectService.score_build_bars(
+        ("Relentless Focus",),
+        ("Bound Armaments",),
+        "spell_critical",
+        active_bar="front",
+    )
+
+    assert duplicate_score == one_score
+    assert len(sources) == 1
+
+
+def test_major_and_minor_named_buffs_remain_distinct_stacking_keys():
+    major = ExtremeSkillStandingEffect(
+        skill_name="Major source",
+        objective_key="spell_damage",
+        projected_delta=1000.0,
+        source="Major Sorcery",
+        scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
+        stacking_key="major_sorcery",
+    )
+    minor = ExtremeSkillStandingEffect(
+        skill_name="Minor source",
+        objective_key="spell_damage",
+        projected_delta=500.0,
+        source="Minor Sorcery",
+        scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
+        stacking_key="minor_sorcery",
+    )
+
+    stacked = ExtremeSkillStandingEffectService.stack_effects((major, minor))
+
+    assert len(stacked) == 2
+    assert sum(effect.projected_delta for effect in stacked) == 1500.0
+
+
+def test_duplicate_major_named_buff_collapses_regardless_of_source_label():
+    skill = ExtremeSkillStandingEffect(
+        skill_name="Skill source",
+        objective_key="spell_damage",
+        projected_delta=1000.0,
+        source="Skill grants Major Sorcery",
+        scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
+        stacking_key="major_sorcery",
+    )
+    potion = ExtremeSkillStandingEffect(
+        skill_name="Potion source",
+        objective_key="spell_damage",
+        projected_delta=1000.0,
+        source="Potion grants Major Sorcery",
+        scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
+        stacking_key="major_sorcery",
+    )
+
+    stacked = ExtremeSkillStandingEffectService.stack_effects((skill, potion))
+
+    assert len(stacked) == 1
+    assert stacked[0].projected_delta == 1000.0
 
 
 def test_reviewed_crit_skill_does_not_fake_spell_damage():
