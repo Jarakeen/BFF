@@ -2,13 +2,13 @@ from __future__ import annotations
 
 """Scribing integration for the Builds page and BuildEditor.
 
-This module is installed at application startup, the same way the shared
-searchable build selectors are installed. Keeping the integration isolated
-avoids duplicating scribing behavior across the page and editor while the
-canonical DB importer is still being extended for crafted skills.
+The builder prefers the normalized Update 51 PTS scribing catalog in eso.db.
+Static compatibility remains as a compatibility fallback for databases that
+have not yet imported the U51 catalog.
 """
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -21,16 +21,20 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from engine.config import DEFAULT_DATABASE
 from models.build_model import PlayerBuild
 from models.scribing_recipe import ScribedSkillRecipe
+from services.eso_icon_resolver import EsoIconResolver
 from services.scribing_catalog import (
-    compatible_affix,
-    compatible_focus,
-    compatible_signature,
-    grimoire_names,
-    result_name,
+    compatible_affix as static_compatible_affix,
+    compatible_focus as static_compatible_focus,
+    compatible_signature as static_compatible_signature,
+    grimoire_names as static_grimoire_names,
+    result_name as static_result_name,
     skill_line_for_grimoire,
 )
+from services.scribing_icons import texture_for_scribed_skill
+from services.scribing_u51_service import U51ScribingService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 
@@ -63,8 +67,6 @@ def _recipes_for(build: PlayerBuild | None) -> list[ScribedSkillRecipe]:
 def _store_recipes(build: PlayerBuild, recipes: list[ScribedSkillRecipe]) -> None:
     clean = [recipe for recipe in recipes if recipe.ResultName.strip()]
     build.ScribedSkillRecipes = clean
-    # Keep the original field as a compatibility mirror. Existing code and
-    # older builds know only result names.
     build.ScribedSkills = [recipe.ResultName.strip() for recipe in clean]
 
 
@@ -72,14 +74,16 @@ class ScribedSkillRecipeDialog(QDialog):
     def __init__(self, recipe: ScribedSkillRecipe | None = None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Build Scribed Skill")
-        self.resize(560, 330)
+        self.resize(650, 430)
         self._loading = False
+        self._u51 = U51ScribingService(DEFAULT_DATABASE)
+        self._icon_resolver = EsoIconResolver()
         recipe = recipe or ScribedSkillRecipe()
 
         root = QVBoxLayout(self)
         explanation = QLabel(
             "Choose a Grimoire, then one compatible Focus, Signature, and Affix script. "
-            "The result is saved as one configured skill for this build."
+            "Update 51 catalog data is used when available."
         )
         explanation.setWordWrap(True)
         root.addWidget(explanation)
@@ -87,7 +91,8 @@ class ScribedSkillRecipeDialog(QDialog):
         form = QFormLayout()
         self.grimoire = QComboBox()
         self.grimoire.addItem("")
-        self.grimoire.addItems(grimoire_names())
+        names = self._u51.grimoire_names() if self._u51.available else static_grimoire_names()
+        self.grimoire.addItems(names)
         self.focus = QComboBox()
         self.signature = QComboBox()
         self.affix = QComboBox()
@@ -97,11 +102,19 @@ class ScribedSkillRecipeDialog(QDialog):
         form.addRow("Focus", self.focus)
         form.addRow("Signature", self.signature)
         form.addRow("Affix", self.affix)
-        form.addRow("Result Skill", self.result)
+
+        result_row = QHBoxLayout()
+        self.result_icon = QLabel()
+        self.result_icon.setFixedSize(48, 48)
+        self.result_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        result_row.addWidget(self.result_icon)
+        result_row.addWidget(self.result, 1)
+        form.addRow("Result Skill", result_row)
         root.addLayout(form)
 
         self.result_note = QLabel()
         self.result_note.setWordWrap(True)
+        self.result_note.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         root.addWidget(self.result_note)
 
         buttons = QHBoxLayout()
@@ -115,7 +128,9 @@ class ScribedSkillRecipeDialog(QDialog):
         root.addLayout(buttons)
 
         self.grimoire.currentTextChanged.connect(self._refresh_compatible_scripts)
-        self.focus.currentTextChanged.connect(self._refresh_result_name)
+        self.focus.currentTextChanged.connect(self._refresh_result)
+        self.signature.currentTextChanged.connect(self._refresh_result)
+        self.affix.currentTextChanged.connect(self._refresh_result)
 
         self._loading = True
         self.grimoire.setCurrentText(recipe.Grimoire)
@@ -125,7 +140,7 @@ class ScribedSkillRecipeDialog(QDialog):
         self.affix.setCurrentText(recipe.Affix)
         self.result.setText(recipe.ResultName)
         self._loading = False
-        self._refresh_result_name(preserve_existing=bool(recipe.ResultName))
+        self._refresh_result(preserve_existing=bool(recipe.ResultName))
 
     @staticmethod
     def _replace_combo(combo: QComboBox, values: list[str], current: str = "") -> None:
@@ -137,25 +152,82 @@ class ScribedSkillRecipeDialog(QDialog):
             combo.setCurrentText(current)
         combo.blockSignals(False)
 
+    def _choices(self, kind: str, grimoire: str) -> list[str]:
+        if self._u51.available:
+            if kind == "focus":
+                return self._u51.compatible_focus(grimoire)
+            if kind == "signature":
+                return self._u51.compatible_signature(grimoire)
+            return self._u51.compatible_affix(grimoire)
+        if kind == "focus":
+            return static_compatible_focus(grimoire)
+        if kind == "signature":
+            return static_compatible_signature(grimoire)
+        return static_compatible_affix(grimoire)
+
     def _refresh_compatible_scripts(self, *_args) -> None:
         grimoire = self.grimoire.currentText().strip()
         old_focus = self.focus.currentText().strip()
         old_signature = self.signature.currentText().strip()
         old_affix = self.affix.currentText().strip()
-        self._replace_combo(self.focus, compatible_focus(grimoire), old_focus)
-        self._replace_combo(self.signature, compatible_signature(grimoire), old_signature)
-        self._replace_combo(self.affix, compatible_affix(grimoire), old_affix)
+        self._replace_combo(self.focus, self._choices("focus", grimoire), old_focus)
+        self._replace_combo(self.signature, self._choices("signature", grimoire), old_signature)
+        self._replace_combo(self.affix, self._choices("affix", grimoire), old_affix)
         if not self._loading:
-            self._refresh_result_name()
+            self._refresh_result()
 
-    def _refresh_result_name(self, *_args, preserve_existing: bool = False) -> None:
-        mapped = result_name(self.grimoire.currentText(), self.focus.currentText())
+    def _refresh_icon(self) -> None:
+        texture = texture_for_scribed_skill(
+            self.grimoire.currentText(),
+            self.focus.currentText(),
+        )
+        path = self._icon_resolver.resolve(texture)
+        self.result_icon.clear()
+        self.result_icon.setToolTip(texture or "No mapped scribed-skill texture")
+        if path is None:
+            return
+        pixmap = QPixmap(str(path))
+        if pixmap.isNull():
+            return
+        self.result_icon.setPixmap(
+            pixmap.scaled(
+                44,
+                44,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+    def _refresh_result(self, *_args, preserve_existing: bool = False) -> None:
+        grimoire = self.grimoire.currentText().strip()
+        focus = self.focus.currentText().strip()
+        signature = self.signature.currentText().strip()
+        affix = self.affix.currentText().strip()
+
+        mapped = self._u51.result_name(grimoire, focus) if self._u51.available else ""
+        if not mapped:
+            mapped = static_result_name(grimoire, focus)
+
         if mapped:
             self.result.setText(mapped)
-            self.result_note.setText("Result name verified for this Grimoire + Focus pair.")
+            self.result.setReadOnly(True)
         else:
+            self.result.setReadOnly(False)
             if not preserve_existing:
                 self.result.clear()
+
+        self._refresh_icon()
+
+        if self._u51.available:
+            detail = self._u51.combined_description(grimoire, focus, signature, affix)
+            if mapped:
+                prefix = "Update 51 result resolved from the canonical scribing catalog."
+            else:
+                prefix = "Update 51 compatibility resolved; result name is not available for this selection."
+            self.result_note.setText(prefix + (("\n\n" + detail) if detail else ""))
+        elif mapped:
+            self.result_note.setText("Result name verified by the legacy Grimoire + Focus mapping.")
+        else:
             self.result_note.setText(
                 "This Grimoire + Focus result name is not normalized yet. "
                 "Enter the exact name shown in ESO; the recipe itself will still be preserved."
@@ -276,7 +348,7 @@ def _synthetic_skill(recipe: ScribedSkillRecipe) -> dict:
         "skill_line": skill_line_for_grimoire(recipe.Grimoire),
         "class_type": "",
         "base_mechanic": 0,
-        "texture": "",
+        "texture": texture_for_scribed_skill(recipe.Grimoire, recipe.Focus),
         "scribing_recipe": recipe.to_dict(),
     }
 
@@ -289,7 +361,6 @@ def install() -> None:
     from ui.builds_page import BuildsPage
     from widgets.build_editor import BuildEditor
 
-    # ---- PlayerBuild persistence -----------------------------------------
     original_to_dict = PlayerBuild.to_dict
     original_from_dict = PlayerBuild.from_dict
 
@@ -322,7 +393,6 @@ def install() -> None:
     PlayerBuild.to_dict = to_dict_with_recipes
     PlayerBuild.from_dict = classmethod(from_dict_with_recipes)
 
-    # ---- BuildEditor carry-through --------------------------------------
     original_load = BuildEditor.load
     original_model = BuildEditor.model
 
@@ -338,7 +408,6 @@ def install() -> None:
     BuildEditor.load = load_with_recipes
     BuildEditor.model = property(model_with_recipes)
 
-    # ---- Builds page card / builder -------------------------------------
     original_editor = BuildsPage._editor
 
     def editor_with_scribed_recipes(self, build: PlayerBuild | None = None):
@@ -354,8 +423,6 @@ def install() -> None:
                 continue
             editor.skill_choices.append(_synthetic_skill(recipe))
             existing.add(recipe.ResultName.casefold())
-        # SkillBarRow keeps the original list it received at construction;
-        # update that source before BuildEditor.load applies the class filter.
         for row in (editor.front_bar, editor.back_bar):
             row.all_skill_choices = editor.skill_choices
         return editor
