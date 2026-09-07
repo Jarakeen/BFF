@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from minmax.character_build.character_class import CLASS_SKILL_LINES
+from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
 from services.skill_bar_eligibility import is_player_active, is_ultimate
 from services.skill_choice_service import load_skill_choices
 
@@ -57,10 +58,10 @@ class ExtremeSubclassSkillBarService:
     slot, and the same Ultimate may legally be slotted on both bars. There is no
     cross-bar uniqueness rule for abilities or Ultimates.
 
-    The service proves only bar materialization. It does not claim that the
-    chosen morphs are themselves optimal for the Extreme objective. For each
-    base ability family it chooses one deterministic canonical representative,
-    preferring a morph over the unmorphed base where available.
+    Base/morph families still fill only one slot. When BFF has a reviewed
+    standing effect for the requested Extreme objective, that morph is preferred
+    over a merely alphabetical representative. Unreviewed skill effects remain
+    neutral rather than guessed from tooltip prose.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -76,7 +77,7 @@ class ExtremeSubclassSkillBarService:
         cls,
         rows: list[dict],
     ) -> dict[str, tuple[ExtremeSubclassBarSkill, ...]]:
-        by_line: dict[str, dict[tuple[int, bool], ExtremeSubclassBarSkill]] = {}
+        by_line: dict[str, dict[tuple[int, int, bool], ExtremeSubclassBarSkill]] = {}
         for row in rows:
             if not is_player_active(row):
                 continue
@@ -98,7 +99,7 @@ class ExtremeSubclassSkillBarService:
             )
             if not candidate.name:
                 continue
-            key = (base_id, ultimate)
+            key = (base_id, candidate.morph, ultimate)
             existing = by_line.setdefault(line_id, {}).get(key)
             if existing is None or cls._preference(candidate) < cls._preference(existing):
                 by_line[line_id][key] = candidate
@@ -110,7 +111,6 @@ class ExtremeSubclassSkillBarService:
 
     @staticmethod
     def _preference(skill: ExtremeSubclassBarSkill) -> tuple[int, str, int]:
-        # Prefer a morph over the unmorphed base, then keep selection stable.
         morph_rank = 0 if skill.morph > 0 else 1
         return (morph_rank, skill.name.casefold(), skill.ability_id)
 
@@ -118,22 +118,53 @@ class ExtremeSubclassSkillBarService:
     def _display_key(skill: ExtremeSubclassBarSkill) -> tuple[str, int]:
         return (skill.name.casefold(), skill.ability_id)
 
+    @classmethod
+    def _objective_preference(
+        cls,
+        skill: ExtremeSubclassBarSkill,
+        objective_key: str,
+    ) -> tuple[float, int, str, int]:
+        score = ExtremeSkillStandingEffectService.score(skill.name, objective_key)
+        morph_rank, name, ability_id = cls._preference(skill)
+        return (-score, morph_rank, name, ability_id)
+
     def skills_for_line(
         self,
         skill_line_id: str,
         *,
         ultimate: bool,
+        objective_key: str = "",
     ) -> tuple[ExtremeSubclassBarSkill, ...]:
         line = str(skill_line_id or "").strip().casefold()
-        return tuple(
+        rows = tuple(
             skill
             for skill in self._catalog.get(line, ())
             if skill.is_ultimate is bool(ultimate)
         )
 
+        families: dict[int, list[ExtremeSubclassBarSkill]] = {}
+        for skill in rows:
+            families.setdefault(skill.base_ability_id, []).append(skill)
+
+        selected = [
+            min(
+                family,
+                key=lambda skill: self._objective_preference(skill, objective_key),
+            )
+            for family in families.values()
+        ]
+        return tuple(
+            sorted(
+                selected,
+                key=lambda skill: self._objective_preference(skill, objective_key),
+            )
+        )
+
     def materialize(
         self,
         slot_counts: tuple[tuple[str, int], ...],
+        *,
+        objective_key: str = "",
     ) -> ExtremeSubclassSkillBarResult | None:
         requested = {
             str(line or "").strip().casefold(): max(0, int(count))
@@ -143,12 +174,13 @@ class ExtremeSubclassSkillBarService:
         if not requested or sum(requested.values()) != 6:
             return None
 
-        # The sixth slot must be an Ultimate. Every represented/purchased class
-        # line is eligible to provide it; base-class identity does not restrict
-        # which of the three equipped class-line Ultimates may be slotted.
         candidates: list[ExtremeSubclassSkillBarResult] = []
         for ultimate_line in sorted(requested):
-            ultimates = self.skills_for_line(ultimate_line, ultimate=True)
+            ultimates = self.skills_for_line(
+                ultimate_line,
+                ultimate=True,
+                objective_key=objective_key,
+            )
             if not ultimates:
                 continue
 
@@ -163,7 +195,11 @@ class ExtremeSubclassSkillBarService:
                 needed = normal_needed[line]
                 if needed <= 0:
                     continue
-                choices = self.skills_for_line(line, ultimate=False)
+                choices = self.skills_for_line(
+                    line,
+                    ultimate=False,
+                    objective_key=objective_key,
+                )
                 if len(choices) < needed:
                     legal = False
                     break
@@ -182,15 +218,26 @@ class ExtremeSubclassSkillBarService:
 
         if not candidates:
             return None
-        return min(
-            candidates,
-            key=lambda row: tuple((skill.name.casefold(), skill.ability_id) for skill in row.skills),
-        )
+
+        def candidate_key(row: ExtremeSubclassSkillBarResult):
+            effect_score = sum(
+                ExtremeSkillStandingEffectService.score(skill.name, objective_key)
+                for skill in row.skills
+            )
+            deterministic = tuple(
+                (skill.name.casefold(), skill.ability_id)
+                for skill in row.skills
+            )
+            return (-effect_score, deterministic)
+
+        return min(candidates, key=candidate_key)
 
     def materialize_two_bars(
         self,
         front_slot_counts: tuple[tuple[str, int], ...],
         back_slot_counts: tuple[tuple[str, int], ...],
+        *,
+        objective_key: str = "",
     ) -> ExtremeSubclassTwoBarResult | None:
         """Materialize front/back bars independently.
 
@@ -198,10 +245,10 @@ class ExtremeSubclassSkillBarService:
         same active skill or Ultimate on both bars, so legality is checked per
         bar rather than across the character as a whole.
         """
-        front = self.materialize(front_slot_counts)
+        front = self.materialize(front_slot_counts, objective_key=objective_key)
         if front is None:
             return None
-        back = self.materialize(back_slot_counts)
+        back = self.materialize(back_slot_counts, objective_key=objective_key)
         if back is None:
             return None
         return ExtremeSubclassTwoBarResult(front=front, back=back)
