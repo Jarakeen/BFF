@@ -179,3 +179,24 @@ A mechanic at 70% happens earlier for a high-damage group and later for a lower-
 **Layman's version:** "this happens at 70%" tells you where the boss is in the fight, not what the stopwatch says. Faster groups reach that mechanic sooner.
 
 **For BFF:** encounter timing needs two lanes. Explicit clock events can feed rotation scheduling directly. Health-triggered events need a fight-duration or damage-trajectory projection before BFF can place them on the same seconds-based rotation timeline.
+
+---
+
+## 2026-09-07 — Some mechanic timing belongs to the group, not just the boss
+
+Using Xalvakka hardmode's persisted health of **214,233,024**, we projected the reviewed **70%** and **40%** thresholds under two different caller-supplied raid DPS assumptions.
+
+| Raid DPS | 70% threshold | 40% threshold |
+| ---: | ---: | ---: |
+| 1,500,000 | 42.85s | 85.69s |
+| 2,000,000 | 32.13s | 64.27s |
+
+Increasing raid DPS from 1.5 million to 2.0 million is a **33.3% increase in damage rate**, but the practical effect is that the same boss mechanics arrive about **10.72 seconds earlier at 70%** and **21.42 seconds earlier at 40%**.
+
+The later threshold moves more in absolute seconds because the faster group has been gaining time for longer before reaching it.
+
+**Layman's version:** some boss mechanics do not have a universal timestamp. The group partly creates the timing by how fast it burns the boss. Two teams fighting the same boss can experience the same health-based mechanic at very different moments on the clock.
+
+**What it means in actual play:** a rotation, cooldown plan, or healer-prep callout learned from one group can be mistimed in another group even when both are mechanically correct. Faster groups can push a health-triggered mechanic into a completely different part of a buff, Ultimate, potion, or sustain cycle.
+
+**For BFF:** health-triggered encounter planning should use the selected team's projected or observed damage trajectory. A fixed global timestamp would be wrong by construction. This also means team composition and rotation planning are mathematically coupled: changing raid damage can move encounter mechanics, and moved mechanics can in turn change the best rotation.
