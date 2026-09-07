@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from .healer_heavy_attack_build_discovery import HealerHeavyAttackBuildIncentive
+from .healer_heavy_attack_build_discovery import (
+    HeavyAttackBuildIncentiveKind,
+    HealerHeavyAttackBuildIncentive,
+)
 from .healer_heavy_attack_runtime_candidates import build_required_heavy_attack_candidates
 from .healer_recovery_heavy_pressure import HealerRecoveryHeavyPressure
 from .healer_recovery_heavy_runtime_candidates import build_recovery_heavy_attack_candidate
@@ -69,11 +72,13 @@ class RuntimeHealerWaitDecisionProvider:
             pressure = self.recovery_pressure_resolver(context)
             if pressure is not None:
                 for incentive in self.incentives:
+                    if incentive.kind is not HeavyAttackBuildIncentiveKind.RECOVERY_VALUE:
+                        continue
                     candidate = build_recovery_heavy_attack_candidate(
                         incentive=incentive,
                         pressure=pressure,
                         window=window,
-                    ) if incentive.kind.value == "recovery_value" else None
+                    )
                     if candidate is not None:
                         recovery_candidates.append(candidate)
 
