@@ -9,6 +9,10 @@ from minmax.priority_aware_duration_scheduler import PriorityAwareDurationRotati
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationPlan
 from minmax.rotation_wait_decision import PrematureRecastDecisionProvider
+from minmax.soft_action_duration_scheduler import (
+    PriorityAwareSoftActionDurationRotationScheduler,
+    SoftActionDurationRotationScheduler,
+)
 from services.rotation_duration_analysis_service import (
     RotationDurationAnalysisService,
     RotationDurationProjection,
@@ -49,16 +53,33 @@ class RotationDurationRefinementService:
         # the seed schedule. It is not returned as final evidence because its
         # uptime/gap measurements describe the pre-refinement plan.
         seed_projection = self.duration_analysis.analyze(plan)
-        scheduler = (
-            PriorityAwareDurationRotationScheduler(priorities)
-            if priorities is not None
-            else self.scheduler
-        )
-        refined = scheduler.refine(
-            plan,
-            seed_projection.rules,
-            wait_decision=wait_decision,
-        )
+
+        if wait_decision is not None and priorities is not None:
+            scheduler = PriorityAwareSoftActionDurationRotationScheduler(priorities)
+            refined = scheduler.refine(
+                plan,
+                seed_projection.rules,
+                wait_decision=wait_decision,
+                soft_decision=wait_decision,
+            )
+        elif wait_decision is not None:
+            scheduler = SoftActionDurationRotationScheduler()
+            refined = scheduler.refine(
+                plan,
+                seed_projection.rules,
+                wait_decision=wait_decision,
+                soft_decision=wait_decision,
+            )
+        else:
+            scheduler = (
+                PriorityAwareDurationRotationScheduler(priorities)
+                if priorities is not None
+                else self.scheduler
+            )
+            refined = scheduler.refine(
+                plan,
+                seed_projection.rules,
+            )
 
         unresolved = self._dedupe(
             tuple(refined.unresolved) + tuple(seed_projection.unresolved)
