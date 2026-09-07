@@ -29,6 +29,30 @@ def _plan(*heavy_times: float) -> RotationPlan:
     )
 
 
+def _plan_with_skill(*, skill_name: str, skill_time: float = 5.0) -> RotationPlan:
+    return RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=20.0,
+        actions=(
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.HEAVY_ATTACK,
+                name="Heavy Attack",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=skill_time,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name=skill_name,
+                bar="front",
+            ),
+        ),
+    )
+
+
 class _ReplayService:
     def __init__(self) -> None:
         self.replays = []
@@ -82,7 +106,7 @@ class _ReplayService:
         return resolve
 
 
-def test_stabilizer_regenerates_until_heavy_schedule_is_unchanged() -> None:
+def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None:
     replay = _ReplayService()
     service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
     build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
@@ -112,13 +136,77 @@ def test_stabilizer_regenerates_until_heavy_schedule_is_unchanged() -> None:
     )
 
     assert result.converged is True
+    assert result.termination_reason == "stable_fixed_point"
     assert [item.heavy_signature for item in result.iterations] == [
-        ((2.0, "front", "Heavy Attack"), (10.0, "front", "Heavy Attack")),
-        ((2.0, "front", "Heavy Attack"),),
-        ((2.0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"), (10.0, 0, "front", "Heavy Attack")),
+        ((2.0, 0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"),),
     ]
     assert len(calls) == 3
     assert replay.replays == [(2.0, 10.0), (2.0,), (2.0,)]
+
+
+def test_stabilizer_does_not_false_converge_when_non_heavy_schedule_changes() -> None:
+    replay = _ReplayService()
+    service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+    count = 0
+
+    def generate(_pressure_resolver):
+        nonlocal count
+        count += 1
+        if count == 1:
+            return _plan_with_skill(skill_name="Combat Prayer")
+        return _plan_with_skill(skill_name="Budding Seeds")
+
+    result = service.stabilize(
+        build=build,
+        generate=generate,
+        resource=ResourceType.MAGICKA,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda heavy: None,
+        max_iterations=4,
+    )
+
+    assert result.converged is True
+    assert len(result.iterations) == 3
+    assert [item.heavy_signature for item in result.iterations] == [
+        ((2.0, 0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"),),
+    ]
+    assert result.iterations[0].plan_signature != result.iterations[1].plan_signature
+    assert result.iterations[1].plan_signature == result.iterations[2].plan_signature
+
+
+def test_stabilizer_rechecks_hard_obligation_state_before_converging() -> None:
+    replay = _ReplayService()
+    service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+    obligation_checks = 0
+
+    def resolve_obligations(_plan, _replay):
+        nonlocal obligation_checks
+        obligation_checks += 1
+        return ("support_assignment_missing",) if obligation_checks == 1 else ()
+
+    result = service.stabilize(
+        build=build,
+        generate=lambda _pressure_resolver: _plan(2.0),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda heavy: None,
+        hard_obligation_state_resolver=resolve_obligations,
+        max_iterations=4,
+    )
+
+    assert result.converged is True
+    assert len(result.iterations) == 3
+    assert result.iterations[0].hard_obligation_state == ("support_assignment_missing",)
+    assert result.iterations[1].hard_obligation_state == ()
+    assert result.iterations[2].hard_obligation_state == ()
 
 
 def test_stabilizer_stops_at_cap_when_heavy_schedule_oscillates() -> None:
@@ -143,10 +231,11 @@ def test_stabilizer_stops_at_cap_when_heavy_schedule_oscillates() -> None:
     )
 
     assert result.converged is False
+    assert result.termination_reason == "iteration_limit_reached"
     assert len(result.iterations) == 4
     assert [item.heavy_signature for item in result.iterations] == [
-        ((2.0, "front", "Heavy Attack"),),
-        ((2.0, "front", "Heavy Attack"), (10.0, "front", "Heavy Attack")),
-        ((2.0, "front", "Heavy Attack"),),
-        ((2.0, "front", "Heavy Attack"), (10.0, "front", "Heavy Attack")),
+        ((2.0, 0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"), (10.0, 0, "front", "Heavy Attack")),
+        ((2.0, 0, "front", "Heavy Attack"),),
+        ((2.0, 0, "front", "Heavy Attack"), (10.0, 0, "front", "Heavy Attack")),
     ]
