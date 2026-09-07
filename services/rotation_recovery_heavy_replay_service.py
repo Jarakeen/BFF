@@ -3,9 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from minmax.healer_recovery_heavy_pressure import (
+    HealerRecoveryHeavyPressure,
+    evaluate_healer_recovery_heavy_pressure,
+)
 from minmax.resource_costs import ResourceType
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.rotation_resource_reserve import RotationResourceReserveAssessment
+from minmax.rotation_wait_decision import PrematureRecastDecisionContext
 from models.build_model import PlayerBuild
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
 
@@ -13,6 +19,14 @@ from services.rotation_sustain_service import RotationSustainProjection, Rotatio
 VerifiedRecoveryHeavyRestorationResolver = Callable[
     [RotationAction],
     ResourceRestorationEvent | None,
+]
+RecoveryReserveAssessmentResolver = Callable[
+    [PrematureRecastDecisionContext],
+    RotationResourceReserveAssessment | None,
+]
+RecoveryPressureResolver = Callable[
+    [PrematureRecastDecisionContext],
+    HealerRecoveryHeavyPressure | None,
 ]
 
 
@@ -106,6 +120,42 @@ class RotationRecoveryHeavyReplayService:
             restoration_events=tuple(restoration_events),
             steps=tuple(steps),
         )
+
+    @staticmethod
+    def pressure_resolver(
+        *,
+        replay: RotationRecoveryHeavyReplay,
+        maximum_amount: int,
+        trigger_fraction: float,
+        reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+    ) -> RecoveryPressureResolver:
+        """Build generation-ready pressure evidence from the replayed timeline.
+
+        The returned resolver reads only ``replay.final_projection``. A later
+        generation pass therefore sees every verified restore already applied by
+        the replay instead of recomputing pressure from the original pre-heavy
+        resource timeline.
+        """
+
+        timeline = replay.final_projection.run.timeline
+
+        def resolve(
+            context: PrematureRecastDecisionContext,
+        ) -> HealerRecoveryHeavyPressure:
+            reserve = (
+                reserve_assessment_resolver(context)
+                if reserve_assessment_resolver is not None
+                else None
+            )
+            return evaluate_healer_recovery_heavy_pressure(
+                timeline=timeline,
+                time_seconds=context.time_seconds,
+                maximum_amount=maximum_amount,
+                trigger_fraction=trigger_fraction,
+                reserve_assessment=reserve,
+            )
+
+        return resolve
 
     @staticmethod
     def _validate_event(
