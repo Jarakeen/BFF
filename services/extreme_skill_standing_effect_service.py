@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from enum import Enum
 
 from minmax.gear_stat_inputs import GearStatInputResolver
-from services.named_buff_resolution_service import NamedBuffResolutionService
+from services.named_buff_resolution_service import (
+    NamedBuffContribution,
+    NamedBuffResolutionService,
+)
 
 
 class ExtremeSkillEffectScope(str, Enum):
@@ -32,8 +35,8 @@ class ExtremeSkillStandingEffectService:
     scoring until combat state supplies their uptime.
 
     Named-buff stacking is delegated to the source-neutral resolver shared with
-    future potion, set, passive, and group-provider effects. Source type does not
-    create a second copy of the same named Major/Minor buff.
+    potion, set, passive, and group-provider effects. Source type does not create
+    a second copy of the same named Major/Minor buff.
     """
 
     MAJOR_CRIT_RATING = 2629.0
@@ -192,14 +195,21 @@ class ExtremeSkillStandingEffectService:
         *,
         active_bar: str,
         reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> tuple[float, tuple[str, ...]]:
-        """Score reviewed standing skill effects with bar scope and buff stacking."""
+        """Score standing skills plus reviewed external named-buff sources.
+
+        External effects may represent potions, sets, passives, group providers,
+        or other reviewed systems. The shared resolver deduplicates them against
+        skill effects by exact named buff identity while preserving Major+Minor
+        stacking.
+        """
         active = str(active_bar or "").strip().casefold()
         if active not in {"front", "back"}:
             raise ValueError("active_bar must be 'front' or 'back'")
 
         active_names = front_skill_names if active == "front" else back_skill_names
-        candidates: list[ExtremeSkillStandingEffect] = []
+        candidates: list[object] = []
 
         for skill_name in tuple(dict.fromkeys((*front_skill_names, *back_skill_names))):
             for effect in cls.effects_for_skill(skill_name, reference_value=reference_value):
@@ -211,7 +221,10 @@ class ExtremeSkillStandingEffectService:
                 if effect.objective_key == objective_key and effect.scope is ExtremeSkillEffectScope.ACTIVE_BAR_SLOTTED:
                     candidates.append(effect)
 
-        selected = cls.stack_effects(tuple(candidates))
+        candidates.extend(
+            effect for effect in external_effects if effect.objective_key == objective_key
+        )
+        selected = NamedBuffResolutionService.resolve(tuple(candidates))
         return (
             sum(float(effect.projected_delta) for effect in selected),
             tuple(effect.source for effect in selected),
