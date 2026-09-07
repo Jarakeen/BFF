@@ -8,11 +8,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from engine.config import get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.resource_costs import ResourceType
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from services.build_service import BuildService
+from services.rotation_sustain_service import RotationSustainService
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
 
 
@@ -98,6 +99,29 @@ def _heavy_signature(plan) -> tuple[tuple[float, str | None, str | None], ...]:
     )
 
 
+def _baseline_maximum_magicka(
+    *,
+    build,
+    duration_seconds: float,
+    database_path: Path,
+) -> int:
+    """Use the Phase 4 full-pool sustain baseline as canonical maximum Magicka."""
+
+    baseline_plan = RotationGenerationSupport().generate(
+        build=build,
+        request=RotationGenerationRequest(duration_seconds=float(duration_seconds)),
+    )
+    projection = RotationSustainService(database_path=database_path).evaluate(
+        build=build,
+        plan=baseline_plan,
+        resource=ResourceType.MAGICKA,
+    )
+    maximum = int(projection.run.timeline.starting_amount)
+    if maximum <= 0:
+        raise ValueError("calculated maximum Magicka must be positive")
+    return maximum
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -108,8 +132,13 @@ def main() -> int:
     parser.add_argument("--character", required=True)
     parser.add_argument("--build", required=True)
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
+    parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--duration", type=float, default=60.0)
-    parser.add_argument("--maximum-magicka", type=int, required=True)
+    parser.add_argument(
+        "--maximum-magicka",
+        type=int,
+        help="optional override; otherwise derived from the Phase 4 full-pool sustain baseline",
+    )
     parser.add_argument("--trigger-fraction", type=float, required=True)
     parser.add_argument("--restore-amount", type=int, required=True)
     parser.add_argument("--restore-bar", choices=("front", "back"))
@@ -122,6 +151,18 @@ def main() -> int:
         character=args.character,
         build_name=args.build,
     )
+    maximum_magicka = (
+        int(args.maximum_magicka)
+        if args.maximum_magicka is not None
+        else _baseline_maximum_magicka(
+            build=build,
+            duration_seconds=float(args.duration),
+            database_path=Path(args.database),
+        )
+    )
+    if maximum_magicka <= 0:
+        raise ValueError("maximum Magicka must be positive")
+
     resolver = build_verified_heavy_restore_resolver(
         amount=args.restore_amount,
         channel_seconds=args.channel_seconds,
@@ -135,7 +176,7 @@ def main() -> int:
             required_heavy_channel_seconds=float(args.channel_seconds),
             stabilize_recovery_heavies=True,
             recovery_stabilization_resource=ResourceType.MAGICKA,
-            recovery_maximum_amount=int(args.maximum_magicka),
+            recovery_maximum_amount=maximum_magicka,
             recovery_trigger_fraction=float(args.trigger_fraction),
             recovery_restoration_resolver=resolver,
             recovery_stabilization_max_iterations=int(args.max_iterations),
@@ -152,7 +193,11 @@ def main() -> int:
     print(f"Build:              {getattr(build, 'BuildName', '') or 'unnamed'}")
     print(f"Role:               {getattr(build, 'Role', '') or 'Unspecified'}")
     print(f"Duration:           {float(args.duration):g}s")
-    print(f"Maximum Magicka:    {int(args.maximum_magicka)}")
+    print(f"Maximum Magicka:    {maximum_magicka}")
+    print(
+        "Maximum source:     "
+        + ("caller override" if args.maximum_magicka is not None else "Phase 4 full-pool sustain baseline")
+    )
     print(f"Recovery trigger:   {float(args.trigger_fraction):.1%}")
     print(f"Heavy restore:      {int(args.restore_amount)} Magicka (caller supplied)")
     print(f"Heavy channel:      {float(args.channel_seconds):g}s")
