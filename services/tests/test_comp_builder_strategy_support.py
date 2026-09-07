@@ -31,7 +31,7 @@ def test_strategy_engine_remains_installed_but_button_is_hidden_from_main_workfl
     assert "button.hide()" in controls
     assert 'label.property("compInterestingStrategyHelp")' in controls
     assert "right.addWidget(actions, 0)" in layout
-    assert "actions.setMinimumHeight(270)" in layout
-    assert "actions.setMaximumHeight(310)" in layout
-    assert "details.setMinimumHeight(700)" in layout
+    assert "actions.setMinimumHeight(205)" in layout
+    assert "actions.setMaximumHeight(225)" in layout
+    assert "details.setMinimumHeight(760)" in layout
     assert "install_comp_builder_strategy()" in installer
