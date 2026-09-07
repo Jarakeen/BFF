@@ -13,7 +13,7 @@ from .rotation_wait_decision import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass
 class RuntimeHealerWaitDecisionProvider:
     """Convert due required-heavy incentives into safe WAIT replacements.
 
@@ -25,7 +25,10 @@ class RuntimeHealerWaitDecisionProvider:
 
     A scheduled fully charged heavy reserves ``required_window_seconds`` of the
     timeline so ordinary same-bar skill decisions inside the channel are displaced
-    instead of overlapping the heavy attack.
+    instead of overlapping the heavy attack. When the heavy is scheduled, this
+    provider records its qualifying trigger at channel completion so later WAIT
+    points in the same generated plan respect the effect recurrence instead of
+    repeatedly treating the effect as never triggered.
     """
 
     incentives: tuple[HealerHeavyAttackBuildIncentive, ...]
@@ -54,7 +57,29 @@ class RuntimeHealerWaitDecisionProvider:
         action = HealerWaitDecisionProvider(candidates)(context)
         if action is None:
             return None
+
+        completion_time = float(context.time_seconds) + float(self.required_window_seconds)
+        self._record_triggers(candidates, completion_time)
         return PrematureRecastDecision(
             action=action,
             reservation_seconds=float(self.required_window_seconds),
+        )
+
+    def _record_triggers(self, candidates, completion_time: float) -> None:
+        by_key = {
+            (state.incentive_name.casefold(), state.bar): state
+            for state in self.runtime_states
+        }
+        for candidate in candidates:
+            name = str(candidate.evidence.requirement_name or "").strip()
+            if not name:
+                continue
+            by_key[(name.casefold(), candidate.bar)] = HeavyAttackEffectRuntimeState(
+                incentive_name=name,
+                bar=candidate.bar,
+                last_trigger_seconds=completion_time,
+            )
+        self.runtime_states = tuple(
+            by_key[key]
+            for key in sorted(by_key, key=lambda value: (value[1], value[0]))
         )
