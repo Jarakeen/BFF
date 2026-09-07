@@ -18,7 +18,7 @@ from services.extreme_class_route_comparison_service import (
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Show reviewed pure-class Class Mastery routes and slot-aware conservative subclass lower bounds."
+            "Show reviewed pure-class Class Mastery routes and canonical-bar-backed subclass lower bounds."
         )
     )
     parser.add_argument("objective")
@@ -34,11 +34,11 @@ def main() -> int:
     )
 
     pure = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.PURE_MASTERY]
-    subclass_lower_bounds = [
-        row
-        for row in result.routes
-        if row.route_kind is ExtremeClassRouteKind.SUBCLASS
-        and row.projected_delta is not None
+    subclasses = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.SUBCLASS]
+    subclass_lower_bounds = [row for row in subclasses if row.projected_delta is not None]
+    pending_bar = [
+        row for row in subclasses
+        if row.score_status == "pending_canonical_bar_materialization"
     ]
 
     print("=" * 100)
@@ -51,7 +51,8 @@ def main() -> int:
         f"{args.higher_max_resource if args.higher_max_resource is not None else 'not supplied'}"
     )
     print(f"Reviewed pure-class routes with numeric deltas: {len(pure)}")
-    print(f"Subclass routes with reviewed slot-allocation lower bounds: {len(subclass_lower_bounds)}")
+    print(f"Subclass routes with canonical materialized lower bounds: {len(subclass_lower_bounds)}")
+    print(f"Reviewed allocations blocked by canonical bar materialization: {len(pending_bar)}")
     print(f"Legal subclass routes still globally unresolved: {result.unresolved_subclass_count}")
     print(f"Global winner allowed: {'yes' if result.can_declare_global_winner else 'NO'}")
     print()
@@ -70,9 +71,9 @@ def main() -> int:
 
     print()
     if not subclass_lower_bounds:
-        print("No reviewed subclass slot-allocation lower bound is currently numeric for this objective.")
+        print("No reviewed subclass lower bound currently has a canonical six-slot bar for this objective.")
     else:
-        print("Top reviewed subclass lower bounds:")
+        print("Top reviewed subclass lower bounds with concrete bars:")
         for row in sorted(
             subclass_lower_bounds,
             key=lambda item: (
@@ -80,23 +81,27 @@ def main() -> int:
                 item.base_class.value,
                 item.equipped_skill_lines,
                 item.slot_counts,
+                item.skill_bar_names,
             ),
         )[:12]:
             lines = ", ".join(row.equipped_skill_lines)
             slots = ", ".join(f"{line}={count}" for line, count in row.slot_counts if count) or "none"
             sources = "; ".join(row.reviewed_sources) or "none"
+            bar = " | ".join(row.skill_bar_names) or "unmaterialized"
             print(
                 f"  {row.base_class.value:13s} | delta >= {row.projected_delta:g} | "
                 f"slots {slots} | {sources} | {lines}"
             )
+            print(f"      bar: {bar}")
 
     print()
     print(
-        "Boundary: pure deltas cover only reviewed Class Mastery contributions. Subclass numeric values are "
-        "conservative lower bounds from a legal six-slot active-bar allocation. The allocator distinguishes "
-        "class-scoped counters such as Expert Mage and Pressure Points from line-scoped Warden passives, but "
-        "unreviewed skills/passives are still not assumed to contribute zero. Every subclass route therefore "
-        "remains globally unresolved until the full borrowed-line skill/passive search is complete."
+        "Boundary: subclass numeric values now require both a reviewed six-slot allocation and a concrete "
+        "canonical skill bar with five distinct non-Ultimate base families plus one Ultimate. The displayed "
+        "bar proves equipability only; its morph choices are deterministic representatives, not yet an "
+        "objective-optimal skill-effect search. Unreviewed skills/passives are still not assumed to contribute "
+        "zero, so every subclass route remains globally unresolved until the full borrowed-line effect search "
+        "is complete."
     )
     return 0
 
