@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from services.encounter_boss_guide import (
     BossGuideTimelineFact,
@@ -63,11 +65,16 @@ def test_projects_reviewed_health_thresholds_to_clock_points() -> None:
     )
 
     assert result.maximum_health == 100_000_000
-    assert [(row.fact_key, row.threshold_fraction, row.time_seconds) for row in result.points] == [
-        ("phase_2", 0.70, 30.0),
-        ("retreat_thresholds", 0.70, 30.0),
-        ("retreat_thresholds", 0.40, 60.0),
+    projected = [
+        (row.fact_key, row.threshold_fraction, row.time_seconds)
+        for row in result.points
     ]
+    assert [(key, threshold) for key, threshold, _ in projected] == [
+        ("phase_2", 0.70),
+        ("retreat_thresholds", 0.70),
+        ("retreat_thresholds", 0.40),
+    ]
+    assert [time for _, _, time in projected] == pytest.approx([30.0, 30.0, 60.0])
     assert result.unresolved == ()
 
 
