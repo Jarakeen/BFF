@@ -160,23 +160,24 @@ def test_source_rich_canonical_gap_is_reported_without_inventing_missing_rows(tm
     try:
         connection.execute(
             """
-            INSERT INTO encounter_ability(
-                encounter_id, name, description, source_section
-            ) VALUES (?, ?, ?, ?)
-            """,
-            (
-                "boss_one",
-                "Aerial Onslaught",
-                "Boss becomes untargetable while source mechanics continue.",
-                "Abilities",
-            ),
-        )
-        connection.execute(
-            """
             INSERT INTO encounter_section(encounter_id, section_name, payload_json)
             VALUES (?, ?, ?)
             """,
             ("boss_one", "abilities", '{"source_backed":true}'),
+        )
+        connection.execute(
+            """
+            INSERT INTO encounter_dialogue(
+                encounter_id, trigger, speaker, line, source_section
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                "boss_one",
+                "phase_change",
+                "Boss One",
+                "The storm intensifies.",
+                "Dialogue",
+            ),
         )
         connection.commit()
 
@@ -192,7 +193,8 @@ def test_source_rich_canonical_gap_is_reported_without_inventing_missing_rows(tm
     row = audit.source_rich_canonical_gaps[0]
     assert row.encounter_id == "boss_one"
     assert row.is_source_rich is True
-    assert row.ability_count == 1
+    assert row.ability_count == 0
+    assert row.dialogue_count == 1
     assert row.section_count == 1
     assert row.source_signal_count == 2
     assert row.missing_canonical_surfaces == (
