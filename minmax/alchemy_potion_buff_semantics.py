@@ -14,6 +14,8 @@ U50_POTION_TRAIT_BUFFS: dict[str, str] = {
     "Restore Health": "Major Fortitude",
     "Restore Magicka": "Major Intellect",
     "Restore Stamina": "Major Endurance",
+    "Increase Armor": "Major Resolve",
+    "Increase Spell Resist": "Major Resolve",
     "Increase Spell Power": "Major Sorcery",
     "Increase Weapon Power": "Major Brutality",
     "Spell Critical": "Major Prophecy",
@@ -21,11 +23,14 @@ U50_POTION_TRAIT_BUFFS: dict[str, str] = {
 }
 
 # Update 51 consolidates Alchemy Power/Critical traits and removes the Sorcery /
-# Prophecy named effects. Restore-resource potion semantics are unchanged here.
+# Prophecy named effects. Restore-resource and resistance potion semantics are
+# unchanged here.
 U51_POTION_TRAIT_BUFFS: dict[str, str] = {
     "Restore Health": "Major Fortitude",
     "Restore Magicka": "Major Intellect",
     "Restore Stamina": "Major Endurance",
+    "Increase Armor": "Major Resolve",
+    "Increase Spell Resist": "Major Resolve",
     "Increase Power": "Major Brutality",
     "Critical": "Major Savagery",
 }
