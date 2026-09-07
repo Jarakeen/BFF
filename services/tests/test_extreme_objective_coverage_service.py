@@ -29,23 +29,43 @@ def test_every_current_extreme_objective_is_explicitly_a_lower_bound(objective):
     assert coverage.blocking_sources
 
 
-@pytest.mark.parametrize(
-    "objective",
-    ExtremeObjectiveCoverageService.REVIEWED_OBJECTIVES,
-)
-def test_current_objectives_acknowledge_reviewed_passive_and_standing_skill_layers(objective):
-    coverage = ExtremeObjectiveCoverageService.coverage_for(objective)
+def test_skill_universe_is_split_into_explicit_player_skill_families():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("physical_resistance")
     sources = _by_source(coverage)
 
-    assert sources["class_passives"].status is ExtremeSourceCoverageStatus.REVIEWED
-    assert sources["slotted_skills"].status is ExtremeSourceCoverageStatus.REVIEWED
+    expected = {
+        "active_skills",
+        "class_skill_passives",
+        "weapon_skill_passives",
+        "armor_skill_passives",
+        "guild_skill_passives",
+        "alliance_war_passives",
+        "world_skill_passives",
+        "racial_skill_passives",
+        "craft_utility_passives",
+    }
+    assert expected.issubset(sources)
+    assert all(
+        sources[source].status is ExtremeSourceCoverageStatus.PARTIAL
+        for source in expected
+    )
+    assert all(sources[source].blocks_global_maximum for source in expected)
+
+
+def test_old_class_passives_umbrella_no_longer_masquerades_as_complete():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("critical_damage")
+    sources = _by_source(coverage)
+
+    assert "class_passives" not in sources
+    assert "slotted_skills" not in sources
+    assert sources["class_skill_passives"].status is ExtremeSourceCoverageStatus.PARTIAL
+    assert sources["active_skills"].status is ExtremeSourceCoverageStatus.PARTIAL
 
 
 @pytest.mark.parametrize(
     "source_family",
     [
         "gear_sets",
-        "armor_weight_passives",
         "champion_points",
         "enchantments",
     ],
@@ -56,6 +76,16 @@ def test_unmodeled_whole_build_sources_block_global_maximum(source_family):
 
     assert sources[source_family].status is ExtremeSourceCoverageStatus.NOT_MODELED
     assert sources[source_family].blocks_global_maximum is True
+
+
+def test_armor_base_values_and_traits_are_partial_not_missing():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("physical_resistance")
+    armor = _by_source(coverage)["armor_base_values_traits"]
+
+    assert armor.status is ExtremeSourceCoverageStatus.PARTIAL
+    assert armor.blocks_global_maximum is True
+    assert "base values" in armor.note.casefold()
+    assert "trait" in armor.note.casefold()
 
 
 def test_race_structured_projection_is_partial_until_nonstructured_passives_are_exhaustive():
@@ -111,7 +141,7 @@ def test_global_maximum_gate_can_open_only_after_source_universe_and_sources_are
         source_universe_reviewed=True,
         sources=(
             ExtremeSourceFamilyCoverage(
-                "class_passives", ExtremeSourceCoverageStatus.REVIEWED
+                "class_skill_passives", ExtremeSourceCoverageStatus.REVIEWED
             ),
             ExtremeSourceFamilyCoverage(
                 "race", ExtremeSourceCoverageStatus.REVIEWED
@@ -133,7 +163,7 @@ def test_complete_reviewed_contract_can_be_reported_without_overclaiming_global_
         source_universe_reviewed=False,
         sources=(
             ExtremeSourceFamilyCoverage(
-                "class_passives", ExtremeSourceCoverageStatus.REVIEWED
+                "class_skill_passives", ExtremeSourceCoverageStatus.REVIEWED
             ),
             ExtremeSourceFamilyCoverage(
                 "race", ExtremeSourceCoverageStatus.NOT_APPLICABLE
@@ -152,7 +182,7 @@ def test_reviewed_source_universe_with_a_partial_source_still_refuses_complete_c
         source_universe_reviewed=True,
         sources=(
             ExtremeSourceFamilyCoverage(
-                "class_passives", ExtremeSourceCoverageStatus.REVIEWED
+                "class_skill_passives", ExtremeSourceCoverageStatus.REVIEWED
             ),
             ExtremeSourceFamilyCoverage(
                 "gear_sets", ExtremeSourceCoverageStatus.PARTIAL
