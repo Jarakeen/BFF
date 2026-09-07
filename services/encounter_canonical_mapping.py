@@ -3,13 +3,15 @@ from __future__ import annotations
 """Map reviewed encounter evidence into canonical fact shapes without writing DB rows.
 
 This module is intentionally one step before persistence. It translates eligible
-promotion candidates into canonical semantic kinds and reports whether the
-current encounter schema can represent the fact without losing provenance.
+promotion candidates, or explicitly reviewed single-source facts, into canonical
+semantic kinds and reports whether the current encounter schema can represent the
+fact without losing provenance.
 """
 
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+from services.encounter_evidence import ReconciledEncounterFact
 from services.encounter_promotion import (
     EncounterPromotionCandidate,
     PROMOTION_ELIGIBLE,
@@ -57,20 +59,7 @@ def _dict_payload(value: object) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {"value": value}
 
 
-def map_candidate_to_canonical(
-    candidate: EncounterPromotionCandidate,
-) -> EncounterCanonicalMapping | None:
-    """Map one promotion candidate to a canonical semantic shape.
-
-    Only promotion-eligible facts are mapped here. Single-source facts still
-    require explicit review, and conflicting facts remain blocked upstream.
-    Schema v3 can preserve the mapped fact plus every supporting evidence row.
-    """
-
-    if candidate.promotion_status != PROMOTION_ELIGIBLE:
-        return None
-
-    fact = candidate.fact
+def _map_fact_to_canonical(fact: ReconciledEncounterFact) -> EncounterCanonicalMapping:
     fact_type = fact.fact_type.casefold()
     fact_key = fact.fact_key.casefold()
 
@@ -204,6 +193,39 @@ def map_candidate_to_canonical(
         lossless_in_current_schema=False,
         schema_note="no reviewed canonical mapping exists for this fact type yet",
     )
+
+
+def map_reviewed_fact_to_canonical(
+    fact: ReconciledEncounterFact,
+) -> EncounterCanonicalMapping:
+    """Map an explicitly reviewed, non-conflicting fact without changing its status.
+
+    This is the semantic mapping hook for the separate human-review persistence
+    path. It does not promote a fact by itself and refuses conflicting evidence.
+    Callers remain responsible for proving an explicit review decision exists.
+    """
+
+    if not fact.safe_for_review:
+        raise ValueError(
+            f"encounter fact is not safe for review mapping: "
+            f"{fact.encounter_id} :: {fact.fact_type}:{fact.fact_key} :: {fact.status}"
+        )
+    return _map_fact_to_canonical(fact)
+
+
+def map_candidate_to_canonical(
+    candidate: EncounterPromotionCandidate,
+) -> EncounterCanonicalMapping | None:
+    """Map one promotion candidate to a canonical semantic shape.
+
+    Only promotion-eligible facts are mapped here. Single-source facts still
+    require explicit review through ``map_reviewed_fact_to_canonical`` plus the
+    reviewed persistence path. Conflicting facts remain blocked upstream.
+    """
+
+    if candidate.promotion_status != PROMOTION_ELIGIBLE:
+        return None
+    return _map_fact_to_canonical(candidate.fact)
 
 
 def build_encounter_canonical_mapping_preview(
