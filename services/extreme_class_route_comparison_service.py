@@ -8,9 +8,8 @@ from minmax.character_build.character_class import CharacterClass
 from services.class_mastery_classification_service import ClassMasteryBoundary
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
 from services.extreme_class_mastery_pair_service import ExtremeClassMasteryPairService
-from services.extreme_subclass_line_effect_service import (
-    ExtremeSubclassLineContribution,
-    ExtremeSubclassLineEffectService,
+from services.extreme_subclass_slot_allocation_service import (
+    ExtremeSubclassSlotAllocationService,
 )
 
 
@@ -30,6 +29,8 @@ class ExtremeClassRouteCandidate:
     boundary: ClassMasteryBoundary | None = None
     score_status: str = ""
     reviewed_line_ids: tuple[str, ...] = ()
+    slot_counts: tuple[tuple[str, int], ...] = ()
+    reviewed_sources: tuple[str, ...] = ()
 
     @property
     def is_scored(self) -> bool:
@@ -54,32 +55,19 @@ class ExtremeClassRouteComparisonService:
     """Compare reviewed pure-class mastery routes against legal subclass routes.
 
     Pure-class Class Mastery effects can be scored where BFF has reviewed numeric
-    mechanics. Subclass routes now expose conservative reviewed *lower bounds*
-    when an equipped line has a verified Extreme-stat effect elsewhere in BFF.
+    mechanics. Subclass routes expose conservative reviewed lower bounds from a
+    legal six-slot active-bar allocation across the three equipped class lines.
 
-    A lower bound is not a complete subclass score: unreviewed passives from the
-    same or other equipped lines may add more, and competing active-bar slot
-    effects still need a full legal bar search. Therefore every subclass route
-    remains unresolved for purposes of declaring a global winner until the full
-    borrowed-line effect search is complete.
+    The slot allocator understands that Pressure Points and Expert Mage count
+    abilities from the whole represented class, while Warden's reviewed slot
+    passives are line-specific. The resulting number is still a lower bound, not
+    a complete subclass score, because unreviewed skills/passives may add value.
+    Every subclass route therefore remains globally unresolved until the complete
+    borrowed-line search is finished.
     """
 
     def __init__(self, database_path: str | Path) -> None:
         self.mastery_pairs = ExtremeClassMasteryPairService(database_path)
-
-    @staticmethod
-    def _line_delta(
-        contribution: ExtremeSubclassLineContribution,
-        *,
-        reference_value: float | None,
-    ) -> float | None:
-        if contribution.percent and reference_value is None:
-            return None
-        return (
-            float(contribution.flat)
-            + float(contribution.additive_ratio)
-            + (float(contribution.percent) * float(reference_value or 0.0))
-        )
 
     def compare(
         self,
@@ -121,35 +109,26 @@ class ExtremeClassRouteComparisonService:
                 continue
             subclass_count += 1
 
-            reviewed: list[tuple[str, float]] = []
-            for skill_line_id in config.equipped_skill_lines:
-                contribution = ExtremeSubclassLineEffectService.contribution_for_objective(
-                    skill_line_id,
-                    objective_key,
-                )
-                if contribution is None:
-                    continue
-                delta = self._line_delta(contribution, reference_value=reference_value)
-                if delta is None:
-                    continue
-                reviewed.append((skill_line_id, delta))
-
-            if reviewed:
-                # Conservative by construction: active-bar slot-scaled effects
-                # from multiple lines are not summed until BFF searches a legal
-                # six-slot distribution. The strongest single reviewed line is a
-                # useful proven lower bound, never a claimed final route score.
-                best_delta = max(value for _, value in reviewed)
-                best_lines = tuple(
-                    sorted(line for line, value in reviewed if abs(value - best_delta) <= 1e-12)
-                )
+            allocation = ExtremeSubclassSlotAllocationService.best_allocation(
+                config.equipped_skill_lines,
+                objective_key,
+                reference_value=reference_value,
+            )
+            if allocation is not None:
                 reviewed_lower_bound_count += 1
-                projected_delta: float | None = best_delta
-                score_status = "reviewed_subclass_line_lower_bound"
+                projected_delta: float | None = allocation.projected_delta
+                score_status = "reviewed_subclass_slot_lower_bound"
+                slot_counts = allocation.slot_counts
+                reviewed_sources = allocation.reviewed_sources
+                reviewed_line_ids = tuple(
+                    line for line, count in slot_counts if count > 0
+                )
             else:
-                best_lines = ()
                 projected_delta = None
                 score_status = "pending_subclass_effect_resolution"
+                slot_counts = ()
+                reviewed_sources = ()
+                reviewed_line_ids = ()
 
             routes.append(
                 ExtremeClassRouteCandidate(
@@ -161,7 +140,9 @@ class ExtremeClassRouteComparisonService:
                     projected_delta=projected_delta,
                     boundary=None,
                     score_status=score_status,
-                    reviewed_line_ids=best_lines,
+                    reviewed_line_ids=reviewed_line_ids,
+                    slot_counts=slot_counts,
+                    reviewed_sources=reviewed_sources,
                 )
             )
 
@@ -189,6 +170,7 @@ class ExtremeClassRouteComparisonService:
                         -(item.projected_delta or 0.0),
                         item.base_class.value,
                         item.equipped_skill_lines,
+                        item.slot_counts,
                     ),
                 )
             ),
