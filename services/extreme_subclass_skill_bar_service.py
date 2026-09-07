@@ -60,8 +60,9 @@ class ExtremeSubclassSkillBarService:
 
     Base/morph families still fill only one slot. When BFF has a reviewed
     standing effect for the requested Extreme objective, that morph is preferred
-    over a merely alphabetical representative. Unreviewed skill effects remain
-    neutral rather than guessed from tooltip prose.
+    over a merely alphabetical representative. Percentage effects require an
+    explicit reference value before they may influence objective selection.
+    Unreviewed skill effects remain neutral rather than guessed from tooltip prose.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -123,8 +124,14 @@ class ExtremeSubclassSkillBarService:
         cls,
         skill: ExtremeSubclassBarSkill,
         objective_key: str,
+        *,
+        reference_value: float | None = None,
     ) -> tuple[float, int, str, int]:
-        score = ExtremeSkillStandingEffectService.score(skill.name, objective_key)
+        score = ExtremeSkillStandingEffectService.score(
+            skill.name,
+            objective_key,
+            reference_value=reference_value,
+        )
         morph_rank, name, ability_id = cls._preference(skill)
         return (-score, morph_rank, name, ability_id)
 
@@ -134,6 +141,7 @@ class ExtremeSubclassSkillBarService:
         *,
         ultimate: bool,
         objective_key: str = "",
+        reference_value: float | None = None,
     ) -> tuple[ExtremeSubclassBarSkill, ...]:
         line = str(skill_line_id or "").strip().casefold()
         rows = tuple(
@@ -149,14 +157,22 @@ class ExtremeSubclassSkillBarService:
         selected = [
             min(
                 family,
-                key=lambda skill: self._objective_preference(skill, objective_key),
+                key=lambda skill: self._objective_preference(
+                    skill,
+                    objective_key,
+                    reference_value=reference_value,
+                ),
             )
             for family in families.values()
         ]
         return tuple(
             sorted(
                 selected,
-                key=lambda skill: self._objective_preference(skill, objective_key),
+                key=lambda skill: self._objective_preference(
+                    skill,
+                    objective_key,
+                    reference_value=reference_value,
+                ),
             )
         )
 
@@ -165,6 +181,7 @@ class ExtremeSubclassSkillBarService:
         slot_counts: tuple[tuple[str, int], ...],
         *,
         objective_key: str = "",
+        reference_value: float | None = None,
     ) -> ExtremeSubclassSkillBarResult | None:
         requested = {
             str(line or "").strip().casefold(): max(0, int(count))
@@ -180,6 +197,7 @@ class ExtremeSubclassSkillBarService:
                 ultimate_line,
                 ultimate=True,
                 objective_key=objective_key,
+                reference_value=reference_value,
             )
             if not ultimates:
                 continue
@@ -199,6 +217,7 @@ class ExtremeSubclassSkillBarService:
                     line,
                     ultimate=False,
                     objective_key=objective_key,
+                    reference_value=reference_value,
                 )
                 if len(choices) < needed:
                     legal = False
@@ -221,7 +240,11 @@ class ExtremeSubclassSkillBarService:
 
         def candidate_key(row: ExtremeSubclassSkillBarResult):
             effect_score = sum(
-                ExtremeSkillStandingEffectService.score(skill.name, objective_key)
+                ExtremeSkillStandingEffectService.score(
+                    skill.name,
+                    objective_key,
+                    reference_value=reference_value,
+                )
                 for skill in row.skills
             )
             deterministic = tuple(
@@ -238,17 +261,27 @@ class ExtremeSubclassSkillBarService:
         back_slot_counts: tuple[tuple[str, int], ...],
         *,
         objective_key: str = "",
+        reference_value: float | None = None,
     ) -> ExtremeSubclassTwoBarResult | None:
         """Materialize front/back bars independently.
 
         This deliberately performs no cross-bar deduplication. ESO allows the
         same active skill or Ultimate on both bars, so legality is checked per
-        bar rather than across the character as a whole.
+        bar rather than across the character as a whole. Effect stacking is a
+        separate build-level concern.
         """
-        front = self.materialize(front_slot_counts, objective_key=objective_key)
+        front = self.materialize(
+            front_slot_counts,
+            objective_key=objective_key,
+            reference_value=reference_value,
+        )
         if front is None:
             return None
-        back = self.materialize(back_slot_counts, objective_key=objective_key)
+        back = self.materialize(
+            back_slot_counts,
+            objective_key=objective_key,
+            reference_value=reference_value,
+        )
         if back is None:
             return None
         return ExtremeSubclassTwoBarResult(front=front, back=back)
