@@ -177,6 +177,59 @@ def test_resolves_archers_mind_conditional_bonus():
     ]
 
 
+def test_damage_shield_condition_preserves_health_recovery_requirement():
+    effects = GearSetEffectResolver().resolve(
+        bonus(
+            "(5 items) While you have a damage shield on you, your Health Recovery "
+            "is increased by 25-1106."
+        )
+    )
+    assert [(effect.stat, effect.value, effect.condition) for effect in effects] == [
+        (StatId.HEALTH_RECOVERY, 1106.0, "damage_shield_active")
+    ]
+
+
+def test_destruction_staff_condition_preserves_equipment_requirement():
+    effects = GearSetEffectResolver().resolve(
+        bonus(
+            "(5 items) While you have a Destruction Staff equipped, your Max Magicka "
+            "is increased by 66-2840."
+        )
+    )
+    assert [(effect.stat, effect.value, effect.condition) for effect in effects] == [
+        (StatId.MAX_MAGICKA, 2840.0, "destruction_staff_equipped")
+    ]
+
+
+def test_peace_and_serenity_preserves_mutually_exclusive_movement_states():
+    effects = GearSetEffectResolver().resolve(
+        bonus(
+            "(5 items) While you are standing still, you gain 10-465 Weapon and Spell Damage. "
+            "While you are moving, you gain 4-203 Health, Magicka, and Stamina Recovery."
+        )
+    )
+    assert [(effect.stat, effect.value, effect.condition) for effect in effects] == [
+        (StatId.WEAPON_DAMAGE, 465.0, "standing_still"),
+        (StatId.SPELL_DAMAGE, 465.0, "standing_still"),
+        (StatId.HEALTH_RECOVERY, 203.0, "moving"),
+        (StatId.MAGICKA_RECOVERY, 203.0, "moving"),
+        (StatId.STAMINA_RECOVERY, 203.0, "moving"),
+    ]
+
+
+def test_telvanni_enforcer_preserves_bracing_state_split():
+    effects = GearSetEffectResolver().resolve(
+        bonus(
+            "(5 items) While Bracing, increase your Magicka Recovery by 369. "
+            "While you are not Bracing, increase your Stamina Recovery by 369."
+        )
+    )
+    assert [(effect.stat, effect.value, effect.condition) for effect in effects] == [
+        (StatId.MAGICKA_RECOVERY, 369.0, "bracing"),
+        (StatId.STAMINA_RECOVERY, 369.0, "not_bracing"),
+    ]
+
+
 def test_rejects_tradeoff_bonus():
     effects = GearSetEffectResolver().resolve(
         bonus(
