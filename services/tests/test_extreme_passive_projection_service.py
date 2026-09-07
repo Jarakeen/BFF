@@ -91,7 +91,7 @@ def test_known_contextual_formula_is_not_duplicated_as_static_tooltip_math():
     assert "context" in result.unresolved[0].casefold()
 
 
-def test_crafting_passive_is_retained_as_known_noncombat():
+def test_medicinal_use_remains_context_required_because_potion_duration_can_affect_combat():
     result = ExtremePassiveProjectionService.project(
         _passive(
             "Medicinal Use",
@@ -101,7 +101,22 @@ def test_crafting_passive_is_retained_as_known_noncombat():
         )
     )
 
-    assert result.status is ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT
+    assert result.status is ExtremePassiveProjectionStatus.CONTEXT_REQUIRED
+    assert result.contributions == ()
+    assert result.unresolved
+
+
+def test_unreviewed_crafting_or_utility_passive_is_not_blanket_discarded():
+    result = ExtremePassiveProjectionService.project(
+        _passive(
+            "Unknown Craft Passive",
+            "Provides a specialized crafting interaction.",
+            domain=ExtremeSkillDomain.CRAFT,
+            skill_line="Blacksmithing",
+        )
+    )
+
+    assert result.status is ExtremePassiveProjectionStatus.UNRESOLVED
     assert result.contributions == ()
 
 
