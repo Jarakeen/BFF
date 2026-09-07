@@ -76,12 +76,23 @@ def test_progression_infers_only_visibly_equipped_armor_lines_and_marks_boundary
     build.Armor["Chest"]["Weight"] = "Heavy"
     build.Armor["Hands"]["Weight"] = ""
 
-    progression, unresolved = RotationSustainService._progression(build)
+    canonical_without_owned_lines = SimpleNamespace(
+        resolved=True,
+        progression=SimpleNamespace(owned_skill_lines=()),
+        unresolved=(),
+    )
+    progression_adapter = SimpleNamespace(
+        resolve=lambda _build: canonical_without_owned_lines,
+    )
+    service = RotationSustainService(progression_adapter=progression_adapter)
+
+    progression, unresolved = service._progression(build)
 
     assert progression.attributes.magicka == 64
     assert progression.owned_skill_lines == ("Heavy Armor", "Light Armor")
     assert len(unresolved) == 1
-    assert "infers equipped armor skill-line ownership" in unresolved[0]
+    assert "canonical character progression has no owned skill lines" in unresolved[0]
+    assert "equipped-armor inference" in unresolved[0]
 
 
 def test_rotation_sustain_identity_requires_matching_character_and_build() -> None:
