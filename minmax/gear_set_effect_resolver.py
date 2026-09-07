@@ -17,7 +17,10 @@ class GearSetEffectResolver:
     """
 
     _COLOR_MARKUP = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
-    _BONUS_PREFIX = re.compile(r"^\(\d+\s+items\)\s*", re.IGNORECASE)
+    _BONUS_PREFIX = re.compile(
+        r"^\(\d+\s+(?:perfected\s+)?items?\)\s*",
+        re.IGNORECASE,
+    )
     _RANGE = r"(?P<min>\d[\d,]*)\s*-\s*(?P<max>\d[\d,]*)"
     _NUMBER = r"(?P<value>\d+(?:\.\d+)?)"
 
@@ -49,12 +52,10 @@ class GearSetEffectResolver:
 
         source_text = source or f"Gear set bonus ({bonus.piece_count} items)"
 
-        # Combined flat stats.
         combined = self._resolve_combined(text, source_text, use_max_value)
         if combined:
             return combined
 
-        # Single flat stat, range form.
         for label, stat in self._FLAT_STATS.items():
             match = re.fullmatch(
                 rf"Adds\s+{self._RANGE}\s+{re.escape(label)}",
@@ -65,7 +66,6 @@ class GearSetEffectResolver:
                 value = self._selected_range_value(match, use_max_value)
                 return [self._effect(stat, value, source_text)]
 
-        # Single flat stat, scalar form.
         for label, stat in self._FLAT_STATS.items():
             match = re.fullmatch(
                 rf"Adds\s+{self._NUMBER}\s+{re.escape(label)}",
@@ -76,7 +76,6 @@ class GearSetEffectResolver:
                 value = float(match.group("value"))
                 return [self._effect(stat, value, source_text)]
 
-        # Percent Healing Done / Healing Taken.
         percent_patterns = (
             (r"Adds\s+(?P<value>\d+(?:\.\d+)?)%\s+Healing Done", StatId.HEALING_DONE),
             (r"Adds\s+(?P<value>\d+(?:\.\d+)?)%\s+Healing Taken", StatId.HEALING_TAKEN),
@@ -96,18 +95,14 @@ class GearSetEffectResolver:
                     operation=EffectOperation.ADD_PERCENT,
                     unit=EffectUnit.PERCENT,
                 )]
-        # Conditional percentage effects.
-        # Phase 2B initially handles the explicit
-        # "Sneaking or Invisible" Archer's Mind pattern.
+
         conditional = self._resolve_conditional_percentage(
             text,
             source_text,
         )
         if conditional:
             return conditional
-        # Unconditional percentage stat increases. Phase 1 only accepts a
-        # single clause and therefore deliberately rejects anything with a
-        # qualifier, second sentence, or trade-off.
+
         percent_stats = {
             "Healing Done": StatId.HEALING_DONE,
             "Healing Taken": StatId.HEALING_TAKEN,
@@ -129,7 +124,7 @@ class GearSetEffectResolver:
                 )]
 
         return []
-    
+
     def _resolve_conditional_percentage(
         self,
         text: str,
@@ -183,6 +178,7 @@ class GearSetEffectResolver:
                 condition="sneaking_or_invisible",
             ),
         ]
+
     def _resolve_combined(
         self,
         text: str,
