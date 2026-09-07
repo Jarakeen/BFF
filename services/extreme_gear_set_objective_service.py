@@ -11,6 +11,7 @@ than silently contributing zero.
 from dataclasses import dataclass
 
 from minmax.effects import Effect, EffectOperation, EffectUnit
+from minmax.eso_markup import normalize_eso_markup
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_sets import GearSet, GearSetBonus
@@ -164,7 +165,8 @@ class ExtremeGearSetObjectiveService:
             all_effects.extend(effects)
 
             if not effects:
-                description = str(bonus.description or "").strip()
+                raw_description = str(bonus.description or "").strip()
+                description = normalize_eso_markup(raw_description).text.strip()
                 if description:
                     unresolved.append(
                         f"{source}: active set bonus is not yet mechanic-mapped: {description}"
