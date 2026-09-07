@@ -88,3 +88,110 @@ def test_stickerbook_exports_progress(tmp_path):
     assert "Test Arena Set" in text
     assert "Jarakeen" in text
     assert ",1,2,50.0" in text
+
+
+def test_standard_dropped_set_exposes_full_22_piece_sticker_shape(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "INSERT INTO gear_set(id, name, category, max_equip_count) VALUES (200, 'Full Trial Set', 'Trial', 5)"
+        )
+        armor_rows = [
+            (200, equip_type, 2, 0)
+            for equip_type in (1, 3, 4, 8, 9, 10, 13)
+        ]
+        weapon_rows = [
+            (200, 5 if weapon_type in {1, 2, 3, 11, 14} else 6, 0, weapon_type)
+            for weapon_type in (1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 15)
+        ]
+        jewelry_rows = [(200, 2, 0, 0), (200, 12, 0, 0)]
+        connection.executemany(
+            "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, ?)",
+            armor_rows + weapon_rows + jewelry_rows,
+        )
+        connection.execute(
+            "INSERT INTO content(id, content_type, name, location) VALUES (2, 'trial', 'Test Trial', '')"
+        )
+        connection.execute(
+            "INSERT INTO content_sets(content_id, set_id) VALUES (2, 200)"
+        )
+        connection.commit()
+
+    service = StickerbookService(path)
+    pieces = service.pieces(200, "Jarakeen")
+
+    assert len(pieces) == 22
+    assert sum(piece.group == "Armor" for piece in pieces) == 7
+    assert sum(piece.group == "Weapons" for piece in pieces) == 13
+    assert sum(piece.group == "Jewelry" for piece in pieces) == 2
+    assert {piece.label for piece in pieces if piece.group == "Weapons"} == {
+        "Axe",
+        "Mace",
+        "Sword",
+        "Two-Handed Sword",
+        "Two-Handed Axe",
+        "Two-Handed Mace",
+        "Bow",
+        "Restoration Staff",
+        "Dagger",
+        "Inferno Staff",
+        "Ice Staff",
+        "Shield",
+        "Lightning Staff",
+    }
+
+
+def test_stickerbook_classifies_monster_mythic_and_class_sets_and_excludes_crafted(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        connection.executescript(
+            """
+            INSERT INTO gear_set(id, name, category, max_equip_count) VALUES
+                (300, 'Test Monster Set', 'Monster Set', 2),
+                (301, 'Test Mythic', 'Mythic', 1),
+                (302, 'Test Class Set', 'Class', 5),
+                (303, 'Test Crafted Set', 'Crafted', 5);
+
+            INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES
+                (300, 1, 1, 0),
+                (300, 1, 2, 0),
+                (300, 1, 3, 0),
+                (300, 4, 1, 0),
+                (300, 4, 2, 0),
+                (300, 4, 3, 0),
+                (301, 2, 0, 0),
+                (302, 3, 2, 0),
+                (303, 3, 2, 0);
+
+            INSERT INTO content(id, content_type, name, location) VALUES
+                (3, 'dungeon', 'Test Dungeon', ''),
+                (4, 'mythic', 'Antiquities', ''),
+                (5, 'class', 'Infinite Archive', ''),
+                (6, 'crafted', 'Test Crafting Station', '');
+
+            INSERT INTO content_sets(content_id, set_id) VALUES
+                (3, 300),
+                (4, 301),
+                (5, 302),
+                (6, 303);
+            """
+        )
+        connection.commit()
+
+    service = StickerbookService(path)
+    rows = {row["name"]: row for row in service.sets("Jarakeen")}
+
+    assert rows["Test Monster Set"]["bucket"] == "Monster"
+    assert rows["Test Monster Set"]["total"] == 6
+    assert rows["Test Mythic"]["bucket"] == "Mythic"
+    assert rows["Test Class Set"]["bucket"] == "Class"
+    assert "Test Crafted Set" not in rows
+
+
+def test_unexpected_structural_piece_is_not_mislabeled_as_armor():
+    label, group = StickerbookService.piece_label(99, 0, 0)
+
+    assert label == "Equipment Slot 99"
+    assert group == "Other"
