@@ -194,12 +194,18 @@ def main() -> int:
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
+            if card.candidate_specific_unresolved:
+                print("    candidate-specific unresolved:")
+                for message in card.candidate_specific_unresolved:
+                    print(f"      * {message}")
 
     print()
     print(
         "Interpretation: hard encounter obligations decide eligibility before softer resource "
         "consequences. If neither candidate satisfies the supplied obligation, neither is promoted "
-        "to an eligible plan merely because its resource numbers are better."
+        "to an eligible plan merely because its resource numbers are better. Candidate-specific "
+        "unresolved messages are printed verbatim so ranking uncertainty can be traced to the "
+        "schedule change that introduced it."
     )
     return 0
 
