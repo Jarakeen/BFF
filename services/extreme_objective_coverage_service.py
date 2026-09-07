@@ -177,8 +177,8 @@ class ExtremeObjectiveCoverageService:
             "Canonical static Champion Point effects now project into reviewed Extreme objectives; always-active CP contributes a reviewed lower bound and every slottable star can be inspected at max rank, while legal Champion Bar combination rules and dynamic/runtime CP mechanics remain unresolved blockers.",
         ),
         "enchantments": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Glyph/enchantment contributions are not yet exhaustively enumerated for Extreme objectives.",
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Canonical armor and jewelry glyph names are enumerable and reviewed static glyph effects can now project into Extreme objectives, including explicit jewelry slot multipliers. Weapon enchantments and full trait/glyph opportunity-cost search remain runtime or unresolved blockers rather than zero-value assumptions.",
         ),
         "consumables": (
             ExtremeSourceCoverageStatus.PARTIAL,
