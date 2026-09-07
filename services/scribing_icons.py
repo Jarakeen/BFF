@@ -46,11 +46,23 @@ FOCUS_ICON_SUFFIXES: dict[str, str] = {
     "Trauma": "trauma",
 }
 
+# AbilityIcons has no dedicated Traveling Knife + Pull texture. Use the
+# existing base Traveling Knife icon rather than borrowing another Grimoire's
+# pull art and presenting it as if it were canonical.
+EXACT_TEXTURE_FALLBACKS: dict[tuple[str, str], str] = {
+    ("Traveling Knife", "Pull"): "/esoui/art/icons/ability_grimoire_dualwield.dds",
+}
+
 
 def texture_for_scribed_skill(grimoire: str, focus: str) -> str:
     """Return an ESO-style texture path understood by the shared icon picker."""
-    stem = GRIMOIRE_ICON_STEMS.get(str(grimoire or "").strip())
-    suffix = FOCUS_ICON_SUFFIXES.get(str(focus or "").strip())
+    grimoire = str(grimoire or "").strip()
+    focus = str(focus or "").strip()
+    exact = EXACT_TEXTURE_FALLBACKS.get((grimoire, focus))
+    if exact:
+        return exact
+    stem = GRIMOIRE_ICON_STEMS.get(grimoire)
+    suffix = FOCUS_ICON_SUFFIXES.get(focus)
     if not stem or not suffix:
         return ""
     return f"/esoui/art/icons/ability_grimoire_{stem}_{suffix}.dds"
