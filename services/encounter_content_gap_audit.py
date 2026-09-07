@@ -41,8 +41,56 @@ class EncounterDatabaseCoverage:
     mechanic_count: int
     phase_count: int
     dialogue_count: int
+    section_count: int
+    strategy_count: int
     canonical_fact_count: int
     canonical_evidence_count: int
+
+    @property
+    def source_signal_count(self) -> int:
+        """Count source/structural rows that prove the encounter is not empty.
+
+        ``encounter_ability``, ``encounter_dialogue``, ``encounter_section`` and
+        ``encounter_npc`` are intentionally treated as source-rich signals. They can
+        exist before reviewed mechanic/phase/canonical-fact promotion. Health and
+        explicit phase rows are also retained as structural evidence when present.
+        """
+        return (
+            self.npc_count
+            + self.health_count
+            + self.ability_count
+            + self.phase_count
+            + self.dialogue_count
+            + self.section_count
+        )
+
+    @property
+    def is_source_rich(self) -> bool:
+        return self.source_signal_count > 0
+
+    @property
+    def missing_canonical_surfaces(self) -> tuple[str, ...]:
+        """Name canonical/reviewed surfaces that still have zero encounter rows.
+
+        This is a discovery signal, not permission to synthesize rows. Missing
+        surfaces must be filled through reviewed source-backed import/promotion.
+        """
+        missing: list[str] = []
+        if self.health_count == 0:
+            missing.append("encounter_health")
+        if self.mechanic_count == 0:
+            missing.append("encounter_mechanic")
+        if self.phase_count == 0:
+            missing.append("encounter_phase")
+        if self.strategy_count == 0:
+            missing.append("encounter_strategy")
+        if self.canonical_fact_count == 0:
+            missing.append("encounter_canonical_fact")
+        return tuple(missing)
+
+    @property
+    def is_source_rich_canonical_gap(self) -> bool:
+        return self.is_source_rich and bool(self.missing_canonical_surfaces)
 
 
 @dataclass(frozen=True)
@@ -56,6 +104,13 @@ class EncounterContentGapAudit:
     source_declared_encounters: tuple[str, ...]
     source_declared_missing_db: tuple[str, ...]
     source_declared_missing_packets: tuple[str, ...]
+
+    @property
+    def source_rich_canonical_gaps(self) -> tuple[EncounterDatabaseCoverage, ...]:
+        """Return encounters with source structure but incomplete canonical surfaces."""
+        return tuple(
+            row for row in self.database_encounters if row.is_source_rich_canonical_gap
+        )
 
 
 def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
@@ -198,6 +253,8 @@ def audit_content_encounters(
                 mechanic_count=_count_for_encounter(connection, "encounter_mechanic", encounter_id),
                 phase_count=_count_for_encounter(connection, "encounter_phase", encounter_id),
                 dialogue_count=_count_for_encounter(connection, "encounter_dialogue", encounter_id),
+                section_count=_count_for_encounter(connection, "encounter_section", encounter_id),
+                strategy_count=_count_for_encounter(connection, "encounter_strategy", encounter_id),
                 canonical_fact_count=_count_for_encounter(
                     connection, "encounter_canonical_fact", encounter_id
                 ),
