@@ -11,6 +11,7 @@ reported explicitly and is never interpreted as zero contribution.
 import argparse
 from collections import Counter, defaultdict
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,12 +22,31 @@ from engine.config import DEFAULT_DATABASE
 from minmax.eso_markup import normalize_eso_markup
 from minmax.gear_set_effect_resolver import GearSetEffectResolver
 from minmax.gear_set_repository import GearSetRepository
+from minmax.named_combat_buffs import canonical_buff_name, is_component_layer_buff
 
 
 STATIC = "reviewed_static"
 CONDITIONAL = "reviewed_conditional"
+COMPONENT = "reviewed_component_layer"
 UNRESOLVED = "unresolved"
 EMPTY = "empty_description"
+
+_ALWAYS_ON_NAMED_EFFECT = re.compile(
+    r"^\(\d+\s+(?:perfected\s+)?items?\)\s*"
+    r"Gain\s+(?P<buff>(?:Major|Minor)\s+.+?)\s+at all times\b",
+    re.IGNORECASE,
+)
+
+
+def _recognized_component_buff(description: str) -> str | None:
+    readable = normalize_eso_markup(description).text.strip()
+    match = _ALWAYS_ON_NAMED_EFFECT.match(readable)
+    if not match:
+        return None
+    canonical = canonical_buff_name(match.group("buff"))
+    if canonical and is_component_layer_buff(canonical):
+        return canonical
+    return None
 
 
 def classify_bonus(resolver: GearSetEffectResolver, bonus, *, set_name: str) -> tuple[str, tuple[str, ...]]:
@@ -43,6 +63,9 @@ def classify_bonus(resolver: GearSetEffectResolver, bonus, *, set_name: str) -> 
         )
     )
     if not effects:
+        component_buff = _recognized_component_buff(description)
+        if component_buff:
+            return COMPONENT, (component_buff,)
         return UNRESOLVED, ()
     if any(effect.condition for effect in effects):
         conditions = tuple(
@@ -115,7 +138,7 @@ def main() -> int:
                     )
                 )
 
-    resolved = totals[STATIC] + totals[CONDITIONAL]
+    resolved = totals[STATIC] + totals[CONDITIONAL] + totals[COMPONENT]
 
     print("EXTREME GEAR-SET MECHANIC COVERAGE AUDIT")
     print("Mode:       READ ONLY")
@@ -130,6 +153,7 @@ def main() -> int:
     print(f"Canonical bonus rows:               {bonus_count}")
     print(f"Reviewed static bonus rows:         {totals[STATIC]}")
     print(f"Reviewed conditional bonus rows:    {totals[CONDITIONAL]}")
+    print(f"Reviewed component-layer rows:      {totals[COMPONENT]}")
     print(f"Unresolved bonus rows:              {totals[UNRESOLVED]}")
     print(f"Empty-description bonus rows:       {totals[EMPTY]}")
     print(f"Mechanically recognized rows:       {resolved}")
@@ -143,8 +167,8 @@ def main() -> int:
         total = sum(counts.values())
         print(
             f"{category}: total={total} static={counts[STATIC]} "
-            f"conditional={counts[CONDITIONAL]} unresolved={counts[UNRESOLVED]} "
-            f"empty={counts[EMPTY]}"
+            f"conditional={counts[CONDITIONAL]} component={counts[COMPONENT]} "
+            f"unresolved={counts[UNRESOLVED]} empty={counts[EMPTY]}"
         )
     print()
 
@@ -154,8 +178,8 @@ def main() -> int:
         total = sum(counts.values())
         print(
             f"{piece_count} piece(s): total={total} static={counts[STATIC]} "
-            f"conditional={counts[CONDITIONAL]} unresolved={counts[UNRESOLVED]} "
-            f"empty={counts[EMPTY]}"
+            f"conditional={counts[CONDITIONAL]} component={counts[COMPONENT]} "
+            f"unresolved={counts[UNRESOLVED]} empty={counts[EMPTY]}"
         )
 
     if args.show_unresolved:
@@ -173,7 +197,7 @@ def main() -> int:
     print()
     print("BOUNDARY")
     print(
-        "A resolved 2/3/4-piece stat line may contribute to an Extreme reviewed lower bound even when a later active set bonus remains unresolved. The unresolved mechanic still blocks a complete/global claim."
+        "A resolved 2/3/4-piece stat line may contribute to an Extreme reviewed lower bound even when a later active set bonus remains unresolved. Component-layer named buffs are recognized as known mechanics but remain owned by their damage/mitigation component rather than being flattened into unrelated sheet stats."
     )
     return 0
 
