@@ -94,7 +94,8 @@ def test_named_demand_can_make_explicit_burst_prep_refresh_due_early() -> None:
 def test_early_refresh_permission_does_not_apply_outside_named_demand() -> None:
     scheduler = _scheduler(3.0)
 
-    assert _due(scheduler, 32.0) == ("burst prep", "front")
+    # Once the demand window closes, ordinary base priority applies again.
+    assert _due(scheduler, 32.0) == ("sustained heal", "front")
 
 
 def test_refresh_lead_cannot_make_skill_immediately_eligible_after_each_cast() -> None:
