@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
+from minmax.rotation_effective_duration import (
+    RotationEffectiveDurationOverride,
+    index_effective_duration_overrides,
+    select_effective_duration_override,
+)
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.rotation_recast import (
     RotationRecastAnalysis,
@@ -18,10 +23,17 @@ class RotationDurationProjection:
     analysis: RotationRecastAnalysis
     rules: tuple[RotationRecastRule, ...]
     unresolved: tuple[str, ...]
+    effective_duration_overrides: tuple[RotationEffectiveDurationOverride, ...] = ()
 
 
 class RotationDurationAnalysisService:
-    """Resolve canonical skill durations and audit a generated rotation's recasts."""
+    """Resolve build-effective skill durations and audit rotation recasts.
+
+    Canonical skill duration remains the fallback evidence. When an upstream
+    authoritative build/effect resolver supplies an already-resolved effective
+    duration, that value is used for recast and uptime math instead. This service
+    does not calculate gear/passive/armor duration mechanics itself.
+    """
 
     def __init__(
         self,
@@ -33,9 +45,18 @@ class RotationDurationAnalysisService:
         self.duration_repository = duration_repository or SkillDurationRepository(database_path)
         self.analyzer = analyzer or RotationRecastAnalyzer()
 
-    def analyze(self, plan: RotationPlan) -> RotationDurationProjection:
+    def analyze(
+        self,
+        plan: RotationPlan,
+        *,
+        effective_duration_overrides: tuple[RotationEffectiveDurationOverride, ...] = (),
+    ) -> RotationDurationProjection:
+        indexed_overrides = index_effective_duration_overrides(
+            tuple(effective_duration_overrides)
+        )
         rules: list[RotationRecastRule] = []
         unresolved: list[str] = []
+        applied_overrides: list[RotationEffectiveDurationOverride] = []
         seen: set[tuple[str, str | None]] = set()
 
         for action in plan.actions:
@@ -55,10 +76,23 @@ class RotationDurationAnalysisService:
                 )
                 continue
 
+            override = select_effective_duration_override(
+                indexed_overrides,
+                skill_name=resolution.skill_name or action.name,
+                bar=action.bar,
+            )
+            duration_seconds = (
+                override.duration_seconds
+                if override is not None
+                else resolution.duration_seconds
+            )
+            if override is not None:
+                applied_overrides.append(override)
+
             rules.append(
                 RotationRecastRule(
                     skill_name=resolution.skill_name or action.name,
-                    duration_seconds=resolution.duration_seconds,
+                    duration_seconds=duration_seconds,
                     bar=action.bar,
                 )
             )
@@ -69,6 +103,7 @@ class RotationDurationAnalysisService:
             analysis=analysis,
             rules=tuple(rules),
             unresolved=self._dedupe(unresolved),
+            effective_duration_overrides=tuple(applied_overrides),
         )
 
     @staticmethod
