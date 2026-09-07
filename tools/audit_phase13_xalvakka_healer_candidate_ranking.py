@@ -9,8 +9,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from minmax.demand_action_claim_duration_scheduler import DemandActionClaim
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.resource_costs import ResourceType
+from minmax.rotation_plan import RotationActionKind
 from minmax.rotation_resource_reserve import RotationResourceReserveRequirement
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.healer_rotation_priority_service import HealerRotationPriorityService
@@ -29,6 +31,10 @@ from services.rotation_candidate_scorecard_service import (
 )
 from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_demand_bar_access_service import (
+    RotationDemandBarAccessClaim,
+    RotationDemandBarAccessService,
+)
 from services.rotation_runtime_uptime_service import (
     RotationRuntimeUptimeObjective,
     RotationRuntimeUptimeRequirement,
@@ -103,6 +109,25 @@ def _dedupe_realized_candidates(
         seen.add(signature)
         result.append(candidate)
     return tuple(result)
+
+
+def _has_required_action_candidate(
+    candidates: tuple[GeneratedRotationCandidate, ...],
+    *,
+    demand,
+    skill_name: str,
+    bar: str,
+) -> bool:
+    """Whether any ordinary candidate already covers the exact timed action."""
+
+    return any(
+        action.kind is RotationActionKind.SKILL
+        and action.bar == bar
+        and str(action.name or "").casefold() == skill_name.casefold()
+        and demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
+        for candidate in candidates
+        for action in candidate.plan.actions
+    )
 
 
 def main() -> int:
@@ -219,6 +244,7 @@ def main() -> int:
     candidate_generator = RotationCandidateGenerationService(
         refinement_service=refinement_service
     )
+    bar_access_service = RotationDemandBarAccessService()
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
     duration_analysis_service = RotationDurationAnalysisService(database_path)
@@ -293,14 +319,62 @@ def main() -> int:
             options=options,
             baseline_id="demand-aware-0s",
         )
+        ordinary_candidates = (
+            GeneratedRotationCandidate(
+                candidate_id="baseline",
+                plan=base_plan,
+                refresh_leads=(),
+            ),
+            *generated,
+        )
+        explicit_claim_candidates = []
+        bar_access = None
+        if not _has_required_action_candidate(
+            ordinary_candidates,
+            demand=demand,
+            skill_name="Budding Seeds",
+            bar="front",
+        ):
+            mechanic_claim_plan = refinement_service.refine(
+                seed_plan,
+                priorities=priority_projection.priority_list,
+                demands=(demand,),
+                demand_action_claims=(
+                    DemandActionClaim(
+                        demand_name=demand.name,
+                        bar="front",
+                        skill_name="Budding Seeds",
+                    ),
+                ),
+            ).plan
+            explicit_claim_candidates.append(
+                GeneratedRotationCandidate(
+                    candidate_id="mechanic-claim",
+                    plan=mechanic_claim_plan,
+                    refresh_leads=(),
+                )
+            )
+            bar_access = bar_access_service.refine(
+                plan=mechanic_claim_plan,
+                demands=(demand,),
+                claim=RotationDemandBarAccessClaim(
+                    demand_name=demand.name,
+                    bar="front",
+                    skill_name="Budding Seeds",
+                ),
+            )
+            if bar_access.applied:
+                explicit_claim_candidates.append(
+                    GeneratedRotationCandidate(
+                        candidate_id="bar-access-rescue",
+                        plan=bar_access.plan,
+                        refresh_leads=(),
+                    )
+                )
         all_candidates = _dedupe_realized_candidates(
             (
-                GeneratedRotationCandidate(
-                    candidate_id="baseline",
-                    plan=base_plan,
-                    refresh_leads=(),
-                ),
-                *generated,
+                *ordinary_candidates,
+                *explicit_claim_candidates,
             )
         )
 
@@ -370,6 +444,16 @@ def main() -> int:
             f"prep {demand.start_seconds:.2f}-{demand.end_seconds:.2f}s | "
             f"{len(all_candidates)} unique realized schedules"
         )
+        if bar_access is None:
+            print(
+                "Explicit mechanic claim/rescue: SKIPPED | an ordinary generated candidate "
+                "already covers Budding Seeds inside the demand"
+            )
+        else:
+            print(
+                "Bar-access rescue attempt: "
+                f"{'APPLIED' if bar_access.applied else 'NOT APPLIED'} | {bar_access.reason}"
+            )
         for item in ranked:
             card = item.scorecard
             coverage = card.demand_coverage[0]
