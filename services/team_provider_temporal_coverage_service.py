@@ -41,6 +41,13 @@ class TeamProviderTemporalRequirement:
     ``minimum_distinct_sources`` is a strategy constraint, not a universal property
     of the named buff. Use it when the encounter plan intentionally requires more
     than one carrier, for example alternating support ultimates through a burn phase.
+
+    ``target_coverage_ratio`` is the strategy's required uptime over this window.
+    It defaults to 1.0 for backward compatibility, but raid strategy may explicitly
+    target a lower practical uptime such as 0.75 when that is the expected standard.
+    The service still reports whether 100% coverage was achieved, so consumers can
+    distinguish "target met" from "perfect uptime" without forcing every provider
+    to chase an unnecessarily expensive full-window result.
     """
 
     effect_key: str
@@ -48,6 +55,7 @@ class TeamProviderTemporalRequirement:
     end_seconds: float
     label: str = "required window"
     minimum_distinct_sources: int = 1
+    target_coverage_ratio: float = 1.0
 
     def __post_init__(self) -> None:
         if not str(self.effect_key or "").strip():
@@ -58,6 +66,8 @@ class TeamProviderTemporalRequirement:
             raise ValueError("end_seconds must be greater than start_seconds")
         if self.minimum_distinct_sources <= 0:
             raise ValueError("minimum_distinct_sources must be positive")
+        if not 0.0 < float(self.target_coverage_ratio) <= 1.0:
+            raise ValueError("target_coverage_ratio must be greater than 0 and at most 1")
 
     @property
     def duration_seconds(self) -> float:
@@ -74,6 +84,8 @@ class TeamProviderTemporalCoverageResult:
     uncovered_seconds: float
     simultaneous_overlap_seconds: float
     coverage_ratio: float
+    target_coverage_ratio: float
+    target_coverage_met: bool
     full_window_covered: bool
     covered_intervals: tuple[tuple[float, float], ...]
     uncovered_intervals: tuple[tuple[float, float], ...]
@@ -84,7 +96,7 @@ class TeamProviderTemporalCoverageResult:
 
     @property
     def full_requirement_met(self) -> bool:
-        return self.full_window_covered and self.distinct_source_requirement_met
+        return self.target_coverage_met and self.distinct_source_requirement_met
 
 
 class TeamProviderTemporalCoverageService:
@@ -95,6 +107,11 @@ class TeamProviderTemporalCoverageService:
     through a difficult phase, while intentional simultaneous overlap may be needed
     for recipient targeting or reliability. This service therefore reports overlap
     instead of automatically classifying it as waste.
+
+    Requirement success is based on the strategy's target coverage ratio rather than
+    assuming every provider must reach 100% uptime. Full-window coverage remains a
+    separate diagnostic because perfect uptime can be useful information without
+    being the success threshold for the assignment.
     """
 
     @staticmethod
@@ -154,6 +171,7 @@ class TeamProviderTemporalCoverageService:
             distinct_source_count >= requirement.minimum_distinct_sources
         )
         ratio = 1.0 if required_seconds <= 0 else covered_seconds / required_seconds
+        target_met = ratio + 1e-9 >= float(requirement.target_coverage_ratio)
         full = uncovered_seconds <= 1e-9
         return TeamProviderTemporalCoverageResult(
             effect_key=requirement.effect_key,
@@ -164,6 +182,8 @@ class TeamProviderTemporalCoverageService:
             uncovered_seconds=uncovered_seconds,
             simultaneous_overlap_seconds=overlap_seconds,
             coverage_ratio=ratio,
+            target_coverage_ratio=float(requirement.target_coverage_ratio),
+            target_coverage_met=target_met,
             full_window_covered=full,
             covered_intervals=covered_intervals,
             uncovered_intervals=tuple(uncovered),
