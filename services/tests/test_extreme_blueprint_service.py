@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_blueprint_service import ExtremeBlueprintService
 from services.extreme_optimization_service import ExtremeOptimizationService
 
@@ -57,9 +59,10 @@ def test_spell_damage_resting_profile_is_sorcerer_with_six_class_slots_and_dual_
     assert len([skill for skill in profiled.FrontBarSkills if skill]) == 6
     assert profiled.FrontBarWeapon.WeaponType == "Sword"
     assert profiled.FrontBarOffHand.WeaponType == "Sword"
+    assert all(entry["Weight"] == "Medium" for entry in profiled.Armor.values())
 
 
-def test_spell_damage_resting_bonus_counts_expert_mage_and_two_swords_only():
+def test_spell_damage_resting_bonus_counts_expert_mage_swords_and_agility():
     service = ExtremeBlueprintService.__new__(ExtremeBlueprintService)
     objective = ExtremeOptimizationService.objective("spell_damage")
     build = service._blank_build(objective)
@@ -67,7 +70,7 @@ def test_spell_damage_resting_bonus_counts_expert_mage_and_two_swords_only():
 
     bonus = service._resting_spell_damage_bonus(profiled, active_bar="front")
 
-    assert bonus == (6 * 108) + (2 * 129)
+    assert bonus == pytest.approx(((6 * 108) + (2 * 129)) * 1.14)
 
 
 def test_spell_damage_resting_profile_populates_requested_back_bar():
