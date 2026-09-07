@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.passive_math import (
+    heavy_armor_resolve_resistance,
     light_armor_critical_rating,
     light_armor_magicka_recovery_percent,
     light_armor_spell_resistance,
@@ -122,6 +123,10 @@ class ExtremeArmorWeightObjectiveService:
         elif objective == "critical_damage" and medium:
             ratio += medium_armor_crit_damage_healing_percent(medium)
             sources.append(f"Medium Armor: Dexterity ({medium} pieces)")
+
+        if objective in {"physical_resistance", "spell_resistance"} and heavy:
+            flat += heavy_armor_resolve_resistance(heavy)
+            sources.append(f"Heavy Armor: Resolve ({heavy} pieces)")
 
         return ExtremeArmorWeightObjectiveCandidate(
             objective_key=objective,
