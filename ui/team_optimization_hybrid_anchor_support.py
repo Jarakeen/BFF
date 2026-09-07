@@ -154,3 +154,6 @@ def install() -> None:
 
     from ui.comp_builder_layout_support import install as install_comp_builder_layout
     install_comp_builder_layout()
+
+    from ui.stickerbook_bookmark_support import install as install_stickerbook_bookmarks
+    install_stickerbook_bookmarks()
