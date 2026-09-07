@@ -18,6 +18,35 @@ class GearSetRepository:
         self._set_name_cache: dict[str, GearSet | None] = {}
         self._set_id_cache: dict[int, GearSet | None] = {}
         self._bonuses_cache: dict[int, tuple[GearSetBonus, ...]] = {}
+        self._all_sets_cache: tuple[GearSet, ...] | None = None
+
+    def list_sets(self) -> tuple[GearSet, ...]:
+        """Return every canonical gear set in deterministic name/id order."""
+
+        if self._all_sets_cache is not None:
+            return self._all_sets_cache
+
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    id,
+                    name,
+                    category,
+                    max_equip_count
+                FROM gear_set
+                WHERE name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE, id
+                """
+            ).fetchall()
+
+        sets = tuple(self._to_gear_set(row) for row in rows)
+        self._all_sets_cache = sets
+        for gear_set in sets:
+            self._set_id_cache[gear_set.id] = gear_set
+            self._set_name_cache[gear_set.name] = gear_set
+        return sets
 
     def get_set(self, name: str) -> GearSet | None:
         cache_key = str(name)
