@@ -45,6 +45,7 @@ class AbilityBreakdown:
     Name: str = ""
     Total: float = 0.0
     Percent: float = 0.0
+    IconSlug: str = ""  # ESO Logs' raw `abilityIcon` value, if present
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -66,6 +67,7 @@ class PerformanceSnapshot:
 
     FightName: str = ""
     FightDurationSeconds: float = 0.0
+    BossActiveSeconds: float | None = None  # None if no immunity buff tracked
 
     BuffUptimes: list[AbilityUptime] = field(default_factory=list)
     DebuffUptimes: list[AbilityUptime] = field(default_factory=list)
@@ -95,6 +97,8 @@ class PerformanceProfile:
     ActorId: int | None = None
     ActorLabel: str = ""
     Role: str = "DPS"
+    ImmunityBuffName: str = ""  # boss's immunity buff/debuff name, optional
+    ImmunityBuffKind: str = "Buff"  # "Buff" | "Debuff"
 
     def to_dict(self) -> dict:
 
@@ -105,6 +109,8 @@ class PerformanceProfile:
             "ActorId": self.ActorId,
             "ActorLabel": self.ActorLabel,
             "Role": self.Role,
+            "ImmunityBuffName": self.ImmunityBuffName,
+            "ImmunityBuffKind": self.ImmunityBuffKind,
         }
 
     @classmethod
@@ -121,6 +127,8 @@ class PerformanceProfile:
             ActorId=int(actor_id) if actor_id is not None else None,
             ActorLabel=data.get("ActorLabel", ""),
             Role=data.get("Role", "DPS"),
+            ImmunityBuffName=data.get("ImmunityBuffName", ""),
+            ImmunityBuffKind=data.get("ImmunityBuffKind", "Buff"),
         )
 
     def display_label(self, fallback: str) -> str:

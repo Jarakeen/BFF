@@ -27,19 +27,19 @@ Tasks outside of the master roadmap
 -[X] we've lost the app icon on the task bar when its running - fix that please
 -[X] wherever there are timers in the app - plase make them functional
 -[X] whereever there are "edit notes" cards on the app, please make that card a note app and editable
--[ ] next to "Provides" card on the Overview page card, please change that to a "thumbs up"
+-[X] next to "Provides" card on the Overview page card, please change that to a "thumbs up"
 -[X] figure out what to do the the ESO logs page, maybe ask Rik
 -[X] make all the timers work
 -[X] add an asylum sanctorium timer
 -[ ] are there other ESO game timers that would be handy? if so, add them
 -[?] wire all the bosses and mechs to the Mechanics page and reference pages
--[ ] How do multiple ppl share a roster info?
+-[X] How do multiple ppl share a roster info?
 -[X] make roster output/export 'pretty'
 -[X] add the top ESO Logs setups per trial
 -[ ] get ms signature file thingy for app completed
 -[ ] images for mechs - can they be farmed? uesp?
 -[X] Optimaztion - auto fill top buttons to match what they need to be for "generate team"
--[ ] figure out how to easily share things like maps and roster to google docs and make it pretty
+-[X] figure out how to easily share things like maps and roster to google docs and make it pretty
 -[X] fix top logo
 -[X] can I document how long bosses are damagable from ESO logs?
 -[X] add Help docs
@@ -54,8 +54,10 @@ Tasks outside of the master roadmap
 -[ ] add an engine that has lots of swaps or only a few swaps for a trial?
 -[ ] rylo says it needs to auto update
 -[ ] still need more trial info
--[ ] art/icons for scribed skills
--[ ] why arent the arena weapons in the gear lookup
+-[X] art/icons for scribed skills
+-[x] why arent the arena weapons in the gear lookup
 -[ ] make a MOST page for fun lol ask the app to make a build capabale of the most heals, health, damage, etc (sustain, survivability not required lol)
 -[ ] PvP? 
--[ ] 
+-[X] add an "armor that looks interesting" bookmark tool for comp building
+-[ ] can we create builds from screenshots?
+-[X] add a dashboard inside OBS so I dont have to run the app if I dont want to

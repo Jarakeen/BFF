@@ -103,20 +103,36 @@ class PerformanceDashboardService:
         actor_id: int,
         actor_label: str,
         role: str,
+        immunity_buff_name: str = "",
+        immunity_buff_kind: str = "Buff",
     ) -> PerformanceSnapshot:
 
         summary = self.capability_service.fetch_fight_summary(report_code, fight_id)
 
         start, end = summary["start_time"], summary["end_time"]
 
-        duration = summary["duration_seconds"]
+        full_duration = summary["duration_seconds"]
+
+        # When a boss immunity buff/debuff name is given, uptime
+        # percentages are computed against the time the boss was
+        # actually damageable rather than the full pull length --
+        # matching how BTVTools reports uptime, since a buff sitting
+        # at 85% of the full clock might really be full uptime once
+        # an unavailable/immune phase is subtracted out.
+        boss_active_seconds = self.capability_service.compute_boss_active_seconds(
+            report_code, fight_id, immunity_buff_name, immunity_buff_kind,
+        )
+
+        uptime_duration = (
+            boss_active_seconds if boss_active_seconds is not None else full_duration
+        )
 
         # Buffs: filter by targetID (who *holds* the buff) -- most
         # raid buffs (Major Courage, Major Sorcery, ...) are cast
         # by someone else, so this actor's own uptime picture comes
         # from what's active ON them, not what they personally cast.
         buff_uptimes = self._top_uptimes(
-            report_code, fight_id, start, end, duration,
+            report_code, fight_id, start, end, uptime_duration,
             data_type="Buffs", hostility_type="Friendlies",
             filter_by="target", actor_id=actor_id,
         )
@@ -125,7 +141,7 @@ class PerformanceDashboardService:
         # "debuffs you personally landed on the boss", which is
         # legitimately empty for builds that don't apply any.
         debuff_uptimes = self._top_uptimes(
-            report_code, fight_id, start, end, duration,
+            report_code, fight_id, start, end, uptime_duration,
             data_type="Debuffs", hostility_type="Enemies",
             filter_by="source", actor_id=actor_id,
         )
@@ -136,7 +152,7 @@ class PerformanceDashboardService:
         # useful number for support roles who track team debuff
         # uptime rather than personal cast credit.
         raid_debuff_uptimes = self._top_uptimes(
-            report_code, fight_id, start, end, duration,
+            report_code, fight_id, start, end, uptime_duration,
             data_type="Debuffs", hostility_type="Enemies",
             filter_by="none", actor_id=actor_id,
         )
@@ -160,7 +176,7 @@ class PerformanceDashboardService:
 
         peak_label = _peak_window_label(points, PEAK_WINDOW_SECONDS, rate_label)
 
-        output_per_second = (total / duration) if duration > 0 else 0.0
+        output_per_second = (total / full_duration) if full_duration > 0 else 0.0
 
         return PerformanceSnapshot(
             ReportCode=report_code,
@@ -169,7 +185,8 @@ class PerformanceDashboardService:
             ActorLabel=actor_label,
             Role=role,
             FightName=summary.get("name", ""),
-            FightDurationSeconds=duration,
+            FightDurationSeconds=full_duration,
+            BossActiveSeconds=boss_active_seconds,
             BuffUptimes=buff_uptimes,
             DebuffUptimes=debuff_uptimes,
             RaidDebuffUptimes=raid_debuff_uptimes,
@@ -342,8 +359,12 @@ def _top_abilities(
 
         pct = (amount / total * 100.0) if total > 0 else 0.0
 
+        icon_slug = str(entry.get("abilityIcon", "") or "").strip()
+
         rows.append(
-            AbilityBreakdown(Name=name, Total=amount, Percent=round(pct, 1))
+            AbilityBreakdown(
+                Name=name, Total=amount, Percent=round(pct, 1), IconSlug=icon_slug,
+            )
         )
 
     rows.sort(key=lambda r: r.Total, reverse=True)

@@ -1086,6 +1086,8 @@ class CapabilitiesPage(FoundryPage):
 
             snapshot = service.build_snapshot(
                 report_code, fight_id, actor.ActorId, actor.Label, role,
+                immunity_buff_name=dashboard.immunity_buff_name_value,
+                immunity_buff_kind=dashboard.immunity_buff_kind_value,
             )
 
         except EsoLogsApiError as exc:

@@ -14,11 +14,12 @@
 
 from __future__ import annotations
 
+import requests
+
 from PySide6.QtCore import Qt, Signal, QMargins
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtCharts import (
     QBarCategoryAxis,
-    QBarSeries,
     QBarSet,
     QChart,
     QChartView,
@@ -33,6 +34,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QProgressBar,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -89,12 +92,147 @@ def _new_chart() -> QChart:
     return chart
 
 
+def _style_axis(axis, grid: bool = True):
+    """
+    QtCharts axes default to unstyled (effectively black-on-
+    near-black) label text, which is invisible on this app's dark
+    theme -- every axis this file creates must go through here or
+    its labels silently disappear, exactly what happened to the
+    category (ability-name) labels on the uptime bar charts.
+    """
+
+    axis.setLabelsColor(QColor(Colors.TEXT))
+    axis.setLinePen(QColor(Colors.BORDER))
+
+    if grid:
+        axis.setGridLineColor(QColor(Colors.BORDER))
+    else:
+        axis.setGridLineVisible(False)
+
+    return axis
+
+
 def _empty_chart(message: str) -> QChart:
 
     chart = _new_chart()
     chart.setTitle(message)
 
     return chart
+
+
+# ESO Logs (RPGLogs family) serves static assets from
+# assets.rpglogs.com -- confirmed via RPGLogs' own docs/GitHub org.
+# This exact per-game ability-icon subpath is NOT independently
+# confirmed against a live URL, though; if icons never appear, this
+# template is the first thing to check against a real icon URL
+# copied from an esologs.com report page.
+ABILITY_ICON_URL_TEMPLATE = "https://assets.rpglogs.com/img/eso/abilities/{icon}.png"
+
+_ICON_SIZE = 20
+
+_icon_cache: dict[str, QPixmap | None] = {}
+
+
+def _fetch_ability_icon(icon_slug: str) -> QPixmap | None:
+    """
+    Best-effort ability icon fetch, cached per slug for the process
+    lifetime. Any failure (network, 404, bad image bytes, wrong URL
+    template) just returns None -- callers fall back to a plain
+    colored square, never a broken-image glyph or a crash.
+    """
+
+    if not icon_slug:
+        return None
+
+    if icon_slug in _icon_cache:
+        return _icon_cache[icon_slug]
+
+    pixmap = None
+
+    try:
+        response = requests.get(
+            ABILITY_ICON_URL_TEMPLATE.format(icon=icon_slug), timeout=3,
+        )
+        if response.status_code == 200 and response.content:
+            candidate = QPixmap()
+            if candidate.loadFromData(response.content):
+                pixmap = candidate
+    except Exception:
+        pixmap = None
+
+    _icon_cache[icon_slug] = pixmap
+
+    return pixmap
+
+
+class _AbilityRow(QWidget):
+    """One row in the Top Abilities list: icon, name, a proportional
+    mini-bar, and the raw value -- compact enough that several fit
+    in half the width a full bar chart with text-label bars needed."""
+
+    def __init__(
+        self,
+        name: str,
+        icon_slug: str,
+        value_text: str,
+        percent: float,
+        color: str,
+        parent=None,
+    ):
+        super().__init__(parent)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 1, 0, 1)
+        layout.setSpacing(6)
+
+        icon_label = QLabel()
+        icon_label.setFixedSize(_ICON_SIZE, _ICON_SIZE)
+
+        pixmap = _fetch_ability_icon(icon_slug)
+
+        if pixmap is not None:
+            icon_label.setPixmap(
+                pixmap.scaled(
+                    _ICON_SIZE, _ICON_SIZE,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        else:
+            icon_label.setStyleSheet(
+                f"background-color: {Colors.SURFACE_LIGHT}; border-radius: 3px;"
+            )
+
+        name_label = QLabel()
+        name_label.setStyleSheet(f"color: {Colors.TEXT}; font-size: 11px;")
+        name_label.setFixedWidth(84)
+        name_label.setToolTip(name)
+        metrics = name_label.fontMetrics()
+        name_label.setText(metrics.elidedText(name, Qt.TextElideMode.ElideRight, 84))
+
+        bar = QProgressBar()
+        bar.setRange(0, 100)
+        bar.setValue(int(max(0.0, min(100.0, percent))))
+        bar.setTextVisible(False)
+        bar.setFixedHeight(8)
+        bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        bar.setStyleSheet(
+            f"QProgressBar {{ background-color: {Colors.SURFACE_LIGHT}; "
+            f"border: none; border-radius: 4px; }}"
+            f"QProgressBar::chunk {{ background-color: {color}; border-radius: 4px; }}"
+        )
+
+        value_label = QLabel(value_text)
+        value_label.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 10px;")
+        value_label.setFixedWidth(52)
+        value_label.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+
+        layout.addWidget(icon_label)
+        layout.addWidget(name_label)
+        layout.addWidget(bar, 1)
+        layout.addWidget(value_label)
 
 
 class PerformanceDashboard(QWidget):
@@ -147,8 +285,8 @@ class PerformanceDashboard(QWidget):
         raid_debuff_card, self.raid_debuff_chart_view = self._build_chart_card(
             "Boss Debuffs (Raid-Wide)", compact=True
         )
-        abilities_card, self.abilities_chart_view = self._build_chart_card(
-            "Top Abilities", compact=True
+        abilities_card, self.abilities_list_layout = self._build_ability_list_card(
+            "Top Abilities"
         )
 
         self.output_card = output_card
@@ -158,12 +296,23 @@ class PerformanceDashboard(QWidget):
         self.abilities_card = abilities_card
 
         # Row 0: the one detailed time-series chart, full width.
-        # Rows 1-2: compact bar charts, two per row.
+        # Row 1: Your Buff Uptime | Debuffs You Applied, 50/50.
+        # Row 2: Boss Debuffs (Raid-Wide) | Top Abilities, but Top
+        # Abilities is a compact icon list (no long text-label bars
+        # to fit), so it only needs half that width -- wrapped in
+        # its own row so this doesn't skew row 1's 50/50 split.
         charts_grid.addWidget(output_card, 0, 0, 1, 2)
         charts_grid.addWidget(buff_card, 1, 0)
         charts_grid.addWidget(debuff_card, 1, 1)
-        charts_grid.addWidget(raid_debuff_card, 2, 0)
-        charts_grid.addWidget(abilities_card, 2, 1)
+
+        row2 = QWidget()
+        row2_layout = QHBoxLayout(row2)
+        row2_layout.setContentsMargins(0, 0, 0, 0)
+        row2_layout.setSpacing(10)
+        row2_layout.addWidget(raid_debuff_card, 2)
+        row2_layout.addWidget(abilities_card, 1)
+
+        charts_grid.addWidget(row2, 2, 0, 1, 2)
 
         charts_grid.setColumnStretch(0, 1)
         charts_grid.setColumnStretch(1, 1)
@@ -236,6 +385,26 @@ class PerformanceDashboard(QWidget):
 
         form.addRow("Who Am I?", who_row)
 
+        self.immunity_buff_name = QLineEdit()
+        self.immunity_buff_name.setPlaceholderText(
+            "Optional -- name of the boss's immunity buff/debuff "
+            "(used to compute boss-active time for uptime %)"
+        )
+
+        self.immunity_buff_kind = QComboBox()
+        self.immunity_buff_kind.addItems(["Buff", "Debuff"])
+        self.immunity_buff_kind.setToolTip(
+            "Whether the boss's immunity shows up as a buff the boss "
+            "gains, or a debuff that has to fall off the boss to end "
+            "the immunity window."
+        )
+
+        immunity_row = QHBoxLayout()
+        immunity_row.addWidget(self.immunity_buff_name, 3)
+        immunity_row.addWidget(self.immunity_buff_kind, 1)
+
+        form.addRow("Boss Immunity Buff", immunity_row)
+
         card.addLayout(form)
         card.addWidget(self.fight_summary_label)
 
@@ -279,6 +448,28 @@ class PerformanceDashboard(QWidget):
         card.set_body_margins(8, 4, 8, 4)
 
         return card, chart_view
+
+    def _build_ability_list_card(self, title: str) -> tuple[FoundryCard, QVBoxLayout]:
+        """Compact icon+bar list, used for Top Abilities instead of a
+        QChart bar chart -- no long text-label bars means it fits in
+        roughly half the width."""
+
+        card = FoundryCard(title)
+        card.set_body_margins(8, 4, 8, 4)
+        card.set_body_spacing(3)
+
+        list_widget = QWidget()
+        list_layout = QVBoxLayout(list_widget)
+        list_layout.setContentsMargins(0, 0, 0, 0)
+        list_layout.setSpacing(3)
+
+        placeholder = QLabel("No data yet")
+        placeholder.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 11px;")
+        list_layout.addWidget(placeholder)
+
+        card.addWidget(list_widget)
+
+        return card, list_layout
 
     def _set_results_visible(self, visible: bool):
 
@@ -345,6 +536,14 @@ class PerformanceDashboard(QWidget):
     def fight_id_value(self) -> str:
         return self.fight_id.text().strip()
 
+    @property
+    def immunity_buff_name_value(self) -> str:
+        return self.immunity_buff_name.text().strip()
+
+    @property
+    def immunity_buff_kind_value(self) -> str:
+        return self.immunity_buff_kind.currentText()
+
     def show_fight_summary(self, summary: dict):
 
         kill_text = "Kill" if summary.get("kill") else "Wipe"
@@ -374,7 +573,14 @@ class PerformanceDashboard(QWidget):
 
         role_color = Colors.ROLE.get(snapshot.Role.casefold(), Colors.ACCENT)
 
-        self.kpi_duration.set_value(f"{snapshot.FightDurationSeconds:,.0f}s")
+        if snapshot.BossActiveSeconds is not None:
+            self.kpi_duration.set_value(
+                f"{snapshot.FightDurationSeconds:,.0f}s "
+                f"({snapshot.BossActiveSeconds:,.0f}s active)"
+            )
+        else:
+            self.kpi_duration.set_value(f"{snapshot.FightDurationSeconds:,.0f}s")
+
         self.kpi_total.set_value(f"{snapshot.OutputTotal:,.0f} {snapshot.OutputLabel}")
         self.kpi_rate.set_value(f"{snapshot.OutputPerSecond:,.0f} {snapshot.OutputRateLabel}")
         self.kpi_peak.set_value(snapshot.PeakWindowLabel)
@@ -384,12 +590,18 @@ class PerformanceDashboard(QWidget):
         )
         self._update_output_chart(snapshot.OutputSeries, role_color, snapshot.OutputRateLabel)
 
+        uptime_basis = "vs boss-active" if snapshot.BossActiveSeconds is not None else "vs full fight"
+
+        self.buff_card.title_label.setText(f"Your Buff Uptime ({uptime_basis})")
+        self.debuff_card.title_label.setText(f"Debuffs You Applied ({uptime_basis})")
+        self.raid_debuff_card.title_label.setText(f"Boss Debuffs, Raid-Wide ({uptime_basis})")
+
         self._update_uptime_chart(self.buff_chart_view, snapshot.BuffUptimes, Colors.ACCENT_LIGHT)
         self._update_uptime_chart(self.debuff_chart_view, snapshot.DebuffUptimes, Colors.WARNING)
         self._update_uptime_chart(self.raid_debuff_chart_view, snapshot.RaidDebuffUptimes, Colors.GOLD)
 
         self.abilities_card.title_label.setText(f"Top Abilities by {snapshot.OutputLabel}")
-        self._update_abilities_chart(snapshot.TopAbilities, role_color)
+        self._update_abilities_list(snapshot.TopAbilities, role_color)
 
     def _update_output_chart(self, points, color: str, rate_label: str):
 
@@ -410,11 +622,13 @@ class PerformanceDashboard(QWidget):
         axis_x = QValueAxis()
         axis_x.setTitleText("Time (s)")
         axis_x.setLabelFormat("%d")
+        _style_axis(axis_x)
         chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
         series.attachAxis(axis_x)
 
         axis_y = QValueAxis()
         axis_y.setTitleText(rate_label)
+        _style_axis(axis_y)
         chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
         series.attachAxis(axis_y)
 
@@ -447,49 +661,49 @@ class PerformanceDashboard(QWidget):
 
         axis_y = QBarCategoryAxis()
         axis_y.append(categories)
+        _style_axis(axis_y, grid=False)
         chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
         series.attachAxis(axis_y)
 
         axis_x = QValueAxis()
         axis_x.setRange(0, 100)
         axis_x.setLabelFormat("%d%%")
+        _style_axis(axis_x)
         chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
         series.attachAxis(axis_x)
 
         chart_view.setChart(chart)
 
-    def _update_abilities_chart(self, abilities, color: str):
+    def _update_abilities_list(self, abilities, color: str):
+
+        layout = self.abilities_list_layout
+
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
 
         if not abilities:
-            self.abilities_chart_view.setChart(_empty_chart("No ability data yet"))
+            placeholder = QLabel("No ability data yet")
+            placeholder.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 11px;")
+            layout.addWidget(placeholder)
             return
 
-        chart = _new_chart()
-
-        bar_set = QBarSet("Total")
-        bar_set.setColor(QColor(color))
-
-        categories = []
+        max_total = max((a.Total for a in abilities), default=0.0) or 1.0
 
         for ability in abilities:
-            bar_set.append(ability.Total)
-            categories.append(ability.Name)
 
-        series = QBarSeries()
-        series.append(bar_set)
+            percent = (ability.Total / max_total) * 100.0
 
-        chart.addSeries(series)
-
-        axis_x = QBarCategoryAxis()
-        axis_x.append(categories)
-        chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
-        series.attachAxis(axis_x)
-
-        axis_y = QValueAxis()
-        chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
-        series.attachAxis(axis_y)
-
-        self.abilities_chart_view.setChart(chart)
+            layout.addWidget(
+                _AbilityRow(
+                    name=ability.Name,
+                    icon_slug=ability.IconSlug,
+                    value_text=f"{ability.Total:,.0f}",
+                    percent=percent,
+                    color=color,
+                )
+            )
 
     # --------------------------------------------------
     # Model (persistence -- pick only, not the computed snapshot)
@@ -511,6 +725,8 @@ class PerformanceDashboard(QWidget):
             ActorId=actor_id,
             ActorLabel=actor_label,
             Role=role or "DPS",
+            ImmunityBuffName=self.immunity_buff_name_value,
+            ImmunityBuffKind=self.immunity_buff_kind_value,
         )
 
     def load(self, profile: PerformanceProfile):
@@ -520,6 +736,8 @@ class PerformanceDashboard(QWidget):
         self.member_name.setText(profile.Name)
         self.report_code.setText(profile.ReportCode)
         self.fight_id.setText(profile.FightId)
+        self.immunity_buff_name.setText(profile.ImmunityBuffName)
+        self.immunity_buff_kind.setCurrentText(profile.ImmunityBuffKind or "Buff")
 
         if profile.Role in ROLE_OPTIONS:
             self.role_override.setCurrentText(profile.Role)

@@ -202,6 +202,71 @@ def test_build_snapshot_uses_healing_output_for_healer_role():
 # --------------------------------------------------
 
 
+def test_build_snapshot_uses_boss_active_time_when_immunity_name_given():
+    """
+    An immunity name switches the uptime % denominator from the
+    full fight duration to boss-active time (full duration minus
+    time the boss had its immunity buff/debuff up) -- matching how
+    BTVTools reports uptime.
+    """
+
+    client = _FakeClient(
+        fight={
+            "startTime": 0.0, "endTime": 100000.0, "name": "Test Fight",
+            "kill": True, "bossPercentage": None,
+        },
+        auras_by_call=[
+            # 1st call: compute_boss_active_seconds' own immunity lookup
+            [{"name": "Damage Shield", "totalUptime": 20000.0}],
+            # 2nd: buffs (target-filtered) -- 100s fight, 20s immune
+            # -> 80s active; a 40s buff should read 50%, not 40%.
+            [{"name": "Major Courage", "totalUptime": 40000.0}],
+            [],  # debuffs you applied
+            [],  # raid-wide debuffs
+        ],
+    )
+
+    service = PerformanceDashboardService(client)
+
+    snapshot = service.build_snapshot(
+        "ABC123", 1, actor_id=7, actor_label="Me", role="Healer",
+        immunity_buff_name="Damage Shield", immunity_buff_kind="Buff",
+    )
+
+    assert snapshot.BossActiveSeconds == 80.0
+    assert snapshot.FightDurationSeconds == 100.0  # full duration unaffected
+    assert snapshot.BuffUptimes[0].UptimePercent == 50.0  # 40s / 80s active
+
+
+def test_build_snapshot_falls_back_to_full_duration_without_immunity_name():
+
+    client = _FakeClient(
+        auras_by_call=[
+            [{"name": "Major Courage", "totalUptime": 50000.0}],  # buffs
+            [],  # debuffs
+            [],  # raid-wide
+        ],
+    )
+
+    service = PerformanceDashboardService(client)
+
+    snapshot = service.build_snapshot(
+        "ABC123", 1, actor_id=7, actor_label="Me", role="Healer",
+    )
+
+    assert snapshot.BossActiveSeconds is None
+    assert snapshot.BuffUptimes[0].UptimePercent == 50.0  # 50s / 100s full fight
+
+
+def test_top_abilities_extracts_icon_slug():
+
+    entries = [{"name": "Combat Prayer", "total": 100.0, "abilityIcon": "ability_healer_006"}]
+
+    rows = _top_abilities(entries, total=100.0, limit=5)
+
+    assert rows[0].IconSlug == "ability_healer_006"
+
+
 def test_top_uptimes_sorts_and_caps_and_clamps_percent():
 
     auras = [
