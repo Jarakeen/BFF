@@ -6,6 +6,7 @@ from pathlib import Path
 
 from minmax.character_build.character_class import CLASS_SKILL_LINES
 from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
+from services.named_buff_resolution_service import NamedBuffContribution
 from services.skill_bar_eligibility import is_player_active, is_ultimate
 from services.skill_choice_service import load_skill_choices
 
@@ -58,11 +59,12 @@ class ExtremeSubclassSkillBarService:
     slot, and the same Ultimate may legally be slotted on both bars. There is no
     cross-bar uniqueness rule for abilities or Ultimates.
 
-    Base/morph families still fill only one slot. When BFF has a reviewed
-    standing effect for the requested Extreme objective, that morph is preferred
-    over a merely alphabetical representative. Percentage effects require an
-    explicit reference value before they may influence objective selection.
-    Unreviewed skill effects remain neutral rather than guessed from tooltip prose.
+    Base/morph families still fill only one slot. Objective preference uses the
+    skill's marginal reviewed value after already-guaranteed external named buffs
+    are considered. A skill therefore receives no artificial credit for a Major
+    buff already supplied by a potion, set, or group provider. Percentage effects
+    require an explicit reference value. Unreviewed skill effects remain neutral
+    rather than guessed from tooltip prose.
     """
 
     def __init__(self, database_path: str | Path) -> None:
@@ -126,11 +128,13 @@ class ExtremeSubclassSkillBarService:
         objective_key: str,
         *,
         reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> tuple[float, int, str, int]:
-        score = ExtremeSkillStandingEffectService.score(
+        score = ExtremeSkillStandingEffectService.marginal_score(
             skill.name,
             objective_key,
             reference_value=reference_value,
+            external_effects=external_effects,
         )
         morph_rank, name, ability_id = cls._preference(skill)
         return (-score, morph_rank, name, ability_id)
@@ -142,6 +146,7 @@ class ExtremeSubclassSkillBarService:
         ultimate: bool,
         objective_key: str = "",
         reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> tuple[ExtremeSubclassBarSkill, ...]:
         line = str(skill_line_id or "").strip().casefold()
         rows = tuple(
@@ -161,6 +166,7 @@ class ExtremeSubclassSkillBarService:
                     skill,
                     objective_key,
                     reference_value=reference_value,
+                    external_effects=external_effects,
                 ),
             )
             for family in families.values()
@@ -172,6 +178,7 @@ class ExtremeSubclassSkillBarService:
                     skill,
                     objective_key,
                     reference_value=reference_value,
+                    external_effects=external_effects,
                 ),
             )
         )
@@ -182,6 +189,7 @@ class ExtremeSubclassSkillBarService:
         *,
         objective_key: str = "",
         reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> ExtremeSubclassSkillBarResult | None:
         requested = {
             str(line or "").strip().casefold(): max(0, int(count))
@@ -198,6 +206,7 @@ class ExtremeSubclassSkillBarService:
                 ultimate=True,
                 objective_key=objective_key,
                 reference_value=reference_value,
+                external_effects=external_effects,
             )
             if not ultimates:
                 continue
@@ -218,6 +227,7 @@ class ExtremeSubclassSkillBarService:
                     ultimate=False,
                     objective_key=objective_key,
                     reference_value=reference_value,
+                    external_effects=external_effects,
                 )
                 if len(choices) < needed:
                     legal = False
@@ -239,13 +249,13 @@ class ExtremeSubclassSkillBarService:
             return None
 
         def candidate_key(row: ExtremeSubclassSkillBarResult):
-            effect_score = sum(
-                ExtremeSkillStandingEffectService.score(
-                    skill.name,
-                    objective_key,
-                    reference_value=reference_value,
-                )
-                for skill in row.skills
+            effect_score, _ = ExtremeSkillStandingEffectService.marginal_score_build_bars(
+                row.names,
+                (),
+                objective_key,
+                active_bar="front",
+                reference_value=reference_value,
+                external_effects=external_effects,
             )
             deterministic = tuple(
                 (skill.name.casefold(), skill.ability_id)
@@ -262,6 +272,7 @@ class ExtremeSubclassSkillBarService:
         *,
         objective_key: str = "",
         reference_value: float | None = None,
+        external_effects: tuple[NamedBuffContribution, ...] = (),
     ) -> ExtremeSubclassTwoBarResult | None:
         """Materialize front/back bars independently.
 
@@ -274,6 +285,7 @@ class ExtremeSubclassSkillBarService:
             front_slot_counts,
             objective_key=objective_key,
             reference_value=reference_value,
+            external_effects=external_effects,
         )
         if front is None:
             return None
@@ -281,6 +293,7 @@ class ExtremeSubclassSkillBarService:
             back_slot_counts,
             objective_key=objective_key,
             reference_value=reference_value,
+            external_effects=external_effects,
         )
         if back is None:
             return None
