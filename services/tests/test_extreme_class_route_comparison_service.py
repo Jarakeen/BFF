@@ -123,14 +123,13 @@ class _ResistanceSkillBarService:
                 name = f"{line} skill {index + 1}"
                 if line == "daedric_summoning" and index == 0:
                     name = "Bound Aegis"
-                is_ultimate = False
                 skills.append(
                     ExtremeSubclassBarSkill(
                         ability_id=next_id,
                         base_ability_id=next_id + 1000,
                         name=name,
                         skill_line_id=line,
-                        is_ultimate=is_ultimate,
+                        is_ultimate=False,
                         morph=1,
                     )
                 )
@@ -260,7 +259,7 @@ def test_joint_search_can_trade_one_passive_slot_for_stronger_reviewed_skill(tmp
     assert best.projected_delta == pytest.approx(9174.0)
 
 
-def test_two_bars_are_preserved_but_only_selected_active_bar_scores_while_slotted_effects(tmp_path):
+def test_either_bar_skill_scores_from_front_even_when_back_is_active(tmp_path):
     service = ExtremeClassRouteComparisonService(
         _database(tmp_path),
         skill_bar_service=_AsymmetricTwoBarService(),
@@ -273,15 +272,13 @@ def test_two_bars_are_preserved_but_only_selected_active_bar_scores_while_slotte
 
     assert front_best is not None
     assert back_best is not None
-    assert front_best.active_bar == "front"
-    assert back_best.active_bar == "back"
     assert "Relentless Focus" in front_best.front_skill_bar_names
     assert "Relentless Focus" not in front_best.back_skill_bar_names
     assert front_best.skill_bar_names == front_best.front_skill_bar_names
     assert back_best.skill_bar_names == back_best.back_skill_bar_names
-    assert front_best.projected_delta > back_best.projected_delta
+    assert front_best.projected_delta == back_best.projected_delta
     assert any("Relentless Focus" in source for source in front_best.reviewed_sources)
-    assert not any("Relentless Focus" in source for source in back_best.reviewed_sources)
+    assert any("Relentless Focus" in source for source in back_best.reviewed_sources)
 
 
 def test_invalid_active_bar_is_rejected(tmp_path):
