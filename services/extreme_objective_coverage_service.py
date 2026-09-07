@@ -80,7 +80,7 @@ class ExtremeObjectiveCoverageService:
 
     Phase 13.2 now inventories the complete canonical player-skill universe.
     That is deliberately different from claiming every passive/active mechanic
-    is numerically solved.  Each skill family remains ``PARTIAL`` until every
+    is numerically solved. Each skill family remains ``PARTIAL`` until every
     relevant static and contextual mechanic in that family is losslessly mapped
     or explicitly proven irrelevant to the objective.
     """
@@ -154,11 +154,11 @@ class ExtremeObjectiveCoverageService:
         ),
         "craft_utility_passives": (
             ExtremeSourceCoverageStatus.PARTIAL,
-            "Crafting/utility player passives are retained in the canonical skill universe and classified as known noncombat unless a reviewed combat-relevant mechanic proves otherwise; exhaustive relevance review is not complete.",
+            "Crafting/utility player passives are retained in the canonical skill universe; combat-relevance review remains incomplete and no unresolved mechanic is assigned zero value merely because it is unmapped.",
         ),
         "armor_base_values_traits": (
             ExtremeSourceCoverageStatus.PARTIAL,
-            "Deterministic armor base values and several modeled traits exist in the shared build stack, but Extreme has not yet exhaustively searched weight/quality/slot/trait combinations for every objective.",
+            "Deterministic CP160 Gold armor base values, reviewed static traits, armor-weight passives, and seven-slot armor/Mundus tradeoffs are now searchable for reviewed objectives, but shields and every trait/source interaction are not yet exhaustive.",
         ),
         "gear_sets": (
             ExtremeSourceCoverageStatus.NOT_MODELED,
@@ -170,11 +170,11 @@ class ExtremeObjectiveCoverageService:
         ),
         "mundus": (
             ExtremeSourceCoverageStatus.PARTIAL,
-            "Canonical update-versioned Mundus base effects can now be projected for reviewed Extreme objectives, but armor-trait/other Mundus multipliers are not yet exhaustively optimized.",
+            "Canonical update-versioned Mundus effects and Gold Divines amplification are projected, including joint seven-armor trait/Mundus search, but shield Divines and all wider equipment opportunity costs are not yet exhaustively optimized.",
         ),
         "champion_points": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Champion Point contributions are not yet exhaustively enumerated for Extreme objectives.",
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Canonical static Champion Point effects now project into reviewed Extreme objectives; always-active CP contributes a reviewed lower bound and every slottable star can be inspected at max rank, while legal Champion Bar combination rules and dynamic/runtime CP mechanics remain unresolved blockers.",
         ),
         "enchantments": (
             ExtremeSourceCoverageStatus.NOT_MODELED,
