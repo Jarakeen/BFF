@@ -66,11 +66,18 @@ class RotationCandidateScorecard:
     candidate_shortfall: int
     inherited_unresolved: tuple[str, ...]
     candidate_specific_unresolved: tuple[str, ...]
+    inherited_schedule_notes: tuple[str, ...] = ()
+    candidate_specific_schedule_notes: tuple[str, ...] = ()
 
     @property
     def unresolved(self) -> tuple[str, ...]:
-        """All unresolved evidence retained for compatibility and diagnostics."""
+        """Only genuinely unresolved evidence retained for ranking/diagnostics."""
         return self.inherited_unresolved + self.candidate_specific_unresolved
+
+    @property
+    def schedule_notes(self) -> tuple[str, ...]:
+        """Deterministic scheduler provenance that is informative, not uncertainty."""
+        return self.inherited_schedule_notes + self.candidate_specific_schedule_notes
 
     @property
     def missing_demand_requirements(self) -> tuple[RotationDemandActionRequirement, ...]:
@@ -100,8 +107,8 @@ class RotationCandidateScorecardService:
     not claim runtime uptime unless a later layer proves it.
 
     Unresolved evidence is split into inherited/shared baseline limitations and
-    candidate-specific additions. Shared model boundaries stay visible but should
-    not be treated as defects introduced by one candidate.
+    candidate-specific additions. Deterministic refresh-slot cascade messages are
+    retained separately as schedule provenance rather than ranked as uncertainty.
     """
 
     def __init__(
@@ -167,18 +174,30 @@ class RotationCandidateScorecardService:
             candidate_sustain=candidate_sustain,
         )
 
-        baseline_unresolved = self._dedupe(
+        baseline_all = self._dedupe(
             tuple(baseline_plan.unresolved) + tuple(baseline_sustain.unresolved)
         )
-        candidate_unresolved = self._dedupe(
+        candidate_all = self._dedupe(
             tuple(candidate_plan.unresolved) + tuple(candidate_sustain.unresolved)
         )
-        baseline_keys = {item.casefold() for item in baseline_unresolved}
-        inherited = tuple(
-            item for item in candidate_unresolved if item.casefold() in baseline_keys
+
+        baseline_notes, baseline_unresolved = self._partition_scheduler_notes(baseline_all)
+        candidate_notes, candidate_unresolved = self._partition_scheduler_notes(candidate_all)
+
+        baseline_unresolved_keys = {item.casefold() for item in baseline_unresolved}
+        inherited_unresolved = tuple(
+            item for item in candidate_unresolved if item.casefold() in baseline_unresolved_keys
         )
-        candidate_specific = tuple(
-            item for item in candidate_unresolved if item.casefold() not in baseline_keys
+        candidate_specific_unresolved = tuple(
+            item for item in candidate_unresolved if item.casefold() not in baseline_unresolved_keys
+        )
+
+        baseline_note_keys = {item.casefold() for item in baseline_notes}
+        inherited_notes = tuple(
+            item for item in candidate_notes if item.casefold() in baseline_note_keys
+        )
+        candidate_specific_notes = tuple(
+            item for item in candidate_notes if item.casefold() not in baseline_note_keys
         )
 
         return RotationCandidateScorecard(
@@ -186,8 +205,10 @@ class RotationCandidateScorecardService:
             demand_coverage=tuple(coverage),
             missing_required_effects=missing_effects,
             candidate_shortfall=int(candidate_sustain.run.timeline.total_shortfall),
-            inherited_unresolved=inherited,
-            candidate_specific_unresolved=candidate_specific,
+            inherited_unresolved=inherited_unresolved,
+            candidate_specific_unresolved=candidate_specific_unresolved,
+            inherited_schedule_notes=inherited_notes,
+            candidate_specific_schedule_notes=candidate_specific_notes,
         )
 
     @staticmethod
@@ -207,6 +228,31 @@ class RotationCandidateScorecardService:
             and (requirement.bar is None or action.bar == requirement.bar)
             and demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
         )
+
+    @staticmethod
+    def _is_deterministic_cascade_trace(value: str) -> bool:
+        normalized = value.strip().casefold()
+        return (
+            normalized.startswith("refresh obligation for '")
+            and " claimed the " in normalized
+            and normalized.endswith(
+                "displaced skill will cascade to the next same-bar skill slot"
+            )
+        )
+
+    @classmethod
+    def _partition_scheduler_notes(
+        cls,
+        values: tuple[str, ...],
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        notes: list[str] = []
+        unresolved: list[str] = []
+        for value in values:
+            if cls._is_deterministic_cascade_trace(value):
+                notes.append(value)
+            else:
+                unresolved.append(value)
+        return tuple(notes), tuple(unresolved)
 
     @staticmethod
     def _dedupe(values: tuple[str, ...]) -> tuple[str, ...]:
