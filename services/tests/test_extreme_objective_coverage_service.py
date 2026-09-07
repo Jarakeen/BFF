@@ -62,12 +62,16 @@ def test_old_class_passives_umbrella_no_longer_masquerades_as_complete():
     assert sources["active_skills"].status is ExtremeSourceCoverageStatus.PARTIAL
 
 
-def test_unmodeled_gear_sets_block_global_maximum():
+def test_gear_set_projection_is_partial_until_combinations_and_dynamic_mechanics_are_exhaustive():
     coverage = ExtremeObjectiveCoverageService.coverage_for("physical_resistance")
     source = _by_source(coverage)["gear_sets"]
 
-    assert source.status is ExtremeSourceCoverageStatus.NOT_MODELED
+    assert source.status is ExtremeSourceCoverageStatus.PARTIAL
     assert source.blocks_global_maximum is True
+    assert "canonical" in source.note.casefold()
+    assert "unmapped" in source.note.casefold() or "blocker" in source.note.casefold()
+    assert "conditional" in source.note.casefold() or "proc" in source.note.casefold()
+    assert "combination" in source.note.casefold() or "multi-set" in source.note.casefold()
 
 
 def test_champion_point_projection_is_partial_until_loadout_and_dynamic_mechanics_are_exhaustive():
