@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.resource_costs import ResourceType
+from minmax.rotation_resource_reserve import RotationResourceReserveRequirement
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.healer_rotation_priority_service import HealerRotationPriorityService
 from services.rotation_candidate_ranking_service import (
@@ -64,12 +65,23 @@ def main() -> int:
     parser.add_argument("--lead-seconds", type=float, default=3.0)
     parser.add_argument("--window-seconds", type=float, default=2.0)
     parser.add_argument("--anticipation-seconds", type=float, default=3.0)
+    parser.add_argument(
+        "--minimum-magicka-reserve",
+        type=int,
+        default=None,
+        help=(
+            "optional caller-supplied Magicka required immediately before the projected "
+            "Phase 2 prep window; no reserve floor is invented when omitted"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
 
     if any(float(value) <= 0 for value in args.raid_dps):
         raise ValueError("all --raid-dps values must be positive")
+    if args.minimum_magicka_reserve is not None and int(args.minimum_magicka_reserve) < 0:
+        raise ValueError("--minimum-magicka-reserve cannot be negative")
 
     database_path = Path(args.database)
     build = _load_saved_build(
@@ -124,9 +136,18 @@ def main() -> int:
         "Hard obligation: at least one front-bar Budding Seeds cast inside the projected "
         "Phase 2 healing-prep demand window"
     )
+    if args.minimum_magicka_reserve is None:
+        print("Mechanic-entry reserve: not supplied; no Magicka floor is assumed")
+    else:
+        print(
+            "Mechanic-entry reserve: "
+            f"{int(args.minimum_magicka_reserve):,} Magicka immediately before the prep window "
+            "(caller supplied)"
+        )
     print(
         "Boundary: this audit ranks only supplied obligations plus canonical Magicka consequences; "
-        "it does not certify the audit-only healer policy as universal gameplay truth"
+        "it does not certify the audit-only healer policy or any caller-supplied reserve as universal "
+        "gameplay truth"
     )
 
     for raid_dps in args.raid_dps:
@@ -152,6 +173,15 @@ def main() -> int:
             bar="front",
             minimum_casts=1,
         )
+        reserve_requirements = ()
+        if args.minimum_magicka_reserve is not None:
+            reserve_requirements = (
+                RotationResourceReserveRequirement(
+                    demand_name=demand.name,
+                    resource=ResourceType.MAGICKA,
+                    minimum_amount=int(args.minimum_magicka_reserve),
+                ),
+            )
 
         baseline_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -160,6 +190,7 @@ def main() -> int:
             candidate_sustain=base_sustain,
             demands=(demand,),
             demand_requirements=(requirement,),
+            reserve_requirements=reserve_requirements,
         )
         aware_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -168,6 +199,7 @@ def main() -> int:
             candidate_sustain=aware_sustain,
             demands=(demand,),
             demand_requirements=(requirement,),
+            reserve_requirements=reserve_requirements,
         )
         ranked = ranking_service.rank(
             (
@@ -187,10 +219,18 @@ def main() -> int:
             coverage = card.demand_coverage[0]
             consequence = card.consequence
             cast_text = ", ".join(f"{value:g}s" for value in coverage.cast_times) or "none"
+            reserve_text = ""
+            if card.reserve_assessments:
+                reserve = card.reserve_assessments[0]
+                reserve_text = (
+                    f" | entry Mag {reserve.available_before_start:,}/"
+                    f"{reserve.requirement.minimum_amount:,}"
+                )
             print(
                 f"#{item.rank} {item.candidate_id:15s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
+                f"{reserve_text}"
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
@@ -206,10 +246,10 @@ def main() -> int:
     print()
     print(
         "Interpretation: hard encounter obligations decide eligibility before softer resource "
-        "consequences. If neither candidate satisfies the supplied obligation, neither is promoted "
-        "to an eligible plan merely because its resource numbers are better. Deterministic refresh "
-        "cascades are reported as schedule notes; only genuine candidate-specific uncertainty is "
-        "ranked as unresolved evidence."
+        "consequences. An optional caller-supplied reserve is checked immediately before demand "
+        "entry, so a plan may be globally sustainable yet still be ineligible if it reaches the "
+        "mechanic under-resourced. Deterministic refresh cascades remain schedule notes rather than "
+        "unresolved evidence."
     )
     return 0
 
