@@ -6,6 +6,10 @@ from math import isclose
 from minmax.build_candidate_comparison import BuildCandidateComparison
 
 from .named_buff_resolution_service import NamedBuffContribution
+from .team_provider_coverage_service import (
+    TeamProviderCoverageProfile,
+    TeamProviderCoverageService,
+)
 from .team_provider_marginal_value_service import (
     TeamProviderMarginalValue,
     TeamProviderMarginalValueService,
@@ -22,6 +26,7 @@ class PrescribedSlotCandidateEvidence:
     open_slot: PrescribedOpenSlotCandidateEvidence | None = None
     provider_requirement_ids: tuple[str, ...] = ()
     provider_effects: tuple[NamedBuffContribution, ...] = ()
+    provider_coverage_profiles: tuple[TeamProviderCoverageProfile, ...] = ()
 
     def __post_init__(self) -> None:
         if (self.comparison is None) == (self.open_slot is None):
@@ -39,6 +44,11 @@ class PrescribedSlotCandidateEvidence:
         )
         object.__setattr__(self, "provider_requirement_ids", normalized)
         object.__setattr__(self, "provider_effects", tuple(self.provider_effects))
+        object.__setattr__(
+            self,
+            "provider_coverage_profiles",
+            tuple(self.provider_coverage_profiles),
+        )
 
     @property
     def candidate_id(self) -> str:
@@ -107,12 +117,17 @@ class PrescribedSlotCandidateRanking:
     provider_marginal_values: tuple[tuple[str, TeamProviderMarginalValue], ...] = ()
 
 
+def _normalized_provider_key(value: object) -> str:
+    return str(value or "").strip().casefold()
+
+
 def rank_prescribed_slot_candidates(
     *,
     slot_name: str,
     required_provider_requirement_ids: tuple[str, ...],
     candidates: tuple[PrescribedSlotCandidateEvidence, ...],
     existing_team_effects: tuple[NamedBuffContribution, ...] = (),
+    provider_required_recipients_by_id: dict[str, int] | None = None,
 ) -> PrescribedSlotCandidateRanking:
     """Rank one prescribed roster slot without weakening Phase 12 constraints.
 
@@ -126,6 +141,12 @@ def rank_prescribed_slot_candidates(
     supported candidates tie on the canonical objective, however, the candidate that
     adds more distinct reviewed named effects beyond the current team may break that
     tie. If marginal provider evidence is also tied, the slot remains unresolved.
+
+    Provider identity alone is not enough when an encounter requirement declares a
+    recipient count. The candidate must also carry coverage profiles proving that
+    its provider can reach the required number of recipients within the modeled
+    refresh/application cycle. Requirements without a recipient count preserve the
+    legacy provider-ID behavior.
     """
 
     normalized_slot = str(slot_name or "").strip()
@@ -141,6 +162,13 @@ def rank_prescribed_slot_candidates(
             if value
         )
     )
+    required_recipients = {
+        _normalized_provider_key(provider_id): int(count)
+        for provider_id, count in (provider_required_recipients_by_id or {}).items()
+        if _normalized_provider_key(provider_id)
+    }
+    if any(count < 0 for count in required_recipients.values()):
+        raise ValueError("provider required recipient counts cannot be negative")
 
     eligible: list[PrescribedSlotCandidateEvidence] = []
     rejected: list[PrescribedSlotCandidateRejection] = []
@@ -165,6 +193,35 @@ def rank_prescribed_slot_candidates(
             reasons.append(
                 "missing required provider evidence: " + ", ".join(missing_provider_ids)
             )
+
+        profiles_by_key: dict[str, list[TeamProviderCoverageProfile]] = {}
+        for profile in evidence.provider_coverage_profiles:
+            profiles_by_key.setdefault(
+                _normalized_provider_key(profile.provider_key),
+                [],
+            ).append(profile)
+        for requirement_id in required_provider_ids:
+            if requirement_id in missing_provider_ids:
+                continue
+            recipient_count = required_recipients.get(_normalized_provider_key(requirement_id))
+            if recipient_count is None:
+                continue
+            profiles = tuple(profiles_by_key.get(_normalized_provider_key(requirement_id), ()))
+            if not profiles:
+                reasons.append(
+                    f"required provider coverage is unproven for {requirement_id}: "
+                    f"no coverage profile for {recipient_count} intended recipients"
+                )
+                continue
+            coverage = TeamProviderCoverageService.combine(
+                profiles,
+                required_recipients=recipient_count,
+            )
+            if not coverage.fully_covered:
+                reasons.append(
+                    f"insufficient provider coverage for {requirement_id}: "
+                    f"covers {coverage.covered_recipients}/{recipient_count} intended recipients"
+                )
 
         if not evidence.is_rankable:
             reasons.append(
