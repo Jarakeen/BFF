@@ -81,6 +81,7 @@ CORE_NAV_SECTIONS = [
         ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
     ]},
     {"label": "Tool", "children": [
+        ("Extreme Build Lab", "extreme_optimization"),
         ("Gear Lookup", "gear_lookup"),
         ("Reference Data", "tools:reference_data"),
         ("vAS2 Timer", "timers"),
