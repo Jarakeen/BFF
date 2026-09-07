@@ -79,7 +79,7 @@ class DurationAwareRotationScheduler:
         pending_light_attack: RotationAction | None = None
         displaced_by_bar: dict[str, list[RotationAction]] = {"front": [], "back": []}
 
-        for action in plan.actions:
+        for action_index, action in enumerate(plan.actions):
             if action.kind is RotationActionKind.LIGHT_ATTACK:
                 pending_light_attack = action
                 continue
@@ -190,6 +190,12 @@ class DurationAwareRotationScheduler:
                             )
                         ),
                         rules=rules,
+                        next_decision_time_seconds=self._next_decision_time(
+                            plan.actions,
+                            action_index,
+                            action.time_seconds,
+                        ),
+                        plan_end_seconds=plan.duration_seconds,
                     )
                 )
                 if decided_action is not None:
@@ -239,6 +245,19 @@ class DurationAwareRotationScheduler:
             assumptions=tuple(self._dedupe(assumptions)),
             unresolved=tuple(self._dedupe(unresolved)),
         )
+
+    @staticmethod
+    def _next_decision_time(
+        plan_actions: tuple[RotationAction, ...],
+        current_index: int,
+        current_time_seconds: float,
+    ) -> float | None:
+        for future in plan_actions[current_index + 1 :]:
+            if future.kind is RotationActionKind.LIGHT_ATTACK:
+                continue
+            if future.time_seconds > current_time_seconds:
+                return future.time_seconds
+        return None
 
     @staticmethod
     def _validate_wait_decision(
