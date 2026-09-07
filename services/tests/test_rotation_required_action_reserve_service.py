@@ -157,6 +157,41 @@ def test_cost_relevant_armor_progression_uncertainty_stays_blocking() -> None:
         result.as_requirement()
 
 
+def test_canonical_progression_compatibility_fallback_stays_blocking() -> None:
+    message = (
+        "canonical character progression has no owned skill lines; "
+        "rotation sustain used equipped-armor inference as a compatibility fallback"
+    )
+    service = RotationRequiredActionReserveService(
+        _StubSustainService(
+            events=(_event("Budding Seeds", 1993),),
+            unresolved=(
+                message,
+                "Champion Point is dynamic or not yet stat-mapped: Master Gatherer",
+            ),
+        )
+    )
+
+    result = service.derive(
+        build=_build(),
+        demand_name="Phase 2 healing prep",
+        requirements=(
+            RotationDemandActionRequirement(
+                demand_name="Phase 2 healing prep",
+                skill_name="Budding Seeds",
+            ),
+        ),
+    )
+
+    assert result.resolved is False
+    assert result.blocking_unresolved == (message,)
+    assert result.context_notes == (
+        "Champion Point is dynamic or not yet stat-mapped: Master Gatherer",
+    )
+    with pytest.raises(ValueError, match="unresolved action costs"):
+        result.as_requirement()
+
+
 def test_unrelated_context_warnings_remain_visible_without_blocking_resolved_cost() -> None:
     service = RotationRequiredActionReserveService(
         _StubSustainService(
