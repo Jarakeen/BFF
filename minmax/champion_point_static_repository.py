@@ -126,6 +126,27 @@ class ChampionPointStaticRepository:
             ).fetchall()
         return tuple(self._record_from_row(row) for row in rows)
 
+    def slottable_records(self) -> tuple[ChampionPointRecord, ...]:
+        """Return every Champion Point star that requires a Champion Bar slot."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT name, skill_type, max_points, jump_points,
+                       COALESCE(min_description, max_description, description, '') AS description
+                FROM champion_point
+                WHERE skill_type IN (?, ?)
+                  AND name IS NOT NULL
+                  AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE
+                """,
+                (
+                    CHAMPION_SKILL_TYPE_NORMAL_SLOTTABLE,
+                    CHAMPION_SKILL_TYPE_STAT_POOL_SLOTTABLE,
+                ),
+            ).fetchall()
+        return tuple(self._record_from_row(row) for row in rows)
+
     def resolve_all_non_slottable_maxed(self) -> tuple[list[Effect], list[str]]:
         """Resolve all non-slottable passives at their maximum purchased rank.
 
