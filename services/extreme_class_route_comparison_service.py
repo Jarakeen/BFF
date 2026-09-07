@@ -39,6 +39,7 @@ class ExtremeClassRouteCandidate:
     reviewed_line_ids: tuple[str, ...] = ()
     slot_counts: tuple[tuple[str, int], ...] = ()
     reviewed_sources: tuple[str, ...] = ()
+    buff_context_notes: tuple[str, ...] = ()
     active_bar: str = "front"
     skill_bar_names: tuple[str, ...] = ()
     skill_bar_ability_ids: tuple[int, ...] = ()
@@ -72,6 +73,7 @@ class _ReviewedSubclassBuild:
     bars: ExtremeSubclassTwoBarResult
     projected_delta: float
     reviewed_sources: tuple[str, ...]
+    buff_context_notes: tuple[str, ...]
 
 
 class ExtremeClassRouteComparisonService:
@@ -86,7 +88,8 @@ class ExtremeClassRouteComparisonService:
     selected bar, either-bar effects apply if present on either bar, and runtime
     effects remain excluded until combat state can prove uptime. External named
     buffs may shape skill choice and stacking, but route scores only receive the
-    marginal value added beyond that shared external context.
+    marginal value added beyond that shared external context. Suppressed duplicate
+    buff evidence is carried on each scored route for downstream explanation.
     """
 
     def __init__(
@@ -194,19 +197,22 @@ class ExtremeClassRouteComparisonService:
             if bars is None:
                 continue
             materialized_any = True
-            skill_delta, skill_sources = ExtremeSkillStandingEffectService.marginal_score_build_bars(
-                bars.front.names,
-                bars.back.names,
-                objective_key,
-                active_bar=active_bar,
-                reference_value=reference_value,
-                external_effects=external_effects,
+            skill_delta, skill_sources, buff_context_notes = (
+                ExtremeSkillStandingEffectService.marginal_score_build_bars_explained(
+                    bars.front.names,
+                    bars.back.names,
+                    objective_key,
+                    active_bar=active_bar,
+                    reference_value=reference_value,
+                    external_effects=external_effects,
+                )
             )
             candidate = _ReviewedSubclassBuild(
                 allocation=allocation,
                 bars=bars,
                 projected_delta=allocation.projected_delta + skill_delta,
                 reviewed_sources=allocation.reviewed_sources + skill_sources,
+                buff_context_notes=buff_context_notes,
             )
             if best is None or (
                 candidate.projected_delta > best.projected_delta + 1e-9
@@ -291,6 +297,7 @@ class ExtremeClassRouteComparisonService:
                 score_status = "reviewed_subclass_materialized_lower_bound"
                 slot_counts = allocation.slot_counts
                 reviewed_sources = reviewed_build.reviewed_sources
+                buff_context_notes = reviewed_build.buff_context_notes
                 reviewed_line_ids = tuple(
                     line for line, count in slot_counts if count > 0
                 )
@@ -314,6 +321,7 @@ class ExtremeClassRouteComparisonService:
                 )
                 slot_counts = ()
                 reviewed_sources = ()
+                buff_context_notes = ()
                 reviewed_line_ids = ()
                 skill_bar_names = ()
                 skill_bar_ability_ids = ()
@@ -335,6 +343,7 @@ class ExtremeClassRouteComparisonService:
                     reviewed_line_ids=reviewed_line_ids,
                     slot_counts=slot_counts,
                     reviewed_sources=reviewed_sources,
+                    buff_context_notes=buff_context_notes,
                     active_bar=active_bar_key,
                     skill_bar_names=skill_bar_names,
                     skill_bar_ability_ids=skill_bar_ability_ids,
