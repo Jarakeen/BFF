@@ -62,13 +62,20 @@ class RotationRequiredActionReserveService:
     pay for these explicitly required casts?" It does not claim that amount is a
     sufficient gameplay safety reserve.
 
-    Broad build-context diagnostics remain visible as ``context_notes``. Only
-    action-cost evidence tied to one of the required skills, or a mismatch between
-    the required and resolved cost-event counts, blocks promotion of the derived
-    reserve requirement.
+    Diagnostics that can change action-cost modifiers remain blocking even when a
+    cost event was produced. Unrelated runtime/static-model notes remain visible as
+    ``context_notes`` but do not veto an otherwise resolved required-action floor.
     """
 
     _SYNTHETIC_DURATION_SECONDS = 1.0
+    _COST_RELEVANT_CONTEXT_PREFIXES = (
+        "rotation sustain currently infers equipped armor skill-line ownership",
+        "light armor: evocation",
+        "medium armor: wind walker",
+        "necklace ",
+        "ring 1 ",
+        "ring 2 ",
+    )
 
     def __init__(self, sustain_service: RotationSustainService | None = None) -> None:
         self.sustain_service = sustain_service or RotationSustainService()
@@ -152,7 +159,11 @@ class RotationRequiredActionReserveService:
             value = str(raw or "").strip()
             if not value:
                 continue
-            if value.casefold().startswith(required_prefixes):
+            normalized = value.casefold()
+            if (
+                normalized.startswith(required_prefixes)
+                or normalized.startswith(self._COST_RELEVANT_CONTEXT_PREFIXES)
+            ):
                 blocking_unresolved.append(value)
             else:
                 context_notes.append(value)
