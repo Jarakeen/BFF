@@ -25,12 +25,6 @@ def _effective_plan_name(page) -> str:
     return f"{selection} Composition"
 
 
-def _refresh_team_name(page) -> None:
-    label = getattr(page, "comp_team_name_label", None)
-    if label is not None:
-        label.setText(f"TEAM / ROSTER PLAN: {_effective_plan_name(page)}")
-
-
 def _send_completed(page, plan_name: str) -> None:
     name = str(plan_name or "").strip() or _effective_plan_name(page)
     page._comp_send_completed_name = name
@@ -73,22 +67,14 @@ def _install_feedback(page) -> None:
         return
 
     page._comp_send_completed_name = ""
-    page.comp_team_name_label = QLabel()
-    page.comp_team_name_label.setWordWrap(True)
-    page.comp_team_name_label.setProperty("compTeamName", True)
-
-    page.comp_send_feedback_label = QLabel("Ready to send this comp when assignments are complete.")
-    page.comp_send_feedback_label.setWordWrap(True)
+    page.comp_send_feedback_label = QLabel("Ready to send when assignments are complete.")
+    page.comp_send_feedback_label.setWordWrap(False)
     page.comp_send_feedback_label.setProperty("compSendFeedback", True)
 
-    # Keep the identity/feedback near the actions without creating another card.
-    actions.body_layout.insertWidget(0, page.comp_team_name_label)
-    actions.body_layout.insertWidget(1, page.comp_send_feedback_label)
-
-    page.plan_name_input.textChanged.connect(lambda *_: _refresh_team_name(page))
-    page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_team_name(page))
+    # Plan Name already lives in the header. Keep only one compact state line here
+    # instead of repeating the plan identity inside the Actions card.
+    actions.body_layout.insertWidget(0, page.comp_send_feedback_label)
     page.rosterPlanSent.connect(lambda name: _send_completed(page, name))
-    _refresh_team_name(page)
 
 
 def _comp_init_with_send_feedback(self, parent=None) -> None:
