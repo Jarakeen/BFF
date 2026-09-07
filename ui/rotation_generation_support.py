@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.healer_heavy_attack_build_discovery import (
+    HeavyAttackBuildIncentiveKind,
+    discover_healer_heavy_attack_build_incentives,
+)
 from minmax.healer_wait_decision_provider import (
     HealerHeavyAttackCandidate,
     HealerWaitDecisionProvider,
@@ -9,6 +13,7 @@ from minmax.healer_wait_decision_provider import (
 from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.runtime_healer_wait_decision_provider import RuntimeHealerWaitDecisionProvider
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
 from services.rotation_ultimate_service import (
@@ -35,6 +40,8 @@ class RotationGenerationRequest:
     use_scheduled_combat_attacks_for_ultimate: bool = False
     ability_priorities: tuple[AbilityPriorityEntry, ...] = ()
     heavy_attack_candidates: tuple[HealerHeavyAttackCandidate, ...] = ()
+    auto_required_heavy_attacks: bool = True
+    required_heavy_channel_seconds: float = 1.8
 
 
 @dataclass(frozen=True)
@@ -53,9 +60,11 @@ class RotationGenerationSupport:
     ordinary skills by an explicit AbilityPriorityList, refines the plan using
     canonical positive skill durations and the same explicit priorities, optionally
     uses caller-proven healer heavy opportunities in slots that would otherwise be
-    WAITs, then optionally projects one explicitly selected slot-6 ultimate through
-    the shared Ultimate resource model. Potion cadence, execute rules, automatic
-    heavy-opportunity discovery, and dynamic bar timing remain later Phase 13 work.
+    WAITs, and automatically discovers required-effect healer heavy incentives from
+    saved-build state when enabled. It then optionally projects one explicitly
+    selected slot-6 ultimate through the shared Ultimate resource model. Potion
+    cadence, execute rules, recovery-heavy automation, and dynamic bar timing remain
+    later Phase 13 work.
     """
 
     def __init__(
@@ -83,11 +92,7 @@ class RotationGenerationSupport:
         """Return the final plan together with generation evidence."""
         definition = self.build_definition(build=build, request=request)
         priority_list = self._priority_list(build=build, request=request)
-        wait_decision = (
-            HealerWaitDecisionProvider(tuple(request.heavy_attack_candidates))
-            if request.heavy_attack_candidates
-            else None
-        )
+        wait_decision = self._wait_decision(build=build, request=request)
         seed_plan = self.planner.build_plan(definition, build)
 
         if priority_list is None and wait_decision is None:
@@ -203,6 +208,10 @@ class RotationGenerationSupport:
             assumptions.append(
                 "caller-proven healer heavy-attack opportunities may replace premature-recast WAIT slots on the same active bar"
             )
+        elif self._auto_required_heavy_incentives(build=build, request=request):
+            assumptions.append(
+                "saved-build required-effect heavy incentives are discovered automatically and may reserve legal premature-recast windows"
+            )
 
         selected_ultimate_bar = str(request.ultimate_bar or "").strip().casefold()
         if selected_ultimate_bar:
@@ -247,6 +256,34 @@ class RotationGenerationSupport:
             weave_light_attacks=bool(request.weave_light_attacks),
             assumptions=tuple(assumptions),
             unresolved=tuple(unresolved),
+        )
+
+    def _wait_decision(self, *, build, request: RotationGenerationRequest):
+        if request.heavy_attack_candidates:
+            return HealerWaitDecisionProvider(tuple(request.heavy_attack_candidates))
+
+        required = self._auto_required_heavy_incentives(build=build, request=request)
+        if not required:
+            return None
+
+        channel = float(request.required_heavy_channel_seconds)
+        if channel <= 0:
+            raise ValueError("required heavy attack channel seconds must be positive")
+        return RuntimeHealerWaitDecisionProvider(
+            incentives=required,
+            required_window_seconds=channel,
+        )
+
+    @staticmethod
+    def _auto_required_heavy_incentives(*, build, request: RotationGenerationRequest):
+        if not request.auto_required_heavy_attacks:
+            return ()
+        if str(getattr(build, "Role", "") or "").strip().casefold() != "healer":
+            return ()
+        return tuple(
+            incentive
+            for incentive in discover_healer_heavy_attack_build_incentives(build)
+            if incentive.kind is HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT
         )
 
     def _priority_list(
