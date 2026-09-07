@@ -9,7 +9,11 @@ from services.class_mastery_classification_service import ClassMasteryBoundary
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
 from services.extreme_class_mastery_pair_service import ExtremeClassMasteryPairService
 from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
-from services.extreme_subclass_skill_bar_service import ExtremeSubclassSkillBarService
+from services.extreme_subclass_skill_bar_service import (
+    ExtremeSubclassSkillBarResult,
+    ExtremeSubclassSkillBarService,
+    ExtremeSubclassTwoBarResult,
+)
 from services.extreme_subclass_slot_allocation_service import (
     ExtremeSubclassSlotAllocationService,
 )
@@ -33,8 +37,13 @@ class ExtremeClassRouteCandidate:
     reviewed_line_ids: tuple[str, ...] = ()
     slot_counts: tuple[tuple[str, int], ...] = ()
     reviewed_sources: tuple[str, ...] = ()
+    active_bar: str = "front"
     skill_bar_names: tuple[str, ...] = ()
     skill_bar_ability_ids: tuple[int, ...] = ()
+    front_skill_bar_names: tuple[str, ...] = ()
+    front_skill_bar_ability_ids: tuple[int, ...] = ()
+    back_skill_bar_names: tuple[str, ...] = ()
+    back_skill_bar_ability_ids: tuple[int, ...] = ()
 
     @property
     def is_scored(self) -> bool:
@@ -58,9 +67,10 @@ class ExtremeClassRouteComparison:
 class ExtremeClassRouteComparisonService:
     """Compare reviewed pure-class mastery routes against legal subclass routes.
 
-    Subclass lower bounds require a reviewed six-slot allocation plus a concrete
-    canonical bar. Reviewed while-slotted skill effects may then add to that
-    proven lower bound. Triggered or otherwise unresolved skill effects remain
+    Subclass lower bounds require a reviewed six-slot allocation plus concrete
+    canonical front and back bars. Both bars are preserved as part of the build,
+    but active-bar-only standing effects are scored only from the explicitly
+    selected active bar. Triggered or otherwise unresolved skill effects remain
     excluded rather than inferred from tooltip prose.
     """
 
@@ -73,13 +83,47 @@ class ExtremeClassRouteComparisonService:
         self.mastery_pairs = ExtremeClassMasteryPairService(database_path)
         self.skill_bars = skill_bar_service or ExtremeSubclassSkillBarService(database_path)
 
+    def _materialize_two_bars(
+        self,
+        slot_counts: tuple[tuple[str, int], ...],
+        *,
+        objective_key: str,
+    ) -> ExtremeSubclassTwoBarResult | None:
+        materialize_two_bars = getattr(self.skill_bars, "materialize_two_bars", None)
+        if callable(materialize_two_bars):
+            return materialize_two_bars(
+                slot_counts,
+                slot_counts,
+                objective_key=objective_key,
+            )
+
+        # Compatibility for focused test doubles and older callers while the
+        # production service owns the authoritative two-bar implementation.
+        front = self.skill_bars.materialize(slot_counts, objective_key=objective_key)
+        back = self.skill_bars.materialize(slot_counts, objective_key=objective_key)
+        if front is None or back is None:
+            return None
+        return ExtremeSubclassTwoBarResult(front=front, back=back)
+
+    @staticmethod
+    def _active_bar(
+        bars: ExtremeSubclassTwoBarResult,
+        active_bar: str,
+    ) -> ExtremeSubclassSkillBarResult:
+        return bars.front if active_bar == "front" else bars.back
+
     def compare(
         self,
         objective_key: str,
         *,
         reference_value: float | None = None,
         higher_max_resource: float | None = None,
+        active_bar: str = "front",
     ) -> ExtremeClassRouteComparison:
+        active_bar_key = str(active_bar or "").strip().casefold()
+        if active_bar_key not in {"front", "back"}:
+            raise ValueError("active_bar must be 'front' or 'back'")
+
         routes: list[ExtremeClassRouteCandidate] = []
 
         pure_rows = self.mastery_pairs.best_pure_class_routes(
@@ -103,6 +147,7 @@ class ExtremeClassRouteComparisonService:
                     projected_delta=row.projected_delta,
                     boundary=row.boundary,
                     score_status="reviewed_mastery_delta",
+                    active_bar=active_bar_key,
                 )
             )
 
@@ -118,23 +163,24 @@ class ExtremeClassRouteComparisonService:
                 objective_key,
                 reference_value=reference_value,
             )
-            bar = (
-                self.skill_bars.materialize(
+            bars = (
+                self._materialize_two_bars(
                     allocation.slot_counts,
                     objective_key=objective_key,
                 )
                 if allocation is not None
                 else None
             )
-            if allocation is not None and bar is not None:
+            if allocation is not None and bars is not None:
                 reviewed_lower_bound_count += 1
+                active = self._active_bar(bars, active_bar_key)
                 skill_delta = sum(
                     ExtremeSkillStandingEffectService.score(skill.name, objective_key)
-                    for skill in bar.skills
+                    for skill in active.skills
                 )
                 skill_sources = tuple(
                     source
-                    for skill in bar.skills
+                    for skill in active.skills
                     for source in ExtremeSkillStandingEffectService.sources(skill.name, objective_key)
                 )
                 projected_delta: float | None = allocation.projected_delta + skill_delta
@@ -144,8 +190,12 @@ class ExtremeClassRouteComparisonService:
                 reviewed_line_ids = tuple(
                     line for line, count in slot_counts if count > 0
                 )
-                skill_bar_names = bar.names
-                skill_bar_ability_ids = tuple(skill.ability_id for skill in bar.skills)
+                skill_bar_names = active.names
+                skill_bar_ability_ids = tuple(skill.ability_id for skill in active.skills)
+                front_skill_bar_names = bars.front.names
+                front_skill_bar_ability_ids = tuple(skill.ability_id for skill in bars.front.skills)
+                back_skill_bar_names = bars.back.names
+                back_skill_bar_ability_ids = tuple(skill.ability_id for skill in bars.back.skills)
             else:
                 projected_delta = None
                 score_status = (
@@ -160,6 +210,10 @@ class ExtremeClassRouteComparisonService:
                 )
                 skill_bar_names = ()
                 skill_bar_ability_ids = ()
+                front_skill_bar_names = ()
+                front_skill_bar_ability_ids = ()
+                back_skill_bar_names = ()
+                back_skill_bar_ability_ids = ()
 
             routes.append(
                 ExtremeClassRouteCandidate(
@@ -174,8 +228,13 @@ class ExtremeClassRouteComparisonService:
                     reviewed_line_ids=reviewed_line_ids,
                     slot_counts=slot_counts,
                     reviewed_sources=reviewed_sources,
+                    active_bar=active_bar_key,
                     skill_bar_names=skill_bar_names,
                     skill_bar_ability_ids=skill_bar_ability_ids,
+                    front_skill_bar_names=front_skill_bar_names,
+                    front_skill_bar_ability_ids=front_skill_bar_ability_ids,
+                    back_skill_bar_names=back_skill_bar_names,
+                    back_skill_bar_ability_ids=back_skill_bar_ability_ids,
                 )
             )
 
@@ -205,6 +264,8 @@ class ExtremeClassRouteComparisonService:
                         item.equipped_skill_lines,
                         item.slot_counts,
                         item.skill_bar_names,
+                        item.front_skill_bar_names,
+                        item.back_skill_bar_names,
                     ),
                 )
             ),
