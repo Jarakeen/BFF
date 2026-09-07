@@ -4,6 +4,7 @@ from .priority_aware_duration_scheduler import PriorityAwareDurationRotationSche
 from .rotation_ability_priority import AbilityPriorityList
 from .rotation_demand_window import RotationDemandWindow
 from .rotation_plan import RotationActionKind
+from .soft_action_duration_scheduler import SoftActionDurationRotationScheduler
 
 
 class DemandAwarePriorityDurationRotationScheduler(
@@ -88,3 +89,21 @@ class DemandAwarePriorityDurationRotationScheduler(
             key=lambda item: (item[0], item[1], item[2], item[3], item[4][0])
         )
         return candidates[0][4]
+
+
+class DemandAwarePrioritySoftActionDurationRotationScheduler(
+    SoftActionDurationRotationScheduler,
+    DemandAwarePriorityDurationRotationScheduler,
+):
+    """Demand-aware priority scheduler that also preserves soft runtime seams."""
+
+    def __init__(
+        self,
+        priorities: AbilityPriorityList,
+        demands: tuple[RotationDemandWindow, ...],
+    ) -> None:
+        DemandAwarePriorityDurationRotationScheduler.__init__(
+            self,
+            priorities,
+            demands,
+        )
