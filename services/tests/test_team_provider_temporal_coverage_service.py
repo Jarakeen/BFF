@@ -78,7 +78,7 @@ def test_partial_stagger_reports_middle_gap_explicitly():
 
 def test_one_carrier_can_refresh_repeatedly_when_runtime_schedule_supports_it():
     result = TeamProviderTemporalCoverageService.evaluate(
-        _req(end=24.0),
+        _req(effect="support_buff", end=24.0),
         applications=(
             _app("support_buff", "Healer A", 0.0, 8.0),
             _app("support_buff", "Healer A", 8.0, 8.0),
