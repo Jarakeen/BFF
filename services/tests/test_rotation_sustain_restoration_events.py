@@ -23,12 +23,12 @@ def test_rotation_sustain_passes_verified_restoration_events_to_phase4_runner() 
         source="Verified Restoration Staff heavy",
     )
     received = {}
+    fake_timeline = SimpleNamespace(starting_amount=30000, events=())
 
     def evaluator(**kwargs):
         received.update(kwargs)
-        timeline = SimpleNamespace(starting_amount=30000, events=())
         return SimpleNamespace(
-            timeline=timeline,
+            timeline=fake_timeline,
             unresolved=(),
         )
 
@@ -54,4 +54,5 @@ def test_rotation_sustain_passes_verified_restoration_events_to_phase4_runner() 
 
     assert received["restoration_events"] == (restore,)
     assert received["resource"] is ResourceType.MAGICKA
-    assert projection.run.timeline is fake_context.__class__(**{}) if False else received.get("never")
+    assert projection.run.timeline is fake_timeline
+    assert projection.series == ((0.0, 30000.0),)
