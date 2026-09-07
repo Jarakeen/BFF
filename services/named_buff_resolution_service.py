@@ -32,6 +32,23 @@ class NamedBuffContribution:
     source_kind: str = "other"
 
 
+@dataclass(frozen=True)
+class NamedBuffSuppression:
+    """Auditable explanation for one reviewed contribution that did not stack."""
+
+    stacking_key: str
+    objective_key: str
+    suppressed_source: str
+    retained_source: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class NamedBuffResolution:
+    selected: tuple[NamedBuffEffect, ...]
+    suppressed: tuple[NamedBuffSuppression, ...]
+
+
 class NamedBuffResolutionService:
     """Resolve reviewed named buffs across heterogeneous ESO sources.
 
@@ -47,14 +64,14 @@ class NamedBuffResolutionService:
         return "_".join(str(value or "").strip().casefold().replace("-", " ").split())
 
     @classmethod
-    def resolve(
+    def explain(
         cls,
         effects: tuple[TNamedBuffEffect, ...],
         *,
         objective_key: str | None = None,
-    ) -> tuple[TNamedBuffEffect, ...]:
+    ) -> NamedBuffResolution:
         objective = str(objective_key or "").strip()
-        selected: dict[tuple[str, str], TNamedBuffEffect] = {}
+        grouped: dict[tuple[str, str], list[TNamedBuffEffect]] = {}
 
         for effect in effects:
             effect_objective = str(effect.objective_key or "").strip()
@@ -63,18 +80,46 @@ class NamedBuffResolutionService:
             buff_key = cls.canonical_key(effect.stacking_key)
             if not buff_key or not effect_objective:
                 continue
+            grouped.setdefault((buff_key, effect_objective), []).append(effect)
 
-            identity = (buff_key, effect_objective)
-            existing = selected.get(identity)
-            if existing is None or float(effect.projected_delta) > float(existing.projected_delta):
-                selected[identity] = effect
-            elif (
-                float(effect.projected_delta) == float(existing.projected_delta)
-                and str(effect.source) < str(existing.source)
-            ):
-                selected[identity] = effect
+        selected: list[TNamedBuffEffect] = []
+        suppressed: list[NamedBuffSuppression] = []
+        for identity in sorted(grouped):
+            rows = grouped[identity]
+            retained = min(
+                rows,
+                key=lambda effect: (-float(effect.projected_delta), str(effect.source)),
+            )
+            selected.append(retained)
+            for effect in rows:
+                if effect is retained:
+                    continue
+                suppressed.append(
+                    NamedBuffSuppression(
+                        stacking_key=identity[0],
+                        objective_key=identity[1],
+                        suppressed_source=str(effect.source),
+                        retained_source=str(retained.source),
+                        reason=(
+                            f"{identity[0].replace('_', ' ')} does not stack with another "
+                            "copy of the same named buff"
+                        ),
+                    )
+                )
 
-        return tuple(selected[key] for key in sorted(selected))
+        return NamedBuffResolution(
+            selected=tuple(selected),
+            suppressed=tuple(suppressed),
+        )
+
+    @classmethod
+    def resolve(
+        cls,
+        effects: tuple[TNamedBuffEffect, ...],
+        *,
+        objective_key: str | None = None,
+    ) -> tuple[TNamedBuffEffect, ...]:
+        return tuple(cls.explain(effects, objective_key=objective_key).selected)
 
     @classmethod
     def score(
