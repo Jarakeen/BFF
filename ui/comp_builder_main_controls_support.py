@@ -59,6 +59,30 @@ def _hide_strategy_action(page) -> None:
             label.hide()
 
 
+def _move_plan_controls_to_header(page) -> None:
+    """Put plan identity/style beside Trial and Difficulty to reclaim build space."""
+    plan_name = getattr(page, "plan_name_input", None)
+    style_combo = getattr(page, "comp_composition_style_combo", None)
+
+    for label in page.findChildren(QLabel):
+        text = label.text().strip().upper()
+        if text in {"PLAN NAME", "COMPOSITION STYLE"}:
+            label.hide()
+        if label.property("compCompositionStyleHelp"):
+            label.hide()
+
+    if plan_name is not None:
+        plan_name.setMinimumWidth(210)
+        page.header.add_context_widget(page._context_field("PLAN NAME", plan_name))
+
+    if style_combo is not None:
+        style_combo.setMinimumWidth(180)
+        help_label = getattr(page, "comp_composition_style_help", None)
+        if help_label is not None and help_label.text().strip():
+            style_combo.setToolTip(help_label.text().strip())
+        page.header.add_context_widget(page._context_field("PLAN STYLE", style_combo))
+
+
 def _install_main_controls(page) -> None:
     actions = _actions_card(page)
     if actions is None:
@@ -66,9 +90,10 @@ def _install_main_controls(page) -> None:
 
     _hide_update_context(page)
     _hide_strategy_action(page)
+    _move_plan_controls_to_header(page)
 
-    # The right-side Actions card is the single control surface for Comp Maker.
-    # Re-home working buttons rather than duplicating callbacks or state.
+    # The right-side Actions card is the compact execution surface. Re-home the
+    # working buttons rather than duplicating callbacks or state.
     generate = _detach_widget(getattr(page, "apply_all_comp_candidates_button", None))
     apply_chair = _detach_widget(getattr(page, "apply_comp_candidate_button", None))
     recommended = _detach_widget(getattr(page, "recommended_button", None))
@@ -77,22 +102,22 @@ def _install_main_controls(page) -> None:
     apply_logs = _detach_widget(getattr(page, "apply_esologs_button", None))
 
     if generate is not None:
-        generate.setText("Fill from Roster")
+        generate.setText("↵ Fill from Roster")
         generate.setProperty("compPrimaryGenerate", True)
         generate.setToolTip(
             "Fill every currently open raid chair with the best eligible saved roster build "
             "while preserving existing assignments and required provider coverage."
         )
     if apply_chair is not None:
-        # The selected matrix row is the destination. Candidate ranking on the
-        # right supplies the source build, so use assignment language rather than
-        # the old implementation-centric "apply candidate" wording.
-        apply_chair.setText("Assign Build to This Player")
+        apply_chair.setText("↰ Assign Build to Player")
         apply_chair.setProperty("compAssignBuild", True)
+        apply_chair.setToolTip(
+            "Assign the selected candidate build to the highlighted player/chair."
+        )
 
-    # Keep the existing plan-name, style and roster/save/load controls in the card.
-    # Insert the ordinary Comp Maker workflow immediately after the style help.
-    insert_at = min(3, actions.body_layout.count())
+    # With plan identity and style moved to the header, the remaining controls can
+    # begin at the top of the card instead of leaving dead form rows above them.
+    insert_at = 0
 
     primary = tuple(widget for widget in (generate, apply_chair) if widget is not None)
     if primary:
@@ -107,6 +132,9 @@ def _install_main_controls(page) -> None:
     logs = tuple(widget for widget in (refresh_logs, apply_logs) if widget is not None)
     if logs:
         actions.body_layout.insertLayout(insert_at, _row(*logs))
+
+    actions.set_body_margins(8, 5, 8, 6)
+    actions.set_body_spacing(4)
 
     # Old header hosts become empty after their buttons move; hide them so the comp
     # card remains focused on the 12-chair overview.
