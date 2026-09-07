@@ -106,6 +106,30 @@ class _ReplayService:
         return resolve
 
 
+class _ShortfallReplayService(_ReplayService):
+    def replay(self, *, build, plan, resource, restoration_resolver):
+        signature = tuple(
+            action.time_seconds
+            for action in plan.actions
+            if action.kind is RotationActionKind.HEAVY_ATTACK
+        )
+        self.replays.append(signature)
+        timeline = SimpleNamespace(
+            resource=resource,
+            starting_amount=2500,
+            ending_amount=0,
+            events=(),
+            total_shortfall=500,
+        )
+        projection = SimpleNamespace(run=SimpleNamespace(timeline=timeline))
+        return SimpleNamespace(
+            initial_projection=projection,
+            final_projection=projection,
+            restoration_events=(),
+            steps=(),
+        )
+
+
 def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None:
     replay = _ReplayService()
     service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
@@ -137,6 +161,7 @@ def test_stabilizer_regenerates_until_full_schedule_state_is_unchanged() -> None
 
     assert result.converged is True
     assert result.termination_reason == "stable_fixed_point"
+    assert result.tracked_hard_obligations_satisfied is True
     assert [item.heavy_signature for item in result.iterations] == [
         ((2.0, 0, "front", "Heavy Attack"), (10.0, 0, "front", "Heavy Attack")),
         ((2.0, 0, "front", "Heavy Attack"),),
@@ -203,10 +228,58 @@ def test_stabilizer_rechecks_hard_obligation_state_before_converging() -> None:
     )
 
     assert result.converged is True
+    assert result.termination_reason == "stable_fixed_point"
+    assert result.tracked_hard_obligations_satisfied is True
     assert len(result.iterations) == 3
     assert result.iterations[0].hard_obligation_state == ("support_assignment_missing",)
     assert result.iterations[1].hard_obligation_state == ()
     assert result.iterations[2].hard_obligation_state == ()
+
+
+def test_stabilizer_marks_stable_unresolved_obligation_as_no_legal_improvement() -> None:
+    replay = _ReplayService()
+    service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+
+    result = service.stabilize(
+        build=build,
+        generate=lambda _pressure_resolver: _plan(2.0),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda heavy: None,
+        hard_obligation_state_resolver=lambda _plan, _replay: (
+            "mechanic|xalvakka_healing_prep|budding_seeds",
+        ),
+        max_iterations=4,
+    )
+
+    assert result.converged is True
+    assert result.termination_reason == "stable_no_legal_improvement"
+    assert result.tracked_hard_obligations_satisfied is False
+    assert len(result.iterations) == 2
+
+
+def test_stabilizer_marks_stable_resource_shortfall_as_no_legal_improvement() -> None:
+    replay = _ShortfallReplayService()
+    service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+
+    result = service.stabilize(
+        build=build,
+        generate=lambda _pressure_resolver: _plan(2.0),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda heavy: None,
+        max_iterations=4,
+    )
+
+    assert result.converged is True
+    assert result.termination_reason == "stable_no_legal_improvement"
+    assert result.tracked_hard_obligations_satisfied is False
+    assert result.iterations[-1].total_shortfall == 500
+    assert len(result.iterations) == 2
 
 
 def test_stabilizer_stops_at_cap_when_heavy_schedule_oscillates() -> None:
