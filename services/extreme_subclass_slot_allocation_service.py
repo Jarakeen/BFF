@@ -32,14 +32,19 @@ class ExtremeSubclassSlotAllocationService:
     """Optimize reviewed subclass standing effects across one six-slot active bar.
 
     The service solves only effects whose slot-count mechanics are already
-    reviewed in BFF. It deliberately produces a lower bound, not a final class
-    route score, because unreviewed skills/passives on the same lines may add
+    reviewed in BFF. It deliberately produces lower bounds, not final class
+    route scores, because unreviewed skills/passives on the same lines may add
     further value.
 
     Pressure Points and Expert Mage are class-scoped even though the passives
     live in one class skill line: once the passive's line is equipped, abilities
     from any equipped line of that same class can satisfy the slot count.
     Advanced Species, Flourish, and Frozen Armor are line-scoped.
+
+    ``reviewed_allocations`` exposes every numerically reviewed distribution so
+    callers that also understand concrete skill standing effects can jointly
+    optimize passive slot-count value and the actual skills placed in those
+    slots. ``best_allocation`` remains the passive-only compatibility helper.
     """
 
     ACTIVE_BAR_SLOTS = 6
@@ -47,20 +52,27 @@ class ExtremeSubclassSlotAllocationService:
     SORCERER_EXPERT_MAGE_POWER_PER_SLOT = 108.0
 
     @classmethod
-    def best_allocation(
+    def reviewed_allocations(
         cls,
         equipped_skill_lines: tuple[str, ...],
         objective_key: str,
         *,
         reference_value: float | None = None,
-    ) -> ExtremeSubclassSlotAllocationResult | None:
-        lines = tuple(sorted({str(line or "").strip().casefold() for line in equipped_skill_lines if str(line or "").strip()}))
+    ) -> tuple[ExtremeSubclassSlotAllocationResult, ...]:
+        lines = tuple(
+            sorted(
+                {
+                    str(line or "").strip().casefold()
+                    for line in equipped_skill_lines
+                    if str(line or "").strip()
+                }
+            )
+        )
         objective = str(objective_key or "").strip()
         if not lines or not objective:
-            return None
+            return ()
 
-        best: ExtremeSubclassSlotAllocationResult | None = None
-        # Enumerate every non-negative three-line distribution summing to six.
+        rows: list[ExtremeSubclassSlotAllocationResult] = []
         for counts in product(range(cls.ACTIVE_BAR_SLOTS + 1), repeat=len(lines)):
             if sum(counts) != cls.ACTIVE_BAR_SLOTS:
                 continue
@@ -73,19 +85,37 @@ class ExtremeSubclassSlotAllocationService:
             )
             if projected is None:
                 continue
-            row = ExtremeSubclassSlotAllocationResult(
-                objective_key=objective,
-                equipped_skill_lines=lines,
-                slot_counts=tuple((line, allocation[line]) for line in lines),
-                projected_delta=projected,
-                reviewed_sources=sources,
+            rows.append(
+                ExtremeSubclassSlotAllocationResult(
+                    objective_key=objective,
+                    equipped_skill_lines=lines,
+                    slot_counts=tuple((line, allocation[line]) for line in lines),
+                    projected_delta=projected,
+                    reviewed_sources=sources,
+                )
             )
-            if best is None or row.projected_delta > best.projected_delta + 1e-9 or (
-                abs(row.projected_delta - best.projected_delta) <= 1e-9
-                and row.slot_counts < best.slot_counts
-            ):
-                best = row
-        return best
+
+        return tuple(
+            sorted(
+                rows,
+                key=lambda row: (-row.projected_delta, row.slot_counts),
+            )
+        )
+
+    @classmethod
+    def best_allocation(
+        cls,
+        equipped_skill_lines: tuple[str, ...],
+        objective_key: str,
+        *,
+        reference_value: float | None = None,
+    ) -> ExtremeSubclassSlotAllocationResult | None:
+        rows = cls.reviewed_allocations(
+            equipped_skill_lines,
+            objective_key,
+            reference_value=reference_value,
+        )
+        return rows[0] if rows else None
 
     @classmethod
     def _score_allocation(
@@ -136,7 +166,11 @@ class ExtremeSubclassSlotAllocationService:
                 sources.append("Flourish (Animal Companions represented)")
 
         winter_slots = allocation.get("winters_embrace", 0)
-        if "winters_embrace" in lines and objective_key in {"physical_resistance", "spell_resistance"} and winter_slots:
+        if (
+            "winters_embrace" in lines
+            and objective_key in {"physical_resistance", "spell_resistance"}
+            and winter_slots
+        ):
             flat += WARDEN_FROZEN_ARMOR_RESISTANCE_PER_SLOTTED * winter_slots
             sources.append(f"Frozen Armor ({winter_slots} Winter's Embrace slots)")
 
