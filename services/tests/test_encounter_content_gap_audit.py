@@ -153,3 +153,69 @@ def test_content_gap_audit_reports_source_declared_bosses_missing_downstream(tmp
     assert audit.source_declared_encounters == ("boss_one", "boss_two")
     assert audit.source_declared_missing_db == ("boss_two",)
     assert audit.source_declared_missing_packets == ("boss_two",)
+
+
+def test_source_rich_canonical_gap_is_reported_without_inventing_missing_rows(tmp_path):
+    connection = _db()
+    try:
+        connection.execute(
+            """
+            INSERT INTO encounter_ability(
+                encounter_id, name, description, source_section
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (
+                "boss_one",
+                "Aerial Onslaught",
+                "Boss becomes untargetable while source mechanics continue.",
+                "Abilities",
+            ),
+        )
+        connection.execute(
+            """
+            INSERT INTO encounter_section(encounter_id, section_name, payload_json)
+            VALUES (?, ?, ?)
+            """,
+            ("boss_one", "abilities", '{"source_backed":true}'),
+        )
+        connection.commit()
+
+        audit = audit_content_encounters(
+            connection,
+            content_id="trial_one",
+            packet_dir=tmp_path,
+        )
+    finally:
+        connection.close()
+
+    assert len(audit.source_rich_canonical_gaps) == 1
+    row = audit.source_rich_canonical_gaps[0]
+    assert row.encounter_id == "boss_one"
+    assert row.is_source_rich is True
+    assert row.ability_count == 1
+    assert row.section_count == 1
+    assert row.source_signal_count == 2
+    assert row.missing_canonical_surfaces == (
+        "encounter_health",
+        "encounter_mechanic",
+        "encounter_phase",
+        "encounter_strategy",
+        "encounter_canonical_fact",
+    )
+
+
+def test_empty_encounter_is_not_mislabeled_as_source_rich_canonical_gap(tmp_path):
+    connection = _db()
+    try:
+        audit = audit_content_encounters(
+            connection,
+            content_id="trial_one",
+            packet_dir=tmp_path,
+        )
+    finally:
+        connection.close()
+
+    row = audit.database_encounters[0]
+    assert row.is_source_rich is False
+    assert row.missing_canonical_surfaces
+    assert audit.source_rich_canonical_gaps == ()
