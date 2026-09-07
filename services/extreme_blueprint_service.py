@@ -7,6 +7,7 @@ from pathlib import Path
 from engine.config import get_data_dir
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.gear_set_effect_service import GearSetEffectService
+from minmax.passive_math import medium_armor_weapon_spell_damage_percent
 from models.build_model import ARMOR_SLOTS, GearSlot, PlayerBuild
 from services.extreme_optimization_service import (
     ExtremeObjective,
@@ -39,6 +40,11 @@ _SORCERER_SPELL_DAMAGE_BAR = (
     "Summon Volatile Familiar",
     "Mages' Wrath",
     "Power Overload",
+)
+_MEDIUM_ARMOR_STATIC_PASSIVES = (
+    "Wind Walker",
+    "Agility",
+    "Dexterity",
 )
 
 
@@ -88,11 +94,7 @@ class ExtremeBlueprintService:
     ) -> ExtremeBlueprintResult:
         objective = self.extreme.objective(objective_key)
         active_bar = "back" if str(active_bar or "front").casefold() == "back" else "front"
-        progression = CharacterProgression(
-            attributes=AttributeAllocation(),
-            passive_ranks={},
-            passive_cp_points={},
-        )
+        progression = self._resting_progression(objective)
 
         base = self._blank_build(objective)
         base, class_label, class_candidates = self._apply_resting_profile(
@@ -169,8 +171,8 @@ class ExtremeBlueprintService:
             "Cast-required buffs, group buffs, target debuffs, proc stacks, potion uptime, and temporary combat states are excluded.",
             "Static 5-piece set bonuses are evaluated only when the active-bar equipment actually reaches five pieces.",
             (
-                "Spell Damage uses Sorcerer because Expert Mage grants +108 Weapon/Spell Damage per Sorcerer ability slotted; "
-                "the six-slot active bar is filled with Sorcerer abilities and dual swords receive their standing Twin Blade and Blunt bonus."
+                "Spell Damage uses Sorcerer because Expert Mage grants +108 Weapon/Spell Damage per Sorcerer ability slotted. "
+                "The active bar is six Sorcerer abilities, armor is Medium for standing Agility, and dual swords receive Twin Blade and Blunt."
                 if objective.key == "spell_damage"
                 else "Class remains unresolved for this objective until an objective-specific resting class advantage is modeled."
             ),
@@ -187,6 +189,29 @@ class ExtremeBlueprintService:
             steps=tuple(accepted),
             unresolved=tuple(dict.fromkeys(x for x in unresolved if x)),
             notes=notes,
+        )
+
+    def _resting_progression(self, objective: ExtremeObjective) -> CharacterProgression:
+        if objective.key != "spell_damage":
+            return CharacterProgression(
+                attributes=AttributeAllocation(),
+                passive_ranks={},
+                passive_cp_points={},
+            )
+
+        passive_ranks: dict[str, int] = {}
+        repository = self.extreme.context_factory.skill_line_repository
+        if repository is not None:
+            for passive_name in _MEDIUM_ARMOR_STATIC_PASSIVES:
+                maximum = repository.passive_max_rank(passive_name)
+                if maximum is not None:
+                    passive_ranks[passive_name] = maximum
+
+        return CharacterProgression(
+            attributes=AttributeAllocation(),
+            owned_skill_lines=("Medium Armor",),
+            passive_ranks=passive_ranks,
+            passive_cp_points={},
         )
 
     def _apply_resting_profile(
@@ -209,9 +234,9 @@ class ExtremeBlueprintService:
         else:
             candidate.FrontBarSkills = skills
 
-        # A two-sword bar has more static Spell Damage than the placeholder
-        # staff before temporary buffs are considered. Explicit offhands also
-        # allow the second 5-piece package to be counted legally on the bar.
+        for entry in candidate.Armor.values():
+            entry["Weight"] = "Medium"
+
         main = GearSlot(
             Set="Blueprint Placeholder",
             Quality="Gold",
@@ -262,13 +287,20 @@ class ExtremeBlueprintService:
             return 0.0
         skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
         slotted = sum(1 for skill in skills[:6] if str(skill or "").strip())
-        bonus = _SORCERER_EXPERT_MAGE_PER_SLOT * slotted
+        flat_bonus = _SORCERER_EXPERT_MAGE_PER_SLOT * slotted
 
         main, offhand = build.active_weapon_slots(active_bar)
         for slot in (main, offhand):
             if str(slot.WeaponType or "").strip().casefold() == "sword":
-                bonus += _DUAL_WIELD_SWORD_DAMAGE
-        return bonus
+                flat_bonus += _DUAL_WIELD_SWORD_DAMAGE
+
+        medium_count = sum(
+            1
+            for entry in build.Armor.values()
+            if str(entry.get("Weight", "") or "").strip().casefold() == "medium"
+        )
+        agility_percent = medium_armor_weapon_spell_damage_percent(medium_count)
+        return flat_bonus * (1.0 + agility_percent)
 
     def _blank_build(self, objective: ExtremeObjective) -> PlayerBuild:
         build = PlayerBuild(
@@ -425,8 +457,6 @@ class ExtremeBlueprintService:
                 for field_name in ("Necklace", "Ring1", "Ring2"):
                     getattr(candidate, field_name).Set = second
 
-                # Three jewelry pieces plus both active-bar one-handed weapons
-                # form the second legal five-piece package.
                 if active_bar == "back":
                     candidate.BackBarWeapon.Set = second
                     candidate.BackBarOffHand.Set = second
