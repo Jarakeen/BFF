@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from minmax.healer_heavy_attack_build_discovery import (
     HeavyAttackBuildIncentiveKind,
@@ -10,6 +10,7 @@ from minmax.healer_wait_decision_provider import (
     HealerHeavyAttackCandidate,
     HealerWaitDecisionProvider,
 )
+from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityEntry, AbilityPriorityList
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
 from minmax.rotation_plan import RotationActionKind, RotationPlan
@@ -19,6 +20,14 @@ from minmax.runtime_healer_wait_decision_provider import (
 )
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_recovery_heavy_replay_service import (
+    RecoveryReserveAssessmentResolver,
+    VerifiedRecoveryHeavyRestorationResolver,
+)
+from services.rotation_recovery_heavy_stabilization_service import (
+    RotationRecoveryHeavyStabilizationResult,
+    RotationRecoveryHeavyStabilizationService,
+)
 from services.rotation_ultimate_service import (
     RotationUltimateProjection,
     RotationUltimateService,
@@ -46,6 +55,13 @@ class RotationGenerationRequest:
     auto_required_heavy_attacks: bool = True
     required_heavy_channel_seconds: float = 1.8
     recovery_pressure_resolver: RecoveryHeavyPressureResolver | None = None
+    stabilize_recovery_heavies: bool = False
+    recovery_stabilization_resource: ResourceType = ResourceType.MAGICKA
+    recovery_maximum_amount: int | None = None
+    recovery_trigger_fraction: float | None = None
+    recovery_restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None
+    recovery_reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None
+    recovery_stabilization_max_iterations: int = 6
 
 
 @dataclass(frozen=True)
@@ -55,6 +71,7 @@ class RotationGenerationResult:
     plan: RotationPlan
     duration_evidence: RotationDurationEvidence
     ultimate_projection: RotationUltimateProjection | None = None
+    recovery_stabilization: RotationRecoveryHeavyStabilizationResult | None = None
 
 
 class RotationGenerationSupport:
@@ -67,10 +84,15 @@ class RotationGenerationSupport:
     WAITs, and automatically discovers required-effect healer heavy incentives from
     saved-build state when enabled. When explicit recovery-pressure evidence is
     supplied, discovered recovery-value incentives may use the same safe channel
-    reservation path. It then optionally projects one explicitly selected slot-6
-    ultimate through the shared Ultimate resource model. Potion cadence, execute
-    rules, iterative sustain replay, and dynamic bar timing remain later Phase 13
-    work.
+    reservation path.
+
+    Recovery-heavy stabilization is opt-in and requires caller-verified restoration
+    evidence plus an explicit resource maximum and recovery threshold. When enabled,
+    generation iterates through the shared sustain replay service until the heavy
+    schedule stabilizes or the configured hard iteration cap is reached. It then
+    optionally projects one explicitly selected slot-6 ultimate through the shared
+    Ultimate resource model. Potion cadence, execute rules, and dynamic bar timing
+    remain later Phase 13 work.
     """
 
     def __init__(
@@ -79,11 +101,15 @@ class RotationGenerationSupport:
         duration_refinement: RotationDurationRefinementService | None = None,
         duration_evidence: RotationDurationEvidenceSupport | None = None,
         ultimate_service: RotationUltimateService | None = None,
+        recovery_stabilization: RotationRecoveryHeavyStabilizationService | None = None,
     ) -> None:
         self.planner = planner or SemiStaticRotationPlanner()
         self.duration_refinement = duration_refinement or RotationDurationRefinementService()
         self.duration_evidence = duration_evidence or RotationDurationEvidenceSupport()
         self.ultimate_service = ultimate_service or RotationUltimateService()
+        self.recovery_stabilization = (
+            recovery_stabilization or RotationRecoveryHeavyStabilizationService()
+        )
 
     def generate(self, *, build, request: RotationGenerationRequest) -> RotationPlan:
         """Compatibility entry point returning only the final generated plan."""
@@ -96,6 +122,71 @@ class RotationGenerationSupport:
         request: RotationGenerationRequest,
     ) -> RotationGenerationResult:
         """Return the final plan together with generation evidence."""
+        if not request.stabilize_recovery_heavies:
+            return self._generate_once(build=build, request=request)
+        return self._generate_stabilized(build=build, request=request)
+
+    def _generate_stabilized(
+        self,
+        *,
+        build,
+        request: RotationGenerationRequest,
+    ) -> RotationGenerationResult:
+        maximum = request.recovery_maximum_amount
+        trigger = request.recovery_trigger_fraction
+        restore = request.recovery_restoration_resolver
+        if maximum is None or int(maximum) <= 0:
+            raise ValueError(
+                "recovery-heavy stabilization requires a positive recovery_maximum_amount"
+            )
+        if trigger is None or not 0 <= float(trigger) <= 1:
+            raise ValueError(
+                "recovery-heavy stabilization requires recovery_trigger_fraction between 0 and 1"
+            )
+        if restore is None:
+            raise ValueError(
+                "recovery-heavy stabilization requires a verified recovery_restoration_resolver"
+            )
+
+        generated_results: list[RotationGenerationResult] = []
+
+        def generate(pressure_resolver: RecoveryHeavyPressureResolver | None) -> RotationPlan:
+            iteration_request = replace(
+                request,
+                stabilize_recovery_heavies=False,
+                recovery_pressure_resolver=pressure_resolver,
+            )
+            result = self._generate_once(build=build, request=iteration_request)
+            generated_results.append(result)
+            return result.plan
+
+        stabilization = self.recovery_stabilization.stabilize(
+            build=build,
+            generate=generate,
+            resource=request.recovery_stabilization_resource,
+            maximum_amount=int(maximum),
+            trigger_fraction=float(trigger),
+            restoration_resolver=restore,
+            reserve_assessment_resolver=request.recovery_reserve_assessment_resolver,
+            max_iterations=int(request.recovery_stabilization_max_iterations),
+        )
+        if not generated_results:
+            raise RuntimeError("recovery-heavy stabilization produced no generation pass")
+
+        final_generated = generated_results[-1]
+        return RotationGenerationResult(
+            plan=stabilization.plan,
+            duration_evidence=final_generated.duration_evidence,
+            ultimate_projection=final_generated.ultimate_projection,
+            recovery_stabilization=stabilization,
+        )
+
+    def _generate_once(
+        self,
+        *,
+        build,
+        request: RotationGenerationRequest,
+    ) -> RotationGenerationResult:
         definition = self.build_definition(build=build, request=request)
         priority_list = self._priority_list(build=build, request=request)
         wait_decision = self._wait_decision(build=build, request=request)
