@@ -34,7 +34,7 @@ class _FakeBaseRanker:
         return tuple(
             RotationCandidateRankingResult(
                 candidate_id=candidate_id,
-                scorecard=by_id[candidate_id].scorecard,
+                scorecard=by_id.get(candidate_id, _input(candidate_id)).scorecard,
                 tier=tier,
                 rank=index + 1,
                 reasons=(f"base {candidate_id}",),
