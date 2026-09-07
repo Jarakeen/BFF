@@ -78,11 +78,11 @@ class ExtremeObjectiveCoverage:
 class ExtremeObjectiveCoverageService:
     """Describe what the current Extreme engine can honestly claim.
 
-    ``source_universe_reviewed=False`` is deliberate for the Phase 13.2 seed.
-    The source-family list is a conservative audit surface, not a claim that
-    every listed family contributes to every ESO objective. A later review may
-    mark a family ``NOT_APPLICABLE`` for a specific objective once that absence
-    itself is established.
+    Phase 13.2 now inventories the complete canonical player-skill universe.
+    That is deliberately different from claiming every passive/active mechanic
+    is numerically solved.  Each skill family remains ``PARTIAL`` until every
+    relevant static and contextual mechanic in that family is losslessly mapped
+    or explicitly proven irrelevant to the objective.
     """
 
     REVIEWED_OBJECTIVES = (
@@ -98,10 +98,17 @@ class ExtremeObjectiveCoverageService:
     )
 
     SOURCE_FAMILIES = (
-        "class_passives",
-        "slotted_skills",
+        "active_skills",
+        "class_skill_passives",
+        "weapon_skill_passives",
+        "armor_skill_passives",
+        "guild_skill_passives",
+        "alliance_war_passives",
+        "world_skill_passives",
+        "racial_skill_passives",
+        "craft_utility_passives",
+        "armor_base_values_traits",
         "gear_sets",
-        "armor_weight_passives",
         "race",
         "mundus",
         "champion_points",
@@ -113,21 +120,49 @@ class ExtremeObjectiveCoverageService:
     )
 
     _PHASE13_2_STATUS = {
-        "class_passives": (
-            ExtremeSourceCoverageStatus.REVIEWED,
-            "Reviewed class/subclass passive formulas are represented for the current objective matrix.",
+        "active_skills": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical player active-skill families are now in the route-aware candidate universe, but reviewed standing/activated effect projection is not yet exhaustive for every legal active skill.",
         ),
-        "slotted_skills": (
-            ExtremeSourceCoverageStatus.REVIEWED,
-            "Reviewed standing slotted-skill effects and front/back/either-bar scope are represented.",
+        "class_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical class passives are inventoried; reviewed formulas exist for a subset while remaining conditional/unresolved mechanics stay explicit.",
+        ),
+        "weapon_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical weapon passives are inventoried, but equipment/bar/attack-type conditions are not yet exhaustively projected for every passive.",
+        ),
+        "armor_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical armor passives are inventoried and reviewed Light/Medium/Heavy piece-count formulas are partially projected; the full passive set is not yet exhaustive.",
+        ),
+        "guild_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical guild passives are inventoried; reviewed formulas exist for some standing passives while remaining guild mechanics require mapping/context.",
+        ),
+        "alliance_war_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical Assault/Support passives are inventoried; reviewed standing formulas exist for some effects but the family is not yet exhaustive.",
+        ),
+        "world_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical Soul Magic/Vampire/Werewolf and other player world passives are inventoried; transformation/runtime conditions remain explicit where needed.",
+        ),
+        "racial_skill_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "All canonical racial passive skill records are inventoried; simple static effects may be projected while conditional/non-structured racial mechanics remain unresolved/contextual.",
+        ),
+        "craft_utility_passives": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Crafting/utility player passives are retained in the canonical skill universe and classified as known noncombat unless a reviewed combat-relevant mechanic proves otherwise; exhaustive relevance review is not complete.",
+        ),
+        "armor_base_values_traits": (
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Deterministic armor base values and several modeled traits exist in the shared build stack, but Extreme has not yet exhaustively searched weight/quality/slot/trait combinations for every objective.",
         ),
         "gear_sets": (
             ExtremeSourceCoverageStatus.NOT_MODELED,
             "Extreme candidate generation does not yet exhaustively enumerate gear-set contributions.",
-        ),
-        "armor_weight_passives": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Armor-weight/passive combinations are not yet exhaustively searched by the Extreme engine.",
         ),
         "race": (
             ExtremeSourceCoverageStatus.PARTIAL,
