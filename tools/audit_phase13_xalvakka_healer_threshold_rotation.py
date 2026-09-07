@@ -9,6 +9,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.healer_ability_priority import HealerDemandTagPriorities, HealerTagPriority
 from minmax.healer_rotation_policy import HealerRotationTag
@@ -70,6 +71,12 @@ def main() -> int:
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--lead-seconds", type=float, default=3.0)
     parser.add_argument("--window-seconds", type=float, default=2.0)
+    parser.add_argument(
+        "--budding-seeds-early-refresh",
+        type=float,
+        default=3.0,
+        help="audit-only extra early-refresh permission for Budding Seeds during the projected Phase 2 prep demand",
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
@@ -78,6 +85,8 @@ def main() -> int:
         raise ValueError("--raid-dps must be positive")
     if float(args.duration) <= 0:
         raise ValueError("--duration must be positive")
+    if float(args.budding_seeds_early_refresh) <= 0:
+        raise ValueError("--budding-seeds-early-refresh must be positive")
 
     database_path = Path(args.database)
     build = _load_saved_build(
@@ -142,6 +151,14 @@ def main() -> int:
         seed_plan,
         priorities=priority_projection.priority_list,
         demands=(demand,),
+        demand_refresh_leads=(
+            DemandRefreshLead(
+                demand_name=_DEMAND_NAME,
+                bar="front",
+                skill_name="Budding Seeds",
+                lead_seconds=float(args.budding_seeds_early_refresh),
+            ),
+        ),
     ).plan
 
     base_metrics = _plan_metrics(
@@ -176,7 +193,10 @@ def main() -> int:
         f"({float(args.lead_seconds):g}s lead)"
     )
     print(
-        "Boundary:        encounter threshold and boss health are canonical; clock time is conditional on the supplied DPS; healer policy is audit-only"
+        f"Anticipation:    Budding Seeds may refresh up to {float(args.budding_seeds_early_refresh):g}s early during this demand only"
+    )
+    print(
+        "Boundary:        encounter threshold and boss health are canonical; clock time is conditional on the supplied DPS; healer priority and anticipation are audit-only"
     )
     print()
 
@@ -215,8 +235,9 @@ def main() -> int:
 
     print()
     print(
-        "Interpretation: any schedule difference is caused by an explicit healer-priority override "
-        "during a window whose placement comes from Xalvakka's reviewed 70% threshold plus the supplied raid-DPS trajectory."
+        "Interpretation: any schedule difference is caused by explicit healer priority plus "
+        "explicit demand-specific early-refresh permission during a window whose placement "
+        "comes from Xalvakka's reviewed 70% threshold and the supplied raid-DPS trajectory."
     )
     return 0
 
