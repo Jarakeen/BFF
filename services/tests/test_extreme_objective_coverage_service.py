@@ -46,7 +46,6 @@ def test_current_objectives_acknowledge_reviewed_passive_and_standing_skill_laye
     [
         "gear_sets",
         "armor_weight_passives",
-        "race",
         "champion_points",
         "enchantments",
     ],
@@ -57,6 +56,16 @@ def test_unmodeled_whole_build_sources_block_global_maximum(source_family):
 
     assert sources[source_family].status is ExtremeSourceCoverageStatus.NOT_MODELED
     assert sources[source_family].blocks_global_maximum is True
+
+
+def test_race_structured_projection_is_partial_until_nonstructured_passives_are_exhaustive():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("critical_damage")
+    race = _by_source(coverage)["race"]
+
+    assert race.status is ExtremeSourceCoverageStatus.PARTIAL
+    assert race.blocks_global_maximum is True
+    assert "conditional" in race.note.casefold()
+    assert "non-structured" in race.note.casefold()
 
 
 def test_mundus_base_projection_is_partial_until_multiplier_inputs_are_exhaustive():
