@@ -23,17 +23,24 @@ class RotationRequiredActionReserveDerivation:
     resource: ResourceType
     minimum_amount: int
     action_costs: tuple[tuple[str, int, int], ...]
-    unresolved: tuple[str, ...]
+    blocking_unresolved: tuple[str, ...]
+    context_notes: tuple[str, ...] = ()
+
+    @property
+    def unresolved(self) -> tuple[str, ...]:
+        """Compatibility view of all diagnostic evidence."""
+        return self.blocking_unresolved + self.context_notes
 
     @property
     def resolved(self) -> bool:
-        return not self.unresolved
+        """Whether required action costs are resolved well enough to promote."""
+        return not self.blocking_unresolved
 
     def as_requirement(self) -> RotationResourceReserveRequirement:
-        if self.unresolved:
+        if self.blocking_unresolved:
             raise ValueError(
                 "cannot create resource reserve requirement from unresolved action costs: "
-                + "; ".join(self.unresolved)
+                + "; ".join(self.blocking_unresolved)
             )
         return RotationResourceReserveRequirement(
             demand_name=self.demand_name,
@@ -54,6 +61,11 @@ class RotationRequiredActionReserveService:
     The resulting amount answers only: "what resource is minimally required to
     pay for these explicitly required casts?" It does not claim that amount is a
     sufficient gameplay safety reserve.
+
+    Broad build-context diagnostics remain visible as ``context_notes``. Only
+    action-cost evidence tied to one of the required skills, or a mismatch between
+    the required and resolved cost-event counts, blocks promotion of the derived
+    reserve requirement.
     """
 
     _SYNTHETIC_DURATION_SECONDS = 1.0
@@ -132,12 +144,23 @@ class RotationRequiredActionReserveService:
             counts[key] = counts.get(key, 0) + 1
             display_names.setdefault(key, str(event.source).strip())
 
-        unresolved = list(projection.unresolved)
         required_names = {item.skill_name.casefold(): item.skill_name for item in matching}
+        required_prefixes = tuple(f"{name.casefold()}:" for name in required_names.values())
+        blocking_unresolved: list[str] = []
+        context_notes: list[str] = []
+        for raw in projection.unresolved:
+            value = str(raw or "").strip()
+            if not value:
+                continue
+            if value.casefold().startswith(required_prefixes):
+                blocking_unresolved.append(value)
+            else:
+                context_notes.append(value)
+
         for key, required_count in expected_counts.items():
             observed = counts.get(key, 0)
             if observed != required_count:
-                unresolved.append(
+                blocking_unresolved.append(
                     f"{required_names[key]}: expected {required_count} canonical {resource.value} "
                     f"cost event(s), resolved {observed}"
                 )
@@ -157,7 +180,8 @@ class RotationRequiredActionReserveService:
             resource=resource,
             minimum_amount=minimum_amount,
             action_costs=action_costs,
-            unresolved=self._dedupe(tuple(unresolved)),
+            blocking_unresolved=self._dedupe(tuple(blocking_unresolved)),
+            context_notes=self._dedupe(tuple(context_notes)),
         )
 
     @staticmethod
