@@ -191,11 +191,17 @@ class ExtremeBuildCatalogService:
             },
         }
 
-    def write(self, output_path: str | Path) -> Path:
+    def write(
+        self,
+        output_path: str | Path,
+        *,
+        catalog: dict[str, Any] | None = None,
+    ) -> Path:
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
+        payload = catalog if catalog is not None else self.build()
         output.write_text(
-            json.dumps(self.build(), indent=2, sort_keys=True) + "\n",
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         return output
