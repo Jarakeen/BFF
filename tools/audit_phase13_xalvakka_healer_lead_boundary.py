@@ -275,14 +275,25 @@ def main() -> int:
                 demand_requirements=(requirement,),
                 reserve_requirements=reserve_requirements,
             )
-            if lead is not None and card.eligible and first_eligible_lead is None:
+            if (
+                lead is not None
+                and card.supplied_obligations_satisfied
+                and first_eligible_lead is None
+            ):
                 first_eligible_lead = (lead, candidate.candidate_id)
             ranking_inputs.append(
                 RotationCandidateRankingInput(candidate.candidate_id, card)
             )
 
         ranked = ranking_service.rank(tuple(ranking_inputs))
-        best_eligible = next((item for item in ranked if item.scorecard.eligible), None)
+        best_eligible = next(
+            (
+                item
+                for item in ranked
+                if item.scorecard.supplied_obligations_satisfied
+            ),
+            None,
+        )
 
         print()
         print("-" * 118)
