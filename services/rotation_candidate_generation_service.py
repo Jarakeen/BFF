@@ -157,10 +157,11 @@ class RotationCandidateGenerationService:
 
         Candidate IDs are presentation/provenance labels. Two differently named
         options that produce the same exact refresh-lead policy are still one
-        semantic schedule candidate, so the first supplied option wins.
+        semantic schedule candidate, so the first supplied option wins. The empty
+        lead set is already represented by the baseline and is therefore omitted.
         """
 
-        seen: set[tuple[tuple[str, str, str, float], ...]] = set()
+        seen: set[tuple[tuple[str, str, str, float], ...]] = {()}
         result: list[RotationRefreshLeadCandidateOption] = []
         for option in options:
             leads = cls._canonical_leads(option.refresh_leads)
