@@ -100,3 +100,15 @@ def test_component_layer_buff_is_known_without_polluting_shared_stat_inputs():
     assert context.unresolved_gear_effects == ()
     assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
     assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1000
+
+
+def test_slayer_and_aegis_are_known_component_layer_buffs_without_sheet_stat_pollution():
+    context = _context("Minor Slayer", "Minor Aegis", "Major Slayer", "Major Aegis")
+
+    for name in ("Minor Slayer", "Minor Aegis", "Major Slayer", "Major Aegis"):
+        assert context.combat_state.has_buff(name)
+    assert context.unresolved_gear_effects == ()
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1000
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1000
+    assert context.core_state.derived[StatId.PHYSICAL_RESISTANCE].final_value == 0
+    assert context.core_state.derived[StatId.SPELL_RESISTANCE].final_value == 0
