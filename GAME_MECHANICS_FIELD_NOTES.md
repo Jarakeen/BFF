@@ -334,3 +334,15 @@ In the same Xalvakka reserve work, baseline and encounter-aware rotations had id
 **What it means in actual play:** preparation has two separate questions: "Did I enter the mechanic with enough resource?" and "Did I spend that resource well once the mechanic began?" A rotation can improve the second without fixing the first.
 
 **For BFF:** demand-entry reserve must be checked before demand-window actions are applied. Later schedule improvements can improve the aftermath, but they must never be allowed to retroactively satisfy a pre-mechanic reserve requirement.
+
+---
+
+## 2026-09-07 — Preserving the number of casts does not preserve uptime
+
+In the 60-second Xalvakka healer bar-access audit, the diagnostic rescue kept all five casts of **Winter's Revenge**. Even so, its active coverage changed from **51 seconds (85.00%)** to **50 seconds (83.33%)**. The repaired schedule added one second of total gap and one second of premature overlap.
+
+**Layman's version:** "I cast it five times either way" does not mean the skill covered the fight equally well. Moving one cast can leave a hole before it and waste duration by overlapping the previous cast.
+
+**What it means in actual play:** protecting the cast count is not enough when a mechanic forces a bar swap or rearranges support skills. The same five casts can provide less useful coverage if their spacing gets worse.
+
+**For BFF:** schedule repair must measure the actual active timeline. Required support uptime must be checked as an explicit hard obligation before a rotation can win on better Magicka or another softer benefit.

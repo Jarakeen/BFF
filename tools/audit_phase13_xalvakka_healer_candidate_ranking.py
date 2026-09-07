@@ -27,7 +27,9 @@ from services.rotation_candidate_scorecard_service import (
     RotationCandidateScorecardService,
     RotationDemandActionRequirement,
 )
+from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_runtime_uptime_service import RotationRuntimeUptimeRequirement
 from services.rotation_sustain_service import RotationSustainService
 from tools.audit_phase13_healer_priority_comparison import (
     _BASE_PRIORITIES,
@@ -143,6 +145,15 @@ def main() -> int:
             "Phase 2 prep window; no reserve floor is invented when omitted"
         ),
     )
+    parser.add_argument(
+        "--minimum-winters-revenge-uptime",
+        type=float,
+        default=None,
+        help=(
+            "optional caller-supplied Winter's Revenge runtime uptime floor from 0 to 1; "
+            "no uptime threshold is invented when omitted"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
@@ -151,6 +162,11 @@ def main() -> int:
         raise ValueError("all --raid-dps values must be positive")
     if args.minimum_magicka_reserve is not None and int(args.minimum_magicka_reserve) < 0:
         raise ValueError("--minimum-magicka-reserve cannot be negative")
+    if (
+        args.minimum_winters_revenge_uptime is not None
+        and not 0.0 <= float(args.minimum_winters_revenge_uptime) <= 1.0
+    ):
+        raise ValueError("--minimum-winters-revenge-uptime must be between 0 and 1")
 
     options = _candidate_options(tuple(float(value) for value in args.anticipation_seconds))
     if not options:
@@ -194,6 +210,7 @@ def main() -> int:
     )
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
+    duration_analysis_service = RotationDurationAnalysisService(database_path)
 
     print("=" * 118)
     print(" PHASE 13 XALVAKKA HEALER CANDIDATE FAMILY RANKING")
@@ -215,6 +232,13 @@ def main() -> int:
             "Mechanic-entry reserve: "
             f"{int(args.minimum_magicka_reserve):,} Magicka immediately before the prep window "
             "(caller supplied)"
+        )
+    if args.minimum_winters_revenge_uptime is None:
+        print("Winter's Revenge uptime: not supplied; no runtime floor is assumed")
+    else:
+        print(
+            "Winter's Revenge uptime: "
+            f">= {float(args.minimum_winters_revenge_uptime):.2%} (caller supplied)"
         )
     print(
         "Boundary: candidate leads are explicit audit possibilities. This tool generates and ranks "
@@ -271,6 +295,15 @@ def main() -> int:
                     minimum_amount=int(args.minimum_magicka_reserve),
                 ),
             )
+        uptime_requirements = ()
+        if args.minimum_winters_revenge_uptime is not None:
+            uptime_requirements = (
+                RotationRuntimeUptimeRequirement(
+                    skill_name="Winter's Revenge",
+                    bar="back",
+                    minimum_uptime=float(args.minimum_winters_revenge_uptime),
+                ),
+            )
 
         ranking_inputs = []
         for candidate in all_candidates:
@@ -283,6 +316,11 @@ def main() -> int:
                     resource=ResourceType.MAGICKA,
                 )
             )
+            candidate_duration = (
+                duration_analysis_service.analyze(candidate.plan)
+                if uptime_requirements
+                else None
+            )
             card = scorecard_service.compare(
                 baseline_plan=base_plan,
                 candidate_plan=candidate.plan,
@@ -291,6 +329,8 @@ def main() -> int:
                 demands=(demand,),
                 demand_requirements=(requirement,),
                 reserve_requirements=reserve_requirements,
+                candidate_duration=candidate_duration,
+                runtime_uptime_requirements=uptime_requirements,
             )
             ranking_inputs.append(
                 RotationCandidateRankingInput(candidate.candidate_id, card)
@@ -317,11 +357,23 @@ def main() -> int:
                     f" | entry Mag {reserve.available_before_start:,}/"
                     f"{reserve.requirement.minimum_amount:,}"
                 )
+            uptime_text = ""
+            if card.runtime_uptime_assessments:
+                uptime = card.runtime_uptime_assessments[0]
+                observed = (
+                    "unknown"
+                    if uptime.observed_uptime is None
+                    else f"{uptime.observed_uptime:.2%}"
+                )
+                uptime_text = (
+                    f" | WR uptime {observed}/"
+                    f"{uptime.requirement.minimum_uptime:.2%}"
+                )
             print(
                 f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
-                f"{reserve_text}"
+                f"{reserve_text}{uptime_text}"
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
@@ -339,7 +391,8 @@ def main() -> int:
         "Interpretation: the generator supplies multiple explicit schedule possibilities, then hard "
         "encounter obligations decide eligibility before softer resource consequences. Exact duplicate "
         "realized schedules are collapsed so differently named policies do not masquerade as extra "
-        "choices. Optional reserve remains caller supplied and is checked immediately before demand entry."
+        "choices. Optional reserve and runtime uptime floors remain caller supplied; omitted floors are "
+        "not silently invented."
     )
     return 0
 

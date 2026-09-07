@@ -16,9 +16,15 @@ from minmax.rotation_resource_reserve import (
     assess_rotation_resource_reserves,
 )
 from minmax.support_coverage import SupportCoverage
+from services.rotation_duration_analysis_service import RotationDurationProjection
 from services.rotation_plan_consequence_service import (
     RotationPlanConsequence,
     RotationPlanConsequenceService,
+)
+from services.rotation_runtime_uptime_service import (
+    RotationRuntimeUptimeAssessment,
+    RotationRuntimeUptimeRequirement,
+    assess_rotation_runtime_uptimes,
 )
 from services.rotation_sustain_service import RotationSustainProjection
 
@@ -80,6 +86,7 @@ class RotationCandidateScorecard:
     candidate_specific_schedule_notes: tuple[str, ...] = ()
     reserve_assessments: tuple[RotationResourceReserveAssessment, ...] = ()
     bar_availability_assessment: RotationBarAvailabilityAssessment | None = None
+    runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -106,6 +113,12 @@ class RotationCandidateScorecard:
         return self.bar_availability_assessment.violations
 
     @property
+    def failed_runtime_uptime_assessments(
+        self,
+    ) -> tuple[RotationRuntimeUptimeAssessment, ...]:
+        return tuple(item for item in self.runtime_uptime_assessments if not item.satisfied)
+
+    @property
     def supplied_obligations_satisfied(self) -> bool:
         """Whether all caller-supplied hard obligations are currently satisfied.
 
@@ -118,6 +131,7 @@ class RotationCandidateScorecard:
             and not self.missing_required_effects
             and not self.failed_reserve_assessments
             and not self.bar_availability_violations
+            and not self.failed_runtime_uptime_assessments
             and self.candidate_shortfall == 0
         )
 
@@ -128,7 +142,8 @@ class RotationCandidateScorecardService:
     The scorecard intentionally does not assign weights or choose a winner. Demand
     coverage is based only on exact caller-supplied action requirements. Required
     support effects use the existing static SupportCoverage model and therefore do
-    not claim runtime uptime unless a later layer proves it.
+    not claim runtime uptime. Explicit runtime uptime requirements are assessed only
+    when the caller also supplies canonical duration/recast evidence.
 
     Optional resource-reserve requirements and encounter bar-availability windows
     are caller-supplied hard obligations. This layer never invents how much resource
@@ -161,6 +176,8 @@ class RotationCandidateScorecardService:
         bar_availability_windows: tuple[RotationBarAvailabilityWindow, ...] = (),
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
+        candidate_duration: RotationDurationProjection | None = None,
+        runtime_uptime_requirements: tuple[RotationRuntimeUptimeRequirement, ...] = (),
     ) -> RotationCandidateScorecard:
         demand_by_name: dict[str, RotationDemandWindow] = {}
         for demand in demands:
@@ -218,6 +235,19 @@ class RotationCandidateScorecardService:
                 encounter_requirements.required_effect_names()
             )
 
+        if runtime_uptime_requirements and candidate_duration is None:
+            raise ValueError(
+                "runtime uptime requirements need candidate duration evidence"
+            )
+        uptime_assessments = (
+            assess_rotation_runtime_uptimes(
+                projection=candidate_duration,
+                requirements=runtime_uptime_requirements,
+            )
+            if candidate_duration is not None
+            else ()
+        )
+
         consequence = self.consequence_service.compare(
             baseline_plan=baseline_plan,
             candidate_plan=candidate_plan,
@@ -262,6 +292,7 @@ class RotationCandidateScorecardService:
             candidate_specific_schedule_notes=candidate_specific_notes,
             reserve_assessments=reserve_assessments,
             bar_availability_assessment=bar_assessment,
+            runtime_uptime_assessments=uptime_assessments,
         )
 
     @staticmethod

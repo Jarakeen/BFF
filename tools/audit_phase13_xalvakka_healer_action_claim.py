@@ -28,7 +28,9 @@ from services.rotation_demand_bar_access_service import (
     RotationDemandBarAccessClaim,
     RotationDemandBarAccessService,
 )
+from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
+from services.rotation_runtime_uptime_service import RotationRuntimeUptimeRequirement
 from services.rotation_sustain_service import RotationSustainService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import _load_saved_build
@@ -118,6 +120,15 @@ def main() -> int:
             "no reserve floor is invented when omitted"
         ),
     )
+    parser.add_argument(
+        "--minimum-winters-revenge-uptime",
+        type=float,
+        default=None,
+        help=(
+            "optional caller-supplied Winter's Revenge runtime uptime floor from 0 to 1; "
+            "no uptime threshold is invented when omitted"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
@@ -126,6 +137,11 @@ def main() -> int:
         raise ValueError("all --raid-dps values must be positive")
     if args.minimum_magicka_reserve is not None and int(args.minimum_magicka_reserve) < 0:
         raise ValueError("--minimum-magicka-reserve cannot be negative")
+    if (
+        args.minimum_winters_revenge_uptime is not None
+        and not 0.0 <= float(args.minimum_winters_revenge_uptime) <= 1.0
+    ):
+        raise ValueError("--minimum-winters-revenge-uptime must be between 0 and 1")
 
     database_path = Path(args.database)
     build = _load_saved_build(
@@ -163,6 +179,7 @@ def main() -> int:
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
     bar_access_service = RotationDemandBarAccessService()
+    duration_analysis_service = RotationDurationAnalysisService(database_path)
 
     print("=" * 118)
     print(" PHASE 13 XALVAKKA HEALER MECHANIC / BAR ACCESS AUDIT")
@@ -182,6 +199,13 @@ def main() -> int:
         "Boundary: both are diagnostic encounter policies, not canonical healer strategy. Neither "
         "globally changes Budding Seeds duration or invents extra action time."
     )
+    if args.minimum_winters_revenge_uptime is None:
+        print("Winter's Revenge uptime: not supplied; no runtime floor is assumed")
+    else:
+        print(
+            "Winter's Revenge uptime: "
+            f">= {float(args.minimum_winters_revenge_uptime):.2%} (caller supplied)"
+        )
 
     for raid_dps in args.raid_dps:
         phase_2, demand, _ = _project_plan(
@@ -252,6 +276,27 @@ def main() -> int:
                     minimum_amount=int(args.minimum_magicka_reserve),
                 ),
             )
+        uptime_requirements = ()
+        if args.minimum_winters_revenge_uptime is not None:
+            uptime_requirements = (
+                RotationRuntimeUptimeRequirement(
+                    skill_name="Winter's Revenge",
+                    bar="back",
+                    minimum_uptime=float(args.minimum_winters_revenge_uptime),
+                ),
+            )
+
+        baseline_duration = (
+            duration_analysis_service.analyze(base_plan) if uptime_requirements else None
+        )
+        claim_duration = (
+            duration_analysis_service.analyze(claim_plan) if uptime_requirements else None
+        )
+        bar_access_duration = (
+            duration_analysis_service.analyze(bar_access_plan)
+            if uptime_requirements
+            else None
+        )
 
         baseline_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -261,6 +306,8 @@ def main() -> int:
             demands=(demand,),
             demand_requirements=(requirement,),
             reserve_requirements=reserve_requirements,
+            candidate_duration=baseline_duration,
+            runtime_uptime_requirements=uptime_requirements,
         )
         claim_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -270,6 +317,8 @@ def main() -> int:
             demands=(demand,),
             demand_requirements=(requirement,),
             reserve_requirements=reserve_requirements,
+            candidate_duration=claim_duration,
+            runtime_uptime_requirements=uptime_requirements,
         )
         bar_access_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -279,6 +328,8 @@ def main() -> int:
             demands=(demand,),
             demand_requirements=(requirement,),
             reserve_requirements=reserve_requirements,
+            candidate_duration=bar_access_duration,
+            runtime_uptime_requirements=uptime_requirements,
         )
         ranked = ranking_service.rank(
             (
@@ -317,11 +368,23 @@ def main() -> int:
                     f" | entry Mag {reserve.available_before_start:,}/"
                     f"{reserve.requirement.minimum_amount:,}"
                 )
+            uptime_text = ""
+            if card.runtime_uptime_assessments:
+                uptime = card.runtime_uptime_assessments[0]
+                observed = (
+                    "unknown"
+                    if uptime.observed_uptime is None
+                    else f"{uptime.observed_uptime:.2%}"
+                )
+                uptime_text = (
+                    f" | WR uptime {observed}/"
+                    f"{uptime.requirement.minimum_uptime:.2%}"
+                )
             print(
                 f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
-                f"{reserve_text}"
+                f"{reserve_text}{uptime_text}"
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
@@ -343,7 +406,8 @@ def main() -> int:
         "Interpretation: the mechanic-action claim can only use the required bar when that bar is "
         "already available. The bar-access rescue tests the next boundary: whether existing timeline "
         "slots can be rerouted through the required bar without dropping displaced support work. "
-        "Eligibility still comes from the same hard demand obligation and resource scorecard."
+        "Eligibility still comes from the same hard demand, optional runtime uptime, reserve, and "
+        "resource obligations."
     )
     return 0
 

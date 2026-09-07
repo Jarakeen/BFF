@@ -45,8 +45,9 @@ class RotationCandidateRankingService:
     """Rank candidate rotations with hard obligations before soft consequences.
 
     This is intentionally lexicographic rather than weighted. A candidate that
-    misses an explicit demand action, required static support effect, demand-entry
-    resource reserve, encounter bar-availability rule, or incurs resource shortfall
+    misses an explicit demand action, required static support effect, runtime
+    uptime floor, demand-entry resource reserve, encounter bar-availability rule,
+    or incurs resource shortfall
     cannot outrank one that satisfies those supplied hard obligations merely because
     its softer resource numbers look prettier.
 
@@ -91,6 +92,14 @@ class RotationCandidateRankingService:
         missing_demand = len(scorecard.missing_demand_requirements)
         missing_effects = len(scorecard.missing_required_effects)
         bar_violations = len(scorecard.bar_availability_violations)
+        failed_uptimes = scorecard.failed_runtime_uptime_assessments
+        uptime_failure_count = len(failed_uptimes)
+        uptime_evidence_missing = sum(
+            1 for assessment in failed_uptimes if assessment.observed_uptime is None
+        )
+        uptime_shortfall = sum(
+            assessment.shortfall or 0.0 for assessment in failed_uptimes
+        )
         failed_reserves = scorecard.failed_reserve_assessments
         reserve_failure_count = len(failed_reserves)
         reserve_shortfall = sum(int(assessment.shortfall) for assessment in failed_reserves)
@@ -98,6 +107,7 @@ class RotationCandidateRankingService:
             missing_demand
             + missing_effects
             + bar_violations
+            + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
         )
@@ -108,6 +118,9 @@ class RotationCandidateRankingService:
             missing_demand,
             missing_effects,
             bar_violations,
+            uptime_failure_count,
+            uptime_evidence_missing,
+            uptime_shortfall,
             reserve_failure_count,
             reserve_shortfall,
             int(scorecard.candidate_shortfall),
@@ -143,6 +156,19 @@ class RotationCandidateRankingService:
                 reasons.append(
                     f"bar legality at {violation.time_seconds:g}s in {violation.window_name!r}: "
                     f"{action} -> {violation.reason}"
+                )
+        for assessment in scorecard.failed_runtime_uptime_assessments:
+            requirement = assessment.requirement
+            scope = f" on {requirement.bar} bar" if requirement.bar else ""
+            if assessment.observed_uptime is None:
+                reasons.append(
+                    f"runtime uptime evidence missing for {requirement.skill_name!r}{scope}"
+                )
+            else:
+                reasons.append(
+                    f"runtime uptime below minimum for {requirement.skill_name!r}{scope}: "
+                    f"observed {assessment.observed_uptime:.2%}, "
+                    f"required {requirement.minimum_uptime:.2%}"
                 )
         for assessment in scorecard.failed_reserve_assessments:
             reasons.append(
