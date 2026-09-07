@@ -30,8 +30,11 @@ class ExtremeSkillStandingEffectService:
     and activated/runtime effects are intentionally excluded from resting-sheet
     scoring until combat state supplies their uptime.
 
-    Named buffs also carry a stacking key so two sources of the same Major/Minor
-    buff do not get added together merely because both skills are slotted.
+    Named buffs carry their actual buff identity as a stacking key. Two sources
+    of Major Sorcery, for example, collapse to one Major Sorcery contribution,
+    while Major Sorcery and Minor Sorcery remain different keys and may stack.
+    Source type is irrelevant to named-buff deduplication; a potion and a skill
+    granting the same named Major buff still provide only one copy.
     """
 
     MAJOR_CRIT_RATING = 2629.0
@@ -80,7 +83,7 @@ class ExtremeSkillStandingEffectService:
                     projected_delta=ratio,
                     source=source,
                     scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
-                    stacking_key="major_prophecy_savagery",
+                    stacking_key="major_prophecy",
                 ),
                 ExtremeSkillStandingEffect(
                     skill_name=label,
@@ -88,7 +91,7 @@ class ExtremeSkillStandingEffectService:
                     projected_delta=ratio,
                     source=source,
                     scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
-                    stacking_key="major_prophecy_savagery",
+                    stacking_key="major_savagery",
                 ),
             )
 
@@ -128,7 +131,7 @@ class ExtremeSkillStandingEffectService:
                     projected_delta=delta,
                     source=source,
                     scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
-                    stacking_key="major_brutality_sorcery",
+                    stacking_key="major_sorcery",
                 ),
                 ExtremeSkillStandingEffect(
                     skill_name=label,
@@ -136,11 +139,29 @@ class ExtremeSkillStandingEffectService:
                     projected_delta=delta,
                     source=source,
                     scope=ExtremeSkillEffectScope.EITHER_BAR_SLOTTED,
-                    stacking_key="major_brutality_sorcery",
+                    stacking_key="major_brutality",
                 ),
             )
 
         return ()
+
+    @staticmethod
+    def stack_effects(
+        effects: tuple[ExtremeSkillStandingEffect, ...],
+    ) -> tuple[ExtremeSkillStandingEffect, ...]:
+        """Apply ESO named-buff stacking by exact buff identity.
+
+        Duplicate sources of the same named Major/Minor buff do not stack. Major
+        and Minor variants remain distinct because their stacking keys differ.
+        For duplicate evidence, retain the largest projected contribution so a
+        weaker duplicate source cannot suppress a stronger canonical value.
+        """
+        by_key: dict[str, ExtremeSkillStandingEffect] = {}
+        for effect in effects:
+            existing = by_key.get(effect.stacking_key)
+            if existing is None or effect.projected_delta > existing.projected_delta:
+                by_key[effect.stacking_key] = effect
+        return tuple(by_key[key] for key in sorted(by_key))
 
     @classmethod
     def score(
@@ -184,13 +205,7 @@ class ExtremeSkillStandingEffectService:
         active_bar: str,
         reference_value: float | None = None,
     ) -> tuple[float, tuple[str, ...]]:
-        """Score reviewed standing skill effects with bar scope and buff stacking.
-
-        Either-bar effects are considered from the union of both bars and count
-        once per named stacking key. Active-bar effects are considered only from
-        the selected active bar. Activated/runtime effects are never projected
-        here.
-        """
+        """Score reviewed standing skill effects with bar scope and buff stacking."""
         active = str(active_bar or "").strip().casefold()
         if active not in {"front", "back"}:
             raise ValueError("active_bar must be 'front' or 'back'")
@@ -200,25 +215,15 @@ class ExtremeSkillStandingEffectService:
 
         for skill_name in tuple(dict.fromkeys((*front_skill_names, *back_skill_names))):
             for effect in cls.effects_for_skill(skill_name, reference_value=reference_value):
-                if effect.objective_key != objective_key:
-                    continue
-                if effect.scope is ExtremeSkillEffectScope.EITHER_BAR_SLOTTED:
+                if effect.objective_key == objective_key and effect.scope is ExtremeSkillEffectScope.EITHER_BAR_SLOTTED:
                     candidates.append(effect)
 
         for skill_name in active_names:
             for effect in cls.effects_for_skill(skill_name, reference_value=reference_value):
-                if effect.objective_key != objective_key:
-                    continue
-                if effect.scope is ExtremeSkillEffectScope.ACTIVE_BAR_SLOTTED:
+                if effect.objective_key == objective_key and effect.scope is ExtremeSkillEffectScope.ACTIVE_BAR_SLOTTED:
                     candidates.append(effect)
 
-        by_key: dict[str, ExtremeSkillStandingEffect] = {}
-        for effect in candidates:
-            existing = by_key.get(effect.stacking_key)
-            if existing is None or effect.projected_delta > existing.projected_delta:
-                by_key[effect.stacking_key] = effect
-
-        selected = tuple(by_key[key] for key in sorted(by_key))
+        selected = cls.stack_effects(tuple(candidates))
         return (
             sum(float(effect.projected_delta) for effect in selected),
             tuple(effect.source for effect in selected),
