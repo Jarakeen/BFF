@@ -49,4 +49,10 @@ def install() -> None:
             _unwrap_progression_scroll_areas(panel)
 
     BuildsPage._load_progression_tab = load_progression_without_inner_scroll
+
+    # Progression readiness must wrap the final embedded progression methods so
+    # its status refresh runs after the inline editor and scroll ownership fixes.
+    from ui.build_progression_readiness_support import install as install_progression_readiness
+
+    install_progression_readiness()
     _INSTALLED = True
