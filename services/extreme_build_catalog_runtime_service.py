@@ -11,6 +11,7 @@ from services.extreme_build_catalog_service import (
 )
 from services.extreme_subclass_slot_allocation_service import (
     ExtremeSubclassSlotAllocationResult,
+    ExtremeSubclassSlotAllocationService,
 )
 
 
@@ -19,9 +20,9 @@ class ExtremeBuildCatalogRuntimeService:
 
     This layer does not build the catalog. It only accepts a generated catalog
     when its schema version, subclass-rule version, and source database fingerprint
-    match the current runtime database. A missing or stale catalog returns None so
-    callers can fall back to canonical live enumeration instead of trusting stale
-    structural data.
+    match the current runtime database. A missing, stale, incompatible, or
+    structurally malformed catalog returns None so callers can fall back to
+    canonical live enumeration instead of trusting damaged cached data.
     """
 
     def __init__(
@@ -66,6 +67,43 @@ class ExtremeBuildCatalogRuntimeService:
             return None
         return payload
 
+    @staticmethod
+    def _parse_slot_counts(
+        raw_slot_counts: object,
+        *,
+        expected_lines: tuple[str, ...],
+    ) -> tuple[tuple[str, int], ...] | None:
+        if not isinstance(raw_slot_counts, list):
+            return None
+        parsed: list[tuple[str, int]] = []
+        try:
+            for item in raw_slot_counts:
+                if not isinstance(item, (list, tuple)) or len(item) != 2:
+                    return None
+                line = str(item[0] or "").strip().casefold()
+                count = int(item[1])
+                if not line or count < 0:
+                    return None
+                parsed.append((line, count))
+        except (TypeError, ValueError):
+            return None
+
+        slot_counts = tuple(parsed)
+        if tuple(sorted(line for line, _ in slot_counts)) != expected_lines:
+            return None
+        if len({line for line, _ in slot_counts}) != len(expected_lines):
+            return None
+        if sum(count for _, count in slot_counts) != ExtremeSubclassSlotAllocationService.ACTIVE_BAR_SLOTS:
+            return None
+        return slot_counts
+
+    @staticmethod
+    def _numeric_formula_value(item: dict[str, Any], key: str) -> float | None:
+        try:
+            return float(item.get(key) or 0.0)
+        except (TypeError, ValueError):
+            return None
+
     def reviewed_allocations(
         self,
         equipped_skill_lines: tuple[str, ...],
@@ -76,21 +114,31 @@ class ExtremeBuildCatalogRuntimeService:
     ) -> tuple[ExtremeSubclassSlotAllocationResult, ...] | None:
         """Rehydrate reviewed allocation scores from cached formulas.
 
-        Returns None when this catalog cannot answer the requested line set. That
-        is intentionally different from an empty tuple: None tells the caller to
-        fall back to live canonical scoring, while () means the current catalog
-        handled the line set but found no resolved allocation for this context.
+        Returns None when this catalog cannot safely answer the requested line
+        set. That is intentionally different from an empty tuple: None tells the
+        caller to fall back to live canonical scoring, while () means a valid
+        catalog handled the line set but this context has no resolved allocation.
         """
         if self.catalog is None:
             return None
         objective = str(objective_key or "").strip()
-        lines = tuple(sorted(str(line or "").strip().casefold() for line in equipped_skill_lines))
+        lines = tuple(
+            sorted(
+                str(line or "").strip().casefold()
+                for line in equipped_skill_lines
+                if str(line or "").strip()
+            )
+        )
         if not objective or not lines:
             return ()
 
         line_key = "|".join(lines)
-        formula_root = self.catalog.get("passive_allocation_formulas", {})
-        by_line_set = formula_root.get("by_line_set", {}) if isinstance(formula_root, dict) else {}
+        formula_root = self.catalog.get("passive_allocation_formulas")
+        if not isinstance(formula_root, dict):
+            return None
+        by_line_set = formula_root.get("by_line_set")
+        if not isinstance(by_line_set, dict):
+            return None
         rows = by_line_set.get(line_key)
         if not isinstance(rows, list):
             return None
@@ -98,20 +146,24 @@ class ExtremeBuildCatalogRuntimeService:
         results: list[ExtremeSubclassSlotAllocationResult] = []
         for row in rows:
             if not isinstance(row, dict):
-                continue
-            raw_slot_counts = row.get("slot_counts")
-            if not isinstance(raw_slot_counts, list):
-                continue
-            try:
-                slot_counts = tuple((str(line), int(count)) for line, count in raw_slot_counts)
-            except (TypeError, ValueError):
-                continue
+                return None
+            slot_counts = self._parse_slot_counts(
+                row.get("slot_counts"),
+                expected_lines=lines,
+            )
+            if slot_counts is None:
+                return None
 
-            formulas = row.get("formulas", [])
+            formulas = row.get("formulas")
+            if not isinstance(formulas, list):
+                return None
+            if any(not isinstance(item, dict) for item in formulas):
+                return None
+
             matching = [
                 item
                 for item in formulas
-                if isinstance(item, dict) and item.get("objective_key") == objective
+                if item.get("objective_key") == objective
             ]
             if not matching:
                 if include_known_zero:
@@ -126,20 +178,27 @@ class ExtremeBuildCatalogRuntimeService:
                     )
                 continue
 
-            if reference_value is None and any(
-                float(item.get("percent_of_reference") or 0.0) != 0.0
-                for item in matching
-            ):
+            coefficients: list[tuple[dict[str, Any], float, float, float]] = []
+            for item in matching:
+                flat = self._numeric_formula_value(item, "flat")
+                ratio = self._numeric_formula_value(item, "ratio")
+                percent = self._numeric_formula_value(item, "percent_of_reference")
+                if flat is None or ratio is None or percent is None:
+                    return None
+                sources = item.get("sources", ())
+                if not isinstance(sources, (list, tuple)):
+                    return None
+                coefficients.append((item, flat, ratio, percent))
+
+            if reference_value is None and any(percent != 0.0 for _, _, _, percent in coefficients):
                 continue
 
             projected = 0.0
             sources: list[str] = []
-            for item in matching:
-                projected += float(item.get("flat") or 0.0)
-                projected += float(item.get("ratio") or 0.0)
-                projected += float(reference_value or 0.0) * float(
-                    item.get("percent_of_reference") or 0.0
-                )
+            for item, flat, ratio, percent in coefficients:
+                projected += flat
+                projected += ratio
+                projected += float(reference_value or 0.0) * percent
                 sources.extend(str(source) for source in item.get("sources", ()))
 
             results.append(
