@@ -38,7 +38,8 @@ def _scorecard(
     missing_demand: bool = False,
     missing_effects: tuple[str, ...] = (),
     shortfall: int = 0,
-    unresolved: tuple[str, ...] = (),
+    inherited_unresolved: tuple[str, ...] = (),
+    candidate_specific_unresolved: tuple[str, ...] = (),
 ) -> RotationCandidateScorecard:
     class _Requirement:
         pass
@@ -52,7 +53,8 @@ def _scorecard(
         demand_coverage=(_Coverage(),) if missing_demand else (),
         missing_required_effects=missing_effects,
         candidate_shortfall=shortfall,
-        unresolved=unresolved,
+        inherited_unresolved=inherited_unresolved,
+        candidate_specific_unresolved=candidate_specific_unresolved,
     )
 
 
@@ -139,6 +141,34 @@ def test_resource_consequence_orders_candidates_only_after_hard_obligations_matc
     )
 
     assert [item.candidate_id for item in ranked] == ["improved", "neutral"]
+
+
+def test_candidate_specific_unresolved_counts_but_shared_baseline_limitations_do_not() -> None:
+    service = RotationCandidateRankingService()
+    shared = ("known baseline limitation",) * 48
+    clean = _scorecard(
+        consequence=_consequence(RotationResourceConsequenceKind.NEUTRAL),
+        inherited_unresolved=shared,
+    )
+    new_gap = _scorecard(
+        consequence=_consequence(RotationResourceConsequenceKind.IMPROVED),
+        inherited_unresolved=shared,
+        candidate_specific_unresolved=("candidate-only unresolved action",),
+    )
+
+    ranked = service.rank(
+        (
+            RotationCandidateRankingInput("candidate-with-new-gap", new_gap),
+            RotationCandidateRankingInput("candidate-with-shared-only", clean),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == [
+        "candidate-with-shared-only",
+        "candidate-with-new-gap",
+    ]
+    assert any("candidate-specific" in reason for reason in ranked[1].reasons)
+    assert any("inherited/shared" in reason for reason in ranked[0].reasons)
 
 
 def test_identical_candidates_use_stable_candidate_id_tie_break() -> None:
