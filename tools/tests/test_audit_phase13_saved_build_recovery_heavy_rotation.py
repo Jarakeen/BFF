@@ -1,7 +1,10 @@
+from types import SimpleNamespace
+
 import pytest
 
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind
+import tools.audit_phase13_saved_build_recovery_heavy_rotation as audit_module
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import (
     build_verified_heavy_restore_resolver,
 )
@@ -72,3 +75,41 @@ def test_audit_restore_resolver_rejects_invalid_evidence() -> None:
             channel_seconds=1.8,
             bar="middle",
         )
+
+
+def test_audit_derives_maximum_magicka_from_phase4_full_pool_baseline(monkeypatch) -> None:
+    generated_plan = SimpleNamespace(name="baseline plan")
+    generation_calls = []
+    sustain_calls = []
+
+    class GenerationStub:
+        def generate(self, *, build, request):
+            generation_calls.append((build, request))
+            return generated_plan
+
+    class SustainStub:
+        def __init__(self, *, database_path):
+            self.database_path = database_path
+
+        def evaluate(self, *, build, plan, resource):
+            sustain_calls.append((build, plan, resource, self.database_path))
+            timeline = SimpleNamespace(starting_amount=31109)
+            return SimpleNamespace(run=SimpleNamespace(timeline=timeline))
+
+    monkeypatch.setattr(audit_module, "RotationGenerationSupport", GenerationStub)
+    monkeypatch.setattr(audit_module, "RotationSustainService", SustainStub)
+    build = SimpleNamespace(Name="Magrat", BuildName="DF Healer")
+
+    maximum = audit_module._baseline_maximum_magicka(
+        build=build,
+        duration_seconds=60.0,
+        database_path=audit_module.DEFAULT_DATABASE,
+    )
+
+    assert maximum == 31109
+    assert len(generation_calls) == 1
+    assert generation_calls[0][0] is build
+    assert generation_calls[0][1].duration_seconds == 60.0
+    assert sustain_calls == [
+        (build, generated_plan, ResourceType.MAGICKA, audit_module.DEFAULT_DATABASE)
+    ]
