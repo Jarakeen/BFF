@@ -9,6 +9,8 @@ from minmax.resource_timeline import (
 )
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.rotation_recast import RotationRecastRule
+from minmax.rotation_wait_decision import PrematureRecastDecisionContext
 from models.build_model import PlayerBuild
 from services.rotation_recovery_heavy_replay_service import (
     RotationRecoveryHeavyReplayService,
@@ -70,26 +72,46 @@ def _plan() -> RotationPlan:
     )
 
 
+def _context(time_seconds: float) -> PrematureRecastDecisionContext:
+    slot = RotationAction(
+        time_seconds=time_seconds,
+        sequence=1,
+        kind=RotationActionKind.SKILL,
+        name="Long Buff",
+        bar="front",
+    )
+    return PrematureRecastDecisionContext(
+        time_seconds=time_seconds,
+        bar="front",
+        candidate=slot,
+        slot=slot,
+        next_due=(),
+        rules=(RotationRecastRule("Long Buff", 20.0, bar="front"),),
+        plan_end_seconds=20.0,
+    )
+
+
+def _restore_for_first_heavy(heavy):
+    if heavy.time_seconds != 2.0:
+        return None
+    return ResourceRestorationEvent(
+        time_seconds=3.8,
+        resource=ResourceType.MAGICKA,
+        amount=4000,
+        source="Verified Restoration Staff heavy",
+    )
+
+
 def test_verified_heavy_restore_is_replayed_before_later_recovery_pressure() -> None:
     sustain = _FakeSustainService()
     service = RotationRecoveryHeavyReplayService(sustain_service=sustain)
     build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
 
-    def restore_for(heavy):
-        if heavy.time_seconds != 2.0:
-            return None
-        return ResourceRestorationEvent(
-            time_seconds=3.8,
-            resource=ResourceType.MAGICKA,
-            amount=4000,
-            source="Verified Restoration Staff heavy",
-        )
-
     replay = service.replay(
         build=build,
         plan=_plan(),
         resource=ResourceType.MAGICKA,
-        restoration_resolver=restore_for,
+        restoration_resolver=_restore_for_first_heavy,
     )
 
     initial_pressure = evaluate_healer_recovery_heavy_pressure(
@@ -114,7 +136,29 @@ def test_verified_heavy_restore_is_replayed_before_later_recovery_pressure() -> 
     assert sustain.calls == [(), (replay.restoration_events[0],)]
 
 
-def test_replay_rejects_restore_before_heavy_completion_path() -> None:
+def test_replayed_pressure_resolver_feeds_updated_resource_state_back_to_generation() -> None:
+    service = RotationRecoveryHeavyReplayService(sustain_service=_FakeSustainService())
+    replay = service.replay(
+        build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        restoration_resolver=_restore_for_first_heavy,
+    )
+
+    resolver = service.pressure_resolver(
+        replay=replay,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+    )
+    pressure = resolver(_context(10.0))
+
+    assert pressure.current_amount == 6500
+    assert pressure.resource_fraction == 0.65
+    assert pressure.recommended is False
+    assert "above the 30.0% recovery trigger" in pressure.reason
+
+
+def test_replay_rejects_restore_before_scheduled_heavy_starts() -> None:
     sustain = _FakeSustainService()
     service = RotationRecoveryHeavyReplayService(sustain_service=sustain)
     build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
