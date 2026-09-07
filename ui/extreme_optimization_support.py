@@ -11,8 +11,10 @@ def install() -> None:
         return
 
     from ui import main_window
+    from ui.extreme_critical_profile_support import install as install_extreme_critical_profile_support
     from ui.extreme_optimization_page import ExtremeOptimizationPage
 
+    install_extreme_critical_profile_support()
     original_build_ui = main_window.MainWindow.build_ui
 
     def build_ui_with_extreme_lab(self) -> None:
