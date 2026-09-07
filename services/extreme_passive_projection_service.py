@@ -16,7 +16,6 @@ import re
 from minmax.gear_stat_inputs import GearStatInputResolver
 from services.extreme_skill_universe_service import (
     ExtremePlayerSkillRecord,
-    ExtremeSkillDomain,
 )
 
 
@@ -90,7 +89,7 @@ _CONDITION_PHRASES = (
     " for each ",
 )
 
-# These passives already have reviewed purpose-built formulas.  Their actual
+# These passives already have reviewed purpose-built formulas. Their actual
 # contribution depends on bars, armor composition, or another dynamic input and
 # therefore must not be duplicated as a static tooltip score here.
 _CONTEXTUAL_KNOWN_PASSIVES = frozenset(
@@ -112,7 +111,23 @@ _CONTEXTUAL_KNOWN_PASSIVES = frozenset(
         "dexterity",
         "constitution",
         "undaunted mettle",
+        # Crafting passives can alter combat consumable duration/effects and
+        # therefore remain context-bearing rather than being discarded.
+        "medicinal use",
+        "snakeblood",
+        "gourmand",
+        "connoisseur",
     }
+)
+
+_CONSUMABLE_CONTEXT_TERMS = (
+    "potion",
+    "poison",
+    "food",
+    "drink",
+    "beverage",
+    "meal",
+    "consumable",
 )
 
 
@@ -195,8 +210,6 @@ class ExtremePassiveProjectionService:
             )
             return True
 
-        # Critical Damage is itself a ratio-point objective, not a percentage of
-        # the current Critical Damage value.
         crit_damage = re.search(
             rf"Increases your Critical Damage(?: and Critical Healing)? by {_PERCENT}",
             clause,
@@ -211,7 +224,6 @@ class ExtremePassiveProjectionService:
                 )
             )
 
-        # Flat Weapon/Spell Damage must be checked before percentage variants.
         if "%" not in clause:
             flat(
                 rf"Increases your (?:Weapon and Spell|Spell and Weapon) Damage by {_NUMBER}",
@@ -281,22 +293,12 @@ class ExtremePassiveProjectionService:
                     )
                 )
 
-        # Preserve first occurrence of an identical objective/value/source row.
         return tuple(dict.fromkeys(rows))
 
     @classmethod
     def project(cls, passive: ExtremePlayerSkillRecord) -> ExtremePassiveProjection:
         if not passive.is_passive:
             raise ValueError(f"not a passive skill: {passive.name}")
-
-        if passive.domain in {
-            ExtremeSkillDomain.CRAFT,
-            ExtremeSkillDomain.UTILITY,
-        }:
-            return ExtremePassiveProjection(
-                passive=passive,
-                status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
-            )
 
         name_key = cls._clean(passive.name).casefold()
         clauses = cls._clauses(passive.description)
@@ -306,7 +308,6 @@ class ExtremePassiveProjectionService:
         for clause in clauses:
             contributions.extend(cls._static_clause_contributions(passive, clause))
 
-        # Remove duplicate projections caused by equivalent wording patterns.
         projected = tuple(dict.fromkeys(contributions))
         if projected:
             return ExtremePassiveProjection(
@@ -316,7 +317,9 @@ class ExtremePassiveProjectionService:
                 conditions=conditions,
             )
 
-        if name_key in _CONTEXTUAL_KNOWN_PASSIVES or conditions:
+        description_key = cls._clean(passive.description).casefold()
+        consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
+        if name_key in _CONTEXTUAL_KNOWN_PASSIVES or conditions or consumable_context:
             reason = (
                 f"Reviewed contextual passive requires build/runtime inputs: {passive.name}"
                 if name_key in _CONTEXTUAL_KNOWN_PASSIVES
