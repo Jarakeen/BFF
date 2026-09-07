@@ -25,10 +25,14 @@ class ExtremeGearSetObjectiveCandidate:
     category: str | None
     equipped_piece_count: int
     objective_key: str
-    projected_delta: float | None
+    reviewed_delta: float
     source_bonuses: tuple[GearSetBonus, ...] = ()
     source_effects: tuple[Effect, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    @property
+    def mechanic_complete(self) -> bool:
+        return not self.unresolved
 
 
 class ExtremeGearSetObjectiveService:
@@ -146,7 +150,7 @@ class ExtremeGearSetObjectiveService:
         effect_resolver = resolver or GearSetEffectResolver()
         all_effects: list[Effect] = []
         unresolved: list[str] = []
-        delta = 0.0
+        reviewed_delta = 0.0
 
         for bonus in active_bonuses:
             source = f"{gear_set.name} ({bonus.piece_count})"
@@ -174,7 +178,7 @@ class ExtremeGearSetObjectiveService:
                 if blocker:
                     unresolved.append(blocker)
                 elif contribution is not None:
-                    delta += float(contribution)
+                    reviewed_delta += float(contribution)
 
         return ExtremeGearSetObjectiveCandidate(
             set_id=gear_set.id,
@@ -182,7 +186,7 @@ class ExtremeGearSetObjectiveService:
             category=gear_set.category,
             equipped_piece_count=piece_count,
             objective_key=str(objective_key).strip().casefold(),
-            projected_delta=None if unresolved else float(delta),
+            reviewed_delta=float(reviewed_delta),
             source_bonuses=active_bonuses,
             source_effects=tuple(all_effects),
             unresolved=tuple(unresolved),
@@ -203,8 +207,8 @@ class ExtremeGearSetObjectiveService:
             sorted(
                 rows,
                 key=lambda row: (
-                    row.projected_delta is None,
-                    -(row.projected_delta or 0.0),
+                    not row.mechanic_complete,
+                    -row.reviewed_delta,
                     row.set_name.casefold(),
                     row.set_id,
                 ),
@@ -212,7 +216,7 @@ class ExtremeGearSetObjectiveService:
         )
 
     @classmethod
-    def best_reviewed_single_set_for_objective(
+    def best_mechanic_complete_single_set_for_objective(
         cls,
         repository: GearSetRepository,
         objective_key: str,
@@ -221,7 +225,7 @@ class ExtremeGearSetObjectiveService:
             (
                 row
                 for row in cls.candidates_for_objective(repository, objective_key)
-                if row.projected_delta is not None
+                if row.mechanic_complete
             ),
             None,
         )
