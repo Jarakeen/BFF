@@ -96,7 +96,20 @@ def main() -> int:
         action="store_true",
         help="Print every unresolved/empty set bonus after the summary.",
     )
+    parser.add_argument(
+        "--show-unresolved-piece-count",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "Print only unresolved/empty bonuses at piece threshold N. "
+            "This implies detailed unresolved output without changing summary totals."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.show_unresolved_piece_count is not None and args.show_unresolved_piece_count < 0:
+        parser.error("--show-unresolved-piece-count must be non-negative")
 
     database = Path(args.database)
     if not database.is_file():
@@ -182,13 +195,25 @@ def main() -> int:
             f"unresolved={counts[UNRESOLVED]} empty={counts[EMPTY]}"
         )
 
-    if args.show_unresolved:
+    show_detailed = args.show_unresolved or args.show_unresolved_piece_count is not None
+    if show_detailed:
         print()
-        print("UNRESOLVED / EMPTY BONUS ROWS")
+        if args.show_unresolved_piece_count is None:
+            print("UNRESOLVED / EMPTY BONUS ROWS")
+        else:
+            print(
+                "UNRESOLVED / EMPTY BONUS ROWS "
+                f"AT {args.show_unresolved_piece_count} PIECE(S)"
+            )
         for set_name, category, piece_count, classification, description in sorted(
             unresolved_rows,
             key=lambda row: (row[0].casefold(), row[2], row[3]),
         ):
+            if (
+                args.show_unresolved_piece_count is not None
+                and piece_count != args.show_unresolved_piece_count
+            ):
+                continue
             print(
                 f"- {set_name} | {category} | {piece_count} piece(s) | {classification}"
             )
