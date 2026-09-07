@@ -5,6 +5,7 @@ from zoneinfo import available_timezones
 
 from PySide6.QtCore import QTime
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QFileDialog,
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPushButton,
     QTimeEdit,
@@ -21,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
+from services.roster_share_formats import discord_roster_text, export_roster_csv
 from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
 from ui.components.foundry_card import FoundryCard
 from ui.roster_page import RosterPage as BaseRosterPage
@@ -60,12 +63,20 @@ class RosterPage(BaseRosterPage):
         super()._build_ui()
         self.tabs.addTab(self._build_team_schedule_tab(), "TEAM SCHEDULE")
 
-        self.export_share_button = QPushButton("Export / Share")
+        self.export_share_button = QPushButton("Share Roster ▾")
         self.export_share_button.setProperty("primary", True)
         self.export_share_button.setToolTip(
-            "Export the visible raid assignments, team raid times, and personnel roster as a themed PDF."
+            "Share the visible roster as a themed PDF, Google Sheets-ready CSV, or Discord-formatted text."
         )
-        self.export_share_button.clicked.connect(self._export_roster_pdf)
+        share_menu = QMenu(self.export_share_button)
+        pdf_action = share_menu.addAction("Export Themed PDF")
+        csv_action = share_menu.addAction("Export for Google Sheets (.csv)")
+        share_menu.addSeparator()
+        discord_action = share_menu.addAction("Copy Discord Roster")
+        pdf_action.triggered.connect(self._export_roster_pdf)
+        csv_action.triggered.connect(self._export_roster_csv)
+        discord_action.triggered.connect(self._copy_roster_discord)
+        self.export_share_button.setMenu(share_menu)
         self.header.add_context_widget(self.export_share_button)
 
     def _build_team_schedule_tab(self) -> QWidget:
@@ -330,6 +341,13 @@ class RosterPage(BaseRosterPage):
             })
         return rows
 
+    def _share_title(self) -> str:
+        if hasattr(self, "view_combo"):
+            view = self.view_combo.currentText().strip()
+            if view:
+                return view
+        return "Raid Roster"
+
     def _export_roster_pdf(self) -> None:
         filename, _ = QFileDialog.getSaveFileName(
             self,
@@ -343,22 +361,56 @@ class RosterPage(BaseRosterPage):
         if path.suffix.casefold() != ".pdf":
             path = path.with_suffix(".pdf")
 
-        title = "Raid Roster"
-        if hasattr(self, "view_combo"):
-            view = self.view_combo.currentText().strip()
-            if view:
-                title = view
-
         try:
             theme_name = AccessibilityPreferences().visual_theme()
             TeamScheduleShareDocumentExporter().export_roster(
                 self.members,
                 path,
                 assignments=self._visible_assignment_rows(),
-                title=title,
+                title=self._share_title(),
                 theme_name=theme_name,
                 team_schedules=self.roster_service.list_team_schedules(),
             )
             self.status.success(f"Exported themed roster to {path}")
         except Exception as exc:
             self.status.error(f"Roster export failed: {exc}")
+
+    def _export_roster_csv(self) -> None:
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Roster for Google Sheets",
+            "raid_roster.csv",
+            "CSV for Google Sheets (*.csv)",
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.casefold() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            export_roster_csv(
+                path,
+                self.members,
+                assignments=self._visible_assignment_rows(),
+                team_schedules=self.roster_service.list_team_schedules(),
+            )
+            self.status.success(
+                f"Exported Google Sheets-ready roster to {path}. Upload the CSV to Sheets and it will keep the roster columns."
+            )
+        except Exception as exc:
+            self.status.error(f"Roster CSV export failed: {exc}")
+
+    def _copy_roster_discord(self) -> None:
+        try:
+            text = discord_roster_text(
+                self.members,
+                assignments=self._visible_assignment_rows(),
+                team_schedules=self.roster_service.list_team_schedules(),
+                title=self._share_title(),
+            )
+            QApplication.clipboard().setText(text)
+            self.status.success(
+                "Copied Discord-formatted roster to the clipboard. Paste it directly into your raid channel."
+            )
+        except Exception as exc:
+            self.status.error(f"Discord roster copy failed: {exc}")
