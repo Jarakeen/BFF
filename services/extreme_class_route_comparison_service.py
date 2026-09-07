@@ -81,10 +81,10 @@ class ExtremeClassRouteComparisonService:
     skill effects are optimized together rather than choosing a passive-only bar
     first and merely decorating it afterward.
 
-    Both bars are preserved as part of the build, but active-bar-only standing
-    effects are scored only from the explicitly selected active bar. Triggered
-    or otherwise unresolved skill effects remain excluded rather than inferred
-    from tooltip prose.
+    Standing skills retain explicit scope: active-bar effects only apply on the
+    selected bar, either-bar effects apply if present on either bar, and runtime
+    effects remain excluded until combat state can prove uptime. Named Major and
+    Minor buffs are deduplicated by exact buff identity across both bars.
     """
 
     def __init__(
@@ -101,19 +101,39 @@ class ExtremeClassRouteComparisonService:
         slot_counts: tuple[tuple[str, int], ...],
         *,
         objective_key: str,
+        reference_value: float | None,
     ) -> ExtremeSubclassTwoBarResult | None:
         materialize_two_bars = getattr(self.skill_bars, "materialize_two_bars", None)
         if callable(materialize_two_bars):
-            return materialize_two_bars(
-                slot_counts,
-                slot_counts,
-                objective_key=objective_key,
-            )
+            try:
+                return materialize_two_bars(
+                    slot_counts,
+                    slot_counts,
+                    objective_key=objective_key,
+                    reference_value=reference_value,
+                )
+            except TypeError:
+                return materialize_two_bars(
+                    slot_counts,
+                    slot_counts,
+                    objective_key=objective_key,
+                )
 
-        # Compatibility for focused test doubles and older callers while the
-        # production service owns the authoritative two-bar implementation.
-        front = self.skill_bars.materialize(slot_counts, objective_key=objective_key)
-        back = self.skill_bars.materialize(slot_counts, objective_key=objective_key)
+        def materialize_one():
+            try:
+                return self.skill_bars.materialize(
+                    slot_counts,
+                    objective_key=objective_key,
+                    reference_value=reference_value,
+                )
+            except TypeError:
+                return self.skill_bars.materialize(
+                    slot_counts,
+                    objective_key=objective_key,
+                )
+
+        front = materialize_one()
+        back = materialize_one()
         if front is None or back is None:
             return None
         return ExtremeSubclassTwoBarResult(front=front, back=back)
@@ -147,19 +167,17 @@ class ExtremeClassRouteComparisonService:
             bars = self._materialize_two_bars(
                 allocation.slot_counts,
                 objective_key=objective_key,
+                reference_value=reference_value,
             )
             if bars is None:
                 continue
             materialized_any = True
-            active = self._active_bar(bars, active_bar)
-            skill_delta = sum(
-                ExtremeSkillStandingEffectService.score(skill.name, objective_key)
-                for skill in active.skills
-            )
-            skill_sources = tuple(
-                source
-                for skill in active.skills
-                for source in ExtremeSkillStandingEffectService.sources(skill.name, objective_key)
+            skill_delta, skill_sources = ExtremeSkillStandingEffectService.score_build_bars(
+                bars.front.names,
+                bars.back.names,
+                objective_key,
+                active_bar=active_bar,
+                reference_value=reference_value,
             )
             candidate = _ReviewedSubclassBuild(
                 allocation=allocation,
