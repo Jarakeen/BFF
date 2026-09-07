@@ -110,7 +110,26 @@ def test_global_maximum_gate_can_open_only_after_source_universe_and_sources_are
     assert coverage.claim is ExtremeObjectiveClaim.GLOBAL_MAXIMUM_READY
 
 
-def test_reviewed_source_universe_with_a_partial_source_still_refuses_global_claim():
+def test_complete_reviewed_contract_can_be_reported_without_overclaiming_global_proof():
+    coverage = ExtremeObjectiveCoverage(
+        objective_key="synthetic_contract_complete_objective",
+        source_universe_reviewed=False,
+        sources=(
+            ExtremeSourceFamilyCoverage(
+                "class_passives", ExtremeSourceCoverageStatus.REVIEWED
+            ),
+            ExtremeSourceFamilyCoverage(
+                "race", ExtremeSourceCoverageStatus.NOT_APPLICABLE
+            ),
+        ),
+    )
+
+    assert coverage.blocking_sources == ()
+    assert coverage.global_maximum_ready is False
+    assert coverage.claim is ExtremeObjectiveClaim.COMPLETE_WITHIN_REVIEWED_SOURCE_CONTRACT
+
+
+def test_reviewed_source_universe_with_a_partial_source_still_refuses_complete_claim():
     coverage = ExtremeObjectiveCoverage(
         objective_key="synthetic_partial_objective",
         source_universe_reviewed=True,
@@ -126,4 +145,4 @@ def test_reviewed_source_universe_with_a_partial_source_still_refuses_global_cla
 
     assert coverage.global_maximum_ready is False
     assert [row.source_family for row in coverage.blocking_sources] == ["gear_sets"]
-    assert coverage.claim is ExtremeObjectiveClaim.COMPLETE_WITHIN_REVIEWED_SOURCE_CONTRACT
+    assert coverage.claim is ExtremeObjectiveClaim.BEST_REVIEWED_LOWER_BOUND
