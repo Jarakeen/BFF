@@ -5,6 +5,11 @@ from math import isclose
 
 from minmax.build_candidate_comparison import BuildCandidateComparison
 
+from .named_buff_resolution_service import NamedBuffContribution
+from .team_provider_marginal_value_service import (
+    TeamProviderMarginalValue,
+    TeamProviderMarginalValueService,
+)
 from .team_role_autofill import normalize_team_role, slot_role_family
 from .team_prescription_candidate_source import PrescribedOpenSlotCandidateEvidence
 
@@ -16,6 +21,7 @@ class PrescribedSlotCandidateEvidence:
     comparison: BuildCandidateComparison | None = None
     open_slot: PrescribedOpenSlotCandidateEvidence | None = None
     provider_requirement_ids: tuple[str, ...] = ()
+    provider_effects: tuple[NamedBuffContribution, ...] = ()
 
     def __post_init__(self) -> None:
         if (self.comparison is None) == (self.open_slot is None):
@@ -32,6 +38,7 @@ class PrescribedSlotCandidateEvidence:
             )
         )
         object.__setattr__(self, "provider_requirement_ids", normalized)
+        object.__setattr__(self, "provider_effects", tuple(self.provider_effects))
 
     @property
     def candidate_id(self) -> str:
@@ -97,6 +104,7 @@ class PrescribedSlotCandidateRanking:
     recommended: PrescribedSlotCandidateEvidence | None
     recommended_ties: tuple[PrescribedSlotCandidateEvidence, ...]
     unresolved: tuple[str, ...] = ()
+    provider_marginal_values: tuple[tuple[str, TeamProviderMarginalValue], ...] = ()
 
 
 def rank_prescribed_slot_candidates(
@@ -104,14 +112,20 @@ def rank_prescribed_slot_candidates(
     slot_name: str,
     required_provider_requirement_ids: tuple[str, ...],
     candidates: tuple[PrescribedSlotCandidateEvidence, ...],
+    existing_team_effects: tuple[NamedBuffContribution, ...] = (),
 ) -> PrescribedSlotCandidateRanking:
     """Rank one prescribed roster slot without weakening Phase 12 constraints.
 
     Phase 12 remains authoritative when an anchored-player build comparison is
     supplied. Open chairs use absolute canonical objective evidence because they have
-    no honest baseline. This layer adds the roster-scale role/provider gates and
-    refuses to compare the two unlike score types. Equivalent top candidates remain
-    unresolved rather than using identifier order as stronger gameplay evidence.
+    no honest baseline. This layer adds roster-scale role/provider gates and refuses
+    to compare unlike score types.
+
+    Named provider effects are deliberately not added to damage/healing/tanking
+    objective numbers because those units are incomparable. When otherwise equally
+    supported candidates tie on the canonical objective, however, the candidate that
+    adds more distinct reviewed named effects beyond the current team may break that
+    tie. If marginal provider evidence is also tied, the slot remains unresolved.
     """
 
     normalized_slot = str(slot_name or "").strip()
@@ -200,6 +214,7 @@ def rank_prescribed_slot_candidates(
 
     recommended_ties: tuple[PrescribedSlotCandidateEvidence, ...] = ()
     unresolved: tuple[str, ...] = ()
+    marginal_values: tuple[tuple[str, TeamProviderMarginalValue], ...] = ()
     if recommended is not None and recommended.ranking_value is not None:
         top_value = float(recommended.ranking_value)
         tied = tuple(
@@ -217,11 +232,35 @@ def rank_prescribed_slot_candidates(
         )
         recommended_ties = tied
         if len(tied) > 1:
-            recommended = None
-            unresolved = (
-                f"{normalized_slot}: {len(tied)} equally supported top candidates remain; "
-                "additional strategy evidence is required before prescribing one",
+            evaluated = tuple(
+                (
+                    evidence.candidate_id,
+                    TeamProviderMarginalValueService.evaluate(
+                        existing_team_effects=existing_team_effects,
+                        candidate_effects=evidence.provider_effects,
+                    ),
+                )
+                for evidence in tied
             )
+            marginal_values = evaluated
+            counts = {
+                candidate_id: value.new_named_effect_count
+                for candidate_id, value in evaluated
+            }
+            best_count = max(counts.values(), default=0)
+            marginal_winners = tuple(
+                evidence
+                for evidence in tied
+                if counts.get(evidence.candidate_id, 0) == best_count
+            )
+            if best_count > 0 and len(marginal_winners) == 1:
+                recommended = marginal_winners[0]
+            else:
+                recommended = None
+                unresolved = (
+                    f"{normalized_slot}: {len(tied)} equally supported top candidates remain; "
+                    "marginal team-provider evidence does not uniquely separate them",
+                )
 
     return PrescribedSlotCandidateRanking(
         slot_name=normalized_slot,
@@ -232,4 +271,5 @@ def rank_prescribed_slot_candidates(
         recommended=recommended,
         recommended_ties=recommended_ties,
         unresolved=unresolved,
+        provider_marginal_values=marginal_values,
     )
