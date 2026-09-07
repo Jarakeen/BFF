@@ -24,6 +24,10 @@ from services.rotation_candidate_scorecard_service import (
     RotationCandidateScorecardService,
     RotationDemandActionRequirement,
 )
+from services.rotation_demand_bar_access_service import (
+    RotationDemandBarAccessClaim,
+    RotationDemandBarAccessService,
+)
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
 from services.rotation_sustain_service import RotationSustainService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
@@ -89,8 +93,8 @@ def _print_window_trace(label: str, plan, demand) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Compare the baseline DF Healer rotation with one explicit mechanic-driven Budding Seeds "
-            "action claim inside the projected Xalvakka Phase 2 prep window."
+            "Compare baseline, mechanic-action-claim, and explicit bar-access rescue DF Healer "
+            "rotations inside the projected Xalvakka Phase 2 prep window."
         )
     )
     parser.add_argument("--character", default="Magrat")
@@ -158,19 +162,25 @@ def main() -> int:
     )
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
+    bar_access_service = RotationDemandBarAccessService()
 
     print("=" * 118)
-    print(" PHASE 13 XALVAKKA HEALER MECHANIC ACTION CLAIM")
+    print(" PHASE 13 XALVAKKA HEALER MECHANIC / BAR ACCESS AUDIT")
     print("=" * 118)
     print(f"Character: {args.character} | Build: {args.build}")
     print(f"Encounter: {guide.name} ({guide.encounter_id}) | Difficulty: {args.difficulty}")
     print(
-        "Claim: Budding Seeds may take one front-bar skill slot inside the named Phase 2 prep demand "
-        "only when its ordinary refresh would otherwise occur after that demand ends."
+        "Mechanic action claim: Budding Seeds may claim one front-bar skill slot inside the named "
+        "Phase 2 prep demand only when ordinary refresh would otherwise miss the demand."
     )
     print(
-        "Boundary: this is an explicit diagnostic mechanic policy, not canonical healer strategy. "
-        "The claim does not shorten Budding Seeds' verified duration rule globally."
+        "Bar-access rescue: if no front-bar slot exists, an explicit diagnostic policy may consume "
+        "three existing demand slots for swap -> Budding Seeds -> swap back, but only when every "
+        "displaced original-bar skill can be restored into later waits before the next hard swap."
+    )
+    print(
+        "Boundary: both are diagnostic encounter policies, not canonical healer strategy. Neither "
+        "globally changes Budding Seeds duration or invents extra action time."
     )
 
     for raid_dps in args.raid_dps:
@@ -211,6 +221,22 @@ def main() -> int:
             resource=ResourceType.MAGICKA,
         )
 
+        bar_access = bar_access_service.refine(
+            plan=claim_plan,
+            demands=(demand,),
+            claim=RotationDemandBarAccessClaim(
+                demand_name=demand.name,
+                bar="front",
+                skill_name="Budding Seeds",
+            ),
+        )
+        bar_access_plan = bar_access.plan
+        bar_access_sustain = sustain_service.evaluate(
+            build=build,
+            plan=bar_access_plan,
+            resource=ResourceType.MAGICKA,
+        )
+
         requirement = RotationDemandActionRequirement(
             demand_name=demand.name,
             skill_name="Budding Seeds",
@@ -245,10 +271,20 @@ def main() -> int:
             demand_requirements=(requirement,),
             reserve_requirements=reserve_requirements,
         )
+        bar_access_card = scorecard_service.compare(
+            baseline_plan=base_plan,
+            candidate_plan=bar_access_plan,
+            baseline_sustain=base_sustain,
+            candidate_sustain=bar_access_sustain,
+            demands=(demand,),
+            demand_requirements=(requirement,),
+            reserve_requirements=reserve_requirements,
+        )
         ranked = ranking_service.rank(
             (
                 RotationCandidateRankingInput("baseline", baseline_card),
                 RotationCandidateRankingInput("mechanic-claim", claim_card),
+                RotationCandidateRankingInput("bar-access-rescue", bar_access_card),
             )
         )
 
@@ -258,6 +294,17 @@ def main() -> int:
             f"{float(raid_dps):,.0f} RAID DPS | 70% at {float(phase_2.time_seconds):.2f}s | "
             f"prep {demand.start_seconds:.2f}-{demand.end_seconds:.2f}s"
         )
+        print(
+            f"Bar-access result: {'APPLIED' if bar_access.applied else 'NOT APPLIED'} | "
+            f"{bar_access.reason}"
+        )
+        if bar_access.displaced_actions:
+            displaced_text = ", ".join(
+                f"{action.name or action.kind.value} @{float(action.time_seconds):g}s"
+                for action in bar_access.displaced_actions
+            )
+            print(f"Displaced then restored: {displaced_text}")
+
         for item in ranked:
             card = item.scorecard
             coverage = card.demand_coverage[0]
@@ -271,7 +318,7 @@ def main() -> int:
                     f"{reserve.requirement.minimum_amount:,}"
                 )
             print(
-                f"#{item.rank} {item.candidate_id:15s} | {item.tier.value:10s} | "
+                f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
                 f"{reserve_text}"
@@ -289,12 +336,14 @@ def main() -> int:
 
         _print_window_trace("BASELINE", base_plan, demand)
         _print_window_trace("MECHANIC CLAIM", claim_plan, demand)
+        _print_window_trace("BAR ACCESS RESCUE", bar_access_plan, demand)
 
     print()
     print(
-        "Interpretation: if the mechanic-claim plan becomes eligible, the 2.0m failure was a policy "
-        "limitation of due-only refresh scheduling. If the trace shows no front-bar skill slot inside "
-        "the demand, the remaining blocker is timeline/bar availability rather than Seeds refresh timing."
+        "Interpretation: the mechanic-action claim can only use the required bar when that bar is "
+        "already available. The bar-access rescue tests the next boundary: whether existing timeline "
+        "slots can be rerouted through the required bar without dropping displaced support work. "
+        "Eligibility still comes from the same hard demand obligation and resource scorecard."
     )
     return 0
 
