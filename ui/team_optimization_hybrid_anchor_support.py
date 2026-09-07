@@ -157,3 +157,6 @@ def install() -> None:
 
     from ui.stickerbook_bookmark_support import install as install_stickerbook_bookmarks
     install_stickerbook_bookmarks()
+
+    from ui.comp_builder_polish_support import install as install_comp_builder_polish
+    install_comp_builder_polish()
