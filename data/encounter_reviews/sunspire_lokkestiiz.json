@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "content_id": "sunspire",
+  "encounter_id": "lokkestiiz",
+  "encounter_name": "Lokkestiiz",
+  "review_context": "Explicit human review of source-backed encounter evidence. Review decisions do not count as independent evidence sources.",
+  "decisions": [
+    {
+      "fact_type": "damage_window",
+      "fact_key": "aerial_onslaught_flight",
+      "status": "accepted",
+      "rationale": "Reviewed against the tracked UESP source and raid-mechanic context: during Aerial Onslaught at the documented health thresholds, Lokkestiiz is airborne and not a damageable boss target while add activity and raid-damage mechanics continue. Preserve this as boss-target downtime, not global raid inactivity."
+    },
+    {
+      "fact_type": "add_group",
+      "fact_key": "aerial_onslaught_atronachs",
+      "status": "accepted",
+      "rationale": "Reviewed source-backed add composition for Aerial Onslaught. Frost Atronach and Storm Atronach membership is accepted; the exact number of adds remains unresolved and must not be inferred during canonical promotion."
+    }
+  ]
+}
