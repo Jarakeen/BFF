@@ -130,6 +130,17 @@ class PerformanceDashboardService:
             filter_by="source", actor_id=actor_id,
         )
 
+        # Raid debuffs: no actor filter at all -- "is this debuff up
+        # on the boss, regardless of who applied it", which is what
+        # an in-game raid-debuff addon shows, and usually the more
+        # useful number for support roles who track team debuff
+        # uptime rather than personal cast credit.
+        raid_debuff_uptimes = self._top_uptimes(
+            report_code, fight_id, start, end, duration,
+            data_type="Debuffs", hostility_type="Enemies",
+            filter_by="none", actor_id=actor_id,
+        )
+
         data_type, hostility_type, output_label, rate_label = ROLE_OUTPUT.get(
             role, ROLE_OUTPUT["DPS"]
         )
@@ -161,6 +172,7 @@ class PerformanceDashboardService:
             FightDurationSeconds=duration,
             BuffUptimes=buff_uptimes,
             DebuffUptimes=debuff_uptimes,
+            RaidDebuffUptimes=raid_debuff_uptimes,
             OutputLabel=output_label,
             OutputRateLabel=rate_label,
             OutputTotal=total,
@@ -183,9 +195,12 @@ class PerformanceDashboardService:
         actor_id: int,
     ) -> list[AbilityUptime]:
 
-        kwargs = (
-            {"target_id": actor_id} if filter_by == "target" else {"source_id": actor_id}
-        )
+        if filter_by == "target":
+            kwargs = {"target_id": actor_id}
+        elif filter_by == "source":
+            kwargs = {"source_id": actor_id}
+        else:
+            kwargs = {}
 
         auras = self.client.get_aura_table(
             report_code, fight_id, start, end,
@@ -255,8 +270,17 @@ def _top_uptimes(
     duration_seconds: float,
     limit: int,
 ) -> list[AbilityUptime]:
+    """
+    ESO Logs sometimes logs the same effect under two different
+    ability IDs (observed for Major/Minor Brittle -- an
+    "Elemental Susceptibility"-applied entry and an identical-
+    looking duplicate with a different guid). Both report the same
+    totalUptime, so summing them would double an effect's uptime;
+    keeping only the max per name is correct either way and avoids
+    showing the same named debuff twice in a chart.
+    """
 
-    rows: list[AbilityUptime] = []
+    best_by_name: dict[str, AbilityUptime] = {}
 
     for aura in auras:
 
@@ -278,13 +302,18 @@ def _top_uptimes(
             else 0.0
         )
 
-        rows.append(
-            AbilityUptime(
-                Name=name,
-                UptimeSeconds=uptime_seconds,
-                UptimePercent=round(min(pct, 100.0), 1),
-            )
+        row = AbilityUptime(
+            Name=name,
+            UptimeSeconds=uptime_seconds,
+            UptimePercent=round(min(pct, 100.0), 1),
         )
+
+        existing = best_by_name.get(name)
+
+        if existing is None or row.UptimeSeconds > existing.UptimeSeconds:
+            best_by_name[name] = row
+
+    rows = list(best_by_name.values())
 
     rows.sort(key=lambda r: r.UptimeSeconds, reverse=True)
 

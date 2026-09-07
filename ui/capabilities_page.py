@@ -1176,7 +1176,8 @@ class CapabilitiesPage(FoundryPage):
                         "Output Rate",
                         "Best Stretch",
                         "Top Buff Uptimes (name: %)",
-                        "Top Debuff Uptimes (name: %)",
+                        "Top Debuffs You Applied (name: %)",
+                        "Top Boss Debuffs Raid-Wide (name: %)",
                         "Top Abilities (name: total)",
                     ]
                 )
@@ -1200,6 +1201,11 @@ class CapabilitiesPage(FoundryPage):
                         for u in snapshot.DebuffUptimes
                     )
 
+                    raid_debuffs = "; ".join(
+                        f"{u.Name}: {u.UptimePercent:.1f}%"
+                        for u in snapshot.RaidDebuffUptimes
+                    )
+
                     abilities = "; ".join(
                         f"{a.Name}: {a.Total:,.0f}"
                         for a in snapshot.TopAbilities
@@ -1220,6 +1226,7 @@ class CapabilitiesPage(FoundryPage):
                             snapshot.PeakWindowLabel,
                             buffs,
                             debuffs,
+                            raid_debuffs,
                             abilities,
                         ]
                     )

@@ -156,6 +156,29 @@ def test_build_snapshot_scopes_every_query_to_the_chosen_actor():
     assert snapshot.TopAbilities[0].Name == "Force Pulse"
 
 
+def test_build_snapshot_fetches_raid_wide_debuffs_with_no_actor_filter():
+
+    client = _FakeClient(
+        auras_by_call=[
+            [],  # buffs
+            [],  # debuffs you applied
+            [{"name": "Major Brittle", "totalUptime": 161766.0}],  # raid-wide
+        ],
+    )
+
+    service = PerformanceDashboardService(client)
+
+    snapshot = service.build_snapshot(
+        "ABC123", 1, actor_id=7, actor_label="Me", role="Healer",
+    )
+
+    raid_call = client.aura_calls[2]
+
+    assert "source_id" not in raid_call
+    assert "target_id" not in raid_call
+    assert snapshot.RaidDebuffUptimes[0].Name == "Major Brittle"
+
+
 def test_build_snapshot_uses_healing_output_for_healer_role():
 
     client = _FakeClient(
@@ -191,6 +214,27 @@ def test_top_uptimes_sorts_and_caps_and_clamps_percent():
 
     assert [r.Name for r in rows] == ["Full Uptime", "Short"]
     assert rows[0].UptimePercent == 100.0  # clamped, not 200
+
+
+def test_top_uptimes_dedupes_same_named_entries_under_different_guids():
+    """
+    ESO Logs sometimes logs the same effect (observed: Major/Minor
+    Brittle) under two different ability guids with identical
+    totalUptime -- must not show up as two rows or double-count.
+    """
+
+    auras = [
+        {"name": "Major Brittle", "guid": 263825, "totalUptime": 161766.0},
+        {"name": "Major Brittle", "guid": 145977, "totalUptime": 161766.0},
+        {"name": "Crusher", "guid": 17906, "totalUptime": 126109.0},
+    ]
+
+    rows = _top_uptimes(auras, duration_seconds=255.752, limit=8)
+
+    names = [r.Name for r in rows]
+
+    assert names.count("Major Brittle") == 1
+    assert rows[0].Name == "Major Brittle"  # highest uptime, still sorted correctly
 
 
 def test_top_abilities_computes_percent_of_total():

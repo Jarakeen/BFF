@@ -135,20 +135,35 @@ class PerformanceDashboard(QWidget):
         charts_grid.setHorizontalSpacing(10)
         charts_grid.setVerticalSpacing(10)
 
-        output_card, self.output_chart_view = self._build_chart_card("Output Over Time")
-        buff_card, self.buff_chart_view = self._build_chart_card("Your Buff Uptime")
-        debuff_card, self.debuff_chart_view = self._build_chart_card("Debuffs You Applied")
-        abilities_card, self.abilities_chart_view = self._build_chart_card("Top Abilities")
+        output_card, self.output_chart_view = self._build_chart_card(
+            "Output Over Time"
+        )
+        buff_card, self.buff_chart_view = self._build_chart_card(
+            "Your Buff Uptime", compact=True
+        )
+        debuff_card, self.debuff_chart_view = self._build_chart_card(
+            "Debuffs You Applied", compact=True
+        )
+        raid_debuff_card, self.raid_debuff_chart_view = self._build_chart_card(
+            "Boss Debuffs (Raid-Wide)", compact=True
+        )
+        abilities_card, self.abilities_chart_view = self._build_chart_card(
+            "Top Abilities", compact=True
+        )
 
         self.output_card = output_card
         self.buff_card = buff_card
         self.debuff_card = debuff_card
+        self.raid_debuff_card = raid_debuff_card
         self.abilities_card = abilities_card
 
+        # Row 0: the one detailed time-series chart, full width.
+        # Rows 1-2: compact bar charts, two per row.
         charts_grid.addWidget(output_card, 0, 0, 1, 2)
         charts_grid.addWidget(buff_card, 1, 0)
         charts_grid.addWidget(debuff_card, 1, 1)
-        charts_grid.addWidget(abilities_card, 2, 0, 1, 2)
+        charts_grid.addWidget(raid_debuff_card, 2, 0)
+        charts_grid.addWidget(abilities_card, 2, 1)
 
         charts_grid.setColumnStretch(0, 1)
         charts_grid.setColumnStretch(1, 1)
@@ -244,15 +259,24 @@ class PerformanceDashboard(QWidget):
 
         return card
 
-    def _build_chart_card(self, title: str) -> tuple[FoundryCard, QChartView]:
+    def _build_chart_card(self, title: str, compact: bool = False) -> tuple[FoundryCard, QChartView]:
+        """
+        compact=True is for bar-chart cards (buff/debuff/raid-debuff/
+        top-abilities) which just show name + a single percentage or
+        total per row -- they don't need the height a detailed
+        time-series line chart does, so keep them short and let more
+        of them fit on screen at once.
+        """
 
         card = FoundryCard(title)
 
         chart_view = QChartView(_empty_chart("No data yet"))
-        chart_view.setMinimumHeight(220)
+        chart_view.setMinimumHeight(130 if compact else 220)
+        chart_view.setMaximumHeight(160 if compact else 16777215)
         chart_view.setStyleSheet(f"background-color: {Colors.SURFACE};")
 
         card.addWidget(chart_view)
+        card.set_body_margins(8, 4, 8, 4)
 
         return card, chart_view
 
@@ -362,6 +386,7 @@ class PerformanceDashboard(QWidget):
 
         self._update_uptime_chart(self.buff_chart_view, snapshot.BuffUptimes, Colors.ACCENT_LIGHT)
         self._update_uptime_chart(self.debuff_chart_view, snapshot.DebuffUptimes, Colors.WARNING)
+        self._update_uptime_chart(self.raid_debuff_chart_view, snapshot.RaidDebuffUptimes, Colors.GOLD)
 
         self.abilities_card.title_label.setText(f"Top Abilities by {snapshot.OutputLabel}")
         self._update_abilities_chart(snapshot.TopAbilities, role_color)

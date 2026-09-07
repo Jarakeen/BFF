@@ -69,6 +69,7 @@ class PerformanceSnapshot:
 
     BuffUptimes: list[AbilityUptime] = field(default_factory=list)
     DebuffUptimes: list[AbilityUptime] = field(default_factory=list)
+    RaidDebuffUptimes: list[AbilityUptime] = field(default_factory=list)
 
     OutputLabel: str = "Damage"  # "Damage" | "Healing"
     OutputRateLabel: str = "DPS"  # "DPS" | "HPS"
