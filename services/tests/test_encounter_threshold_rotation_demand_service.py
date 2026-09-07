@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPattern
 from services.encounter_boss_guide import BossGuideTimelineFact, EncounterBossGuide
@@ -77,8 +79,8 @@ def test_projects_threshold_clock_point_into_role_demand_window() -> None:
     assert len(result.demands) == 1
     demand = result.demands[0]
     assert demand.name == "Phase 2 healing prep"
-    assert demand.start_seconds == 27.0
-    assert demand.end_seconds == 32.0
+    assert demand.start_seconds == pytest.approx(27.0)
+    assert demand.end_seconds == pytest.approx(32.0)
     assert demand.kind is RotationDemandKind.HEALING
     assert demand.pattern is RotationDemandPattern.BURST
     assert demand.target_count == 12
