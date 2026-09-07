@@ -38,7 +38,7 @@ def _database(tmp_path):
     return path
 
 
-def test_route_comparison_keeps_subclasses_explicitly_unscored(tmp_path):
+def test_route_comparison_keeps_subclasses_unresolved_even_with_reviewed_lower_bounds(tmp_path):
     service = ExtremeClassRouteComparisonService(_database(tmp_path))
 
     result = service.compare(
@@ -50,8 +50,27 @@ def test_route_comparison_keeps_subclasses_explicitly_unscored(tmp_path):
     subclasses = [row for row in result.routes if row.route_kind is ExtremeClassRouteKind.SUBCLASS]
     assert subclasses
     assert result.unresolved_subclass_count == len(subclasses)
-    assert all(row.projected_delta is None for row in subclasses)
-    assert all(row.score_status == "pending_subclass_effect_resolution" for row in subclasses)
+    assert any(row.projected_delta is not None for row in subclasses)
+    assert any(row.projected_delta is None for row in subclasses)
+    assert result.reviewed_subclass_lower_bound_count > 0
+    assert result.can_declare_global_winner is False
+
+
+def test_spell_damage_subclass_lower_bound_can_use_reviewed_storm_calling(tmp_path):
+    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+
+    result = service.compare(
+        "spell_damage",
+        reference_value=5000,
+        higher_max_resource=35000,
+    )
+
+    best = result.best_reviewed_subclass_lower_bound
+    assert best is not None
+    assert best.route_kind is ExtremeClassRouteKind.SUBCLASS
+    assert best.projected_delta == 648.0
+    assert best.reviewed_line_ids == ("storm_calling",)
+    assert best.score_status == "reviewed_subclass_line_lower_bound"
     assert result.can_declare_global_winner is False
 
 
@@ -96,3 +115,15 @@ def test_subclass_routes_never_claim_class_mastery(tmp_path):
 
     assert subclasses
     assert all(row.mastery_names == () for row in subclasses)
+
+
+def test_percent_subclass_line_requires_reference_value_before_it_gets_lower_bound(tmp_path):
+    service = ExtremeClassRouteComparisonService(_database(tmp_path))
+
+    without_reference = service.compare("magicka_recovery")
+    with_reference = service.compare("magicka_recovery", reference_value=1000)
+
+    assert without_reference.reviewed_subclass_lower_bound_count == 0
+    assert with_reference.reviewed_subclass_lower_bound_count > 0
+    assert with_reference.best_reviewed_subclass_lower_bound is not None
+    assert with_reference.best_reviewed_subclass_lower_bound.projected_delta == 200.0
