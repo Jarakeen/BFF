@@ -200,3 +200,27 @@ The later threshold moves more in absolute seconds because the faster group has 
 **What it means in actual play:** a rotation, cooldown plan, or healer-prep callout learned from one group can be mistimed in another group even when both are mechanically correct. Faster groups can push a health-triggered mechanic into a completely different part of a buff, Ultimate, potion, or sustain cycle.
 
 **For BFF:** health-triggered encounter planning should use the selected team's projected or observed damage trajectory. A fixed global timestamp would be wrong by construction. This also means team composition and rotation planning are mathematically coupled: changing raid damage can move encounter mechanics, and moved mechanics can in turn change the best rotation.
+
+---
+
+## 2026-09-07 — Preparing a heal earlier can improve sustain, not just readiness
+
+In the Xalvakka hardmode audit, the reviewed **70%** Phase 2 threshold projected to about **42.85 seconds** under a caller-supplied 1.5 million raid-DPS assumption. BFF opened an audit-only healer-preparation window from about **39.85s to 44.85s**.
+
+With ordinary scheduling, **Combat Prayer** was cast at 40s and **Budding Seeds** did not return until 48s. When the encounter-aware rotation was explicitly allowed to refresh Budding Seeds up to three seconds early for that Phase 2 preparation window, Budding Seeds moved to **40s** instead.
+
+The surprising part was the resource result:
+
+| Metric | Base rotation | Xalvakka-aware rotation | Change |
+| --- | ---: | ---: | ---: |
+| Minimum Magicka | 14,361 | 16,132 | +1,771 |
+| Ending Magicka | 21,853 | 23,624 | +1,771 |
+| Total shortfall | 0 | 0 | 0 |
+
+WAIT count, refresh-claim count, and horizon displacement were unchanged.
+
+**Layman's version:** casting the mechanic-prep heal earlier did not merely make the healer more prepared. Because that cast changed what happened later in the rotation, it also left Magrat with more Magicka overall. The same skill can therefore have a different sustain consequence depending on *where in the event sequence* it lands.
+
+**What it means in actual play:** an intentional early refresh before a dangerous mechanic is not automatically a sustain penalty. In some rotation paths it can actually be resource-positive compared with letting the ordinary schedule play out, because the early cast displaces or removes a later cost at a more awkward point in the cycle.
+
+**For BFF:** encounter preparation and sustain cannot be optimized independently. The planner needs to evaluate the resulting whole schedule after moving a prep cast, not assign a fixed "early refresh costs extra" penalty. This is another concrete example of ESO rotation sustain being path-dependent rather than a simple sum of casts.
