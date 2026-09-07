@@ -18,6 +18,25 @@ def _display_value(value) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
 
+def _load_packet(path: Path) -> tuple[dict, list]:
+    """Compatibility adapter for callers that still expect ``(payload, evidence)``.
+
+    ``load_encounter_evidence_packet`` is the canonical packet loader.  Older
+    audit/preview/test code historically imported this private helper and
+    expects a dict-like metadata payload plus a mutable evidence list.  Keep
+    that contract here while routing all parsing and validation through the
+    canonical loader so the two paths cannot drift apart.
+    """
+    packet = load_encounter_evidence_packet(path)
+    payload = {
+        "schema_version": packet.schema_version,
+        "content_id": packet.content_id,
+        "encounter_id": packet.encounter_id,
+        "encounter_name": packet.encounter_name,
+    }
+    return payload, list(packet.evidence)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Reconcile source-separated encounter evidence without changing the database"
