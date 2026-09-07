@@ -40,7 +40,7 @@ def _ro_healer() -> PlayerBuild:
     return build
 
 
-def test_recovery_pressure_enables_discovered_resto_recovery_incentive() -> None:
+def test_recovery_pressure_enables_discovered_staff_recovery_incentives() -> None:
     provider = RotationGenerationSupport()._wait_decision(
         build=_resto_healer(),
         request=RotationGenerationRequest(
@@ -50,7 +50,11 @@ def test_recovery_pressure_enables_discovered_resto_recovery_incentive() -> None
 
     assert isinstance(provider, RuntimeHealerWaitDecisionProvider)
     assert provider.recovery_pressure_resolver is _pressure_resolver
-    assert [item.name for item in provider.incentives] == ["Cycle of Life"]
+    assert [(item.bar, item.name) for item in provider.incentives] == [
+        ("front", "Fully Charged Heavy Attack Recovery"),
+        ("front", "Cycle of Life"),
+        ("back", "Fully Charged Heavy Attack Recovery"),
+    ]
     assert all(
         item.kind is HeavyAttackBuildIncentiveKind.RECOVERY_VALUE
         for item in provider.incentives
@@ -70,9 +74,11 @@ def test_ro_and_recovery_incentives_share_one_runtime_provider() -> None:
         HeavyAttackBuildIncentiveKind.RECOVERY_VALUE,
         HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT,
     }
-    assert {item.name for item in provider.incentives} == {
-        "Cycle of Life",
-        "Roaring Opportunist",
+    assert {(item.bar, item.name) for item in provider.incentives} == {
+        ("front", "Fully Charged Heavy Attack Recovery"),
+        ("front", "Cycle of Life"),
+        ("front", "Roaring Opportunist"),
+        ("back", "Fully Charged Heavy Attack Recovery"),
     }
 
 
