@@ -142,6 +142,81 @@ def test_standard_dropped_set_exposes_full_22_piece_sticker_shape(tmp_path):
     }
 
 
+def test_standard_dropped_set_recovers_missing_weapon_stickers(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "INSERT INTO gear_set(id, name, category, max_equip_count) VALUES (250, 'Armor Only Import', 'Trial', 5)"
+        )
+        armor_rows = [
+            (250, equip_type, 2, 0)
+            for equip_type in (1, 3, 4, 8, 9, 10, 13)
+        ]
+        jewelry_rows = [(250, 2, 0, 0), (250, 12, 0, 0)]
+        connection.executemany(
+            "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, ?)",
+            armor_rows + jewelry_rows,
+        )
+        connection.execute(
+            "INSERT INTO content(id, content_type, name, location) VALUES (7, 'trial', 'Recovered Trial', '')"
+        )
+        connection.execute(
+            "INSERT INTO content_sets(content_id, set_id) VALUES (7, 250)"
+        )
+        connection.commit()
+
+    service = StickerbookService(path)
+    pieces = service.pieces(250, "Jarakeen")
+    weapons = [piece for piece in pieces if piece.group == "Weapons"]
+
+    assert len(pieces) == 22
+    assert len(weapons) == 13
+    assert {piece.label for piece in weapons} == set(
+        (
+            "Axe", "Mace", "Sword", "Two-Handed Sword", "Two-Handed Axe",
+            "Two-Handed Mace", "Bow", "Restoration Staff", "Dagger",
+            "Inferno Staff", "Ice Staff", "Shield", "Lightning Staff",
+        )
+    )
+    row = next(row for row in service.sets("Jarakeen") if row["id"] == 250)
+    assert row["total"] == 22
+
+    inferno = next(piece for piece in weapons if piece.label == "Inferno Staff")
+    service.set_collected("Jarakeen", 250, inferno.piece_key, True)
+    row = next(row for row in service.sets("Jarakeen") if row["id"] == 250)
+    assert row["collected"] == 1
+
+
+def test_stickerbook_strips_eso_color_markup_from_display_text(tmp_path):
+    path = tmp_path / "eso.db"
+    _database(path)
+    with sqlite3.connect(path) as connection:
+        connection.executescript(
+            """
+            INSERT INTO gear_set(id, name, category, max_equip_count)
+            VALUES (260, '|cffffff9|Color Set|r', '|cFFFFFFTrial|r', 2);
+            INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type)
+            VALUES (260, 1, 2, 0);
+            INSERT INTO gear_set_bonus(set_id, piece_count, description)
+            VALUES (260, 2, '|cFFAA00Adds clean text|r');
+            INSERT INTO content(id, content_type, name, location)
+            VALUES (8, 'trial', '|c00FF00Color Trial|r', '');
+            INSERT INTO content_sets(content_id, set_id) VALUES (8, 260);
+            """
+        )
+        connection.commit()
+
+    service = StickerbookService(path)
+    row = next(row for row in service.sets("Jarakeen") if row["id"] == 260)
+
+    assert row["name"] == "Color Set"
+    assert row["category"] == "Trial"
+    assert row["source"] == "Color Trial"
+    assert service.bonuses(260) == [(2, "Adds clean text")]
+    assert "|c" not in " ".join((row["name"], row["category"], row["source"]))
+
+
 def test_stickerbook_classifies_monster_mythic_and_class_sets_and_excludes_crafted(tmp_path):
     path = tmp_path / "eso.db"
     _database(path)
