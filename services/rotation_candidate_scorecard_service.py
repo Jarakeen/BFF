@@ -5,6 +5,11 @@ from dataclasses import dataclass
 from minmax.encounter_requirements import EncounterRequirementSet
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from minmax.rotation_resource_reserve import (
+    RotationResourceReserveAssessment,
+    RotationResourceReserveRequirement,
+    assess_rotation_resource_reserves,
+)
 from minmax.support_coverage import SupportCoverage
 from services.rotation_plan_consequence_service import (
     RotationPlanConsequence,
@@ -68,6 +73,7 @@ class RotationCandidateScorecard:
     candidate_specific_unresolved: tuple[str, ...]
     inherited_schedule_notes: tuple[str, ...] = ()
     candidate_specific_schedule_notes: tuple[str, ...] = ()
+    reserve_assessments: tuple[RotationResourceReserveAssessment, ...] = ()
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -84,6 +90,10 @@ class RotationCandidateScorecard:
         return tuple(item.requirement for item in self.demand_coverage if not item.satisfied)
 
     @property
+    def failed_reserve_assessments(self) -> tuple[RotationResourceReserveAssessment, ...]:
+        return tuple(item for item in self.reserve_assessments if not item.satisfied)
+
+    @property
     def supplied_obligations_satisfied(self) -> bool:
         """Whether all caller-supplied hard obligations are currently satisfied.
 
@@ -94,6 +104,7 @@ class RotationCandidateScorecard:
         return (
             not self.missing_demand_requirements
             and not self.missing_required_effects
+            and not self.failed_reserve_assessments
             and self.candidate_shortfall == 0
         )
 
@@ -106,8 +117,10 @@ class RotationCandidateScorecardService:
     support effects use the existing static SupportCoverage model and therefore do
     not claim runtime uptime unless a later layer proves it.
 
-    Unresolved evidence is split into inherited/shared baseline limitations and
-    candidate-specific additions. Deterministic refresh-slot cascade messages are
+    Optional resource-reserve requirements are caller-supplied hard obligations at
+    named demand entry points. This layer never invents how much resource a mechanic
+    requires. Unresolved evidence is split into inherited/shared baseline limitations
+    and candidate-specific additions. Deterministic refresh-slot cascade messages are
     retained separately as schedule provenance rather than ranked as uncertainty.
     """
 
@@ -126,6 +139,7 @@ class RotationCandidateScorecardService:
         candidate_sustain: RotationSustainProjection,
         demands: tuple[RotationDemandWindow, ...] = (),
         demand_requirements: tuple[RotationDemandActionRequirement, ...] = (),
+        reserve_requirements: tuple[RotationResourceReserveRequirement, ...] = (),
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
     ) -> RotationCandidateScorecard:
@@ -156,6 +170,18 @@ class RotationCandidateScorecardService:
                     cast_times=cast_times,
                 )
             )
+
+        for requirement in reserve_requirements:
+            if requirement.demand_name not in demand_by_name:
+                raise ValueError(
+                    "rotation resource reserve requirement references unknown demand "
+                    f"{requirement.demand_name!r}"
+                )
+        reserve_assessments = assess_rotation_resource_reserves(
+            timeline=candidate_sustain.run.timeline,
+            demands=demands,
+            requirements=reserve_requirements,
+        )
 
         if (encounter_requirements is None) != (support_coverage is None):
             raise ValueError(
@@ -209,6 +235,7 @@ class RotationCandidateScorecardService:
             candidate_specific_unresolved=candidate_specific_unresolved,
             inherited_schedule_notes=inherited_notes,
             candidate_specific_schedule_notes=candidate_specific_notes,
+            reserve_assessments=reserve_assessments,
         )
 
     @staticmethod
