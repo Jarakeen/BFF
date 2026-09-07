@@ -36,12 +36,18 @@ class TeamProviderTimedApplication:
 
 @dataclass(frozen=True)
 class TeamProviderTemporalRequirement:
-    """A timed encounter window that should receive one named provider effect."""
+    """A timed encounter window that should receive one named provider effect.
+
+    ``minimum_distinct_sources`` is a strategy constraint, not a universal property
+    of the named buff. Use it when the encounter plan intentionally requires more
+    than one carrier, for example alternating support ultimates through a burn phase.
+    """
 
     effect_key: str
     start_seconds: float
     end_seconds: float
     label: str = "required window"
+    minimum_distinct_sources: int = 1
 
     def __post_init__(self) -> None:
         if not str(self.effect_key or "").strip():
@@ -50,6 +56,8 @@ class TeamProviderTemporalRequirement:
             raise ValueError("start_seconds cannot be negative")
         if self.end_seconds <= self.start_seconds:
             raise ValueError("end_seconds must be greater than start_seconds")
+        if self.minimum_distinct_sources <= 0:
+            raise ValueError("minimum_distinct_sources must be positive")
 
     @property
     def duration_seconds(self) -> float:
@@ -70,6 +78,13 @@ class TeamProviderTemporalCoverageResult:
     covered_intervals: tuple[tuple[float, float], ...]
     uncovered_intervals: tuple[tuple[float, float], ...]
     active_sources: tuple[str, ...]
+    minimum_distinct_sources: int
+    distinct_source_count: int
+    distinct_source_requirement_met: bool
+
+    @property
+    def full_requirement_met(self) -> bool:
+        return self.full_window_covered and self.distinct_source_requirement_met
 
 
 class TeamProviderTemporalCoverageService:
@@ -133,8 +148,10 @@ class TeamProviderTemporalCoverageService:
         if cursor < end - 1e-9:
             uncovered.append((cursor, end))
 
-        sources = tuple(
-            dict.fromkeys(source for _, _, source in clipped)
+        sources = tuple(dict.fromkeys(source for _, _, source in clipped))
+        distinct_source_count = len(sources)
+        source_requirement_met = (
+            distinct_source_count >= requirement.minimum_distinct_sources
         )
         ratio = 1.0 if required_seconds <= 0 else covered_seconds / required_seconds
         full = uncovered_seconds <= 1e-9
@@ -151,4 +168,7 @@ class TeamProviderTemporalCoverageService:
             covered_intervals=covered_intervals,
             uncovered_intervals=tuple(uncovered),
             active_sources=sources,
+            minimum_distinct_sources=requirement.minimum_distinct_sources,
+            distinct_source_count=distinct_source_count,
+            distinct_source_requirement_met=source_requirement_met,
         )
