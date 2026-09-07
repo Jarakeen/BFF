@@ -70,6 +70,8 @@ class RotationRequiredActionReserveService:
     _SYNTHETIC_DURATION_SECONDS = 1.0
     _COST_RELEVANT_CONTEXT_PREFIXES = (
         "rotation sustain currently infers equipped armor skill-line ownership",
+        "canonical character progression has no owned skill lines",
+        "rotation sustain could not use canonical character progression",
         "light armor: evocation",
         "medium armor: wind walker",
         "necklace ",
