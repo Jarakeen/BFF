@@ -55,6 +55,7 @@ def optimize_prescribed_roster_candidates(
     roster: PrescribedRoster,
     candidate_pools: dict[str, tuple[PrescribedSlotCandidateEvidence, ...]],
     provider_requirements_by_slot: dict[str, tuple[str, ...]] | None = None,
+    provider_required_recipients_by_slot: dict[str, dict[str, int]] | None = None,
     existing_team_effects: tuple[NamedBuffContribution, ...] = (),
 ) -> TeamPrescriptionOptimizationResult:
     """Rank and apply evidence-backed candidate pools to genuinely open chairs.
@@ -70,9 +71,15 @@ def optimize_prescribed_roster_candidates(
     forward so later slots receive credit only for effects still missing from the
     evolving team. Provider effects are a tie-break signal only; they are never added
     numerically to unlike canonical objective scores.
+
+    ``provider_required_recipients_by_slot`` adds a coverage-capacity requirement to
+    selected provider IDs. A candidate that owns the provider ID but cannot prove it
+    reaches the requested number of recipients is rejected. Slots/providers omitted
+    from this mapping retain the legacy identity-only requirement behavior.
     """
 
     provider_requirements_by_slot = provider_requirements_by_slot or {}
+    provider_required_recipients_by_slot = provider_required_recipients_by_slot or {}
     normalized_pools = {
         str(slot_name).strip().casefold(): tuple(candidates)
         for slot_name, candidates in candidate_pools.items()
@@ -81,6 +88,11 @@ def optimize_prescribed_roster_candidates(
     normalized_requirements = {
         str(slot_name).strip().casefold(): tuple(requirements)
         for slot_name, requirements in provider_requirements_by_slot.items()
+        if str(slot_name).strip()
+    }
+    normalized_recipient_requirements = {
+        str(slot_name).strip().casefold(): dict(requirements)
+        for slot_name, requirements in provider_required_recipients_by_slot.items()
         if str(slot_name).strip()
     }
 
@@ -140,6 +152,10 @@ def optimize_prescribed_roster_candidates(
             required_provider_requirement_ids=normalized_requirements.get(slot_key, ()),
             candidates=candidates,
             existing_team_effects=tuple(team_effects),
+            provider_required_recipients_by_id=normalized_recipient_requirements.get(
+                slot_key,
+                {},
+            ),
         )
         before = current
         current = apply_ranked_candidate_to_prescribed_roster(
