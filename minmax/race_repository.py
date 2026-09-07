@@ -21,6 +21,27 @@ class RaceRepository:
         self._stats_cache: dict[int, tuple[RaceStat, ...]] = {}
         self._stat_map_cache: dict[int, dict[str, float]] = {}
 
+    def list_races(self) -> list[Race]:
+        """Return every canonical race in deterministic name order."""
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    id,
+                    name,
+                    alliance,
+                    association
+                FROM race
+                ORDER BY name COLLATE NOCASE, id
+                """
+            ).fetchall()
+
+        result = [self._to_race(row) for row in rows]
+        for race in result:
+            self._race_by_id_cache.setdefault(int(race.id), race)
+            self._race_by_name_cache.setdefault(str(race.name), race)
+        return result
+
     def get_race(self, name: str) -> Race | None:
         key = str(name)
         if key in self._race_by_name_cache:
