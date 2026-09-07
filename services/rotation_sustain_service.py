@@ -15,6 +15,7 @@ from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepositor
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
+from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 
@@ -34,7 +35,8 @@ class RotationSustainService:
 
     The service owns only the bridge from ``RotationPlan`` scheduled skill actions
     into Phase 4 ``NamedBuildAction`` inputs. Cost resolution, build modifiers,
-    recovery timing, and resource-state math remain authoritative in Phase 4.
+    recovery timing, restoration events, and resource-state math remain
+    authoritative in Phase 4.
     """
 
     def __init__(
@@ -52,7 +54,16 @@ class RotationSustainService:
         build: PlayerBuild,
         plan: RotationPlan,
         resource: ResourceType = ResourceType.MAGICKA,
+        restoration_events: tuple[ResourceRestorationEvent, ...] = (),
     ) -> RotationSustainProjection:
+        """Evaluate one rotation/resource with only caller-verified restores.
+
+        Heavy attacks, potions, synergies, and other restore sources are not
+        inferred from action names here. A caller that has already proven an
+        exact restoration event may pass it through ``restoration_events``; the
+        Phase 4 timeline then owns ordering, capping, waste, and shortfall math.
+        """
+
         self._validate_identity(build, plan)
 
         named_actions = self.named_actions(plan)
@@ -82,6 +93,7 @@ class RotationSustainService:
                 JewelryCostModifierRepository(self.database_path),
                 JewelryTraitRepository(self.database_path),
             ),
+            restoration_events=tuple(restoration_events),
         )
 
         unresolved = self._dedupe(
@@ -102,9 +114,10 @@ class RotationSustainService:
     def named_actions(plan: RotationPlan) -> tuple[NamedBuildAction, ...]:
         """Project only resource-cost-bearing named ability actions.
 
-        Light attacks, waits, bar swaps, and potions are intentionally excluded.
-        Heavy-attack restoration and potion restoration/cooldown semantics remain
-        later Phase 13 temporal work rather than being fabricated here.
+        Light attacks, heavy attacks, waits, bar swaps, and potions are
+        intentionally excluded. A verified heavy/potion restore enters the
+        Phase 4 timeline through explicit ``restoration_events`` rather than an
+        invented amount derived from the action name.
         """
 
         return tuple(
