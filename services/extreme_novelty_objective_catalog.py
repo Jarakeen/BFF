@@ -25,6 +25,15 @@ class ExtremeNoveltyMetric:
 
 
 @dataclass(frozen=True)
+class ExtremePreferredScribedRoute:
+    weapon_family: str
+    grimoire: str
+    focus: str
+    signature: str | None = None
+    note: str = ""
+
+
+@dataclass(frozen=True)
 class ExtremeNoveltyRecipe:
     key: str
     label: str
@@ -34,6 +43,7 @@ class ExtremeNoveltyRecipe:
     required_back_weapon_family: str | None = None
     required_primary_resource: str | None = None
     required_role: str | None = None
+    preferred_scribed_routes: tuple[ExtremePreferredScribedRoute, ...] = ()
     note: str = ""
 
 
@@ -113,6 +123,20 @@ MOST_STAMINA_HEALER = ExtremeNoveltyRecipe(
     secondary=(HEALING_DONE, CRITICAL_HEALING),
     required_primary_resource="stamina",
     required_role="healer",
+    preferred_scribed_routes=(
+        ExtremePreferredScribedRoute(
+            weapon_family="bow",
+            grimoire="Vault",
+            focus="Healing",
+            signature="Sage's Remedy",
+            note=(
+                "Explore Healing Vault as a real stamina-costed Bow heal. Sage's "
+                "Remedy is a useful optional healing-over-time signature route. "
+                "This is a preferred candidate, not a hard requirement; stronger "
+                "legal stamina-healing routes must remain eligible to win."
+            ),
+        ),
+    ),
     note=(
         "Require a genuinely stamina-primary healer route rather than relabeling "
         "a magicka healer. Maximize actual healing output first, then report "
