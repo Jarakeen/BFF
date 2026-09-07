@@ -99,8 +99,9 @@ class ExtremeOptimizationPage(FoundryPage):
 
         self.warning_card = FoundryCard("Experimental Boundary")
         warning_text = QLabel(
-            "This tool deliberately ignores role viability, sustain, mechanics, and whether any sane raid lead would let you equip the result. "
-            "Existing-toon mode keeps the original bounded mutation search. From-scratch mode also searches race and static 5-piece set packages, but does not invent class-passive or runtime proc math BFF cannot yet prove."
+            "Existing-toon mode keeps the original bounded mutation search. "
+            "From-scratch mode uses a resting/self-contained character: worn gear, food, race, intrinsic passives, "
+            "and standing effects from skills actually slotted on the active bar. No group buffs, proc windows, or temporary cast buffs."
         )
         warning_text.setWordWrap(True)
         warning_text.setProperty("pageSubtitle", True)
@@ -230,8 +231,8 @@ class ExtremeOptimizationPage(FoundryPage):
         if scratch:
             self.scope_text.setPlainText(
                 "FROM SCRATCH\n"
-                "Starts with a neutral CP160 template, then searches race, static 5-piece set packages, attributes, Mundus, traits, enchants, and food.\n"
-                "Class-specific passive/proc winners stay unresolved until BFF can prove them consistently across every class."
+                "Resting/self-contained character only: worn gear, race, Mundus, food, intrinsic passives, and standing effects from skills on the selected active bar.\n"
+                "No group buffs, cast-required temporary buffs, target conditions, proc stacks, or potion uptime."
             )
         else:
             self.scope_text.clear()
@@ -264,7 +265,7 @@ class ExtremeOptimizationPage(FoundryPage):
 
     def _run_blueprint_search(self, objective_key: str, active_bar: str) -> None:
         self.status.info(
-            "Starting from Jane / John Doe and searching the static build space. Dignity remains optional."
+            "Starting from Jane / John Doe and searching the resting build space. Dignity remains optional."
         )
         try:
             result = self.blueprint_service.optimize_from_scratch(
@@ -278,7 +279,7 @@ class ExtremeOptimizationPage(FoundryPage):
         self.current_result = result
         self._show_blueprint_result(result)
         self.status.success(
-            f"Blueprint complete: {result.objective.label} {format_extreme_value(result.objective, result.value)} inside the proven static search boundary."
+            f"Blueprint complete: {result.objective.label} {format_extreme_value(result.objective, result.value)} inside the resting/self-contained boundary."
         )
 
     def _show_result(self, result: ExtremeOptimizationResult) -> None:
@@ -350,15 +351,21 @@ class ExtremeOptimizationPage(FoundryPage):
             ("Race", result.race or "—"),
             ("Class", result.class_label),
             (
-                "Class candidates",
-                ", ".join(result.class_candidates),
-            ),
-            (
                 "Attributes",
                 f"Health {build.AttributeHealth} / Magicka {build.AttributeMagicka} / Stamina {build.AttributeStamina}",
             ),
             ("Mundus", str(build.Mundus or "—")),
         ]
+
+        active_skills = build.FrontBarSkills
+        if not any(str(skill or "").strip() for skill in active_skills):
+            active_skills = build.BackBarSkills
+        for index, skill in enumerate(active_skills[:5], start=1):
+            if str(skill or "").strip():
+                rows.append((f"Skill {index}", str(skill)))
+        if len(active_skills) > 5 and str(active_skills[5] or "").strip():
+            rows.append(("Ultimate", str(active_skills[5])))
+
         if result.set_package:
             rows.append(("5-piece sets", " + ".join(result.set_package)))
 
@@ -381,7 +388,9 @@ class ExtremeOptimizationPage(FoundryPage):
             ("Ring 1", build.Ring1),
             ("Ring 2", build.Ring2),
             ("Front Weapon", build.FrontBarWeapon),
+            ("Front Off-Hand", build.FrontBarOffHand),
             ("Back Weapon", build.BackBarWeapon),
+            ("Back Off-Hand", build.BackBarOffHand),
         ):
             rows.append(
                 (
@@ -398,7 +407,7 @@ class ExtremeOptimizationPage(FoundryPage):
         rows.extend(
             [
                 ("Food", str(build.Food or "—")),
-                ("Potion", str(build.Potion or "No static potion winner modeled")),
+                ("Potion", str(build.Potion or "Excluded from resting result")),
             ]
         )
         return tuple(rows)
