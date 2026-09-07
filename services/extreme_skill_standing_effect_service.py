@@ -16,17 +16,27 @@ class ExtremeSkillStandingEffect:
 class ExtremeSkillStandingEffectService:
     """Reviewed active-skill standing effects usable by Extreme bar selection.
 
-    This is intentionally not a tooltip parser. Only mechanics already modeled
-    elsewhere in BFF are admitted here. Triggered/cast-dependent effects stay out
-    until their combat-state boundary is modeled explicitly.
+    This is intentionally not a tooltip parser. Only mechanics with a reviewed
+    numeric interpretation are admitted here. Triggered/cast-dependent effects
+    stay out until their combat-state boundary is modeled explicitly, and
+    percentage modifiers stay out until this service can project them against
+    the correct reference stat instead of pretending they are flat deltas.
     """
 
     MAJOR_CRIT_RATING = 2629.0
+    MINOR_RESOLVE_ARMOR = 2974.0
 
     _MAJOR_CRIT_WHILE_SLOTTED = frozenset(
         {
             "relentless focus",
             "merciless resolve",
+            "bound armaments",
+        }
+    )
+
+    _MINOR_RESOLVE_WHILE_SLOTTED = frozenset(
+        {
+            "bound aegis",
         }
     )
 
@@ -36,9 +46,10 @@ class ExtremeSkillStandingEffectService:
         if not name:
             return ()
 
+        label = str(skill_name or "").strip()
+
         if name in cls._MAJOR_CRIT_WHILE_SLOTTED:
             ratio = GearStatInputResolver.critical_rating_to_ratio(cls.MAJOR_CRIT_RATING)
-            label = str(skill_name or "").strip()
             source = f"{label}: reviewed while-slotted Major critical rating"
             return (
                 ExtremeSkillStandingEffect(
@@ -51,6 +62,23 @@ class ExtremeSkillStandingEffectService:
                     skill_name=label,
                     objective_key="weapon_critical",
                     projected_delta=ratio,
+                    source=source,
+                ),
+            )
+
+        if name in cls._MINOR_RESOLVE_WHILE_SLOTTED:
+            source = f"{label}: reviewed while-slotted Minor Resolve armor"
+            return (
+                ExtremeSkillStandingEffect(
+                    skill_name=label,
+                    objective_key="physical_resistance",
+                    projected_delta=cls.MINOR_RESOLVE_ARMOR,
+                    source=source,
+                ),
+                ExtremeSkillStandingEffect(
+                    skill_name=label,
+                    objective_key="spell_resistance",
+                    projected_delta=cls.MINOR_RESOLVE_ARMOR,
                     source=source,
                 ),
             )
