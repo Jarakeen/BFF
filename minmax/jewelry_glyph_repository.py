@@ -11,6 +11,19 @@ class JewelryGlyphEffectRepository:
     def __init__(self, database_path: str | Path):
         self.database_path = str(database_path)
 
+    def list_names(self) -> tuple[str, ...]:
+        """Return every distinct canonical jewelry-glyph name."""
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT name
+                FROM jewelry_glyph
+                WHERE name IS NOT NULL AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE
+                """
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def get_jewelry_glyph_effect(
         self,
         item_id: int,
