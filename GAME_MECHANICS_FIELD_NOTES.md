@@ -165,3 +165,17 @@ The recovery stabilizer now follows a loop:
 That is why an initial list of four possible recovery heavies can shrink to two once the first two have already fixed the later problem.
 
 **For BFF:** this fixed-point style of reasoning may turn out to be useful beyond sustain, especially anywhere one rotation choice changes the conditions that produced later choices.
+
+---
+
+## 2026-09-07 — Health-triggered mechanics do not live at one fixed clock time
+
+Encounter research stores some mechanics as boss-health thresholds, such as a phase change at **70% health**, while other mechanics may eventually have explicit seconds from pull.
+
+Those are not interchangeable kinds of timing.
+
+A mechanic at 70% happens earlier for a high-damage group and later for a lower-damage group. There is no honest conversion from "70%" to "24 seconds" unless we also model how quickly that specific group is damaging the boss.
+
+**Layman's version:** "this happens at 70%" tells you where the boss is in the fight, not what the stopwatch says. Faster groups reach that mechanic sooner.
+
+**For BFF:** encounter timing needs two lanes. Explicit clock events can feed rotation scheduling directly. Health-triggered events need a fight-duration or damage-trajectory projection before BFF can place them on the same seconds-based rotation timeline.
