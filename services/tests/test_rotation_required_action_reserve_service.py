@@ -53,6 +53,8 @@ def test_single_required_cast_derives_exact_canonical_cost_floor() -> None:
     assert result.action_costs == (("Budding Seeds", 1, 1993),)
     assert result.unresolved == ()
     assert result.as_requirement().minimum_amount == 1993
+    assert sustain.plan.duration_seconds > 0
+    assert sustain.plan.actions[0].time_seconds == 0.0
     assert sustain.plan.actions[0].name == "Budding Seeds"
 
 
