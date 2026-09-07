@@ -66,15 +66,22 @@ def main() -> int:
         print(f"{name}: {casts} required cast(s) -> {amount:,} canonical Magicka")
     print(f"Derived minimum cast-affordability reserve: {derivation.minimum_amount:,} Magicka")
 
-    if derivation.unresolved:
-        print("\nUNRESOLVED")
-        for message in derivation.unresolved:
+    if derivation.blocking_unresolved:
+        print("\nBLOCKING COST EVIDENCE")
+        for message in derivation.blocking_unresolved:
             print(f"  - {message}")
         print(
             "\nNo reserve requirement should be promoted from this derivation until the "
             "required action costs resolve cleanly."
         )
         return 1
+
+    print("\nPromotion: canonical required-action cost floor is resolved and may be used as a reserve requirement.")
+
+    if derivation.context_notes:
+        print("\nNON-BLOCKING CONTEXT NOTES")
+        for message in derivation.context_notes:
+            print(f"  - {message}")
 
     print(
         "\nBoundary: this is only the canonical resource needed to pay for the explicitly "
