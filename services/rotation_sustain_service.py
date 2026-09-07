@@ -18,6 +18,8 @@ from minmax.resource_costs import ResourceType
 from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
+from services.build_catalog_service import BuildCatalogService
+from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 
 
 @dataclass(frozen=True)
@@ -44,9 +46,19 @@ class RotationSustainService:
         database_path: Path = DEFAULT_DATABASE,
         *,
         sustain_evaluator: Callable[..., BuildSustainRun] = evaluate_named_build_sustain,
+        catalog_path: Path | None = None,
+        progression_adapter: MinmaxCharacterProgressionAdapter | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         self.sustain_evaluator = sustain_evaluator
+        resolved_catalog_path = (
+            Path(catalog_path)
+            if catalog_path is not None
+            else self.database_path.with_name("characters.json")
+        )
+        self.progression_adapter = progression_adapter or MinmaxCharacterProgressionAdapter(
+            BuildCatalogService(resolved_catalog_path)
+        )
 
     def evaluate(
         self,
@@ -148,14 +160,19 @@ class RotationSustainService:
         if cls._build_name(build).casefold() != plan.build_name.casefold():
             raise ValueError("rotation plan build identity does not match selected build")
 
-    @staticmethod
-    def _progression(build: PlayerBuild) -> tuple[CharacterProgression, tuple[str, ...]]:
-        """Build the same bounded progression input proven by the Phase 4 audit.
+    def _progression(self, build: PlayerBuild) -> tuple[CharacterProgression, tuple[str, ...]]:
+        """Prefer canonical character-owned progression and label compatibility inference.
 
-        Character-owned skill-line persistence is not yet authoritative in every
-        downstream page. Until Phase 1 adoption is complete, infer only armor lines
-        visibly equipped by this build and report that assumption explicitly.
+        The canonical adapter is authoritative when it resolves explicit owned
+        skill lines. Legacy catalogs may still contain an otherwise valid character
+        record with empty progression. In that case the historical equipped-armor
+        inference remains only as a compatibility path and is reported explicitly
+        because armor-line ownership can affect action costs.
         """
+
+        resolved = self.progression_adapter.resolve(build)
+        if resolved.resolved and resolved.progression.owned_skill_lines:
+            return resolved.progression, tuple(resolved.unresolved)
 
         armor_lines = {
             f"{str(entry.get('Weight', '') or '').strip().title()} Armor"
@@ -163,7 +180,7 @@ class RotationSustainService:
             if str(entry.get("Weight", "") or "").strip().casefold()
             in {"light", "medium", "heavy"}
         }
-        progression = CharacterProgression(
+        fallback = CharacterProgression(
             attributes=AttributeAllocation(
                 health=build.AttributeHealth,
                 magicka=build.AttributeMagicka,
@@ -171,11 +188,19 @@ class RotationSustainService:
             ),
             owned_skill_lines=tuple(sorted(armor_lines)),
         )
-        unresolved = (
-            "rotation sustain currently infers equipped armor skill-line ownership; "
-            "canonical character-owned progression adoption is still incomplete",
-        )
-        return progression, unresolved
+
+        unresolved = list(resolved.unresolved)
+        if resolved.resolved and not resolved.progression.owned_skill_lines:
+            unresolved.append(
+                "canonical character progression has no owned skill lines; rotation sustain "
+                "used equipped-armor inference as a compatibility fallback"
+            )
+        else:
+            unresolved.append(
+                "rotation sustain could not use canonical character progression; equipped-armor "
+                "skill-line ownership was inferred as a compatibility fallback"
+            )
+        return fallback, self._dedupe(tuple(unresolved))
 
     @staticmethod
     def _character_name(build: PlayerBuild) -> str:
