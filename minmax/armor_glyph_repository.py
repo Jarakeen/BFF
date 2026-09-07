@@ -17,6 +17,19 @@ class ArmorGlyphEffectRepository:
     def _name_key(value: str) -> str:
         return str(value or "").strip().casefold()
 
+    def list_names(self) -> tuple[str, ...]:
+        """Return every distinct canonical armor-glyph name."""
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT DISTINCT name
+                FROM armor_glyph
+                WHERE name IS NOT NULL AND TRIM(name) <> ''
+                ORDER BY name COLLATE NOCASE
+                """
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def get_armor_glyph_effect(
         self,
         item_id: int,
@@ -88,9 +101,6 @@ class ArmorGlyphEffectRepository:
                 (glyph_name,),
             ).fetchall()
 
-        # A glyph name can appear at multiple levels/qualities. Keep only the
-        # strongest row for each distinct effect type for the CP160/max-tier
-        # calculation path.
         strongest = []
         seen_effect_types: set[str] = set()
         for row in rows:
