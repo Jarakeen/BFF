@@ -14,6 +14,11 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_resource_reserve import RotationResourceReserveRequirement
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.healer_rotation_priority_service import HealerRotationPriorityService
+from services.rotation_candidate_generation_service import (
+    GeneratedRotationCandidate,
+    RotationCandidateGenerationService,
+    RotationRefreshLeadCandidateOption,
+)
 from services.rotation_candidate_ranking_service import (
     RotationCandidateRankingInput,
     RotationCandidateRankingService,
@@ -40,10 +45,65 @@ from ui.rotation_generation_support import RotationGenerationRequest, RotationGe
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
 
 
+def _candidate_options(values: tuple[float, ...]) -> tuple[RotationRefreshLeadCandidateOption, ...]:
+    result = []
+    seen: set[float] = set()
+    for raw in values:
+        seconds = float(raw)
+        if seconds <= 0:
+            raise ValueError("all --anticipation-seconds values must be positive")
+        if seconds in seen:
+            continue
+        seen.add(seconds)
+        label = f"seeds-{seconds:g}s-early"
+        result.append(
+            RotationRefreshLeadCandidateOption(
+                option_id=label,
+                refresh_leads=(
+                    DemandRefreshLead(
+                        demand_name=_DEMAND_NAME,
+                        bar="front",
+                        skill_name="Budding Seeds",
+                        lead_seconds=seconds,
+                    ),
+                ),
+            )
+        )
+    return tuple(result)
+
+
+def _plan_signature(candidate: GeneratedRotationCandidate):
+    return tuple(
+        (
+            float(action.time_seconds),
+            action.kind.value,
+            str(action.bar or ""),
+            str(action.name or ""),
+        )
+        for action in candidate.plan.actions
+    )
+
+
+def _dedupe_realized_candidates(
+    candidates: tuple[GeneratedRotationCandidate, ...],
+) -> tuple[GeneratedRotationCandidate, ...]:
+    """Drop candidate policies that realize to the exact same action schedule."""
+
+    seen: set[tuple] = set()
+    result = []
+    for candidate in candidates:
+        signature = _plan_signature(candidate)
+        if signature in seen:
+            continue
+        seen.add(signature)
+        result.append(candidate)
+    return tuple(result)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Rank baseline and encounter-aware DF Healer rotations at representative "
+            "Generate and rank explicit DF Healer rotation candidate families at representative "
             "Xalvakka DPS bands using hard obligations before resource consequences."
         )
     )
@@ -64,7 +124,16 @@ def main() -> int:
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--lead-seconds", type=float, default=3.0)
     parser.add_argument("--window-seconds", type=float, default=2.0)
-    parser.add_argument("--anticipation-seconds", type=float, default=3.0)
+    parser.add_argument(
+        "--anticipation-seconds",
+        type=float,
+        nargs="+",
+        default=(1.0, 2.0, 3.0),
+        help=(
+            "explicit Budding Seeds early-refresh permissions to generate as separate candidates; "
+            "these are audit inputs, not inferred gameplay strategy"
+        ),
+    )
     parser.add_argument(
         "--minimum-magicka-reserve",
         type=int,
@@ -83,6 +152,10 @@ def main() -> int:
     if args.minimum_magicka_reserve is not None and int(args.minimum_magicka_reserve) < 0:
         raise ValueError("--minimum-magicka-reserve cannot be negative")
 
+    options = _candidate_options(tuple(float(value) for value in args.anticipation_seconds))
+    if not options:
+        raise ValueError("at least one --anticipation-seconds value is required")
+
     database_path = Path(args.database)
     build = _load_saved_build(
         Path(args.builds),
@@ -96,23 +169,15 @@ def main() -> int:
         base_priorities=_BASE_PRIORITIES,
         demand_priorities=_DEMAND_PRIORITIES,
     )
-    refresh_leads = (
-        DemandRefreshLead(
-            demand_name=_DEMAND_NAME,
-            bar="front",
-            skill_name="Budding Seeds",
-            lead_seconds=float(args.anticipation_seconds),
-        ),
-    )
 
     refinement_service = RotationDurationRefinementService(database_path=database_path)
-    generator = RotationGenerationSupport(duration_refinement=refinement_service)
+    rotation_generator = RotationGenerationSupport(duration_refinement=refinement_service)
     request = RotationGenerationRequest(
         duration_seconds=float(args.duration),
         ability_priorities=priority_projection.entries,
     )
-    definition = generator.build_definition(build=build, request=request)
-    seed_plan = generator.planner.build_plan(definition, build)
+    definition = rotation_generator.build_definition(build=build, request=request)
+    seed_plan = rotation_generator.planner.build_plan(definition, build)
     base_plan = refinement_service.refine(
         seed_plan,
         priorities=priority_projection.priority_list,
@@ -124,14 +189,21 @@ def main() -> int:
         plan=base_plan,
         resource=ResourceType.MAGICKA,
     )
+    candidate_generator = RotationCandidateGenerationService(
+        refinement_service=refinement_service
+    )
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
 
-    print("=" * 112)
-    print(" PHASE 13 XALVAKKA HEALER CANDIDATE RANKING")
-    print("=" * 112)
+    print("=" * 118)
+    print(" PHASE 13 XALVAKKA HEALER CANDIDATE FAMILY RANKING")
+    print("=" * 118)
     print(f"Character: {args.character} | Build: {args.build}")
     print(f"Encounter: {guide.name} ({guide.encounter_id}) | Difficulty: {args.difficulty}")
+    print(
+        "Generated Seeds anticipation candidates: "
+        + ", ".join(f"{value:g}s" for value in args.anticipation_seconds)
+    )
     print(
         "Hard obligation: at least one front-bar Budding Seeds cast inside the projected "
         "Phase 2 healing-prep demand window"
@@ -145,28 +217,45 @@ def main() -> int:
             "(caller supplied)"
         )
     print(
-        "Boundary: this audit ranks only supplied obligations plus canonical Magicka consequences; "
-        "it does not certify the audit-only healer policy or any caller-supplied reserve as universal "
-        "gameplay truth"
+        "Boundary: candidate leads are explicit audit possibilities. This tool generates and ranks "
+        "their realized schedules; it does not infer that any lead value is canonical healer strategy."
     )
 
     for raid_dps in args.raid_dps:
-        phase_2, demand, aware_plan = _project_plan(
+        # Reuse the established threshold projection helper to obtain the exact demand window.
+        # Its one returned plan is intentionally discarded; the candidate generator below owns
+        # the family generation for this audit.
+        seed_refresh_leads = options[0].refresh_leads
+        phase_2, demand, _ = _project_plan(
             raid_dps=float(raid_dps),
             guide=guide,
             difficulty=args.difficulty,
             seed_plan=seed_plan,
             refinement_service=refinement_service,
             priorities=priority_projection.priority_list,
-            refresh_leads=refresh_leads,
+            refresh_leads=seed_refresh_leads,
             lead_seconds=float(args.lead_seconds),
             window_seconds=float(args.window_seconds),
         )
-        aware_sustain = sustain_service.evaluate(
-            build=build,
-            plan=aware_plan,
-            resource=ResourceType.MAGICKA,
+
+        generated = candidate_generator.generate(
+            seed_plan=seed_plan,
+            priorities=priority_projection.priority_list,
+            demands=(demand,),
+            options=options,
+            baseline_id="demand-aware-0s",
         )
+        all_candidates = _dedupe_realized_candidates(
+            (
+                GeneratedRotationCandidate(
+                    candidate_id="baseline",
+                    plan=base_plan,
+                    refresh_leads=(),
+                ),
+                *generated,
+            )
+        )
+
         requirement = RotationDemandActionRequirement(
             demand_name=demand.name,
             skill_name="Budding Seeds",
@@ -183,36 +272,38 @@ def main() -> int:
                 ),
             )
 
-        baseline_card = scorecard_service.compare(
-            baseline_plan=base_plan,
-            candidate_plan=base_plan,
-            baseline_sustain=base_sustain,
-            candidate_sustain=base_sustain,
-            demands=(demand,),
-            demand_requirements=(requirement,),
-            reserve_requirements=reserve_requirements,
-        )
-        aware_card = scorecard_service.compare(
-            baseline_plan=base_plan,
-            candidate_plan=aware_plan,
-            baseline_sustain=base_sustain,
-            candidate_sustain=aware_sustain,
-            demands=(demand,),
-            demand_requirements=(requirement,),
-            reserve_requirements=reserve_requirements,
-        )
-        ranked = ranking_service.rank(
-            (
-                RotationCandidateRankingInput("baseline", baseline_card),
-                RotationCandidateRankingInput("encounter-aware", aware_card),
+        ranking_inputs = []
+        for candidate in all_candidates:
+            candidate_sustain = (
+                base_sustain
+                if candidate.candidate_id == "baseline"
+                else sustain_service.evaluate(
+                    build=build,
+                    plan=candidate.plan,
+                    resource=ResourceType.MAGICKA,
+                )
             )
-        )
+            card = scorecard_service.compare(
+                baseline_plan=base_plan,
+                candidate_plan=candidate.plan,
+                baseline_sustain=base_sustain,
+                candidate_sustain=candidate_sustain,
+                demands=(demand,),
+                demand_requirements=(requirement,),
+                reserve_requirements=reserve_requirements,
+            )
+            ranking_inputs.append(
+                RotationCandidateRankingInput(candidate.candidate_id, card)
+            )
+
+        ranked = ranking_service.rank(tuple(ranking_inputs))
 
         print()
-        print("-" * 112)
+        print("-" * 118)
         print(
             f"{float(raid_dps):,.0f} RAID DPS | 70% at {float(phase_2.time_seconds):.2f}s | "
-            f"prep {demand.start_seconds:.2f}-{demand.end_seconds:.2f}s"
+            f"prep {demand.start_seconds:.2f}-{demand.end_seconds:.2f}s | "
+            f"{len(all_candidates)} unique realized schedules"
         )
         for item in ranked:
             card = item.scorecard
@@ -227,7 +318,7 @@ def main() -> int:
                     f"{reserve.requirement.minimum_amount:,}"
                 )
             print(
-                f"#{item.rank} {item.candidate_id:15s} | {item.tier.value:10s} | "
+                f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
                 f"{reserve_text}"
@@ -245,11 +336,10 @@ def main() -> int:
 
     print()
     print(
-        "Interpretation: hard encounter obligations decide eligibility before softer resource "
-        "consequences. An optional caller-supplied reserve is checked immediately before demand "
-        "entry, so a plan may be globally sustainable yet still be ineligible if it reaches the "
-        "mechanic under-resourced. Deterministic refresh cascades remain schedule notes rather than "
-        "unresolved evidence."
+        "Interpretation: the generator supplies multiple explicit schedule possibilities, then hard "
+        "encounter obligations decide eligibility before softer resource consequences. Exact duplicate "
+        "realized schedules are collapsed so differently named policies do not masquerade as extra "
+        "choices. Optional reserve remains caller supplied and is checked immediately before demand entry."
     )
     return 0
 
