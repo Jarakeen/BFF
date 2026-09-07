@@ -10,6 +10,7 @@ from services.btv_benchmark_evidence_service import (
     UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME,
     UPTIME_DENOMINATOR_FULL_ENCOUNTER,
     UPTIME_DENOMINATOR_UNKNOWN,
+    btv_uptime_denominator_from_exclude_downtime_toggle,
 )
 
 
@@ -56,6 +57,27 @@ def test_unknown_btv_denominator_does_not_claim_boss_immunity_is_excluded():
     assert len(insight) == 1
     assert insight[0].uptime_denominator_basis == UPTIME_DENOMINATOR_UNKNOWN
     assert insight[0].excludes_boss_immunity_time is None
+
+
+def test_btv_exclude_downtime_toggle_on_uses_damageable_boss_time():
+    assert (
+        btv_uptime_denominator_from_exclude_downtime_toggle(True)
+        == UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME
+    )
+
+
+def test_btv_exclude_downtime_toggle_off_uses_full_encounter_time():
+    assert (
+        btv_uptime_denominator_from_exclude_downtime_toggle(False)
+        == UPTIME_DENOMINATOR_FULL_ENCOUNTER
+    )
+
+
+def test_btv_cropped_or_unreadable_toggle_preserves_unknown_denominator():
+    assert (
+        btv_uptime_denominator_from_exclude_downtime_toggle(None)
+        == UPTIME_DENOMINATOR_UNKNOWN
+    )
 
 
 def test_damageable_time_denominator_explicitly_marks_immunity_as_excluded():
