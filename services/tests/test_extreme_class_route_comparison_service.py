@@ -43,17 +43,20 @@ def _database(tmp_path):
 
 
 class _MaterializingBarService:
-    def materialize(self, slot_counts):
+    def materialize(self, slot_counts, *, objective_key=""):
         if not slot_counts or sum(count for _, count in slot_counts) != 6:
             return None
         lines = [line for line, count in slot_counts for _ in range(count)]
         skills = []
         for index, line in enumerate(lines):
+            name = f"{line} skill {index + 1}"
+            if objective_key in {"spell_critical", "weapon_critical"} and line == "assassination" and index == 0:
+                name = "Relentless Focus"
             skills.append(
                 ExtremeSubclassBarSkill(
                     ability_id=10000 + index,
                     base_ability_id=20000 + index,
-                    name=f"{line} skill {index + 1}",
+                    name=name,
                     skill_line_id=line,
                     is_ultimate=index == 5,
                     morph=1,
@@ -66,7 +69,7 @@ class _MaterializingBarService:
 
 
 class _RejectingBarService:
-    def materialize(self, slot_counts):
+    def materialize(self, slot_counts, *, objective_key=""):
         return None
 
 
@@ -116,6 +119,20 @@ def test_spell_damage_subclass_lower_bound_uses_materialized_legal_bar(tmp_path)
     assert len(best.skill_bar_names) == 6
     assert len(best.skill_bar_ability_ids) == 6
     assert result.can_declare_global_winner is False
+
+
+def test_reviewed_while_slotted_skill_adds_to_subclass_critical_lower_bound(tmp_path):
+    service = _service(tmp_path)
+
+    result = service.compare("spell_critical")
+    best = result.best_reviewed_subclass_lower_bound
+
+    assert best is not None
+    assert "assassination" in best.equipped_skill_lines
+    assert "Relentless Focus" in best.skill_bar_names
+    assert any("Pressure Points" in source for source in best.reviewed_sources)
+    assert any("Relentless Focus" in source for source in best.reviewed_sources)
+    assert best.projected_delta > 0
 
 
 def test_unmaterializable_allocation_is_not_reported_as_numeric_lower_bound(tmp_path):
