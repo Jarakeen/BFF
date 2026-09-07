@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sqlite3
 
+import pytest
+
 from minmax.character_build.character_class import CharacterClass
 from services.extreme_class_route_comparison_service import (
     ExtremeClassRouteComparisonService,
@@ -10,6 +12,7 @@ from services.extreme_class_route_comparison_service import (
 from services.extreme_subclass_skill_bar_service import (
     ExtremeSubclassBarSkill,
     ExtremeSubclassSkillBarResult,
+    ExtremeSubclassTwoBarResult,
 )
 
 
@@ -73,6 +76,42 @@ class _RejectingBarService:
         return None
 
 
+class _AsymmetricTwoBarService:
+    @staticmethod
+    def _bar(slot_counts, *, reviewed_critical: bool, id_offset: int):
+        lines = [line for line, count in slot_counts for _ in range(count)]
+        skills = []
+        for index, line in enumerate(lines):
+            name = f"{line} skill {index + 1}"
+            if reviewed_critical and line == "assassination":
+                name = "Relentless Focus"
+                reviewed_critical = False
+            skills.append(
+                ExtremeSubclassBarSkill(
+                    ability_id=id_offset + index,
+                    base_ability_id=id_offset + 1000 + index,
+                    name=name,
+                    skill_line_id=line,
+                    is_ultimate=index == 5,
+                    morph=1,
+                )
+            )
+        return ExtremeSubclassSkillBarResult(slot_counts=slot_counts, skills=tuple(skills))
+
+    def materialize_two_bars(self, front_slot_counts, back_slot_counts, *, objective_key=""):
+        if not front_slot_counts or not back_slot_counts:
+            return None
+        if sum(count for _, count in front_slot_counts) != 6:
+            return None
+        if sum(count for _, count in back_slot_counts) != 6:
+            return None
+        critical = objective_key in {"spell_critical", "weapon_critical"}
+        return ExtremeSubclassTwoBarResult(
+            front=self._bar(front_slot_counts, reviewed_critical=critical, id_offset=30000),
+            back=self._bar(back_slot_counts, reviewed_critical=False, id_offset=40000),
+        )
+
+
 def _service(tmp_path, *, reject_bars: bool = False):
     bars = _RejectingBarService() if reject_bars else _MaterializingBarService()
     return ExtremeClassRouteComparisonService(
@@ -118,6 +157,8 @@ def test_spell_damage_subclass_lower_bound_uses_materialized_legal_bar(tmp_path)
     assert best.reviewed_sources == ("Expert Mage (6 Sorcerer slots)",)
     assert len(best.skill_bar_names) == 6
     assert len(best.skill_bar_ability_ids) == 6
+    assert len(best.front_skill_bar_names) == 6
+    assert len(best.back_skill_bar_names) == 6
     assert result.can_declare_global_winner is False
 
 
@@ -133,6 +174,37 @@ def test_reviewed_while_slotted_skill_adds_to_subclass_critical_lower_bound(tmp_
     assert any("Pressure Points" in source for source in best.reviewed_sources)
     assert any("Relentless Focus" in source for source in best.reviewed_sources)
     assert best.projected_delta > 0
+
+
+def test_two_bars_are_preserved_but_only_selected_active_bar_scores_while_slotted_effects(tmp_path):
+    service = ExtremeClassRouteComparisonService(
+        _database(tmp_path),
+        skill_bar_service=_AsymmetricTwoBarService(),
+    )
+
+    front = service.compare("spell_critical", active_bar="front")
+    back = service.compare("spell_critical", active_bar="back")
+    front_best = front.best_reviewed_subclass_lower_bound
+    back_best = back.best_reviewed_subclass_lower_bound
+
+    assert front_best is not None
+    assert back_best is not None
+    assert front_best.active_bar == "front"
+    assert back_best.active_bar == "back"
+    assert "Relentless Focus" in front_best.front_skill_bar_names
+    assert "Relentless Focus" not in front_best.back_skill_bar_names
+    assert front_best.skill_bar_names == front_best.front_skill_bar_names
+    assert back_best.skill_bar_names == back_best.back_skill_bar_names
+    assert front_best.projected_delta > back_best.projected_delta
+    assert any("Relentless Focus" in source for source in front_best.reviewed_sources)
+    assert not any("Relentless Focus" in source for source in back_best.reviewed_sources)
+
+
+def test_invalid_active_bar_is_rejected(tmp_path):
+    service = _service(tmp_path)
+
+    with pytest.raises(ValueError, match="active_bar"):
+        service.compare("spell_critical", active_bar="both")
 
 
 def test_unmaterializable_allocation_is_not_reported_as_numeric_lower_bound(tmp_path):
