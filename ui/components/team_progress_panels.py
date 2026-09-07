@@ -145,7 +145,7 @@ class TeamCoverageGrid(QWidget):
             title = QLabel(item.name)
             title.setProperty("sidebarHeading", True)
             state = QLabel(
-                f"{'✓' if item.covered else '○'}  {item.provider or 'Not covered yet'}"
+                "✓  Covered" if item.covered else "○  Not covered yet"
             )
             state.setProperty("coverageCovered", item.covered)
             layout.addWidget(title)
