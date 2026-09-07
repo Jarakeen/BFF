@@ -84,6 +84,19 @@ class ExtremeOptimizationPage(FoundryPage):
         root.setSpacing(5)
         self.add_workspace(workspace)
 
+        dashboard = QHBoxLayout()
+        dashboard.setContentsMargins(0, 0, 0, 0)
+        dashboard.setSpacing(8)
+        root.addLayout(dashboard, 1)
+
+        left_panel = QWidget()
+        left_panel.setMinimumWidth(330)
+        left_panel.setMaximumWidth(470)
+        left = QVBoxLayout(left_panel)
+        left.setContentsMargins(0, 0, 0, 0)
+        left.setSpacing(6)
+        dashboard.addWidget(left_panel, 0)
+
         self.warning_card = FoundryCard("Experimental Boundary")
         warning_text = QLabel(
             "This tool deliberately ignores role viability, sustain, mechanics, and whether any sane raid lead would let you equip the result. "
@@ -93,7 +106,7 @@ class ExtremeOptimizationPage(FoundryPage):
         warning_text.setProperty("pageSubtitle", True)
         self.warning_card.addWidget(warning_text)
         self.warning_card.setMaximumHeight(86)
-        root.addWidget(self.warning_card)
+        left.addWidget(self.warning_card)
 
         self.summary_card = FoundryCard("Result")
         summary_row = QHBoxLayout()
@@ -110,7 +123,22 @@ class ExtremeOptimizationPage(FoundryPage):
         summary_row.addWidget(self._metric("GAIN", self.delta_value), 1)
         self.summary_card.addLayout(summary_row)
         self.summary_card.setMaximumHeight(92)
-        root.addWidget(self.summary_card)
+        left.addWidget(self.summary_card)
+
+        self.scope_card = FoundryCard("Search Boundary")
+        self.scope_text = QTextEdit()
+        self.scope_text.setReadOnly(True)
+        self.scope_text.setMinimumHeight(100)
+        self.scope_text.setMaximumHeight(165)
+        self.scope_card.addWidget(self.scope_text)
+        left.addWidget(self.scope_card)
+        left.addStretch(1)
+
+        right_panel = QWidget()
+        right = QVBoxLayout(right_panel)
+        right.setContentsMargins(0, 0, 0, 0)
+        right.setSpacing(0)
+        dashboard.addWidget(right_panel, 1)
 
         self.changes_card = FoundryCard("Accepted Mutations")
         self.change_table = QTableWidget(0, 4)
@@ -120,9 +148,9 @@ class ExtremeOptimizationPage(FoundryPage):
         self.change_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.change_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.change_table.horizontalHeader().setStretchLastSection(True)
-        self.change_table.setMaximumHeight(230)
+        self.change_table.setMinimumHeight(470)
         self.changes_card.addWidget(self.change_table)
-        root.addWidget(self.changes_card)
+        right.addWidget(self.changes_card, 1)
 
         self.blueprint_card = FoundryCard("From-Scratch Build Blueprint")
         self.blueprint_table = QTableWidget(0, 2)
@@ -131,20 +159,10 @@ class ExtremeOptimizationPage(FoundryPage):
         self.blueprint_table.setAlternatingRowColors(True)
         self.blueprint_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.blueprint_table.horizontalHeader().setStretchLastSection(True)
-        self.blueprint_table.setMaximumHeight(300)
+        self.blueprint_table.setMinimumHeight(520)
         self.blueprint_card.addWidget(self.blueprint_table)
         self.blueprint_card.setVisible(False)
-        root.addWidget(self.blueprint_card)
-
-        self.scope_card = FoundryCard("Search Boundary")
-        self.scope_text = QTextEdit()
-        self.scope_text.setReadOnly(True)
-        self.scope_text.setMinimumHeight(72)
-        self.scope_text.setMaximumHeight(105)
-        self.scope_card.addWidget(self.scope_text)
-        root.addWidget(self.scope_card)
-
-        root.addStretch(1)
+        right.addWidget(self.blueprint_card, 1)
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
