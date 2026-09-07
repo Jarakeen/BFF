@@ -19,6 +19,10 @@ RecoveryAwareRotationGenerator = Callable[
     [RecoveryHeavyPressureResolver | None],
     RotationPlan,
 ]
+RecoveryHardObligationStateResolver = Callable[
+    [RotationPlan, RotationRecoveryHeavyReplay],
+    tuple[str, ...],
+]
 
 
 @dataclass(frozen=True)
@@ -28,7 +32,11 @@ class RotationRecoveryHeavyStabilizationIteration:
     iteration: int
     plan: RotationPlan
     replay: RotationRecoveryHeavyReplay
-    heavy_signature: tuple[tuple[float, str | None, str | None], ...]
+    heavy_signature: tuple[tuple[float, int, str | None, str | None], ...]
+    plan_signature: tuple[object, ...]
+    minimum_resource: int
+    total_shortfall: int
+    hard_obligation_state: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -39,20 +47,25 @@ class RotationRecoveryHeavyStabilizationResult:
     replay: RotationRecoveryHeavyReplay
     iterations: tuple[RotationRecoveryHeavyStabilizationIteration, ...]
     converged: bool
+    termination_reason: str
 
 
 class RotationRecoveryHeavyStabilizationService:
-    """Regenerate recovery-heavy rotations until the heavy schedule stabilizes.
+    """Regenerate recovery-heavy rotations until the complete schedule state stabilizes.
 
     Each iteration generates a plan from the latest pressure resolver, replays all
     caller-verified heavy restores through the authoritative Phase 4 sustain path,
-    then builds the next pressure resolver from that replayed timeline. Convergence
-    is defined only by the scheduled heavy signature (time, bar, name), not by
-    diagnostic text or unrelated plan metadata.
+    then builds the next pressure resolver from that replayed timeline.
 
-    The service never invents restoration amounts, reserve requirements, or a
-    recovery threshold. Those remain explicit caller evidence. A hard iteration
-    cap prevents oscillating pressure policies from looping indefinitely.
+    Fixed-point convergence requires the semantic action schedule, heavy positions,
+    replayed resource floor/shortfall, and caller-supplied hard-obligation state to
+    remain unchanged. Repeating only the heavy list is not sufficient because a
+    heavy can displace other casts or change whether a mandatory responsibility is
+    still satisfied.
+
+    The service never invents restoration amounts, reserve requirements, hard
+    obligations, or a recovery threshold. Those remain explicit caller evidence. A
+    hard iteration cap prevents oscillating policies from looping indefinitely.
     """
 
     def __init__(
@@ -71,6 +84,7 @@ class RotationRecoveryHeavyStabilizationService:
         trigger_fraction: float,
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
+        hard_obligation_state_resolver: RecoveryHardObligationStateResolver | None = None,
         max_iterations: int = 6,
     ) -> RotationRecoveryHeavyStabilizationResult:
         limit = int(max_iterations)
@@ -78,7 +92,7 @@ class RotationRecoveryHeavyStabilizationService:
             raise ValueError("recovery-heavy stabilization max_iterations must be positive")
 
         pressure_resolver: RecoveryHeavyPressureResolver | None = None
-        previous_signature: tuple[tuple[float, str | None, str | None], ...] | None = None
+        previous_state_signature: tuple[object, ...] | None = None
         iterations: list[RotationRecoveryHeavyStabilizationIteration] = []
 
         final_plan: RotationPlan | None = None
@@ -92,27 +106,46 @@ class RotationRecoveryHeavyStabilizationService:
                 resource=resource,
                 restoration_resolver=restoration_resolver,
             )
-            signature = self._heavy_signature(plan)
+            heavy_signature = self._heavy_signature(plan)
+            plan_signature = self._plan_signature(plan)
+            minimum_resource, total_shortfall = self._resource_state(replay)
+            hard_obligation_state = self._hard_obligation_state(
+                resolver=hard_obligation_state_resolver,
+                plan=plan,
+                replay=replay,
+            )
+            state_signature: tuple[object, ...] = (
+                plan_signature,
+                heavy_signature,
+                minimum_resource,
+                total_shortfall,
+                hard_obligation_state,
+            )
             iterations.append(
                 RotationRecoveryHeavyStabilizationIteration(
                     iteration=index,
                     plan=plan,
                     replay=replay,
-                    heavy_signature=signature,
+                    heavy_signature=heavy_signature,
+                    plan_signature=plan_signature,
+                    minimum_resource=minimum_resource,
+                    total_shortfall=total_shortfall,
+                    hard_obligation_state=hard_obligation_state,
                 )
             )
             final_plan = plan
             final_replay = replay
 
-            if previous_signature is not None and signature == previous_signature:
+            if previous_state_signature is not None and state_signature == previous_state_signature:
                 return RotationRecoveryHeavyStabilizationResult(
                     plan=plan,
                     replay=replay,
                     iterations=tuple(iterations),
                     converged=True,
+                    termination_reason="stable_fixed_point",
                 )
 
-            previous_signature = signature
+            previous_state_signature = state_signature
             pressure_resolver = self.replay_service.pressure_resolver(
                 replay=replay,
                 maximum_amount=maximum_amount,
@@ -127,18 +160,58 @@ class RotationRecoveryHeavyStabilizationService:
             replay=final_replay,
             iterations=tuple(iterations),
             converged=False,
+            termination_reason="iteration_limit_reached",
         )
 
     @staticmethod
     def _heavy_signature(
         plan: RotationPlan,
-    ) -> tuple[tuple[float, str | None, str | None], ...]:
+    ) -> tuple[tuple[float, int, str | None, str | None], ...]:
         return tuple(
             (
                 float(action.time_seconds),
+                int(action.sequence),
                 action.bar,
                 action.name,
             )
             for action in plan.actions
             if action.kind is RotationActionKind.HEAVY_ATTACK
         )
+
+    @staticmethod
+    def _plan_signature(plan: RotationPlan) -> tuple[object, ...]:
+        actions = tuple(
+            (
+                float(action.time_seconds),
+                int(action.sequence),
+                action.kind.value,
+                action.name,
+                action.bar,
+            )
+            for action in plan.actions
+        )
+        return (
+            plan.character_name,
+            plan.build_name,
+            float(plan.duration_seconds),
+            actions,
+        )
+
+    @staticmethod
+    def _resource_state(replay: RotationRecoveryHeavyReplay) -> tuple[int, int]:
+        timeline = replay.final_projection.run.timeline
+        amounts = [int(timeline.starting_amount)]
+        amounts.extend(int(event.after) for event in timeline.events)
+        minimum_resource = min(amounts)
+        return minimum_resource, int(timeline.total_shortfall)
+
+    @staticmethod
+    def _hard_obligation_state(
+        *,
+        resolver: RecoveryHardObligationStateResolver | None,
+        plan: RotationPlan,
+        replay: RotationRecoveryHeavyReplay,
+    ) -> tuple[str, ...]:
+        if resolver is None:
+            return ()
+        return tuple(str(value).strip() for value in resolver(plan, replay) if str(value).strip())
