@@ -125,12 +125,44 @@ def test_missing_cost_event_keeps_derivation_unresolved_and_blocks_requirement()
         result.as_requirement()
 
 
+def test_cost_relevant_armor_progression_uncertainty_stays_blocking() -> None:
+    service = RotationRequiredActionReserveService(
+        _StubSustainService(
+            events=(_event("Budding Seeds", 1993),),
+            unresolved=(
+                "rotation sustain currently infers equipped armor skill-line ownership; canonical character-owned progression adoption is still incomplete",
+                "Champion Point is dynamic or not yet stat-mapped: Celerity",
+                "Potion selected; activation/uptime is not part of static build state: spell power",
+            ),
+        )
+    )
+
+    result = service.derive(
+        build=_build(),
+        demand_name="Phase 2 healing prep",
+        requirements=(
+            RotationDemandActionRequirement(
+                demand_name="Phase 2 healing prep",
+                skill_name="Budding Seeds",
+            ),
+        ),
+    )
+
+    assert result.resolved is False
+    assert result.blocking_unresolved == (
+        "rotation sustain currently infers equipped armor skill-line ownership; canonical character-owned progression adoption is still incomplete",
+    )
+    assert len(result.context_notes) == 2
+    with pytest.raises(ValueError, match="unresolved action costs"):
+        result.as_requirement()
+
+
 def test_unrelated_context_warnings_remain_visible_without_blocking_resolved_cost() -> None:
     service = RotationRequiredActionReserveService(
         _StubSustainService(
             events=(_event("Budding Seeds", 1993),),
             unresolved=(
-                "rotation sustain currently infers equipped armor skill-line ownership",
+                "Champion Point is dynamic or not yet stat-mapped: Master Gatherer",
                 "Champion Point is dynamic or not yet stat-mapped: Celerity",
                 "Potion selected; activation/uptime is not part of static build state: spell power",
             ),
