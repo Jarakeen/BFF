@@ -25,6 +25,31 @@ RecoveryHeavyPressureResolver = Callable[
 ]
 
 
+def unique_recovery_incentives(
+    incentives: tuple[HealerHeavyAttackBuildIncentive, ...],
+) -> tuple[HealerHeavyAttackBuildIncentive, ...]:
+    """Collapse equivalent recovery opportunities to one candidate per bar/weapon.
+
+    Build discovery may expose multiple pieces of evidence for the same fully charged
+    heavy, for example base Restoration Staff Magicka recovery plus Cycle of Life.
+    Those remain distinct static evidence, but they do not represent two different
+    runtime actions. Caller order is preserved so the first discovered incentive is
+    the representative scheduling opportunity.
+    """
+
+    seen: set[tuple[str, object]] = set()
+    result: list[HealerHeavyAttackBuildIncentive] = []
+    for incentive in incentives:
+        if incentive.kind is not HeavyAttackBuildIncentiveKind.RECOVERY_VALUE:
+            continue
+        key = (incentive.bar, incentive.weapon)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(incentive)
+    return tuple(result)
+
+
 @dataclass
 class RuntimeHealerWaitDecisionProvider:
     """Convert required/recovery heavy evidence into safe WAIT replacements.
@@ -37,11 +62,12 @@ class RuntimeHealerWaitDecisionProvider:
     provider has no authority to invent mechanic or emergency-heal state.
 
     REQUIRED_EFFECT candidates retain priority over RECOVERY candidates through
-    ``HealerWaitDecisionProvider``. A scheduled fully charged heavy reserves
-    ``required_window_seconds`` of the timeline so ordinary same-bar skill
-    decisions inside the channel are displaced instead of overlapping the heavy.
-    Required-effect triggers are recorded at channel completion so later WAIT
-    points in the same generated plan respect effect recurrence.
+    ``HealerWaitDecisionProvider``. Multiple static recovery facts for the same
+    bar/weapon collapse to one runtime recovery opportunity. A scheduled fully
+    charged heavy reserves ``required_window_seconds`` of the timeline so ordinary
+    same-bar skill decisions inside the channel are displaced instead of overlapping
+    the heavy. Required-effect triggers are recorded at channel completion so later
+    WAIT points in the same generated plan respect effect recurrence.
     """
 
     incentives: tuple[HealerHeavyAttackBuildIncentive, ...]
@@ -71,9 +97,7 @@ class RuntimeHealerWaitDecisionProvider:
         if self.recovery_pressure_resolver is not None:
             pressure = self.recovery_pressure_resolver(context)
             if pressure is not None:
-                for incentive in self.incentives:
-                    if incentive.kind is not HeavyAttackBuildIncentiveKind.RECOVERY_VALUE:
-                        continue
+                for incentive in unique_recovery_incentives(self.incentives):
                     candidate = build_recovery_heavy_attack_candidate(
                         incentive=incentive,
                         pressure=pressure,
