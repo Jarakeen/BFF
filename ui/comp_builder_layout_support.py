@@ -53,10 +53,6 @@ def _install_layout(page) -> None:
     root.setSpacing(10)
     root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    # Main Comp Maker workspace is intentionally two columns. The left side owns
-    # the player composition and its raid-wide evidence. The right side owns the
-    # compact action controls and the ESO Logs / selected-chair catalog. Both
-    # columns grow vertically; the page itself still forbids horizontal scrolling.
     columns = QHBoxLayout()
     columns.setContentsMargins(0, 0, 0, 0)
     columns.setSpacing(10)
@@ -88,16 +84,15 @@ def _install_layout(page) -> None:
     left.addWidget(evidence, 0)
     left.addStretch(1)
 
-    # RIGHT: compact controls above the ESO Logs/candidate catalog. It is still
-    # intentionally much smaller than the catalog, but tall enough to show the full
-    # ordinary workflow without clipping rows of controls.
-    actions.setMinimumHeight(270)
-    actions.setMaximumHeight(310)
+    # RIGHT: plan name/style now live in the page header, so Actions only needs the
+    # execution rows. Give the reclaimed height directly to the ESO Logs catalog.
+    actions.setMinimumHeight(205)
+    actions.setMaximumHeight(225)
     right.addWidget(actions, 0)
 
     details.title_label.setText("ESO Logs Catalog & Chair Evidence")
-    details.setMinimumHeight(700)
-    details.setMaximumHeight(980)
+    details.setMinimumHeight(760)
+    details.setMaximumHeight(1060)
     right.addWidget(details, 1)
     right.addStretch(1)
 
