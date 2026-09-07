@@ -12,6 +12,7 @@ from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.demand_action_claim_duration_scheduler import DemandActionClaim
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.resource_costs import ResourceType
+from minmax.rotation_plan import RotationActionKind
 from minmax.rotation_resource_reserve import RotationResourceReserveRequirement
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.healer_rotation_priority_service import HealerRotationPriorityService
@@ -36,6 +37,53 @@ from ui.rotation_generation_support import RotationGenerationRequest, RotationGe
 
 
 DEFAULT_BUILDS = get_data_dir() / "builds.json"
+
+
+def _window_actions(plan, *, start_seconds: float, end_seconds: float):
+    return tuple(
+        action
+        for action in plan.actions
+        if start_seconds <= float(action.time_seconds) < end_seconds
+        and action.kind is not RotationActionKind.LIGHT_ATTACK
+    )
+
+
+def _front_skill_slots_inside_demand(plan, demand):
+    return tuple(
+        action
+        for action in plan.actions
+        if demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
+        and action.bar == "front"
+        and action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
+    )
+
+
+def _print_window_trace(label: str, plan, demand) -> None:
+    trace_start = max(0.0, float(demand.start_seconds) - 2.0)
+    trace_end = float(demand.end_seconds) + 2.0
+    rows = _window_actions(plan, start_seconds=trace_start, end_seconds=trace_end)
+    slots = _front_skill_slots_inside_demand(plan, demand)
+
+    print(f"\n{label} ACTION TRACE ({trace_start:.2f}-{trace_end:.2f}s)")
+    if not rows:
+        print("  (no non-light-attack actions)")
+    else:
+        for action in rows:
+            inside = demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
+            marker = "IN DEMAND" if inside else ""
+            print(
+                f"  {float(action.time_seconds):6.2f}s | {action.kind.value:12s} | "
+                f"{str(action.bar or '-'):5s} | {str(action.name or '(unnamed)'):28s} {marker}"
+            )
+
+    if slots:
+        rendered = ", ".join(
+            f"{float(action.time_seconds):g}s {action.name or action.kind.value}"
+            for action in slots
+        )
+        print(f"  Front-bar skill slots inside demand: {rendered}")
+    else:
+        print("  Front-bar skill slots inside demand: NONE")
 
 
 def main() -> int:
@@ -126,8 +174,6 @@ def main() -> int:
     )
 
     for raid_dps in args.raid_dps:
-        # Reuse the established threshold projection path only to obtain the exact
-        # health-derived demand window. The returned lead-based plan is discarded.
         phase_2, demand, _ = _project_plan(
             raid_dps=float(raid_dps),
             guide=guide,
@@ -241,11 +287,14 @@ def main() -> int:
                 for message in card.candidate_specific_unresolved:
                     print(f"      * {message}")
 
+        _print_window_trace("BASELINE", base_plan, demand)
+        _print_window_trace("MECHANIC CLAIM", claim_plan, demand)
+
     print()
     print(
-        "Interpretation: if the mechanic-claim plan becomes eligible, the 2.0m failure was not a lack "
-        "of available action time; it was a policy limitation of due-only refresh scheduling. The "
-        "resource/cascade evidence then shows the concrete price of deliberately moving Seeds into the mechanic."
+        "Interpretation: if the mechanic-claim plan becomes eligible, the 2.0m failure was a policy "
+        "limitation of due-only refresh scheduling. If the trace shows no front-bar skill slot inside "
+        "the demand, the remaining blocker is timeline/bar availability rather than Seeds refresh timing."
     )
     return 0
 
