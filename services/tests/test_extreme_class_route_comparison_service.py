@@ -112,6 +112,52 @@ class _AsymmetricTwoBarService:
         )
 
 
+class _ResistanceSkillBarService:
+    @staticmethod
+    def _bar(slot_counts, id_offset: int):
+        skills = []
+        next_id = id_offset
+        ultimate_assigned = False
+        for line, count in slot_counts:
+            for index in range(count):
+                name = f"{line} skill {index + 1}"
+                if line == "daedric_summoning" and index == 0:
+                    name = "Bound Aegis"
+                is_ultimate = False
+                skills.append(
+                    ExtremeSubclassBarSkill(
+                        ability_id=next_id,
+                        base_ability_id=next_id + 1000,
+                        name=name,
+                        skill_line_id=line,
+                        is_ultimate=is_ultimate,
+                        morph=1,
+                    )
+                )
+                next_id += 1
+        if skills:
+            last = skills[-1]
+            skills[-1] = ExtremeSubclassBarSkill(
+                ability_id=last.ability_id,
+                base_ability_id=last.base_ability_id,
+                name=last.name,
+                skill_line_id=last.skill_line_id,
+                is_ultimate=True,
+                morph=last.morph,
+            )
+            ultimate_assigned = True
+        if not ultimate_assigned or len(skills) != 6:
+            return None
+        return ExtremeSubclassSkillBarResult(slot_counts=slot_counts, skills=tuple(skills))
+
+    def materialize_two_bars(self, front_slot_counts, back_slot_counts, *, objective_key=""):
+        front = self._bar(front_slot_counts, 50000)
+        back = self._bar(back_slot_counts, 60000)
+        if front is None or back is None:
+            return None
+        return ExtremeSubclassTwoBarResult(front=front, back=back)
+
+
 def _service(tmp_path, *, reject_bars: bool = False):
     bars = _RejectingBarService() if reject_bars else _MaterializingBarService()
     return ExtremeClassRouteComparisonService(
@@ -174,6 +220,44 @@ def test_reviewed_while_slotted_skill_adds_to_subclass_critical_lower_bound(tmp_
     assert any("Pressure Points" in source for source in best.reviewed_sources)
     assert any("Relentless Focus" in source for source in best.reviewed_sources)
     assert best.projected_delta > 0
+
+
+def test_joint_search_can_trade_one_passive_slot_for_stronger_reviewed_skill(tmp_path, monkeypatch):
+    service = ExtremeClassRouteComparisonService(
+        _database(tmp_path),
+        skill_bar_service=_ResistanceSkillBarService(),
+    )
+
+    monkeypatch.setattr(
+        "services.extreme_class_route_comparison_service.ExtremeClassConfigurationService.all_candidates",
+        lambda: [
+            type(
+                "Config",
+                (),
+                {
+                    "is_pure_class": False,
+                    "base_class": CharacterClass.SORCERER,
+                    "equipped_skill_lines": (
+                        "winters_embrace",
+                        "daedric_summoning",
+                        "storm_calling",
+                    ),
+                },
+            )()
+        ],
+    )
+    monkeypatch.setattr(service.mastery_pairs, "best_pure_class_routes", lambda *args, **kwargs: ())
+
+    result = service.compare("physical_resistance")
+    best = result.best_reviewed_subclass_lower_bound
+
+    assert best is not None
+    assert dict(best.slot_counts)["winters_embrace"] == 5
+    assert dict(best.slot_counts)["daedric_summoning"] == 1
+    assert "Bound Aegis" in best.skill_bar_names
+    assert any("Frozen Armor (5" in source for source in best.reviewed_sources)
+    assert any("Bound Aegis" in source for source in best.reviewed_sources)
+    assert best.projected_delta == pytest.approx(9174.0)
 
 
 def test_two_bars_are_preserved_but_only_selected_active_bar_scores_while_slotted_effects(tmp_path):
