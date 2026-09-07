@@ -32,6 +32,20 @@ def test_range_can_use_min_value():
     assert stats(effects) == [(StatId.MAX_HEALTH, 28.0)]
 
 
+def test_singular_one_item_prefix_is_stripped():
+    effects = GearSetEffectResolver().resolve(
+        bonus("(1 item) Adds 3-129 Magicka Recovery", piece_count=1)
+    )
+    assert stats(effects) == [(StatId.MAGICKA_RECOVERY, 129.0)]
+
+
+def test_perfected_items_prefix_is_stripped():
+    effects = GearSetEffectResolver().resolve(
+        bonus("(5 perfected items) Adds 15-657 Critical Chance", piece_count=5)
+    )
+    assert stats(effects) == [(StatId.CRITICAL_CHANCE, 657.0)]
+
+
 def test_eso_color_markup_is_stripped():
     effects = GearSetEffectResolver().resolve(
         bonus(
