@@ -33,6 +33,8 @@ def _database(tmp_path):
 
 
 class _SkillOnlyBarService:
+    skill_name = "Tome-Bearer's Inspiration"
+
     def materialize_two_bars(
         self,
         front_slot_counts,
@@ -50,7 +52,7 @@ class _SkillOnlyBarService:
                 ExtremeSubclassBarSkill(
                     ability_id=offset + 1,
                     base_ability_id=offset + 101,
-                    name="Tome-Bearer's Inspiration",
+                    name=self.skill_name,
                     skill_line_id="herald_of_the_tome",
                     is_ultimate=False,
                     morph=1,
@@ -104,8 +106,12 @@ class _SkillOnlyBarService:
         )
 
 
-def test_skill_only_standing_effect_can_create_reviewed_subclass_lower_bound(monkeypatch, tmp_path):
-    config = type(
+class _UnreviewedBarService(_SkillOnlyBarService):
+    skill_name = "Unreviewed Herald Skill"
+
+
+def _config():
+    return type(
         "Config",
         (),
         {
@@ -119,7 +125,9 @@ def test_skill_only_standing_effect_can_create_reviewed_subclass_lower_bound(mon
         },
     )()
 
-    monkeypatch.setattr(module.ExtremeClassConfigurationService, "all_candidates", lambda: [config])
+
+def test_skill_only_standing_effect_can_create_reviewed_subclass_lower_bound(monkeypatch, tmp_path):
+    monkeypatch.setattr(module.ExtremeClassConfigurationService, "all_candidates", lambda: [_config()])
 
     service = ExtremeClassRouteComparisonService(
         _database(tmp_path),
@@ -134,3 +142,20 @@ def test_skill_only_standing_effect_can_create_reviewed_subclass_lower_bound(mon
     assert route.projected_delta == 1000.0
     assert "Tome-Bearer's Inspiration" in route.front_skill_bar_names
     assert any("Major Brutality/Sorcery" in source for source in route.reviewed_sources)
+
+
+def test_known_zero_allocation_without_reviewed_skill_value_stays_unresolved(monkeypatch, tmp_path):
+    monkeypatch.setattr(module.ExtremeClassConfigurationService, "all_candidates", lambda: [_config()])
+
+    service = ExtremeClassRouteComparisonService(
+        _database(tmp_path),
+        skill_bar_service=_UnreviewedBarService(),
+    )
+    monkeypatch.setattr(service.mastery_pairs, "best_pure_class_routes", lambda *args, **kwargs: ())
+
+    comparison = service.compare("spell_damage", reference_value=5000.0)
+
+    assert comparison.best_reviewed_subclass_lower_bound is None
+    assert comparison.reviewed_subclass_lower_bound_count == 0
+    assert comparison.routes[0].projected_delta is None
+    assert comparison.routes[0].score_status == "pending_subclass_effect_resolution"
