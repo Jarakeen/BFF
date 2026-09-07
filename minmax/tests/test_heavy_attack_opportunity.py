@@ -43,6 +43,26 @@ def test_recovery_heavy_is_not_used_when_resource_is_healthy() -> None:
     assert "above recovery trigger" in result.reason
 
 
+def test_recovery_heavy_can_be_justified_by_verified_future_reserve_shortfall() -> None:
+    result = evaluate_heavy_attack_opportunity(
+        HeavyAttackOpportunityEvidence(
+            weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
+            purpose=HeavyAttackPurpose.RECOVERY,
+            needed_resource=ResourceType.MAGICKA,
+            current_resource=21000,
+            maximum_resource=30000,
+            recovery_trigger_fraction=0.35,
+            reserve_shortfall=2500,
+            available_window_seconds=2.0,
+            required_window_seconds=1.8,
+        )
+    )
+
+    assert result.recommended is True
+    assert result.resource_fraction == 0.7
+    assert "reserve shortfall 2500" in result.reason
+
+
 def test_required_effect_heavy_can_be_recommended_without_low_resource() -> None:
     result = evaluate_heavy_attack_opportunity(
         HeavyAttackOpportunityEvidence(
