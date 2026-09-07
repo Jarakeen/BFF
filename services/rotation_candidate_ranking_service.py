@@ -50,9 +50,9 @@ class RotationCandidateRankingService:
     obligations merely because its Magicka numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
-    fewer missing obligations, lower shortfall, fewer unresolved items, then
-    resource consequence and resource deltas. The service does not invent role
-    importance weights or claim that static support coverage proves runtime uptime.
+    fewer missing obligations, lower shortfall, fewer candidate-specific unresolved
+    items, then resource consequence and resource deltas. Shared baseline/model
+    limitations remain visible but do not count against one candidate specifically.
     """
 
     def rank(
@@ -96,7 +96,7 @@ class RotationCandidateRankingService:
             missing_demand,
             missing_effects,
             int(scorecard.candidate_shortfall),
-            len(scorecard.unresolved),
+            len(scorecard.candidate_specific_unresolved),
             _RESOURCE_ORDER[consequence.resource_kind],
             -int(consequence.minimum_resource_delta),
             -int(consequence.ending_resource_delta),
@@ -119,8 +119,14 @@ class RotationCandidateRankingService:
             )
         if scorecard.candidate_shortfall:
             reasons.append(f"resource shortfall {scorecard.candidate_shortfall}")
-        if scorecard.unresolved:
-            reasons.append(f"{len(scorecard.unresolved)} unresolved evidence item(s)")
+        if scorecard.candidate_specific_unresolved:
+            reasons.append(
+                f"{len(scorecard.candidate_specific_unresolved)} candidate-specific unresolved evidence item(s)"
+            )
+        if scorecard.inherited_unresolved:
+            reasons.append(
+                f"{len(scorecard.inherited_unresolved)} inherited/shared unresolved evidence item(s)"
+            )
 
         consequence = scorecard.consequence
         reasons.append(f"resource consequence {consequence.resource_kind.value}")
