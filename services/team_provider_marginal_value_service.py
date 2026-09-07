@@ -26,7 +26,10 @@ class TeamProviderMarginalValue:
 
     @property
     def new_named_effect_count(self) -> int:
-        return len(self.marginal_effects)
+        # One ESO named buff is one provider signal even when our model records
+        # that buff against multiple objectives (for example Minor Resolve affects
+        # both physical and spell resistance). Do not reward schema width.
+        return len(self.stacking_keys)
 
     @property
     def stacking_keys(self) -> tuple[str, ...]:
