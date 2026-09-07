@@ -38,6 +38,17 @@ class RotationRecoveryHeavyStabilizationIteration:
     total_shortfall: int
     hard_obligation_state: tuple[str, ...]
 
+    @property
+    def tracked_hard_obligations_satisfied(self) -> bool:
+        """Whether the fixed-point state contains no tracked hard failure.
+
+        Resource shortfall is always tracked directly by the stabilizer. Any other
+        hard obligation is represented by the caller-supplied canonical obligation
+        state. An absent obligation resolver therefore means only resource shortfall
+        can be proven here; it does not imply unknown obligations are satisfied.
+        """
+        return self.total_shortfall == 0 and not self.hard_obligation_state
+
 
 @dataclass(frozen=True)
 class RotationRecoveryHeavyStabilizationResult:
@@ -48,6 +59,12 @@ class RotationRecoveryHeavyStabilizationResult:
     iterations: tuple[RotationRecoveryHeavyStabilizationIteration, ...]
     converged: bool
     termination_reason: str
+
+    @property
+    def tracked_hard_obligations_satisfied(self) -> bool:
+        if not self.iterations:
+            return False
+        return self.iterations[-1].tracked_hard_obligations_satisfied
 
 
 class RotationRecoveryHeavyStabilizationService:
@@ -62,6 +79,10 @@ class RotationRecoveryHeavyStabilizationService:
     remain unchanged. Repeating only the heavy list is not sufficient because a
     heavy can displace other casts or change whether a mandatory responsibility is
     still satisfied.
+
+    A repeated complete state is classified separately from a valid fixed point. If
+    tracked hard failures remain unchanged, the loop terminates as deterministic
+    no-legal-improvement rather than pretending the resulting rotation is valid.
 
     The service never invents restoration amounts, reserve requirements, hard
     obligations, or a recovery threshold. Those remain explicit caller evidence. A
@@ -121,18 +142,17 @@ class RotationRecoveryHeavyStabilizationService:
                 total_shortfall,
                 hard_obligation_state,
             )
-            iterations.append(
-                RotationRecoveryHeavyStabilizationIteration(
-                    iteration=index,
-                    plan=plan,
-                    replay=replay,
-                    heavy_signature=heavy_signature,
-                    plan_signature=plan_signature,
-                    minimum_resource=minimum_resource,
-                    total_shortfall=total_shortfall,
-                    hard_obligation_state=hard_obligation_state,
-                )
+            iteration = RotationRecoveryHeavyStabilizationIteration(
+                iteration=index,
+                plan=plan,
+                replay=replay,
+                heavy_signature=heavy_signature,
+                plan_signature=plan_signature,
+                minimum_resource=minimum_resource,
+                total_shortfall=total_shortfall,
+                hard_obligation_state=hard_obligation_state,
             )
+            iterations.append(iteration)
             final_plan = plan
             final_replay = replay
 
@@ -142,7 +162,11 @@ class RotationRecoveryHeavyStabilizationService:
                     replay=replay,
                     iterations=tuple(iterations),
                     converged=True,
-                    termination_reason="stable_fixed_point",
+                    termination_reason=(
+                        "stable_fixed_point"
+                        if iteration.tracked_hard_obligations_satisfied
+                        else "stable_no_legal_improvement"
+                    ),
                 )
 
             previous_state_signature = state_signature
@@ -214,4 +238,8 @@ class RotationRecoveryHeavyStabilizationService:
     ) -> tuple[str, ...]:
         if resolver is None:
             return ()
-        return tuple(str(value).strip() for value in resolver(plan, replay) if str(value).strip())
+        return tuple(
+            str(value).strip()
+            for value in resolver(plan, replay)
+            if str(value).strip()
+        )
