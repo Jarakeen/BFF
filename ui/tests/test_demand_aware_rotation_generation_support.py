@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from models.build_model import PlayerBuild
+from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_ability_priority import (
     AbilityPriorityEntry,
     AbilityPriorityList,
@@ -23,7 +24,7 @@ from ui.rotation_generation_support import RotationGenerationRequest, RotationGe
 def _build() -> PlayerBuild:
     build = PlayerBuild(Name="Magrat", BuildName="DF Healer", Role="Healer")
     build.FrontBarSkills = ["Budding Seeds", "Combat Prayer", "", "", "", "Aggressive Horn"]
-    build.BackBarSkills = ["", "", "", "", "", "Barrier"]
+    build.BackBarSkills = ["", "", "", "", "", "", "Barrier"]
     return build
 
 
@@ -63,8 +64,24 @@ def test_wrapper_passes_full_priority_list_and_demand_windows_to_refinement() ->
     evidence = SimpleNamespace(label="evidence")
 
     class RefinementStub:
-        def refine(self, plan, *, priorities=None, wait_decision=None, demands=()):
-            calls.append((plan, priorities, wait_decision, demands))
+        def refine(
+            self,
+            plan,
+            *,
+            priorities=None,
+            wait_decision=None,
+            demands=(),
+            demand_refresh_leads=(),
+        ):
+            calls.append(
+                (
+                    plan,
+                    priorities,
+                    wait_decision,
+                    demands,
+                    demand_refresh_leads,
+                )
+            )
             return SimpleNamespace(plan=plan, duration_projection=projection)
 
     class EvidenceStub:
@@ -83,6 +100,12 @@ def test_wrapper_passes_full_priority_list_and_demand_windows_to_refinement() ->
         kind=RotationDemandKind.HEALING,
         pattern=RotationDemandPattern.BURST,
     )
+    refresh_lead = DemandRefreshLead(
+        demand_name="Burst Window",
+        bar="front",
+        skill_name="Budding Seeds",
+        lead_seconds=3.0,
+    )
     priorities = _priorities()
 
     result = DemandAwareRotationGenerationSupport(base).generate_with_evidence(
@@ -94,15 +117,23 @@ def test_wrapper_passes_full_priority_list_and_demand_windows_to_refinement() ->
             ),
             priorities=priorities,
             demands=(demand,),
+            demand_refresh_leads=(refresh_lead,),
         ),
     )
 
     assert result.duration_evidence is evidence
     assert len(calls) == 1
-    _, received_priorities, received_wait, received_demands = calls[0]
+    (
+        _,
+        received_priorities,
+        received_wait,
+        received_demands,
+        received_refresh_leads,
+    ) = calls[0]
     assert received_priorities is priorities
     assert received_priorities.overrides == priorities.overrides
     assert received_demands == (demand,)
+    assert received_refresh_leads == (refresh_lead,)
     assert received_wait is None
 
 
