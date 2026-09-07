@@ -45,14 +45,16 @@ class RotationCandidateRankingService:
     """Rank candidate rotations with hard obligations before soft consequences.
 
     This is intentionally lexicographic rather than weighted. A candidate that
-    misses an explicit demand action, required static support effect, or incurs
-    resource shortfall cannot outrank one that satisfies those supplied hard
-    obligations merely because its Magicka numbers look prettier.
+    misses an explicit demand action, required static support effect, demand-entry
+    resource reserve, or incurs resource shortfall cannot outrank one that satisfies
+    those supplied hard obligations merely because its softer resource numbers look
+    prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
-    fewer missing obligations, lower shortfall, fewer candidate-specific unresolved
-    items, then resource consequence and resource deltas. Shared baseline/model
-    limitations remain visible but do not count against one candidate specifically.
+    fewer missing obligations, smaller reserve/runtime shortfalls, fewer
+    candidate-specific unresolved items, then resource consequence and resource
+    deltas. Shared baseline/model limitations remain visible but do not count
+    against one candidate specifically.
     """
 
     def rank(
@@ -88,13 +90,23 @@ class RotationCandidateRankingService:
         consequence = scorecard.consequence
         missing_demand = len(scorecard.missing_demand_requirements)
         missing_effects = len(scorecard.missing_required_effects)
-        hard_failure_count = missing_demand + missing_effects + (1 if scorecard.candidate_shortfall > 0 else 0)
+        failed_reserves = scorecard.failed_reserve_assessments
+        reserve_failure_count = len(failed_reserves)
+        reserve_shortfall = sum(int(assessment.shortfall) for assessment in failed_reserves)
+        hard_failure_count = (
+            missing_demand
+            + missing_effects
+            + reserve_failure_count
+            + (1 if scorecard.candidate_shortfall > 0 else 0)
+        )
 
         return (
             0 if scorecard.supplied_obligations_satisfied else 1,
             hard_failure_count,
             missing_demand,
             missing_effects,
+            reserve_failure_count,
+            reserve_shortfall,
             int(scorecard.candidate_shortfall),
             len(scorecard.candidate_specific_unresolved),
             _RESOURCE_ORDER[consequence.resource_kind],
@@ -116,6 +128,14 @@ class RotationCandidateRankingService:
             reasons.append(
                 "missing static required effect(s): "
                 + ", ".join(scorecard.missing_required_effects)
+            )
+        for assessment in scorecard.failed_reserve_assessments:
+            reasons.append(
+                "resource reserve shortfall "
+                f"{assessment.shortfall} before {assessment.demand.name!r}: "
+                f"available {assessment.available_before_start}, "
+                f"required {assessment.requirement.minimum_amount} "
+                f"{assessment.requirement.resource.value}"
             )
         if scorecard.candidate_shortfall:
             reasons.append(f"resource shortfall {scorecard.candidate_shortfall}")
