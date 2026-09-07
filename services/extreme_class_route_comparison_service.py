@@ -8,6 +8,7 @@ from minmax.character_build.character_class import CharacterClass
 from services.class_mastery_classification_service import ClassMasteryBoundary
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
 from services.extreme_class_mastery_pair_service import ExtremeClassMasteryPairService
+from services.extreme_subclass_skill_bar_service import ExtremeSubclassSkillBarService
 from services.extreme_subclass_slot_allocation_service import (
     ExtremeSubclassSlotAllocationService,
 )
@@ -31,6 +32,8 @@ class ExtremeClassRouteCandidate:
     reviewed_line_ids: tuple[str, ...] = ()
     slot_counts: tuple[tuple[str, int], ...] = ()
     reviewed_sources: tuple[str, ...] = ()
+    skill_bar_names: tuple[str, ...] = ()
+    skill_bar_ability_ids: tuple[int, ...] = ()
 
     @property
     def is_scored(self) -> bool:
@@ -54,20 +57,25 @@ class ExtremeClassRouteComparison:
 class ExtremeClassRouteComparisonService:
     """Compare reviewed pure-class mastery routes against legal subclass routes.
 
-    Pure-class Class Mastery effects can be scored where BFF has reviewed numeric
-    mechanics. Subclass routes expose conservative reviewed lower bounds from a
-    legal six-slot active-bar allocation across the three equipped class lines.
+    Subclass lower bounds require two proofs:
 
-    The slot allocator understands that Pressure Points and Expert Mage count
-    abilities from the whole represented class, while Warden's reviewed slot
-    passives are line-specific. The resulting number is still a lower bound, not
-    a complete subclass score, because unreviewed skills/passives may add value.
-    Every subclass route therefore remains globally unresolved until the complete
-    borrowed-line search is finished.
+    1. a reviewed six-slot allocation for the requested objective; and
+    2. a concrete canonical bar that can actually realize that allocation with
+       five distinct non-Ultimate base families plus one Ultimate.
+
+    The chosen skill names are a deterministic legality witness, not a claim
+    that those particular morphs are the final objective-optimal bar. Unreviewed
+    skill/passive effects still keep every subclass route globally unresolved.
     """
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        skill_bar_service: ExtremeSubclassSkillBarService | None = None,
+    ) -> None:
         self.mastery_pairs = ExtremeClassMasteryPairService(database_path)
+        self.skill_bars = skill_bar_service or ExtremeSubclassSkillBarService(database_path)
 
     def compare(
         self,
@@ -114,21 +122,32 @@ class ExtremeClassRouteComparisonService:
                 objective_key,
                 reference_value=reference_value,
             )
-            if allocation is not None:
+            bar = self.skill_bars.materialize(allocation.slot_counts) if allocation is not None else None
+            if allocation is not None and bar is not None:
                 reviewed_lower_bound_count += 1
                 projected_delta: float | None = allocation.projected_delta
-                score_status = "reviewed_subclass_slot_lower_bound"
+                score_status = "reviewed_subclass_materialized_lower_bound"
                 slot_counts = allocation.slot_counts
                 reviewed_sources = allocation.reviewed_sources
                 reviewed_line_ids = tuple(
                     line for line, count in slot_counts if count > 0
                 )
+                skill_bar_names = bar.names
+                skill_bar_ability_ids = tuple(skill.ability_id for skill in bar.skills)
             else:
                 projected_delta = None
-                score_status = "pending_subclass_effect_resolution"
-                slot_counts = ()
-                reviewed_sources = ()
-                reviewed_line_ids = ()
+                score_status = (
+                    "pending_canonical_bar_materialization"
+                    if allocation is not None
+                    else "pending_subclass_effect_resolution"
+                )
+                slot_counts = allocation.slot_counts if allocation is not None else ()
+                reviewed_sources = allocation.reviewed_sources if allocation is not None else ()
+                reviewed_line_ids = tuple(
+                    line for line, count in slot_counts if count > 0
+                )
+                skill_bar_names = ()
+                skill_bar_ability_ids = ()
 
             routes.append(
                 ExtremeClassRouteCandidate(
@@ -143,6 +162,8 @@ class ExtremeClassRouteComparisonService:
                     reviewed_line_ids=reviewed_line_ids,
                     slot_counts=slot_counts,
                     reviewed_sources=reviewed_sources,
+                    skill_bar_names=skill_bar_names,
+                    skill_bar_ability_ids=skill_bar_ability_ids,
                 )
             )
 
@@ -171,6 +192,7 @@ class ExtremeClassRouteComparisonService:
                         item.base_class.value,
                         item.equipped_skill_lines,
                         item.slot_counts,
+                        item.skill_bar_names,
                     ),
                 )
             ),
