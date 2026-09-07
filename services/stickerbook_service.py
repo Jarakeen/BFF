@@ -56,10 +56,15 @@ STICKERBOOK_BUCKETS = (
 # stickerbook, so BFF keeps them out of completion totals too.
 _CRAFTED_TOKENS = ("craft", "crafted", "craftable")
 
-# ESO source text sometimes carries game-client color tags. They are useful to the
-# game renderer and look like escaped plumbing everywhere else. Accept 6-8 hex
-# digits because source exports are not perfectly consistent, then strip the reset.
-_ESO_COLOR_OPEN_RE = re.compile(r"\|c[0-9a-fA-F]{6,8}\|?", re.IGNORECASE)
+# ESO source text sometimes carries game-client color tags. Normal ESO tags use
+# exactly six hex digits. A few source rows contain malformed 7/8-digit tags with
+# a trailing delimiter, so accept those only when the delimiter proves where the
+# tag ends. This avoids consuming a legitimate leading A-F character from text,
+# e.g. ``|c00FF00Color`` must become ``Color``, not ``olor``.
+_ESO_COLOR_OPEN_RE = re.compile(
+    r"\|c(?:[0-9a-fA-F]{7,8}\||[0-9a-fA-F]{6}\|?)",
+    re.IGNORECASE,
+)
 _ESO_COLOR_RESET_RE = re.compile(r"\|r", re.IGNORECASE)
 
 # Standard dropped five-piece sets are reconstructable in every ordinary weapon
