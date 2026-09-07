@@ -64,6 +64,46 @@ def _lead_from_candidate_id(candidate_id: str) -> float | None:
         return None
 
 
+def _generate_legal_candidates(
+    candidate_generator,
+    *,
+    seed_plan,
+    priorities,
+    demand,
+    options,
+):
+    """Generate each explicit lead independently so one invalid lead does not abort the sweep."""
+
+    baseline = candidate_generator.generate(
+        seed_plan=seed_plan,
+        priorities=priorities,
+        demands=(demand,),
+        options=(),
+        baseline_id="demand-aware-0s",
+    )
+    generated = list(baseline)
+    rejected: list[tuple[str, str]] = []
+
+    for option in options:
+        try:
+            result = candidate_generator.generate(
+                seed_plan=seed_plan,
+                priorities=priorities,
+                demands=(demand,),
+                options=(option,),
+                baseline_id="demand-aware-0s",
+            )
+        except ValueError as exc:
+            rejected.append((option.option_id, str(exc)))
+            continue
+
+        generated.extend(
+            candidate for candidate in result if candidate.candidate_id != "demand-aware-0s"
+        )
+
+    return tuple(generated), tuple(rejected)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -176,19 +216,13 @@ def main() -> int:
             window_seconds=float(args.window_seconds),
         )
 
-        try:
-            generated = candidate_generator.generate(
-                seed_plan=seed_plan,
-                priorities=priority_projection.priority_list,
-                demands=(demand,),
-                options=options,
-                baseline_id="demand-aware-0s",
-            )
-        except ValueError as exc:
-            raise ValueError(
-                "lead sweep contains an invalid candidate for the verified Budding Seeds recast rule; "
-                "reduce --stop-seconds or narrow the explicit sweep"
-            ) from exc
+        generated, rejected = _generate_legal_candidates(
+            candidate_generator,
+            seed_plan=seed_plan,
+            priorities=priority_projection.priority_list,
+            demand=demand,
+            options=options,
+        )
 
         unique = _dedupe_realized_candidates(
             (
@@ -257,15 +291,22 @@ def main() -> int:
             f"prep {demand.start_seconds:.2f}-{demand.end_seconds:.2f}s | "
             f"{len(unique)} unique realized schedules"
         )
+        if rejected:
+            rejected_ids = ", ".join(candidate_id for candidate_id, _ in rejected)
+            first_reason = rejected[0][1]
+            print(
+                f"Rejected by verified recast rule: {rejected_ids}"
+            )
+            print(f"  rule boundary: {first_reason}")
         if first_schedule_change is None:
-            print("First realized schedule change: none in supplied sweep")
+            print("First realized schedule change: none in legal supplied sweep")
         else:
             print(
                 f"First realized schedule change: {first_schedule_change[0]:g}s early "
                 f"({first_schedule_change[1]})"
             )
         if first_eligible_lead is None:
-            print("First eligible Seeds lead: none in supplied sweep")
+            print("First eligible Seeds lead: none in legal supplied sweep")
         else:
             print(
                 f"First eligible Seeds lead: {first_eligible_lead[0]:g}s early "
@@ -294,7 +335,7 @@ def main() -> int:
             )
 
         if best_eligible is None:
-            print("Best eligible candidate: none in supplied sweep")
+            print("Best eligible candidate: none in legal supplied sweep")
         else:
             lead = lead_by_id.get(best_eligible.candidate_id)
             lead_text = "baseline" if lead is None else f"{lead:g}s early"
@@ -306,7 +347,8 @@ def main() -> int:
     print(
         "Interpretation: the first schedule-change boundary answers when the lead permission actually "
         "changes the realized rotation. The first eligible boundary answers when that changed rotation "
-        "first satisfies the explicit mechanic action obligation. They may be different."
+        "first satisfies the explicit mechanic action obligation. Leads beyond the verified ordinary "
+        "refresh span are reported as illegal candidates rather than aborting the entire sweep."
     )
     return 0
 
