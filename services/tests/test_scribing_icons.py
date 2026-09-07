@@ -16,6 +16,12 @@ def test_goading_throw_uses_existing_shield_throw_taunt_icon_texture():
     )
 
 
+def test_traveling_knife_pull_uses_base_grimoire_icon_when_focus_art_is_absent():
+    assert texture_for_scribed_skill("Traveling Knife", "Pull") == (
+        "/esoui/art/icons/ability_grimoire_dualwield.dds"
+    )
+
+
 def test_unknown_grimoire_icon_family_does_not_guess():
     assert texture_for_scribed_skill("Unknown Grimoire", "Damage Shield") == ""
 
