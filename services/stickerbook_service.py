@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -54,6 +55,40 @@ STICKERBOOK_BUCKETS = (
 # reconstructed. Crafted sets are intentionally not part of the in-game
 # stickerbook, so BFF keeps them out of completion totals too.
 _CRAFTED_TOKENS = ("craft", "crafted", "craftable")
+
+# ESO source text sometimes carries game-client color tags. They are useful to the
+# game renderer and look like escaped plumbing everywhere else. Accept 6-8 hex
+# digits because source exports are not perfectly consistent, then strip the reset.
+_ESO_COLOR_OPEN_RE = re.compile(r"\|c[0-9a-fA-F]{6,8}\|?", re.IGNORECASE)
+_ESO_COLOR_RESET_RE = re.compile(r"\|r", re.IGNORECASE)
+
+# Standard dropped five-piece sets are reconstructable in every ordinary weapon
+# type. Some imports only preserve armor/jewelry structural rows, so Stickerbook
+# fills missing weapon identities at the collection boundary without mutating the
+# canonical source tables. Special sets keep their source-defined shapes.
+_STANDARD_WEAPON_EQUIP = {
+    1: 5,
+    2: 5,
+    3: 5,
+    4: 6,
+    5: 6,
+    6: 6,
+    8: 6,
+    9: 6,
+    11: 5,
+    12: 6,
+    13: 6,
+    14: 5,
+    15: 6,
+}
+_STANDARD_WEAPON_BUCKETS = {"Dungeon", "Trial", "Overland", "PvP", "Class", "Other"}
+
+
+def clean_eso_text(value: object) -> str:
+    text = str(value or "")
+    text = _ESO_COLOR_OPEN_RE.sub("", text)
+    text = _ESO_COLOR_RESET_RE.sub("", text)
+    return " ".join(text.split())
 
 
 @dataclass(frozen=True)
@@ -139,7 +174,7 @@ class StickerbookService:
             rows = connection.execute(
                 "SELECT DISTINCT profile_id FROM stickerbook_progress ORDER BY profile_id COLLATE NOCASE"
             ).fetchall()
-        values = [str(row[0]) for row in rows if str(row[0] or "").strip()]
+        values = [clean_eso_text(row[0]) for row in rows if clean_eso_text(row[0])]
         return values or ["Default"]
 
     def _source_by_set(self, connection: sqlite3.Connection) -> dict[int, tuple[str, str]]:
@@ -161,7 +196,7 @@ class StickerbookService:
             except (TypeError, ValueError):
                 continue
             if key not in result:
-                result[key] = (str(content_type or ""), str(name or ""))
+                result[key] = (clean_eso_text(content_type), clean_eso_text(name))
         return result
 
     @staticmethod
@@ -190,8 +225,27 @@ class StickerbookService:
             return "Overland"
         return "Other"
 
+    @staticmethod
+    def _missing_standard_weapon_types(
+        *,
+        bucket: str,
+        max_equip_count: int | None,
+        existing_weapon_types: set[int],
+    ) -> tuple[int, ...]:
+        try:
+            max_count = int(max_equip_count or 0)
+        except (TypeError, ValueError):
+            max_count = 0
+        if bucket not in _STANDARD_WEAPON_BUCKETS or max_count < 5:
+            return ()
+        return tuple(
+            weapon_type
+            for weapon_type in WEAPON_TYPES
+            if weapon_type not in existing_weapon_types
+        )
+
     def sets(self, profile_id: str = "Default") -> list[dict]:
-        profile = str(profile_id or "Default").strip() or "Default"
+        profile = clean_eso_text(profile_id) or "Default"
         with self._connect() as connection:
             tables = self._tables(connection)
             if not {"gear_set", "gear_set_piece"}.issubset(tables):
@@ -200,7 +254,9 @@ class StickerbookService:
             rows = connection.execute(
                 """
                 SELECT gs.id, gs.name, COALESCE(gs.category, '') AS category,
+                       gs.max_equip_count,
                        COUNT(gp.id) AS piece_count,
+                       GROUP_CONCAT(DISTINCT CASE WHEN COALESCE(gp.weapon_type, 0) > 0 THEN gp.weapon_type END) AS weapon_types,
                        SUM(CASE WHEN COALESCE(sp.collected, 0) = 1 THEN 1 ELSE 0 END) AS collected_count
                 FROM gear_set gs
                 JOIN gear_set_piece gp ON gp.set_id = gs.id
@@ -210,81 +266,158 @@ class StickerbookService:
                       || ':' || CAST(COALESCE(gp.armor_type, 0) AS TEXT)
                       || ':' || CAST(COALESCE(gp.weapon_type, 0) AS TEXT)
                  AND sp.profile_id = ?
-                GROUP BY gs.id, gs.name, gs.category
+                GROUP BY gs.id, gs.name, gs.category, gs.max_equip_count
                 ORDER BY gs.name COLLATE NOCASE
                 """,
                 (profile,),
             ).fetchall()
+            progress_rows = connection.execute(
+                """
+                SELECT set_id, piece_key
+                FROM stickerbook_progress
+                WHERE profile_id = ? AND collected = 1
+                """,
+                (profile,),
+            ).fetchall()
+
+        collected_keys_by_set: dict[int, set[str]] = {}
+        for set_id, piece_key in progress_rows:
+            collected_keys_by_set.setdefault(int(set_id), set()).add(str(piece_key))
 
         result = []
         for row in rows:
             set_id = int(row["id"])
             content_type, source = source_map.get(set_id, ("", ""))
-            category = str(row["category"] or "")
+            category = clean_eso_text(row["category"])
+            content_type = clean_eso_text(content_type)
+            source = clean_eso_text(source)
             if not self._is_stickerbook_set(category, content_type, source):
                 continue
+            bucket = self._bucket(category, content_type, source)
+            existing_weapon_types = {
+                int(value)
+                for value in str(row["weapon_types"] or "").split(",")
+                if value.strip().isdigit()
+            }
+            missing_weapons = self._missing_standard_weapon_types(
+                bucket=bucket,
+                max_equip_count=row["max_equip_count"],
+                existing_weapon_types=existing_weapon_types,
+            )
+            synthetic_collected = 0
+            owned_keys = collected_keys_by_set.get(set_id, set())
+            for weapon_type in missing_weapons:
+                key = self.piece_key(
+                    set_id,
+                    _STANDARD_WEAPON_EQUIP[weapon_type],
+                    0,
+                    weapon_type,
+                )
+                if key in owned_keys:
+                    synthetic_collected += 1
             result.append(
                 {
                     "id": set_id,
-                    "name": str(row["name"]),
+                    "name": clean_eso_text(row["name"]),
                     "category": category,
-                    "bucket": self._bucket(category, content_type, source),
+                    "bucket": bucket,
                     "source": source,
                     "content_type": content_type,
-                    "collected": int(row["collected_count"] or 0),
-                    "total": int(row["piece_count"] or 0),
+                    "collected": int(row["collected_count"] or 0) + synthetic_collected,
+                    "total": int(row["piece_count"] or 0) + len(missing_weapons),
                 }
             )
         return result
 
     def pieces(self, set_id: int, profile_id: str = "Default") -> list[StickerbookPiece]:
-        profile = str(profile_id or "Default").strip() or "Default"
+        profile = clean_eso_text(profile_id) or "Default"
+        set_id = int(set_id)
         with self._connect() as connection:
+            source_map = self._source_by_set(connection)
+            metadata = connection.execute(
+                """
+                SELECT COALESCE(category, '') AS category, max_equip_count
+                FROM gear_set
+                WHERE id = ?
+                """,
+                (set_id,),
+            ).fetchone()
             rows = connection.execute(
                 """
-                SELECT gp.equip_type, gp.armor_type, gp.weapon_type,
-                       COALESCE(sp.collected, 0) AS collected
-                FROM gear_set_piece gp
-                LEFT JOIN stickerbook_progress sp
-                  ON sp.set_id = gp.set_id
-                 AND sp.piece_key = CAST(gp.set_id AS TEXT) || ':' || CAST(COALESCE(gp.equip_type, 0) AS TEXT)
-                      || ':' || CAST(COALESCE(gp.armor_type, 0) AS TEXT)
-                      || ':' || CAST(COALESCE(gp.weapon_type, 0) AS TEXT)
-                 AND sp.profile_id = ?
-                WHERE gp.set_id = ?
-                ORDER BY
-                    CASE
-                        WHEN COALESCE(gp.weapon_type, 0) > 0 THEN 2
-                        WHEN gp.equip_type IN (2, 12) THEN 3
-                        WHEN gp.equip_type IN (1, 3, 4, 8, 9, 10, 13) THEN 1
-                        ELSE 4
-                    END,
-                    gp.equip_type,
-                    gp.armor_type,
-                    gp.weapon_type
+                SELECT equip_type, armor_type, weapon_type
+                FROM gear_set_piece
+                WHERE set_id = ?
+                ORDER BY equip_type, armor_type, weapon_type
                 """,
-                (profile, int(set_id)),
+                (set_id,),
             ).fetchall()
-        pieces = []
-        for row in rows:
-            key = self.piece_key(set_id, row["equip_type"], row["armor_type"], row["weapon_type"])
-            label, group = self.piece_label(row["equip_type"], row["armor_type"], row["weapon_type"])
+            owned_rows = connection.execute(
+                """
+                SELECT piece_key
+                FROM stickerbook_progress
+                WHERE profile_id = ? AND set_id = ? AND collected = 1
+                """,
+                (profile, set_id),
+            ).fetchall()
+
+        owned_keys = {str(row[0]) for row in owned_rows}
+        piece_rows = [
+            (
+                row["equip_type"],
+                row["armor_type"],
+                row["weapon_type"],
+            )
+            for row in rows
+        ]
+
+        if metadata is not None:
+            content_type, source = source_map.get(set_id, ("", ""))
+            category = clean_eso_text(metadata["category"])
+            bucket = self._bucket(category, clean_eso_text(content_type), clean_eso_text(source))
+            existing_weapon_types = {
+                int(weapon_type or 0)
+                for _equip_type, _armor_type, weapon_type in piece_rows
+                if int(weapon_type or 0) > 0
+            }
+            for weapon_type in self._missing_standard_weapon_types(
+                bucket=bucket,
+                max_equip_count=metadata["max_equip_count"],
+                existing_weapon_types=existing_weapon_types,
+            ):
+                piece_rows.append(
+                    (_STANDARD_WEAPON_EQUIP[weapon_type], 0, weapon_type)
+                )
+
+        pieces: list[StickerbookPiece] = []
+        for equip_type, armor_type, weapon_type in piece_rows:
+            key = self.piece_key(set_id, equip_type, armor_type, weapon_type)
+            label, group = self.piece_label(equip_type, armor_type, weapon_type)
             pieces.append(
                 StickerbookPiece(
-                    set_id=int(set_id),
+                    set_id=set_id,
                     piece_key=key,
-                    label=label,
+                    label=clean_eso_text(label),
                     group=group,
-                    equip_type=row["equip_type"],
-                    armor_type=row["armor_type"],
-                    weapon_type=row["weapon_type"],
-                    collected=bool(row["collected"]),
+                    equip_type=equip_type,
+                    armor_type=armor_type,
+                    weapon_type=weapon_type,
+                    collected=key in owned_keys,
                 )
             )
+
+        group_order = {"Armor": 1, "Weapons": 2, "Jewelry": 3, "Other": 4}
+        pieces.sort(
+            key=lambda piece: (
+                group_order.get(piece.group, 9),
+                int(piece.equip_type or 0),
+                int(piece.armor_type or 0),
+                int(piece.weapon_type or 0),
+            )
+        )
         return pieces
 
     def set_collected(self, profile_id: str, set_id: int, piece_key: str, collected: bool) -> None:
-        profile = str(profile_id or "Default").strip() or "Default"
+        profile = clean_eso_text(profile_id) or "Default"
         with self._connect() as connection:
             connection.execute(
                 """
@@ -316,7 +449,11 @@ class StickerbookService:
                 """,
                 (int(set_id),),
             ).fetchall()
-        return [(int(row[0]), str(row[1])) for row in rows]
+        return [
+            (int(row[0]), clean_eso_text(row[1]))
+            for row in rows
+            if clean_eso_text(row[1])
+        ]
 
     def export_csv(self, target: str | Path, profile_id: str = "Default") -> Path:
         path = Path(target)
@@ -327,7 +464,7 @@ class StickerbookService:
             for row in rows:
                 percent = round(100 * row["collected"] / row["total"], 1) if row["total"] else 0.0
                 writer.writerow([
-                    profile_id, row["name"], row["bucket"], row["source"],
+                    clean_eso_text(profile_id), row["name"], row["bucket"], row["source"],
                     row["collected"], row["total"], percent,
                 ])
         return path
