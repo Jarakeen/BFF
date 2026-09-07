@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from enum import Enum
 
 from models.build_model import PlayerBuild
-from .heavy_attack_restoration import HeavyAttackWeaponType
+from .heavy_attack_restoration import (
+    HeavyAttackWeaponType,
+    resource_for_heavy_attack_weapon,
+)
+from .resource_costs import ResourceType
 from .weapon_passive_classification import (
     VERIFIED_WEAPON_PASSIVE_RULES,
     WeaponPassiveLayer,
@@ -67,6 +71,11 @@ _LOTUS_SOURCE = (
     "Heavy Attacks heal the caster or nearby allies"
 )
 
+_BASE_RECOVERY_SOURCE = (
+    "canonical heavy_attack_restoration weapon classification: fully charged staff "
+    "heavy attacks restore Magicka; exact restored amount remains caller-verified"
+)
+
 
 def discover_healer_heavy_attack_build_incentives(
     build: PlayerBuild,
@@ -74,8 +83,11 @@ def discover_healer_heavy_attack_build_incentives(
     """Return static heavy-attack incentives proven by one saved build.
 
     The function intentionally does not manufacture heavy timing. It only derives
-    weapon/passive, equipped-set, and slotted Lotus evidence that a later runtime
-    layer can combine with cooldown, sustain, encounter, and refresh state.
+    weapon recovery, weapon/passive, equipped-set, and slotted Lotus evidence that
+    a later runtime layer can combine with cooldown, sustain, encounter, and refresh
+    state. Base heavy-attack recovery is independent of Restoration Staff passives;
+    Cycle of Life is additional Restoration Staff evidence, not the permission to
+    recover Magicka in the first place.
     """
 
     incentives: list[HealerHeavyAttackBuildIncentive] = []
@@ -89,6 +101,17 @@ def discover_healer_heavy_attack_build_incentives(
         weapon = _weapon_for_bar(build, bar)
         if weapon is None:
             continue
+
+        if resource_for_heavy_attack_weapon(weapon) is ResourceType.MAGICKA:
+            incentives.append(
+                HealerHeavyAttackBuildIncentive(
+                    bar=bar,
+                    weapon=weapon,
+                    kind=HeavyAttackBuildIncentiveKind.RECOVERY_VALUE,
+                    name="Fully Charged Heavy Attack Recovery",
+                    source=_BASE_RECOVERY_SOURCE,
+                )
+            )
 
         if weapon is HeavyAttackWeaponType.RESTORATION_STAFF:
             passive_names = {
