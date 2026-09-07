@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Protocol
 
 from services.rotation_candidate_ranking_service import (
@@ -147,14 +148,14 @@ class RotationCandidateEffectObligationService:
             for index, (_key, result) in enumerate(staged)
         )
 
-    @staticmethod
-    def _validate_assessments(candidate: RotationEffectObligationCandidate) -> None:
+    @classmethod
+    def _validate_assessments(cls, candidate: RotationEffectObligationCandidate) -> None:
         seen: set[tuple[str, str, str | None]] = set()
         for assessment in candidate.effect_uptime_assessments:
             requirement = assessment.requirement
             key = (
                 requirement.effect_name.casefold(),
-                requirement.source_skill_name.casefold(),
+                cls._stable_skill_id(requirement.source_skill_name),
                 requirement.bar,
             )
             if key in seen:
@@ -164,6 +165,11 @@ class RotationCandidateEffectObligationService:
                     f"{requirement.effect_name!r} from {requirement.source_skill_name!r}"
                 )
             seen.add(key)
+
+    @staticmethod
+    def _stable_skill_id(value: object) -> str:
+        text = str(value or "").strip().casefold().replace("'", "")
+        return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
 
     @staticmethod
     def _effect_reasons(
