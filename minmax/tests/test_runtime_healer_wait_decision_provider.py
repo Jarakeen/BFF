@@ -9,7 +9,10 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind
 from minmax.rotation_recast import RotationRecastRule
 from minmax.rotation_wait_decision import PrematureRecastDecisionContext
-from minmax.runtime_healer_wait_decision_provider import RuntimeHealerWaitDecisionProvider
+from minmax.runtime_healer_wait_decision_provider import (
+    RuntimeHealerWaitDecisionProvider,
+    unique_recovery_incentives,
+)
 
 
 def _incentive() -> HealerHeavyAttackBuildIncentive:
@@ -24,12 +27,17 @@ def _incentive() -> HealerHeavyAttackBuildIncentive:
     )
 
 
-def _recovery_incentive() -> HealerHeavyAttackBuildIncentive:
+def _recovery_incentive(
+    *,
+    name: str = "Cycle of Life",
+    bar: str = "front",
+    weapon: HeavyAttackWeaponType = HeavyAttackWeaponType.RESTORATION_STAFF,
+) -> HealerHeavyAttackBuildIncentive:
     return HealerHeavyAttackBuildIncentive(
-        bar="front",
-        weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
+        bar=bar,
+        weapon=weapon,
         kind=HeavyAttackBuildIncentiveKind.RECOVERY_VALUE,
-        name="Cycle of Life",
+        name=name,
         source="verified test evidence",
     )
 
@@ -220,3 +228,30 @@ def test_recovery_heavy_is_not_scheduled_without_proven_pressure() -> None:
     decision = provider(_context())
 
     assert decision is None
+
+
+def test_equivalent_recovery_evidence_collapses_to_one_runtime_opportunity() -> None:
+    incentives = (
+        _recovery_incentive(name="Fully Charged Heavy Attack Recovery"),
+        _recovery_incentive(name="Cycle of Life"),
+        _recovery_incentive(
+            name="Fully Charged Heavy Attack Recovery",
+            bar="back",
+            weapon=HeavyAttackWeaponType.FROST_STAFF,
+        ),
+    )
+
+    unique = unique_recovery_incentives(incentives)
+
+    assert [(item.bar, item.weapon, item.name) for item in unique] == [
+        (
+            "front",
+            HeavyAttackWeaponType.RESTORATION_STAFF,
+            "Fully Charged Heavy Attack Recovery",
+        ),
+        (
+            "back",
+            HeavyAttackWeaponType.FROST_STAFF,
+            "Fully Charged Heavy Attack Recovery",
+        ),
+    ]
