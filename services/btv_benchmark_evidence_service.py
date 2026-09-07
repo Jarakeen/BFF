@@ -19,6 +19,23 @@ _ALLOWED_DENOMINATORS = {
 }
 
 
+def btv_uptime_denominator_from_exclude_downtime_toggle(
+    exclude_downtime: bool | None,
+) -> str:
+    """Translate the visible BTVTools ``Exclude Downtime`` toggle into a denominator.
+
+    The supplied screenshots show the top-right toggle as the denominator control.
+    Purple/on means downtime such as boss immunity is excluded from the uptime
+    denominator; dark/off means the full encounter window is used. When the toggle
+    is cropped out or otherwise unreadable, preserve ``unknown`` rather than guess.
+    """
+    if exclude_downtime is True:
+        return UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME
+    if exclude_downtime is False:
+        return UPTIME_DENOMINATOR_FULL_ENCOUNTER
+    return UPTIME_DENOMINATOR_UNKNOWN
+
+
 @dataclass(frozen=True)
 class BTVBenchmarkObservation:
     """One screenshot-backed BTVTools benchmark observation.
@@ -197,9 +214,19 @@ class BTVBenchmarkEvidenceService:
         for raw in raw_rows:
             if not isinstance(raw, dict):
                 raise ValueError("every BTV benchmark observation must be an object")
-            denominator = str(
-                raw.get("uptime_denominator_basis") or default_denominator
-            ).strip()
+            if "exclude_downtime_toggle" in raw:
+                toggle_value = raw.get("exclude_downtime_toggle")
+                if toggle_value not in (True, False, None):
+                    raise ValueError(
+                        "exclude_downtime_toggle must be true, false, or null when supplied"
+                    )
+                denominator = btv_uptime_denominator_from_exclude_downtime_toggle(
+                    toggle_value
+                )
+            else:
+                denominator = str(
+                    raw.get("uptime_denominator_basis") or default_denominator
+                ).strip()
             observations.append(
                 BTVBenchmarkObservation(
                     encounter_key=encounter_key,
