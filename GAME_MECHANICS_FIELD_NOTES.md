@@ -264,3 +264,41 @@ At **1.2m DPS**, for example, the mechanic-aware plan moved Budding Seeds from 4
 **What it means in actual play:** two groups with nearly identical strategies can get different value from the same pre-buff or pre-heal habit. A mechanic that lands near a convenient front-bar refresh seam may make early preparation cheap or even sustain-positive. Move the same mechanic a few seconds and the preparation can instead delay a skill, change later costs, or push the rotation into a worse resource path.
 
 **For BFF:** encounter-aware optimization needs to evaluate complete schedules across projected mechanic times, not attach one fixed value to a policy such as "refresh Budding Seeds before Phase 2." The useful object is an **opportunity band**: a range of fight trajectories where a policy has the same practical result. Team optimization should eventually know when increasing or decreasing raid damage crosses one of these discontinuous scheduling boundaries.
+
+---
+
+## 2026-09-07 — A complete character can have 64 attribute points that do not change the stat being maximized
+
+While building the from-scratch Extreme Build Lab, a Spell Damage blueprint initially left all attribute points at zero because level-up Magicka points do not directly increase the literal **Spell Damage** character-sheet stat in BFF's static formula.
+
+That is mathematically defensible and still a terrible character blueprint.
+
+**Layman's version:** Max Magicka and Spell Damage are both offensive stats, but they are not the same number. Adding Magicka can make Magicka-scaled abilities stronger without making the Spell Damage line on the character sheet go up.
+
+**What it means in actual play:** a build can be better at dealing damage even when the displayed Spell Damage stat does not move. Conversely, a stunt build whose only goal is the biggest possible Spell Damage number can make choices that are worse for real damage.
+
+**For BFF:** from-scratch builds now allocate all 64 attribute points even when the requested sheet stat does not benefit directly. The tool must distinguish "maximize this literal stat" from future whole-damage optimization.
+
+---
+
+## 2026-09-07 — Both skill bars belong to the build, but only the active bar gets active-bar-only standing bonuses
+
+The Extreme Build Lab now displays both skill bars, but its character-sheet snapshot still has one explicitly selected active bar.
+
+**Layman's version:** putting a useful passive-granting skill on the back bar does not mean its bar-only bonus also exists while you are standing on the front bar. You own both bars; you only have one of them active at a time.
+
+**What it means in actual play:** swapping bars can change a character-sheet stat even though no gear was changed. A deliberately absurd max-stat build may therefore have a "show-off bar" whose only job is to make one number larger.
+
+**For BFF:** both bars should be presented in a generated build, while active-bar-only skill and weapon effects must be evaluated against the selected bar instead of being added together.
+
+---
+
+## 2026-09-07 — "Resting maximum" and "potion-active maximum" are different honest answers
+
+The first Extreme Build Lab boundary excluded potion uptime entirely. That made the resting number clean, but it also hid a perfectly legitimate self-usable way to push a stat higher.
+
+**Layman's version:** the number you have while standing around and the number you have immediately after drinking the right potion are both real character-sheet values. They are just different states.
+
+**What it means in actual play:** Spell Power, Critical, recovery, and resistance potions can legitimately raise different requested stats without borrowing anything from another player. A Restore Health potion, however, improves Health Recovery rather than Max Health, so it does not magically win a "maximum Max Health" contest just because the word Health appears on the bottle.
+
+**For BFF:** the scratch optimizer now keeps the resting/self-contained result and a separate objective-specific potion-active result. It must never quietly fold temporary potion state into the resting number.
