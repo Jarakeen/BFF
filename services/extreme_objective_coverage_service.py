@@ -130,8 +130,8 @@ class ExtremeObjectiveCoverageService:
             "Armor-weight/passive combinations are not yet exhaustively searched by the Extreme engine.",
         ),
         "race": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Race is not yet exhaustively enumerated as an Extreme objective source.",
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Canonical aggregate/max-rank race_stat contributions can now be enumerated for reviewed Extreme objectives, but conditional and non-structured racial passive mechanics are not yet exhaustively projected.",
         ),
         "mundus": (
             ExtremeSourceCoverageStatus.PARTIAL,
