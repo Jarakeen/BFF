@@ -62,19 +62,12 @@ def test_old_class_passives_umbrella_no_longer_masquerades_as_complete():
     assert sources["active_skills"].status is ExtremeSourceCoverageStatus.PARTIAL
 
 
-@pytest.mark.parametrize(
-    "source_family",
-    [
-        "gear_sets",
-        "enchantments",
-    ],
-)
-def test_unmodeled_whole_build_sources_block_global_maximum(source_family):
+def test_unmodeled_gear_sets_block_global_maximum():
     coverage = ExtremeObjectiveCoverageService.coverage_for("physical_resistance")
-    sources = _by_source(coverage)
+    source = _by_source(coverage)["gear_sets"]
 
-    assert sources[source_family].status is ExtremeSourceCoverageStatus.NOT_MODELED
-    assert sources[source_family].blocks_global_maximum is True
+    assert source.status is ExtremeSourceCoverageStatus.NOT_MODELED
+    assert source.blocks_global_maximum is True
 
 
 def test_champion_point_projection_is_partial_until_loadout_and_dynamic_mechanics_are_exhaustive():
@@ -85,6 +78,17 @@ def test_champion_point_projection_is_partial_until_loadout_and_dynamic_mechanic
     assert cp.blocks_global_maximum is True
     assert "slottable" in cp.note.casefold() or "champion bar" in cp.note.casefold()
     assert "dynamic" in cp.note.casefold() or "runtime" in cp.note.casefold()
+
+
+def test_enchantment_projection_is_partial_until_weapon_and_trait_interactions_are_exhaustive():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("spell_damage")
+    enchantments = _by_source(coverage)["enchantments"]
+
+    assert enchantments.status is ExtremeSourceCoverageStatus.PARTIAL
+    assert enchantments.blocks_global_maximum is True
+    assert "armor" in enchantments.note.casefold()
+    assert "jewelry" in enchantments.note.casefold()
+    assert "weapon" in enchantments.note.casefold()
 
 
 def test_armor_base_values_and_traits_are_partial_not_missing():
