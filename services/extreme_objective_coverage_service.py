@@ -134,8 +134,8 @@ class ExtremeObjectiveCoverageService:
             "Race is not yet exhaustively enumerated as an Extreme objective source.",
         ),
         "mundus": (
-            ExtremeSourceCoverageStatus.NOT_MODELED,
-            "Mundus choices are not yet exhaustively enumerated as an Extreme objective source.",
+            ExtremeSourceCoverageStatus.PARTIAL,
+            "Canonical update-versioned Mundus base effects can now be projected for reviewed Extreme objectives, but armor-trait/other Mundus multipliers are not yet exhaustively optimized.",
         ),
         "champion_points": (
             ExtremeSourceCoverageStatus.NOT_MODELED,
