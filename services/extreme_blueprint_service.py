@@ -25,6 +25,22 @@ _CLASSES = (
     "Warden",
 )
 
+# Resting/self-contained Spell Damage proof boundary.
+# Expert Mage rank 2: +108 Weapon/Spell Damage for each Sorcerer ability slotted.
+# Twin Blade and Blunt rank 2: each equipped sword adds +129 Weapon/Spell Damage.
+# These are standing effects. Cast-required Major Sorcery, proc stacks, target state,
+# group buffs, potions, and other temporary effects are intentionally excluded.
+_SORCERER_EXPERT_MAGE_PER_SLOT = 108.0
+_DUAL_WIELD_SWORD_DAMAGE = 129.0
+_SORCERER_SPELL_DAMAGE_BAR = (
+    "Crystal Fragments",
+    "Daedric Prey",
+    "Bound Aegis",
+    "Summon Volatile Familiar",
+    "Mages' Wrath",
+    "Power Overload",
+)
+
 
 @dataclass(frozen=True)
 class ExtremeBlueprintResult:
@@ -43,10 +59,10 @@ class ExtremeBlueprintResult:
 class ExtremeBlueprintService:
     """Build a deliberately absurd stat-maximizing character from an empty shell.
 
-    This service uses the same canonical static character-sheet calculation stack
-    as ExtremeOptimizationService. It is intentionally conservative about what
-    it calls proven: class-specific passive/proc advantages are not invented when
-    the static stack cannot distinguish them.
+    From-scratch blueprints use a resting/self-contained boundary: equipment,
+    food, race, intrinsic passives, and standing effects from skills actually
+    slotted on the active bar. Cast-required buffs, group buffs, target debuffs,
+    proc windows, potion uptime, and temporary combat states are excluded.
     """
 
     def __init__(
@@ -71,6 +87,7 @@ class ExtremeBlueprintService:
         max_passes: int = 24,
     ) -> ExtremeBlueprintResult:
         objective = self.extreme.objective(objective_key)
+        active_bar = "back" if str(active_bar or "front").casefold() == "back" else "front"
         progression = CharacterProgression(
             attributes=AttributeAllocation(),
             passive_ranks={},
@@ -78,6 +95,11 @@ class ExtremeBlueprintService:
         )
 
         base = self._blank_build(objective)
+        base, class_label, class_candidates = self._apply_resting_profile(
+            base,
+            objective,
+            active_bar=active_bar,
+        )
         base = self._best_race(base, objective, progression, active_bar)
         base, set_package = self._best_static_set_package(
             base,
@@ -87,7 +109,7 @@ class ExtremeBlueprintService:
         )
 
         current = base
-        current_value, initial_unresolved = self.extreme._evaluate(
+        current_value, initial_unresolved = self._evaluate_resting(
             current,
             progression=progression,
             character_id="extreme-blueprint",
@@ -106,7 +128,7 @@ class ExtremeBlueprintService:
                 character_id="extreme-blueprint",
                 baseline_build_id=f"extreme-blueprint:{pass_index}",
             ):
-                value, candidate_unresolved = self.extreme._evaluate(
+                value, candidate_unresolved = self._evaluate_resting(
                     candidate.candidate_build,
                     progression=progression,
                     character_id="extreme-blueprint",
@@ -139,17 +161,19 @@ class ExtremeBlueprintService:
             current = winner.candidate_build
             current_value = next_value
 
-        # The current static context does not apply a generic, fully-maxed
-        # class-passive package for every class. Do not manufacture a winner.
-        class_label = "Any class (static-sheet tie)"
         current.EsoClass = class_label
         current.BuildName = f"Extreme {objective.label} Blueprint"
 
         notes = (
-            "Starts from a fully equipped CP160 template rather than a saved character.",
-            "Race, static gear-set bonuses, Mundus, traits, enchants, attributes, and food are searched with BFF's canonical static math.",
-            "Class is shown as a tie until BFF can prove comparable fully-maxed class-passive packages for every class.",
-            "Runtime proc stacks, target-only conditions, group-only buffs, and temporary combat states are not treated as permanently active.",
+            "Resting/self-contained boundary: armor, jewelry, weapons, race, Mundus, food, intrinsic passives, and standing effects from skills on the active bar.",
+            "Cast-required buffs, group buffs, target debuffs, proc stacks, potion uptime, and temporary combat states are excluded.",
+            "Static 5-piece set bonuses are evaluated only when the active-bar equipment actually reaches five pieces.",
+            (
+                "Spell Damage uses Sorcerer because Expert Mage grants +108 Weapon/Spell Damage per Sorcerer ability slotted; "
+                "the six-slot active bar is filled with Sorcerer abilities and dual swords receive their standing Twin Blade and Blunt bonus."
+                if objective.key == "spell_damage"
+                else "Class remains unresolved for this objective until an objective-specific resting class advantage is modeled."
+            ),
         )
 
         return ExtremeBlueprintResult(
@@ -158,12 +182,93 @@ class ExtremeBlueprintService:
             value=current_value,
             race=str(current.Race or ""),
             class_label=class_label,
-            class_candidates=_CLASSES,
+            class_candidates=class_candidates,
             set_package=set_package,
             steps=tuple(accepted),
             unresolved=tuple(dict.fromkeys(x for x in unresolved if x)),
             notes=notes,
         )
+
+    def _apply_resting_profile(
+        self,
+        build: PlayerBuild,
+        objective: ExtremeObjective,
+        *,
+        active_bar: str,
+    ) -> tuple[PlayerBuild, str, tuple[str, ...]]:
+        candidate = PlayerBuild.from_dict(build.to_dict())
+        if objective.key != "spell_damage":
+            label = "Any class (resting-sheet tie)"
+            candidate.EsoClass = label
+            return candidate, label, _CLASSES
+
+        candidate.EsoClass = "Sorcerer"
+        skills = list(_SORCERER_SPELL_DAMAGE_BAR)
+        if active_bar == "back":
+            candidate.BackBarSkills = skills
+        else:
+            candidate.FrontBarSkills = skills
+
+        # A two-sword bar has more static Spell Damage than the placeholder
+        # staff before temporary buffs are considered. Explicit offhands also
+        # allow the second 5-piece package to be counted legally on the bar.
+        main = GearSlot(
+            Set="Blueprint Placeholder",
+            Quality="Gold",
+            Trait="Nirnhoned",
+            Enchant="",
+            EnchantTier="Truly Superb",
+            Level="CP160",
+            WeaponType="Sword",
+        )
+        off = GearSlot.from_dict(main.to_dict())
+        if active_bar == "back":
+            candidate.BackBarWeapon = main
+            candidate.BackBarOffHand = off
+            candidate.FrontBarWeapon = GearSlot.from_dict(main.to_dict())
+            candidate.FrontBarOffHand = GearSlot.from_dict(off.to_dict())
+        else:
+            candidate.FrontBarWeapon = main
+            candidate.FrontBarOffHand = off
+            candidate.BackBarWeapon = GearSlot.from_dict(main.to_dict())
+            candidate.BackBarOffHand = GearSlot.from_dict(off.to_dict())
+        return candidate, "Sorcerer", ("Sorcerer",)
+
+    def _evaluate_resting(
+        self,
+        build: PlayerBuild,
+        *,
+        progression: CharacterProgression,
+        character_id: str,
+        build_id: str,
+        objective: ExtremeObjective,
+        active_bar: str,
+    ) -> tuple[float, tuple[str, ...]]:
+        value, unresolved = self.extreme._evaluate(
+            build,
+            progression=progression,
+            character_id=character_id,
+            build_id=build_id,
+            objective=objective,
+            active_bar=active_bar,
+        )
+        if objective.key == "spell_damage":
+            value += self._resting_spell_damage_bonus(build, active_bar=active_bar)
+        return value, unresolved
+
+    @staticmethod
+    def _resting_spell_damage_bonus(build: PlayerBuild, *, active_bar: str) -> float:
+        if str(build.EsoClass or "").strip().casefold() != "sorcerer":
+            return 0.0
+        skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
+        slotted = sum(1 for skill in skills[:6] if str(skill or "").strip())
+        bonus = _SORCERER_EXPERT_MAGE_PER_SLOT * slotted
+
+        main, offhand = build.active_weapon_slots(active_bar)
+        for slot in (main, offhand):
+            if str(slot.WeaponType or "").strip().casefold() == "sword":
+                bonus += _DUAL_WIELD_SWORD_DAMAGE
+        return bonus
 
     def _blank_build(self, objective: ExtremeObjective) -> PlayerBuild:
         build = PlayerBuild(
@@ -236,7 +341,7 @@ class ExtremeBlueprintService:
         for race in self._race_names():
             candidate = PlayerBuild.from_dict(build.to_dict())
             candidate.Race = race
-            value, _ = self.extreme._evaluate(
+            value, _ = self._evaluate_resting(
                 candidate,
                 progression=progression,
                 character_id="extreme-blueprint",
@@ -307,8 +412,6 @@ class ExtremeBlueprintService:
         if not names:
             return build, ()
 
-        # Evaluate legal-ish 5/5 front-bar packages through the real context,
-        # rather than assuming isolated tooltip bonuses add linearly.
         best_build = PlayerBuild.from_dict(build.to_dict())
         best_value = float("-inf")
         best_pair: tuple[str, ...] = ()
@@ -321,13 +424,19 @@ class ExtremeBlueprintService:
                     candidate.Armor[slot_name]["Set"] = first
                 for field_name in ("Necklace", "Ring1", "Ring2"):
                     getattr(candidate, field_name).Set = second
-                candidate.FrontBarWeapon.Set = second
-                candidate.BackBarWeapon.Set = second
-                # Keep head/shoulder open rather than inventing a 2-piece winner
-                # without proven item-slot legality.
+
+                # Three jewelry pieces plus both active-bar one-handed weapons
+                # form the second legal five-piece package.
+                if active_bar == "back":
+                    candidate.BackBarWeapon.Set = second
+                    candidate.BackBarOffHand.Set = second
+                else:
+                    candidate.FrontBarWeapon.Set = second
+                    candidate.FrontBarOffHand.Set = second
+
                 candidate.Armor["Head"]["Set"] = ""
                 candidate.Armor["Shoulders"]["Set"] = ""
-                value, _ = self.extreme._evaluate(
+                value, _ = self._evaluate_resting(
                     candidate,
                     progression=progression,
                     character_id="extreme-blueprint",
