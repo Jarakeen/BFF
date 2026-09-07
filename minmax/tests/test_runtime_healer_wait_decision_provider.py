@@ -22,7 +22,7 @@ def _incentive() -> HealerHeavyAttackBuildIncentive:
     )
 
 
-def _context(*, next_decision=5.0, next_due=()) -> PrematureRecastDecisionContext:
+def _context(*, next_decision=3.0, hard_boundary=5.0, next_due=()) -> PrematureRecastDecisionContext:
     slot = RotationAction(2.0, 1, RotationActionKind.SKILL, "Long Buff", "front")
     return PrematureRecastDecisionContext(
         time_seconds=2.0,
@@ -32,33 +32,35 @@ def _context(*, next_decision=5.0, next_due=()) -> PrematureRecastDecisionContex
         next_due=tuple(next_due),
         rules=(RotationRecastRule("Long Buff", 10.0, bar="front"),),
         next_decision_time_seconds=next_decision,
+        next_hard_boundary_time_seconds=hard_boundary,
         plan_end_seconds=10.0,
     )
 
 
-def test_due_required_heavy_is_scheduled_when_channel_fits() -> None:
+def test_due_required_heavy_reserves_channel_across_soft_skill_decision() -> None:
     provider = RuntimeHealerWaitDecisionProvider(
         incentives=(_incentive(),),
         required_window_seconds=1.8,
     )
 
-    action = provider(_context(next_decision=5.0))
+    decision = provider(_context(next_decision=3.0, hard_boundary=5.0))
 
-    assert action is not None
-    assert action.kind is RotationActionKind.HEAVY_ATTACK
-    assert action.bar == "front"
-    assert action.time_seconds == 2.0
+    assert decision is not None
+    assert decision.action.kind is RotationActionKind.HEAVY_ATTACK
+    assert decision.action.bar == "front"
+    assert decision.action.time_seconds == 2.0
+    assert decision.reservation_seconds == 1.8
 
 
-def test_due_required_heavy_is_rejected_when_next_decision_cuts_channel_short() -> None:
+def test_due_required_heavy_is_rejected_when_hard_boundary_cuts_channel_short() -> None:
     provider = RuntimeHealerWaitDecisionProvider(
         incentives=(_incentive(),),
         required_window_seconds=1.8,
     )
 
-    action = provider(_context(next_decision=3.0))
+    decision = provider(_context(next_decision=3.0, hard_boundary=3.0))
 
-    assert action is None
+    assert decision is None
 
 
 def test_locked_out_required_heavy_is_not_scheduled() -> None:
@@ -74,9 +76,9 @@ def test_locked_out_required_heavy_is_not_scheduled() -> None:
         ),
     )
 
-    action = provider(_context(next_decision=5.0))
+    decision = provider(_context())
 
-    assert action is None
+    assert decision is None
 
 
 def test_due_required_heavy_is_rejected_when_refresh_lands_inside_channel() -> None:
@@ -85,11 +87,10 @@ def test_due_required_heavy_is_rejected_when_refresh_lands_inside_channel() -> N
         required_window_seconds=1.8,
     )
 
-    action = provider(
+    decision = provider(
         _context(
-            next_decision=5.0,
             next_due=(("combat prayer", "front", 3.2),),
         )
     )
 
-    assert action is None
+    assert decision is None
