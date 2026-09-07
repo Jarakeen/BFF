@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -10,9 +11,16 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.config import get_data_dir
 
+_COLOR_TAG_RE = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
+
 
 def _columns(connection: sqlite3.Connection, table: str) -> set[str]:
     return {str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})").fetchall()}
+
+
+def _plain_text(value: object) -> str:
+    text = _COLOR_TAG_RE.sub("", str(value or ""))
+    return " ".join(text.split())
 
 
 def main() -> int:
@@ -67,7 +75,7 @@ def main() -> int:
     for row in rows:
         values = []
         for value in row:
-            text = " ".join(str(value or "").split())
+            text = _plain_text(value)
             if len(text) > 120:
                 text = text[:117] + "..."
             values.append(text)
