@@ -50,7 +50,7 @@ Tasks outside of the master roadmap
 -[X] remove |cffffff0 from gear lookup
 -[X] make scribe simulator actually work
 -[ ] make a team merch page
--[ ] add stickerbook to Collectibles
+-[X] add stickerbook to Collectibles
 -[ ] add an engine that has lots of swaps or only a few swaps for a trial?
 -[ ] rylo says it needs to auto update
 -[ ] still need more trial info
