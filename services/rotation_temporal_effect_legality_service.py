@@ -69,11 +69,12 @@ class RotationTemporalEffectLegalityService:
         resolved: list[_ResolvedActivation] = []
 
         seen_applications: set[
-            tuple[float, str, EffectLayer, str, str, str | None]
+            tuple[float, int | None, str, EffectLayer, str, str, str | None]
         ] = set()
         for application in applications:
             key = (
                 float(application.time_seconds),
+                application.sequence,
                 application.effect_name.casefold(),
                 application.layer,
                 application.source.casefold(),
@@ -145,7 +146,13 @@ class RotationTemporalEffectLegalityService:
 
         violations: list[RotationTemporalEffectLegalityViolation] = []
         for group in grouped.values():
-            ordered = sorted(group, key=lambda item: item.application.time_seconds)
+            ordered = sorted(
+                group,
+                key=lambda item: (
+                    item.application.time_seconds,
+                    -1 if item.application.sequence is None else item.application.sequence,
+                ),
+            )
             for previous, current in zip(ordered, ordered[1:]):
                 cooldown = previous.effect.cooldown
                 if cooldown is None or float(cooldown) <= 0.0:
