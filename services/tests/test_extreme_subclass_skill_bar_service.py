@@ -145,8 +145,6 @@ def test_base_and_morph_from_same_family_do_not_fill_two_slots(monkeypatch, tmp_
     monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
     service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
 
-    # Only four distinct normal base families exist, so a six-slot all-Storm
-    # bar cannot be materialized even though base+morph rows total five.
     assert service.materialize((("storm_calling", 6),)) is None
 
 
@@ -168,3 +166,26 @@ def test_morph_is_preferred_as_representative_within_one_base_family(monkeypatch
     assert result is not None
     assert "Morphed Skill" in result.names
     assert "Base Skill" not in result.names
+
+
+def test_objective_prefers_reviewed_critical_morph_within_family(monkeypatch, tmp_path):
+    rows = [
+        _skill(101, 1001, "Other Morph", "Assassination", morph=1),
+        _skill(102, 1001, "Relentless Focus", "Assassination", morph=2),
+        _skill(103, 1002, "Assassin Two", "Assassination"),
+        _skill(104, 1003, "Assassin Three", "Assassination"),
+        _skill(105, 1004, "Assassin Four", "Assassination"),
+        _skill(106, 1005, "Assassin Five", "Assassination"),
+        _skill(201, 2001, "Assassination Ultimate", "Assassination", ultimate=True),
+    ]
+    monkeypatch.setattr(module, "load_skill_choices", lambda _path: rows)
+    service = ExtremeSubclassSkillBarService(tmp_path / "eso.db")
+
+    result = service.materialize(
+        (("assassination", 6),),
+        objective_key="spell_critical",
+    )
+
+    assert result is not None
+    assert "Relentless Focus" in result.names
+    assert "Other Morph" not in result.names
