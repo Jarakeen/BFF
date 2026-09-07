@@ -188,6 +188,23 @@ def test_duplicate_effect_assessments_for_one_candidate_fail_closed() -> None:
         ))
 
 
+def test_semantic_duplicate_skill_identity_fails_closed() -> None:
+    service = RotationCandidateEffectObligationService(
+        _FakeBaseRanker((("candidate", RotationCandidateTier.ELIGIBLE),))
+    )
+
+    with pytest.raises(ValueError, match="duplicate effect uptime assessment"):
+        service.rank((
+            RotationEffectObligationCandidate(
+                _input("candidate"),
+                (
+                    _assessment(uptime=0.95, source="Winter's Revenge"),
+                    _assessment(uptime=0.95, source="Winters Revenge"),
+                ),
+            ),
+        ))
+
+
 def test_base_ranker_must_return_same_candidate_set() -> None:
     service = RotationCandidateEffectObligationService(
         _FakeBaseRanker((("different", RotationCandidateTier.ELIGIBLE),))
