@@ -155,7 +155,7 @@ def test_contextual_and_unresolved_passives_remain_explicit_blockers():
     assert result.unresolved_passives == ("Fighters Guild: Mystery",)
 
 
-def test_crafting_passive_is_known_but_never_becomes_combat_score():
+def test_combat_relevant_crafting_passive_remains_context_blocker():
     craft = _passive(
         "Medicinal Use",
         "Alchemy",
@@ -168,4 +168,5 @@ def test_crafting_passive_is_known_but_never_becomes_combat_score():
     result = ExtremePassiveObjectiveService.score((craft,), "spell_damage", context)
 
     assert result.projected_delta == 0.0
-    assert result.fully_resolved is True
+    assert result.fully_resolved is False
+    assert result.context_required_passives == ("Alchemy: Medicinal Use",)
