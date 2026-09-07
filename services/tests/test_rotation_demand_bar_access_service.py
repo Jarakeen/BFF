@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from minmax.rotation_bar_availability import RotationBarAvailabilityWindow
 from minmax.rotation_demand_window import (
     RotationDemandKind,
     RotationDemandPattern,
@@ -120,6 +121,27 @@ def test_bar_access_claim_refuses_to_drop_displaced_work() -> None:
     assert result.applied is False
     assert result.plan is no_restore_room
     assert "preserve displaced" in result.reason
+
+
+def test_bar_access_claim_refuses_route_when_encounter_locks_current_bar() -> None:
+    result = RotationDemandBarAccessService().refine(
+        plan=_plan(),
+        demands=(_demand(),),
+        claim=_claim(),
+        bar_availability_windows=(
+            RotationBarAvailabilityWindow(
+                name="single-bar encounter state",
+                start_seconds=29.13,
+                end_seconds=34.13,
+                allowed_bars=frozenset({"back"}),
+                bar_swaps_allowed=False,
+            ),
+        ),
+    )
+
+    assert result.applied is False
+    assert result.plan == _plan()
+    assert "bar availability" in result.reason
 
 
 def test_bar_access_claim_requires_exact_named_demand() -> None:
