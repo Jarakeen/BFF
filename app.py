@@ -225,6 +225,7 @@ def main() -> int:
     from ui.team_prescription_template_support import install as install_team_prescription_template_support
     from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
     from ui.team_optimization_hybrid_anchor_support import install as install_team_optimization_hybrid_anchor_support
+    from ui.extreme_optimization_support import install as install_extreme_optimization_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -285,6 +286,8 @@ def main() -> int:
     install_team_optimization_mode_defaults()
     # A visibly partial Hybrid team means keep those selected players and recruit the rest.
     install_team_optimization_hybrid_anchor_support()
+    # Tools gets the deliberately unconstrained single-stat lab before MainWindow is built.
+    install_extreme_optimization_support()
 
     from ui.main_window import MainWindow
 
