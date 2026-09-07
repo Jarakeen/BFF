@@ -22,6 +22,8 @@ CANONICAL_PHASE = "phase"
 CANONICAL_PHASE_TRANSITION = "phase_transition"
 CANONICAL_STATE = "encounter_state"
 CANONICAL_FAILURE_CONDITION = "failure_condition"
+CANONICAL_DAMAGE_WINDOW = "damage_window"
+CANONICAL_ADD_GROUP = "add_group"
 CANONICAL_UNMAPPED = "unmapped"
 
 
@@ -49,6 +51,10 @@ def _v3_note(note: str) -> str:
         f"{note}; schema v3 preserves each independent source in "
         "encounter_fact_evidence"
     )
+
+
+def _dict_payload(value: object) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {"value": value}
 
 
 def map_candidate_to_canonical(
@@ -91,13 +97,12 @@ def map_candidate_to_canonical(
             )
 
     if fact_type == "mechanic_detail":
-        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
         return EncounterCanonicalMapping(
             encounter_id=fact.encounter_id,
             fact_type=fact.fact_type,
             fact_key=fact.fact_key,
             canonical_kind=CANONICAL_MECHANIC_DETAIL,
-            payload=dict(value),
+            payload=_dict_payload(fact.value),
             source_count=fact.distinct_sources,
             lossless_in_current_schema=True,
             schema_note=_v3_note(
@@ -106,13 +111,12 @@ def map_candidate_to_canonical(
         )
 
     if fact_type == "failure_condition":
-        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
         return EncounterCanonicalMapping(
             encounter_id=fact.encounter_id,
             fact_type=fact.fact_type,
             fact_key=fact.fact_key,
             canonical_kind=CANONICAL_FAILURE_CONDITION,
-            payload=dict(value),
+            payload=_dict_payload(fact.value),
             source_count=fact.distinct_sources,
             lossless_in_current_schema=True,
             schema_note=_v3_note(
@@ -121,13 +125,12 @@ def map_candidate_to_canonical(
         )
 
     if fact_type == "phase":
-        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
         return EncounterCanonicalMapping(
             encounter_id=fact.encounter_id,
             fact_type=fact.fact_type,
             fact_key=fact.fact_key,
             canonical_kind=CANONICAL_PHASE,
-            payload=dict(value),
+            payload=_dict_payload(fact.value),
             source_count=fact.distinct_sources,
             lossless_in_current_schema=True,
             schema_note=_v3_note(
@@ -136,17 +139,44 @@ def map_candidate_to_canonical(
         )
 
     if fact_type == "transition":
-        value = fact.value if isinstance(fact.value, dict) else {"value": fact.value}
         return EncounterCanonicalMapping(
             encounter_id=fact.encounter_id,
             fact_type=fact.fact_type,
             fact_key=fact.fact_key,
             canonical_kind=CANONICAL_PHASE_TRANSITION,
-            payload=dict(value),
+            payload=_dict_payload(fact.value),
             source_count=fact.distinct_sources,
             lossless_in_current_schema=True,
             schema_note=_v3_note(
                 "encounter_canonical_fact stores the transition payload without flattening thresholds"
+            ),
+        )
+
+    if fact_type == "damage_window":
+        return EncounterCanonicalMapping(
+            encounter_id=fact.encounter_id,
+            fact_type=fact.fact_type,
+            fact_key=fact.fact_key,
+            canonical_kind=CANONICAL_DAMAGE_WINDOW,
+            payload=_dict_payload(fact.value),
+            source_count=fact.distinct_sources,
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed target-damageability window without collapsing target or phase semantics"
+            ),
+        )
+
+    if fact_type == "add_group":
+        return EncounterCanonicalMapping(
+            encounter_id=fact.encounter_id,
+            fact_type=fact.fact_type,
+            fact_key=fact.fact_key,
+            canonical_kind=CANONICAL_ADD_GROUP,
+            payload=_dict_payload(fact.value),
+            source_count=fact.distinct_sources,
+            lossless_in_current_schema=True,
+            schema_note=_v3_note(
+                "encounter_canonical_fact stores the reviewed add-group payload without inventing unresolved counts or timing"
             ),
         )
 
