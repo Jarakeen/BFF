@@ -6,9 +6,13 @@ from pathlib import Path
 
 from minmax.character_build.character_class import CharacterClass
 from services.class_mastery_classification_service import ClassMasteryBoundary
+from services.extreme_build_catalog_runtime_service import ExtremeBuildCatalogRuntimeService
 from services.extreme_class_configuration_service import ExtremeClassConfigurationService
 from services.extreme_class_mastery_pair_service import ExtremeClassMasteryPairService
-from services.extreme_skill_standing_effect_service import ExtremeSkillStandingEffectService
+from services.extreme_skill_standing_effect_service import (
+    ExtremeSkillEffectScope,
+    ExtremeSkillStandingEffectService,
+)
 from services.extreme_subclass_skill_bar_service import (
     ExtremeSubclassSkillBarResult,
     ExtremeSubclassSkillBarService,
@@ -87,11 +91,16 @@ class ExtremeClassRouteComparisonService:
     jointly rather than choosing one passive-only allocation and cloning it onto
     both bars.
 
-    Front and back slot distributions are independent. Active-bar slot-count
-    passives are credited only from the selected active bar, while reviewed
-    either-bar standing effects can be supplied from either materialized bar.
-    Each allocation is materialized once per bar position before pair scoring so
-    the dual-bar search does not repeat expensive catalog work for every pair.
+    When a current precomputed Extreme Build catalog is present, allocation shapes
+    and reviewed passive formulas are rehydrated from that catalog instead of
+    regenerating and rescoring the same structural universe on every request. A
+    missing, stale, or incompatible catalog falls back to canonical live scoring.
+
+    Front and back slot distributions remain independent. To avoid a blind 28x28
+    cross product for every line set, mechanically equivalent reviewed bar effects
+    are collapsed to deterministic representatives before pair scoring. Active-bar
+    candidates retain the highest reviewed passive value for each effect signature;
+    off-bar candidates need only preserve distinct either-bar standing effects.
 
     Standing skills retain explicit scope: active-bar effects only apply on the
     selected bar, either-bar effects apply if present on either bar, and runtime
@@ -115,8 +124,32 @@ class ExtremeClassRouteComparisonService:
         *,
         skill_bar_service: ExtremeSubclassSkillBarService | None = None,
     ) -> None:
-        self.mastery_pairs = ExtremeClassMasteryPairService(database_path)
-        self.skill_bars = skill_bar_service or ExtremeSubclassSkillBarService(database_path)
+        self.database_path = Path(database_path)
+        self.mastery_pairs = ExtremeClassMasteryPairService(self.database_path)
+        self.skill_bars = skill_bar_service or ExtremeSubclassSkillBarService(self.database_path)
+        self.precomputed = ExtremeBuildCatalogRuntimeService(self.database_path)
+
+    def _reviewed_allocations(
+        self,
+        equipped_skill_lines: tuple[str, ...],
+        objective_key: str,
+        *,
+        reference_value: float | None,
+    ) -> tuple[ExtremeSubclassSlotAllocationResult, ...]:
+        cached = self.precomputed.reviewed_allocations(
+            equipped_skill_lines,
+            objective_key,
+            reference_value=reference_value,
+            include_known_zero=True,
+        )
+        if cached is not None:
+            return cached
+        return ExtremeSubclassSlotAllocationService.reviewed_allocations(
+            equipped_skill_lines,
+            objective_key,
+            reference_value=reference_value,
+            include_known_zero=True,
+        )
 
     def _materialize_two_bars(
         self,
@@ -186,6 +219,38 @@ class ExtremeClassRouteComparisonService:
     ) -> ExtremeSubclassSkillBarResult:
         return bars.front if active_bar == "front" else bars.back
 
+    @staticmethod
+    def _reviewed_bar_signature(
+        bar: ExtremeSubclassSkillBarResult,
+        objective_key: str,
+        *,
+        active: bool,
+        reference_value: float | None,
+    ) -> tuple[tuple[str, float], ...]:
+        """Return only the reviewed standing mechanics relevant to pair scoring.
+
+        Unreviewed skill differences do not change the numeric lower bound, so
+        retaining every bar that differs only by unreviewed names recreates the
+        combinatoric explosion without adding reviewed information.
+        """
+        selected: dict[str, float] = {}
+        for skill_name in tuple(dict.fromkeys(bar.names)):
+            for effect in ExtremeSkillStandingEffectService.effects_for_skill(
+                skill_name,
+                reference_value=reference_value,
+            ):
+                if effect.objective_key != objective_key:
+                    continue
+                if effect.scope is ExtremeSkillEffectScope.ACTIVATED_RUNTIME:
+                    continue
+                if not active and effect.scope is not ExtremeSkillEffectScope.EITHER_BAR_SLOTTED:
+                    continue
+                key = str(effect.stacking_key or "").strip().casefold()
+                delta = float(effect.projected_delta)
+                if key not in selected or delta > selected[key]:
+                    selected[key] = delta
+        return tuple(sorted(selected.items()))
+
     def _best_reviewed_subclass_build(
         self,
         equipped_skill_lines: tuple[str, ...],
@@ -195,19 +260,16 @@ class ExtremeClassRouteComparisonService:
         active_bar: str,
         external_effects: tuple[NamedBuffContribution, ...],
     ) -> tuple[_ReviewedSubclassBuild | None, bool]:
-        allocations = ExtremeSubclassSlotAllocationService.reviewed_allocations(
+        allocations = self._reviewed_allocations(
             equipped_skill_lines,
             objective_key,
             reference_value=reference_value,
-            include_known_zero=True,
         )
         if not allocations:
             return None, False
 
-        # Materialize every legal allocation once. A self-pair gives us the
-        # canonical front form and canonical back form for that distribution;
-        # those already-built bars can then be combined without repeating the
-        # catalog/morph search for every front/back allocation pair.
+        # Materialize each allocation once per bar position. Pair scoring below
+        # reuses these concrete bars instead of repeating catalog/morph selection.
         materialized: list[
             tuple[
                 ExtremeSubclassSlotAllocationResult,
@@ -229,13 +291,69 @@ class ExtremeClassRouteComparisonService:
         if not materialized:
             return None, False
 
-        best: _ReviewedSubclassBuild | None = None
-        for front_allocation, front_bar, _ in materialized:
-            for back_allocation, _, back_bar in materialized:
-                bars = ExtremeSubclassTwoBarResult(front=front_bar, back=back_bar)
-                active_allocation = (
-                    front_allocation if active_bar == "front" else back_allocation
+        # Collapse active-bar candidates by reviewed standing-effect signature.
+        # For equal mechanics only the allocation with the strongest reviewed
+        # active-bar passive can ever win this reviewed lower-bound search.
+        active_candidates: dict[
+            tuple[tuple[str, float], ...],
+            tuple[ExtremeSubclassSlotAllocationResult, ExtremeSubclassSkillBarResult],
+        ] = {}
+        # Off-bar passives do not apply to the selected active bar, so one stable
+        # representative per either-bar effect signature is sufficient.
+        offbar_candidates: dict[
+            tuple[tuple[str, float], ...],
+            tuple[ExtremeSubclassSlotAllocationResult, ExtremeSubclassSkillBarResult],
+        ] = {}
+
+        for allocation, front_bar, back_bar in materialized:
+            active_result = front_bar if active_bar == "front" else back_bar
+            offbar_result = back_bar if active_bar == "front" else front_bar
+
+            active_signature = self._reviewed_bar_signature(
+                active_result,
+                objective_key,
+                active=True,
+                reference_value=reference_value,
+            )
+            current_active = active_candidates.get(active_signature)
+            if current_active is None or (
+                allocation.projected_delta > current_active[0].projected_delta + 1e-9
+                or (
+                    abs(allocation.projected_delta - current_active[0].projected_delta) <= 1e-9
+                    and (allocation.slot_counts, active_result.names)
+                    < (current_active[0].slot_counts, current_active[1].names)
                 )
+            ):
+                active_candidates[active_signature] = (allocation, active_result)
+
+            offbar_signature = self._reviewed_bar_signature(
+                offbar_result,
+                objective_key,
+                active=False,
+                reference_value=reference_value,
+            )
+            current_offbar = offbar_candidates.get(offbar_signature)
+            if current_offbar is None or (
+                allocation.slot_counts,
+                offbar_result.names,
+            ) < (
+                current_offbar[0].slot_counts,
+                current_offbar[1].names,
+            ):
+                offbar_candidates[offbar_signature] = (allocation, offbar_result)
+
+        best: _ReviewedSubclassBuild | None = None
+        for active_allocation, active_result in active_candidates.values():
+            for offbar_allocation, offbar_result in offbar_candidates.values():
+                if active_bar == "front":
+                    front_allocation = active_allocation
+                    back_allocation = offbar_allocation
+                    bars = ExtremeSubclassTwoBarResult(front=active_result, back=offbar_result)
+                else:
+                    front_allocation = offbar_allocation
+                    back_allocation = active_allocation
+                    bars = ExtremeSubclassTwoBarResult(front=offbar_result, back=active_result)
+
                 skill_delta, skill_sources, buff_context_notes = (
                     ExtremeSkillStandingEffectService.marginal_score_build_bars_explained(
                         bars.front.names,
@@ -321,18 +439,30 @@ class ExtremeClassRouteComparisonService:
 
         subclass_count = 0
         reviewed_lower_bound_count = 0
+        # The same equipped three-line set can be legal from multiple base classes.
+        # Its subclass bar mechanics are identical for this compare context, so
+        # solve each unique line set once and reuse the result across route labels.
+        build_cache: dict[
+            tuple[str, ...],
+            tuple[_ReviewedSubclassBuild | None, bool],
+        ] = {}
+
         for config in ExtremeClassConfigurationService.all_candidates():
             if config.is_pure_class:
                 continue
             subclass_count += 1
 
-            reviewed_build, materialized_any = self._best_reviewed_subclass_build(
-                config.equipped_skill_lines,
-                objective_key,
-                reference_value=reference_value,
-                active_bar=active_bar_key,
-                external_effects=external_effects,
-            )
+            line_key = tuple(config.equipped_skill_lines)
+            if line_key not in build_cache:
+                build_cache[line_key] = self._best_reviewed_subclass_build(
+                    config.equipped_skill_lines,
+                    objective_key,
+                    reference_value=reference_value,
+                    active_bar=active_bar_key,
+                    external_effects=external_effects,
+                )
+            reviewed_build, materialized_any = build_cache[line_key]
+
             if reviewed_build is not None:
                 reviewed_lower_bound_count += 1
                 bars = reviewed_build.bars
@@ -369,11 +499,10 @@ class ExtremeClassRouteComparisonService:
                 score_status = (
                     "pending_canonical_bar_materialization"
                     if materialized_any is False
-                    and ExtremeSubclassSlotAllocationService.reviewed_allocations(
+                    and self._reviewed_allocations(
                         config.equipped_skill_lines,
                         objective_key,
                         reference_value=reference_value,
-                        include_known_zero=True,
                     )
                     else "pending_subclass_effect_resolution"
                 )
