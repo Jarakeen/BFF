@@ -40,8 +40,22 @@ class ExtremeSubclassSkillBarResult:
         return tuple(skill.name for skill in self.skills)
 
 
+@dataclass(frozen=True)
+class ExtremeSubclassTwoBarResult:
+    front: ExtremeSubclassSkillBarResult
+    back: ExtremeSubclassSkillBarResult
+
+
 class ExtremeSubclassSkillBarService:
-    """Turn an abstract subclass slot allocation into one canonical legal bar.
+    """Turn abstract subclass slot allocations into canonical legal skill bars.
+
+    Every equipped class skill line contributes its own active abilities and its
+    own Ultimate candidates. A subclassed character may therefore use an
+    Ultimate from any one of its three equipped class lines on either bar.
+
+    Bar legality is independent: each bar has five normal slots and one Ultimate
+    slot, and the same Ultimate may legally be slotted on both bars. There is no
+    cross-bar uniqueness rule for abilities or Ultimates.
 
     The service proves only bar materialization. It does not claim that the
     chosen morphs are themselves optimal for the Extreme objective. For each
@@ -129,8 +143,9 @@ class ExtremeSubclassSkillBarService:
         if not requested or sum(requested.values()) != 6:
             return None
 
-        # The sixth slot must be an Ultimate. Try each represented line as the
-        # Ultimate provider, then choose the first deterministic legal bar.
+        # The sixth slot must be an Ultimate. Every represented/purchased class
+        # line is eligible to provide it; base-class identity does not restrict
+        # which of the three equipped class-line Ultimates may be slotted.
         candidates: list[ExtremeSubclassSkillBarResult] = []
         for ultimate_line in sorted(requested):
             ultimates = self.skills_for_line(ultimate_line, ultimate=True)
@@ -171,3 +186,22 @@ class ExtremeSubclassSkillBarService:
             candidates,
             key=lambda row: tuple((skill.name.casefold(), skill.ability_id) for skill in row.skills),
         )
+
+    def materialize_two_bars(
+        self,
+        front_slot_counts: tuple[tuple[str, int], ...],
+        back_slot_counts: tuple[tuple[str, int], ...],
+    ) -> ExtremeSubclassTwoBarResult | None:
+        """Materialize front/back bars independently.
+
+        This deliberately performs no cross-bar deduplication. ESO allows the
+        same active skill or Ultimate on both bars, so legality is checked per
+        bar rather than across the character as a whole.
+        """
+        front = self.materialize(front_slot_counts)
+        if front is None:
+            return None
+        back = self.materialize(back_slot_counts)
+        if back is None:
+            return None
+        return ExtremeSubclassTwoBarResult(front=front, back=back)
