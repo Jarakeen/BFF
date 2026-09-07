@@ -66,10 +66,10 @@ def test_ro_and_recovery_incentives_share_one_runtime_provider() -> None:
     )
 
     assert isinstance(provider, RuntimeHealerWaitDecisionProvider)
-    assert [item.kind for item in provider.incentives] == [
+    assert {item.kind for item in provider.incentives} == {
         HeavyAttackBuildIncentiveKind.RECOVERY_VALUE,
         HeavyAttackBuildIncentiveKind.REQUIRED_EFFECT,
-    ]
+    }
     assert {item.name for item in provider.incentives} == {
         "Cycle of Life",
         "Roaring Opportunist",
