@@ -56,7 +56,7 @@ def test_route_comparison_keeps_subclasses_unresolved_even_with_reviewed_lower_b
     assert result.can_declare_global_winner is False
 
 
-def test_spell_damage_subclass_lower_bound_can_use_reviewed_storm_calling(tmp_path):
+def test_spell_damage_subclass_lower_bound_uses_legal_slot_allocation(tmp_path):
     service = ExtremeClassRouteComparisonService(_database(tmp_path))
 
     result = service.compare(
@@ -69,8 +69,10 @@ def test_spell_damage_subclass_lower_bound_can_use_reviewed_storm_calling(tmp_pa
     assert best is not None
     assert best.route_kind is ExtremeClassRouteKind.SUBCLASS
     assert best.projected_delta == 648.0
-    assert best.reviewed_line_ids == ("storm_calling",)
-    assert best.score_status == "reviewed_subclass_line_lower_bound"
+    assert "storm_calling" in best.equipped_skill_lines
+    assert best.score_status == "reviewed_subclass_slot_lower_bound"
+    assert sum(count for _, count in best.slot_counts) == 6
+    assert best.reviewed_sources == ("Expert Mage (6 Sorcerer slots)",)
     assert result.can_declare_global_winner is False
 
 
