@@ -47,7 +47,6 @@ def test_current_objectives_acknowledge_reviewed_passive_and_standing_skill_laye
         "gear_sets",
         "armor_weight_passives",
         "race",
-        "mundus",
         "champion_points",
         "enchantments",
     ],
@@ -58,6 +57,15 @@ def test_unmodeled_whole_build_sources_block_global_maximum(source_family):
 
     assert sources[source_family].status is ExtremeSourceCoverageStatus.NOT_MODELED
     assert sources[source_family].blocks_global_maximum is True
+
+
+def test_mundus_base_projection_is_partial_until_multiplier_inputs_are_exhaustive():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("critical_damage")
+    mundus = _by_source(coverage)["mundus"]
+
+    assert mundus.status is ExtremeSourceCoverageStatus.PARTIAL
+    assert mundus.blocks_global_maximum is True
+    assert "multiplier" in mundus.note.casefold()
 
 
 def test_supplied_context_support_does_not_masquerade_as_exhaustive_generation():
