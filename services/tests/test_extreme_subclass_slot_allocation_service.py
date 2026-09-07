@@ -60,6 +60,24 @@ def test_winters_embrace_resistance_is_line_scoped():
     assert result.reviewed_sources == ("Frozen Armor (6 Winter's Embrace slots)",)
 
 
+def test_reviewed_allocations_expose_mixed_resistance_distributions():
+    rows = ExtremeSubclassSlotAllocationService.reviewed_allocations(
+        ("winters_embrace", "daedric_summoning", "storm_calling"),
+        "physical_resistance",
+    )
+
+    assert rows
+    assert rows[0].projected_delta == pytest.approx(7440.0)
+    mixed = next(
+        row
+        for row in rows
+        if _counts(row)["winters_embrace"] == 5
+        and _counts(row)["daedric_summoning"] == 1
+    )
+    assert mixed.projected_delta == pytest.approx(6200.0)
+    assert mixed.reviewed_sources == ("Frozen Armor (5 Winter's Embrace slots)",)
+
+
 def test_flourish_requires_reference_value_for_percent_projection():
     assert (
         ExtremeSubclassSlotAllocationService.best_allocation(
@@ -86,4 +104,11 @@ def test_unreviewed_objective_returns_no_fake_zero_score():
             "spell_damage",
         )
         is None
+    )
+    assert (
+        ExtremeSubclassSlotAllocationService.reviewed_allocations(
+            ("aedric_spear", "dark_magic", "green_balance"),
+            "spell_damage",
+        )
+        == ()
     )
