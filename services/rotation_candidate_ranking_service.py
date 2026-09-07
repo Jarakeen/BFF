@@ -46,9 +46,9 @@ class RotationCandidateRankingService:
 
     This is intentionally lexicographic rather than weighted. A candidate that
     misses an explicit demand action, required static support effect, demand-entry
-    resource reserve, or incurs resource shortfall cannot outrank one that satisfies
-    those supplied hard obligations merely because its softer resource numbers look
-    prettier.
+    resource reserve, encounter bar-availability rule, or incurs resource shortfall
+    cannot outrank one that satisfies those supplied hard obligations merely because
+    its softer resource numbers look prettier.
 
     Within the same eligibility tier, deterministic evidence ordering is used:
     fewer missing obligations, smaller reserve/runtime shortfalls, fewer
@@ -90,12 +90,14 @@ class RotationCandidateRankingService:
         consequence = scorecard.consequence
         missing_demand = len(scorecard.missing_demand_requirements)
         missing_effects = len(scorecard.missing_required_effects)
+        bar_violations = len(scorecard.bar_availability_violations)
         failed_reserves = scorecard.failed_reserve_assessments
         reserve_failure_count = len(failed_reserves)
         reserve_shortfall = sum(int(assessment.shortfall) for assessment in failed_reserves)
         hard_failure_count = (
             missing_demand
             + missing_effects
+            + bar_violations
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
         )
@@ -105,6 +107,7 @@ class RotationCandidateRankingService:
             hard_failure_count,
             missing_demand,
             missing_effects,
+            bar_violations,
             reserve_failure_count,
             reserve_shortfall,
             int(scorecard.candidate_shortfall),
@@ -129,6 +132,18 @@ class RotationCandidateRankingService:
                 "missing static required effect(s): "
                 + ", ".join(scorecard.missing_required_effects)
             )
+        if scorecard.bar_availability_violations:
+            reasons.append(
+                f"{len(scorecard.bar_availability_violations)} encounter bar-availability violation(s)"
+            )
+            for violation in scorecard.bar_availability_violations:
+                action = violation.action_name or (
+                    violation.action_kind.value if violation.action_kind is not None else "bar state"
+                )
+                reasons.append(
+                    f"bar legality at {violation.time_seconds:g}s in {violation.window_name!r}: "
+                    f"{action} -> {violation.reason}"
+                )
         for assessment in scorecard.failed_reserve_assessments:
             reasons.append(
                 "resource reserve shortfall "
