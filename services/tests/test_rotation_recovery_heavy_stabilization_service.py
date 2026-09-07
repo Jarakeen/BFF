@@ -282,6 +282,40 @@ def test_stabilizer_marks_stable_resource_shortfall_as_no_legal_improvement() ->
     assert len(result.iterations) == 2
 
 
+def test_stabilizer_canonicalizes_semantically_identical_obligation_state() -> None:
+    replay = _ReplayService()
+    service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+    checks = 0
+
+    def resolve_obligations(_plan, _replay):
+        nonlocal checks
+        checks += 1
+        if checks % 2:
+            return ("reserve|phase2", "effect|major_brittle", "reserve|phase2")
+        return ("effect|major_brittle", "reserve|phase2")
+
+    result = service.stabilize(
+        build=build,
+        generate=lambda _pressure_resolver: _plan(2.0),
+        resource=ResourceType.MAGICKA,
+        maximum_amount=10000,
+        trigger_fraction=0.30,
+        restoration_resolver=lambda heavy: None,
+        hard_obligation_state_resolver=resolve_obligations,
+        max_iterations=4,
+    )
+
+    assert result.converged is True
+    assert result.termination_reason == "stable_no_legal_improvement"
+    assert len(result.iterations) == 2
+    assert result.iterations[0].hard_obligation_state == (
+        "effect|major_brittle",
+        "reserve|phase2",
+    )
+    assert result.iterations[1].hard_obligation_state == result.iterations[0].hard_obligation_state
+
+
 def test_stabilizer_stops_at_cap_when_heavy_schedule_oscillates() -> None:
     replay = _ReplayService()
     service = RotationRecoveryHeavyStabilizationService(replay_service=replay)
