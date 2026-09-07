@@ -4,6 +4,15 @@ from .healer_heavy_attack_runtime_candidates import HeavyAttackDecisionWindow
 from .rotation_wait_decision import PrematureRecastDecisionContext
 
 
+_TIMING_PRECISION_DIGITS = 9
+
+
+def _normalized_seconds(value: float) -> float:
+    """Normalize derived schedule deltas for deterministic timing comparisons."""
+
+    return round(float(value), _TIMING_PRECISION_DIGITS)
+
+
 def derive_heavy_attack_decision_window(
     *,
     context: PrematureRecastDecisionContext,
@@ -18,6 +27,10 @@ def derive_heavy_attack_decision_window(
     This deliberately refuses to assume that a multi-second heavy may overlap a
     later scheduled action. Encounter safety and higher-priority action state are
     still caller-owned evidence.
+
+    Derived schedule deltas are normalized to nanosecond-scale decimal precision
+    so equivalent human-facing timestamps do not retain binary floating-point
+    artifacts such as ``1.2000000000000002``.
     """
 
     if context.bar not in {"front", "back"}:
@@ -45,7 +58,7 @@ def derive_heavy_attack_decision_window(
         boundaries.append(min(same_bar_due))
 
     available = min(boundaries) - start if boundaries else 0.0
-    required = float(required_window_seconds)
+    required = _normalized_seconds(required_window_seconds)
     refresh_collision = any(
         bar == context.bar and start < float(due_time) < start + required
         for _, bar, due_time in context.next_due
@@ -54,7 +67,7 @@ def derive_heavy_attack_decision_window(
     return HeavyAttackDecisionWindow(
         time_seconds=start,
         bar=context.bar,
-        available_window_seconds=max(0.0, available),
+        available_window_seconds=_normalized_seconds(max(0.0, available)),
         required_window_seconds=required,
         encounter_allows_channel=encounter_allows_channel,
         higher_priority_action_ready=higher_priority_action_ready,
