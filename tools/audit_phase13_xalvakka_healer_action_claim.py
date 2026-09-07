@@ -30,7 +30,10 @@ from services.rotation_demand_bar_access_service import (
 )
 from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
-from services.rotation_runtime_uptime_service import RotationRuntimeUptimeRequirement
+from services.rotation_runtime_uptime_service import (
+    RotationRuntimeUptimeObjective,
+    RotationRuntimeUptimeRequirement,
+)
 from services.rotation_sustain_service import RotationSustainService
 from tools.audit_phase13_healer_priority_comparison import _BASE_PRIORITIES, _audit_policy_set
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import _load_saved_build
@@ -129,6 +132,14 @@ def main() -> int:
             "no uptime threshold is invented when omitted"
         ),
     )
+    parser.add_argument(
+        "--maximize-winters-revenge-uptime",
+        action="store_true",
+        help=(
+            "use measured Winter's Revenge duration coverage as the soft ranking objective "
+            "after all hard obligations"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
@@ -180,6 +191,11 @@ def main() -> int:
     ranking_service = RotationCandidateRankingService()
     bar_access_service = RotationDemandBarAccessService()
     duration_analysis_service = RotationDurationAnalysisService(database_path)
+    uptime_objective = (
+        RotationRuntimeUptimeObjective("Winter's Revenge", "back")
+        if args.maximize_winters_revenge_uptime
+        else None
+    )
 
     print("=" * 118)
     print(" PHASE 13 XALVAKKA HEALER MECHANIC / BAR ACCESS AUDIT")
@@ -206,6 +222,14 @@ def main() -> int:
             "Winter's Revenge uptime: "
             f">= {float(args.minimum_winters_revenge_uptime):.2%} (caller supplied)"
         )
+    print(
+        "Winter's Revenge objective: "
+        + (
+            "maximize measured runtime uptime after hard obligations"
+            if uptime_objective is not None
+            else "not selected"
+        )
+    )
 
     for raid_dps in args.raid_dps:
         phase_2, demand, _ = _project_plan(
@@ -287,14 +311,18 @@ def main() -> int:
             )
 
         baseline_duration = (
-            duration_analysis_service.analyze(base_plan) if uptime_requirements else None
+            duration_analysis_service.analyze(base_plan)
+            if uptime_requirements or uptime_objective is not None
+            else None
         )
         claim_duration = (
-            duration_analysis_service.analyze(claim_plan) if uptime_requirements else None
+            duration_analysis_service.analyze(claim_plan)
+            if uptime_requirements or uptime_objective is not None
+            else None
         )
         bar_access_duration = (
             duration_analysis_service.analyze(bar_access_plan)
-            if uptime_requirements
+            if uptime_requirements or uptime_objective is not None
             else None
         )
 
@@ -308,6 +336,7 @@ def main() -> int:
             reserve_requirements=reserve_requirements,
             candidate_duration=baseline_duration,
             runtime_uptime_requirements=uptime_requirements,
+            runtime_uptime_objective=uptime_objective,
         )
         claim_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -319,6 +348,7 @@ def main() -> int:
             reserve_requirements=reserve_requirements,
             candidate_duration=claim_duration,
             runtime_uptime_requirements=uptime_requirements,
+            runtime_uptime_objective=uptime_objective,
         )
         bar_access_card = scorecard_service.compare(
             baseline_plan=base_plan,
@@ -330,6 +360,7 @@ def main() -> int:
             reserve_requirements=reserve_requirements,
             candidate_duration=bar_access_duration,
             runtime_uptime_requirements=uptime_requirements,
+            runtime_uptime_objective=uptime_objective,
         )
         ranked = ranking_service.rank(
             (
@@ -380,11 +411,19 @@ def main() -> int:
                     f" | WR uptime {observed}/"
                     f"{uptime.requirement.minimum_uptime:.2%}"
                 )
+            objective_text = ""
+            if card.runtime_uptime_objective_assessment is not None:
+                observed = card.runtime_uptime_objective_assessment.observed_uptime
+                objective_text = (
+                    " | WR objective unknown"
+                    if observed is None
+                    else f" | WR objective {observed:.2%}"
+                )
             print(
                 f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
-                f"{reserve_text}{uptime_text}"
+                f"{reserve_text}{uptime_text}{objective_text}"
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
@@ -407,7 +446,7 @@ def main() -> int:
         "already available. The bar-access rescue tests the next boundary: whether existing timeline "
         "slots can be rerouted through the required bar without dropping displaced support work. "
         "Eligibility still comes from the same hard demand, optional runtime uptime, reserve, and "
-        "resource obligations."
+        "resource obligations. A selected uptime objective only orders candidates after those gates."
     )
     return 0
 

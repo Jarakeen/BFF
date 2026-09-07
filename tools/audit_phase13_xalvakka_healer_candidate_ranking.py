@@ -29,7 +29,10 @@ from services.rotation_candidate_scorecard_service import (
 )
 from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_duration_refinement_service import RotationDurationRefinementService
-from services.rotation_runtime_uptime_service import RotationRuntimeUptimeRequirement
+from services.rotation_runtime_uptime_service import (
+    RotationRuntimeUptimeObjective,
+    RotationRuntimeUptimeRequirement,
+)
 from services.rotation_sustain_service import RotationSustainService
 from tools.audit_phase13_healer_priority_comparison import (
     _BASE_PRIORITIES,
@@ -154,6 +157,14 @@ def main() -> int:
             "no uptime threshold is invented when omitted"
         ),
     )
+    parser.add_argument(
+        "--maximize-winters-revenge-uptime",
+        action="store_true",
+        help=(
+            "use measured Winter's Revenge duration coverage as the soft ranking objective "
+            "after all hard obligations"
+        ),
+    )
     parser.add_argument("--builds", type=Path, default=DEFAULT_BUILDS)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     args = parser.parse_args()
@@ -211,6 +222,11 @@ def main() -> int:
     scorecard_service = RotationCandidateScorecardService()
     ranking_service = RotationCandidateRankingService()
     duration_analysis_service = RotationDurationAnalysisService(database_path)
+    uptime_objective = (
+        RotationRuntimeUptimeObjective("Winter's Revenge", "back")
+        if args.maximize_winters_revenge_uptime
+        else None
+    )
 
     print("=" * 118)
     print(" PHASE 13 XALVAKKA HEALER CANDIDATE FAMILY RANKING")
@@ -240,6 +256,14 @@ def main() -> int:
             "Winter's Revenge uptime: "
             f">= {float(args.minimum_winters_revenge_uptime):.2%} (caller supplied)"
         )
+    print(
+        "Winter's Revenge objective: "
+        + (
+            "maximize measured runtime uptime after hard obligations"
+            if uptime_objective is not None
+            else "not selected"
+        )
+    )
     print(
         "Boundary: candidate leads are explicit audit possibilities. This tool generates and ranks "
         "their realized schedules; it does not infer that any lead value is canonical healer strategy."
@@ -318,7 +342,7 @@ def main() -> int:
             )
             candidate_duration = (
                 duration_analysis_service.analyze(candidate.plan)
-                if uptime_requirements
+                if uptime_requirements or uptime_objective is not None
                 else None
             )
             card = scorecard_service.compare(
@@ -331,6 +355,7 @@ def main() -> int:
                 reserve_requirements=reserve_requirements,
                 candidate_duration=candidate_duration,
                 runtime_uptime_requirements=uptime_requirements,
+                runtime_uptime_objective=uptime_objective,
             )
             ranking_inputs.append(
                 RotationCandidateRankingInput(candidate.candidate_id, card)
@@ -369,11 +394,19 @@ def main() -> int:
                     f" | WR uptime {observed}/"
                     f"{uptime.requirement.minimum_uptime:.2%}"
                 )
+            objective_text = ""
+            if card.runtime_uptime_objective_assessment is not None:
+                observed = card.runtime_uptime_objective_assessment.observed_uptime
+                objective_text = (
+                    " | WR objective unknown"
+                    if observed is None
+                    else f" | WR objective {observed:.2%}"
+                )
             print(
                 f"#{item.rank} {item.candidate_id:19s} | {item.tier.value:10s} | "
                 f"prep casts {cast_text:12s} | resource {consequence.resource_kind.value:8s} | "
                 f"min {consequence.minimum_resource_delta:+d} | end {consequence.ending_resource_delta:+d}"
-                f"{reserve_text}{uptime_text}"
+                f"{reserve_text}{uptime_text}{objective_text}"
             )
             for reason in item.reasons:
                 print(f"    - {reason}")
@@ -392,7 +425,7 @@ def main() -> int:
         "encounter obligations decide eligibility before softer resource consequences. Exact duplicate "
         "realized schedules are collapsed so differently named policies do not masquerade as extra "
         "choices. Optional reserve and runtime uptime floors remain caller supplied; omitted floors are "
-        "not silently invented."
+        "not silently invented. A selected uptime objective is considered only after hard obligations."
     )
     return 0
 

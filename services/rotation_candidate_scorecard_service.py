@@ -23,7 +23,10 @@ from services.rotation_plan_consequence_service import (
 )
 from services.rotation_runtime_uptime_service import (
     RotationRuntimeUptimeAssessment,
+    RotationRuntimeUptimeObjective,
+    RotationRuntimeUptimeObjectiveAssessment,
     RotationRuntimeUptimeRequirement,
+    assess_rotation_runtime_uptime_objective,
     assess_rotation_runtime_uptimes,
 )
 from services.rotation_sustain_service import RotationSustainProjection
@@ -87,6 +90,9 @@ class RotationCandidateScorecard:
     reserve_assessments: tuple[RotationResourceReserveAssessment, ...] = ()
     bar_availability_assessment: RotationBarAvailabilityAssessment | None = None
     runtime_uptime_assessments: tuple[RotationRuntimeUptimeAssessment, ...] = ()
+    runtime_uptime_objective_assessment: (
+        RotationRuntimeUptimeObjectiveAssessment | None
+    ) = None
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -178,6 +184,7 @@ class RotationCandidateScorecardService:
         support_coverage: SupportCoverage | None = None,
         candidate_duration: RotationDurationProjection | None = None,
         runtime_uptime_requirements: tuple[RotationRuntimeUptimeRequirement, ...] = (),
+        runtime_uptime_objective: RotationRuntimeUptimeObjective | None = None,
     ) -> RotationCandidateScorecard:
         demand_by_name: dict[str, RotationDemandWindow] = {}
         for demand in demands:
@@ -235,9 +242,11 @@ class RotationCandidateScorecardService:
                 encounter_requirements.required_effect_names()
             )
 
-        if runtime_uptime_requirements and candidate_duration is None:
+        if (
+            runtime_uptime_requirements or runtime_uptime_objective is not None
+        ) and candidate_duration is None:
             raise ValueError(
-                "runtime uptime requirements need candidate duration evidence"
+                "runtime uptime requirements/objective need candidate duration evidence"
             )
         uptime_assessments = (
             assess_rotation_runtime_uptimes(
@@ -246,6 +255,14 @@ class RotationCandidateScorecardService:
             )
             if candidate_duration is not None
             else ()
+        )
+        uptime_objective_assessment = (
+            assess_rotation_runtime_uptime_objective(
+                projection=candidate_duration,
+                objective=runtime_uptime_objective,
+            )
+            if candidate_duration is not None and runtime_uptime_objective is not None
+            else None
         )
 
         consequence = self.consequence_service.compare(
@@ -293,6 +310,7 @@ class RotationCandidateScorecardService:
             reserve_assessments=reserve_assessments,
             bar_availability_assessment=bar_assessment,
             runtime_uptime_assessments=uptime_assessments,
+            runtime_uptime_objective_assessment=uptime_objective_assessment,
         )
 
     @staticmethod

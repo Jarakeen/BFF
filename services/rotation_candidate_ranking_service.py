@@ -69,6 +69,8 @@ class RotationCandidateRankingService:
                 raise ValueError(f"duplicate rotation ranking candidate_id: {item.candidate_id!r}")
             seen.add(key)
 
+        self._validate_uptime_objective(candidates)
+
         ordered = sorted(candidates, key=self._sort_key)
         return tuple(
             RotationCandidateRankingResult(
@@ -100,6 +102,15 @@ class RotationCandidateRankingService:
         uptime_shortfall = sum(
             assessment.shortfall or 0.0 for assessment in failed_uptimes
         )
+        objective = scorecard.runtime_uptime_objective_assessment
+        objective_evidence_missing = int(
+            objective is not None and objective.observed_uptime is None
+        )
+        objective_uptime = (
+            objective.observed_uptime
+            if objective is not None and objective.observed_uptime is not None
+            else 0.0
+        )
         failed_reserves = scorecard.failed_reserve_assessments
         reserve_failure_count = len(failed_reserves)
         reserve_shortfall = sum(int(assessment.shortfall) for assessment in failed_reserves)
@@ -125,6 +136,8 @@ class RotationCandidateRankingService:
             reserve_shortfall,
             int(scorecard.candidate_shortfall),
             len(scorecard.candidate_specific_unresolved),
+            objective_evidence_missing,
+            -objective_uptime,
             _RESOURCE_ORDER[consequence.resource_kind],
             -int(consequence.minimum_resource_delta),
             -int(consequence.ending_resource_delta),
@@ -189,6 +202,21 @@ class RotationCandidateRankingService:
                 f"{len(scorecard.inherited_unresolved)} inherited/shared unresolved evidence item(s)"
             )
 
+        objective = scorecard.runtime_uptime_objective_assessment
+        if objective is not None:
+            target = objective.objective
+            scope = f" on {target.bar} bar" if target.bar else ""
+            if objective.observed_uptime is None:
+                reasons.append(
+                    f"runtime uptime objective evidence unavailable for "
+                    f"{target.skill_name!r}{scope}"
+                )
+            else:
+                reasons.append(
+                    f"runtime uptime objective for {target.skill_name!r}{scope}: "
+                    f"observed {objective.observed_uptime:.2%}"
+                )
+
         consequence = scorecard.consequence
         reasons.append(f"resource consequence {consequence.resource_kind.value}")
         reasons.append(
@@ -199,3 +227,24 @@ class RotationCandidateRankingService:
             f"waits {consequence.wait_delta:+d}"
         )
         return tuple(reasons)
+
+    @staticmethod
+    def _validate_uptime_objective(
+        candidates: tuple[RotationCandidateRankingInput, ...],
+    ) -> None:
+        keys: set[tuple[str, str | None] | None] = set()
+        for item in candidates:
+            assessment = item.scorecard.runtime_uptime_objective_assessment
+            if assessment is None:
+                keys.add(None)
+                continue
+            keys.add(
+                (
+                    assessment.objective.skill_name.casefold(),
+                    assessment.objective.bar,
+                )
+            )
+        if len(keys) > 1:
+            raise ValueError(
+                "rotation ranking candidates must use the same runtime uptime objective"
+            )

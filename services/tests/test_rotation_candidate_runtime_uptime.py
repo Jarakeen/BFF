@@ -13,7 +13,10 @@ from services.rotation_candidate_ranking_service import (
 )
 from services.rotation_candidate_scorecard_service import RotationCandidateScorecardService
 from services.rotation_duration_analysis_service import RotationDurationProjection
-from services.rotation_runtime_uptime_service import RotationRuntimeUptimeRequirement
+from services.rotation_runtime_uptime_service import (
+    RotationRuntimeUptimeObjective,
+    RotationRuntimeUptimeRequirement,
+)
 
 
 def _plan() -> RotationPlan:
@@ -25,13 +28,21 @@ def _plan() -> RotationPlan:
     )
 
 
-def _sustain(*, ending: int):
+def _sustain(*, ending: int, shortfall: int = 0):
     timeline = ResourceTimelineResult(
         resource=ResourceType.MAGICKA,
         starting_amount=30000,
         ending_amount=ending,
         events=(),
     )
+    if shortfall:
+        timeline = SimpleNamespace(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=ending,
+            total_shortfall=shortfall,
+            events=(),
+        )
     return SimpleNamespace(
         resource=ResourceType.MAGICKA,
         run=SimpleNamespace(timeline=timeline, action_cost_events=()),
@@ -57,20 +68,32 @@ def _duration(*, skill: str = "Winter's Revenge", uptime: float = 0.9, bar="back
     )
 
 
-def _card(*, uptime: float, ending: int = 20000):
+def _card(
+    *,
+    uptime: float,
+    ending: int = 20000,
+    minimum_uptime: float = 0.9,
+    maximize_uptime: bool = False,
+    shortfall: int = 0,
+):
     plan = _plan()
     return RotationCandidateScorecardService().compare(
         baseline_plan=plan,
         candidate_plan=plan,
         baseline_sustain=_sustain(ending=20000),
-        candidate_sustain=_sustain(ending=ending),
+        candidate_sustain=_sustain(ending=ending, shortfall=shortfall),
         candidate_duration=_duration(uptime=uptime),
         runtime_uptime_requirements=(
             RotationRuntimeUptimeRequirement(
                 skill_name="Winter's Revenge",
                 bar="back",
-                minimum_uptime=0.9,
+                minimum_uptime=minimum_uptime,
             ),
+        ),
+        runtime_uptime_objective=(
+            RotationRuntimeUptimeObjective("Winter's Revenge", "back")
+            if maximize_uptime
+            else None
         ),
     )
 
@@ -152,3 +175,119 @@ def test_resource_gain_cannot_outrank_required_runtime_uptime() -> None:
     assert ranked[0].tier is RotationCandidateTier.ELIGIBLE
     assert ranked[1].tier is RotationCandidateTier.INELIGIBLE
     assert any("observed 85.00%, required 90.00%" in reason for reason in ranked[1].reasons)
+
+
+def test_explicit_uptime_objective_precedes_resource_tie_breakers() -> None:
+    ranked = RotationCandidateRankingService().rank(
+        (
+            RotationCandidateRankingInput(
+                "more-magicka",
+                _card(
+                    uptime=0.90,
+                    ending=25000,
+                    minimum_uptime=0.80,
+                    maximize_uptime=True,
+                ),
+            ),
+            RotationCandidateRankingInput(
+                "more-uptime",
+                _card(
+                    uptime=0.95,
+                    ending=19000,
+                    minimum_uptime=0.80,
+                    maximize_uptime=True,
+                ),
+            ),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == ["more-uptime", "more-magicka"]
+    assert all(item.tier is RotationCandidateTier.ELIGIBLE for item in ranked)
+    assert any("observed 95.00%" in reason for reason in ranked[0].reasons)
+
+
+def test_hard_failure_precedes_higher_uptime_objective() -> None:
+    ranked = RotationCandidateRankingService().rank(
+        (
+            RotationCandidateRankingInput(
+                "higher-uptime-with-shortfall",
+                _card(
+                    uptime=0.95,
+                    minimum_uptime=0.80,
+                    maximize_uptime=True,
+                    shortfall=1,
+                ),
+            ),
+            RotationCandidateRankingInput(
+                "eligible-lower-uptime",
+                _card(
+                    uptime=0.90,
+                    minimum_uptime=0.80,
+                    maximize_uptime=True,
+                ),
+            ),
+        )
+    )
+
+    assert [item.candidate_id for item in ranked] == [
+        "eligible-lower-uptime",
+        "higher-uptime-with-shortfall",
+    ]
+    assert ranked[0].tier is RotationCandidateTier.ELIGIBLE
+    assert ranked[1].tier is RotationCandidateTier.INELIGIBLE
+
+
+def test_missing_objective_evidence_remains_unknown_instead_of_zero() -> None:
+    plan = _plan()
+    empty = RotationDurationProjection(
+        analysis=RotationRecastAnalysis(windows=(), summaries=()),
+        rules=(),
+        unresolved=("canonical duration unavailable",),
+    )
+    card = RotationCandidateScorecardService().compare(
+        baseline_plan=plan,
+        candidate_plan=plan,
+        baseline_sustain=_sustain(ending=20000),
+        candidate_sustain=_sustain(ending=20000),
+        candidate_duration=empty,
+        runtime_uptime_objective=RotationRuntimeUptimeObjective(
+            "Winter's Revenge",
+            "back",
+        ),
+    )
+
+    assessment = card.runtime_uptime_objective_assessment
+    assert assessment is not None
+    assert assessment.observed_uptime is None
+    assert assessment.unresolved == (
+        "runtime uptime objective evidence missing for \"Winter's Revenge\" on back bar",
+    )
+    assert card.supplied_obligations_satisfied is True
+
+
+def test_candidates_must_share_the_same_uptime_objective() -> None:
+    first = _card(
+        uptime=0.90,
+        minimum_uptime=0.80,
+        maximize_uptime=True,
+    )
+    plan = _plan()
+    second = RotationCandidateScorecardService().compare(
+        baseline_plan=plan,
+        candidate_plan=plan,
+        baseline_sustain=_sustain(ending=20000),
+        candidate_sustain=_sustain(ending=20000),
+        candidate_duration=_duration(skill="Expansive Frost Cloak"),
+        runtime_uptime_objective=RotationRuntimeUptimeObjective(
+            "Expansive Frost Cloak",
+            "back",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="same runtime uptime objective"):
+        RotationCandidateRankingService().rank(
+            (
+                RotationCandidateRankingInput("winter", first),
+                RotationCandidateRankingInput("frost-cloak", second),
+            )
+        )

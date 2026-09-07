@@ -38,6 +38,30 @@ class RotationRuntimeUptimeRequirement:
 
 
 @dataclass(frozen=True)
+class RotationRuntimeUptimeObjective:
+    """One caller-selected duration-skill uptime target to maximize.
+
+    Unlike a requirement, this has no pass/fail threshold. It is a soft objective
+    considered only after hard rotation obligations have been ordered.
+    """
+
+    skill_name: str
+    bar: str | None = None
+
+    def __post_init__(self) -> None:
+        name = str(self.skill_name or "").strip()
+        if not name:
+            raise ValueError("runtime uptime objective needs skill_name")
+        object.__setattr__(self, "skill_name", name)
+
+        if self.bar is not None:
+            bar = str(self.bar).strip().casefold()
+            if bar not in {"front", "back"}:
+                raise ValueError("runtime uptime objective bar must be front or back")
+            object.__setattr__(self, "bar", bar)
+
+
+@dataclass(frozen=True)
 class RotationRuntimeUptimeAssessment:
     requirement: RotationRuntimeUptimeRequirement
     summary: RotationRecastSummary | None
@@ -56,6 +80,17 @@ class RotationRuntimeUptimeAssessment:
     @property
     def satisfied(self) -> bool:
         return self.shortfall == 0.0
+
+
+@dataclass(frozen=True)
+class RotationRuntimeUptimeObjectiveAssessment:
+    objective: RotationRuntimeUptimeObjective
+    summary: RotationRecastSummary | None
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def observed_uptime(self) -> float | None:
+        return None if self.summary is None else float(self.summary.uptime_fraction)
 
 
 def assess_rotation_runtime_uptimes(
@@ -108,3 +143,36 @@ def assess_rotation_runtime_uptimes(
             )
         )
     return tuple(assessments)
+
+
+def assess_rotation_runtime_uptime_objective(
+    *,
+    projection: RotationDurationProjection,
+    objective: RotationRuntimeUptimeObjective,
+) -> RotationRuntimeUptimeObjectiveAssessment:
+    """Resolve one soft uptime objective without converting unknown evidence to zero."""
+
+    matches = tuple(
+        summary
+        for summary in projection.analysis.summaries
+        if summary.skill_name.casefold() == objective.skill_name.casefold()
+        and (objective.bar is None or summary.bar == objective.bar)
+    )
+    if len(matches) > 1 and objective.bar is None:
+        raise ValueError(
+            f"runtime uptime objective for {objective.skill_name!r} is ambiguous across bars"
+        )
+    if not matches:
+        scope = f" on {objective.bar} bar" if objective.bar else ""
+        return RotationRuntimeUptimeObjectiveAssessment(
+            objective=objective,
+            summary=None,
+            unresolved=(
+                f"runtime uptime objective evidence missing for "
+                f"{objective.skill_name!r}{scope}",
+            ),
+        )
+    return RotationRuntimeUptimeObjectiveAssessment(
+        objective=objective,
+        summary=matches[0],
+    )
