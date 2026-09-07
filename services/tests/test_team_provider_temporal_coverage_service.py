@@ -18,13 +18,20 @@ def _app(effect, source, start, duration):
     )
 
 
-def _req(effect="major_force", start=0.0, end=20.0, minimum_distinct_sources=1):
+def _req(
+    effect="major_force",
+    start=0.0,
+    end=20.0,
+    minimum_distinct_sources=1,
+    target_coverage_ratio=1.0,
+):
     return TeamProviderTemporalRequirement(
         effect_key=effect,
         start_seconds=start,
         end_seconds=end,
         label="burn phase",
         minimum_distinct_sources=minimum_distinct_sources,
+        target_coverage_ratio=target_coverage_ratio,
     )
 
 
@@ -38,6 +45,7 @@ def test_staggered_same_named_buff_extends_full_required_window():
     )
 
     assert result.full_window_covered is True
+    assert result.target_coverage_met is True
     assert result.full_requirement_met is True
     assert result.coverage_ratio == pytest.approx(1.0)
     assert result.covered_seconds == pytest.approx(20.0)
@@ -56,6 +64,7 @@ def test_simultaneous_duplicate_does_not_extend_temporal_coverage():
     )
 
     assert result.full_window_covered is False
+    assert result.target_coverage_met is False
     assert result.coverage_ratio == pytest.approx(0.5)
     assert result.covered_seconds == pytest.approx(10.0)
     assert result.uncovered_intervals == ((10.0, 20.0),)
@@ -74,6 +83,49 @@ def test_partial_stagger_reports_middle_gap_explicitly():
     assert result.covered_seconds == pytest.approx(16.0)
     assert result.uncovered_seconds == pytest.approx(4.0)
     assert result.uncovered_intervals == ((8.0, 12.0),)
+
+
+def test_seventy_five_percent_target_can_pass_without_perfect_uptime():
+    result = TeamProviderTemporalCoverageService.evaluate(
+        _req(effect="major_slayer", end=100.0, target_coverage_ratio=0.75),
+        applications=(
+            _app("major_slayer", "Roaring Opportunist", 0.0, 75.0),
+        ),
+    )
+
+    assert result.coverage_ratio == pytest.approx(0.75)
+    assert result.target_coverage_ratio == pytest.approx(0.75)
+    assert result.target_coverage_met is True
+    assert result.full_window_covered is False
+    assert result.full_requirement_met is True
+    assert result.uncovered_seconds == pytest.approx(25.0)
+
+
+def test_below_seventy_five_percent_target_remains_unsatisfied():
+    result = TeamProviderTemporalCoverageService.evaluate(
+        _req(effect="powerful_assault", end=100.0, target_coverage_ratio=0.75),
+        applications=(
+            _app("powerful_assault", "PA Vigor", 0.0, 74.0),
+        ),
+    )
+
+    assert result.coverage_ratio == pytest.approx(0.74)
+    assert result.target_coverage_met is False
+    assert result.full_window_covered is False
+    assert result.full_requirement_met is False
+
+
+def test_uptime_target_does_not_override_distinct_carrier_requirement():
+    result = TeamProviderTemporalCoverageService.evaluate(
+        _req(end=100.0, minimum_distinct_sources=2, target_coverage_ratio=0.75),
+        applications=(
+            _app("major_force", "Tank Horn", 0.0, 75.0),
+        ),
+    )
+
+    assert result.target_coverage_met is True
+    assert result.distinct_source_requirement_met is False
+    assert result.full_requirement_met is False
 
 
 def test_one_carrier_can_refresh_repeatedly_when_runtime_schedule_supports_it():
@@ -199,6 +251,8 @@ def test_invalid_timed_application_is_rejected(application):
         lambda: TeamProviderTemporalRequirement("buff", 1.0, 1.0),
         lambda: TeamProviderTemporalRequirement("buff", 2.0, 1.0),
         lambda: TeamProviderTemporalRequirement("buff", 0.0, 1.0, minimum_distinct_sources=0),
+        lambda: TeamProviderTemporalRequirement("buff", 0.0, 1.0, target_coverage_ratio=0.0),
+        lambda: TeamProviderTemporalRequirement("buff", 0.0, 1.0, target_coverage_ratio=1.01),
     ],
 )
 def test_invalid_temporal_requirement_is_rejected(requirement):
