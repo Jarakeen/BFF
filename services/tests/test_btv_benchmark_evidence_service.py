@@ -22,6 +22,24 @@ FIXTURE = (
 )
 
 
+def _row(*, denominator: str, observed: float = 0.75) -> BTVBenchmarkObservation:
+    return BTVBenchmarkObservation(
+        encounter_key="example",
+        encounter_label="Example",
+        effect_key="major_slayer",
+        page="insights",
+        observed_ratio=observed,
+        target_ratio=0.90,
+        reference_average_ratio=None,
+        theoretical_max_ratio=None,
+        contribution_percent=None,
+        player_role=None,
+        source_file="example.png",
+        source="test",
+        uptime_denominator_basis=denominator,
+    )
+
+
 def test_lokke_fixture_loads_as_scoped_benchmark_evidence():
     corpus = BTVBenchmarkEvidenceService.load(FIXTURE)
 
@@ -41,43 +59,33 @@ def test_unknown_btv_denominator_does_not_claim_boss_immunity_is_excluded():
 
 
 def test_damageable_time_denominator_explicitly_marks_immunity_as_excluded():
-    row = BTVBenchmarkObservation(
-        encounter_key="example",
-        encounter_label="Example",
-        effect_key="major_slayer",
-        page="insights",
-        observed_ratio=0.75,
-        target_ratio=0.90,
-        reference_average_ratio=None,
-        theoretical_max_ratio=None,
-        contribution_percent=None,
-        player_role=None,
-        source_file="example.png",
-        source="test",
-        uptime_denominator_basis=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME,
-    )
-
-    assert row.excludes_boss_immunity_time is True
+    assert _row(denominator=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME).excludes_boss_immunity_time is True
 
 
 def test_full_encounter_denominator_explicitly_marks_immunity_as_included():
-    row = BTVBenchmarkObservation(
-        encounter_key="example",
-        encounter_label="Example",
-        effect_key="major_slayer",
-        page="insights",
-        observed_ratio=0.75,
-        target_ratio=0.90,
-        reference_average_ratio=None,
-        theoretical_max_ratio=None,
-        contribution_percent=None,
-        player_role=None,
-        source_file="example.png",
-        source="test",
-        uptime_denominator_basis=UPTIME_DENOMINATOR_FULL_ENCOUNTER,
-    )
+    assert _row(denominator=UPTIME_DENOMINATOR_FULL_ENCOUNTER).excludes_boss_immunity_time is False
 
-    assert row.excludes_boss_immunity_time is False
+
+def test_unknown_denominator_is_not_directly_comparable_even_to_unknown():
+    left = _row(denominator=UPTIME_DENOMINATOR_UNKNOWN, observed=0.85)
+    right = _row(denominator=UPTIME_DENOMINATOR_UNKNOWN, observed=0.75)
+
+    assert left.comparable_uptime_with(right) is False
+
+
+def test_full_encounter_and_damageable_boss_time_are_not_directly_comparable():
+    full = _row(denominator=UPTIME_DENOMINATOR_FULL_ENCOUNTER, observed=0.85)
+    damageable = _row(denominator=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME, observed=0.75)
+
+    assert full.comparable_uptime_with(damageable) is False
+    assert damageable.comparable_uptime_with(full) is False
+
+
+def test_matching_known_denominators_are_directly_comparable():
+    left = _row(denominator=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME, observed=0.85)
+    right = _row(denominator=UPTIME_DENOMINATOR_DAMAGEABLE_BOSS_TIME, observed=0.75)
+
+    assert left.comparable_uptime_with(right) is True
 
 
 def test_same_effect_remains_separate_across_group_and_player_scope():
@@ -118,18 +126,4 @@ def test_reference_average_only_observation_does_not_become_target_policy():
 
 def test_invalid_uptime_denominator_is_rejected():
     with pytest.raises(ValueError, match="uptime_denominator_basis"):
-        BTVBenchmarkObservation(
-            encounter_key="example",
-            encounter_label="Example",
-            effect_key="major_slayer",
-            page="insights",
-            observed_ratio=0.75,
-            target_ratio=0.90,
-            reference_average_ratio=None,
-            theoretical_max_ratio=None,
-            contribution_percent=None,
-            player_role=None,
-            source_file="example.png",
-            source="test",
-            uptime_denominator_basis="probably_boss_time",
-        )
+        _row(denominator="probably_boss_time")
