@@ -51,6 +51,8 @@ def test_single_required_cast_derives_exact_canonical_cost_floor() -> None:
 
     assert result.minimum_amount == 1993
     assert result.action_costs == (("Budding Seeds", 1, 1993),)
+    assert result.blocking_unresolved == ()
+    assert result.context_notes == ()
     assert result.unresolved == ()
     assert result.as_requirement().minimum_amount == 1993
     assert sustain.plan.duration_seconds > 0
@@ -114,10 +116,42 @@ def test_missing_cost_event_keeps_derivation_unresolved_and_blocks_requirement()
     )
 
     assert result.resolved is False
-    assert any("action cost could not be resolved" in item for item in result.unresolved)
-    assert any("expected 1 canonical magicka cost event(s), resolved 0" in item for item in result.unresolved)
+    assert any("action cost could not be resolved" in item for item in result.blocking_unresolved)
+    assert any(
+        "expected 1 canonical magicka cost event(s), resolved 0" in item
+        for item in result.blocking_unresolved
+    )
     with pytest.raises(ValueError, match="unresolved action costs"):
         result.as_requirement()
+
+
+def test_unrelated_context_warnings_remain_visible_without_blocking_resolved_cost() -> None:
+    service = RotationRequiredActionReserveService(
+        _StubSustainService(
+            events=(_event("Budding Seeds", 1993),),
+            unresolved=(
+                "rotation sustain currently infers equipped armor skill-line ownership",
+                "Champion Point is dynamic or not yet stat-mapped: Celerity",
+                "Potion selected; activation/uptime is not part of static build state: spell power",
+            ),
+        )
+    )
+
+    result = service.derive(
+        build=_build(),
+        demand_name="Phase 2 healing prep",
+        requirements=(
+            RotationDemandActionRequirement(
+                demand_name="Phase 2 healing prep",
+                skill_name="Budding Seeds",
+            ),
+        ),
+    )
+
+    assert result.resolved is True
+    assert result.blocking_unresolved == ()
+    assert len(result.context_notes) == 3
+    assert result.as_requirement().minimum_amount == 1993
 
 
 def test_demand_requires_matching_explicit_action_obligation() -> None:
