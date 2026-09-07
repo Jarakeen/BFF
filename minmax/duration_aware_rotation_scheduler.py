@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from .rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from .rotation_recast import RotationRecastRule
 from .rotation_wait_decision import (
+    PrematureRecastDecision,
     PrematureRecastDecisionContext,
     PrematureRecastDecisionProvider,
 )
@@ -20,16 +21,17 @@ class DurationAwareRotationScheduler:
     the verified rule moves that obligation into the supplied pre-expiry refresh
     window; zero lead preserves hard-expiry behavior.
 
-    Existing timestamps and explicit bar swaps are preserved. When a refresh
-    claims a same-bar skill slot, the displaced action cascades forward through
-    later skill slots on that bar rather than being silently deleted. Any action
-    still queued when the fixed plan horizon ends is reported explicitly.
+    Existing timestamps and explicit bar swaps are preserved. When a refresh or a
+    verified multi-slot channel claims same-bar skill time, displaced actions
+    cascade forward through later skill slots on that bar rather than disappearing.
+    Any action still queued when the fixed plan horizon ends is reported explicitly.
 
     Premature recast slots that are not needed by another due refresh continue to
     use deterministic same-bar no-duration fillers when available. If no filler
     exists, an optional caller-proven decision provider may supply one legal action
-    for that exact slot. Otherwise the slot becomes an explicit WAIT rather than
-    an invented cast.
+    for that exact slot. A provider may also reserve a positive channel duration;
+    ordinary same-bar skills strictly inside that interval are displaced forward.
+    Otherwise the slot becomes an explicit WAIT rather than an invented cast.
 
     The scheduler does not itself optimize bar-swap timing, pull a refresh onto the
     opposite bar, invent refresh lead windows, or infer execute, proc, potion,
@@ -74,12 +76,40 @@ class DurationAwareRotationScheduler:
             assumptions.append(
                 "caller-proven premature-recast decisions may replace waits without inventing legality"
             )
+            assumptions.append(
+                "verified channel reservations displace only ordinary same-bar skill decisions and never cross hard timeline boundaries"
+            )
 
         actions: list[RotationAction] = []
         pending_light_attack: RotationAction | None = None
         displaced_by_bar: dict[str, list[RotationAction]] = {"front": [], "back": []}
+        reserved_until: float | None = None
+        reserved_bar: str | None = None
 
         for action_index, action in enumerate(plan.actions):
+            if reserved_until is not None and action.time_seconds >= reserved_until:
+                reserved_until = None
+                reserved_bar = None
+
+            if reserved_until is not None and action.time_seconds < reserved_until:
+                if action.kind is RotationActionKind.LIGHT_ATTACK:
+                    continue
+                if (
+                    action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
+                    and action.bar == reserved_bar
+                ):
+                    if action.bar in displaced_by_bar:
+                        displaced_by_bar[action.bar].append(action)
+                    unresolved.append(
+                        f"{action.kind.value} '{action.name or ''}' at {action.time_seconds:g}s was displaced by "
+                        f"a verified channel reservation through {reserved_until:g}s on {reserved_bar} bar"
+                    )
+                    continue
+                raise ValueError(
+                    "verified channel reservation crossed a hard timeline boundary; "
+                    f"encountered {action.kind.value} at {action.time_seconds:g}s before reservation end {reserved_until:g}s"
+                )
+
             if action.kind is RotationActionKind.LIGHT_ATTACK:
                 pending_light_attack = action
                 continue
@@ -172,43 +202,65 @@ class DurationAwareRotationScheduler:
                 )
                 continue
 
-            decided_action = None
+            decided = None
             if wait_decision is not None:
-                decided_action = wait_decision(
-                    PrematureRecastDecisionContext(
-                        time_seconds=action.time_seconds,
-                        bar=action.bar,
-                        candidate=candidate,
-                        slot=action,
-                        next_due=tuple(
-                            sorted(
-                                (
-                                    (name, bar, due_time)
-                                    for (name, bar), due_time in next_due.items()
-                                ),
-                                key=lambda item: (item[2], item[1] or "", item[0]),
-                            )
-                        ),
-                        rules=rules,
-                        next_decision_time_seconds=self._next_decision_time(
-                            plan.actions,
-                            action_index,
-                            action.time_seconds,
-                        ),
-                        plan_end_seconds=plan.duration_seconds,
-                    )
+                next_hard_boundary = self._next_hard_boundary_time(
+                    plan.actions,
+                    action_index,
+                    action.time_seconds,
+                    action.bar,
                 )
-                if decided_action is not None:
-                    decided_action = self._validate_wait_decision(
-                        decided_action,
+                context = PrematureRecastDecisionContext(
+                    time_seconds=action.time_seconds,
+                    bar=action.bar,
+                    candidate=candidate,
+                    slot=action,
+                    next_due=tuple(
+                        sorted(
+                            (
+                                (name, bar, due_time)
+                                for (name, bar), due_time in next_due.items()
+                            ),
+                            key=lambda item: (item[2], item[1] or "", item[0]),
+                        )
+                    ),
+                    rules=rules,
+                    next_decision_time_seconds=self._next_decision_time(
+                        plan.actions,
+                        action_index,
+                        action.time_seconds,
+                    ),
+                    next_hard_boundary_time_seconds=next_hard_boundary,
+                    plan_end_seconds=plan.duration_seconds,
+                )
+                decided = wait_decision(context)
+                if decided is not None:
+                    decided_action, reservation_seconds = self._normalize_wait_decision(
+                        decided,
                         slot=action,
+                    )
+                    reservation_end = action.time_seconds + reservation_seconds
+                    self._validate_channel_reservation(
+                        reservation_end=reservation_end,
+                        slot=action,
+                        next_due=next_due,
+                        next_hard_boundary_time_seconds=next_hard_boundary,
+                        plan_end_seconds=plan.duration_seconds,
                     )
                     pending_light_attack = None
                     actions.append(decided_action)
+                    if reservation_seconds > 0:
+                        reserved_until = reservation_end
+                        reserved_bar = action.bar
                     unresolved.append(
                         f"premature recast of '{candidate.name}' at {action.time_seconds:g}s was replaced "
                         f"by caller-proven {decided_action.kind.value} decision"
                     )
+                    if reservation_seconds > 0:
+                        unresolved.append(
+                            f"caller-proven {decided_action.kind.value} at {action.time_seconds:g}s reserved "
+                            f"the {action.bar or 'unknown'}-bar timeline through {reservation_end:g}s"
+                        )
                     continue
 
             pending_light_attack = None
@@ -234,7 +286,7 @@ class DurationAwareRotationScheduler:
                 if displaced.name:
                     unresolved.append(
                         f"skill '{displaced.name}' was displaced beyond the {plan.duration_seconds:g}s "
-                        f"plan horizon after same-bar refresh insertion on {bar} bar"
+                        f"plan horizon after same-bar refresh/channel insertion on {bar} bar"
                     )
 
         return RotationPlan(
@@ -258,6 +310,67 @@ class DurationAwareRotationScheduler:
             if future.time_seconds > current_time_seconds:
                 return future.time_seconds
         return None
+
+    @staticmethod
+    def _next_hard_boundary_time(
+        plan_actions: tuple[RotationAction, ...],
+        current_index: int,
+        current_time_seconds: float,
+        current_bar: str | None,
+    ) -> float | None:
+        for future in plan_actions[current_index + 1 :]:
+            if future.time_seconds <= current_time_seconds:
+                continue
+            if future.kind is RotationActionKind.LIGHT_ATTACK:
+                continue
+            if (
+                future.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}
+                and future.bar == current_bar
+            ):
+                continue
+            return future.time_seconds
+        return None
+
+    @classmethod
+    def _normalize_wait_decision(
+        cls,
+        decided: RotationAction | PrematureRecastDecision,
+        *,
+        slot: RotationAction,
+    ) -> tuple[RotationAction, float]:
+        if isinstance(decided, PrematureRecastDecision):
+            action = decided.action
+            reservation = decided.reservation_seconds
+        else:
+            action = decided
+            reservation = 0.0
+        return cls._validate_wait_decision(action, slot=slot), float(reservation)
+
+    @staticmethod
+    def _validate_channel_reservation(
+        *,
+        reservation_end: float,
+        slot: RotationAction,
+        next_due: dict[tuple[str, str | None], float],
+        next_hard_boundary_time_seconds: float | None,
+        plan_end_seconds: float,
+    ) -> None:
+        if reservation_end <= slot.time_seconds:
+            return
+        if reservation_end > plan_end_seconds:
+            raise ValueError("verified channel reservation exceeds the fixed plan horizon")
+        if (
+            next_hard_boundary_time_seconds is not None
+            and reservation_end > next_hard_boundary_time_seconds
+        ):
+            raise ValueError("verified channel reservation crosses the next hard timeline boundary")
+        colliding_due = [
+            due_time
+            for (_, bar), due_time in next_due.items()
+            if bar == slot.bar and slot.time_seconds < due_time < reservation_end
+        ]
+        if colliding_due:
+            raise ValueError("verified channel reservation crosses a same-bar refresh obligation")
 
     @staticmethod
     def _validate_wait_decision(
