@@ -2,93 +2,42 @@ from __future__ import annotations
 
 """Source-backed ESO base character/progression contract.
 
-This module is intentionally narrower than combat math. It describes the rules
-that determine what a legal player character can own, level, slot, morph, and
-combine before downstream systems score damage, healing, tanking, sustain, or
-Extreme Build objectives.
+This module describes *legality and progression*, not combat-effect math. It is
+intended as a shared rules layer for Extreme Builds, Comp Maker, saved-build
+validation, progression UI, and rotation planning.
 
-Design rules:
-- Treat these as legality/progression constraints, not as skill-effect truth.
-- Keep base character rules separate from gear/set/passive effect projection.
-- Never infer an unlocked skill/passive from its name alone; callers should join
-  these rules to canonical skill-line/rank data from ``eso.db``.
+Boundaries:
+- Join these rules to canonical skills/ranks/effects in ``eso.db``.
+- Do not infer skill effects from names or from this file.
 - Subclassing and Class Mastery are mutually exclusive character routes.
-- Runtime resources such as Ultimate and Crux remain runtime state, not static
-  character-sheet bonuses.
+- Ultimate and Crux are runtime resources, not static sheet bonuses.
+- Champion progression is intentionally outside the normal-level 1-50 contract.
 
-Source snapshot provenance (uploaded reference pages reviewed 2026-09-07):
-- UESP Online:Attributes, revision 2861719
-- UESP Online:Health, revision 2861707
-- UESP Online:Magicka, revision 2861709
-- UESP Online:Stamina, revision 3044713
-- UESP Online:Skills, revision 3600114
-- UESP Online:Ultimate, revision 3543403
-- UESP Online:Crux, revision 3559618
-- UESP Online:Class Mastery, revision 3581024
+Source snapshots reviewed 2026-09-07:
+- UESP Online:Attributes r2861719
+- UESP Online:Health r2861707
+- UESP Online:Magicka r2861709
+- UESP Online:Stamina r3044713
+- UESP Online:Skills r3600114
+- UESP Online:Ultimate r3543403
+- UESP Online:Crux r3559618
+- UESP Online:Class Mastery r3581024
 - ESO-Hub Subclassing guide, modified 2026-05-20
 
-Values in this contract should be re-reviewed when an ESO update changes base
-progression, subclassing, Class Mastery, or resource rules.
+Re-review this contract when an ESO update changes base progression,
+subclassing, Class Mastery, bar rules, or runtime-resource behavior.
 """
 
 from dataclasses import dataclass
 from enum import Enum
+
+from services.skill_bar_eligibility import CLASS_SKILL_LINES
 
 
 class AttributeKey(str, Enum):
     HEALTH = "health"
     MAGICKA = "magicka"
     STAMINA = "stamina"
-
-
-@dataclass(frozen=True)
-class BaseAttributeRule:
-    key: AttributeKey
-    level_coefficient: float
-    base_constant: float
-    per_attribute_point: float
-    level_50_unallocated: float
-    level_50_all_64_points: float
-
-    def value(self, *, level: int, attribute_points: int) -> float:
-        validate_character_level(level)
-        if attribute_points < 0:
-            raise ValueError("attribute_points cannot be negative")
-        if attribute_points > CHARACTER_RULES.attribute_points_at_level_50:
-            raise ValueError("attribute_points exceed the level-50 allocation ceiling")
-        return (
-            self.level_coefficient * int(level)
-            + self.base_constant
-            + self.per_attribute_point * int(attribute_points)
-        )
-
-
-BASE_ATTRIBUTES = {
-    AttributeKey.HEALTH: BaseAttributeRule(
-        key=AttributeKey.HEALTH,
-        level_coefficient=300.0,
-        base_constant=1000.0,
-        per_attribute_point=122.0,
-        level_50_unallocated=16000.0,
-        level_50_all_64_points=23808.0,
-    ),
-    AttributeKey.MAGICKA: BaseAttributeRule(
-        key=AttributeKey.MAGICKA,
-        level_coefficient=220.0,
-        base_constant=1000.0,
-        per_attribute_point=111.0,
-        level_50_unallocated=12000.0,
-        level_50_all_64_points=19104.0,
-    ),
-    AttributeKey.STAMINA: BaseAttributeRule(
-        key=AttributeKey.STAMINA,
-        level_coefficient=220.0,
-        base_constant=1000.0,
-        per_attribute_point=111.0,
-        level_50_unallocated=12000.0,
-        level_50_all_64_points=19104.0,
-    ),
-}
 
 
 @dataclass(frozen=True)
@@ -109,8 +58,39 @@ CHARACTER_RULES = CharacterProgressionRules()
 
 
 @dataclass(frozen=True)
+class BaseAttributeRule:
+    key: AttributeKey
+    level_coefficient: float
+    base_constant: float
+    per_attribute_point: float
+    level_50_unallocated: float
+    level_50_all_64_points: float
+
+    def value(self, *, level: int, attribute_points: int) -> float:
+        validate_character_level(level)
+        points = int(attribute_points)
+        if points < 0:
+            raise ValueError("attribute_points cannot be negative")
+        if points > CHARACTER_RULES.attribute_points_at_level_50:
+            raise ValueError("attribute_points exceed the level-50 allocation ceiling")
+        return self.level_coefficient * int(level) + self.base_constant + self.per_attribute_point * points
+
+
+BASE_ATTRIBUTES = {
+    AttributeKey.HEALTH: BaseAttributeRule(
+        AttributeKey.HEALTH, 300.0, 1000.0, 122.0, 16000.0, 23808.0
+    ),
+    AttributeKey.MAGICKA: BaseAttributeRule(
+        AttributeKey.MAGICKA, 220.0, 1000.0, 111.0, 12000.0, 19104.0
+    ),
+    AttributeKey.STAMINA: BaseAttributeRule(
+        AttributeKey.STAMINA, 220.0, 1000.0, 111.0, 12000.0, 19104.0
+    ),
+}
+
+
+@dataclass(frozen=True)
 class SkillProgressionRules:
-    # Passive ranks are data-driven because individual passives vary.
     passive_upgrade_costs_skill_point: bool = True
     morph_costs_skill_point: bool = True
     active_skill_progresses_through_use: bool = True
@@ -124,20 +104,32 @@ class SkillProgressionRules:
 
 SKILL_PROGRESSION_RULES = SkillProgressionRules()
 
+WEAPON_SKILL_LINES = frozenset(
+    {
+        "two handed",
+        "one hand and shield",
+        "dual wield",
+        "bow",
+        "destruction staff",
+        "restoration staff",
+    }
+)
+ARMOR_SKILL_LINES = frozenset({"light armor", "medium armor", "heavy armor"})
+
 
 @dataclass(frozen=True)
 class UltimateRules:
     maximum_resource: int = 500
     one_ultimate_per_bar: bool = True
     normal_cast_consumes_accumulated_resource: bool = True
-    light_attack_regen_buff_seconds: float = 9.0
-    light_attack_regen_per_second: float = 3.0
-    light_attack_regen_total: float = 27.0
-    regen_trigger_light_or_heavy_attack: bool = True
-    regen_trigger_heal_other: bool = True
-    regen_trigger_self_heal: bool = False
-    regen_trigger_block: bool = True
-    regen_trigger_dodge: bool = True
+    standard_regen_buff_seconds: float = 9.0
+    standard_regen_per_second: float = 3.0
+    standard_regen_total: float = 27.0
+    trigger_light_or_heavy_attack: bool = True
+    trigger_heal_other: bool = True
+    trigger_self_heal: bool = False
+    trigger_block: bool = True
+    trigger_dodge: bool = True
 
 
 ULTIMATE_RULES = UltimateRules()
@@ -191,30 +183,6 @@ class ClassMasteryRules:
 CLASS_MASTERY_RULES = ClassMasteryRules()
 
 
-WEAPON_SKILL_LINES = frozenset(
-    {
-        "two handed",
-        "one hand and shield",
-        "dual wield",
-        "bow",
-        "destruction staff",
-        "restoration staff",
-    }
-)
-
-ARMOR_SKILL_LINES = frozenset({"light armor", "medium armor", "heavy armor"})
-
-CLASS_SKILL_LINES = {
-    "dragonknight": frozenset({"ardent flame", "draconic power", "earthen heart"}),
-    "sorcerer": frozenset({"dark magic", "daedric summoning", "storm calling"}),
-    "nightblade": frozenset({"assassination", "shadow", "siphoning"}),
-    "templar": frozenset({"aedric spear", "dawn's wrath", "restoring light"}),
-    "warden": frozenset({"animal companions", "green balance", "winter's embrace"}),
-    "necromancer": frozenset({"grave lord", "bone tyrant", "living death"}),
-    "arcanist": frozenset({"herald of the tome", "soldier of apocrypha", "curative runeforms"}),
-}
-
-
 @dataclass(frozen=True)
 class ClassRouteValidation:
     legal: bool
@@ -226,12 +194,11 @@ def _key(value: object) -> str:
 
 
 def validate_character_level(level: int) -> None:
-    if int(level) < CHARACTER_RULES.minimum_level:
+    value = int(level)
+    if value < CHARACTER_RULES.minimum_level:
         raise ValueError("character level must be at least 1")
-    if int(level) > CHARACTER_RULES.normal_level_cap:
-        raise ValueError(
-            "this contract models normal character levels 1-50; Champion progression is separate"
-        )
+    if value > CHARACTER_RULES.normal_level_cap:
+        raise ValueError("normal character-level contract ends at 50; Champion progression is separate")
 
 
 def validate_attribute_allocation(*, health: int, magicka: int, stamina: int) -> None:
@@ -252,41 +219,33 @@ def base_attribute_value(
     return BASE_ATTRIBUTES[key].value(level=level, attribute_points=attribute_points)
 
 
-def validate_bar_shape(
-    *,
-    normal_skill_count: int,
-    ultimate_count: int,
-    character_level: int = 50,
-) -> None:
-    validate_character_level(character_level)
-    if int(normal_skill_count) > CHARACTER_RULES.normal_skill_slots_per_bar:
-        raise ValueError("a skill bar cannot contain more than five normal skills")
-    if int(ultimate_count) > CHARACTER_RULES.ultimate_slots_per_bar:
-        raise ValueError("a skill bar cannot contain more than one Ultimate")
-    if int(normal_skill_count) < 0 or int(ultimate_count) < 0:
-        raise ValueError("slot counts cannot be negative")
-
-
 def available_bar_count(character_level: int) -> int:
     validate_character_level(character_level)
-    return (
-        CHARACTER_RULES.bars_after_weapon_swap
-        if int(character_level) >= CHARACTER_RULES.weapon_swap_unlock_level
-        else 1
-    )
+    return 2 if int(character_level) >= CHARACTER_RULES.weapon_swap_unlock_level else 1
+
+
+def validate_bar_shape(
+    *, normal_skill_count: int, ultimate_count: int, character_level: int = 50
+) -> None:
+    validate_character_level(character_level)
+    normals = int(normal_skill_count)
+    ultimates = int(ultimate_count)
+    if normals < 0 or ultimates < 0:
+        raise ValueError("slot counts cannot be negative")
+    if normals > CHARACTER_RULES.normal_skill_slots_per_bar:
+        raise ValueError("a skill bar cannot contain more than five normal skills")
+    if ultimates > CHARACTER_RULES.ultimate_slots_per_bar:
+        raise ValueError("a skill bar cannot contain more than one Ultimate")
 
 
 def validate_subclass_route(
-    *,
-    base_class: str,
-    equipped_class_lines: tuple[str, ...],
+    *, base_class: str, equipped_class_lines: tuple[str, ...]
 ) -> ClassRouteValidation:
     base = _key(base_class)
     native = CLASS_SKILL_LINES.get(base)
     errors: list[str] = []
     if native is None:
-        errors.append(f"unknown base class: {base_class}")
-        return ClassRouteValidation(False, tuple(errors))
+        return ClassRouteValidation(False, (f"unknown base class: {base_class}",))
 
     equipped = tuple(_key(line) for line in equipped_class_lines if _key(line))
     if len(equipped) != SUBCLASSING_RULES.total_equipped_class_lines:
@@ -294,26 +253,22 @@ def validate_subclass_route(
     if len(set(equipped)) != len(equipped):
         errors.append("equipped class skill lines must be distinct")
 
-    retained = sum(1 for line in equipped if line in native)
-    foreign = sum(1 for line in equipped if line not in native)
+    retained = sum(line in native for line in equipped)
+    foreign = sum(line not in native for line in equipped)
     if retained < SUBCLASSING_RULES.minimum_original_class_lines_retained:
         errors.append("subclassing must retain at least one native class skill line")
     if foreign > SUBCLASSING_RULES.maximum_foreign_class_lines_equipped:
         errors.append("subclassing cannot equip more than two foreign class skill lines")
 
-    all_known_lines = frozenset(line for lines in CLASS_SKILL_LINES.values() for line in lines)
-    unknown = tuple(sorted(line for line in equipped if line not in all_known_lines))
+    known = frozenset(line for lines in CLASS_SKILL_LINES.values() for line in lines)
+    unknown = tuple(sorted(line for line in equipped if line not in known))
     if unknown:
         errors.append(f"unknown class skill line(s): {', '.join(unknown)}")
-
     return ClassRouteValidation(not errors, tuple(errors))
 
 
 def validate_class_mastery_eligibility(
-    *,
-    native_class_line_ranks: tuple[int, int, int],
-    subclassing: bool,
-    selected_mastery_count: int,
+    *, native_class_line_ranks: tuple[int, int, int], subclassing: bool, selected_mastery_count: int
 ) -> ClassRouteValidation:
     errors: list[str] = []
     if subclassing:
@@ -323,9 +278,10 @@ def validate_class_mastery_eligibility(
         for rank in native_class_line_ranks
     ):
         errors.append("Class Mastery requires all three native class skill lines at rank 50")
-    if int(selected_mastery_count) < 0:
+    count = int(selected_mastery_count)
+    if count < 0:
         errors.append("selected_mastery_count cannot be negative")
-    if int(selected_mastery_count) > CLASS_MASTERY_RULES.selectable_passives:
+    if count > CLASS_MASTERY_RULES.selectable_passives:
         errors.append("a character may select at most two Class Mastery passives")
     return ClassRouteValidation(not errors, tuple(errors))
 
@@ -339,11 +295,6 @@ def crux_can_generate(*, in_combat: bool, current_crux: int) -> bool:
 
 
 def ultimate_regen_from_standard_trigger(seconds: float) -> float:
-    """Return base hidden Ultimate-regeneration gain for one standard trigger.
-
-    This does not include skills, sets, passives, Heroism, or other additional
-    Ultimate sources. The standard hidden regeneration window is capped at the
-    documented 9-second duration.
-    """
-    duration = min(max(0.0, float(seconds)), ULTIMATE_RULES.light_attack_regen_buff_seconds)
-    return duration * ULTIMATE_RULES.light_attack_regen_per_second
+    """Base hidden Ultimate gain only; excludes Heroism, sets, skills, and passives."""
+    duration = min(max(0.0, float(seconds)), ULTIMATE_RULES.standard_regen_buff_seconds)
+    return duration * ULTIMATE_RULES.standard_regen_per_second
