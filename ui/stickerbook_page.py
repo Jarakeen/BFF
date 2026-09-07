@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QSplitter,
     QVBoxLayout,
     QWidget,
@@ -182,7 +181,7 @@ class StickerbookPage(FoundryPage):
         left.addLayout(filter_row)
         self.results = QListWidget()
         self.results.currentItemChanged.connect(self._show_selected)
-        left.addWidget(self.results, 1)
+        left.addWidget(self.results)
         splitter.addWidget(left)
 
         right = FoundryCard("Set Details", "open-book")
@@ -236,7 +235,7 @@ class StickerbookPage(FoundryPage):
         self.missing_box.setWordWrap(True)
         self.missing_box.setProperty("stickerMissing", True)
         detail_layout.addWidget(self.missing_box)
-        right.addWidget(detail_host, 1)
+        right.addWidget(detail_host)
         splitter.addWidget(right)
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 5)
@@ -262,6 +261,9 @@ class StickerbookPage(FoundryPage):
         theme = self.theme
         self.setStyleSheet(
             "QFrame[stickerSummary='true'] {"
+            f"background:{theme.panel}; border:1px solid {theme.border}; border-radius:4px;"
+            "}"
+            "QFrame[stickerPieceGroup='true'] {"
             f"background:{theme.panel}; border:1px solid {theme.border}; border-radius:4px;"
             "}"
             "QLabel[stickerSummaryCount='true'] {"
