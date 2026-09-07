@@ -124,35 +124,29 @@ class DemandActionClaimPriorityDurationRotationScheduler(
         rule_order: dict[tuple[str, str | None], int],
         action_kind_by_key: dict[tuple[str, str | None], RotationActionKind],
     ) -> tuple[str, str | None] | None:
-        ordinary = super()._due_refresh(
+        demand = self._active_demand(time_seconds)
+        if demand is not None and bar in {"front", "back"}:
+            for claim in self.claims:
+                if claim.demand_name != demand.name or claim.bar != bar:
+                    continue
+                claim_key = (claim.demand_name, claim.bar, claim.skill_name.casefold())
+                if claim_key in self._consumed_claim_keys:
+                    continue
+
+                skill_key = (claim.skill_name.casefold(), claim.bar)
+                due = next_due.get(skill_key)
+                if due is None:
+                    continue
+                if float(due) <= float(demand.end_seconds):
+                    continue
+
+                self._consumed_claim_keys.add(claim_key)
+                return skill_key
+
+        return super()._due_refresh(
             time_seconds=time_seconds,
             bar=bar,
             next_due=next_due,
             rule_order=rule_order,
             action_kind_by_key=action_kind_by_key,
         )
-        if ordinary is not None:
-            return ordinary
-
-        demand = self._active_demand(time_seconds)
-        if demand is None or bar not in {"front", "back"}:
-            return None
-
-        for claim in self.claims:
-            if claim.demand_name != demand.name or claim.bar != bar:
-                continue
-            claim_key = (claim.demand_name, claim.bar, claim.skill_name.casefold())
-            if claim_key in self._consumed_claim_keys:
-                continue
-
-            skill_key = (claim.skill_name.casefold(), claim.bar)
-            due = next_due.get(skill_key)
-            if due is None:
-                continue
-            if float(due) <= float(demand.end_seconds):
-                continue
-
-            self._consumed_claim_keys.add(claim_key)
-            return skill_key
-
-        return None
