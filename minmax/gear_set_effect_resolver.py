@@ -110,6 +110,14 @@ class GearSetEffectResolver:
         if conditional:
             return conditional
 
+        conditional = self._resolve_ability_scoped_damage(
+            text,
+            source_text,
+            use_max_value,
+        )
+        if conditional:
+            return conditional
+
         percent_stats = {
             "Healing Done": StatId.HEALING_DONE,
             "Healing Taken": StatId.HEALING_TAKEN,
@@ -261,6 +269,29 @@ class GearSetEffectResolver:
 
         return []
 
+    def _resolve_ability_scoped_damage(
+        self,
+        text: str,
+        source: str,
+        use_max_value: bool,
+    ) -> list[Effect]:
+        match = re.fullmatch(
+            rf"Adds\s+{self._RANGE}\s+Weapon and Spell Damage to your "
+            r"(?P<scope>.+?) abilities\.?",
+            text,
+            re.IGNORECASE,
+        )
+        if not match:
+            return []
+
+        value = self._selected_range_value(match, use_max_value)
+        scope = self._condition_slug(match.group("scope"))
+        condition = f"ability_scope:{scope}"
+        return [
+            self._effect(StatId.WEAPON_DAMAGE, value, source, condition=condition),
+            self._effect(StatId.SPELL_DAMAGE, value, source, condition=condition),
+        ]
+
     def _resolve_combined(
         self,
         text: str,
@@ -314,6 +345,10 @@ class GearSetEffectResolver:
         text = cls._COLOR_MARKUP.sub("", description).strip()
         text = cls._BONUS_PREFIX.sub("", text).strip()
         return text
+
+    @staticmethod
+    def _condition_slug(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "_", str(value).casefold()).strip("_")
 
     @staticmethod
     def _selected_range_value(match: re.Match[str], use_max_value: bool) -> float:
