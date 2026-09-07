@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "content_id": "sunspire",
+  "encounter_id": "lokkestiiz",
+  "encounter_name": "Lokkestiiz",
+  "evidence": [
+    {
+      "fact_type": "damage_window",
+      "fact_key": "aerial_onslaught_flight",
+      "value": {
+        "trigger_health_percent": [80, 50, 20],
+        "boss_targetable": false,
+        "boss_damageable": false,
+        "state": "boss_airborne",
+        "adds_active": true,
+        "raid_damage_active": true,
+        "flight_attacks": [
+          "lightning_strafe_with_lingering_damage",
+          "ice_and_shock_sweeping_beam"
+        ],
+        "final_beam_requires_block": true
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Lokkestiiz",
+      "source_locator": "Skills and Abilities - Aerial Onslaught",
+      "source_revision": "3606420",
+      "confidence": "high",
+      "notes": "Tracked source states that at 80%/50%/20% health Lokkestiiz flies into the air and ceases to be targetable while atronachs are summoned. During the flight he performs damaging lightning strafes and ends with a large ice/shock beam that must be blocked. This is boss-target downtime, not raid-action downtime."
+    },
+    {
+      "fact_type": "add_group",
+      "fact_key": "aerial_onslaught_atronachs",
+      "value": {
+        "members": [
+          "Frost Atronach",
+          "Storm Atronach"
+        ],
+        "trigger": "aerial_onslaught_flight",
+        "exact_count_resolved": false
+      },
+      "source_type": "uesp",
+      "source_name": "UESP Online:Lokkestiiz",
+      "source_locator": "Skills and Abilities - Aerial Onslaught; Summon Frost Atronach; Summon Storm Atronach",
+      "source_revision": "3606420",
+      "confidence": "high",
+      "notes": "Aerial Onslaught states that a large number of atronachs are summoned during flight, while the same source page separately identifies Frost Atronach and Storm Atronach summons. The exact count is intentionally left unresolved."
+    }
+  ]
+}
