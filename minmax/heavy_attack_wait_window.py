@@ -22,15 +22,16 @@ def derive_heavy_attack_decision_window(
 ) -> HeavyAttackDecisionWindow:
     """Derive channel and refresh evidence from one duration WAIT decision point.
 
-    The available window ends at the earliest of the next scheduled decision,
-    the fixed plan horizon, or the next same-bar verified refresh obligation.
-    This deliberately refuses to assume that a multi-second heavy may overlap a
-    later scheduled action. Encounter safety and higher-priority action state are
-    still caller-owned evidence.
+    The available window ends at the earliest hard timeline boundary, the fixed
+    plan horizon, or the next same-bar verified refresh obligation. Ordinary
+    same-bar skill decisions are deliberately *not* hard boundaries: a verified
+    multi-slot channel may reserve those timestamps and displace their skills
+    forward. Bar swaps and cross-bar decisions remain hard boundaries.
 
-    Derived schedule deltas are normalized to nanosecond-scale decimal precision
-    so equivalent human-facing timestamps do not retain binary floating-point
-    artifacts such as ``1.2000000000000002``.
+    Encounter safety and higher-priority action state are still caller-owned
+    evidence. Derived schedule deltas are normalized to nanosecond-scale decimal
+    precision so equivalent human-facing timestamps do not retain binary floating-
+    point artifacts such as ``1.2000000000000002``.
     """
 
     if context.bar not in {"front", "back"}:
@@ -39,10 +40,10 @@ def derive_heavy_attack_decision_window(
     start = float(context.time_seconds)
     boundaries: list[float] = []
 
-    if context.next_decision_time_seconds is not None:
-        next_decision = float(context.next_decision_time_seconds)
-        if next_decision >= start:
-            boundaries.append(next_decision)
+    if context.next_hard_boundary_time_seconds is not None:
+        hard_boundary = float(context.next_hard_boundary_time_seconds)
+        if hard_boundary >= start:
+            boundaries.append(hard_boundary)
 
     if context.plan_end_seconds is not None:
         plan_end = float(context.plan_end_seconds)
