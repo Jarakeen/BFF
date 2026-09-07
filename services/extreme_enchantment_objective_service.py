@@ -95,9 +95,16 @@ class ExtremeEnchantmentObjectiveService:
         delta = 0.0
         for effect in relevant:
             if effect.operation is not EffectOperation.ADD:
-                unresolved.append(
-                    f"{glyph_name}: relevant enchantment effect uses unsupported operation {effect.operation.value}"
-                )
+                if effect.operation is EffectOperation.ADD_PERCENT:
+                    unresolved.append(
+                        f"{glyph_name}: percent enchantment effect requires objective-specific stacking review "
+                        f"(operation {effect.operation.value})"
+                    )
+                else:
+                    unresolved.append(
+                        f"{glyph_name}: relevant enchantment effect uses unsupported operation "
+                        f"{effect.operation.value}; stacking review required"
+                    )
                 continue
             if effect.unit is EffectUnit.PERCENT:
                 unresolved.append(
