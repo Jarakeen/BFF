@@ -9,11 +9,10 @@ from .stat_ids import StatId
 
 
 class GearSetEffectResolver:
-    """Resolve unconditional, static gear-set bonuses into Effects.
+    """Resolve reviewed static/conditional gear-set bonuses into Effects.
 
-    Phase 1 intentionally handles only single-clause stat modifiers.
-    Triggered, conditional, proc, cooldown, scaling, and trade-off bonuses
-    return an empty list rather than being guessed at.
+    Triggered, proc, cooldown, scaling, and trade-off bonuses remain unresolved
+    unless their full mechanic can be represented without guessing.
     """
 
     _COLOR_MARKUP = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
@@ -103,6 +102,14 @@ class GearSetEffectResolver:
         if conditional:
             return conditional
 
+        conditional = self._resolve_state_conditional_stats(
+            text,
+            source_text,
+            use_max_value,
+        )
+        if conditional:
+            return conditional
+
         percent_stats = {
             "Healing Done": StatId.HEALING_DONE,
             "Healing Taken": StatId.HEALING_TAKEN,
@@ -178,6 +185,81 @@ class GearSetEffectResolver:
                 condition="sneaking_or_invisible",
             ),
         ]
+
+    def _resolve_state_conditional_stats(
+        self,
+        text: str,
+        source: str,
+        use_max_value: bool,
+    ) -> list[Effect]:
+        single_patterns = (
+            (
+                r"While you have a damage shield on you, your Health Recovery is increased by "
+                rf"{self._RANGE}\. ?",
+                (StatId.HEALTH_RECOVERY,),
+                "damage_shield_active",
+            ),
+            (
+                r"While you have a Destruction Staff equipped, your Max Magicka is increased by "
+                rf"{self._RANGE}\. ?",
+                (StatId.MAX_MAGICKA,),
+                "destruction_staff_equipped",
+            ),
+        )
+        for pattern, stats, condition in single_patterns:
+            match = re.fullmatch(pattern, text, re.IGNORECASE)
+            if match:
+                value = self._selected_range_value(match, use_max_value)
+                return [
+                    self._effect(stat, value, source, condition=condition)
+                    for stat in stats
+                ]
+
+        match = re.fullmatch(
+            r"While you are standing still, you gain "
+            r"(?P<wd_min>\d[\d,]*)\s*-\s*(?P<wd_max>\d[\d,]*) Weapon and Spell Damage\.\s*"
+            r"While you are moving, you gain "
+            r"(?P<rec_min>\d[\d,]*)\s*-\s*(?P<rec_max>\d[\d,]*) "
+            r"Health, Magicka, and Stamina Recovery\. ?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            damage_key = "wd_max" if use_max_value else "wd_min"
+            recovery_key = "rec_max" if use_max_value else "rec_min"
+            damage = float(match.group(damage_key).replace(",", ""))
+            recovery = float(match.group(recovery_key).replace(",", ""))
+            return [
+                self._effect(StatId.WEAPON_DAMAGE, damage, source, condition="standing_still"),
+                self._effect(StatId.SPELL_DAMAGE, damage, source, condition="standing_still"),
+                self._effect(StatId.HEALTH_RECOVERY, recovery, source, condition="moving"),
+                self._effect(StatId.MAGICKA_RECOVERY, recovery, source, condition="moving"),
+                self._effect(StatId.STAMINA_RECOVERY, recovery, source, condition="moving"),
+            ]
+
+        match = re.fullmatch(
+            r"While Bracing, increase your Magicka Recovery by (?P<mag>\d+(?:\.\d+)?)\.\s*"
+            r"While you are not Bracing, increase your Stamina Recovery by (?P<stam>\d+(?:\.\d+)?)\. ?",
+            text,
+            re.IGNORECASE,
+        )
+        if match:
+            return [
+                self._effect(
+                    StatId.MAGICKA_RECOVERY,
+                    float(match.group("mag")),
+                    source,
+                    condition="bracing",
+                ),
+                self._effect(
+                    StatId.STAMINA_RECOVERY,
+                    float(match.group("stam")),
+                    source,
+                    condition="not_bracing",
+                ),
+            ]
+
+        return []
 
     def _resolve_combined(
         self,
