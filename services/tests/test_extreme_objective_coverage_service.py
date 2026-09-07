@@ -66,7 +66,6 @@ def test_old_class_passives_umbrella_no_longer_masquerades_as_complete():
     "source_family",
     [
         "gear_sets",
-        "champion_points",
         "enchantments",
     ],
 )
@@ -76,6 +75,16 @@ def test_unmodeled_whole_build_sources_block_global_maximum(source_family):
 
     assert sources[source_family].status is ExtremeSourceCoverageStatus.NOT_MODELED
     assert sources[source_family].blocks_global_maximum is True
+
+
+def test_champion_point_projection_is_partial_until_loadout_and_dynamic_mechanics_are_exhaustive():
+    coverage = ExtremeObjectiveCoverageService.coverage_for("physical_resistance")
+    cp = _by_source(coverage)["champion_points"]
+
+    assert cp.status is ExtremeSourceCoverageStatus.PARTIAL
+    assert cp.blocks_global_maximum is True
+    assert "slottable" in cp.note.casefold() or "champion bar" in cp.note.casefold()
+    assert "dynamic" in cp.note.casefold() or "runtime" in cp.note.casefold()
 
 
 def test_armor_base_values_and_traits_are_partial_not_missing():
@@ -98,13 +107,14 @@ def test_race_structured_projection_is_partial_until_nonstructured_passives_are_
     assert "non-structured" in race.note.casefold()
 
 
-def test_mundus_base_projection_is_partial_until_multiplier_inputs_are_exhaustive():
+def test_mundus_projection_remains_partial_until_wider_equipment_tradeoffs_are_exhaustive():
     coverage = ExtremeObjectiveCoverageService.coverage_for("critical_damage")
     mundus = _by_source(coverage)["mundus"]
 
     assert mundus.status is ExtremeSourceCoverageStatus.PARTIAL
     assert mundus.blocks_global_maximum is True
-    assert "multiplier" in mundus.note.casefold()
+    assert "divines" in mundus.note.casefold()
+    assert "shield" in mundus.note.casefold() or "equipment" in mundus.note.casefold()
 
 
 def test_supplied_context_support_does_not_masquerade_as_exhaustive_generation():
