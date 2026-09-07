@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_demand_window import RotationDemandWindow
 from services.rotation_recovery_heavy_stabilization_service import (
@@ -21,6 +22,7 @@ class DemandAwareRotationGenerationRequest:
     base_request: RotationGenerationRequest
     priorities: AbilityPriorityList
     demands: tuple[RotationDemandWindow, ...]
+    demand_refresh_leads: tuple[DemandRefreshLead, ...] = ()
 
 
 class DemandAwareRotationGenerationSupport:
@@ -73,6 +75,7 @@ class DemandAwareRotationGenerationSupport:
             priorities=request.priorities,
             wait_decision=wait_decision,
             demands=tuple(request.demands),
+            demand_refresh_leads=tuple(request.demand_refresh_leads),
         )
 
         final_plan = refinement.plan
