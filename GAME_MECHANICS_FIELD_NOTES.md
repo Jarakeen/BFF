@@ -240,3 +240,27 @@ At **2.0 million raid DPS**, the exact same 70% threshold projected much earlier
 **What it means in actual play:** health-triggered mechanics can cross invisible rotation boundaries as group damage changes. A small enough DPS change may only shift a callout by a second or two, but a larger change can move the mechanic across a bar swap, cooldown seam, heavy-attack window, Ultimate window, or resource dip. The practical effect can jump suddenly rather than changing smoothly.
 
 **For BFF:** mechanic-response quality is not a smooth function of raid DPS. The planner should expect discrete opportunity bands where a given prep action is legal, followed by bands where it is not. Optimizing team damage may therefore change the best healer rotation in step-like jumps, not by simply sliding every action earlier on the clock.
+
+---
+
+## 2026-09-07 — Healer opportunity bands can be helpful, neutral, or actively harmful
+
+A broader Xalvakka hardmode sweep projected the same reviewed **70%** threshold across raid-DPS assumptions from **1.2 million to 2.4 million**, using the same audit-only healer policy: begin preparation three seconds early and allow Budding Seeds up to three seconds of demand-specific early refresh.
+
+The result did not form one simple "faster is better" or "faster is worse" curve. It formed distinct scheduling bands:
+
+| Raid-DPS band | Observed effect |
+| --- | --- |
+| 1.2m–1.3m | Rotation changed, but minimum and ending Magicka got worse |
+| 1.4m | No schedule effect |
+| 1.5m–1.7m | Rotation changed and minimum/ending Magicka improved by 1,771 |
+| 1.8m–2.0m | No schedule effect |
+| 2.1m–2.4m | Rotation changed and minimum/ending Magicka improved by 1,771 |
+
+At **1.2m DPS**, for example, the mechanic-aware plan moved Budding Seeds from 48s to 51s, reduced one WAIT, yet still lowered minimum Magicka by **523** and ending Magicka by **2,878**. By **1.5m DPS**, the same policy moved Budding Seeds from 48s to 40s and improved both minimum and ending Magicka by **1,771**. At **1.8m–2.0m**, the moving mechanic crossed into a part of the rotation where the policy could no longer alter the schedule at all.
+
+**Layman's version:** the same healer prep rule can be good, useless, or bad depending only on when the boss reaches the health threshold. The rule itself did not change. The build did not change. The mechanic did not change. Only the group's damage rate moved that mechanic into a different part of the healer's rotation.
+
+**What it means in actual play:** two groups with nearly identical strategies can get different value from the same pre-buff or pre-heal habit. A mechanic that lands near a convenient front-bar refresh seam may make early preparation cheap or even sustain-positive. Move the same mechanic a few seconds and the preparation can instead delay a skill, change later costs, or push the rotation into a worse resource path.
+
+**For BFF:** encounter-aware optimization needs to evaluate complete schedules across projected mechanic times, not attach one fixed value to a policy such as "refresh Budding Seeds before Phase 2." The useful object is an **opportunity band**: a range of fight trajectories where a policy has the same practical result. Team optimization should eventually know when increasing or decreasing raid damage crosses one of these discontinuous scheduling boundaries.
