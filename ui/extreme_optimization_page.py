@@ -71,7 +71,7 @@ class ExtremeOptimizationPage(FoundryPage):
         self.bar_combo.addItem("Front", "front")
         self.bar_combo.addItem("Back", "back")
         self.bar_combo.setMinimumWidth(80)
-        self.header.add_context_widget(self._context_field("BAR", self.bar_combo))
+        self.header.add_context_widget(self._context_field("ACTIVE BAR", self.bar_combo))
 
         self.run_button = QPushButton("Commit Crimes Against Buildcraft")
         self.run_button.setProperty("primary", True)
@@ -100,8 +100,8 @@ class ExtremeOptimizationPage(FoundryPage):
         self.warning_card = FoundryCard("Experimental Boundary")
         warning_text = QLabel(
             "Existing-toon mode keeps the original bounded mutation search. "
-            "From-scratch mode uses a resting/self-contained character: worn gear, food, race, intrinsic passives, "
-            "and standing effects from skills actually slotted on the active bar. No group buffs, proc windows, or temporary cast buffs."
+            "From-scratch mode builds a self-contained character from gear, food, race, attributes, intrinsic passives, and slotted skills. "
+            "It also shows a separate self-usable potion-active snapshot without borrowing group buffs or target debuffs."
         )
         warning_text.setWordWrap(True)
         warning_text.setProperty("pageSubtitle", True)
@@ -119,8 +119,8 @@ class ExtremeOptimizationPage(FoundryPage):
         self.optimized_value.setProperty("metricValue", True)
         self.delta_value = QLabel("—")
         self.delta_value.setProperty("metricValue", True)
-        summary_row.addWidget(self._metric("BASELINE", self.baseline_value), 1)
-        summary_row.addWidget(self._metric("EXTREME", self.optimized_value), 1)
+        summary_row.addWidget(self._metric("BASELINE / RESTING", self.baseline_value), 1)
+        summary_row.addWidget(self._metric("EXTREME / POTION", self.optimized_value), 1)
         summary_row.addWidget(self._metric("GAIN", self.delta_value), 1)
         self.summary_card.addLayout(summary_row)
         self.summary_card.setMaximumHeight(92)
@@ -231,8 +231,9 @@ class ExtremeOptimizationPage(FoundryPage):
         if scratch:
             self.scope_text.setPlainText(
                 "FROM SCRATCH\n"
-                "Resting/self-contained character only: worn gear, race, Mundus, food, intrinsic passives, and standing effects from skills on the selected active bar.\n"
-                "No group buffs, cast-required temporary buffs, target conditions, proc stacks, or potion uptime."
+                "All 64 attributes are allocated. Both bars are shown; only the selected active bar contributes bar-only standing effects.\n"
+                "The result shows resting/self-contained math and, when useful, a separate self-usable potion-active snapshot.\n"
+                "Group buffs, target debuffs, proc stacks, and execute conditions remain excluded. Mythic/monster/arena legality is the next gear-package pass."
             )
         else:
             self.scope_text.clear()
@@ -265,7 +266,7 @@ class ExtremeOptimizationPage(FoundryPage):
 
     def _run_blueprint_search(self, objective_key: str, active_bar: str) -> None:
         self.status.info(
-            "Starting from Jane / John Doe and searching the resting build space. Dignity remains optional."
+            "Starting from Jane / John Doe and searching the self-contained build space. Dignity remains optional."
         )
         try:
             result = self.blueprint_service.optimize_from_scratch(
@@ -279,7 +280,8 @@ class ExtremeOptimizationPage(FoundryPage):
         self.current_result = result
         self._show_blueprint_result(result)
         self.status.success(
-            f"Blueprint complete: {result.objective.label} {format_extreme_value(result.objective, result.value)} inside the resting/self-contained boundary."
+            f"Blueprint complete: resting {format_extreme_value(result.objective, result.resting_value)}; "
+            f"potion-active {format_extreme_value(result.objective, result.potion_value)}."
         )
 
     def _show_result(self, result: ExtremeOptimizationResult) -> None:
@@ -322,9 +324,11 @@ class ExtremeOptimizationPage(FoundryPage):
         )
 
     def _show_blueprint_result(self, result: ExtremeBlueprintResult) -> None:
-        self.baseline_value.setText("FROM SCRATCH")
-        self.optimized_value.setText(format_extreme_value(result.objective, result.value))
-        self.delta_value.setText("—")
+        self.baseline_value.setText(format_extreme_value(result.objective, result.resting_value))
+        self.optimized_value.setText(format_extreme_value(result.objective, result.potion_value))
+        self.delta_value.setText(
+            format_extreme_value(result.objective, result.potion_value - result.resting_value)
+        )
 
         self.blueprint_table.setRowCount(0)
         for label, value in self._blueprint_rows(result):
@@ -355,16 +359,44 @@ class ExtremeOptimizationPage(FoundryPage):
                 f"Health {build.AttributeHealth} / Magicka {build.AttributeMagicka} / Stamina {build.AttributeStamina}",
             ),
             ("Mundus", str(build.Mundus or "—")),
+            (
+                f"Resting {result.objective.label}",
+                format_extreme_value(result.objective, result.resting_value),
+            ),
+            (
+                f"Potion-active {result.objective.label}",
+                format_extreme_value(result.objective, result.potion_value),
+            ),
         ]
 
-        active_skills = build.FrontBarSkills
-        if not any(str(skill or "").strip() for skill in active_skills):
-            active_skills = build.BackBarSkills
-        for index, skill in enumerate(active_skills[:5], start=1):
-            if str(skill or "").strip():
-                rows.append((f"Skill {index}", str(skill)))
-        if len(active_skills) > 5 and str(active_skills[5] or "").strip():
-            rows.append(("Ultimate", str(active_skills[5])))
+        if len(result.class_candidates) > 1:
+            rows.append(
+                (
+                    "Class contenders",
+                    ", ".join(result.class_candidates),
+                )
+            )
+
+        rows.append(("Skill bars", "FRONT BAR  \\  BACK BAR"))
+        front = list(build.FrontBarSkills[:6])
+        back = list(build.BackBarSkills[:6])
+        while len(front) < 6:
+            front.append("")
+        while len(back) < 6:
+            back.append("")
+        for index in range(5):
+            rows.append(
+                (
+                    f"Skill {index + 1}",
+                    f"FB: {front[index] or '—'}  \\  BB: {back[index] or '—'}",
+                )
+            )
+        rows.append(
+            (
+                "Ultimate",
+                f"FB: {front[5] or '—'}  \\  BB: {back[5] or '—'}",
+            )
+        )
 
         if result.set_package:
             rows.append(("5-piece sets", " + ".join(result.set_package)))
@@ -407,7 +439,7 @@ class ExtremeOptimizationPage(FoundryPage):
         rows.extend(
             [
                 ("Food", str(build.Food or "—")),
-                ("Potion", str(build.Potion or "Excluded from resting result")),
+                ("Potion", str(result.potion_label or "No potion improves this objective")),
             ]
         )
         return tuple(rows)
