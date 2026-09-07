@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.rotation_bar_availability import (
+    RotationBarAvailabilityAssessor,
+    RotationBarAvailabilityWindow,
+)
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 
@@ -53,10 +57,17 @@ class RotationDemandBarAccessService:
     next hard bar-swap boundary. If the plan cannot preserve that work exactly, no
     rewrite is performed.
 
+    Caller-supplied bar-availability windows are hard encounter legality. A rescue
+    that would violate one of those windows is refused rather than treated as a
+    viable candidate.
+
     This deliberately avoids inventing swap duration, extra action slots, cross-bar
     skill legality, or hidden priority. It is an explicit encounter rescue policy
     whose downstream resource and consequence costs remain visible to the scorecard.
     """
+
+    def __init__(self, *, bar_assessor: RotationBarAvailabilityAssessor | None = None) -> None:
+        self.bar_assessor = bar_assessor or RotationBarAvailabilityAssessor()
 
     def refine(
         self,
@@ -64,6 +75,7 @@ class RotationDemandBarAccessService:
         plan: RotationPlan,
         demands: tuple[RotationDemandWindow, ...],
         claim: RotationDemandBarAccessClaim,
+        bar_availability_windows: tuple[RotationBarAvailabilityWindow, ...] = (),
     ) -> RotationDemandBarAccessResult:
         demand = self._resolve_demand(demands, claim.demand_name)
         if self._already_satisfied(plan, demand, claim):
@@ -81,6 +93,7 @@ class RotationDemandBarAccessService:
             if demand.start_seconds <= float(action.time_seconds) < demand.end_seconds
             and action.kind in {RotationActionKind.SKILL, RotationActionKind.WAIT}
         ]
+        blocked_by_bar_state = False
 
         for offset in range(max(0, len(decision_indices) - 2)):
             window = decision_indices[offset : offset + 3]
@@ -160,11 +173,24 @@ class RotationDemandBarAccessService:
                 assumptions=self._append_once(plan.assumptions, assumption),
                 unresolved=plan.unresolved,
             )
+            if bar_availability_windows:
+                assessment = self.bar_assessor.assess(refined, bar_availability_windows)
+                if not assessment.legal:
+                    blocked_by_bar_state = True
+                    continue
+
             return RotationDemandBarAccessResult(
                 plan=refined,
                 applied=True,
                 reason="temporary bar route created and displaced same-bar skills were preserved",
                 displaced_actions=displaced,
+            )
+
+        if blocked_by_bar_state:
+            return RotationDemandBarAccessResult(
+                plan=plan,
+                applied=False,
+                reason="candidate bar route violates caller-supplied encounter bar availability",
             )
 
         return RotationDemandBarAccessResult(
