@@ -238,8 +238,12 @@ class RotationRecoveryHeavyStabilizationService:
     ) -> tuple[str, ...]:
         if resolver is None:
             return ()
-        return tuple(
-            str(value).strip()
-            for value in resolver(plan, replay)
-            if str(value).strip()
-        )
+
+        by_key: dict[str, str] = {}
+        for raw in resolver(plan, replay):
+            value = str(raw).strip()
+            if not value:
+                continue
+            key = value.casefold()
+            by_key.setdefault(key, value)
+        return tuple(by_key[key] for key in sorted(by_key))
