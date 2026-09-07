@@ -45,7 +45,33 @@ def test_proven_heavy_attack_replaces_premature_recast_wait() -> None:
     assert len(contexts) == 1
     assert contexts[0].candidate.name == "Long Buff"
     assert contexts[0].next_due == (("long buff", "front", 10.0),)
+    assert contexts[0].next_decision_time_seconds is None
+    assert contexts[0].plan_end_seconds == 2.0
     assert any("caller-proven heavy_attack decision" in item for item in refined.unresolved)
+
+
+def test_wait_context_exposes_next_scheduled_decision_time() -> None:
+    contexts = []
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=4.0,
+        actions=(
+            RotationAction(0.0, 0, RotationActionKind.SKILL, "Long Buff", "front"),
+            RotationAction(2.0, 0, RotationActionKind.SKILL, "Long Buff", "front"),
+            RotationAction(4.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+    )
+
+    DurationAwareRotationScheduler().refine(
+        plan,
+        (RotationRecastRule("Long Buff", duration_seconds=10.0, bar="front"),),
+        wait_decision=lambda context: contexts.append(context) or None,
+    )
+
+    assert len(contexts) == 1
+    assert contexts[0].next_decision_time_seconds == 4.0
+    assert contexts[0].plan_end_seconds == 4.0
 
 
 def test_wait_remains_when_decision_provider_declines() -> None:
