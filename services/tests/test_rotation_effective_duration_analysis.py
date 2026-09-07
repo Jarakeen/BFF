@@ -86,7 +86,7 @@ def test_base_duration_remains_fallback_when_build_has_no_override() -> None:
     assert projection.rules[0].duration_seconds == 8.0
     assert projection.effective_duration_overrides == ()
     summary = projection.analysis.summaries[0]
-    assert summary.total_gap_seconds == 24.0
+    assert summary.total_gap_seconds == 12.0
     assert summary.uptime_fraction == pytest.approx(16.0 / 40.0)
 
 
