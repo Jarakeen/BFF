@@ -10,7 +10,6 @@ if str(ROOT) not in sys.path:
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.resource_costs import ResourceType
-from minmax.rotation_plan import RotationActionKind
 from tools.audit_phase13_saved_build_recovery_heavy_rotation import (
     _baseline_maximum_magicka,
     _heavy_signature,
@@ -59,7 +58,11 @@ def main() -> int:
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE)
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--restore-amount", type=int, required=True)
-    parser.add_argument("--restore-bar", choices=("front", "back"), default="front")
+    parser.add_argument(
+        "--restore-bar",
+        choices=("front", "back"),
+        help="optional diagnostic filter; omit to credit the supplied test restore to any scheduled staff heavy",
+    )
     parser.add_argument("--channel-seconds", type=float, default=1.8)
     parser.add_argument(
         "--thresholds",
@@ -95,7 +98,7 @@ def main() -> int:
     print(f"Maximum Magicka: {maximum_magicka} (Phase 4 full-pool baseline)")
     print(f"Heavy restore:   {int(args.restore_amount)} Magicka (caller supplied)")
     print(f"Heavy channel:   {float(args.channel_seconds):g}s")
-    print(f"Restore bar:     {args.restore_bar}")
+    print(f"Restore bar:     {args.restore_bar or 'any scheduled heavy'}")
     print("Boundary:        sensitivity audit only; thresholds and restore amount are not canonical policy")
     print()
     print("TRIGGER | MIN MAGICKA | MIN TIME | HEAVIES | END MAGICKA | SHORTFALL | CONVERGED")
