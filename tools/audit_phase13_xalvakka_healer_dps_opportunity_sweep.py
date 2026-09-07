@@ -12,6 +12,10 @@ from engine.config import DEFAULT_DATABASE, get_data_dir
 from minmax.demand_anticipatory_duration_scheduler import DemandRefreshLead
 from minmax.fight_damage_trajectory import RaidDamageSegment
 from minmax.rotation_demand_window import RotationDemandKind, RotationDemandPattern
+from minmax.rotation_opportunity_band import (
+    RotationOpportunitySample,
+    classify_rotation_opportunity_bands,
+)
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_health_threshold_projection_service import (
     EncounterHealthThresholdProjectionService,
@@ -77,6 +81,16 @@ def _dps_values(start: float, stop: float, step: float) -> tuple[float, ...]:
         values.append(current)
         current += float(step)
     return tuple(values)
+
+
+def _outcome_label(*, minimum_delta: int, ending_delta: int, waits_delta: int) -> str:
+    if minimum_delta == 0 and ending_delta == 0 and waits_delta == 0:
+        return "neutral"
+    if minimum_delta >= 0 and ending_delta >= 0 and (minimum_delta > 0 or ending_delta > 0):
+        return "helpful"
+    if minimum_delta <= 0 and ending_delta <= 0 and (minimum_delta < 0 or ending_delta < 0):
+        return "harmful"
+    return "mixed"
 
 
 def main() -> int:
@@ -157,6 +171,7 @@ def main() -> int:
         database_path=database_path,
     )
     base_seed_times = _skill_times(base_plan, "Budding Seeds")
+    band_samples: list[RotationOpportunitySample[float, tuple[str, bool]]] = []
 
     print("=" * 126)
     print(" PHASE 13 XALVAKKA HEALER DPS OPPORTUNITY-BAND SWEEP")
@@ -251,20 +266,51 @@ def main() -> int:
         else:
             seed_text = f"{base_nearest:4.0f}->{demand_nearest:2.0f}s"
 
+        minimum_delta = int(metrics["minimum_magicka"]) - int(base_metrics["minimum_magicka"])
+        ending_delta = int(metrics["ending_magicka"]) - int(base_metrics["ending_magicka"])
+        waits_delta = int(metrics["waits"]) - int(base_metrics["waits"])
+        outcome = _outcome_label(
+            minimum_delta=minimum_delta,
+            ending_delta=ending_delta,
+            waits_delta=waits_delta,
+        )
+        band_samples.append(
+            RotationOpportunitySample(
+                value=float(raid_dps),
+                signature=(outcome, changed),
+            )
+        )
+
         print(
             f"{raid_dps:10,.0f} | {event_time:8.2f}s | "
             f"{demand.start_seconds:6.2f}-{demand.end_seconds:6.2f}s | "
             f"{'YES' if changed else ' no':4s} | {seed_text:13s} | "
-            f"{int(metrics['minimum_magicka']) - int(base_metrics['minimum_magicka']):+9d} | "
-            f"{int(metrics['ending_magicka']) - int(base_metrics['ending_magicka']):+9d} | "
-            f"{int(metrics['waits']) - int(base_metrics['waits']):+6d}"
+            f"{minimum_delta:+9d} | {ending_delta:+9d} | {waits_delta:+6d}"
         )
+
+    bands = classify_rotation_opportunity_bands(band_samples)
+    if bands:
+        print()
+        print("OPPORTUNITY BANDS")
+        print("-----------------")
+        print("DPS RANGE              | OUTCOME  | PLAN CHANGED | SAMPLES")
+        print("-----------------------+----------+--------------+--------")
+        for band in bands:
+            outcome, changed = band.signature
+            if band.start_value == band.end_value:
+                dps_range = f"{band.start_value:,.0f}"
+            else:
+                dps_range = f"{band.start_value:,.0f}-{band.end_value:,.0f}"
+            print(
+                f"{dps_range:23s}| {outcome:8s} | "
+                f"{'yes' if changed else 'no':12s} | {band.sample_count:7d}"
+            )
 
     print()
     print(
-        "Interpretation: contiguous rows with the same behavior form one opportunity band. "
-        "Abrupt changes show where the moving health-triggered mechanic crosses a discrete "
-        "rotation boundary such as a bar swap, due-refresh seam, or legal anticipation slot."
+        "Interpretation: contiguous rows with the same outcome and plan-change state form one "
+        "opportunity band. Abrupt changes show where the moving health-triggered mechanic crosses "
+        "a discrete rotation boundary such as a bar swap, due-refresh seam, or legal anticipation slot."
     )
     return 0
 
