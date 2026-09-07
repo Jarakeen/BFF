@@ -224,3 +224,19 @@ WAIT count, refresh-claim count, and horizon displacement were unchanged.
 **What it means in actual play:** an intentional early refresh before a dangerous mechanic is not automatically a sustain penalty. In some rotation paths it can actually be resource-positive compared with letting the ordinary schedule play out, because the early cast displaces or removes a later cost at a more awkward point in the cycle.
 
 **For BFF:** encounter preparation and sustain cannot be optimized independently. The planner needs to evaluate the resulting whole schedule after moving a prep cast, not assign a fixed "early refresh costs extra" penalty. This is another concrete example of ESO rotation sustain being path-dependent rather than a simple sum of casts.
+
+---
+
+## 2026-09-07 — More raid DPS can move a mechanic out of a useful prep opportunity
+
+We ran the same Xalvakka hardmode Phase 2 healer-prep policy at two different raid-DPS assumptions.
+
+At **1.5 million raid DPS**, the 70% threshold projected to about **42.85s**, putting the prep window around **39.85s–44.85s**. That lined up with Magrat's front-bar rotation, so BFF could intentionally pull **Budding Seeds** forward to 40s.
+
+At **2.0 million raid DPS**, the exact same 70% threshold projected much earlier, around **32.13s**, moving the prep window to roughly **29.13s–34.13s**. That entire useful portion of the window landed while Magrat was on her back bar. Budding Seeds therefore stayed at its ordinary 36s cast and the encounter-aware schedule was identical to the base schedule.
+
+**Layman's version:** making the group faster did not gradually make the same healer prep happen earlier. It moved the mechanic far enough that the prep opportunity vanished entirely because the healer was on the wrong bar at that moment.
+
+**What it means in actual play:** health-triggered mechanics can cross invisible rotation boundaries as group damage changes. A small enough DPS change may only shift a callout by a second or two, but a larger change can move the mechanic across a bar swap, cooldown seam, heavy-attack window, Ultimate window, or resource dip. The practical effect can jump suddenly rather than changing smoothly.
+
+**For BFF:** mechanic-response quality is not a smooth function of raid DPS. The planner should expect discrete opportunity bands where a given prep action is legal, followed by bands where it is not. Optimizing team damage may therefore change the best healer rotation in step-like jumps, not by simply sliding every action earlier on the clock.
