@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from minmax.encounter_requirements import EncounterRequirementSet
+from minmax.rotation_bar_availability import (
+    RotationBarAvailabilityAssessment,
+    RotationBarAvailabilityAssessor,
+    RotationBarAvailabilityWindow,
+)
 from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.rotation_resource_reserve import (
@@ -74,6 +79,7 @@ class RotationCandidateScorecard:
     inherited_schedule_notes: tuple[str, ...] = ()
     candidate_specific_schedule_notes: tuple[str, ...] = ()
     reserve_assessments: tuple[RotationResourceReserveAssessment, ...] = ()
+    bar_availability_assessment: RotationBarAvailabilityAssessment | None = None
 
     @property
     def unresolved(self) -> tuple[str, ...]:
@@ -94,6 +100,12 @@ class RotationCandidateScorecard:
         return tuple(item for item in self.reserve_assessments if not item.satisfied)
 
     @property
+    def bar_availability_violations(self):
+        if self.bar_availability_assessment is None:
+            return ()
+        return self.bar_availability_assessment.violations
+
+    @property
     def supplied_obligations_satisfied(self) -> bool:
         """Whether all caller-supplied hard obligations are currently satisfied.
 
@@ -105,6 +117,7 @@ class RotationCandidateScorecard:
             not self.missing_demand_requirements
             and not self.missing_required_effects
             and not self.failed_reserve_assessments
+            and not self.bar_availability_violations
             and self.candidate_shortfall == 0
         )
 
@@ -117,18 +130,23 @@ class RotationCandidateScorecardService:
     support effects use the existing static SupportCoverage model and therefore do
     not claim runtime uptime unless a later layer proves it.
 
-    Optional resource-reserve requirements are caller-supplied hard obligations at
-    named demand entry points. This layer never invents how much resource a mechanic
-    requires. Unresolved evidence is split into inherited/shared baseline limitations
-    and candidate-specific additions. Deterministic refresh-slot cascade messages are
-    retained separately as schedule provenance rather than ranked as uncertainty.
+    Optional resource-reserve requirements and encounter bar-availability windows
+    are caller-supplied hard obligations. This layer never invents how much resource
+    a mechanic requires or which bar an encounter permits. Unresolved evidence is
+    split into inherited/shared baseline limitations and candidate-specific additions.
+    Deterministic refresh-slot cascade messages are retained separately as schedule
+    provenance rather than ranked as uncertainty.
     """
 
     def __init__(
         self,
         consequence_service: RotationPlanConsequenceService | None = None,
+        bar_availability_assessor: RotationBarAvailabilityAssessor | None = None,
     ) -> None:
         self.consequence_service = consequence_service or RotationPlanConsequenceService()
+        self.bar_availability_assessor = (
+            bar_availability_assessor or RotationBarAvailabilityAssessor()
+        )
 
     def compare(
         self,
@@ -140,6 +158,7 @@ class RotationCandidateScorecardService:
         demands: tuple[RotationDemandWindow, ...] = (),
         demand_requirements: tuple[RotationDemandActionRequirement, ...] = (),
         reserve_requirements: tuple[RotationResourceReserveRequirement, ...] = (),
+        bar_availability_windows: tuple[RotationBarAvailabilityWindow, ...] = (),
         encounter_requirements: EncounterRequirementSet | None = None,
         support_coverage: SupportCoverage | None = None,
     ) -> RotationCandidateScorecard:
@@ -181,6 +200,12 @@ class RotationCandidateScorecardService:
             timeline=candidate_sustain.run.timeline,
             demands=demands,
             requirements=reserve_requirements,
+        )
+
+        bar_assessment = (
+            self.bar_availability_assessor.assess(candidate_plan, bar_availability_windows)
+            if bar_availability_windows
+            else None
         )
 
         if (encounter_requirements is None) != (support_coverage is None):
@@ -236,6 +261,7 @@ class RotationCandidateScorecardService:
             inherited_schedule_notes=inherited_notes,
             candidate_specific_schedule_notes=candidate_specific_notes,
             reserve_assessments=reserve_assessments,
+            bar_availability_assessment=bar_assessment,
         )
 
     @staticmethod
