@@ -2,15 +2,24 @@ from __future__ import annotations
 
 """Resolve configured scribed skills to the existing AbilityIcons asset names.
 
-Only Grimoire family stems verified from the local AbilityIcons naming scheme
-belong here. Focus suffixes mirror the icon pack's filenames.
+Grimoire stems mirror the U51 grimoire icon families. Focus suffixes mirror the
+AbilityIcons scribed-skill filenames so the shared ESO icon resolver can find
+local PNG assets without duplicating them into another catalog.
 """
 
 GRIMOIRE_ICON_STEMS: dict[str, str] = {
-    "Wield Soul": "soulmagic1",
-    "Soul Burst": "soulmagic2",
+    "Banner Bearer": "support",
     "Elemental Explosion": "staffdestro",
+    "Mender's Bond": "staffresto",
     "Shield Throw": "1handed",
+    "Smash": "2handed",
+    "Soul Burst": "soulmagic2",
+    "Torchbearer": "fightersguild",
+    "Trample": "assault",
+    "Traveling Knife": "dualwield",
+    "Ulfsild's Contingency": "magesguild",
+    "Vault": "bow",
+    "Wield Soul": "soulmagic1",
 }
 
 FOCUS_ICON_SUFFIXES: dict[str, str] = {
