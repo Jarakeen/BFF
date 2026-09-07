@@ -44,6 +44,7 @@ from ui.reference_data_page import ReferenceDataPage
 from ui.themed_roster_page import RosterPage
 from ui.rotation_dashboard_page import RotationDashboardPage
 from ui.settings_page import SettingsPage
+from ui.stickerbook_page import StickerbookPage
 
 
 class MainWindow(QMainWindow):
@@ -83,6 +84,7 @@ class MainWindow(QMainWindow):
         collectible_dashboard.categoryRequested.connect(
             lambda category: self.show_page(f"collectibles:{category}")
         )
+        stickerbook_page = StickerbookPage()
 
         roster_page = RosterPage()
         roster_page.header.title.setText("Roster")
@@ -105,6 +107,7 @@ class MainWindow(QMainWindow):
             "achievements": AchievementsPage(),
             "collectibles": collectible_dashboard,
             "collectibles_browser": collectible_browser,
+            "stickerbook": stickerbook_page,
             "roster_page": roster_page,
             "comp_builder": comp_builder_page,
             "operations_console": OperationsConsole(expedition=self.expedition_service),
@@ -196,20 +199,26 @@ class MainWindow(QMainWindow):
         return False
 
     def _refresh_collectibles_for_active_profile(self) -> None:
-        """Keep collection browser/dashboard aligned with the achievement profile."""
+        """Keep collection browser/dashboard/stickerbook aligned with the achievement profile."""
         achievements_page = self.pages.get("achievements")
         collectibles_page = self.pages.get("collectibles_browser")
         dashboard = self.pages.get("collectibles")
+        stickerbook = self.pages.get("stickerbook")
         service = getattr(collectibles_page, "service", None)
         progress = getattr(achievements_page, "achievement_progress_service", None)
+        active_profile = ""
 
-        if service is not None and progress is not None and hasattr(service, "set_active_profile"):
-            profile = str(progress.active_profile or "").strip()
-            if profile:
-                service.set_active_profile(profile)
-                reload_combo = getattr(collectibles_page, "_reload_profile_combo", None)
-                if callable(reload_combo):
-                    reload_combo(profile)
+        if progress is not None:
+            active_profile = str(progress.active_profile or "").strip()
+
+        if service is not None and active_profile and hasattr(service, "set_active_profile"):
+            service.set_active_profile(active_profile)
+            reload_combo = getattr(collectibles_page, "_reload_profile_combo", None)
+            if callable(reload_combo):
+                reload_combo(active_profile)
+
+        if stickerbook is not None and active_profile and hasattr(stickerbook, "set_profile"):
+            stickerbook.set_profile(active_profile)
 
         if collectibles_page is not None:
             collectibles_page.refresh()
@@ -397,6 +406,9 @@ class MainWindow(QMainWindow):
             self.pages["achievements"].refresh()
         elif page_name == "collectibles":
             self._refresh_collectibles_for_active_profile()
+        elif page_name == "stickerbook":
+            self._refresh_collectibles_for_active_profile()
+            self.pages["stickerbook"].refresh()
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
         elif page_name == "gear_lookup":
