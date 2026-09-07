@@ -38,6 +38,23 @@ WEAPON_TYPES = {
     15: "Lightning Staff",
 }
 
+STICKERBOOK_BUCKETS = (
+    "Arena",
+    "Dungeon",
+    "Trial",
+    "Overland",
+    "PvP",
+    "Monster",
+    "Mythic",
+    "Class",
+    "Other",
+)
+
+# ESO's Item Set Collection tracks dropped/bound set gear that can be
+# reconstructed. Crafted sets are intentionally not part of the in-game
+# stickerbook, so BFF keeps them out of completion totals too.
+_CRAFTED_TOKENS = ("craft", "crafted", "craftable")
+
 
 @dataclass(frozen=True)
 class StickerbookPiece:
@@ -52,7 +69,7 @@ class StickerbookPiece:
 
 
 class StickerbookService:
-    """Profile-aware ownership ledger over the canonical gear-set piece catalog."""
+    """Profile-aware ownership ledger over the canonical dropped-set catalog."""
 
     def __init__(self, database_path: str | Path):
         self.database_path = Path(database_path)
@@ -102,13 +119,20 @@ class StickerbookService:
         weapon_id = int(weapon_type or 0)
         armor_id = int(armor_type or 0)
         equip_id = int(equip_type or 0)
+
         if weapon_id > 0:
             return WEAPON_TYPES.get(weapon_id, f"Weapon Type {weapon_id}"), "Weapons"
         if equip_id in {2, 12}:
             return EQUIP_TYPES.get(equip_id, f"Jewelry Slot {equip_id}"), "Jewelry"
-        slot = EQUIP_TYPES.get(equip_id, f"Armor Slot {equip_id}")
-        weight = ARMOR_TYPES.get(armor_id, "")
-        return (f"{slot} · {weight}" if weight else slot), "Armor"
+        if equip_id in {1, 3, 4, 8, 9, 10, 13}:
+            slot = EQUIP_TYPES[equip_id]
+            weight = ARMOR_TYPES.get(armor_id, "")
+            return (f"{slot} · {weight}" if weight else slot), "Armor"
+
+        # Preserve unexpected canonical structures rather than pretending they
+        # are armor. This makes source-data gaps visible without losing the row.
+        slot = EQUIP_TYPES.get(equip_id, f"Equipment Slot {equip_id}")
+        return slot, "Other"
 
     def profiles(self) -> list[str]:
         with self._connect() as connection:
@@ -141,15 +165,26 @@ class StickerbookService:
         return result
 
     @staticmethod
+    def _is_stickerbook_set(category: str, content_type: str, source: str) -> bool:
+        text = " ".join((category, content_type, source)).casefold()
+        return not any(token in text for token in _CRAFTED_TOKENS)
+
+    @staticmethod
     def _bucket(category: str, content_type: str, source: str) -> str:
         text = " ".join((category, content_type, source)).casefold()
-        if "arena" in text:
+        if "mythic" in text:
+            return "Mythic"
+        if "monster" in text:
+            return "Monster"
+        if "class" in text or "infinite archive" in text:
+            return "Class"
+        if "arena" in text or "maelstrom" in text or "dragonstar" in text or "vateshran" in text:
             return "Arena"
         if "trial" in text:
             return "Trial"
-        if "dungeon" in text or "monster" in text:
+        if "dungeon" in text:
             return "Dungeon"
-        if "cyrodiil" in text or "pvp" in text or "alliance war" in text:
+        if "cyrodiil" in text or "pvp" in text or "alliance war" in text or "battleground" in text:
             return "PvP"
         if "overland" in text or "zone" in text or "world" in text:
             return "Overland"
@@ -185,12 +220,15 @@ class StickerbookService:
         for row in rows:
             set_id = int(row["id"])
             content_type, source = source_map.get(set_id, ("", ""))
+            category = str(row["category"] or "")
+            if not self._is_stickerbook_set(category, content_type, source):
+                continue
             result.append(
                 {
                     "id": set_id,
                     "name": str(row["name"]),
-                    "category": str(row["category"] or ""),
-                    "bucket": self._bucket(str(row["category"] or ""), content_type, source),
+                    "category": category,
+                    "bucket": self._bucket(category, content_type, source),
                     "source": source,
                     "content_type": content_type,
                     "collected": int(row["collected_count"] or 0),
@@ -214,7 +252,16 @@ class StickerbookService:
                       || ':' || CAST(COALESCE(gp.weapon_type, 0) AS TEXT)
                  AND sp.profile_id = ?
                 WHERE gp.set_id = ?
-                ORDER BY gp.weapon_type, gp.equip_type, gp.armor_type
+                ORDER BY
+                    CASE
+                        WHEN COALESCE(gp.weapon_type, 0) > 0 THEN 2
+                        WHEN gp.equip_type IN (2, 12) THEN 3
+                        WHEN gp.equip_type IN (1, 3, 4, 8, 9, 10, 13) THEN 1
+                        ELSE 4
+                    END,
+                    gp.equip_type,
+                    gp.armor_type,
+                    gp.weapon_type
                 """,
                 (profile, int(set_id)),
             ).fetchall()
