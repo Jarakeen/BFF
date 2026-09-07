@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -102,8 +103,8 @@ class ExtremeOptimizationPage(FoundryPage):
         self.change_table.setHorizontalHeaderLabels(["CHANGE", "BEFORE", "AFTER", "STAT GAIN"])
         self.change_table.verticalHeader().setVisible(False)
         self.change_table.setAlternatingRowColors(True)
-        self.change_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.change_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.change_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.change_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.change_table.horizontalHeader().setStretchLastSection(True)
         changes.addWidget(self.change_table)
         root.addWidget(changes, 1)
@@ -213,7 +214,7 @@ class ExtremeOptimizationPage(FoundryPage):
         omitted = "\n".join(f"  ○ {item}" for item in result.omitted_scope)
         unresolved = ""
         if result.unresolved:
-            unresolved = "\n\nUnresolved candidates/effects were not used for ranking:\n" + "\n".join(
+            unresolved = "\n\nUnresolved candidates/effects were not used as invented values:\n" + "\n".join(
                 f"  ? {message}" for message in result.unresolved[:20]
             )
             if len(result.unresolved) > 20:
