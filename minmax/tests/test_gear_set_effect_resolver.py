@@ -125,11 +125,14 @@ def test_healing_received_phrase_maps_to_healing_taken():
     assert effects[0].operation == EffectOperation.ADD_PERCENT
 
 
-def test_rejects_ability_specific_bonus():
+def test_ability_specific_bonus_preserves_scope_condition():
     effects = GearSetEffectResolver().resolve(
         bonus("(5 items) Adds 9-400 Weapon and Spell Damage to your Flame Damage abilities.")
     )
-    assert effects == []
+    assert [(effect.stat, effect.value, effect.condition) for effect in effects] == [
+        (StatId.WEAPON_DAMAGE, 400.0, "ability_scope:flame_damage"),
+        (StatId.SPELL_DAMAGE, 400.0, "ability_scope:flame_damage"),
+    ]
 
 
 def test_resolves_archers_mind_conditional_bonus():
