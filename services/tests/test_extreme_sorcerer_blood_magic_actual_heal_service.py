@@ -30,7 +30,7 @@ class _FakeOptimizer:
 
 
 def _build() -> PlayerBuild:
-    return PlayerBuild(CharacterName="Test Sorcerer", BuildName="Blood Magic")
+    return PlayerBuild(Name="Test Sorcerer", BuildName="Blood Magic")
 
 
 def test_blood_magic_lane_optimizes_canonical_max_health():
