@@ -9,6 +9,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_arcanist_curative_runeforms_healing_service import (
+    ExtremeArcanistCurativeRuneformsHealingService,
+)
 from services.extreme_healing_event_service import ExtremeHealingEventResult
 from services.extreme_necromancer_living_death_healing_service import (
     ExtremeNecromancerLivingDeathHealingService,
@@ -31,6 +34,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     result and does not activate target-health or trigger-dependent conditionals.
     This service forwards one explicit target-health fraction through every
     whole-build candidate rebuild.
+
+    Reviewed Arcanist ``Healing Tides`` may be activated by an explicit active
+    Crux count. At reviewed U50 max rank it contributes generic Healing Done per
+    active Crux, so it can increase heals from any ability family. No Crux count
+    is invented when the caller omits that scenario.
 
     Reviewed Templar ``Mending`` is also resolved here because its Restoring Light
     healing bonus scales continuously with the explicit target-health fraction.
@@ -66,25 +74,37 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         fully_charged_restoration_heavy_attack_completed: bool = False,
         sacred_ground_window_active: bool = False,
         healer_has_negative_effect: bool | None = None,
+        active_crux: int | None = None,
         restoration_heavy_state: ExtremeRestorationHeavyCombatStateService | None = None,
         templar_sacred_ground_state: ExtremeTemplarSacredGroundCombatStateService | None = None,
         templar_restoring_light_healing: ExtremeTemplarRestoringLightHealingService | None = None,
         necromancer_living_death_healing: ExtremeNecromancerLivingDeathHealingService | None = None,
+        arcanist_curative_runeforms_healing: ExtremeArcanistCurativeRuneformsHealingService | None = None,
         **kwargs,
     ) -> None:
         value = float(target_health_fraction)
         if not 0.0 <= value <= 1.0:
             raise ValueError("target_health_fraction must be between 0 and 1")
+        if active_crux is not None:
+            try:
+                normalized_crux = int(active_crux)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("active_crux must be an integer from 0 through 3") from exc
+            if normalized_crux != active_crux or not 0 <= normalized_crux <= 3:
+                raise ValueError("active_crux must be an integer from 0 through 3")
+            active_crux = normalized_crux
         self.target_health_fraction = value
         self.fully_charged_restoration_heavy_attack_completed = bool(
             fully_charged_restoration_heavy_attack_completed
         )
         self.sacred_ground_window_active = bool(sacred_ground_window_active)
         self.healer_has_negative_effect = healer_has_negative_effect
+        self.active_crux = active_crux
         self.restoration_heavy_state = restoration_heavy_state
         self.templar_sacred_ground_state = templar_sacred_ground_state
         self.templar_restoring_light_healing = templar_restoring_light_healing
         self.necromancer_living_death_healing = necromancer_living_death_healing
+        self.arcanist_curative_runeforms_healing = arcanist_curative_runeforms_healing
         super().__init__(**kwargs)
 
     def optimize(
@@ -107,6 +127,11 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             "explicit conditional target health fraction "
             f"{self.target_health_fraction:.6f}"
         ]
+        if self.active_crux is not None:
+            scenarios.append(
+                f"explicit active Crux count {self.active_crux}; "
+                "Healing Tides requires canonical legality proof"
+            )
         if self.sacred_ground_window_active:
             scenarios.append(
                 "explicit Sacred Ground active/grace window; "
@@ -188,10 +213,6 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
         skill = getattr(tooltip_result, "skill", None)
         skill_name = str(getattr(skill, "name", "") or "").strip()
         if not skill_name:
-            # Mending is ability-family-specific. If an alternate event producer
-            # does not expose canonical tooltip/skill identity, preserve that
-            # event unchanged rather than guessing a Restoring Light family or
-            # crashing unrelated conditional optimization paths.
             return event
 
         service = self.templar_restoring_light_healing
@@ -216,9 +237,7 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             if event.critical_heal is None
             else float(event.critical_heal) * multiplier
         )
-        unresolved = tuple(
-            dict.fromkeys((*event.unresolved, *mending.unresolved))
-        )
+        unresolved = tuple(dict.fromkeys((*event.unresolved, *mending.unresolved)))
         return replace(
             event,
             normal_heal=normal_heal,
@@ -257,9 +276,46 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             if event.critical_heal is None
             else float(event.critical_heal) * multiplier
         )
-        unresolved = tuple(
-            dict.fromkeys((*event.unresolved, *curse.unresolved))
+        unresolved = tuple(dict.fromkeys((*event.unresolved, *curse.unresolved)))
+        return replace(
+            event,
+            normal_heal=normal_heal,
+            critical_heal=critical_heal,
+            unresolved=unresolved,
         )
+
+    def _arcanist_healing_tides_event(
+        self,
+        *,
+        build: PlayerBuild,
+        progression: CharacterProgression,
+        event: ExtremeHealingEventResult,
+    ) -> ExtremeHealingEventResult:
+        if self.active_crux is None:
+            return event
+
+        service = self.arcanist_curative_runeforms_healing
+        if service is None:
+            service = ExtremeArcanistCurativeRuneformsHealingService(
+                getattr(self.optimizer, "database_path", None)
+            )
+            self.arcanist_curative_runeforms_healing = service
+
+        tides = service.resolve(
+            build=build,
+            progression=progression,
+            active_crux=self.active_crux,
+        )
+        multiplier = float(tides.multiplier)
+        normal_heal = (
+            None if event.normal_heal is None else float(event.normal_heal) * multiplier
+        )
+        critical_heal = (
+            None
+            if event.critical_heal is None
+            else float(event.critical_heal) * multiplier
+        )
+        unresolved = tuple(dict.fromkeys((*event.unresolved, *tides.unresolved)))
         return replace(
             event,
             normal_heal=normal_heal,
@@ -314,11 +370,14 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
             progression=candidate_progression,
             event=event,
         )
+        event = self._arcanist_healing_tides_event(
+            build=build,
+            progression=candidate_progression,
+            event=event,
+        )
         unresolved = (
             tuple(context.unresolved_gear_effects)
             + tuple(combat_unresolved)
             + tuple(event.unresolved)
         )
-        return event, tuple(
-            dict.fromkeys(message for message in unresolved if message)
-        )
+        return event, tuple(dict.fromkeys(message for message in unresolved if message))
