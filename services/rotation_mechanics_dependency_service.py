@@ -141,6 +141,11 @@ class RotationMechanicsDependencyService:
             f"armor_weight_count:{weight}={weight_counts[weight]}"
             for weight in sorted(weight_counts)
         )
+        armor_weight_type_evidence = (
+            (f"armor_weight_type_count={len(weight_counts)}",)
+            if weight_counts
+            else ()
+        )
         effect_slots = tuple(
             f"effect_bearing_slot={piece.slot.value}"
             for piece in equipped
@@ -160,6 +165,17 @@ class RotationMechanicsDependencyService:
                 "Equipped gear carries explicit effect variants, so proc trigger, cooldown, stacking, or refresh behavior can matter.",
                 evidence=effect_slots + set_ids,
             )
+        if armor_weight_evidence:
+            self._add(
+                dependencies,
+                "armor:weight_passive_semantics",
+                (
+                    "Armor-line passives can scale from exact equipped piece counts, while "
+                    "composition-sensitive passives such as Undaunted Mettle can depend on "
+                    "the number of distinct armor weights."
+                ),
+                evidence=armor_weight_evidence + armor_weight_type_evidence,
+            )
 
         if character_build.potion_id or character_build.poison_id:
             consumables = tuple(
@@ -177,7 +193,7 @@ class RotationMechanicsDependencyService:
                 evidence=consumables,
             )
 
-        if passives or character_build.class_mastery.passive_ability_ids or armor_weight_evidence:
+        if passives or character_build.class_mastery.passive_ability_ids:
             passive_lines = tuple(
                 f"passive_skill_line={value}"
                 for value in (
@@ -190,25 +206,11 @@ class RotationMechanicsDependencyService:
                 f"class_mastery_passive={passive_id}"
                 for passive_id in character_build.class_mastery.passive_ability_ids
             )
-            reasons: list[str] = []
-            if passives or mastery:
-                reasons.append(
-                    "Explicit passive or Class Mastery evidence can modify skill, resource, duration, or combat behavior."
-                )
-            if armor_weight_evidence:
-                reasons.append(
-                    "Equipped armor-weight distribution can make verified armor passive bonuses relevant to timing, sustain, mitigation, or output."
-                )
             self._add(
                 dependencies,
                 "passives:runtime_semantics",
-                " ".join(reasons),
-                evidence=(
-                    passive_lines
-                    + mastery
-                    + armor_weight_evidence
-                    + represented_skill_lines
-                ),
+                "Explicit passive or Class Mastery evidence can modify skill, resource, duration, or combat behavior.",
+                evidence=passive_lines + mastery + represented_skill_lines,
             )
 
         if requirements:
