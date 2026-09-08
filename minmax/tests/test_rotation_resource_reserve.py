@@ -15,6 +15,7 @@ from minmax.rotation_resource_reserve import (
     assess_rotation_resource_reserve,
     assess_rotation_resource_reserves,
     resource_amount_before,
+    resource_maximum_before,
 )
 
 
@@ -64,12 +65,66 @@ def _timeline() -> ResourceTimelineResult:
     )
 
 
+def _bar_sensitive_timeline() -> ResourceTimelineResult:
+    return ResourceTimelineResult(
+        resource=ResourceType.MAGICKA,
+        starting_amount=24_000,
+        ending_amount=12_000,
+        starting_maximum=30_000,
+        ending_maximum=36_000,
+        events=(
+            AppliedResourceTimelineEvent(
+                time_seconds=4.0,
+                kind=ResourceTimelineEventKind.ACTION_COST,
+                source="maintenance",
+                before=24_000,
+                attempted_change=-6_000,
+                applied_change=-6_000,
+                after=18_000,
+                maximum_before=30_000,
+                maximum_after=30_000,
+            ),
+            AppliedResourceTimelineEvent(
+                time_seconds=8.0,
+                kind=ResourceTimelineEventKind.RESOURCE_MAXIMUM,
+                source="bar swap to back",
+                before=18_000,
+                attempted_change=0,
+                applied_change=0,
+                after=18_000,
+                maximum_before=30_000,
+                maximum_after=36_000,
+            ),
+            AppliedResourceTimelineEvent(
+                time_seconds=12.0,
+                kind=ResourceTimelineEventKind.ACTION_COST,
+                source="burst prep",
+                before=18_000,
+                attempted_change=-6_000,
+                applied_change=-6_000,
+                after=12_000,
+                maximum_before=36_000,
+                maximum_after=36_000,
+            ),
+        ),
+    )
+
+
 def test_resource_amount_before_uses_strict_demand_entry_boundary() -> None:
     timeline = _timeline()
 
     assert resource_amount_before(timeline, 0.0) == 20_000
     assert resource_amount_before(timeline, 10.0) == 16_000
     assert resource_amount_before(timeline, 14.0) == 12_000
+
+
+def test_resource_maximum_before_uses_strict_demand_entry_boundary() -> None:
+    timeline = _bar_sensitive_timeline()
+
+    assert resource_maximum_before(timeline, 0.0) == 30_000
+    assert resource_maximum_before(timeline, 8.0) == 30_000
+    assert resource_maximum_before(timeline, 8.001) == 36_000
+    assert resource_maximum_before(_timeline(), 10.0) is None
 
 
 def test_staggered_healer_demands_can_require_independent_reserves() -> None:
@@ -102,8 +157,33 @@ def test_staggered_healer_demands_can_require_independent_reserves() -> None:
     ]
     assert assessments[0].satisfied is True
     assert assessments[0].shortfall == 0
+    assert assessments[0].available_fraction_before_start is None
     assert assessments[1].satisfied is False
     assert assessments[1].shortfall == 1_000
+
+
+def test_bar_sensitive_reserve_assessment_exposes_normalized_entry_state() -> None:
+    demand = RotationDemandWindow(
+        name="Burst window",
+        start_seconds=12.0,
+        end_seconds=16.0,
+        kind=RotationDemandKind.DAMAGE,
+        pattern=RotationDemandPattern.BURST,
+    )
+    assessment = assess_rotation_resource_reserve(
+        timeline=_bar_sensitive_timeline(),
+        demand=demand,
+        requirement=RotationResourceReserveRequirement(
+            demand_name="Burst window",
+            resource=ResourceType.MAGICKA,
+            minimum_amount=17_000,
+        ),
+    )
+
+    assert assessment.available_before_start == 18_000
+    assert assessment.maximum_before_start == 36_000
+    assert assessment.available_fraction_before_start == 0.5
+    assert assessment.satisfied is True
 
 
 def test_sustained_pressure_uses_same_role_neutral_reserve_contract() -> None:
