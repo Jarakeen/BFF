@@ -3,9 +3,12 @@ import sqlite3
 from services.rotation_healer_canonical_periodic_timing_service import (
     RotationHealerCanonicalPeriodicTimingService,
 )
+from services.rotation_healer_u50_skill_component_repository import (
+    RotationHealerU50SkillComponentRepository,
+)
 
 
-def _database(tmp_path, *, name, description, duration_ms):
+def _database(tmp_path, *, name, description, duration_ms, rank_id=10):
     path = tmp_path / f"{name.replace(' ', '_').lower()}.db"
     with sqlite3.connect(path) as db:
         db.executescript(
@@ -48,9 +51,9 @@ def _database(tmp_path, *, name, description, duration_ms):
         db.execute(
             """
             INSERT INTO skill_rank(id, skill_id, ability_id, raw_name, rank, morph)
-            VALUES (10, 1, 101, ?, 4, 1)
+            VALUES (?, 1, 101, ?, 4, 1)
             """,
-            (name,),
+            (rank_id, name),
         )
         db.execute(
             """
@@ -63,13 +66,14 @@ def _database(tmp_path, *, name, description, duration_ms):
             """
             INSERT INTO skill_coefficient(
                 skill_rank_id, coefficient_number, type, a, b, c, r, avg
-            ) VALUES (10, 1, '8', 0.1, 1.0, 0.0, 1.0, NULL)
-            """
+            ) VALUES (?, 1, '8', 0.1, 1.0, 0.0, 1.0, NULL)
+            """,
+            (rank_id,),
         )
     return path
 
 
-def test_illustrious_healing_uses_reviewed_two_second_cadence(tmp_path):
+def test_illustrious_healing_uses_reviewed_one_second_static_hot_cadence(tmp_path):
     path = _database(
         tmp_path,
         name="Illustrious Healing",
@@ -86,14 +90,15 @@ def test_illustrious_healing_uses_reviewed_two_second_cadence(tmp_path):
     )
 
     assert result.unresolved == ()
-    assert result.cadence_seconds == 2.0
+    assert result.cadence_seconds == 1.0
     assert result.duration_seconds == 15.0
     assert result.timing_ready_for_runtime_binding
     assert any("reviewed U50 cadence" in item for item in result.evidence)
-    assert any("v8.1.0" in item for item in result.evidence)
+    assert any("v8.1.5" in item for item in result.evidence)
+    assert any("static-based" in item for item in result.evidence)
 
 
-def test_echoing_vigor_uses_reviewed_two_second_cadence(tmp_path):
+def test_echoing_vigor_uses_reviewed_two_second_target_hot_cadence(tmp_path):
     path = _database(
         tmp_path,
         name="Echoing Vigor",
@@ -113,10 +118,10 @@ def test_echoing_vigor_uses_reviewed_two_second_cadence(tmp_path):
     assert result.cadence_seconds == 2.0
     assert result.duration_seconds == 16.0
     assert result.timing_ready_for_runtime_binding
-    assert any("v5.1.0" in item for item in result.evidence)
+    assert any("target-based" in item for item in result.evidence)
 
 
-def test_reviewed_cadence_does_not_bypass_missing_periodic_identity(tmp_path):
+def test_radiating_regeneration_combines_reviewed_periodic_identity_with_reviewed_cadence(tmp_path):
     path = _database(
         tmp_path,
         name="Radiating Regeneration",
@@ -125,6 +130,32 @@ def test_reviewed_cadence_does_not_bypass_missing_periodic_identity(tmp_path):
             "allies for $1 over 10 seconds."
         ),
         duration_ms=10000,
+        rank_id=RotationHealerU50SkillComponentRepository.RADIATING_REGENERATION_RANK_ID,
+    )
+
+    result = RotationHealerCanonicalPeriodicTimingService(path).resolve(
+        source_name="Radiating Regeneration",
+        coefficient_number=1,
+    )
+
+    assert result.unresolved == ()
+    assert result.cadence_seconds == 2.0
+    assert result.duration_seconds == 10.0
+    assert result.timing_ready_for_runtime_binding
+    assert any("HEAL / PERIODIC" in item for item in result.evidence)
+    assert any("target-based" in item for item in result.evidence)
+
+
+def test_reviewed_cadence_still_does_not_create_periodic_identity_for_wrong_rank(tmp_path):
+    path = _database(
+        tmp_path,
+        name="Radiating Regeneration",
+        description=(
+            "Share your staff's life-giving energy, healing you or up to 3 nearby "
+            "allies for $1 over 10 seconds."
+        ),
+        duration_ms=10000,
+        rank_id=10,
     )
 
     result = RotationHealerCanonicalPeriodicTimingService(path).resolve(
@@ -135,5 +166,5 @@ def test_reviewed_cadence_does_not_bypass_missing_periodic_identity(tmp_path):
     assert result.timing is None
     assert not result.timing_ready_for_runtime_binding
     assert result.unresolved == (
-        "Radiating Regeneration coefficient 1: canonical text does not prove periodic healing identity",
+        "Radiating Regeneration coefficient 1: canonical/reviewed identity does not prove periodic healing",
     )
