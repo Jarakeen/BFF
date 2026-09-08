@@ -6,6 +6,9 @@ from minmax.build_candidate import BuildCandidate
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.race_repository import RaceRepository
 from models.build_model import PlayerBuild
+from services.extreme_actual_heal_double_five_package_service import (
+    ExtremeActualHealDoubleFivePackageService,
+)
 from services.extreme_actual_heal_gear_set_candidate_service import (
     ExtremeActualHealGearSetCandidateService,
 )
@@ -61,10 +64,10 @@ class ExtremeActualHealOptimizationService:
 
     Candidate changes are materialized onto a real ``PlayerBuild`` and the full
     canonical context is rebuilt before the healing event is scored. Reviewed
-    ordinary five-piece sets and structurally legal five-piece-plus-monster
-    packages participate the same way: the gear is equipped on actual body slots
-    and its resource/power/healing effects are resolved by the shared gear
-    pipeline rather than added as an Extreme-only tooltip delta.
+    single five-piece, legal five-plus-monster, and legal double-five packages
+    are all physically equipped before canonical resource/power/healing math is
+    recalculated. Tooltip deltas are only used to bound candidate discovery,
+    never as the final score.
     """
 
     SEARCH_SCOPE = (
@@ -79,12 +82,13 @@ class ExtremeActualHealOptimizationService:
         "food/drink",
         "reviewed ordinary five-piece body-set replacement",
         "reviewed legal five-piece + two-piece monster body package",
+        "reviewed legal five-piece + five-piece body/jewelry package",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "mythic / arena-weapon / 5+5 / mixed 5+5+1 package search",
+        "mythic / arena-weapon / mixed 5+5+1 package search",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
@@ -100,6 +104,7 @@ class ExtremeActualHealOptimizationService:
         race_repository: RaceRepository | None = None,
         gear_set_candidates: ExtremeActualHealGearSetCandidateService | None = None,
         monster_packages: ExtremeActualHealMonsterPackageService | None = None,
+        double_five_packages: ExtremeActualHealDoubleFivePackageService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -116,6 +121,11 @@ class ExtremeActualHealOptimizationService:
         )
         self.monster_packages = monster_packages or (
             ExtremeActualHealMonsterPackageService(database_path)
+            if database_path
+            else None
+        )
+        self.double_five_packages = double_five_packages or (
+            ExtremeActualHealDoubleFivePackageService(database_path)
             if database_path
             else None
         )
@@ -162,36 +172,60 @@ class ExtremeActualHealOptimizationService:
 
         proxy_objective = self.optimizer.objective("healing_done")
         for pass_index in range(max(1, int(max_passes))):
-            best: tuple[float, str, BuildCandidate, ExtremeHealingEventResult, tuple[str, ...]] | None = None
+            best: tuple[
+                float,
+                str,
+                BuildCandidate,
+                ExtremeHealingEventResult,
+                tuple[str, ...],
+            ] | None = None
             candidate_build_id = f"{baseline_build_id}:extreme-actual-heal:{pass_index}"
-            candidates = list(self.optimizer._candidates(
-                current,
-                objective=proxy_objective,
-                character_id=character_id,
-                baseline_build_id=candidate_build_id,
-            ))
-            candidates.extend(self._resource_attribute_candidates(
-                current,
-                character_id=character_id,
-                baseline_build_id=candidate_build_id,
-            ))
-            candidates.extend(self._race_candidates(
-                current,
-                character_id=character_id,
-                baseline_build_id=candidate_build_id,
-            ))
+            candidates = list(
+                self.optimizer._candidates(
+                    current,
+                    objective=proxy_objective,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                )
+            )
+            candidates.extend(
+                self._resource_attribute_candidates(
+                    current,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                )
+            )
+            candidates.extend(
+                self._race_candidates(
+                    current,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                )
+            )
             if self.gear_set_candidates is not None:
-                candidates.extend(self.gear_set_candidates.build_candidates(
-                    current,
-                    character_id=character_id,
-                    baseline_build_id=candidate_build_id,
-                ))
+                candidates.extend(
+                    self.gear_set_candidates.build_candidates(
+                        current,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
+                    )
+                )
             if self.monster_packages is not None:
-                candidates.extend(self.monster_packages.build_candidates(
-                    current,
-                    character_id=character_id,
-                    baseline_build_id=candidate_build_id,
-                ))
+                candidates.extend(
+                    self.monster_packages.build_candidates(
+                        current,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
+                    )
+                )
+            if self.double_five_packages is not None:
+                candidates.extend(
+                    self.double_five_packages.build_candidates(
+                        current,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
+                    )
+                )
 
             for candidate in candidates:
                 event, candidate_unresolved = self._evaluate(
@@ -206,7 +240,8 @@ class ExtremeActualHealOptimizationService:
                 if score <= current_score + 1e-9:
                     continue
                 if best is None or score > best[0] + 1e-9 or (
-                    abs(score - best[0]) <= 1e-9 and candidate.candidate_id < best[1]
+                    abs(score - best[0]) <= 1e-9
+                    and candidate.candidate_id < best[1]
                 ):
                     best = (
                         score,
@@ -278,7 +313,9 @@ class ExtremeActualHealOptimizationService:
             entity_id=entity_id,
         )
         unresolved = tuple(context.unresolved_gear_effects) + tuple(event.unresolved)
-        return event, tuple(dict.fromkeys(message for message in unresolved if message))
+        return event, tuple(
+            dict.fromkeys(message for message in unresolved if message)
+        )
 
     @staticmethod
     def _score(event: ExtremeHealingEventResult) -> float:
@@ -309,7 +346,11 @@ class ExtremeActualHealOptimizationService:
             if before == allocation:
                 continue
             build = PlayerBuild.from_dict(baseline_build.to_dict())
-            build.AttributeHealth, build.AttributeMagicka, build.AttributeStamina = allocation
+            (
+                build.AttributeHealth,
+                build.AttributeMagicka,
+                build.AttributeStamina,
+            ) = allocation
             result.append(
                 ExtremeCompleteOptimizationService._direct_candidate(
                     build,
@@ -317,8 +358,16 @@ class ExtremeActualHealOptimizationService:
                     baseline_build_id=baseline_build_id,
                     token=f"actual-heal-attributes:{resource}",
                     path="Attributes",
-                    before={"health": before[0], "magicka": before[1], "stamina": before[2]},
-                    after={"health": allocation[0], "magicka": allocation[1], "stamina": allocation[2]},
+                    before={
+                        "health": before[0],
+                        "magicka": before[1],
+                        "stamina": before[2],
+                    },
+                    after={
+                        "health": allocation[0],
+                        "magicka": allocation[1],
+                        "stamina": allocation[2],
+                    },
                     source="extreme:actual-heal:attributes",
                 )
             )
