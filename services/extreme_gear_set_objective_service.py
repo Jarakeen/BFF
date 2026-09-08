@@ -49,6 +49,8 @@ class ExtremeGearSetObjectiveService:
         "weapon_damage",
         "spell_critical",
         "weapon_critical",
+        "detection_radius_reduction",
+        "sneak_cost_reduction",
     )
 
     _STAT_BY_OBJECTIVE = {
@@ -59,6 +61,8 @@ class ExtremeGearSetObjectiveService:
         "spell_resistance": StatId.SPELL_RESISTANCE,
         "spell_damage": StatId.SPELL_DAMAGE,
         "weapon_damage": StatId.WEAPON_DAMAGE,
+        "detection_radius_reduction": StatId.DETECTION_RADIUS_REDUCTION,
+        "sneak_cost_reduction": StatId.SNEAK_COST_REDUCTION,
     }
 
     @classmethod
@@ -106,7 +110,7 @@ class ExtremeGearSetObjectiveService:
             return value, None
 
         if effect.operation is EffectOperation.ADD_PERCENT:
-            if objective == "critical_damage":
+            if objective in {"critical_damage", "sneak_cost_reduction"}:
                 value = float(effect.value)
                 if effect.unit is EffectUnit.PERCENT:
                     value /= 100.0
