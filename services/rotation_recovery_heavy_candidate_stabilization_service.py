@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Callable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -19,6 +20,7 @@ from services.rotation_recovery_heavy_replay_service import (
 )
 from services.rotation_recovery_heavy_stabilization_service import (
     RecoveryAwareRotationGenerator,
+    RecoveryMaximumEventResolver,
     RotationRecoveryHeavyStabilizationResult,
     RotationRecoveryHeavyStabilizationService,
 )
@@ -34,17 +36,7 @@ RecoveryCandidateEvaluator = Callable[
 
 
 class RotationRecoveryHeavyCandidateStabilizationService:
-    """Stabilize recovery heavies against the real candidate hard-obligation gate.
-
-    The underlying fixed-point loop already replays sustain after verified heavy
-    restores. This composition boundary closes the next gap: every regenerated plan
-    is also re-evaluated through the caller's canonical candidate evaluation path,
-    and the resulting hard-obligation state is fed back into fixed-point identity.
-
-    The evaluator must return either the generic candidate-ranking result or the
-    build-specific effect-obligation ranking result. Soft rank, objective uptime,
-    and resource preference deltas are intentionally excluded by the state service.
-    """
+    """Stabilize recovery heavies against the real candidate hard-obligation gate."""
 
     def __init__(
         self,
@@ -70,6 +62,8 @@ class RotationRecoveryHeavyCandidateStabilizationService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyStabilizationResult:
         def hard_state(
             plan: RotationPlan,
@@ -95,6 +89,8 @@ class RotationRecoveryHeavyCandidateStabilizationService:
             reserve_assessment_resolver=reserve_assessment_resolver,
             hard_obligation_state_resolver=hard_state,
             max_iterations=max_iterations,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
 
 
