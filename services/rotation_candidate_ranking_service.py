@@ -189,10 +189,12 @@ class RotationCandidateRankingService:
                     f"required {requirement.minimum_uptime:.2%}"
                 )
         for assessment in scorecard.failed_reserve_assessments:
+            fraction = assessment.available_fraction_before_start
+            normalized = f" ({fraction:.2%} of active pool)" if fraction is not None else ""
             reasons.append(
                 "resource reserve shortfall "
                 f"{assessment.shortfall} before {assessment.demand.name!r}: "
-                f"available {assessment.available_before_start}, "
+                f"available {assessment.available_before_start}{normalized}, "
                 f"required {assessment.requirement.minimum_amount} "
                 f"{assessment.requirement.resource.value}"
             )
