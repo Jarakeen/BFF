@@ -6,6 +6,7 @@ import pytest
 
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.resource_costs import ResourceType
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.minmax_character_progression_adapter import SavedBuildProgressionResolution
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
@@ -106,6 +107,35 @@ def test_static_resource_ceiling_preserves_bar_specific_values_and_only_unifies_
     )
     assert result.uniform_maximum_amount_for(ResourceType.STAMINA) == 13000
     assert result.uniform_maximum_amount_for(ResourceType.HEALTH) == 21000
+
+
+def test_bar_swaps_project_only_real_static_resource_ceiling_changes() -> None:
+    service = RotationStaticBuildContextService(
+        progression_adapter=_ProgressionAdapter(_progression()),
+        context_factory=_ContextFactory(),
+    )
+    result = service.resolve(_build())
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=12.0,
+        actions=(
+            RotationAction(2.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+            RotationAction(5.0, 1, RotationActionKind.BAR_SWAP, bar="front"),
+            RotationAction(8.0, 2, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+    )
+
+    magicka_events = result.maximum_events_for(plan, ResourceType.MAGICKA)
+    assert [(event.time_seconds, event.maximum) for event in magicka_events] == [
+        (2.0, 31800),
+        (5.0, 32000),
+        (8.0, 31800),
+    ]
+    assert all(event.resource is ResourceType.MAGICKA for event in magicka_events)
+    assert "canonical magicka maximum" in magicka_events[0].source
+
+    assert result.maximum_events_for(plan, ResourceType.STAMINA) == ()
 
 
 def test_unresolved_progression_fails_closed_before_static_calculation() -> None:
