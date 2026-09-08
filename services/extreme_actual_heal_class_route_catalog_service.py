@@ -69,29 +69,32 @@ class ExtremeActualHealClassRouteCatalogResult:
 
 
 class ExtremeActualHealClassRouteCatalogService:
-    """Score legal class-line routes plus one selected heal on the active bar.
+    """Score legal base-class/class-line routes plus one selected active heal.
 
-    This is the first route-aware layer above the per-skill optimizer. It keeps
-    the character's base class fixed, enumerates every structurally legal
-    three-class-line configuration, discovers heals against that exact route,
-    then physically slots the selected heal into each ordinary active-bar slot
-    before whole-build scoring.
+    By default the service keeps the saved build's base class and exhaustively
+    searches structurally legal three-class-line configurations for that class.
+    ``include_base_class_changes=True`` widens discovery across all seven ESO
+    base classes, materializing each route onto a real ``PlayerBuild`` before
+    heal discovery and whole-build scoring.
+
+    Cross-base-class results deliberately remain lower bounds. The progression
+    snapshot originates from the supplied character/build, so unproven passive
+    ownership for a hypothetical alternate base class is not silently upgraded
+    to max rank. Full passive/proc coverage and hypothetical progression
+    normalization remain explicit omitted scope.
 
     The five ordinary skill positions are searched because the selected heal
     must be present for slot-counted passive math. The ultimate slot is preserved.
-    This is not yet a full multi-skill bar optimizer. Full class-line passive/proc
-    coverage also remains explicit omitted scope, so numeric route comparisons
-    are useful lower bounds rather than a false global-proof claim.
+    This is not yet a full multi-skill bar optimizer.
     """
 
     SEARCH_SCOPE = (
-        "all structurally legal class-line routes for the current base class",
+        "structurally legal class-line routes",
         "class-line-aware canonical HEAL candidate discovery per route",
         "selected heal replacement across the five ordinary active-bar slots",
         *ExtremeActualHealOptimizationService.SEARCH_SCOPE,
     )
     OMITTED_SCOPE = (
-        "base-class change",
         "full multi-skill active/back-bar combinatorial search",
         "complete class-line passive/proc coverage for every equipped route",
         "group-only buffs",
@@ -117,37 +120,57 @@ class ExtremeActualHealClassRouteCatalogService:
         *,
         active_bar: str = "front",
         max_passes: int = 24,
+        include_base_class_changes: bool = False,
     ) -> ExtremeActualHealClassRouteCatalogResult:
         progression = self._progression(baseline_build)
-        base_class = self._base_class(baseline_build)
+        baseline_class = self._base_class(baseline_build)
+        base_classes = (
+            tuple(CharacterClass)
+            if include_base_class_changes
+            else (baseline_class,)
+        )
 
         entries: list[ExtremeActualHealClassRouteEntry] = []
-        for route in self.routes.routes_for_base_class(base_class):
-            route_build = self.routes.materialize_build(baseline_build, route)
-            route_candidates = self.candidates.candidates_for_build(
-                route_build,
-                progression,
-                class_configuration=route.configuration,
-            )
-            for candidate in route_candidates:
-                entry = self._best_slot_entry(
+        for base_class in base_classes:
+            for route in self.routes.routes_for_base_class(base_class):
+                route_build = self.routes.materialize_build(baseline_build, route)
+                route_candidates = self.candidates.candidates_for_build(
                     route_build,
-                    route=route,
-                    candidate=candidate,
-                    active_bar=active_bar,
-                    max_passes=max_passes,
+                    progression,
+                    class_configuration=route.configuration,
                 )
-                entries.append(entry)
+                for candidate in route_candidates:
+                    entry = self._best_slot_entry(
+                        route_build,
+                        route=route,
+                        candidate=candidate,
+                        active_bar=active_bar,
+                        max_passes=max_passes,
+                    )
+                    entries.append(entry)
 
         ranked = tuple(sorted(entries, key=self._rank_key))
         scored = tuple(entry for entry in ranked if entry.critical_heal is not None)
         complete = tuple(entry for entry in scored if entry.mechanic_complete)
+
+        search_scope = list(self.SEARCH_SCOPE)
+        omitted_scope = list(self.OMITTED_SCOPE)
+        if include_base_class_changes:
+            search_scope.insert(0, "all seven ESO base classes")
+            omitted_scope.insert(
+                0,
+                "hypothetical alternate-base-class passive/progression normalization",
+            )
+        else:
+            search_scope.insert(0, "current saved-build base class")
+            omitted_scope.insert(0, "base-class change")
+
         return ExtremeActualHealClassRouteCatalogResult(
             entries=ranked,
             best_scored=scored[0] if scored else None,
             best_complete=complete[0] if complete else None,
-            search_scope=self.SEARCH_SCOPE,
-            omitted_scope=self.OMITTED_SCOPE,
+            search_scope=tuple(search_scope),
+            omitted_scope=tuple(omitted_scope),
         )
 
     def _best_slot_entry(
@@ -259,10 +282,13 @@ class ExtremeActualHealClassRouteCatalogService:
         )
 
     @staticmethod
-    def _rank_key(entry: ExtremeActualHealClassRouteEntry) -> tuple[float, str, tuple[str, ...], int]:
+    def _rank_key(
+        entry: ExtremeActualHealClassRouteEntry,
+    ) -> tuple[float, str, str, tuple[str, ...], int]:
         score = entry.critical_heal
         return (
             -(float(score) if score is not None else float("-inf")),
+            entry.route.base_class.value,
             entry.candidate.name.casefold(),
             entry.route.equipped_skill_lines,
             entry.slotted_index,
