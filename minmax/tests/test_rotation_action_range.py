@@ -86,6 +86,60 @@ def test_range_assessment_only_evaluates_explicit_distance_windows() -> None:
     assert result.legal
 
 
+def test_weapon_attack_range_is_kind_identified_and_bar_scoped() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
+        RotationAction(20.0, 0, RotationActionKind.LIGHT_ATTACK, bar="back"),
+        RotationAction(30.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front"),
+    )
+    windows = (
+        RotationTargetDistanceWindow("Front light too far", 9.0, 11.0, 9.0),
+        RotationTargetDistanceWindow("Back light ignored", 19.0, 21.0, 40.0),
+        RotationTargetDistanceWindow("Heavy legal", 29.0, 31.0, 4.0),
+    )
+    requirements = (
+        RotationActionRangeRequirement(
+            None,
+            maximum_range=7.0,
+            action_kind=RotationActionKind.LIGHT_ATTACK,
+            bar="front",
+        ),
+        RotationActionRangeRequirement(
+            None,
+            maximum_range=5.0,
+            action_kind=RotationActionKind.HEAVY_ATTACK,
+            bar="front",
+        ),
+    )
+
+    result = RotationActionRangeAssessor().assess(plan, requirements, windows)
+
+    assert not result.legal
+    assert len(result.violations) == 1
+    assert result.violations[0].requirement.action_kind is RotationActionKind.LIGHT_ATTACK
+    assert result.violations[0].time_seconds == 10.0
+
+
+def test_weapon_attack_range_exact_boundary_is_legal() -> None:
+    plan = _plan(
+        RotationAction(10.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front"),
+    )
+    result = RotationActionRangeAssessor().assess(
+        plan,
+        (
+            RotationActionRangeRequirement(
+                None,
+                minimum_range=2.0,
+                maximum_range=8.0,
+                action_kind=RotationActionKind.HEAVY_ATTACK,
+            ),
+        ),
+        (RotationTargetDistanceWindow("Boundary", 9.0, 11.0, 8.0),),
+    )
+
+    assert result.legal
+
+
 def test_invalid_range_evidence_and_overlapping_windows_fail_closed() -> None:
     with pytest.raises(ValueError, match="minimum range"):
         RotationActionRangeRequirement("Skill", minimum_range=-1.0, maximum_range=28.0)
@@ -93,11 +147,25 @@ def test_invalid_range_evidence_and_overlapping_windows_fail_closed() -> None:
     with pytest.raises(ValueError, match="maximum range"):
         RotationActionRangeRequirement("Skill", minimum_range=10.0, maximum_range=5.0)
 
-    with pytest.raises(ValueError, match="skill or ultimate"):
+    with pytest.raises(ValueError, match="skill, ultimate, light attack, or heavy attack"):
         RotationActionRangeRequirement(
             "Potion",
             maximum_range=28.0,
             action_kind=RotationActionKind.POTION,
+        )
+
+    with pytest.raises(ValueError, match="needs action_name"):
+        RotationActionRangeRequirement(
+            None,
+            maximum_range=28.0,
+            action_kind=RotationActionKind.SKILL,
+        )
+
+    with pytest.raises(ValueError, match="must not set action_name"):
+        RotationActionRangeRequirement(
+            "Light Attack",
+            maximum_range=28.0,
+            action_kind=RotationActionKind.LIGHT_ATTACK,
         )
 
     plan = _plan(
@@ -108,6 +176,18 @@ def test_invalid_range_evidence_and_overlapping_windows_fail_closed() -> None:
         RotationActionRangeAssessor().assess(
             plan,
             (duplicate, duplicate),
+            (RotationTargetDistanceWindow("Known", 9.0, 11.0, 20.0),),
+        )
+
+    attack_duplicate = RotationActionRangeRequirement(
+        None,
+        maximum_range=8.0,
+        action_kind=RotationActionKind.LIGHT_ATTACK,
+    )
+    with pytest.raises(ValueError, match="duplicate rotation range requirement"):
+        RotationActionRangeAssessor().assess(
+            plan,
+            (attack_duplicate, attack_duplicate),
             (RotationTargetDistanceWindow("Known", 9.0, 11.0, 20.0),),
         )
 
