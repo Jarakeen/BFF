@@ -19,6 +19,7 @@ from .resource_costs import BaseActionCost, ResourceType
 from .resource_state import StaticResourceState
 from .resource_timeline import (
     ResourceCostEvent,
+    ResourceMaximumEvent,
     ResourceTimelineResult,
     create_action_cost_events,
     run_resource_timeline,
@@ -82,6 +83,7 @@ class BuildSustainRun:
     timeline: ResourceTimelineResult
     sustain: SustainResult
     unresolved: tuple[str, ...]
+    maximum_events: tuple[ResourceMaximumEvent, ...] = ()
 
 
 def resolve_named_build_actions(
@@ -156,6 +158,7 @@ def evaluate_build_sustain(
     starting_amount: int | None = None,
     first_recovery_tick_seconds: float = 2.0,
     additional_unresolved: tuple[str, ...] = (),
+    maximum_events: tuple[ResourceMaximumEvent, ...] = (),
 ) -> BuildSustainRun:
     """Run a saved build through the verified Phase 4 sustain pipeline.
 
@@ -166,7 +169,10 @@ def evaluate_build_sustain(
     name-to-ability lookup bridge.
 
     Only events for the requested resource enter the single-resource timeline.
-    Unsupported cost or action resolution remains explicit in ``unresolved``.
+    Optional ``maximum_events`` carry caller-verified primary-resource ceiling
+    changes, such as a bar swap whose destination bar has a different canonical
+    maximum. Unsupported cost or action resolution remains explicit in
+    ``unresolved``.
     """
 
     duration = float(duration_seconds)
@@ -216,6 +222,11 @@ def evaluate_build_sustain(
         for event in restoration_events
         if event.resource is resource and event.time_seconds <= duration
     )
+    resource_maximums = tuple(
+        event
+        for event in maximum_events
+        if event.resource is resource and event.time_seconds <= duration
+    )
 
     timeline = run_resource_timeline(
         pool,
@@ -223,6 +234,7 @@ def evaluate_build_sustain(
         cost_events=tuple(cost_events),
         recovery_ticks=recovery_ticks,
         restoration_events=resource_restores,
+        maximum_events=resource_maximums,
     )
 
     return BuildSustainRun(
@@ -233,6 +245,7 @@ def evaluate_build_sustain(
         timeline=timeline,
         sustain=summarize_sustain(timeline),
         unresolved=resolved_modifiers.unresolved + tuple(additional_unresolved),
+        maximum_events=resource_maximums,
     )
 
 
@@ -250,6 +263,7 @@ def evaluate_named_build_sustain(
     activity_at: RecoveryActivityResolver | None = None,
     starting_amount: int | None = None,
     first_recovery_tick_seconds: float = 2.0,
+    maximum_events: tuple[ResourceMaximumEvent, ...] = (),
 ) -> BuildSustainRun:
     """Resolve named saved skills and run them through the Phase 4 pipeline."""
 
@@ -270,4 +284,5 @@ def evaluate_named_build_sustain(
         starting_amount=starting_amount,
         first_recovery_tick_seconds=first_recovery_tick_seconds,
         additional_unresolved=resolution.unresolved,
+        maximum_events=maximum_events,
     )
