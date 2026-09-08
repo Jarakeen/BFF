@@ -50,6 +50,57 @@ def test_static_set_bonus_projects_weapon_and_spell_damage():
     assert row.unresolved == ()
 
 
+def test_static_max_health_bonus_is_reviewed_for_health_scaling_heals():
+    gear_set = GearSet(10, "Healthy Five Piece", "Test", 5)
+    repo = _Repo(
+        [gear_set],
+        {
+            10: [
+                _bonus(10, 10, 2, "Adds 1206 Maximum Health"),
+                _bonus(11, 10, 5, "Adds 1206 Maximum Health"),
+            ]
+        },
+    )
+
+    row = ExtremeGearSetObjectiveService.candidate_for_set(
+        repo,
+        "Healthy Five Piece",
+        "max_health",
+    )
+
+    assert row.reviewed_delta == 2412.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
+
+
+def test_static_max_magicka_and_stamina_bonuses_are_reviewed():
+    magicka = GearSet(11, "Magicka Five Piece", "Test", 5)
+    stamina = GearSet(12, "Stamina Five Piece", "Test", 5)
+    repo = _Repo(
+        [magicka, stamina],
+        {
+            11: [_bonus(12, 11, 5, "Adds 1096 Maximum Magicka")],
+            12: [_bonus(13, 12, 5, "Adds 1096 Maximum Stamina")],
+        },
+    )
+
+    magicka_row = ExtremeGearSetObjectiveService.candidate_for_set(
+        repo,
+        "Magicka Five Piece",
+        "max_magicka",
+    )
+    stamina_row = ExtremeGearSetObjectiveService.candidate_for_set(
+        repo,
+        "Stamina Five Piece",
+        "max_stamina",
+    )
+
+    assert magicka_row.reviewed_delta == 1096.0
+    assert stamina_row.reviewed_delta == 1096.0
+    assert magicka_row.mechanic_complete is True
+    assert stamina_row.mechanic_complete is True
+
+
 def test_unmapped_active_bonus_preserves_known_lower_bound_and_blocker():
     gear_set = GearSet(2, "Mystery Five Piece", "Test", 5)
     repo = _Repo(
@@ -200,4 +251,4 @@ def test_unknown_objective_is_rejected():
     repo = _Repo([], {})
 
     with pytest.raises(KeyError, match="unreviewed Extreme gear-set objective"):
-        ExtremeGearSetObjectiveService.candidates_for_objective(repo, "max_health")
+        ExtremeGearSetObjectiveService.candidates_for_objective(repo, "ultimate_generation")
