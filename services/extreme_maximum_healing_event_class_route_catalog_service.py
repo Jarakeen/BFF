@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from models.build_model import PlayerBuild
 from services.extreme_actual_heal_class_route_catalog_service import (
     ExtremeActualHealClassRouteCatalogResult,
     ExtremeActualHealClassRouteCatalogService,
     ExtremeActualHealClassRouteEntry,
+)
+from services.extreme_maximum_healing_event_explanation_service import (
+    ExtremeMaximumHealingEventExplanationService,
+    ExtremeMaximumHealingEventTrace,
 )
 from services.extreme_sorcerer_blood_magic_class_route_catalog_service import (
     ExtremeSorcererBloodMagicClassRouteCatalogResult,
@@ -26,6 +30,7 @@ class ExtremeMaximumHealingEventRouteEntry:
     mechanic_complete: bool
     unresolved: tuple[str, ...]
     route_entry: ExtremeActualHealClassRouteEntry | ExtremeSorcererBloodMagicClassRouteEntry
+    trace: ExtremeMaximumHealingEventTrace = ExtremeMaximumHealingEventTrace()
 
     @property
     def route(self):
@@ -34,6 +39,21 @@ class ExtremeMaximumHealingEventRouteEntry:
     @property
     def slotted_index(self) -> int:
         return int(self.route_entry.slotted_index)
+
+
+@dataclass(frozen=True)
+class ExtremeMaximumHealingEventWinnerExplanation:
+    source_kind: str
+    source_name: str
+    event_kind: str
+    event_value: float
+    route_skill_lines: tuple[str, ...]
+    slotted_index: int
+    trace: ExtremeMaximumHealingEventTrace
+    runner_up_name: str | None
+    runner_up_value: float | None
+    margin: float | None
+    reason: str
 
 
 @dataclass(frozen=True)
@@ -56,6 +76,45 @@ class ExtremeMaximumHealingEventClassRouteCatalogResult:
             and all(entry.mechanic_complete for entry in self.entries)
         )
 
+    @property
+    def winner_explanation(self) -> ExtremeMaximumHealingEventWinnerExplanation | None:
+        winner = self.best_scored
+        if winner is None or winner.event_value is None:
+            return None
+        scored = tuple(entry for entry in self.entries if entry.event_value is not None)
+        runner_up = next((entry for entry in scored if entry is not winner), None)
+        runner_value = None if runner_up is None else float(runner_up.event_value)
+        margin = None if runner_value is None else float(winner.event_value) - runner_value
+        kind_label = (
+            "canonical maximum event"
+            if winner.event_kind == "canonical_maximum"
+            else "proved non-critical event"
+        )
+        if runner_up is None:
+            reason = (
+                f"{winner.source_name} is the only scored candidate, with a "
+                f"{kind_label} of {float(winner.event_value):.3f}."
+            )
+        else:
+            reason = (
+                f"{winner.source_name} wins with a {kind_label} of "
+                f"{float(winner.event_value):.3f}, exceeding {runner_up.source_name} "
+                f"at {runner_value:.3f} by {float(margin):.3f}."
+            )
+        return ExtremeMaximumHealingEventWinnerExplanation(
+            source_kind=winner.source_kind,
+            source_name=winner.source_name,
+            event_kind=winner.event_kind,
+            event_value=float(winner.event_value),
+            route_skill_lines=tuple(winner.route.equipped_skill_lines),
+            slotted_index=winner.slotted_index,
+            trace=winner.trace,
+            runner_up_name=None if runner_up is None else runner_up.source_name,
+            runner_up_value=runner_value,
+            margin=margin,
+            reason=reason,
+        )
+
 
 class ExtremeMaximumHealingEventClassRouteCatalogService:
     """Compare modeled route candidates by their largest legal single heal event.
@@ -72,15 +131,16 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
     recipient/event identity, not a mixture of critical-only and normal-only
     leaderboards.
 
-    This service is an aggregation boundary only. Each source catalog remains
-    authoritative for route legality, build materialization, progression, and
-    mechanic completeness.
+    Each ranked entry also carries a read-only event identity trace. The trace
+    reuses the canonical event grouper to expose the winning coefficient group,
+    recipient/event identity, and temporal scope without rerunning build search.
     """
 
     SEARCH_SCOPE = (
         "ordinary coefficient-backed maximum healing events across legal class routes",
         "Blood Magic non-critical maximum healing events across legal Dark Magic routes",
         "single event magnitude comparison across critical and explicitly non-critical heal families",
+        "winner source/route/event identity trace and runner-up margin",
     )
 
     def __init__(
@@ -88,12 +148,19 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
         *,
         ordinary: ExtremeActualHealClassRouteCatalogService | None = None,
         blood_magic: ExtremeSorcererBloodMagicClassRouteCatalogService | None = None,
+        explanations: ExtremeMaximumHealingEventExplanationService | None = None,
     ) -> None:
         self.ordinary = ordinary if ordinary is not None else ExtremeActualHealClassRouteCatalogService()
         self.blood_magic = (
             blood_magic
             if blood_magic is not None
             else ExtremeSorcererBloodMagicClassRouteCatalogService()
+        )
+        healing_events = getattr(getattr(self.ordinary, "optimizer", None), "healing_events", None)
+        self.explanations = (
+            explanations
+            if explanations is not None
+            else ExtremeMaximumHealingEventExplanationService(healing_events=healing_events)
         )
 
     def rank(
@@ -144,8 +211,8 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
             omitted_scope=omitted_scope,
         )
 
-    @staticmethod
     def _ordinary_entry(
+        self,
         entry: ExtremeActualHealClassRouteEntry,
     ) -> ExtremeMaximumHealingEventRouteEntry:
         event_value: float | None = None
@@ -155,7 +222,7 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
             if value is not None:
                 event_value = float(value)
                 event_kind = "canonical_maximum"
-        return ExtremeMaximumHealingEventRouteEntry(
+        result = ExtremeMaximumHealingEventRouteEntry(
             source_kind="ordinary_skill",
             source_name=entry.candidate.name,
             event_value=event_value,
@@ -164,13 +231,14 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
             unresolved=entry.unresolved,
             route_entry=entry,
         )
+        return replace(result, trace=self.explanations.describe(result))
 
-    @staticmethod
     def _blood_magic_entry(
+        self,
         entry: ExtremeSorcererBloodMagicClassRouteEntry,
     ) -> ExtremeMaximumHealingEventRouteEntry:
         value = entry.normal_heal
-        return ExtremeMaximumHealingEventRouteEntry(
+        result = ExtremeMaximumHealingEventRouteEntry(
             source_kind="blood_magic",
             source_name=f"Blood Magic via {entry.trigger.name}",
             event_value=None if value is None else float(value),
@@ -179,6 +247,7 @@ class ExtremeMaximumHealingEventClassRouteCatalogService:
             unresolved=entry.unresolved,
             route_entry=entry,
         )
+        return replace(result, trace=self.explanations.describe(result))
 
     @staticmethod
     def _rank_key(entry: ExtremeMaximumHealingEventRouteEntry) -> tuple[float, str, str, tuple[str, ...], int]:
