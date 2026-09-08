@@ -112,6 +112,43 @@ def _show_overview_page(owner, route: str) -> None:
         show_page(route)
 
 
+def _show_overview_team_schedule(owner) -> None:
+    """Open Roster directly on its existing Team Schedule tab."""
+    window = owner.window()
+    show_page = getattr(window, "show_page", None)
+    if not callable(show_page):
+        return
+    show_page("roster_page")
+
+    pages = getattr(window, "pages", {})
+    roster_page = pages.get("roster_page") if isinstance(pages, dict) else None
+    tabs = getattr(roster_page, "tabs", None)
+    if tabs is None:
+        return
+    for index in range(tabs.count()):
+        if tabs.tabText(index).strip().casefold() == "team schedule":
+            tabs.setCurrentIndex(index)
+            break
+
+
+def _show_overview_bookmarks(owner) -> None:
+    """Open Gear Lookup with its existing saved-set shortlist filter active."""
+    window = owner.window()
+    show_page = getattr(window, "show_page", None)
+    if not callable(show_page):
+        return
+    show_page("gear_lookup")
+
+    pages = getattr(window, "pages", {})
+    gear_page = pages.get("gear_lookup") if isinstance(pages, dict) else None
+    bookmark_filter = getattr(gear_page, "gear_bookmark_filter", None)
+    if bookmark_filter is None:
+        return
+    index = bookmark_filter.findData("bookmarked")
+    if index >= 0:
+        bookmark_filter.setCurrentIndex(index)
+
+
 def _install_mechanics() -> None:
     from ui import mechanics_page
 
@@ -264,7 +301,16 @@ def _install_overview_navigation() -> None:
         route = route_by_label.get(text)
         if route is None and text.startswith("View Full Coverage"):
             route = "console:5"
-        if route is not None:
+
+        if text == "Open Calendar":
+            button.clicked.connect(
+                lambda _checked=False, owner=self: _show_overview_team_schedule(owner)
+            )
+        elif text == "Manage Bookmarks":
+            button.clicked.connect(
+                lambda _checked=False, owner=self: _show_overview_bookmarks(owner)
+            )
+        elif route is not None:
             button.clicked.connect(
                 lambda _checked=False, target=route, owner=self: _show_overview_page(owner, target)
             )
