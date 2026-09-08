@@ -409,6 +409,12 @@ class MainWindow(QMainWindow):
         elif page_name == "stickerbook":
             self._refresh_collectibles_for_active_profile()
             self.pages["stickerbook"].refresh()
+        elif page_name == "operations_console":
+            # The overview is a long-lived page. Performance Focus goals are
+            # persisted while the user is on Capabilities, so rebuild the
+            # overview whenever it becomes visible instead of showing the card
+            # state captured when the application first launched.
+            self.pages["operations_console"].refresh()
         elif page_name == "console:4":
             self.pages["console:4"].refresh_context()
         elif page_name == "gear_lookup":
