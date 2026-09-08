@@ -155,7 +155,19 @@ class CanonicalRotationDashboardPage(RotationDashboardPage):
     ) -> RotationDashboardCanonicalCandidateResult:
         """Evaluate one already-assembled canonical encounter/build evidence bundle."""
         if not bundle.ready:
-            detail = "; ".join(bundle.unresolved) or "unspecified unresolved evidence"
+            details = [
+                str(item).strip()
+                for item in getattr(bundle, "unresolved", ())
+                if str(item).strip()
+            ]
+            for gap in getattr(bundle, "knowledge_gaps", ()):
+                summary = str(getattr(gap, "summary", "") or "").strip()
+                needed = str(getattr(gap, "needed_evidence", "") or "").strip()
+                if summary and needed:
+                    details.append(f"{summary} Bring back: {needed}")
+                elif summary:
+                    details.append(summary)
+            detail = "; ".join(details) or "unspecified unresolved evidence"
             raise ValueError(
                 "canonical rotation evidence bundle is not ready for candidate evaluation: "
                 + detail
