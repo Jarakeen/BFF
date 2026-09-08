@@ -236,10 +236,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Provide a build/context-wide canonical effect inventory that can prove all "
-                "applicable non-item potion-cooldown channels are present or absent, including "
-                "conditional skill/passive/set and scenario-specific modifiers, before "
-                "automatically promoting the aggregated value into final candidate cadence."
+                "Provide a complete build/context-wide canonical effect inventory that can "
+                "prove all applicable non-item potion-cooldown channels are present or absent, "
+                "including conditional skill/passive/set and scenario-specific modifiers, "
+                "before automatically promoting the aggregated value into final candidate cadence."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
