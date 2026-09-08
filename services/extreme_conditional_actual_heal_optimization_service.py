@@ -41,7 +41,9 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     Reviewed Arcanist ``Healing Tides`` may be activated by an explicit active
     Crux count. At reviewed U50 max rank it contributes generic Healing Done per
     active Crux, so it can increase heals from any ability family. No Crux count
-    is invented when the caller omits that scenario.
+    is invented when the caller omits that scenario. Crux-consuming Remedy
+    Cascade-family casts remain blocked from claiming this bonus until the
+    consume-versus-heal snapshot order is canonically proven.
 
     Reviewed Arcanist ``Cascading Fortune`` is an ability-specific emergency-heal
     modifier. Its beam heals for up to 50% more in proportion to the target's
@@ -74,6 +76,10 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     standalone optimization result cannot be mistaken for the ordinary standing
     maximum or for a different emergency/combat-state window.
     """
+
+    CRUX_CONSUMING_REMEDY_CASCADE_FAMILY = frozenset(
+        {"remedy cascade", "cascading fortune", "curative surge"}
+    )
 
     def __init__(
         self,
@@ -303,6 +309,22 @@ class ExtremeConditionalActualHealOptimizationService(ExtremeActualHealOptimizat
     ) -> ExtremeHealingEventResult:
         if self.active_crux is None:
             return event
+
+        tooltip_result = getattr(event, "tooltip_result", None)
+        skill = getattr(tooltip_result, "skill", None)
+        skill_name = str(getattr(skill, "name", "") or "").strip().casefold()
+        if self.active_crux > 0 and skill_name in self.CRUX_CONSUMING_REMEDY_CASCADE_FAMILY:
+            unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *event.unresolved,
+                        "Healing Tides timing is unresolved for a Crux-consuming "
+                        "Remedy Cascade-family cast; active Crux may be consumed "
+                        "before the heal snapshots Healing Done",
+                    )
+                )
+            )
+            return replace(event, unresolved=unresolved)
 
         service = self.arcanist_curative_runeforms_healing
         if service is None:
