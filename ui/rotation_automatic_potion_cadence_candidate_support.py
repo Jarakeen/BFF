@@ -68,6 +68,11 @@ class RotationAutomaticPotionCadenceCandidateSupport:
         )
         self.last_potion_cooldown_resolution: RotationBuildPotionCooldownResolution | None = None
 
+    @property
+    def static_context_service(self):
+        """Preserve the wrapped bridge's public compatibility seam."""
+        return self.canonical_candidates.static_context_service
+
     def run_effects(
         self,
         *,
