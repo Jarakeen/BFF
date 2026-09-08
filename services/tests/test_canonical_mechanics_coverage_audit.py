@@ -181,11 +181,24 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "heavy_attack:restoration" in keys
     assert "assignment:rotation_fulfillment_catalog" in keys
     assert "passives:runtime_semantics" in keys
+    assert "armor:weight_passive_semantics" in keys
     assert "gear:conditional_topology" in keys
     assert "skills:runtime_topology" in keys
     assert "consumables:runtime_resource_and_buff_policy" in keys
     assert "weapons:bash_interrupt_poison_topology" in keys
     assert "encounter:target_range_movement_topology" in keys
+
+    armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
+    assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
+    assert "armor_passive_input_resolver.py" in armor_row.evidence_source
+    assert "undaunted_passive_input_resolver.py" in armor_row.evidence_source
+
+    armor_gaps = report.dependency_gaps_for(
+        "rotation_maker",
+        ("armor:weight_passive_semantics",),
+    )
+    assert len(armor_gaps) == 1
+    assert armor_gaps[0].blocking is False
 
     assert report.gaps_for("comp_maker")
     assert report.gaps_for("rotation_maker")
