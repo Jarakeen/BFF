@@ -30,6 +30,8 @@ class RotationUltimateProjection:
     rules: tuple[UltimateScheduleRule, ...]
     unresolved: tuple[str, ...]
     resource_projections: tuple[tuple[str, UltimateResourceProjection], ...] = ()
+    spend_rules: tuple[UltimateSpendRule, ...] = ()
+    generation_events: tuple[UltimateGenerationEvent, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -107,10 +109,15 @@ class RotationUltimateService:
             if resolved is not None:
                 rules.append(resolved)
 
+        spend_rules = tuple(
+            UltimateSpendRule(skill_name=rule.skill_name, cost=rule.cost)
+            for rule in rules
+        )
         return self._finish(
             plan=plan,
             rules=tuple(rules),
             unresolved=tuple(unresolved),
+            spend_rules=spend_rules,
         )
 
     def apply_generation(
@@ -152,6 +159,10 @@ class RotationUltimateService:
             )
             return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
 
+        spend_rule = UltimateSpendRule(
+            skill_name=spend.skill_name,
+            cost=spend.cost,
+        )
         heroism_events = self.heroism_source.events(
             windows=tuple(heroism_windows),
             duration_seconds=plan.duration_seconds,
@@ -169,10 +180,7 @@ class RotationUltimateService:
         projection = self.resource_timeline.project(
             starting_amount=starting_ultimate,
             events=all_events,
-            spend_rule=UltimateSpendRule(
-                skill_name=spend.skill_name,
-                cost=spend.cost,
-            ),
+            spend_rule=spend_rule,
             duration_seconds=plan.duration_seconds,
         )
 
@@ -208,6 +216,8 @@ class RotationUltimateService:
             rules=rules,
             unresolved=tuple(unresolved),
             resource_projections=((bar, projection),),
+            spend_rules=(spend_rule,),
+            generation_events=all_events,
         )
 
     def _resolve_ultimate_spend(self, ultimate: str) -> _ResolvedUltimateSpend:
@@ -278,6 +288,8 @@ class RotationUltimateService:
         rules: tuple[UltimateScheduleRule, ...],
         unresolved: tuple[str, ...],
         resource_projections: tuple[tuple[str, UltimateResourceProjection], ...] = (),
+        spend_rules: tuple[UltimateSpendRule, ...] = (),
+        generation_events: tuple[UltimateGenerationEvent, ...] = (),
     ) -> RotationUltimateProjection:
         result = self.scheduler.apply(plan, rules) if rules else plan
         merged = self._dedupe(tuple(result.unresolved) + tuple(unresolved))
@@ -296,6 +308,8 @@ class RotationUltimateService:
             rules=rules,
             unresolved=merged,
             resource_projections=resource_projections,
+            spend_rules=spend_rules,
+            generation_events=generation_events,
         )
 
     @staticmethod
