@@ -1,0 +1,92 @@
+from minmax.character_build.character_build import CharacterBuild
+from minmax.character_build.character_class import CharacterClass
+from minmax.character_build.gear_piece import ArmorPiece, GearSlot
+from minmax.role import Role
+from services.rotation_mechanics_dependency_service import (
+    RotationMechanicsDependencyService,
+)
+
+
+def _build(**overrides) -> CharacterBuild:
+    values = dict(
+        name="dependency test",
+        character_class=CharacterClass.WARDEN,
+        role=Role.HEALER,
+    )
+    values.update(overrides)
+    return CharacterBuild(**values)
+
+
+def _keys(build: CharacterBuild, **kwargs) -> tuple[str, ...]:
+    service = RotationMechanicsDependencyService()
+    return service.keys(service.discover(character_build=build, **kwargs))
+
+
+def test_minimal_build_only_requires_structure_and_recovery_when_enabled() -> None:
+    assert _keys(_build()) == (
+        "saved_build:canonical_structure",
+        "heavy_attack:restoration",
+    )
+    assert _keys(_build(), recovery_enabled=False) == (
+        "saved_build:canonical_structure",
+    )
+
+
+def test_set_and_consumable_identity_add_only_relevant_runtime_domains() -> None:
+    build = _build(
+        armor=(
+            ArmorPiece(
+                slot=GearSlot.CHEST,
+                set_id="serpents_disdain",
+                weight="light",
+            ),
+        ),
+        potion_id="essence_of_spell_power",
+        poison_id="test_poison",
+    )
+
+    keys = _keys(build, recovery_enabled=False)
+
+    assert keys == (
+        "saved_build:canonical_structure",
+        "gear:conditional_topology",
+        "consumables:runtime_resource_and_buff_policy",
+    )
+    assert "procs:conditional_topology" not in keys
+
+
+def test_runtime_evidence_adds_passive_uptime_assignment_and_encounter_domains() -> None:
+    keys = _keys(
+        _build(),
+        passives=(object(),),
+        requirements=(object(),),
+        demands=(object(),),
+        recovery_enabled=False,
+    )
+
+    assert keys == (
+        "saved_build:canonical_structure",
+        "passives:runtime_semantics",
+        "effect_duration:build_modifiers",
+        "assignment:rotation_fulfillment_catalog",
+        "encounter:target_range_movement_topology",
+    )
+
+
+def test_dependency_reasons_are_explanatory_and_keys_are_unique() -> None:
+    service = RotationMechanicsDependencyService()
+    dependencies = service.discover(
+        character_build=_build(
+            armor=(ArmorPiece(slot=GearSlot.CHEST, set_id="serpents_disdain"),),
+            potion_id="test_potion",
+        ),
+        requirements=(object(),),
+        passives=(object(),),
+        recovery_enabled=True,
+    )
+
+    keys = service.keys(dependencies)
+    assert len(keys) == len(set(keys))
+    assert all(item.reason.strip() for item in dependencies)
+    assert any("duration" in item.reason.casefold() for item in dependencies)
+    assert any("heavy" in item.reason.casefold() for item in dependencies)
