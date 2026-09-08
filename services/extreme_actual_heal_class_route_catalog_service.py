@@ -10,6 +10,9 @@ from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationResult,
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_canonical_actual_heal_optimization_service import (
+    ExtremeCanonicalActualHealOptimizationService,
+)
 from services.extreme_heal_class_route_service import (
     ExtremeHealClassRoute,
     ExtremeHealClassRouteService,
@@ -121,7 +124,7 @@ class ExtremeActualHealClassRouteCatalogService:
         routes: ExtremeHealClassRouteService | None = None,
         progression_normalizer: ExtremeHypotheticalClassProgressionService | None = None,
     ) -> None:
-        self.optimizer = optimizer or ExtremeActualHealOptimizationService()
+        self.optimizer = optimizer or ExtremeCanonicalActualHealOptimizationService()
         resolved_path = Path(database_path or self.optimizer.optimizer.database_path)
         self.candidates = candidates or ExtremeHealSkillCandidateService(resolved_path)
         self.routes = routes or ExtremeHealClassRouteService()
