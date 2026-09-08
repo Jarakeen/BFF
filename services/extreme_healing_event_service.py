@@ -395,7 +395,7 @@ class ExtremeHealingEventService:
         context: BuildCalculationContext,
     ) -> tuple[float, tuple[str, ...]]:
         active_bar = str(getattr(context, "active_bar", "front") or "front")
-        multiplier = 1.0
+        healing_done_bonus = 0.0
         unresolved: list[str] = []
 
         progression = getattr(context, "progression", None)
@@ -405,17 +405,19 @@ class ExtremeHealingEventService:
                 progression=progression,
                 active_bar=active_bar,
             )
-            multiplier *= siphoner.multiplier
+            healing_done_bonus += float(siphoner.multiplier) - 1.0
             unresolved.extend(siphoner.unresolved)
 
         living_death = self.necromancer_living_death_slotted_healing.resolve(
             build=build,
             active_bar=active_bar,
         )
-        multiplier *= living_death.multiplier
+        healing_done_bonus += float(living_death.multiplier) - 1.0
         unresolved.extend(living_death.unresolved)
 
-        return multiplier, tuple(dict.fromkeys(message for message in unresolved if message))
+        return 1.0 + healing_done_bonus, tuple(
+            dict.fromkeys(message for message in unresolved if message)
+        )
 
     def _ability_family_healing_multiplier(
         self,
