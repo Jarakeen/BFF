@@ -15,6 +15,7 @@ from minmax.gear_set_repository import GearSetRepository
 from minmax.jewelry_cost_modifier_repository import JewelryCostModifierRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from minmax.race_repository import RaceRepository
+from minmax.recovery_timing import DisplayedRecoveryResolver
 from minmax.resource_costs import ResourceType
 from minmax.resource_timeline import ResourceMaximumEvent
 from minmax.restoration_events import ResourceRestorationEvent
@@ -35,13 +36,7 @@ class RotationSustainProjection:
 
 
 class RotationSustainService:
-    """Evaluate a generated rotation through the existing Phase 4 sustain engine.
-
-    The service owns only the bridge from ``RotationPlan`` scheduled skill actions
-    into Phase 4 ``NamedBuildAction`` inputs. Cost resolution, build modifiers,
-    recovery timing, restoration events, resource-ceiling events, and resource-state
-    math remain authoritative in Phase 4.
-    """
+    """Evaluate a generated rotation through the existing Phase 4 sustain engine."""
 
     def __init__(
         self,
@@ -71,17 +66,14 @@ class RotationSustainService:
         restoration_events: tuple[ResourceRestorationEvent, ...] = (),
         maximum_events: tuple[ResourceMaximumEvent, ...] = (),
         calculation_context: BuildCalculationContext | None = None,
+        displayed_recovery_at: DisplayedRecoveryResolver | None = None,
     ) -> RotationSustainProjection:
-        """Evaluate one rotation/resource with only caller-verified temporal evidence.
+        """Evaluate one rotation/resource with caller-verified temporal evidence.
 
-        Heavy attacks, potions, synergies, and other restore sources are not
-        inferred from action names here. A caller that has already proven an exact
-        restoration or maximum-resource transition may pass it explicitly; the
-        Phase 4 timeline then owns ordering, capping, waste, clipping, and shortfall.
-
-        Canonical callers may also pass the already-resolved static front-bar
-        ``BuildCalculationContext`` so sustain reuses the exact progression/passive
-        snapshot instead of rebuilding a parallel static context.
+        Canonical callers may provide the already-resolved front-bar static context,
+        resource-ceiling events, and a time-aware displayed-recovery resolver. The
+        Phase 4 sustain engine remains authoritative for tick cadence, action costs,
+        ordering, clipping, waste, and shortfall.
         """
 
         self._validate_identity(build, plan)
@@ -122,6 +114,7 @@ class RotationSustainService:
             ),
             restoration_events=tuple(restoration_events),
             maximum_events=tuple(maximum_events),
+            displayed_recovery_at=displayed_recovery_at,
         )
 
         unresolved = self._dedupe(
@@ -140,14 +133,6 @@ class RotationSustainService:
 
     @staticmethod
     def named_actions(plan: RotationPlan) -> tuple[NamedBuildAction, ...]:
-        """Project only resource-cost-bearing named ability actions.
-
-        Light attacks, heavy attacks, waits, bar swaps, and potions are
-        intentionally excluded. Verified temporal resource consequences enter the
-        Phase 4 timeline through explicit event inputs rather than action-name
-        inference.
-        """
-
         return tuple(
             NamedBuildAction(
                 time_seconds=action.time_seconds,
@@ -160,8 +145,6 @@ class RotationSustainService:
 
     @staticmethod
     def timeline_series(run: BuildSustainRun) -> tuple[tuple[float, float], ...]:
-        """Return graph-ready resource state including the initial state."""
-
         points: list[tuple[float, float]] = [(0.0, float(run.timeline.starting_amount))]
         points.extend(
             (float(event.time_seconds), float(event.after))
@@ -177,15 +160,6 @@ class RotationSustainService:
             raise ValueError("rotation plan build identity does not match selected build")
 
     def _progression(self, build: PlayerBuild) -> tuple[CharacterProgression, tuple[str, ...]]:
-        """Prefer canonical character-owned progression and label compatibility inference.
-
-        The canonical adapter is authoritative when it resolves explicit owned
-        skill lines. Legacy catalogs may still contain an otherwise valid character
-        record with empty progression. In that case the historical equipped-armor
-        inference remains only as a compatibility path and is reported explicitly
-        because armor-line ownership can affect action costs.
-        """
-
         resolved = self.progression_adapter.resolve(build)
         if resolved.resolved and resolved.progression.owned_skill_lines:
             return resolved.progression, tuple(resolved.unresolved)
