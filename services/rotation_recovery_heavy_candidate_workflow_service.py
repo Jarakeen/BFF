@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from minmax.build_calculation_context import BuildCalculationContext
 from minmax.character_build.character_build import CharacterBuild
 from minmax.character_build.passive_grant import PassiveGrant
 from minmax.resource_costs import ResourceType
@@ -20,24 +21,18 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_recovery_heavy_stabilization_service import (
+    RecoveryMaximumEventResolver,
+)
 
 
 class RotationRecoveryHeavyCandidateWorkflowService:
     """Compose recovery stabilization with canonical final-family evaluation.
 
-    This is the executable service boundary for the recovery-aware candidate family
-    workflow. It removes the remaining caller glue between the fixed-point
-    orchestrator and the final-family evaluator while preserving their separate
-    responsibilities.
-
-    ``PlayerBuild`` remains explicit for recovery replay/stabilization and
-    ``CharacterBuild`` remains explicit for build-aware effect timing. They are not
-    silently converted or treated as interchangeable models. Callers that need
-    effect obligations must supply both pieces of canonical build evidence.
-
-    No encounter requirement, recovery threshold, restore amount, reserve policy,
-    effect identity, uptime floor, passive, set mechanic, or strategy semantic is
-    inferred here.
+    Static calculation context and optional per-plan resource-ceiling evidence stay
+    explicit through this boundary. The workflow does not infer them from role or
+    build labels; callers that have canonical evidence may provide it, while legacy
+    callers retain the historical static-resource behavior.
     """
 
     def __init__(
@@ -65,6 +60,8 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.generic_evaluator(
             scorecard_resolver=scorecard_resolver,
@@ -79,6 +76,8 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             restoration_resolver=restoration_resolver,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
 
     def run_effects(
@@ -96,6 +95,8 @@ class RotationRecoveryHeavyCandidateWorkflowService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver,
         reserve_assessment_resolver: RecoveryReserveAssessmentResolver | None = None,
         max_iterations: int = 6,
+        calculation_context: BuildCalculationContext | None = None,
+        maximum_event_resolver: RecoveryMaximumEventResolver | None = None,
     ) -> RotationRecoveryHeavyCandidateOrchestrationResult:
         final_evaluator = self.final_family_service.effect_evaluator(
             build=character_build,
@@ -113,6 +114,8 @@ class RotationRecoveryHeavyCandidateWorkflowService:
             restoration_resolver=restoration_resolver,
             reserve_assessment_resolver=reserve_assessment_resolver,
             max_iterations=max_iterations,
+            calculation_context=calculation_context,
+            maximum_event_resolver=maximum_event_resolver,
         )
 
 
