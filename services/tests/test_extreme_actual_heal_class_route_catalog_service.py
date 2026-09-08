@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -99,9 +100,20 @@ class _AllBaseRoutes:
         return result
 
 
+class _ProgressionNormalizer:
+    def normalize(self, progression, route):
+        marker = 9 if route.base_class is CharacterClass.TEMPLAR else 7
+        return replace(
+            progression,
+            owned_skill_lines=tuple(route.equipped_skill_lines),
+            passive_ranks={"Route Passive": marker},
+        )
+
+
 class _Candidates:
     def candidates_for_build(self, build, progression, *, class_configuration=None, include_blocked=False):
-        _ = progression, include_blocked
+        _ = include_blocked
+        assert progression.passive_rank("Route Passive") == 7
         lines = set(class_configuration.effective_skill_lines(CharacterClass.WARDEN))
         if "restoring_light" in lines:
             return (_candidate("Breath of Life", skill_line="Restoring Light", class_type="Templar"),)
@@ -110,10 +122,12 @@ class _Candidates:
 
 class _AllBaseCandidates:
     def candidates_for_build(self, build, progression, *, class_configuration=None, include_blocked=False):
-        _ = progression, class_configuration, include_blocked
+        _ = class_configuration, include_blocked
         if build.EsoClass == CharacterClass.TEMPLAR.value:
+            assert progression.passive_rank("Route Passive") == 9
             return (_candidate("Breath of Life", skill_line="Restoring Light", class_type="Templar"),)
         if build.EsoClass == CharacterClass.WARDEN.value:
+            assert progression.passive_rank("Route Passive") == 7
             return (_candidate("Budding Seeds", skill_line="Green Balance", class_type="Warden"),)
         return ()
 
@@ -126,15 +140,24 @@ class _Optimizer:
                 canonical=SimpleNamespace(catalog_service=object())
             ),
         )
+        self.progression_overrides = []
 
-    def optimize(self, build, entity_id, *, active_bar="front", max_passes=24):
+    def optimize(
+        self,
+        build,
+        entity_id,
+        *,
+        active_bar="front",
+        max_passes=24,
+        progression_override=None,
+    ):
         _ = max_passes
+        assert progression_override is not None
+        self.progression_overrides.append(progression_override)
         skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
         slot = next(index for index, name in enumerate(skills[:5]) if name.casefold().replace(" ", "_") == entity_id)
         subclass = "restoring_light" in build.ClassSkillLines
         base = 2000.0 if subclass else 1000.0
-        # Deliberately prefer slot 3 so the service proves that it evaluates all
-        # ordinary positions rather than replacing one arbitrary slot forever.
         score = base + (100.0 if slot == 3 else float(slot))
         event = SimpleNamespace(critical_heal=score)
         return SimpleNamespace(
@@ -145,12 +168,23 @@ class _Optimizer:
 
 
 class _AllBaseOptimizer(_Optimizer):
-    def optimize(self, build, entity_id, *, active_bar="front", max_passes=24):
+    def optimize(
+        self,
+        build,
+        entity_id,
+        *,
+        active_bar="front",
+        max_passes=24,
+        progression_override=None,
+    ):
         _ = entity_id, max_passes
+        assert progression_override is not None
+        self.progression_overrides.append(progression_override)
         skills = build.BackBarSkills if active_bar == "back" else build.FrontBarSkills
         slot = next(index for index, name in enumerate(skills[:5]) if name)
+        route_passive = float(progression_override.passive_rank("Route Passive") or 0)
         base = 3000.0 if build.EsoClass == CharacterClass.TEMPLAR.value else 1500.0
-        event = SimpleNamespace(critical_heal=base + float(slot))
+        event = SimpleNamespace(critical_heal=base + route_passive + float(slot))
         return SimpleNamespace(
             optimized_event=event,
             mechanic_complete=True,
@@ -176,6 +210,15 @@ def _install_progression(monkeypatch):
     monkeypatch.setattr(module, "MinmaxCharacterProgressionAdapter", _Adapter)
 
 
+def _service(*, optimizer, candidates, routes):
+    return ExtremeActualHealClassRouteCatalogService(
+        optimizer=optimizer,
+        candidates=candidates,
+        routes=routes,
+        progression_normalizer=_ProgressionNormalizer(),
+    )
+
+
 def test_route_catalog_scores_subclass_heal_on_materialized_route(monkeypatch):
     _install_progression(monkeypatch)
     baseline = PlayerBuild(
@@ -183,8 +226,9 @@ def test_route_catalog_scores_subclass_heal_on_materialized_route(monkeypatch):
         FrontBarSkills=["Old 1", "Old 2", "Old 3", "Old 4", "Old 5", "Ultimate"],
         ClassMasteryAbilityIds=[111, 222],
     )
-    service = ExtremeActualHealClassRouteCatalogService(
-        optimizer=_Optimizer(),
+    optimizer = _Optimizer()
+    service = _service(
+        optimizer=optimizer,
         candidates=_Candidates(),
         routes=_Routes(),
     )
@@ -204,6 +248,8 @@ def test_route_catalog_scores_subclass_heal_on_materialized_route(monkeypatch):
         "storm_calling",
     }
     assert result.best_scored.candidate_build.ClassMasteryAbilityIds == []
+    assert optimizer.progression_overrides
+    assert all(item.passive_rank("Route Passive") == 7 for item in optimizer.progression_overrides)
 
 
 def test_route_catalog_searches_all_five_ordinary_slots_and_preserves_ultimate(monkeypatch):
@@ -212,7 +258,7 @@ def test_route_catalog_searches_all_five_ordinary_slots_and_preserves_ultimate(m
         EsoClass="Warden",
         FrontBarSkills=["A", "B", "C", "D", "E", "Ultimate"],
     )
-    service = ExtremeActualHealClassRouteCatalogService(
+    service = _service(
         optimizer=_Optimizer(),
         candidates=_Candidates(),
         routes=_Routes(),
@@ -227,7 +273,7 @@ def test_route_catalog_searches_all_five_ordinary_slots_and_preserves_ultimate(m
 
 def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_incomplete(monkeypatch):
     _install_progression(monkeypatch)
-    service = ExtremeActualHealClassRouteCatalogService(
+    service = _service(
         optimizer=_Optimizer(),
         candidates=_Candidates(),
         routes=_Routes(),
@@ -240,17 +286,19 @@ def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_inc
     assert result.global_maximum_proven is False
     assert "base-class change" in result.omitted_scope
     assert "complete class-line passive/proc coverage for every equipped route" in result.omitted_scope
+    assert "hypothetical selected-class-line max progression normalization" in result.search_scope
     assert "selected heal replacement across the five ordinary active-bar slots" in result.search_scope
 
 
-def test_route_catalog_can_search_all_base_classes_without_claiming_normalized_progression(monkeypatch):
+def test_route_catalog_searches_all_base_classes_with_normalized_progression(monkeypatch):
     _install_progression(monkeypatch)
     baseline = PlayerBuild(
         EsoClass="Warden",
         FrontBarSkills=["", "", "", "", "", "Ultimate"],
     )
-    service = ExtremeActualHealClassRouteCatalogService(
-        optimizer=_AllBaseOptimizer(),
+    optimizer = _AllBaseOptimizer()
+    service = _service(
+        optimizer=optimizer,
         candidates=_AllBaseCandidates(),
         routes=_AllBaseRoutes(),
     )
@@ -266,6 +314,8 @@ def test_route_catalog_can_search_all_base_classes_without_claiming_normalized_p
     assert result.best_scored.candidate.name == "Breath of Life"
     assert result.best_scored.candidate_build.EsoClass == CharacterClass.TEMPLAR.value
     assert "all seven ESO base classes" in result.search_scope
+    assert "hypothetical selected-class-line max progression normalization" in result.search_scope
     assert "base-class change" not in result.omitted_scope
-    assert "hypothetical alternate-base-class passive/progression normalization" in result.omitted_scope
+    assert "hypothetical alternate-base-class passive/progression normalization" not in result.omitted_scope
+    assert any(item.passive_rank("Route Passive") == 9 for item in optimizer.progression_overrides)
     assert result.global_maximum_proven is False
