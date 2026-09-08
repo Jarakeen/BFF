@@ -11,16 +11,42 @@ from .restoration_events import ResourceRestorationEvent, apply_resource_restora
 
 
 class ResourceTimelineEventKind(str, Enum):
+    RESOURCE_MAXIMUM = "resource_maximum"
     ACTION_COST = "action_cost"
     RECOVERY_TICK = "recovery_tick"
     RESTORATION = "restoration"
 
 
 _EVENT_PRIORITY = {
-    ResourceTimelineEventKind.ACTION_COST: 0,
-    ResourceTimelineEventKind.RECOVERY_TICK: 1,
-    ResourceTimelineEventKind.RESTORATION: 2,
+    ResourceTimelineEventKind.RESOURCE_MAXIMUM: 0,
+    ResourceTimelineEventKind.ACTION_COST: 1,
+    ResourceTimelineEventKind.RECOVERY_TICK: 2,
+    ResourceTimelineEventKind.RESTORATION: 3,
 }
+
+
+@dataclass(frozen=True)
+class ResourceMaximumEvent:
+    """One verified change to the active maximum of a primary resource pool."""
+
+    time_seconds: float
+    resource: ResourceType
+    maximum: int
+    source: str
+
+    def __post_init__(self) -> None:
+        if self.time_seconds < 0:
+            raise ValueError(
+                f"Resource maximum event time cannot be negative: {self.time_seconds}"
+            )
+        if self.amount_is_invalid:
+            raise ValueError(f"Resource maximum cannot be negative: {self.maximum}")
+        if not str(self.source or "").strip():
+            raise ValueError("Resource maximum event requires a source")
+
+    @property
+    def amount_is_invalid(self) -> bool:
+        return int(self.maximum) < 0
 
 
 @dataclass(frozen=True)
@@ -54,6 +80,9 @@ class AppliedResourceTimelineEvent:
     after: int
     shortfall: int = 0
     wasted_restore: int = 0
+    maximum_before: int | None = None
+    maximum_after: int | None = None
+    clipped_amount: int = 0
 
 
 @dataclass(frozen=True)
@@ -64,6 +93,7 @@ class ResourceTimelineResult:
     starting_amount: int
     ending_amount: int
     events: tuple[AppliedResourceTimelineEvent, ...]
+    ending_maximum: int | None = None
 
     @property
     def total_shortfall(self) -> int:
@@ -100,27 +130,50 @@ def run_resource_timeline(
     cost_events: tuple[ResourceCostEvent, ...] = (),
     recovery_ticks: tuple[ScheduledRecoveryTick, ...] = (),
     restoration_events: tuple[ResourceRestorationEvent, ...] = (),
+    maximum_events: tuple[ResourceMaximumEvent, ...] = (),
 ) -> ResourceTimelineResult:
     """Apply verified Phase 4 resource events in deterministic time order.
 
-    This first 4E timeline intentionally models one resource pool at a time.
-    Events at the same timestamp use the established sustain-flow ordering:
+    This timeline models one primary resource at a time. Callers may optionally
+    supply verified maximum-resource changes, such as a bar swap that activates a
+    different canonical maximum. At the same timestamp the active ceiling changes
+    before costs, recovery, and restoration so destination-bar state governs later
+    resource consequences at that timestamp::
 
-        action cost -> recovery tick -> restoration event
+        resource maximum -> action cost -> recovery tick -> restoration event
 
-    A planned action whose cost exceeds the current pool records a shortfall and
-    floors the resource at zero. The later 4F sustain-result layer will interpret
-    that shortfall as a failure point; this timeline only records state changes.
+    Lowering the maximum clips the current amount to the new ceiling and records the
+    clipped amount explicitly. Raising the maximum never grants resource by itself.
+    Existing callers that omit ``maximum_events`` retain the historical static-pool
+    behavior.
     """
 
     current = int(starting_amount)
-    if current < 0 or current > pool.maximum:
+    current_maximum = int(pool.maximum)
+    if current < 0 or current > current_maximum:
         raise ValueError(
-            f"Starting {pool.resource.value} must be between 0 and {pool.maximum}: {current}"
+            f"Starting {pool.resource.value} must be between 0 and {current_maximum}: {current}"
         )
 
     queued: list[tuple[float, int, int, ResourceTimelineEventKind, object]] = []
     sequence = 0
+
+    for event in maximum_events:
+        if event.resource is not pool.resource:
+            raise ValueError(
+                "Resource maximum event does not match pool: "
+                f"{event.resource.value} != {pool.resource.value}"
+            )
+        queued.append(
+            (
+                event.time_seconds,
+                _EVENT_PRIORITY[ResourceTimelineEventKind.RESOURCE_MAXIMUM],
+                sequence,
+                ResourceTimelineEventKind.RESOURCE_MAXIMUM,
+                event,
+            )
+        )
+        sequence += 1
 
     for event in cost_events:
         if event.resource is not pool.resource:
@@ -160,6 +213,35 @@ def run_resource_timeline(
     applied: list[AppliedResourceTimelineEvent] = []
     for _time, _priority, _sequence, kind, raw_event in sorted(queued, key=lambda item: item[:3]):
         before = current
+        maximum_before = current_maximum
+
+        if kind is ResourceTimelineEventKind.RESOURCE_MAXIMUM:
+            event = raw_event
+            assert isinstance(event, ResourceMaximumEvent)
+            current_maximum = int(event.maximum)
+            clipped = max(0, current - current_maximum)
+            current = min(current, current_maximum)
+            applied.append(
+                AppliedResourceTimelineEvent(
+                    time_seconds=event.time_seconds,
+                    kind=kind,
+                    source=event.source,
+                    before=before,
+                    attempted_change=0,
+                    applied_change=current - before,
+                    after=current,
+                    maximum_before=maximum_before,
+                    maximum_after=current_maximum,
+                    clipped_amount=clipped,
+                )
+            )
+            continue
+
+        active_pool = StaticResourcePool(
+            resource=pool.resource,
+            maximum=current_maximum,
+            displayed_recovery=pool.displayed_recovery,
+        )
 
         if kind is ResourceTimelineEventKind.ACTION_COST:
             event = raw_event
@@ -178,6 +260,8 @@ def run_resource_timeline(
                     applied_change=-spent,
                     after=current,
                     shortfall=shortfall,
+                    maximum_before=maximum_before,
+                    maximum_after=current_maximum,
                 )
             )
             continue
@@ -185,7 +269,7 @@ def run_resource_timeline(
         if kind is ResourceTimelineEventKind.RECOVERY_TICK:
             event = raw_event
             assert isinstance(event, ScheduledRecoveryTick)
-            result = apply_scheduled_recovery_tick(pool, current, event)
+            result = apply_scheduled_recovery_tick(active_pool, current, event)
             current = result.after
             applied.append(
                 AppliedResourceTimelineEvent(
@@ -197,13 +281,19 @@ def run_resource_timeline(
                     applied_change=result.applied_restore,
                     after=current,
                     wasted_restore=result.attempted_restore - result.applied_restore,
+                    maximum_before=maximum_before,
+                    maximum_after=current_maximum,
                 )
             )
             continue
 
         event = raw_event
         assert isinstance(event, ResourceRestorationEvent)
-        result = apply_resource_restoration_event(pool, current_amount=current, event=event)
+        result = apply_resource_restoration_event(
+            active_pool,
+            current_amount=current,
+            event=event,
+        )
         current = result.resulting_amount
         applied.append(
             AppliedResourceTimelineEvent(
@@ -215,6 +305,8 @@ def run_resource_timeline(
                 applied_change=result.applied_restore,
                 after=current,
                 wasted_restore=result.wasted_restore,
+                maximum_before=maximum_before,
+                maximum_after=current_maximum,
             )
         )
 
@@ -223,4 +315,5 @@ def run_resource_timeline(
         starting_amount=int(starting_amount),
         ending_amount=current,
         events=tuple(applied),
+        ending_maximum=current_maximum,
     )
