@@ -20,10 +20,10 @@ class ExtremeSorcererSkillComponentRepository:
     not yet persisted as HEAL classifications. This repository overlays only the
     exact max-rank skill-rank/coefficient pairs proven by the read-only U50 audit.
 
-    Crit eligibility is deliberately left unresolved because the local corpus
-    proves recipient/event identity but does not prove whether these concrete
-    heal components can critically heal. The canonical event scorer may therefore
-    compute a normal heal while retaining an explicit critical-heal blocker.
+    These rows are ordinary active-skill HEAL components, so they use the
+    project's reviewed normal-skill critical rule: ordinary skill damage/healing
+    is crit-eligible, while proc/set and special-scaling exceptions are handled
+    by their own source-specific evaluators.
 
     Dark Exchange-family and Surge-family skills are not included because the
     local canonical rows expose no coefficient math for their healing. They remain
@@ -43,8 +43,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Winged Twilight coefficient-local friendly-target heal wording",
+            can_crit=True,
+            source="reviewed U50 Winged Twilight identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.ALLY,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -57,8 +57,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Winged Twilight coefficient-local pet-self heal wording",
+            can_crit=True,
+            source="reviewed U50 Winged Twilight identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.PET,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -71,8 +71,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=True,
-            can_crit=None,
-            source="reviewed U50 Twilight Matriarch coefficient-local two-friendly-target heal wording",
+            can_crit=True,
+            source="reviewed U50 Twilight Matriarch identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.GROUP,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -85,8 +85,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Twilight Matriarch coefficient-local pet-self heal wording",
+            can_crit=True,
+            source="reviewed U50 Twilight Matriarch identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.PET,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -99,8 +99,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Unstable Clannfear coefficient-local player-self heal wording",
+            can_crit=True,
+            source="reviewed U50 Unstable Clannfear identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.SELF,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -113,8 +113,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Unstable Clannfear coefficient-local pet-self heal wording",
+            can_crit=True,
+            source="reviewed U50 Unstable Clannfear identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.PET,
             heal_temporal_scope=HealTemporalScope.DIRECT,
@@ -127,8 +127,8 @@ class ExtremeSorcererSkillComponentRepository:
             effect_kind=SkillEffectKind.HEAL,
             is_dot=False,
             is_aoe=False,
-            can_crit=None,
-            source="reviewed U50 Regenerative Ward coefficient-local player-self heal wording",
+            can_crit=True,
+            source="reviewed U50 Regenerative Ward identity + canonical normal active-skill crit rule",
             confidence=1.0,
             heal_recipient_scope=HealRecipientScope.SELF,
             heal_temporal_scope=HealTemporalScope.DIRECT,
