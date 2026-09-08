@@ -15,7 +15,7 @@ from services.rotation_healer_u50_skill_component_repository import (
 
 @dataclass(frozen=True)
 class RotationHealerResolvedHealEvent:
-    """One verified direct healing component at a scheduled cast time.
+    """One verified direct healing component at a scheduled event time.
 
     ``modeled_heal`` is the canonical modeled actual-effect value for the
     component before target-specific received-heal consequences such as missing
@@ -32,12 +32,23 @@ class RotationHealerResolvedHealEvent:
 
 @dataclass(frozen=True)
 class RotationHealerPeriodicHealSeed:
-    """Verified periodic-heal component awaiting canonical runtime timing.
+    """Verified periodic-heal component awaiting canonical runtime timing."""
 
-    A coefficient proves the per-component modeled value, not how many ticks
-    occur, when the first tick lands, refresh/overwrite behavior, target lifetime,
-    or encounter-effective coverage. Those semantics belong to a later runtime
-    scheduler and must not be guessed here.
+    time_seconds: float
+    sequence: int
+    source_name: str
+    coefficient_number: int
+    modeled_heal: float
+
+
+@dataclass(frozen=True)
+class RotationHealerDelayedHealSeed:
+    """Verified delayed-heal component awaiting a source-backed delay.
+
+    The action timestamp is the activation time, not the heal time. A separate
+    delayed-runtime resolver must prove the offset before the component may become
+    a timed healing event. This prevents delayed blooms from being counted as
+    direct cast-time healing.
     """
 
     time_seconds: float
@@ -51,16 +62,16 @@ class RotationHealerPeriodicHealSeed:
 class RotationHealerActionHealingProjection:
     direct_events: tuple[RotationHealerResolvedHealEvent, ...]
     periodic_seeds: tuple[RotationHealerPeriodicHealSeed, ...]
-    unresolved: tuple[str, ...]
+    delayed_seeds: tuple[RotationHealerDelayedHealSeed, ...] = ()
+    unresolved: tuple[str, ...] = ()
 
 
 class RotationHealerActionHealingService:
     """Project scheduled healer skill actions into canonical healing consequences.
 
-    Direct heals may attach to cast time. Periodic heals become seeds for the
-    recurring runtime scheduler. Delayed and channel-tick healing remain explicit
-    blockers until their distinct event timing is modeled; they must never be
-    collapsed into direct-at-cast consequences merely because ``is_dot`` is false.
+    Direct heals may attach to cast time. Periodic heals become recurring-runtime
+    seeds. Delayed heals become delayed-runtime seeds. Channel-tick healing remains
+    an explicit blocker until its distinct event timing is modeled.
     """
 
     def __init__(
@@ -86,6 +97,7 @@ class RotationHealerActionHealingService:
     ) -> RotationHealerActionHealingProjection:
         direct_events: list[RotationHealerResolvedHealEvent] = []
         periodic_seeds: list[RotationHealerPeriodicHealSeed] = []
+        delayed_seeds: list[RotationHealerDelayedHealSeed] = []
         unresolved: list[str] = []
 
         for action in plan.actions:
@@ -154,12 +166,6 @@ class RotationHealerActionHealingService:
                     continue
 
                 temporal = classification.heal_temporal_scope
-                if temporal is HealTemporalScope.DELAYED:
-                    unresolved.append(
-                        f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
-                        "delayed heal runtime timing is not yet modeled"
-                    )
-                    continue
                 if temporal is HealTemporalScope.CHANNEL_TICK:
                     unresolved.append(
                         f"{action.name} coefficient {number} at {action.time_seconds:g}s: "
@@ -168,6 +174,18 @@ class RotationHealerActionHealingService:
                     continue
 
                 value = actual_by_number.get(number, float(trace.final_value))
+                if temporal is HealTemporalScope.DELAYED:
+                    delayed_seeds.append(
+                        RotationHealerDelayedHealSeed(
+                            time_seconds=float(action.time_seconds),
+                            sequence=int(action.sequence),
+                            source_name=action.name,
+                            coefficient_number=number,
+                            modeled_heal=value,
+                        )
+                    )
+                    continue
+
                 if temporal is HealTemporalScope.PERIODIC or (
                     temporal is None and classification.is_dot is True
                 ):
@@ -201,31 +219,16 @@ class RotationHealerActionHealingService:
                     "direct-versus-periodic heal identity unavailable"
                 )
 
-        direct = tuple(
-            sorted(
-                direct_events,
-                key=lambda item: (
-                    item.time_seconds,
-                    item.sequence,
-                    item.source_name.casefold(),
-                    item.coefficient_number,
-                ),
-            )
-        )
-        periodic = tuple(
-            sorted(
-                periodic_seeds,
-                key=lambda item: (
-                    item.time_seconds,
-                    item.sequence,
-                    item.source_name.casefold(),
-                    item.coefficient_number,
-                ),
-            )
+        sort_key = lambda item: (
+            item.time_seconds,
+            item.sequence,
+            item.source_name.casefold(),
+            item.coefficient_number,
         )
         return RotationHealerActionHealingProjection(
-            direct_events=direct,
-            periodic_seeds=periodic,
+            direct_events=tuple(sorted(direct_events, key=sort_key)),
+            periodic_seeds=tuple(sorted(periodic_seeds, key=sort_key)),
+            delayed_seeds=tuple(sorted(delayed_seeds, key=sort_key)),
             unresolved=self._dedupe(tuple(unresolved)),
         )
 
