@@ -35,6 +35,8 @@ def _database(tmp_path):
                 (201, "Glyph of Test Harm"),
                 (300, "Glyph of Strange Things"),
                 (400, "Glyph of Increase Magical Harm"),
+                (500, "Lesser Glyph of Bashing"),
+                (501, "Truly Superb Glyph of Bashing"),
             ],
         )
         connection.executemany(
@@ -51,6 +53,8 @@ def _database(tmp_path):
                 (5, 201, "stamina_recovery", 10, 160, "flat", "Max tier Recovery"),
                 (6, 300, "not_a_real_engine_stat", 1, 2, "flat", "Unsupported"),
                 (7, 400, "weapon_spell_damage", 10, 174, "flat", "Adds damage"),
+                (8, 500, "bash_damage", 10, 90, "flat", "Bash attacks deal more damage"),
+                (9, 501, "bash_damage", 20, 180, "flat", "Bash attacks deal more damage"),
             ],
         )
     return database_path
@@ -94,7 +98,6 @@ def test_unsupported_effect_type_is_explicit(tmp_path):
         repository.get_jewelry_glyph_effect(300)
 
 
-
 def test_combined_weapon_spell_damage_glyph_maps_to_both_stats(tmp_path):
     repository = JewelryGlyphEffectRepository(_database(tmp_path))
 
@@ -107,3 +110,25 @@ def test_combined_weapon_spell_damage_glyph_maps_to_both_stats(tmp_path):
         StatId.WEAPON_DAMAGE: 174,
         StatId.SPELL_DAMAGE: 174,
     }
+
+
+def test_effect_type_lookup_returns_strongest_canonical_bash_glyph(tmp_path):
+    repository = JewelryGlyphEffectRepository(_database(tmp_path))
+
+    effects = repository.get_strongest_jewelry_glyph_effect_by_type("  BASH_DAMAGE  ")
+
+    assert len(effects) == 1
+    assert effects[0].stat == StatId.BASH_DAMAGE
+    assert effects[0].value == 180
+    assert effects[0].source == "Truly Superb Glyph of Bashing"
+
+
+def test_effect_type_lookup_can_use_minimum_recorded_value(tmp_path):
+    repository = JewelryGlyphEffectRepository(_database(tmp_path))
+
+    effects = repository.get_strongest_jewelry_glyph_effect_by_type(
+        "bash_damage",
+        use_max_value=False,
+    )
+
+    assert effects[0].value == 20
