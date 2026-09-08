@@ -40,6 +40,10 @@ from services.rotation_recovery_heavy_replay_service import (
     RecoveryReserveAssessmentResolver,
     VerifiedRecoveryHeavyRestorationResolver,
 )
+from services.rotation_static_build_context_service import (
+    RotationStaticBuildContextResolution,
+    RotationStaticBuildContextService,
+)
 from ui.rotation_recovery_validation_support import (
     RotationRecoveryValidationEvidence,
     RotationRecoveryValidationScope,
@@ -52,8 +56,9 @@ class RotationCanonicalCandidateApplicationResult:
     """Application-facing result for one canonical recovery candidate family.
 
     ``pipeline_result`` is absent when the selected saved build could not be fully
-    adapted or when decision-critical mechanics coverage is unresolved. Discovered
-    mechanics dependencies and their research gaps are retained for explanation.
+    adapted, when optional canonical static build context is unresolved, or when
+    decision-critical mechanics coverage is unresolved. Discovered mechanics
+    dependencies and research gaps are retained for explanation.
     """
 
     build_adaptation: SavedBuildAdaptation
@@ -61,17 +66,20 @@ class RotationCanonicalCandidateApplicationResult:
     validation: RotationRecoveryValidationEvidence
     mechanics_dependencies: tuple[RotationMechanicsDependency, ...] = ()
     knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
+    static_context: RotationStaticBuildContextResolution | None = None
 
 
 class RotationCanonicalCandidateSupport:
     """Bridge a saved UI build into the effect-aware recovery candidate pipeline.
 
     Saved ``PlayerBuild`` state is first adapted through the canonical
-    SavedBuildCharacterAdapter. When a mechanics coverage report is supplied, the
-    resolved CharacterBuild and current rotation evidence are then used to discover
-    which coverage domains actually matter to this decision. Unrelated global gaps do
-    not block the candidate; a blocking gap in a discovered dependency fails closed
-    before the expensive candidate pipeline runs.
+    SavedBuildCharacterAdapter. A caller may also supply ``static_context_service``
+    to require the existing MinMax static calculation pipeline, including verified
+    armor/passive ownership and ranks, to resolve cleanly before candidate ranking.
+
+    When a mechanics coverage report is supplied, the resolved CharacterBuild and
+    current rotation evidence are used to discover which coverage domains actually
+    matter to this decision. Unrelated global gaps do not block the candidate.
     """
 
     def __init__(
@@ -82,12 +90,14 @@ class RotationCanonicalCandidateSupport:
         pipeline: RotationRecoveryHeavyCandidatePipelineService | None = None,
         validation_support: RotationRecoveryValidationSupport | None = None,
         dependency_service: RotationMechanicsDependencyService | None = None,
+        static_context_service: RotationStaticBuildContextService | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
         self.pipeline = pipeline or RotationRecoveryHeavyCandidatePipelineService()
         self.validation_support = validation_support or RotationRecoveryValidationSupport()
         self.dependency_service = dependency_service or RotationMechanicsDependencyService()
+        self.static_context_service = static_context_service
 
     def run_effects(
         self,
@@ -141,6 +151,30 @@ class RotationCanonicalCandidateSupport:
         passive_tuple = tuple(passives)
         dependencies: tuple[RotationMechanicsDependency, ...] = ()
         knowledge_gaps: tuple[CanonicalKnowledgeGap, ...] = ()
+        static_context: RotationStaticBuildContextResolution | None = None
+
+        if self.static_context_service is not None:
+            static_context = self.static_context_service.resolve(player_build)
+            if not static_context.resolved:
+                reasons = [
+                    "canonical candidate evaluation was not run because static build "
+                    "calculation evidence is unresolved"
+                ]
+                reasons.extend(
+                    f"static build context: {item}"
+                    for item in static_context.unresolved
+                    if str(item).strip()
+                )
+                return RotationCanonicalCandidateApplicationResult(
+                    build_adaptation=adaptation,
+                    pipeline_result=None,
+                    validation=RotationRecoveryValidationEvidence(
+                        scope=RotationRecoveryValidationScope.NOT_EVALUATED,
+                        selectable=None,
+                        reasons=tuple(reasons),
+                    ),
+                    static_context=static_context,
+                )
 
         if coverage_report is not None:
             dependencies = self.dependency_service.discover(
@@ -179,6 +213,7 @@ class RotationCanonicalCandidateSupport:
                     ),
                     mechanics_dependencies=dependencies,
                     knowledge_gaps=knowledge_gaps,
+                    static_context=static_context,
                 )
 
         result = self.pipeline.run_effects(
@@ -207,6 +242,7 @@ class RotationCanonicalCandidateSupport:
             validation=self.validation_support.from_candidate_pipeline_result(result),
             mechanics_dependencies=dependencies,
             knowledge_gaps=knowledge_gaps,
+            static_context=static_context,
         )
 
     @staticmethod
