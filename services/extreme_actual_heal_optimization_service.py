@@ -9,6 +9,9 @@ from models.build_model import PlayerBuild
 from services.extreme_actual_heal_gear_set_candidate_service import (
     ExtremeActualHealGearSetCandidateService,
 )
+from services.extreme_actual_heal_monster_package_service import (
+    ExtremeActualHealMonsterPackageService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_healing_event_service import (
     ExtremeHealingEventResult,
@@ -58,9 +61,10 @@ class ExtremeActualHealOptimizationService:
 
     Candidate changes are materialized onto a real ``PlayerBuild`` and the full
     canonical context is rebuilt before the healing event is scored. Reviewed
-    ordinary five-piece sets now participate the same way: the set is equipped on
-    actual body slots and its resource/power/healing effects are resolved by the
-    shared gear pipeline rather than added as an Extreme-only tooltip delta.
+    ordinary five-piece sets and structurally legal five-piece-plus-monster
+    packages participate the same way: the gear is equipped on actual body slots
+    and its resource/power/healing effects are resolved by the shared gear
+    pipeline rather than added as an Extreme-only tooltip delta.
     """
 
     SEARCH_SCOPE = (
@@ -74,12 +78,13 @@ class ExtremeActualHealOptimizationService:
         "weapon traits",
         "food/drink",
         "reviewed ordinary five-piece body-set replacement",
+        "reviewed legal five-piece + two-piece monster body package",
         "canonical healing coefficient scaling",
         "Healing Done and verified healing CP",
         "Critical Healing",
     )
     OMITTED_SCOPE = (
-        "monster-set / mythic / arena-weapon / mixed 5+2+1 package search",
+        "mythic / arena-weapon / 5+5 / mixed 5+5+1 package search",
         "class change / subclass route",
         "healing-skill replacement",
         "skill-bar passive/proc search",
@@ -94,6 +99,7 @@ class ExtremeActualHealOptimizationService:
         healing_events: ExtremeHealingEventService | None = None,
         race_repository: RaceRepository | None = None,
         gear_set_candidates: ExtremeActualHealGearSetCandidateService | None = None,
+        monster_packages: ExtremeActualHealMonsterPackageService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -105,6 +111,11 @@ class ExtremeActualHealOptimizationService:
         )
         self.gear_set_candidates = gear_set_candidates or (
             ExtremeActualHealGearSetCandidateService(database_path)
+            if database_path
+            else None
+        )
+        self.monster_packages = monster_packages or (
+            ExtremeActualHealMonsterPackageService(database_path)
             if database_path
             else None
         )
@@ -171,6 +182,12 @@ class ExtremeActualHealOptimizationService:
             ))
             if self.gear_set_candidates is not None:
                 candidates.extend(self.gear_set_candidates.build_candidates(
+                    current,
+                    character_id=character_id,
+                    baseline_build_id=candidate_build_id,
+                ))
+            if self.monster_packages is not None:
+                candidates.extend(self.monster_packages.build_candidates(
                     current,
                     character_id=character_id,
                     baseline_build_id=candidate_build_id,
