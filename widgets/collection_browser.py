@@ -11,19 +11,31 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+import re
 
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QPalette
 from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
     QListWidget,
-    QListWidgetItem,
     QTreeWidget,
     QTreeWidgetItem,
     QLineEdit,
-    QLabel,
 )
+
+from ui.theme.colors import Colors
+
+
+_PLAYER_PLACEHOLDER = re.compile(r"\s*<<player>>(?:'s)?\s*", re.IGNORECASE)
+
+
+def clean_achievement_display_text(value: object) -> str:
+    """Remove unresolved ESO player-name tokens from user-facing achievement text."""
+    text = _PLAYER_PLACEHOLDER.sub(" ", str(value or ""))
+    text = " ".join(text.split())
+    return re.sub(r"\s+([,.;:!?])", r"\1", text).strip()
 
 
 class CollectionBrowser(QWidget):
@@ -98,6 +110,7 @@ class CollectionBrowser(QWidget):
             return
         for category in self.provider.top_categories():
             self.categories.addItem(category)
+        self.refresh_completion_styles()
 
     def category_changed(self, category):
         if not category:
@@ -113,7 +126,7 @@ class CollectionBrowser(QWidget):
 
                 for achievement in self.provider.achievements_in(category, subcategory):
                     child = QTreeWidgetItem(
-                        [achievement["name"], str(achievement.get("points", ""))]
+                        [clean_achievement_display_text(achievement["name"]), str(achievement.get("points", ""))]
                     )
                     achievement_id = achievement["id"]
                     child.setCheckState(
@@ -128,6 +141,70 @@ class CollectionBrowser(QWidget):
                 parent.setExpanded(True)
         finally:
             self.tree.blockSignals(False)
+        self.refresh_completion_styles()
+
+    # --------------------------------------------------
+    # Completion styling
+    # --------------------------------------------------
+
+    def _text_brush(self, complete: bool) -> QBrush:
+        if complete:
+            return QBrush(QColor(Colors.GOLD))
+        return QBrush(self.palette().color(QPalette.ColorRole.Text))
+
+    def _subcategory_complete(self, category: str, subcategory: str) -> bool:
+        if self.provider is None or self.progress_service is None:
+            return False
+        achievements = tuple(self.provider.achievements_in(category, subcategory))
+        return bool(achievements) and all(
+            self.progress_service.is_complete(achievement["id"])
+            for achievement in achievements
+        )
+
+    def _category_complete(self, category: str) -> bool:
+        if self.provider is None or self.progress_service is None:
+            return False
+        subcategories = tuple(self.provider.subcategories(category))
+        if not subcategories:
+            return False
+        seen_achievement = False
+        for subcategory in subcategories:
+            achievements = tuple(self.provider.achievements_in(category, subcategory))
+            if not achievements:
+                continue
+            seen_achievement = True
+            if not all(
+                self.progress_service.is_complete(achievement["id"])
+                for achievement in achievements
+            ):
+                return False
+        return seen_achievement
+
+    def refresh_completion_styles(self) -> None:
+        """Gold completed categories/subcategories using the Achievement Points accent."""
+        if self.provider is None or self.progress_service is None:
+            return
+
+        for index in range(self.categories.count()):
+            item = self.categories.item(index)
+            item.setForeground(self._text_brush(self._category_complete(item.text())))
+
+        current = self.categories.currentItem()
+        category = current.text() if current is not None else ""
+        if not category or self.search.text().strip():
+            return
+
+        for index in range(self.tree.topLevelItemCount()):
+            parent = self.tree.topLevelItem(index)
+            # Normal category browsing uses top-level subcategory headers with
+            # children. Search results are top-level achievements and are not
+            # category headers, so leave them alone.
+            if parent.childCount() <= 0 or parent.data(0, Qt.ItemDataRole.UserRole) is not None:
+                continue
+            parent.setForeground(
+                0,
+                self._text_brush(self._subcategory_complete(category, parent.text(0))),
+            )
 
     # --------------------------------------------------
     # Search
@@ -149,7 +226,7 @@ class CollectionBrowser(QWidget):
 
             for achievement in self.provider.search(text):
                 item = QTreeWidgetItem(
-                    [achievement["name"], str(achievement.get("points", ""))]
+                    [clean_achievement_display_text(achievement["name"]), str(achievement.get("points", ""))]
                 )
                 item.setData(0, Qt.ItemDataRole.UserRole, achievement["id"])
                 item.setCheckState(
