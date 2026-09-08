@@ -8,6 +8,8 @@ from .rotation_plan import RotationActionKind, RotationPlan
 _BAR_BOUND_KINDS = frozenset({
     RotationActionKind.SKILL,
     RotationActionKind.ULTIMATE,
+    RotationActionKind.LIGHT_ATTACK,
+    RotationActionKind.HEAVY_ATTACK,
 })
 
 
@@ -33,12 +35,13 @@ class RotationActiveBarAssessment:
 
 
 class RotationActiveBarAssessor:
-    """Audit skill/ultimate actions against the plan's own BAR_SWAP progression.
+    """Audit bar-bound actions against the plan's own BAR_SWAP progression.
 
     BAR_SWAP actions set the destination bar immediately in deterministic plan order.
-    This layer does not decide whether a skill belongs on a bar; saved-build slot
-    legality owns that separate question. It only verifies that a bar-labelled cast
-    matches the bar that is actually active at that instant.
+    This layer does not decide whether a skill belongs on a bar or which weapon family
+    is equipped there; saved-build slot and weapon projections own those separate
+    questions. It only verifies that a bar-labelled skill, Ultimate, light attack, or
+    heavy attack matches the bar that is actually active at that instant.
     """
 
     def assess(
