@@ -18,9 +18,9 @@ class ExtremeActualHealReviewedBarCandidateService:
     This bar-search layer is intentionally narrow. The shared context already has
     verified slot-count math for Mages Guild ``Magicka Controller`` and Fighters
     Guild ``Slayer``. Extreme also owns reviewed Green Balance ``Emerald Moss``
-    family math, where each slotted Green Balance ability increases Green Balance
-    healing. Those three families can therefore justify legal carrier-skill search
-    while the canonical context/event layer remains responsible for final scoring.
+    family math and Nightblade Siphoning ``Soul Siphoner`` generic Healing Done.
+    Those reviewed families can therefore justify legal carrier-skill search while
+    the canonical context/event layer remains responsible for final scoring.
 
     Ability-specific cast/proc/slotted effects are *not* inferred here. A skill is
     used only as a legal carrier for the explicitly reviewed line-count passive.
@@ -28,11 +28,14 @@ class ExtremeActualHealReviewedBarCandidateService:
     family and avoids pretending that unreviewed morph mechanics have been scored.
     """
 
-    REVIEWED_LINE_IDS = frozenset({"mages_guild", "fighters_guild", "green_balance"})
+    REVIEWED_LINE_IDS = frozenset(
+        {"mages_guild", "fighters_guild", "green_balance", "siphoning"}
+    )
     PASSIVE_BY_LINE_ID = {
         "mages_guild": "Magicka Controller",
         "fighters_guild": "Slayer",
         "green_balance": "Emerald Moss",
+        "siphoning": "Soul Siphoner",
     }
 
     def __init__(
