@@ -4,7 +4,7 @@ from __future__ import annotations
 
 When an exact immunity aura marker is configured, the Performance Dashboard can
 now paint the periods where the boss is damageable as quiet background bands
-behind the healing/damage line.  Aggregate active seconds remain valid when
+behind the healing/damage line. Aggregate active seconds remain valid when
 exact events are unavailable, but no bands are fabricated from a percentage.
 
 This layer also keeps the left-hand cards from vertically stretching when the
@@ -36,7 +36,6 @@ def _balance_cards(page) -> None:
                 QSizePolicy.Policy.Expanding,
                 QSizePolicy.Policy.Preferred,
             )
-            card.setMaximumHeight(card.sizeHint().height())
 
 
 def _extract_snapshot_args(args, kwargs):
@@ -88,16 +87,27 @@ def _shade_active_windows(page, points) -> None:
     if chart is None:
         return
 
-    axes_x = [axis for axis in chart.axes(Qt.Orientation.Horizontal) if isinstance(axis, QValueAxis)]
-    axes_y = [axis for axis in chart.axes(Qt.Orientation.Vertical) if isinstance(axis, QValueAxis)]
+    axes_x = [
+        axis
+        for axis in chart.axes(Qt.Orientation.Horizontal)
+        if isinstance(axis, QValueAxis)
+    ]
+    axes_y = [
+        axis
+        for axis in chart.axes(Qt.Orientation.Vertical)
+        if isinstance(axis, QValueAxis)
+    ]
     if not axes_x or not axes_y:
         return
     axis_x = axes_x[0]
     axis_y = axes_y[0]
 
-    # The output line is created by the canonical dashboard.  Move it to the end
+    # The output line is created by the canonical dashboard. Move it to the end
     # of the series stack after adding bands so it is always painted on top.
-    output_series = next((series for series in chart.series() if isinstance(series, QLineSeries)), None)
+    output_series = next(
+        (series for series in chart.series() if isinstance(series, QLineSeries)),
+        None,
+    )
     if output_series is None:
         return
 
@@ -170,7 +180,9 @@ def install() -> None:
 
         try:
             summary = self.capability_service.fetch_fight_summary(report_code, int(fight_id))
-            snapshot.BossActiveWindows = PerformanceBossActivityService(self.client).fetch_active_windows(
+            snapshot.BossActiveWindows = PerformanceBossActivityService(
+                self.client
+            ).fetch_active_windows(
                 report_code,
                 int(fight_id),
                 float(summary["start_time"]),
