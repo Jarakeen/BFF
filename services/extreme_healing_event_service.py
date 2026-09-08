@@ -13,6 +13,7 @@ from minmax.skill_line_repository import SkillLineRepository
 from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
+from services.extreme_critical_healing_cap_service import ExtremeCriticalHealingCapService
 from services.extreme_healing_event_recipient_scope_service import (
     ExtremeHealingEventRecipientScopeService,
 )
@@ -21,6 +22,9 @@ from services.extreme_healing_event_temporal_scope_service import (
 )
 from services.extreme_necromancer_living_death_slotted_healing_service import (
     ExtremeNecromancerLivingDeathSlottedHealingService,
+)
+from services.extreme_nightblade_class_mastery_healing_service import (
+    ExtremeNightbladeClassMasteryHealingService,
 )
 from services.extreme_nightblade_siphoning_healing_service import (
     ExtremeNightbladeSiphoningHealingService,
@@ -46,7 +50,8 @@ class ExtremeHealingEventResult:
     ``critical_heal`` is the largest reviewed value of the same event when every
     crit-eligible HEAL component crits. Components explicitly marked non-crittable
     stay at their normal value. Unknown critical eligibility blocks the critical
-    result.
+    result. Critical Healing is capped at the reviewed ESO ceiling; legal mastery
+    effects may raise that ceiling explicitly rather than bypassing it.
 
     Multi-recipient abilities are not aggregated into one recipient's heal unless
     component-recipient identity is proven. Multi-time abilities are likewise not
@@ -90,6 +95,10 @@ class ExtremeHealingEventService:
     canonical 50% base critical healing multiplier from the UESP
     SpellCritHealing/WeaponCritHealing formula.
 
+    The resulting critical bonus is constrained by ESO's reviewed Critical
+    Healing ceiling. Pure Nightblade ``Above and Beyond`` may legally add Critical
+    Healing and raise that ceiling; subclassed builds cannot claim Class Mastery.
+
     Critical chance is intentionally absent. "Largest actual heal" asks how big
     the event can be when it crits; an expected-heal objective is a separate
     probability problem and must remain separate.
@@ -108,6 +117,8 @@ class ExtremeHealingEventService:
         skill_line_repository: SkillLineRepository | None = None,
         recipient_scope: ExtremeHealingEventRecipientScopeService | None = None,
         temporal_scope: ExtremeHealingEventTemporalScopeService | None = None,
+        critical_healing_cap: ExtremeCriticalHealingCapService | None = None,
+        nightblade_class_mastery_healing: ExtremeNightbladeClassMasteryHealingService | None = None,
         nightblade_siphoning_healing: ExtremeNightbladeSiphoningHealingService | None = None,
         necromancer_living_death_slotted_healing: ExtremeNecromancerLivingDeathSlottedHealingService | None = None,
         warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
@@ -121,6 +132,11 @@ class ExtremeHealingEventService:
         )
         self.recipient_scope = recipient_scope or ExtremeHealingEventRecipientScopeService()
         self.temporal_scope = temporal_scope or ExtremeHealingEventTemporalScopeService()
+        self.critical_healing_cap = critical_healing_cap or ExtremeCriticalHealingCapService()
+        self.nightblade_class_mastery_healing = (
+            nightblade_class_mastery_healing
+            or ExtremeNightbladeClassMasteryHealingService(self.database_path)
+        )
         self.nightblade_siphoning_healing = (
             nightblade_siphoning_healing
             or ExtremeNightbladeSiphoningHealingService(
@@ -278,7 +294,7 @@ class ExtremeHealingEventService:
                     for number in heal_numbers
                 )
 
-        return ExtremeHealingEventResult(
+        event = ExtremeHealingEventResult(
             entity_id=str(entity_id),
             normal_heal=normal_heal,
             critical_heal=critical_heal,
@@ -290,6 +306,41 @@ class ExtremeHealingEventService:
             tooltip_result=result,
             unresolved=tuple(dict.fromkeys(message for message in unresolved if message)),
         )
+
+        mastery = self.nightblade_class_mastery_healing.resolve(
+            build=build,
+            target_health_fraction=target_health_fraction,
+            battle_spirit_active=False,
+        )
+        mastery_unresolved = list(mastery.unresolved)
+        if any(
+            str(name or "").strip().casefold() == "an eye for exploitation"
+            for name in mastery.selected_masteries
+        ):
+            mastery_unresolved.append(
+                "An Eye for Exploitation Weapon/Spell Damage contribution is not yet applied to the canonical heal coefficient context"
+            )
+        if mastery_unresolved:
+            event = ExtremeHealingEventResult(
+                entity_id=event.entity_id,
+                normal_heal=event.normal_heal,
+                critical_heal=event.critical_heal,
+                critical_healing_bonus=event.critical_healing_bonus,
+                critical_multiplier=event.critical_multiplier,
+                heal_coefficient_numbers=event.heal_coefficient_numbers,
+                crit_eligible_coefficient_numbers=event.crit_eligible_coefficient_numbers,
+                noncrit_coefficient_numbers=event.noncrit_coefficient_numbers,
+                tooltip_result=event.tooltip_result,
+                unresolved=tuple(
+                    dict.fromkeys((*event.unresolved, *mastery_unresolved))
+                ),
+            )
+
+        return self.critical_healing_cap.apply(
+            event,
+            additional_critical_healing=float(mastery.critical_healing_bonus),
+            critical_healing_cap=float(mastery.critical_healing_cap),
+        ).event
 
     def _active_weapon_line(
         self,
