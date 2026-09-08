@@ -195,6 +195,7 @@ class AchievementsPage(QWidget):
 
     def achievement_changed(self, achievement_id: int, complete: bool):
         self.achievement_progress_service.set_complete(achievement_id, complete)
+        self.browser.refresh_completion_styles()
         self.refresh_stats()
         self.status.success(
             f"Progress updated for {self.achievement_progress_service.active_profile}."
