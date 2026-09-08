@@ -95,7 +95,12 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from ui.help_feature_extension_support import install as install_help_feature_extensions
     from ui.main_window import MainWindow
+
+    # Extend the data-driven guide before HelpPage is constructed so screenshot
+    # build import and portable calendar export are searchable like native topics.
+    install_help_feature_extensions()
 
     original_build_ui = MainWindow.build_ui
 
