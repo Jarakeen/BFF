@@ -14,6 +14,7 @@ from services.performance_focus_service import (
     likely_responsibilities,
     suggest_working_target,
 )
+from services.performance_role_focus import desired_uptime, role_profile
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.theme.colors import Colors
@@ -32,6 +33,13 @@ def _clear(layout) -> None:
             item.widget().deleteLater()
         elif item.layout() is not None:
             _clear(item.layout())
+
+
+def _target_for_result(result) -> float:
+    calibrated = desired_uptime(result.name)
+    if calibrated is not None:
+        return float(calibrated)
+    return suggest_working_target(float(result.uptime_percent))
 
 
 def _current_result_map(page) -> dict[str, object]:
@@ -56,7 +64,7 @@ def _goal_from_result(page, result, *, evidence_note: str = "") -> PerformanceFo
     current = float(result.uptime_percent)
     return PerformanceFocusGoal(
         Name=result.name,
-        TargetPercent=suggest_working_target(current),
+        TargetPercent=_target_for_result(result),
         CurrentPercent=current,
         Source="Suggested",
         ReportCode=str(getattr(snapshot, "ReportCode", "") or ""),
@@ -105,13 +113,14 @@ def _add_custom_goal(page) -> None:
 def _build_focus_card(page) -> FoundryCard:
     card = FoundryCard("Performance Focus")
     card.set_body_margins(10, 6, 10, 8)
+    page.performance_focus_card = card
 
-    intro = QLabel(
+    page.performance_focus_intro = QLabel(
         "Suggestions are clues, not assignments. Pin only what is actually your job."
     )
-    intro.setWordWrap(True)
-    intro.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
-    card.addWidget(intro)
+    page.performance_focus_intro.setWordWrap(True)
+    page.performance_focus_intro.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
+    card.addWidget(page.performance_focus_intro)
 
     host = QWidget()
     page.performance_focus_layout = QVBoxLayout(host)
@@ -142,11 +151,29 @@ def _build_focus_card(page) -> FoundryCard:
     custom.addWidget(add)
     card.addLayout(custom)
 
-    footer = QLabel("Pinned goals feed Raid Engine Overview → Skills to Work On.")
+    footer = QLabel("Pinned goals feed Raid Engine Overview → Next Raid Focus.")
     footer.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 10px;")
     footer.setWordWrap(True)
     card.addWidget(footer)
     return card
+
+
+def _apply_role_profile(page, snapshot) -> None:
+    profile = role_profile(getattr(snapshot, "Role", ""))
+    card = getattr(page, "performance_focus_card", None)
+    if card is not None:
+        card.set_title(profile.CardTitle)
+    intro = getattr(page, "performance_focus_intro", None)
+    if intro is not None:
+        intro.setText(profile.Intro)
+
+    # Role defaults are context, not assignments. Once the user explicitly adds
+    # or resets tracking, preserve that choice instead of silently replacing it.
+    if not getattr(page, "_tracked_effects_customized", False):
+        page._tracked_effect_names = list(profile.TrackedEffects)
+        from ui import performance_dashboard_polish_support as polish
+        polish._render_tracking_label(page)
+        polish._render_tracked_effects(page)
 
 
 def _render_focus(page) -> None:
@@ -166,6 +193,8 @@ def _render_focus(page) -> None:
     pinned = {goal.Name.casefold(): goal for goal in _store().load()}
     evidence = getattr(snapshot, "BuildEvidence", PerformanceBuildEvidence())
     inferred = {name.casefold(): note for name, note in likely_responsibilities(evidence)}
+    role = str(getattr(snapshot, "Role", "") or "").casefold()
+    custom_tracking = bool(getattr(page, "_tracked_effects_customized", False))
 
     candidates = []
     for key, result in result_map.items():
@@ -175,7 +204,14 @@ def _render_focus(page) -> None:
             str(name or "").strip().casefold()
             for name in getattr(page, "_tracked_effect_names", ())
         }
-        if not explicit and key not in inferred:
+
+        # Healer tracking remains intentionally broad because support coverage is
+        # the role's central job. DPS/tank role defaults are contextual until the
+        # build evidence or the user explicitly marks an effect as their concern.
+        personally_relevant = key in inferred or (
+            explicit and ("heal" in role or custom_tracking)
+        )
+        if not personally_relevant:
             continue
         candidates.append((float(result.uptime_percent), result, inferred.get(key, "Tracked by you")))
     candidates.sort(key=lambda row: row[0])
@@ -197,10 +233,11 @@ def _render_focus(page) -> None:
         row_layout.setContentsMargins(0, 1, 0, 1)
         row_layout.setSpacing(7)
 
-        target = suggest_working_target(float(result.uptime_percent))
+        target = _target_for_result(result)
+        target_note = "BFF calibrated target" if desired_uptime(result.name) is not None else "next-step target"
         text = QLabel(
             f"△  {result.name}  {result.uptime_percent:.1f}%  →  {target:.0f}%\n"
-            f"     {note}"
+            f"     {note} • {target_note}"
         )
         text.setWordWrap(True)
         text.setStyleSheet(f"color: {Colors.TEXT};")
@@ -222,9 +259,21 @@ def _render_focus(page) -> None:
         layout.addWidget(row)
 
     if not candidates:
-        label = QLabel(
-            "No measurable tracked uptimes are available yet. Add a custom goal below if the thing you want to improve is not an aura percentage."
-        )
+        if "dps" in role:
+            message = (
+                "No build-owned measurable uptime is weak enough to surface yet. "
+                "The raid buffs above remain useful context; add a custom goal for rotation, DoT, execute, or weave work."
+            )
+        elif "tank" in role:
+            message = (
+                "No source-backed tank responsibility is measurable in this effect set yet. "
+                "Add a custom goal for taunt, blocking, positioning, or another mechanic until event-level tank metrics are wired."
+            )
+        else:
+            message = (
+                "No measurable tracked uptimes are available yet. Add a custom goal below if the thing you want to improve is not an aura percentage."
+            )
+        label = QLabel(message)
         label.setWordWrap(True)
         label.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
         layout.addWidget(label)
@@ -242,6 +291,27 @@ def install() -> None:
     # _build_ui_clean resolves this module-level helper when a dashboard is
     # constructed, so replacing it here cleanly swaps Quick Read for Focus.
     polish._build_quick_read_card = _build_focus_card
+
+    # Mark hand-edited tracking so role defaults never erase the user's choices.
+    original_add_tracked = polish._add_tracked_effect
+    original_reset_tracked = polish._reset_tracked_effects
+
+    def add_tracked_with_role_memory(page):
+        page._tracked_effects_customized = True
+        original_add_tracked(page)
+
+    def reset_tracked_for_role(page):
+        page._tracked_effects_customized = False
+        snapshot = getattr(page, "_last_snapshot", None)
+        if snapshot is not None:
+            page._tracked_effect_names = list(role_profile(snapshot.Role).TrackedEffects)
+            polish._render_tracking_label(page)
+            polish._render_tracked_effects(page)
+            return
+        original_reset_tracked(page)
+
+    polish._add_tracked_effect = add_tracked_with_role_memory
+    polish._reset_tracked_effects = reset_tracked_for_role
 
     original_snapshot = service_module.PerformanceDashboardService.build_snapshot
     original_show = PerformanceDashboard.show_snapshot
@@ -269,6 +339,7 @@ def install() -> None:
 
     def show_snapshot_with_focus(self, snapshot):
         original_show(self, snapshot)
+        _apply_role_profile(self, snapshot)
         _render_focus(self)
 
     service_module.PerformanceDashboardService.build_snapshot = build_snapshot_with_build_evidence
