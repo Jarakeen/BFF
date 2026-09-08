@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityEntry
-from minmax.rotation_plan import RotationPlan
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.ultimate_resource_timeline import UltimateGenerationEvent, UltimateSpendRule
 from models.build_model import PlayerBuild
 from ui.rotation_dashboard_canonical_candidate_support import (
@@ -120,8 +120,8 @@ def test_dashboard_does_not_invent_affordability_requirement_without_resolved_sp
     assert "ultimate_affordability_requirement" not in canonical.calls[0]
 
 
-def test_dashboard_does_not_reuse_seed_attack_generation_for_final_candidates() -> None:
-    seed_attack_event = UltimateGenerationEvent(10.0, 3.0, "scheduled combat attacks")
+def test_dashboard_recomputes_attack_generation_from_final_candidate_plan() -> None:
+    seed_attack_event = UltimateGenerationEvent(10.0, 3.0, "stale seed attack generation")
     projection = SimpleNamespace(
         spend_rules=(UltimateSpendRule("Aggressive Horn", 250.0),),
         generation_events=(seed_attack_event,),
@@ -135,4 +135,25 @@ def test_dashboard_does_not_reuse_seed_attack_generation_for_final_candidates() 
         request=_request(use_scheduled_combat_attacks_for_ultimate=True),
     )
 
-    assert "ultimate_affordability_requirement" not in canonical.calls[0]
+    call = canonical.calls[0]
+    requirement = call["ultimate_affordability_requirement"]
+    assert requirement.starting_amount == 50.0
+    assert requirement.spend_rules == projection.spend_rules
+    assert requirement.generation_events == ()
+
+    resolver = call["ultimate_generation_event_resolver"]
+    candidate_plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=12.0,
+        actions=(
+            RotationAction(2.0, 0, RotationActionKind.LIGHT_ATTACK, bar="front"),
+        ),
+    )
+    events = resolver(candidate_plan)
+
+    assert events
+    assert events[0].time_seconds == 3.0
+    assert events[0].amount == 3.0
+    assert all(event.source == "base combat Ultimate generation" for event in events)
+    assert seed_attack_event not in events
