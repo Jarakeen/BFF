@@ -96,23 +96,20 @@ class CanonicalMechanicsCoverageReport:
 
     @property
     def decision_critical_gaps(self) -> tuple[CanonicalKnowledgeGap, ...]:
-        critical_keys = {
-            row.key.casefold()
-            for row in self.rows
-            if row.status is CanonicalMechanicsCoverageStatus.MISSING_CRITICAL
-        }
-        return tuple(
-            gap for gap in self.knowledge_gaps if gap.key.casefold() in critical_keys
-        )
+        return tuple(gap for gap in self.knowledge_gaps if gap.blocking)
+
+    @property
+    def advisory_gaps(self) -> tuple[CanonicalKnowledgeGap, ...]:
+        return tuple(gap for gap in self.knowledge_gaps if not gap.blocking)
 
 
 class CanonicalMechanicsCoverageAuditService:
     """Turn explicit mechanics-coverage observations into a shared research queue.
 
-    The audit never decides game mechanics from filenames or prose. Callers provide
-    evidence-backed coverage rows after inspecting canonical repositories/services.
-    Partial and decision-critical rows become CanonicalKnowledgeGap objects so the
-    same research can improve Comp Maker, Rotation Maker, and Optimizer.
+    PARTIAL coverage remains visible as advisory research. MISSING_CRITICAL coverage
+    becomes a blocking knowledge gap because a concrete decision cannot be defended
+    without it. This lets the research queue be exhaustive without globally disabling
+    Comp Maker, Rotation Maker, or Optimizer for unrelated incomplete mechanics.
     """
 
     def audit(
@@ -140,6 +137,9 @@ class CanonicalMechanicsCoverageAuditService:
                     source_context=(
                         row.research_context
                         or f"coverage evidence source: {row.evidence_source}"
+                    ),
+                    blocking=(
+                        row.status is CanonicalMechanicsCoverageStatus.MISSING_CRITICAL
                     ),
                 )
             )
