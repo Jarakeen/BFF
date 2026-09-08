@@ -20,8 +20,8 @@ def _build() -> PlayerBuild:
     return build
 
 
-def _request() -> RotationGenerationRequest:
-    return RotationGenerationRequest(
+def _request(**changes) -> RotationGenerationRequest:
+    values = dict(
         duration_seconds=60.0,
         ultimate_bar="front",
         starting_ultimate=50.0,
@@ -34,6 +34,8 @@ def _request() -> RotationGenerationRequest:
             ),
         ),
     )
+    values.update(changes)
+    return RotationGenerationRequest(**values)
 
 
 class _Generation:
@@ -65,14 +67,14 @@ class _Canonical:
         return self.result
 
 
-def _run(generation, canonical):
+def _run(generation, canonical, *, request=None):
     support = RotationDashboardCanonicalCandidateSupport(
         generation=generation,
         canonical_candidates=canonical,
     )
     return support.run_effects(
         player_build=_build(),
-        generation_request=_request(),
+        generation_request=request or _request(),
         evaluator_resolver=object(),
         scorecard_resolver=object(),
         resource=ResourceType.MAGICKA,
@@ -114,5 +116,23 @@ def test_dashboard_does_not_invent_affordability_requirement_without_resolved_sp
     canonical = _Canonical()
 
     _run(generation, canonical)
+
+    assert "ultimate_affordability_requirement" not in canonical.calls[0]
+
+
+def test_dashboard_does_not_reuse_seed_attack_generation_for_final_candidates() -> None:
+    seed_attack_event = UltimateGenerationEvent(10.0, 3.0, "scheduled combat attacks")
+    projection = SimpleNamespace(
+        spend_rules=(UltimateSpendRule("Aggressive Horn", 250.0),),
+        generation_events=(seed_attack_event,),
+    )
+    generation = _Generation(projection)
+    canonical = _Canonical()
+
+    _run(
+        generation,
+        canonical,
+        request=_request(use_scheduled_combat_attacks_for_ultimate=True),
+    )
 
     assert "ultimate_affordability_requirement" not in canonical.calls[0]
