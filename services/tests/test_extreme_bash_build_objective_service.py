@@ -41,9 +41,13 @@ def test_build_objective_composes_deadly_bash_skill2_damage_channel():
     deadly = ExtremeDeadlyBashResult(passive_name="Deadly Bash", rank=2, skill2_bash_damage=500.0, skill_bash_cost=-0.5)
     result = ExtremeBashBuildObjectiveService.evaluate_damage(inputs, deadly_bash=deadly)
     assert result.reviewed_value == pytest.approx(2000.0 * 0.011250 + 1.0 + 500.0)
-    assert result.objective.unresolved_channels == ()
+    assert "skill2_bash_damage" not in result.objective.unresolved_channels
+    assert result.objective.unresolved_channels == (
+        "cp_bash_damage",
+        "item_extra_bash_damage",
+    )
     assert result.source_blockers == ()
-    assert result.mechanic_complete is True
+    assert result.mechanic_complete is False
 
 
 def test_build_objective_composes_deadly_bash_cost_channel():
