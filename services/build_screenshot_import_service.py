@@ -2,11 +2,10 @@ from __future__ import annotations
 
 """Stage ESO build screenshots for a review-first import workflow.
 
-The first version deliberately keeps capture intake separate from recognition.
-ESO's Armory and Character screens expose complementary information, and the
-recognition layer needs real screenshots before we can safely map pixels/text to
-canonical PlayerBuild fields.  Staging the evidence now means users can capture
-characters quickly without hand-entering them while that analyzer is tuned.
+ESO's Armory spreads useful build evidence across several subviews (equipment,
+skills, Champion Points, attributes).  A complete import therefore needs to keep
+multiple Armory captures together with one matching Character-sheet capture.
+This service stores that evidence without interpreting or writing build state yet.
 """
 
 from dataclasses import asdict, dataclass
@@ -16,6 +15,7 @@ from pathlib import Path
 import re
 import shutil
 import uuid
+from collections.abc import Iterable
 
 
 _SUPPORTED_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
@@ -28,9 +28,12 @@ class BuildScreenshotIntake:
     armory_image: str
     character_image: str
     status: str = "awaiting_analysis"
+    armory_images: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        payload = asdict(self)
+        payload["armory_images"] = list(self.armory_images)
+        return payload
 
 
 class BuildScreenshotImportService:
@@ -54,8 +57,41 @@ class BuildScreenshotImportService:
         stem = re.sub(r"[^A-Za-z0-9_-]+", "-", str(value or "").strip()).strip("-")
         return stem[:48] or "eso-build"
 
-    def stage(self, *, armory_image: Path, character_image: Path) -> BuildScreenshotIntake:
-        armory = self._validated_image(armory_image, "Armory")
+    @staticmethod
+    def _normalize_armory_inputs(
+        armory_image: Path | None,
+        armory_images: Iterable[Path] | None,
+    ) -> list[Path]:
+        rows: list[Path] = []
+        if armory_image is not None:
+            rows.append(Path(armory_image))
+        if armory_images is not None:
+            rows.extend(Path(value) for value in armory_images)
+
+        unique: list[Path] = []
+        seen: set[str] = set()
+        for row in rows:
+            key = str(row.resolve()) if row.exists() else str(row)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(row)
+        return unique
+
+    def stage(
+        self,
+        *,
+        character_image: Path,
+        armory_image: Path | None = None,
+        armory_images: Iterable[Path] | None = None,
+    ) -> BuildScreenshotIntake:
+        armory_sources = self._normalize_armory_inputs(armory_image, armory_images)
+        if not armory_sources:
+            raise ValueError("Choose at least one Armory screenshot.")
+
+        armory_sources = [
+            self._validated_image(path, "Armory") for path in armory_sources
+        ]
         character = self._validated_image(character_image, "Character")
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -63,24 +99,43 @@ class BuildScreenshotImportService:
         folder = self.root / intake_id
         folder.mkdir(parents=True, exist_ok=False)
 
-        armory_target = folder / f"armory{armory.suffix.casefold()}"
+        armory_targets: list[Path] = []
+        for index, armory in enumerate(armory_sources, start=1):
+            # Keep the historical one-screen filename for compatibility, while
+            # multi-screen imports get deterministic numbered evidence files.
+            filename = (
+                f"armory{armory.suffix.casefold()}"
+                if len(armory_sources) == 1
+                else f"armory-{index:02d}{armory.suffix.casefold()}"
+            )
+            target = folder / filename
+            shutil.copy2(armory, target)
+            armory_targets.append(target)
+
         character_target = folder / f"character{character.suffix.casefold()}"
-        shutil.copy2(armory, armory_target)
         shutil.copy2(character, character_target)
 
         intake = BuildScreenshotIntake(
             intake_id=intake_id,
             created_at=datetime.now(timezone.utc).isoformat(),
-            armory_image=str(armory_target),
+            armory_image=str(armory_targets[0]),
+            armory_images=tuple(str(path) for path in armory_targets),
             character_image=str(character_target),
         )
 
         manifest = {
             **intake.to_dict(),
             "source_files": {
-                "armory": str(armory),
+                "armory": [str(path) for path in armory_sources],
                 "character": str(character),
             },
+            "recommended_capture_set": [
+                "armory_equipment",
+                "armory_skills",
+                "armory_champion",
+                "character_sheet",
+            ],
+            # Retained for older tooling that only knew about a pair.
             "recommended_capture_pair": ["armory", "character"],
             "recognition": {
                 "status": "awaiting_analysis",
@@ -89,6 +144,7 @@ class BuildScreenshotImportService:
                 "warnings": [
                     "Screenshot evidence is staged but has not yet been interpreted.",
                     "Imported build fields must be reviewed before saving to builds.json.",
+                    "Armory data may span several subviews; all supplied Armory screenshots belong to this one build intake.",
                 ],
             },
         }
@@ -110,11 +166,20 @@ class BuildScreenshotImportService:
             if str(data.get("status", "")) != "awaiting_analysis":
                 continue
             try:
+                armory_images = tuple(
+                    str(value)
+                    for value in (data.get("armory_images") or [])
+                    if str(value).strip()
+                )
+                primary = str(data.get("armory_image") or "")
+                if not armory_images and primary:
+                    armory_images = (primary,)
                 rows.append(
                     BuildScreenshotIntake(
                         intake_id=str(data["intake_id"]),
                         created_at=str(data["created_at"]),
-                        armory_image=str(data["armory_image"]),
+                        armory_image=primary or (armory_images[0] if armory_images else ""),
+                        armory_images=armory_images,
                         character_image=str(data["character_image"]),
                         status=str(data.get("status") or "awaiting_analysis"),
                     )
